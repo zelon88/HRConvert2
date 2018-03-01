@@ -89,6 +89,8 @@ $Delete_Threshold = '30';
 $LogDir = '/var/www/html/HRProprietary/HRConvert2/Logs';
 // / Number of megabytes to store in each logfile before splitting to a new one.
 $MaxLogSize = '1';
-
-
+// / Terms of Service URL.
+$TOSURL = 'https://www.honestrepair.net/index.php/terms-of-service/';
+// / Privacy Policy URL.
+$PPURL = 'https://www.honestrepair.net/index.php/privacy-policy/';
 // / ------------------------------ 

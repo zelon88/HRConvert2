@@ -10,18 +10,20 @@
   </head>
   <body>
     <div id="header-text" style="max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;">
+      <br>
       <h2>HRConvert2</h2>
       <hr />
       <h3>Online File Converter, Extractor, Compressor</h3>
       <hr />
     </div>
     <div id="main" align="center">
-      <div id="overview" style="max-width:1000px; text-align:left;">
-      	<p id="info" style="display:block;">HRConvert2 is an online file conversion tool that anyone can use to securely convert their files from a 
-          variety of devices. Without tracking you across the net, selling your info to advertisers, using 3rd party anaylitics, or infringing on your intellectual property.</p>
-        <button id="more-info-button" class='info-button' onclick="toggle_visibility('more-info'); toggle_visibility('more-info-button'); toggle_visibility('supported-formats-show-button'); 
+      <div id="overview" style="max-width:1000px; text-align:left; margin:25px;">
+      	<p id="info" style="display:block;">HRConvert2 is a secure and open-source tool that does it's job without tracking you across the net, selling your info to advertisers, 
+          using 3rd party anaylitics, or infringing on your intellectual property. Check out our <a href="<?php echo $TOSURL; ?>" target="_blank" rel="noopener noreferrer">Terms of Service</a> 
+          and <a href="<?php echo $PPURL; ?>" target="_blank" rel="noopener noreferrer">Privacy Policy</a></p>
+        <button id="more-info-button" class="info-button" onclick="toggle_visibility('more-info'); toggle_visibility('more-info-button'); toggle_visibility('supported-formats-show-button'); 
           toggle_visibility('less-info-button');" style="text-align:center; display:block; margin-left:auto; margin-right:auto;"><i>More Info ...</i></button>
-        <button id="less-info-button" class='info-button' onclick="toggle_visibility('more-info'); toggle_visibility('more-info-button'); toggle_visibility('supported-formats-show-button'); 
+        <button id="less-info-button" class="info-button" onclick="toggle_visibility('more-info'); toggle_visibility('more-info-button'); toggle_visibility('supported-formats-show-button'); 
           toggle_visibility('less-info-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Less Info ...</i></button>
         <div id="more-info" style="display:none;">
           <hr />
@@ -29,9 +31,9 @@
             need to worry about forfeiting your personal information or property while using our services.</p>
           <p>Currently HRConvert2 supports 59x different file formats, including documents, spreadsheets, images, media, 
             3d models, CAD drawings, vector files, archives, disk images, and more.</p> 
-          <button id="supported-formats-show-button" class='info-button' onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
+          <button id="supported-formats-show-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
             toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>View Supported Formats ...</i></button>
-          <button id="supported-formats-hide-button" class='info-button' onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
+          <button id="supported-formats-hide-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
             toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Hide Supported Formats ...</i></button>
           <br>
           <div id="supported-formats" class="supported-formats" style="margin-left:33%; display:none;">
@@ -156,14 +158,16 @@
           </div>
         </div>
         <br>
-        <hr />
-        <p id="call-to-action1" style="text-align:center;">To begin select files by clicking or dropping files into the box below.</p>
       </div>
-      <div id="dropzone" style="max-height:2000px; max-width:1000px;">
-        <form action="convertCore.php" class="dropzone" id="upload" name="upload" method="post" enctype="multipart/form-data">
-          <input type="text" name="dirToMake" id="dirToMake" value="<?php echo $Udir; ?>" style="display:none;">
+      <hr />
+      <p id="call-to-action1" style="text-align:center;">Select files by clicking, tapping, or dropping files into the box below.</p>
+      <div id="dropzone" style="max-height:2000px; max-width:1000px; margin:25px;">
+        <form action="convertCore.php" class="dropzone" id="filesToUpload" name="filesToUpload" method="post" enctype="multipart/form-data">
         </form>
       </div>
     </div>
+    <div align="center">
+      <button id="more-info-button" class="info-button" onclick="location.href='convertGui2.php';"><i>Continue ...</i></button>
+    </div> 
   </body>
 </html>

@@ -36,33 +36,6 @@ if ($HRC2_Integration == '0') {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / The following code sets the global variables for the session.
-$HRConvertVersion = 'v0.8.2';
-$Date = date("m_d_y");
-$Time = date("F j, Y, g:i a"); 
-$Current_URL = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
-$SesHash = substr(hash('ripemd160', $Date.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6), -12);
-$ConvertDir = $ConvertLoc.'/'.$SesHash;
-$ConvertTemp = $InstLoc.'/DATA/';
-$ConvertTempDir = $ConvertTemp.'/'.$SesHash;
-$LogInc = '0';
-$LogFile = $LogDir.'/HRConvert2_'.$LogInc.'_'.$Date.'_'.$SesHash.'.txt.';
-$defaultLogDir = $InstLoc.'/Logs';
-$defaultLogSize = '1';
-if (!is_numeric($MaxLogSize)) $MaxLogSize = $defaultLogSize;
-if (!is_dir($LogDir)) $LogDir = $defaultLogDir;
-if (!is_dir($LogDir)) mkdir($LogDir);
-if (!file_exists($LogDir.'/index.html')) copy('index.html', $LogDir.'/index.html');
-while (file_exists($LogFile) && round((filesize($LogFile) / 1048576), 2) > $MaxLogSize) { 
-  $LogInc++; 
-  $LogFile = $LogDir.'/HRConvert2_'.$LogInc.'.txt.'; 
-  if (file_exists($LogFile) && round((filesize($LogFile) / 1048576), 2) > $MaxLogSize) { 
-    $MAKELogFile = file_put_contents($LogFile, 'OP-Act: Logfile created on '.$Time.'.'.PHP_EOL, FILE_APPEND); 
-    continue; } }
-if (!file_exists($LogFile)) $MAKELogFile = file_put_contents($LogFile, 'OP-Act: Logfile created on '.$Time.'.'.PHP_EOL, FILE_APPEND);
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
 // / The following code loads HRCloud2 if HRC2_Integration is enabled in config.php.
 if ($HRC2_Integration == '1' && !is_dir($HRC2_InstLoc)) {
   $MAKELogFile = file_put_contents($LogFile, 'ERROR!!! HRConvert256, Could not enable HRCloud2 integration on '.$Time.'.'.PHP_EOL, FILE_APPEND); }
@@ -72,20 +45,129 @@ if ($HRC2_Integration == '1' && is_dir($HRC2_InstLoc)) {
     echo nl2br('ERROR!!! HRConvert233, Cannot process the HRCloud2 Common Core file (commonCore.php)!'."\n"); 
     die (); }
   else {
-    require_once ($HRC2_InstLoc.'/commonCore.php'); } } 
+    require_once ($HRC2_InstLoc.'/commonCore.php'); 
+    require('config.php'); } } 
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / The folloiwing code attempts to detect the users IP so it can be used as a unique identifier for the session.
+  // / If it is not unique we will adjust it later.
+if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+  $IP = $_SERVER['HTTP_CLIENT_IP']; }
+elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+  $IP = $_SERVER['HTTP_X_FORWARDED_FOR']; }
+else {
+  $IP = $_SERVER['REMOTE_ADDR']; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / The following code sets the global variables for the session.
+$HRConvertVersion = 'v0.8.2';
+$Date = date("m_d_y");
+$Time = date("F j, Y, g:i a"); 
+$Current_URL = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+$SesHash = substr(hash('ripemd160', $Date.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6), -12);
+$SesHash2 = substr(hash('ripemd160', $SesHash.$Date.$IP.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6), -12);
+$ConvertDir0 = $ConvertLoc.'/'.$SesHash;
+$ConvertDir = $ConvertDir0.'/'.$SesHash2;
+$ConvertTemp = $InstLoc.'/DATA';
+$ConvertTempDir0 = $ConvertTemp.'/'.$SesHash;
+$ConvertTempDir = $ConvertTempDir0.'/'.$SesHash2;
+$LogInc = '0';
+$LogFile = $LogDir.'/HRConvert2_'.$LogInc.'_'.$Date.'_'.$SesHash.'.txt';
+$ClamLogFile = $LogDir.'/ClamLog_'.$Date.'_'.$SesHash.'.txt';
+$defaultLogDir = $InstLoc.'/Logs';
+$defaultLogSize = '1';
+$defaultApps = array('.', '..', '..');
+$DangerousFiles = array('js', 'php', 'html', 'css');
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / The following code creates a logfile if one does not exist.
+if (!is_numeric($MaxLogSize)) $MaxLogSize = $defaultLogSize;
+if (!is_dir($LogDir)) $LogDir = $defaultLogDir;
+if (!is_dir($LogDir)) mkdir($LogDir);
+if (!file_exists($LogDir.'/index.html')) copy('index.html', $LogDir.'/index.html');
+while (file_exists($LogFile) && round((filesize($LogFile) / 1048576), 2) > $MaxLogSize) { 
+  $LogInc++; 
+  $LogFile = $LogDir.'/HRConvert2_'.$LogInc.'.txt.'; 
+  $MAKELogFile = file_put_contents($LogFile, 'OP-Act: Logfile created on '.$Time.'.'.PHP_EOL, FILE_APPEND); }
+if (!file_exists($LogFile)) $MAKELogFile = file_put_contents($LogFile, 'OP-Act: Logfile created on '.$Time.'.'.PHP_EOL, FILE_APPEND);
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / The following code creates required data directoreis if they do not exist.
+if (!is_dir($ConvertLoc)) {
+  $txt = ('ERROR!!! HRConvert278, The specified '.$ConvertLoc.' does not exist at '.$ConvertLoc.' on '.$Time.'.');
+  $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); }
+if (!is_dir($ConvertDir0)) {
+  mkdir($ConvertDir0); 
+  $txt = ('OP-Act: Created a directory at '.$ConvertDir0.' on '.$Time.'.');
+  $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); 
+  copy ('index.html', $ConvertDir0.'/index.html'); }
+if (is_dir($ConvertDir)) {
+  $SeshHash2 = substr(hash('ripemd160', $SesHash.$SeshHash2), -12);
+  $ConvertDir = $ConvertDir0.'/'.$SesHash2; }
+if (!is_dir($ConvertDir)) { 
+  mkdir($ConvertDir);
+  $txt = ('OP-Act: Created a directory at '.$ConvertDir.' on '.$Time.'.');
+  $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); }
+if (is_dir($ConvertTempDir)) {
+  $SeshHash2 = substr(hash('ripemd160', $SesHash.$SeshHash2), -12);
+  $ConvertTempDir = $ConvertTempDir0.'/'.$SesHash2; }
+if (!is_dir($ConvertTemp)) {
+  mkdir($ConvertTemp); 
+  $txt = ('OP-Act: Created a directory at '.$ConvertTemp.' on '.$Time.'.');
+  $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); 
+  copy ('index.html', $ConvertTemp.'/index.html'); }
+if (!is_dir($ConvertTempDir0)) {
+  mkdir($ConvertTempDir0); 
+  $txt = ('OP-Act: Created a directory at '.$ConvertTempDir0.' on '.$Time.'.');
+  $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); 
+  copy ('index.html', $ConvertTempDir0.'/index.html'); }
+if (!is_dir($ConvertTempDir)) { 
+  mkdir($ConvertTempDir);
+  $txt = ('OP-Act: Created a directory at '.$ConvertTempDir.' on '.$Time.'.');
+  $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); 
+  copy ('index.html', $ConvertTempDir.'/index.html'); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / The following code will clean up old files.
+function symlinkmtime0($symlinkPath) {
+  $stat = lstat($symlinkPath);
+  return isset($stat['mtime']) ? $stat['mtime'] : null; }
+if (file_exists($ConvertTemp)) {
+  $DFiles = scandir($ConvertTemp);
+  $now = time();
+  foreach ($DFiles as $DFile) {
+    if ($DFile == 'index.html') continue;
+    if (in_array($DFile, $defaultApps)) continue;
+    if (($now - symlinkmtime0($ConvertTemp.'/'.$DFile)) > ($Delete_Threshold * 60)) { // Time to keep files.
+      if (is_file($DFile)) {
+        @chmod ($DFile, 0755);
+        //unlink($DFile); 
+        $txt = ('OP-Act: Cleaned '.$DFiles.'/'.$DFile.' on '.$Time.'.');
+        $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); }
+      if (is_dir($DFile)) {
+        $CleanDir = $DFiles.'/'.$DFile;
+        @chmod ($CleanDir, 0755);
+        $CleanFiles = scandir($DFiles.'/'.$DFile);
+        include($JanitorFile); 
+        //@unlink($DFile.'/index.html');
+        @rmdir($DFile); } } } }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / The following code is performed when a user initiates a file upload.
-if(isset($upload)) {
+if(!empty($_FILES)) {
   $txt = ('OP-Act: Initiated Uploader on '.$Time.'.');
   $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
-  if (!is_array($_FILES["filesToUpload"]['name'])) {
-    $_FILES["filesToUpload"]['name'] = array($_FILES["filesToUpload"]['name']); }
-  foreach ($_FILES['filesToUpload']['name'] as $key=>$file) {
+  if (!is_array($_FILES['file']['name'])) {
+    $_FILES['file']['name'] = array($_FILES['file']['name']); }
+  foreach ($_FILES['file']['name'] as $key=>$file) {
     if ($file == '.' or $file == '..' or $file == 'index.html') continue;     
     $file = htmlentities(str_replace(str_split('\\/[]{};:$!#^&%@>*<'), '', $file), ENT_QUOTES, 'UTF-8');
-    $DangerousFiles = array('js', 'php', 'html', 'css');
     $F0 = pathinfo($file, PATHINFO_EXTENSION);
     if (in_array($F0, $DangerousFiles)) { 
       $txt = ("ERROR!!! HRConvert2103, Unsupported file format, $F0 on $Time.");
@@ -93,28 +175,29 @@ if(isset($upload)) {
       echo nl2br($txt."\n".'--------------------'."\n"); 
       continue; }
     $F2 = pathinfo($file, PATHINFO_BASENAME);
-    $F3 = str_replace('//', '/', $ConvertDir.$F2);
+    $F3 = str_replace('//', '/', $ConvertDir.'/'.$F2);
     if($file == "") {
       $txt = ("ERROR!!! HRConvert2160, No file specified on $Time.");
       $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
       echo nl2br($txt."\n".'--------------------'."\n"); 
       die(); }
-    $COPY_TEMP = copy($_FILES['filesToUpload']['tmp_name'][$key], $F3);
-    $txt = ('OP-Act: '."Uploaded $file to $ConvertTempDir on $Time".'.');
-    echo nl2br ('OP-Act: '."Uploaded $file on $Time".'.'."\n".'--------------------'."\n");
+    $COPY_TEMP = copy($_FILES['file']['tmp_name'], $F3);
+    $txt = ('OP-Act: '."Uploaded $file to $F3 on $Time".'.');
+    echo nl2br ($txt."\n".'--------------------'."\n");
     $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
     chmod($F3, 0755); 
     // / The following code checks the Cloud Location with ClamAV after copying, just in case.
     if ($VirusScan == '1') {
-      shell_exec(str_replace('  ', ' ', str_replace('  ', ' ', 'clamscan -r '.$Thorough.' '.$F3.' | grep FOUND >> '.$ClamLogDir)));
-      $ClamLogFileDATA = @file_get_contents($ClamLogDir);
+      shell_exec(str_replace('  ', ' ', str_replace('  ', ' ', 'clamscan -r '.$Thorough.' '.$F3.' | grep FOUND >> '.$ClamLogFile)));
+      $ClamLogFileDATA = @file_get_contents($ClamLogFile);
       if (strpos($ClamLogFileDATA, 'Virus Detected') == 'true' or strpos($ClamLogFileDATA, 'FOUND') == 'true') {
         $txt = ('WARNING HRConvert2338, There were potentially infected files detected. The file
           transfer could not be completed at this time. Please check your file for viruses or
           try again later.'."\n");
         $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);          
-        unlink($F3);
-        die($txt); } } } 
+        @unlink($F3);
+        die($txt); } 
+      @unlink($ClamLogFile); } } 
   // / Free un-needed memory.
   $txt = $file = $F0 = $F2 = $F3 = $ClamLogFileDATA = $Upload = $MAKELogFile = null;
   unset ($txt, $file, $F0, $F2, $F3, $ClamLogFileDATA, $Upload, $MAKELogFile); }
@@ -135,11 +218,11 @@ if (isset($download)) {
     $file = $ConvertDir.$file;
     if (!file_exists($file)) continue;
     $F2 = pathinfo($file, PATHINFO_BASENAME);
-    $F3 = $ConvertTempDir.$F2;
+    $F3 = $ConvertTempDir.'/'.$F2;
     if($file == "") {
       $txt = ("ERROR!!! HRConvert2187, No file specified on $Time".'.');
       $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
-      echo nl2br("ERROR!!! HRConvert2187, No file specified"."\n");
+      echo nl2br($txt."\n");
       die(); }
     if (file_exists($F3)) { 
       @touch($F3); }
@@ -271,15 +354,16 @@ if (isset($_POST["dearchiveButton"])) {
             $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); 
             // / Check the Cloud Location with ClamAV before dearchiving, just in case.
             if ($VirusScan == '1') {
-              shell_exec(str_replace('  ', ' ', str_replace('  ', ' ', 'clamscan -r '.$Thorough.' '.$dearchTempPath.' | grep FOUND >> '.$ClamLogDir)));
-              $ClamLogFileDATA = file_get_contents($ClamLogDir);
+              shell_exec(str_replace('  ', ' ', str_replace('  ', ' ', 'clamscan -r '.$Thorough.' '.$dearchTempPath.' | grep FOUND >> '.$ClamLogFile)));
+              $ClamLogFileDATA = file_get_contents($ClamLogFile);
               if (strpos($ClamLogFileDATA, 'Virus Detected') == 'true' or strpos($ClamLogFileDATA, 'FOUND') == 'true') {
                 $txt = ('WARNING HRConvert2338, There were potentially infected files detected. The file
                   transfer could not be completed at this time. Please check your file for viruses or
                   try again later.'."\n");
                 $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);          
                 unlink($dearchTempPath);
-                die($txt); } } } }
+                die($txt); } 
+              @unlink($ClamLogFile); } } }
         if (!is_dir($dearchUserDir)) {
           $txt = ('ERROR!!! HRConvert2419, Discrepency detected! The dearchive directory supplied is not a directory on '.$Time.'!');
           $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } }

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <link rel="shortcut icon" href="Resources/favicon.ico"/>
-    <link rel="stylesheet" href="Resources/dropzone.css"/>
+    <link rel="stylesheet" href="Resources/dropzoneCSS.php"/>
     <script type="text/javascript" src="Resources/HRC2-Functions.js"></script>
     <script type="text/javascript" src="Resources/dropzone.js"></script>
     <title>HRConvert2-Convert anything!</title>
@@ -157,10 +157,11 @@
             </ol>
           </div>
         </div>
-        <br>
       </div>
-      <hr />
-      <p id="call-to-action1" style="text-align:center;">Select files by clicking, tapping, or dropping files into the box below.</p>
+      <div id="call-to-action1" style="max-width:1000px; text-align:center;">
+        <hr />
+        <p>Select files by clicking, tapping, or dropping files into the box below.</p>
+      </div>
       <div id="dropzone" style="max-height:2000px; max-width:1000px; margin:25px;">
         <form action="convertCore.php" class="dropzone" id="filesToUpload" name="filesToUpload" method="post" enctype="multipart/form-data">
         </form>

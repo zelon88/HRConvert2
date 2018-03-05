@@ -27,12 +27,12 @@ $Accept_GPLv3_OpenSource_License = '1';
     // / Change these to something completely random and keep it a secret. Store your $Salts
     // / in hardcopy form or an encrypted drive in case of emergency.
     // / IF YOU LOSE YOUR SALTS YOU WILL BE UNABLE TO DECODE USER ID'S AFTER AN EMEREGENCY.
-$Salts1 = 'somethingSoRaqnDasdoMThatNobody_Will_evar+guess+itgdgdfgfdsfgdasfdas';
-$Salts2 = 'gdfsgdfsgsdfsomade212121oRanDoMThatNobody_Will_evar+guess+it';
-$Salts3 = 'sometewhingSoRaewnDoMThatNobody54534534534_Will_evar+guess+it';
-$Salts4 = 'somethinewgSoRanw3dDoMThatNobody;lk;jll;;l_Will_evar+guess+it';
-$Salts5 = 'sometewhingSoRasadasnDoMThatNobodyr3454r3r33_Will_evar+guess+it';
-$Salts6 = 'sometewhingSoRadasnDoMTfgeehatNobodyawryoglukfgy;/.5^&#&__Will_evar+guess+it';
+$Salts1 = 'somethingSoRanDoMThatNobody_Will_evar+guess+itgdgdfgfdsfgdasfdas';
+$Salts2 = 'gdfsgdfsgsdfsomethingSoRanDoMThatNobody_Will_evar+guess+it';
+$Salts3 = 'somethingSoRanDoMThatNobody54534534534_Will_evar+guess+it';
+$Salts4 = 'somethingSoRanDoMThatNobody;lk;jll;;l_Will_evar+guess+it';
+$Salts5 = 'somethingSoRanDoMThatNobodyr3454r3r33_Will_evar+guess+it';
+$Salts6 = 'somethingSoRanDoMThatNobodyawryoglukfgy;/.5^&#&__Will_evar+guess+it';
   // / Externally or internally accesible domain or IP.
 $URL = 'https://www.honestrepair.net';
   // / Scan for viruses during directory scan. Use '1' for default. 
@@ -66,7 +66,7 @@ $ServerRootDir = '/var/www/html';
   // / DO NOT CHANGE THE DEFAULT INSTALL DIRECTORY!!! 
 $InstLoc = '/var/www/html/HRProprietary/HRConvert2';
   // / The CloudLoc is where permanent Cloud files are stored. (NO SLASH AFTER DIRECTORY!!!) ...  
-$ConvertLoc = '/mnt/22E65FA5E175984D/Convert';
+$ConvertLoc = '/mnt/22E65FA5E65F784D/Convert';
 // / ------------------------------ 
 
 // / ------------------------------ 
@@ -84,7 +84,7 @@ $HRC2_InstLoc = '/var/www/html/HRProprietary/HRCloud2';
 // / Number of minutes to keep user supplied files.
   // / Default is '30'.
   // / Set to '0' to keep files indefinately.
-$Delete_Threshold = '30';
+$Delete_Threshold = '5';
 // / Log directory.
 $LogDir = '/var/www/html/HRProprietary/HRConvert2/Logs';
 // / Number of megabytes to store in each logfile before splitting to a new one.

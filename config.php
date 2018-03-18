@@ -66,7 +66,9 @@ $ServerRootDir = '/var/www/html';
   // / DO NOT CHANGE THE DEFAULT INSTALL DIRECTORY!!! 
 $InstLoc = '/var/www/html/HRProprietary/HRConvert2';
   // / The CloudLoc is where permanent Cloud files are stored. (NO SLASH AFTER DIRECTORY!!!) ...  
-$ConvertLoc = '/mnt/54E67FN5E66N824A/Convert';
+$ConvertLoc = '/mnt/22E65FA5E65F784D/Convert';
+  // / The CloudLoc is where permanent Log files are stored. (NO SLASH AFTER DIRECTORY!!!) ... 
+$LogDir = '/var/www/html/HRProprietary/HRConvert2/Logs';
 // / ------------------------------ 
 
 // / ------------------------------ 
@@ -76,21 +78,21 @@ $ConvertLoc = '/mnt/54E67FN5E66N824A/Convert';
   // / Set to '1' for Logged-In users only... Only logged-in users can convert files.
   // / Set to '2' for Admin-Only... Only administrators can convert files.
 $Auth_Level = '0';
-// / HRCloud2 Integration.
-  // / Set to '0' to use HRConvert2 as a standalone application.
-  // / Set to '1' to enable HRCloud2-user features for logged-in users when HRCloud2 is installed.
+  // / HRCloud2 Integration.
+    // / Set to '0' to use HRConvert2 as a standalone application.
+    // / Set to '1' to enable HRCloud2-user features for logged-in users when HRCloud2 is installed.
 $HRC2_Integration = '1';
 $HRC2_InstLoc = '/var/www/html/HRProprietary/HRCloud2';
-// / Number of minutes to keep user supplied files.
-  // / Default is '30'.
-  // / Set to '0' to keep files indefinately.
+  // / Number of minutes to keep user supplied files.
+    // / Default is '30'.
+    // / Set to '0' to keep files indefinately.
 $Delete_Threshold = '5';
-// / Log directory.
-$LogDir = '/var/www/html/HRProprietary/HRConvert2/Logs';
-// / Number of megabytes to store in each logfile before splitting to a new one.
-$MaxLogSize = '1';
-// / Terms of Service URL.
+  // / Number of bytes to store in each logfile before splitting to a new one.
+$MaxLogSize = '1048576';
+  // / The default font to use throughout HRConvert2 GUI elements.
+$Font = 'Arial';
+  // / Terms of Service URL.
 $TOSURL = 'https://www.honestrepair.net/index.php/terms-of-service/';
-// / Privacy Policy URL.
+  // / Privacy Policy URL.
 $PPURL = 'https://www.honestrepair.net/index.php/privacy-policy/';
 // / ------------------------------ 

@@ -66,24 +66,13 @@ $ServerRootDir = '/var/www/html';
   // / DO NOT CHANGE THE DEFAULT INSTALL DIRECTORY!!! 
 $InstLoc = '/var/www/html/HRProprietary/HRConvert2';
   // / The CloudLoc is where permanent Cloud files are stored. (NO SLASH AFTER DIRECTORY!!!) ...  
-$ConvertLoc = '/mnt/37E65FA5321F784D/Convert';
+$ConvertLoc = '/mnt/22E65FA5E65F784D/Convert';
   // / The CloudLoc is where permanent Log files are stored. (NO SLASH AFTER DIRECTORY!!!) ... 
 $LogDir = '/var/www/html/HRProprietary/HRConvert2/Logs';
 // / ------------------------------ 
 
 // / ------------------------------ 
 // / General Information ...
-// / Authentication Mode.
-  // / Set to '0' for no authentication... Convert anything from anyone.
-  // / Set to '1' for Logged-In users only... Only logged-in users can convert files.
-  // / Set to '2' for Admin-Only... Only administrators can convert files.
-$Auth_Level = '0';
-  // / HRCloud2 Integration.
-    // / Set to '0' to use HRConvert2 as a standalone application.
-    // / Set to '1' to enable HRCloud2-user features for logged-in users when HRCloud2 is installed.
-$HRC2_Integration = '1';
-$HRC2_InstLoc = '/var/www/html/HRProprietary/HRCloud2';
-  // / Number of minutes to keep user supplied files.
     // / Default is '30'.
     // / Set to '0' to keep files indefinately.
 $Delete_Threshold = '5';

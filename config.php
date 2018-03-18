@@ -66,7 +66,7 @@ $ServerRootDir = '/var/www/html';
   // / DO NOT CHANGE THE DEFAULT INSTALL DIRECTORY!!! 
 $InstLoc = '/var/www/html/HRProprietary/HRConvert2';
   // / The CloudLoc is where permanent Cloud files are stored. (NO SLASH AFTER DIRECTORY!!!) ...  
-$ConvertLoc = '/mnt/22E65FA5E65F784D/Convert';
+$ConvertLoc = '/mnt/37E65FA5321F784D/Convert';
   // / The CloudLoc is where permanent Log files are stored. (NO SLASH AFTER DIRECTORY!!!) ... 
 $LogDir = '/var/www/html/HRProprietary/HRConvert2/Logs';
 // / ------------------------------ 

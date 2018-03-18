@@ -62,7 +62,7 @@ else {
 
 // / -----------------------------------------------------------------------------------
 // / The following code sets the global variables for the session.
-$HRConvertVersion = 'v0.8.2';
+$HRConvertVersion = 'v0.8.3';
 $Date = date("m_d_y");
 $Time = date("F j, Y, g:i a"); 
 $Current_URL = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
@@ -826,6 +826,9 @@ if (isset($_POST['pdfworkSelected'])) {
 
 // / -----------------------------------------------------------------------------------
 // / The following code loads the GUI.
+if (isset($_GET['showFiles']) or isset($_POST['showFiles'])) {
+  require_once('convertGui2.php');
+  die(); }
 require_once('convertGui1.php');
 // / -----------------------------------------------------------------------------------
 

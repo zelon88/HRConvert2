@@ -1,9 +1,8 @@
-<!DOCTYPE HTML>
 <html>
   <head>
     <meta charset="UTF-8">
     <link rel="shortcut icon" href="Resources/favicon.ico"/>
-    <link rel="stylesheet" href="Resources/dropzoneCSS.php"/>
+    <link rel="stylesheet" href="Resources/dropzone.css"/>
     <script type="text/javascript" src="Resources/HRC2-Functions.js"></script>
     <script type="text/javascript" src="Resources/dropzone.js"></script>
     <title>HRConvert2-Convert anything!</title>
@@ -168,7 +167,7 @@
       </div>
     </div>
     <div align="center">
-      <button id="more-info-button" class="info-button" onclick="location.href='convertGui2.php';"><i>Continue ...</i></button>
+      <button id="more-info-button" class="info-button" onclick="location.href='convertCore.php?showFiles=1';"><i>Continue ...</i></button>
     </div> 
   </body>
 </html>

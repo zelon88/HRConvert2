@@ -1,3 +1,4 @@
+<!DOCTYPE HTML>
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
@@ -27,26 +28,11 @@ if (!file_exists('config.php')) {
   die (); }
 else {
   require_once ('config.php'); }
-if ($HRC2_Integration == '0') {
-  if (!file_exists('sanitizeCore.php')) {
-    echo nl2br('ERROR!!! HRConvert233, Cannot process the HRConvert2 Sanitize Core file (sanitizeCore.php)!'."\n"); 
-    die (); }
-  else {
-    require_once ('sanitizeCore.php'); } }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / The following code loads HRCloud2 if HRC2_Integration is enabled in config.php.
-if ($HRC2_Integration == '1' && !is_dir($HRC2_InstLoc)) {
-  $MAKELogFile = file_put_contents($LogFile, 'ERROR!!! HRConvert256, Could not enable HRCloud2 integration on '.$Time.'.'.PHP_EOL, FILE_APPEND); }
-if ($HRC2_Integration == '1' && is_dir($HRC2_InstLoc)) {
-  $HRC2_InstLoc = rtrim($HRC2_InstLoc, '/');
-  if (!file_exists($HRC2_InstLoc.'/commonCore.php')) {
-    echo nl2br('ERROR!!! HRConvert233, Cannot process the HRCloud2 Common Core file (commonCore.php)!'."\n"); 
-    die (); }
-  else {
-    require_once ($HRC2_InstLoc.'/commonCore.php'); 
-    require('config.php'); } } 
+if (!file_exists('sanitizeCore.php')) {
+  echo nl2br('ERROR!!! HRConvert233, Cannot process the HRConvert2 Sanitize Core file (sanitizeCore.php)!'."\n"); 
+  die (); }
+else {
+  require_once ('sanitizeCore.php'); } 
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -62,7 +48,7 @@ else {
 
 // / -----------------------------------------------------------------------------------
 // / The following code sets the global variables for the session.
-$HRConvertVersion = 'v0.8.3';
+$HRConvertVersion = 'v0.8.4';
 $Date = date("m_d_y");
 $Time = date("F j, Y, g:i a"); 
 $Current_URL = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
@@ -77,7 +63,7 @@ $LogInc = '0';
 $LogFile = $LogDir.'/HRConvert2_'.$LogInc.'_'.$Date.'_'.$SesHash.'.txt';
 $ClamLogFile = $LogDir.'/ClamLog_'.$Date.'_'.$SesHash.'.txt';
 $defaultLogDir = $InstLoc.'/Logs';
-$defaultLogSize = '1';
+$defaultLogSize = '1048576';
 $defaultApps = array('.', '..', '..');
 $DangerousFiles = array('js', 'php', 'html', 'css');
 // / -----------------------------------------------------------------------------------
@@ -85,10 +71,11 @@ $DangerousFiles = array('js', 'php', 'html', 'css');
 // / -----------------------------------------------------------------------------------
 // / The following code creates a logfile if one does not exist.
 if (!is_numeric($MaxLogSize)) $MaxLogSize = $defaultLogSize;
-if (!is_dir($LogDir)) $LogDir = $defaultLogDir;
 if (!is_dir($LogDir)) mkdir($LogDir);
+if (!is_dir($LogDir)) $LogDir = $defaultLogDir;
+if (!is_dir($LogDir)) die('ERROR!!! HRConvert278, The specified $LogDir does not exist at '.$LogDir.' on '.$Time.'.');
 if (!file_exists($LogDir.'/index.html')) copy('index.html', $LogDir.'/index.html');
-while (file_exists($LogFile) && round((filesize($LogFile) / 1048576), 2) > $MaxLogSize) { 
+while (file_exists($LogFile) && round((filesize($LogFile) / $MaxLogSize), 2) > $MaxLogSize) { 
   $LogInc++; 
   $LogFile = $LogDir.'/HRConvert2_'.$LogInc.'.txt.'; 
   $MAKELogFile = file_put_contents($LogFile, 'OP-Act: Logfile created on '.$Time.'.'.PHP_EOL, FILE_APPEND); }
@@ -98,7 +85,7 @@ if (!file_exists($LogFile)) $MAKELogFile = file_put_contents($LogFile, 'OP-Act: 
 // / -----------------------------------------------------------------------------------
 // / The following code creates required data directoreis if they do not exist.
 if (!is_dir($ConvertLoc)) {
-  $txt = ('ERROR!!! HRConvert278, The specified '.$ConvertLoc.' does not exist at '.$ConvertLoc.' on '.$Time.'.');
+  $txt = ('ERROR!!! HRConvert278, The specified $ConvertLoc does not exist at '.$ConvertLoc.' on '.$Time.'.');
   $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); }
 if (!is_dir($ConvertDir0)) {
   mkdir($ConvertDir0); 
@@ -106,14 +93,14 @@ if (!is_dir($ConvertDir0)) {
   $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); 
   copy ('index.html', $ConvertDir0.'/index.html'); }
 if (is_dir($ConvertDir)) {
-  $SeshHash2 = substr(hash('ripemd160', $SesHash.$SeshHash2), -12);
+  $SesHash2 = substr(hash('ripemd160', $SesHash.$SesHash2), -12);
   $ConvertDir = $ConvertDir0.'/'.$SesHash2; }
 if (!is_dir($ConvertDir)) { 
   mkdir($ConvertDir);
   $txt = ('OP-Act: Created a directory at '.$ConvertDir.' on '.$Time.'.');
   $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); }
 if (is_dir($ConvertTempDir)) {
-  $SeshHash2 = substr(hash('ripemd160', $SesHash.$SeshHash2), -12);
+  $SeshHash2 = substr(hash('ripemd160', $SesHash.$SesHash2), -12);
   $ConvertTempDir = $ConvertTempDir0.'/'.$SesHash2; }
 if (!is_dir($ConvertTemp)) {
   mkdir($ConvertTemp); 
@@ -822,6 +809,20 @@ if (isset($_POST['pdfworkSelected'])) {
    $oldPathname , $filename, $oldExtension, $newFile, $newPathname, $doc1array, $img1array, $pdf1array, $pathnameTEMP, $_POST['method'],
    $_POST['method1'], $pathnameTEMP1, $PagedFilesArrRAW, $PagedFile, $CleanFilname, $CleanPathnamePages, $PageNumber, $READPAGEDATA, $WRITEDOCUMENT, $multiple,
    $pathnameTEMP0, $pathnameTEMPTesseract, $pathnameTEMP0, $imgmethod, $pathnameTEMP3); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / The following code sync's the users AppData between the CloudLoc and the InstLoc.
+foreach ($iterator = new \RecursiveIteratorIterator (
+  new \RecursiveDirectoryIterator ($ConvertTempDir, \RecursiveDirectoryIterator::SKIP_DOTS),
+  \RecursiveIteratorIterator::SELF_FIRST) as $item) {
+    @chmod($item, 0755);
+    if ($item->isDir()) {
+      if (!file_exists($ConvertDir.DIRECTORY_SEPARATOR.$iterator->getSubPathName())) {
+        mkdir($ConvertDir.DIRECTORY_SEPARATOR.$iterator->getSubPathName()); } }
+    else {
+        if (!is_link($item) or !file_exists($ConvertTempDir.DIRECTORY_SEPARATOR.$iterator->getSubPathName())) {
+          copy($item, $ConvertTempDir.DIRECTORY_SEPARATOR.$iterator->getSubPathName()); } } }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

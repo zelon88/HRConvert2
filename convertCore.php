@@ -60,12 +60,46 @@ $ConvertTemp = $InstLoc.'/DATA';
 $ConvertTempDir0 = $ConvertTemp.'/'.$SesHash;
 $ConvertTempDir = $ConvertTempDir0.'/'.$SesHash2;
 $LogInc = '0';
+$ConvertGuiCounter1 = 0;
 $LogFile = $LogDir.'/HRConvert2_'.$LogInc.'_'.$Date.'_'.$SesHash.'.txt';
 $ClamLogFile = $LogDir.'/ClamLog_'.$Date.'_'.$SesHash.'.txt';
 $defaultLogDir = $InstLoc.'/Logs';
 $defaultLogSize = '1048576';
 $defaultApps = array('.', '..', '..');
 $DangerousFiles = array('js', 'php', 'html', 'css');
+$ArchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi');
+$DearchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd');
+$DocumentArray = array('txt', 'doc', 'docx', 'rtf', 'xls', 'xlsx', 'odf', 'ods', 'pptx', 'ppt', 'xps', 'potx', 'potm', 'pot', 'ppa', 'odp');
+$ImageArray = array('jpeg', 'jpg', 'png', 'bmp', 'gif', 'pdf');
+$MediaArray = array('mp3', 'mp4', 'mov', 'aac', 'oog', 'wma', 'mp2', 'flac');
+$VideoArray = array('3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv');
+$DrawingArray = array('svg', 'dxf', 'vdx', 'fig');
+$archArr = array('rar', 'tar', 'tar.bz', '7z', 'zip', 'tar.gz', 'tar.bz2', 'tgz');
+$convertArr = array('pdf', 'doc', 'docx', 'txt', 'rtf', 'odf', 'pages', 'jpg', 'jpeg', 'png', 'bmp', 'gif', 'mp2', 'mp3', 'wma', 'wav', 'aac', 'flac', 'ogg', 'avi', 'mov', 'mkv', 'flv', 'ogv', 'wmv', 'mpg', 'mpeg', 'm4v', '3gp', 'mp4', 'pptx', 'ppt', 'xps');
+$pdfWorkArr = array('pdf', 'jpg', 'jpeg', 'png', 'bmp', 'gif');
+$imgArr = array('jpg', 'jpeg', 'png', 'bmp', 'gif');
+$modelarray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'ptx', 'dxf', 'u3d', 'vrml');
+$fileArray1 = array();
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / GUI specific resources.
+function getFiles($pathToFiles) {
+  $dirtyFileArr = scandir($Files);
+  foreach ($dirtyFileArr as $dirtyFile) {
+    $dirtyExt = pathinfo($pathToFiles.'/'.$dirtyFile, PATHINFO_EXTENSION);
+    if (in_array($dirtyExt, $DangerousFiles) or $dirtyFile == 'index.html') continue;
+    array_push($Files, $dirtyFile); }
+  return ($Files); }
+function getExtension($pathToFile) {
+  return pathinfo($pathToFile, PATHINFO_EXTENSION); }
+function getFilesize($File) {
+  $Size = filesize($File);
+  if ($Size < 1024) $Size=$Size." Bytes"; 
+  elseif (($Size < 1048576) && ($Size > 1023)) $Size = round($Size / 1024, 1)." KB";
+  elseif (($Size < 1073741824) && ($Size > 1048575)) $Size = round($Size / 1048576, 1)." MB";
+  else ($Size = round($Size/1073741824, 1)." GB");
+  return ($Size); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -814,12 +848,12 @@ if (isset($_POST['pdfworkSelected'])) {
 // / -----------------------------------------------------------------------------------
 // / The following code sync's the users AppData between the CloudLoc and the InstLoc.
 foreach ($iterator = new \RecursiveIteratorIterator (
-  new \RecursiveDirectoryIterator ($ConvertTempDir, \RecursiveDirectoryIterator::SKIP_DOTS),
+  new \RecursiveDirectoryIterator ($ConvertDir, \RecursiveDirectoryIterator::SKIP_DOTS),
   \RecursiveIteratorIterator::SELF_FIRST) as $item) {
     @chmod($item, 0755);
     if ($item->isDir()) {
-      if (!file_exists($ConvertDir.DIRECTORY_SEPARATOR.$iterator->getSubPathName())) {
-        mkdir($ConvertDir.DIRECTORY_SEPARATOR.$iterator->getSubPathName()); } }
+      if (!file_exists($ConvertTempDir.DIRECTORY_SEPARATOR.$iterator->getSubPathName())) {
+        mkdir($ConvertTempDir.DIRECTORY_SEPARATOR.$iterator->getSubPathName()); } }
     else {
         if (!is_link($item) or !file_exists($ConvertTempDir.DIRECTORY_SEPARATOR.$iterator->getSubPathName())) {
           copy($item, $ConvertTempDir.DIRECTORY_SEPARATOR.$iterator->getSubPathName()); } } }

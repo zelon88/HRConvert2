@@ -16,43 +16,83 @@
       <hr />
     </div>
 
-<?php
-$Files = getFiles($ConvertTempDir);
-foreach ($Files as $File) {
-  $extension = getExtension($ConvertTempDir.'/'.$File);
+    <div id="compressAll" name="compressAll" style="max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;">
+      <button id="scandocMoreOptionsButton" name="scandocMoreOptionsButton" onclick="toggle_visibility('compressAllOptions');">Bulk File Options</button>
+      <div id="compressAllOptions" name="compressAllOptions" align="center" style="display:none;">
+        <p>Compress & Download All Files:</p>
+        <p>Specify Filename: <input type="text" id='userfilename' name='userfilename' value='HRConvert2_Files-<?php echo $Date; ?>'></p> 
+        <select id='archextension' name='archextension'> 
+          <option value="zip">Zip</option>
+          <option value="rar">Rar</option>
+          <option value="tar">Tar</option>
+          <option value="7z">7z</option>
+        </select>
+        <input type="submit" id="archiveAllSubmit" name="archiveAllSubmit" value='Compress & Download' onclick="toggle_visibility('loadingCommandDiv');">
+        <hr />
+      </div>
+    </div>
 
-if (in_array($extension, $pdfWordArr)) { 
-  ?>
-  <div align="center" id='scandocshowDiv' name='scandocshowDiv' style="display:none;">
-  <input type="text" id="scandocuserfilename" name="scandocuserfilename" value='<?php echo $Udir.'Scanned-Document_'.$Date; ?>'> 
-  <select id='outputtopdf' name='outputtopdf'> 
-  <option value="0">Preserve Extensions</option>
-  <option value="1">Create PDF's</option>
-  </select>
-  <input type="submit" id="scandocSubmit" name="scandocSubmit" value='Scan Document' onclick="toggle_visibility('loadingCommandDiv');">
-  </div>
-  <?php } 
+    <div style="max-width:1000px; margin-left:auto; margin-right:auto;">
 
-if (in_array($extension, $archArr)) {
-  ?>
-  <div align="center" id='archiveOptionsDiv' name='archiveOptionsDiv' style="display:none;">
-  <input type="text" id='userfilename' name='userfilename' value='<?php echo $Udir.'Archive'.'_'.$Date.'_'.$ArchInc; ?>'> 
-  <select id='archextension' name='archextension'> 
-  <option value="zip">Zip</option>
-  <option value="rar">Rar</option>
-  <option value="tar">Tar</option>
-  <option value="7z">7z</option>
-  </select>
-  <input type="submit" id="archiveFileSubmit" name="archiveFileSubmit" value='Archive Files' onclick="toggle_visibility('loadingCommandDiv');">
-  </div>
-  ?> }
+    <?php
+    $Files = getFiles($ConvertTempDir);
+    foreach ($Files as $File) {
+      $extension = getExtension($ConvertTempDir.'/'.$File);
+      if (!in_array($extension, $convertArr)) continue;
+      $ConvertGuiCounter1++;
+    ?>
 
-}
+    <div id="file<?php echo $ConvertGuiCounter1; ?>" name="<?php echo $ConvertGuiCounter1; ?>">
+      <p><strong><?php echo $ConvertGuiCounter1; ?>.</strong> <?php echo $File; ?></p>
+      <button id="fileMoreOptionsButton" name="fileMoreOptionsButton" onclick="toggle_visibility('fileOptionsDiv<?php echo $ConvertGuiCounter1; ?>');">File Options</button>
+      <div id='fileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='fileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="margin-left:35px; display:none;">
 
-?>
+        <?php
+        if (in_array($extension, $pdfWorkArr)) { 
+        ?>
+        
+        <hr />
+        <p>Specify Filename: <a id='userpdfconvertfilename1'><input type="text" id='userpdfconvertfilename' name='userpdfconvertfilename' value='<?php echo str_replace('.', '_', $File); ?>'></a>
+        <select id='pdfextension' name='pdfextension'>   
+          <option value="">Select Format</option> 
+          <option value="pdf">Pdf</option>   
+          <option value="doc">Doc</option>
+          <option value="docx">Docx</option>
+          <option value="rtf">Rtf</option>
+          <option value="txt">Txt</option>
+          <option value="odf">Odf</option>
+        </select></p>
+        <p><input type="submit" id='pdfwork' name='pdfwork' value='Convert To Document' onclick="toggle_visibility('loadingCommandDiv');"></p>
+      
+      <?php } ?>
+
+      </div>
+
+      <?php
+      if (in_array($extension, $archArr)) {
+      ?>
+      
+      <hr />
+      <div id='archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="display:none;">
+        <input type="text" id='userfilename' name='userfilename' value=''> 
+        <select id='archextension' name='archextension'> 
+          <option value="zip">Zip</option>
+          <option value="rar">Rar</option>
+          <option value="tar">Tar</option>
+          <option value="7z">7z</option>
+        </select>
+        <input type="submit" id="archiveFileSubmit" name="archiveFileSubmit" value='Archive Files' onclick="toggle_visibility('loadingCommandDiv');">
+      </div>
+
+      <?php } ?>
+      
+      <hr />
+    </div>
+
+    <?php } /*
 
   <div align="center" id='convertOptionsDiv' name='convertOptionsDiv' style="display:none;">
-  <input type="text" id="userconvertfilename" name="userconvertfilename" value="<?php echo $Udir.'Convert'.'_'.$Date; ?>"> 
+  <input type="text" id="userconvertfilename" name="userconvertfilename" value=""> 
   <select id='extension' name='extension'> 
   <option value="">Select Format</option>
   <option value="mp3">--Audio Formats--</option>
@@ -121,7 +161,7 @@ if (in_array($extension, $archArr)) {
   <input type="submit" id="convertSubmit" name="convertSubmit" value='Convert Files' onclick="toggle_visibility('loadingCommandDiv');">
   </div>
   <div align="center" id='photoOptionsDiv' name='photoOptionsDiv' style="display:none;">
-  <p>Filename: <input type="text" id='userphotofilename' name='userphotofilename' value='<?php echo $Udir.'Edited'.'_'.$Date; ?>'>
+  <p>Filename: <input type="text" id='userphotofilename' name='userphotofilename' value=''>
   <select id='photoextension' name='photoextension'>
   <option value="jpg">Jpg</option>
   <option value="bmp">Bmp</option>
@@ -140,16 +180,7 @@ if (in_array($extension, $archArr)) {
   <option value="1">Automatic</option>  
   <option value="1">Method 1 (Simple)</option>
   <option value="2">Method 2 (Advanced)</option>
-  </select></p>
-  <p><a id='userpdfconvertfilename1'><input type="text" id='userpdfconvertfilename' name='userpdfconvertfilename' value='<?php echo $Udir.'Converted'.'_'.$Date; ?>'></a>
-  <select id='pdfextension' name='pdfextension'>   
-  <option value="">Select Format</option> 
-  <option value="pdf">Pdf</option>   
-  <option value="doc">Doc</option>
-  <option value="docx">Docx</option>
-  <option value="rtf">Rtf</option>
-  <option value="txt">Txt</option>
-  <option value="odf">Odf</option>
-  </select></p>
-  <p><input type="submit" id='pdfwork' name='pdfwork' value='Perform PDFWork' onclick="toggle_visibility('loadingCommandDiv');"></p>
+  </select></p> */
+  ?>
+  </div>
   </div>

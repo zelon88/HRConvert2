@@ -227,10 +227,9 @@ if (isset($_POST['convertSelected'])) {
       // / Method 1 is advanced. This is best for advanced format support and multi-page .pdf to document conversions.
       // / Method 1 requires unoconv. If conversions fail make sure to run "unoconv -l" or "unoconv --listen" in a terminal window.
 if (isset($_POST['pdfworkSelected'])) {
-  $_POST['pdfworkSelected'] = htmlentities(str_replace(str_split('~#[](){};:$!#^&%@>*<"\''), '', $_POST['pdfworkSelected']), ENT_QUOTES, 'UTF-8');
-  $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
-    if (!is_array($_POST['pdfworkSelected'])) {
-      $_POST['pdfworkSelected'] = array($_POST['pdfworkSelected']); } 
+  $_POST['pdfworkSelected'] = str_replace(str_split('~#[](){};:$!#^&%@>*<"\''), '', $_POST['pdfworkSelected']);
+  if (!is_array($_POST['pdfworkSelected'])) {
+    $_POST['pdfworkSelected'] = array($_POST['pdfworkSelected']); } 
   $_POST['pdfextension'] = htmlentities(str_replace(str_split('~#[](){};:$!#^&%@>*<"\''), '', $_POST['pdfextension']), ENT_QUOTES, 'UTF-8'); 
   $_POST['userpdfconvertfilename'] = htmlentities(str_replace(str_split('~#[](){};:$!#^&%@>*<"\''), '', $_POST['userpdfconvertfilename']), ENT_QUOTES, 'UTF-8');
   $_POST['method'] =  htmlentities(str_replace(str_split('~#[](){};:$!#^&%@>*<"\''), '', $_POST['method']), ENT_QUOTES, 'UTF-8'); }

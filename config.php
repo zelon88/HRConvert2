@@ -58,14 +58,13 @@ $PersistentAV = '1';
 
 // / ------------------------------ 
 // / Directory locations ...
+  // / Install HRConvert2 to the following directory.
+  // / DO NOT CHANGE THE DEFAULT INSTALL DIRECTORY!!! 
+$InstLoc = '/var/www/html/HRProprietary/HRConvert2';
 // / The ServerRootDir should be pointed at the root of your web server directory.
   // / (NO SLASH AFTER DIRECTORY!!!) ...  
 $ServerRootDir = '/var/www/html';
-  // / Use format '/home/YOUR_USERNAME/Desktop/TestDir'. (NO SLASH AFTER DIRECTORY!!!) ...  
-  // / YOU MUST INSTALL HRConvert2 TO THE FOLLOWING DIRECTORY!!!
-  // / DO NOT CHANGE THE DEFAULT INSTALL DIRECTORY!!! 
-$InstLoc = '/var/www/html/HRProprietary/HRConvert2';
-  // / The CloudLoc is where permanent Cloud files are stored. (NO SLASH AFTER DIRECTORY!!!) ...  
+  // / The CloudLoc is where temporary data files are stored. (NO SLASH AFTER DIRECTORY!!!) ...  
 $ConvertLoc = '/mnt/22E65FA5E65F784D/Convert';
   // / The CloudLoc is where permanent Log files are stored. (NO SLASH AFTER DIRECTORY!!!) ... 
 $LogDir = '/var/www/html/HRProprietary/HRConvert2/Logs';
@@ -75,7 +74,7 @@ $LogDir = '/var/www/html/HRProprietary/HRConvert2/Logs';
 // / General Information ...
     // / Default is '30'.
     // / Set to '0' to keep files indefinately.
-$Delete_Threshold = '5';
+$Delete_Threshold = '30';
   // / Number of bytes to store in each logfile before splitting to a new one.
 $MaxLogSize = '1048576';
   // / The default font to use throughout HRConvert2 GUI elements.
@@ -84,4 +83,3 @@ $Font = 'Arial';
 $TOSURL = 'https://www.honestrepair.net/index.php/terms-of-service/';
   // / Privacy Policy URL.
 $PPURL = 'https://www.honestrepair.net/index.php/privacy-policy/';
-// / ------------------------------ 

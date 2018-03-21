@@ -48,7 +48,7 @@ else {
 
 // / -----------------------------------------------------------------------------------
 // / The following code sets the global variables for the session.
-$HRConvertVersion = 'v0.8.5';
+$HRConvertVersion = 'v0.8.6';
 $Date = date("m_d_y");
 $Time = date("F j, Y, g:i a"); 
 $Current_URL = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
@@ -67,31 +67,35 @@ $defaultLogDir = $InstLoc.'/Logs';
 $defaultLogSize = '1048576';
 $defaultApps = array('.', '..', '..');
 $DangerousFiles = array('js', 'php', 'html', 'css');
+$DangerousFiles1 = array('.', '..', 'index.php', 'index.html');
 $ArchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi');
 $DearchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd');
 $DocumentArray = array('txt', 'doc', 'docx', 'rtf', 'xls', 'xlsx', 'odf', 'ods', 'pptx', 'ppt', 'xps', 'potx', 'potm', 'pot', 'ppa', 'odp');
+$DocArray = array('txt', 'doc', 'docx', 'rtf', 'odf');
+$SpreadsheetArray = array('xls', 'xlsx', 'odf', 'ods');
+$PresentationArray = array('ppt', 'xps', 'potx', 'potm', 'pot', 'ppa', 'odp');
 $ImageArray = array('jpeg', 'jpg', 'png', 'bmp', 'gif', 'pdf');
+$ImageArray1 = array('jpeg', 'jpg', 'png', 'bmp', 'gif');
 $MediaArray = array('mp3', 'mp4', 'mov', 'aac', 'oog', 'wma', 'mp2', 'flac');
 $VideoArray = array('3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv');
 $DrawingArray = array('svg', 'dxf', 'vdx', 'fig');
-$archArr = array('rar', 'tar', 'tar.bz', '7z', 'zip', 'tar.gz', 'tar.bz2', 'tgz');
+$ModelArray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'ptx', 'dxf', 'u3d', 'vrml');
 $convertArr = array('pdf', 'doc', 'docx', 'txt', 'rtf', 'odf', 'pages', 'jpg', 'jpeg', 'png', 'bmp', 'gif', 'mp2', 'mp3', 'wma', 'wav', 'aac', 
  'flac', 'ogg', 'avi', 'mov', 'mkv', 'flv', 'ogv', 'wmv', 'mpg', 'mpeg', 'm4v', '3gp', 'mp4', 'pptx', 'ppt', 'xps');
 $pdfWorkArr = array('pdf', 'jpg', 'jpeg', 'png', 'bmp', 'gif');
 $imgArr = array('jpg', 'jpeg', 'png', 'bmp', 'gif');
-$modelarray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'ptx', 'dxf', 'u3d', 'vrml');
 $fileArray1 = array();
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / GUI specific resources.
 function getFiles($pathToFiles) {
-  global $DangerousFiles;
+  global $DangerousFiles, $DangerousFiles1;
   $Files = array();
   $dirtyFileArr = scandir($pathToFiles);
   foreach ($dirtyFileArr as $dirtyFile) {
     $dirtyExt = pathinfo($pathToFiles.'/'.$dirtyFile, PATHINFO_EXTENSION);
-    if (in_array($dirtyExt, $DangerousFiles) or $dirtyFile == 'index.html') continue;
+    if (in_array($dirtyExt, $DangerousFiles) or in_array($dirtyFile, $DangerousFiles1) or is_dir($pathToFiles.'/'.$dirtyFile)) continue;
     array_push($Files, $dirtyFile); }
   return ($Files); }
 function getExtension($pathToFile) {
@@ -483,7 +487,7 @@ if (isset($_POST['convertSelected'])) {
     $imgarray = array('jpg', 'jpeg', 'bmp', 'png', 'gif');
     $audioarray =  array('mp3', 'wma', 'wav', 'ogg', 'mp2', 'flac', 'aac');
     $videoarray =  array('3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv');
-    $modelarray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'ptx', 'dxf', 'u3d', 'vrml');
+    $ModelArray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'ptx', 'dxf', 'u3d', 'vrml');
     $drawingarray = array('xvg', 'dxf', 'vdx', 'fig');
     $pdfarray = array('pdf');
     $abwarray = array('abw');
@@ -561,7 +565,7 @@ if (isset($_POST['convertSelected'])) {
               $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
               shell_exec("convert -background none -resize $wxh $rotate $pathname $newPathname"); } }
           // / Code to convert and manipulate 3d model files.
-          if (in_array($oldExtension, $modelarray)) { 
+          if (in_array($oldExtension, $ModelArray)) { 
             $txt = ("OP-Act, Executing \"meshlabserver -i $pathname -o $newPathname\" on ".$Time.'.');
             $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
             shell_exec("meshlabserver -i $pathname -o $newPathname"); } 
@@ -673,12 +677,12 @@ if (isset($_POST['convertSelected'])) {
     $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } } 
   // / Free un-needed memory.
   $_POST['convertSelected'] = $txt = $key = $file = $allowed = $file1 = $file2 = $convertcount = $extension = $pathname = $oldPathname = $filename = $oldExtension
-   = $newFile = $newPathname = $docarray = $imgarray = $audioarray = $videoarray = $modelarray = $drawingarray = $pdfarray = $abwarray = $archarray = $array7z = $array7zo
+   = $newFile = $newPathname = $docarray = $imgarray = $audioarray = $videoarray = $ModelArray = $drawingarray = $pdfarray = $abwarray = $archarray = $array7z = $array7zo
    = $arrayzipo = $arraytaro = $arrayraro = $abwstd = $abwuno = $_POST['userconvertfilename'] = $returnDATA = $returnDATALINE = $stopper = $height 
    = $width = $_POST['height'] = $_POST['width'] = $rotate = $_POST['rotate'] = $wxh = $bitrate = $_POST['bitrate'] = $safedir1 = $safedirTEMP = $safedirTEMP2 = $safedirTEMP3
    = $safedir2 = $safedir3 = $safedir4 = $delFiles = $delFile = $MAKELogFile = null;
   unset ($_POST['convertSelected'], $txt, $key, $file, $allowed, $file1, $file2, $convertcount, $extension, $pathname, $oldPathname, $filename, $oldExtension, 
-   $newFile, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $modelarray, $drawingarray, $pdfarray, $abwarray, $archarray, $array7z, $array7zo,
+   $newFile, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $ModelArray, $drawingarray, $pdfarray, $abwarray, $archarray, $array7z, $array7zo,
    $arrayzipo, $arraytaro, $arrayraro, $abwstd, $abwuno, $_POST['userconvertfilename'], $returnDATA, $returnDATALINE, $stopper, $height, 
    $width, $_POST['height'], $_POST['width'], $rotate, $_POST['rotate'], $wxh, $bitrate, $_POST['bitrate'], $safedir1, $safedirTEMP, $safedirTEMP2, $safedirTEMP3,
    $safedir2, $safedir3, $safedir4, $delFiles, $delFile, $MAKELogFile ); }

@@ -1,35 +1,25 @@
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <link rel="shortcut icon" href="Resources/favicon.ico"/>
-    <link rel="stylesheet" href="Resources/dropzone.css"/>
-    <script type="text/javascript" src="Resources/HRC2-Functions.js"></script>
-    <script type="text/javascript" src="Resources/dropzone.js"></script>
-    <title>HRConvert2-Convert anything!</title>
-  </head>
+<?php 
+include ('header.php');
+?>
   <body>
     <div id="header-text" style="max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;">
       <br>
-      <h2>HRConvert2</h2>
+      <h1>HRConvert2</h1>
       <hr />
       <h3>Online File Converter, Extractor, Compressor</h3>
       <hr />
     </div>
     <div id="main" align="center">
       <div id="overview" style="max-width:1000px; text-align:left; margin:25px;">
-      	<p id="info" style="display:block;">HRConvert2 is a secure and open-source tool that does it's job without tracking you across the net, selling your info to advertisers, 
-          using 3rd party anaylitics, or infringing on your intellectual property. Check out our <a href="<?php echo $TOSURL; ?>" target="_blank" rel="noopener noreferrer">Terms of Service</a> 
-          and <a href="<?php echo $PPURL; ?>" target="_blank" rel="noopener noreferrer">Privacy Policy</a></p>
+      	<p id="info" style="display:block;">HRConvert2 is an open-source web-app that converts files without tracking users across the net or infringing on your intellectual property.</p>
         <button id="more-info-button" class="info-button" onclick="toggle_visibility('more-info'); toggle_visibility('more-info-button'); toggle_visibility('supported-formats-show-button'); 
           toggle_visibility('less-info-button');" style="text-align:center; display:block; margin-left:auto; margin-right:auto;"><i>More Info ...</i></button>
         <button id="less-info-button" class="info-button" onclick="toggle_visibility('more-info'); toggle_visibility('more-info-button'); toggle_visibility('supported-formats-show-button'); 
           toggle_visibility('less-info-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Less Info ...</i></button>
         <div id="more-info" style="display:none;">
           <hr />
-          <p>The best part is that all user-supplied data is erased automatically, so you don't 
-            need to worry about forfeiting your personal information or property while using our services.</p>
-          <p>Currently HRConvert2 supports 59x different file formats, including documents, spreadsheets, images, media, 
-            3d models, CAD drawings, vector files, archives, disk images, and more.</p> 
+          <p>All user-supplied data is erased automatically, so you don't need to worry about forfeiting your personal information or property while using our services.</p>
+          <p>Currently HRConvert2 supports 59x different file formats, including documents, spreadsheets, images, media, 3d models, CAD drawings, vector files, archives, disk images, & more.</p> 
           <button id="supported-formats-show-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
             toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>View Supported Formats ...</i></button>
           <button id="supported-formats-hide-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
@@ -168,6 +158,8 @@
     </div>
     <div align="center">
       <button id="more-info-button" class="info-button" onclick="location.href='convertCore.php?showFiles=1';"><i>Continue ...</i></button>
-    </div> 
-  </body>
-</html>
+    </div>
+    
+    <?php
+    include ('footer.php');
+    ?>

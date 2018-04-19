@@ -1,7 +1,12 @@
 <?php
 $Files = getFiles($ConvertTempDir);
 $fileCount = count($Files);
+$fcPlural1 = 's';
+$fcPlural2 = 's are';
 if (!is_numeric($fileCount)) $fileCount = 'an unknown number of';
+if ($fileCount == 1) {
+  $fcPlural1 = '';
+  $fcPlural2 = ' is'; }
 include ('header.php');
 ?>
 
@@ -9,15 +14,12 @@ include ('header.php');
       <h1>HRConvert2</h1>
       <hr />
       <h3>File Conversion Options</h3>
-      <p>You have uploaded <?php echo $fileCount; ?> valid files to HRConvert2.</p> 
-      <p>Your files are now ready to convert using the options below.</p>
-      <hr />
+      <p>You have uploaded <?php echo $fileCount; ?> valid file<?php echo $fcPlural1; ?> to HRConvert2.</p> 
+      <p>Your file<?php echo $fcPlural2; ?> now ready to convert using the options below.</p>
     </div>
 
     <div align="center">
-      <br />
       <img id='loadingCommandDiv' name='loadingCommandDiv' src='Resources/pacman.gif' style="max-width:64px; max-height:64px; display:none;"/>
-      <br />
     </div>
 
     <div id="compressAll" name="compressAll" style="max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;">
@@ -33,11 +35,11 @@ include ('header.php');
           <option value="7z">7z</option>
         </select>
         <input type="submit" id="archiveAllSubmit" name="archiveAllSubmit" class="info-button" value='Compress & Download' onclick="toggle_visibility('loadingCommandDiv');">
-        <hr />
       </div>
     </div>
-
+    <br />
     <div style="max-width:1000px; margin-left:auto; margin-right:auto;">
+      <hr />
 
       <?php
       foreach ($Files as $File) {
@@ -55,19 +57,40 @@ include ('header.php');
           <img id="allfileXButton<?php echo $ConvertGuiCounter1; ?>" name="allfileXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:left; display:none;" 
            onclick="toggle_visibility('allfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('allfileButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('allfileXButton<?php echo $ConvertGuiCounter1; ?>');"/> 
           
+          <?php if (in_array($extension, $pdfWorkArr)) { ?>          
           <a style="float:left;">&nbsp;|&nbsp;</a>
           
           <img id="docscanButton<?php echo $ConvertGuiCounter1; ?>" name="docscanButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/docscan.png" style="float:left; display:block;" 
            onclick="toggle_visibility('pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('docscanButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('docscanXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <img id="docscanXButton<?php echo $ConvertGuiCounter1; ?>" name="docscanXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:left; display:none;" 
            onclick="toggle_visibility('pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('docscanButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('docscanXButton<?php echo $ConvertGuiCounter1; ?>');"/> 
+          <?php } 
+
+          if (in_array($extension, $DocumentArray)) { ?>
+          <a style="float:left;">&nbsp;|&nbsp;</a>
+
+          <img id="documentButton<?php echo $ConvertGuiCounter1; ?>" name="documentButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/document.png" style="float:left; display:block;" 
+           onclick="toggle_visibility('docOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentXButton<?php echo $ConvertGuiCounter1; ?>');"/>
+          <img id="documentXButton<?php echo $ConvertGuiCounter1; ?>" name="documentXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:left; display:none;" 
+           onclick="toggle_visibility('docOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentXButton<?php echo $ConvertGuiCounter1; ?>');"/> 
+          <?php } 
+
+          if (in_array($extension, $SpreadsheetArray)) { ?>
+          <a style="float:left;">&nbsp;|&nbsp;</a>
+
+          <img id="spreadsheetButton<?php echo $ConvertGuiCounter1; ?>" name="spreadsheetButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/spreadsheet.png" style="float:left; display:block;" 
+           onclick="toggle_visibility('spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>');"/>
+          <img id="spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>" name="spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:left; display:none;" 
+           onclick="toggle_visibility('spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>');"/> 
+          <?php } ?>
 
           <a style="float:left;">&nbsp;|&nbsp;</a>
+
+        </div>
         </div>
 
-
         <div id='allfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='allfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"><hr /></p>
+          <p style="max-width:1000px;"></p>
           <p>Archive This File</p>
           <p>Specify Filename: <input type="text" id='userconvertfilename' name='userconvertfilename' value='<?php echo str_replace('.', '_', $File); ?>'>
           <select id='extension' name='extension'> 
@@ -79,13 +102,12 @@ include ('header.php');
           </select></p>
           <input type="submit" id="convertSubmit" name="convertSubmit" value='Convert Document' onclick="toggle_visibility('loadingCommandDiv');">
         </div>
-          
         <?php
+
         if (in_array($extension, $pdfWorkArr)) { 
         ?>
-
         <div id='pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"><hr /></p>
+          <p style="max-width:1000px;"></p>
           <p>Optical Character Recognition Options</p>
           <p>Specify Filename: <input type="text" id='userpdfconvertfilename' name='userpdfconvertfilename' value='<?php echo str_replace('.', '_', $File); ?>'>
           <select id='method1' name='method1'>   
@@ -104,13 +126,12 @@ include ('header.php');
           </select></p>
           <p><input type="submit" id='pdfwork' name='pdfwork' value='Convert Into Document' onclick="toggle_visibility('loadingCommandDiv');"></p>
         </div>
-
         <?php } 
+
         if (in_array($extension, $ArchiveArray)) {
         ?>
-        
         <div id='archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"><hr /></p>
+          <p style="max-width:1000px;"></p>
           <p>Convert This Archive</p>
           <p>Specify Filename: <input type="text" id='userfilename' name='userfilename' value='<?php echo str_replace('.', '_', $File); ?>'>
           <select id='archextension' name='archextension'> 
@@ -122,13 +143,12 @@ include ('header.php');
           </select></p>
           <input type="submit" id="archiveFileSubmit" name="archiveFileSubmit" value='Archive Files' onclick="toggle_visibility('loadingCommandDiv'); display:none;">
         </div>
-
         <?php } 
-        if (in_array($extension, $DocArray)) {
+
+        if (in_array($extension, $DocumentArray)) {
         ?>
-        
-        <div id='documentOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='documentOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"><hr /></p>
+        <div id='docOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='docOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+          <p style="max-width:1000px;"></p>
           <p>Convert This Document</p>
           <p>Specify Filename: <input type="text" id='userconvertfilename' name='userconvertfilename' value='<?php echo str_replace('.', '_', $File); ?>'>
           <select id='extension' name='extension'> 
@@ -142,18 +162,17 @@ include ('header.php');
           </select></p>
           <input type="submit" id="convertSubmit" name="convertSubmit" value='Convert Document' onclick="toggle_visibility('loadingCommandDiv');">
         </div>
-
         <?php }
 
         if (in_array($extension, $SpreadsheetArray)) {
         ?>
-        
-        <div id='spreadsheetOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='spreadsheetOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"><hr /></p>
+        <div id='spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+          <p style="max-width:1000px;"></p>
           <p>Convert This Spreadsheet</p>
           <p>Specify Filename: <input type="text" id='userconvertfilename' name='userconvertfilename' value='<?php echo str_replace('.', '_', $File); ?>'>
           <select id='extension' name='extension'>
             <option value="">Select Format</option> 
+            <option value="csv">Csv</option>
             <option value="xls">Xls</option>
             <option value="xlsx">Xlsx</option>
             <option value="ods">Ods</option>
@@ -161,14 +180,12 @@ include ('header.php');
           </select></p>
           <input type="submit" id="convertSubmit" name="convertSubmit" value='Convert Spreadsheet' onclick="toggle_visibility('loadingCommandDiv');">
         </div>
-
         <?php }
 
         if (in_array($extension, $PresentationArray)) {
         ?>
-        
         <div id='presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"><hr /></p>
+          <p style="max-width:1000px;"></p>
           <p>Convert This Presentation</p>
           <p>Specify Filename: <input type="text" id='userconvertfilename' name='userconvertfilename' value='<?php echo str_replace('.', '_', $File); ?>'>
           <select id='extension' name='extension'>
@@ -184,13 +201,12 @@ include ('header.php');
           </select></p>
           <input type="submit" id="convertSubmit" name="convertSubmit" value='Convert Presentation' onclick="toggle_visibility('loadingCommandDiv');">
         </div>
-
         <?php } 
+
         if (in_array($extension, $MediaArray)) {
         ?>
-        
         <div id='audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"><hr /></p>
+          <p style="max-width:1000px;"></p>
           <p>Convert This Audio</p>
           <p>Specify Filename: <input type="text" id='userconvertfilename' name='userconvertfilename' value='<?php echo str_replace('.', '_', $File); ?>'>
           <select id='extension' name='extension'> 
@@ -204,13 +220,12 @@ include ('header.php');
           </select></p>
           <input type="submit" id="convertSubmit" name="convertSubmit" value='Convert Audio' onclick="toggle_visibility('loadingCommandDiv');">
         </div>
-
         <?php } 
+
         if (in_array($extension, $VideoArray)) {
         ?>
-        
         <div id='videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"><hr /></p>
+          <p style="max-width:1000px;"></p>
           <p>Convert This Video</p>
           <p>Specify Filename: <input type="text" id='userconvertfilename' name='userconvertfilename' value='<?php echo str_replace('.', '_', $File); ?>'>
           <select id='extension' name='extension'>
@@ -225,13 +240,12 @@ include ('header.php');
           </select></p>
           <input type="submit" id="convertSubmit" name="convertSubmit" value='Convert Video' onclick="toggle_visibility('loadingCommandDiv');">
         </div>
-
         <?php } 
+
         if (in_array($extension, $ModelArray)) {
         ?>
-        
         <div id='modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"><hr /></p>
+          <p style="max-width:1000px;"></p>
           <p>Convert This 3D Model</p>
           <p>Specify Filename: <input type="text" id='userconvertfilename' name='userconvertfilename' value='<?php echo str_replace('.', '_', $File); ?>'>
           <select id='extension' name='extension'>
@@ -249,13 +263,12 @@ include ('header.php');
           </select></p>
           <input type="submit" id="convertSubmit" name="convertSubmit" value='Convert Model' onclick="toggle_visibility('loadingCommandDiv');">
         </div>
-
         <?php } 
+
         if (in_array($extension, $DrawingArray)) {
         ?>
-        
         <div id='drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"><hr /></p>
+          <p style="max-width:1000px;"></p>
           <p>Convert This Technical Drawing Or Vector File</p>
           <p>Specify Filename: <input type="text" id='userconvertfilename' name='userconvertfilename' value='<?php echo str_replace('.', '_', $File); ?>'>
           <select id='extension' name='extension'>
@@ -267,13 +280,12 @@ include ('header.php');
           </select></p>
           <input type="submit" id="convertSubmit" name="convertSubmit" value='Convert Drawing' onclick="toggle_visibility('loadingCommandDiv');">
         </div>
-
         <?php } 
+
         if (in_array($extension, $ImageArray1)) {
         ?>
-        
         <div id='photoOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='photoOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"><hr /></p>
+          <p style="max-width:1000px;"></p>
           <p>Convert This Image</p>
           <p>Specify Filename: <input type="text" id='userphotofilename' name='userphotofilename' value='<?php echo str_replace('.', '_', $File); ?>'>
           <select id='photoextension' name='photoextension'>
@@ -287,12 +299,9 @@ include ('header.php');
           <p>Rotate: <input type="number" size="3" id='rotate' name='rotate' value="0" min="0" max="359"></p>
           <input type="submit" id='convertPhotoSubmit' name='convertPhotoSubmit' value='Convert Image' onclick="toggle_visibility('loadingCommandDiv');">
 
-
         <?php } ?>
-
       </div>
       <hr />
-
       <?php } ?>
 
     </div>

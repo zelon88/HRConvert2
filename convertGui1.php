@@ -19,7 +19,7 @@ include ('header.php');
         <div id="more-info" style="display:none;">
           <hr />
           <p>All user-supplied data is erased automatically, so you don't need to worry about forfeiting your personal information or property while using our services.</p>
-          <p>Currently HRConvert2 supports 59x different file formats, including documents, spreadsheets, images, media, 3d models, CAD drawings, vector files, archives, disk images, & more.</p> 
+          <p>Currently HRConvert2 supports 60x different file formats, including documents, spreadsheets, images, media, 3d models, CAD drawings, vector files, archives, disk images, & more.</p> 
           <button id="supported-formats-show-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
             toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>View Supported Formats ...</i></button>
           <button id="supported-formats-hide-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
@@ -63,6 +63,7 @@ include ('header.php');
               <li>Xls</li>
               <li>Xlsx</li>
               <li>Ods</li>
+              <li>Csv</li>
             </ol>
             <strong>Presentation Formats</strong>
             <ol>
@@ -159,7 +160,8 @@ include ('header.php');
     <div align="center">
       <button id="more-info-button" class="info-button" onclick="location.href='convertCore.php?showFiles=1';"><i>Continue ...</i></button>
     </div>
-    
+    <br />
+    <hr />    
     <?php
     include ('footer.php');
     ?>

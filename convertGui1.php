@@ -152,13 +152,15 @@ include ('header.php');
       </div>
       <div id="dropzone" style="max-height:2000px; max-width:1000px; margin:25px;">
         <form action="convertCore.php" class="dropzone" id="filesToUpload" name="filesToUpload" method="post" enctype="multipart/form-data">
-        <input type="hidden" id="token" name="Token" value="<?php echo $Token; ?>">
+        <input type="hidden" id="token1" name="Token1" value="<?php echo $Token1; ?>">
+        <input type="hidden" id="token2" name="Token2" value="<?php echo $Token2; ?>">
         </form>
       </div>
     </div>
     <div align="center">
       <form action="convertCore.php?showFiles=1" method="post">
-        <input type="hidden" id="token" name="Token" value="<?php echo $Token; ?>">
+        <input type="hidden" id="token1" name="Token1" value="<?php echo $Token1; ?>">
+        <input type="hidden" id="token2" name="Token2" value="<?php echo $Token2; ?>">
         <input type="submit" id="continue-button" class="info-button" value="Continue ...">
       </form>
       </form>

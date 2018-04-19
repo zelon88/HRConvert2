@@ -47,15 +47,6 @@ else {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / The folloiwing code attempts to detect the users IP so it can be used as a unique identifier for the session.
-  // / If it is not unique we will adjust it later.
-if (!empty($_SERVER['HTTP_USER_AGENT'])) {
-  $UA = hash('ripemd160', 'CUSTOM'.rand(0, 1000000000)); }
-else {
-  $UA = hash('ripemd160', htmlentities(str_replace(str_split('~#[](){};:$!#^&%@>*<"\''), '', $_SERVER['HTTP_USER_AGENT']), ENT_QUOTES, 'UTF-8')); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
 // / The following code sets an echp variable that adjusts printed URL's to https when SSL is enabled.
 if (!empty($_SERVER['HTTPS']) && $_SERVER['SERVER_PORT'] == 443) {
   $URLEcho = 's'; }
@@ -63,18 +54,23 @@ if (!empty($_SERVER['HTTPS']) && $_SERVER['SERVER_PORT'] == 443) {
 
 // / -----------------------------------------------------------------------------------
 // / The following code sets or validates a Token so it can be used as a unique idebtifier for the session.
-if (!isset($Token)) {
-  $Token = hash('ripemd160', rand(0, 1000000000).rand(0, 1000000000)); }
+if (!isset($Token1)) {
+  $Token1 = hash('ripemd160', rand(0, 1000000000).rand(0, 1000000000)); }
+if (isset($Token2)) {
+  if ($Token2 !== hash('ripemd160', $Token1.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6)) {
+    die('ERROR!!! HRConvert263, Authentication error!!!'); } }
+if (!isset($Token2)) {
+  $Token2 = hash('ripemd160', $Token1.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / The following code sets the global variables for the session.
-$HRConvertVersion = 'v0.8.8';
+$HRConvertVersion = 'v0.8.9';
 $Date = date("m_d_y");
 $Time = date("F j, Y, g:i a"); 
 $Current_URL = "http$URLEcho://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 $SesHash = substr(hash('ripemd160', $Date.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6), -12);
-$SesHash2 = substr(hash('ripemd160', $SesHash.$Token.$Date.$IP.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6), -12);
+$SesHash2 = substr(hash('ripemd160', $SesHash.$Token1.$Date.$IP.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6), -12);
 $ConvertDir0 = $ConvertLoc.'/'.$SesHash;
 $ConvertDir = $ConvertDir0.'/'.$SesHash2;
 $ConvertTemp = $InstLoc.'/DATA';

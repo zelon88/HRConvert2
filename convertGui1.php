@@ -3,9 +3,7 @@ include ('header.php');
 ?>
   <body>
     <div id="header-text" style="max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;">
-      <br>
       <h1>HRConvert2</h1>
-      <hr />
       <h3>Online File Converter, Extractor, Compressor</h3>
       <hr />
     </div>
@@ -154,11 +152,17 @@ include ('header.php');
       </div>
       <div id="dropzone" style="max-height:2000px; max-width:1000px; margin:25px;">
         <form action="convertCore.php" class="dropzone" id="filesToUpload" name="filesToUpload" method="post" enctype="multipart/form-data">
+        <input type="hidden" id="token" name="Token" value="<?php echo $Token; ?>">
         </form>
       </div>
     </div>
     <div align="center">
-      <button id="more-info-button" class="info-button" onclick="location.href='convertCore.php?showFiles=1';"><i>Continue ...</i></button>
+      <form action="convertCore.php?showFiles=1" method="post">
+        <input type="hidden" id="token" name="Token" value="<?php echo $Token; ?>">
+        <input type="submit" id="continue-button" class="info-button" value="Continue ...">
+      </form>
+      </form>
+      
     </div>
     <br />
     <hr />    

@@ -39,21 +39,42 @@ else {
 // / The folloiwing code attempts to detect the users IP so it can be used as a unique identifier for the session.
   // / If it is not unique we will adjust it later.
 if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-  $IP = $_SERVER['HTTP_CLIENT_IP']; }
+  $IP = htmlentities(str_replace(str_split('~#[](){};:$!#^&%@>*<"\''), '', $_SERVER['HTTP_CLIENT_IP']), ENT_QUOTES, 'UTF-8'); }
 elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-  $IP = $_SERVER['HTTP_X_FORWARDED_FOR']; }
+  $IP = htmlentities(str_replace(str_split('~#[](){};:$!#^&%@>*<"\''), '', $_SERVER['HTTP_X_FORWARDED_FOR']), ENT_QUOTES, 'UTF-8'); }
 else {
-  $IP = $_SERVER['REMOTE_ADDR']; }
+  $IP = htmlentities(str_replace(str_split('~#[](){};:$!#^&%@>*<"\''), '', $_SERVER['REMOTE_ADDR']), ENT_QUOTES, 'UTF-8'); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / The folloiwing code attempts to detect the users IP so it can be used as a unique identifier for the session.
+  // / If it is not unique we will adjust it later.
+if (!empty($_SERVER['HTTP_USER_AGENT'])) {
+  $UA = hash('ripemd160', 'CUSTOM'.rand(0, 1000000000)); }
+else {
+  $UA = hash('ripemd160', htmlentities(str_replace(str_split('~#[](){};:$!#^&%@>*<"\''), '', $_SERVER['HTTP_USER_AGENT']), ENT_QUOTES, 'UTF-8')); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / The following code sets an echp variable that adjusts printed URL's to https when SSL is enabled.
+if (!empty($_SERVER['HTTPS']) && $_SERVER['SERVER_PORT'] == 443) {
+  $URLEcho = 's'; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / The following code sets or validates a Token so it can be used as a unique idebtifier for the session.
+if (!isset($Token)) {
+  $Token = hash('ripemd160', rand(0, 1000000000).rand(0, 1000000000)); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / The following code sets the global variables for the session.
-$HRConvertVersion = 'v0.8.7';
+$HRConvertVersion = 'v0.8.8';
 $Date = date("m_d_y");
 $Time = date("F j, Y, g:i a"); 
-$Current_URL = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+$Current_URL = "http$URLEcho://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 $SesHash = substr(hash('ripemd160', $Date.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6), -12);
-$SesHash2 = substr(hash('ripemd160', $SesHash.$Date.$IP.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6), -12);
+$SesHash2 = substr(hash('ripemd160', $SesHash.$Token.$Date.$IP.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6), -12);
 $ConvertDir0 = $ConvertLoc.'/'.$SesHash;
 $ConvertDir = $ConvertDir0.'/'.$SesHash2;
 $ConvertTemp = $InstLoc.'/DATA';
@@ -107,6 +128,9 @@ function getFilesize($File) {
   elseif (($Size < 1073741824) && ($Size > 1048575)) $Size = round($Size / 1048576, 1)." MB";
   else ($Size = round($Size/1073741824, 1)." GB");
   return ($Size); }
+function symlinkmtime0($symlinkPath) {
+  $stat = lstat($symlinkPath);
+  return isset($stat['mtime']) ? $stat['mtime'] : null; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -133,16 +157,10 @@ if (!is_dir($ConvertDir0)) {
   $txt = ('OP-Act: Created a directory at '.$ConvertDir0.' on '.$Time.'.');
   $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); 
   copy ('index.html', $ConvertDir0.'/index.html'); }
-if (is_dir($ConvertDir)) {
-  $SesHash2 = substr(hash('ripemd160', $SesHash.$SesHash2), -12);
-  $ConvertDir = $ConvertDir0.'/'.$SesHash2; }
 if (!is_dir($ConvertDir)) { 
   mkdir($ConvertDir);
   $txt = ('OP-Act: Created a directory at '.$ConvertDir.' on '.$Time.'.');
   $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); }
-if (is_dir($ConvertTempDir)) {
-  $SeshHash2 = substr(hash('ripemd160', $SesHash.$SesHash2), -12);
-  $ConvertTempDir = $ConvertTempDir0.'/'.$SesHash2; }
 if (!is_dir($ConvertTemp)) {
   mkdir($ConvertTemp); 
   $txt = ('OP-Act: Created a directory at '.$ConvertTemp.' on '.$Time.'.');
@@ -162,9 +180,6 @@ if (!is_dir($ConvertTempDir)) {
 
 // / -----------------------------------------------------------------------------------
 // / The following code will clean up old files.
-function symlinkmtime0($symlinkPath) {
-  $stat = lstat($symlinkPath);
-  return isset($stat['mtime']) ? $stat['mtime'] : null; }
 if (file_exists($ConvertTemp)) {
   $DFiles = scandir($ConvertTemp);
   $now = time();
@@ -865,9 +880,9 @@ foreach ($iterator = new \RecursiveIteratorIterator (
 // / -----------------------------------------------------------------------------------
 // / The following code loads the GUI.
 if (isset($_GET['showFiles']) or isset($_POST['showFiles'])) {
-  require_once('convertGui2.php');
-  die(); }
-require_once('convertGui1.php');
+  require_once('convertGui2.php'); }
+if (!isset($_GET['showFiles'])) {
+  require_once('convertGui1.php'); }
 // / -----------------------------------------------------------------------------------
 
 ?>

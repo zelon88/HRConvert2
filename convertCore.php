@@ -65,21 +65,23 @@ if (!isset($Token2)) {
 
 // / -----------------------------------------------------------------------------------
 // / The following code sets the global variables for the session.
-$HRConvertVersion = 'v0.9';
+$HRConvertVersion = 'v0.9.5';
 $Date = date("m_d_y");
 $Time = date("F j, Y, g:i a"); 
 $Current_URL = "http$URLEcho://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 $SesHash = substr(hash('ripemd160', $Date.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6), -12);
 $SesHash2 = substr(hash('ripemd160', $SesHash.$Token1.$Date.$IP.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6), -12);
+$SesHash3 = $SesHash.'/'.$SesHash2;
+$SesHash4 = hash('ripemd160', $Salts6.$Salts5.$Salts4.$Salts3.$Salts2.$Salts1);
 $ConvertDir0 = $ConvertLoc.'/'.$SesHash;
-$ConvertDir = $ConvertDir0.'/'.$SesHash2;
+$ConvertDir = $ConvertDir0.'/'.$SesHash2.'/';
 $ConvertTemp = $InstLoc.'/DATA';
 $ConvertTempDir0 = $ConvertTemp.'/'.$SesHash;
-$ConvertTempDir = $ConvertTempDir0.'/'.$SesHash2;
+$ConvertTempDir = $ConvertTempDir0.'/'.$SesHash2.'/';
 $LogInc = '0';
 $ConvertGuiCounter1 = 0;
-$LogFile = $LogDir.'/HRConvert2_'.$LogInc.'_'.$Date.'_'.$SesHash.'.txt';
-$ClamLogFile = $LogDir.'/ClamLog_'.$Date.'_'.$SesHash.'.txt';
+$LogFile = $LogDir.'/HRConvert2_'.$LogInc.'_'.$Date.'_'.$SesHash4.'_'.$SesHash.'.txt';
+$ClamLogFile = $LogDir.'/ClamLog_'.$Date.'_'.$SesHash4.'_'.$SesHash.'.txt';
 $defaultLogDir = $InstLoc.'/Logs';
 $defaultLogSize = '1048576';
 $defaultApps = array('.', '..', '..');
@@ -211,18 +213,22 @@ if(!empty($_FILES)) {
     if (in_array($F0, $DangerousFiles)) { 
       $txt = ("ERROR!!! HRConvert2103, Unsupported file format, $F0 on $Time.");
       $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
-      echo nl2br($txt."\n".'--------------------'."\n"); 
+      echo nl2br($txt."\n"); 
       continue; }
     $F2 = pathinfo($file, PATHINFO_BASENAME);
     $F3 = str_replace('//', '/', $ConvertDir.'/'.$F2);
     if($file == "") {
       $txt = ("ERROR!!! HRConvert2160, No file specified on $Time.");
       $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
-      echo nl2br($txt."\n".'--------------------'."\n"); 
+      echo nl2br($txt."\n"); 
       die(); }
-    $COPY_TEMP = copy($_FILES['file']['tmp_name'], $F3);
-    $txt = ('OP-Act: '."Uploaded $file to $F3 on $Time".'.');
-    echo nl2br ($txt."\n".'--------------------'."\n");
+    $COPY_TEMP = move_uploaded_file($_FILES['file']['tmp_name'], $F3);
+    if (file_exists($F3)) {
+      $txt = ('OP-Act: '."Uploaded $file to $F3 on $Time".'.');
+      echo nl2br ($txt."\n"); }
+    if (!file_exists($F3)) {
+      $txt = ('ERROR!!!HRConvert2230, Could not upload '.$file.' to '.$F3.' on '.$Time.'!');
+      echo nl2br ($txt."\n"); }
     $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
     chmod($F3, 0755); 
     // / The following code checks the Cloud Location with ClamAV after copying, just in case.
@@ -246,7 +252,7 @@ if(!empty($_FILES)) {
 // / The following code is performed when a user downloads a selection of files.
 if (isset($download)) {
   $download = str_replace(str_split('[]{};:$!#^&%@>*<'), '', $download);
-  $txt = ('OP-Act: Initiated Downloader on '.$Time.'.');
+  $txt = ('OP-Act: Initiated Downloader with input '.$download.' on '.$Time.'.');
   $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
   if (!is_array($download)) $download = array($download); 
   foreach ($download as $file) {
@@ -254,15 +260,14 @@ if (isset($download)) {
     if ($file == '.' or $file == '..' or $file == 'index.html') continue;
     $file1 = $file;
     $file1 = trim($file, '/');
-    $file = $ConvertDir.$file;
-    if (!file_exists($file)) continue;
+    $file = $ConvertDir.'/'.$file;
+    if (!file_exists($file) or $file == "") {
+      $txt = ("ERROR!!! HRConvert2260, $file1 doesn't exist on $Time".'.');
+      $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
+      echo ($txt."\n");
+      continue; }
     $F2 = pathinfo($file, PATHINFO_BASENAME);
     $F3 = $ConvertTempDir.'/'.$F2;
-    if($file == "") {
-      $txt = ("ERROR!!! HRConvert2187, No file specified on $Time".'.');
-      $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
-      echo nl2br($txt."\n");
-      die(); }
     if (file_exists($F3)) { 
       @touch($F3); }
     if (!is_dir($file) or !file_exists($file)) { 
@@ -274,13 +279,14 @@ if (isset($download)) {
       foreach ($iterator = new \RecursiveIteratorIterator(
         new \RecursiveDirectoryIterator($file, \RecursiveDirectoryIterator::SKIP_DOTS),
         \RecursiveIteratorIterator::SELF_FIRST) as $item) {
+        $F4 = $F3 . DIRECTORY_SEPARATOR . $iterator->getSubPathName();
         if ($item->isDir()) {
-          mkdir($F3 . DIRECTORY_SEPARATOR . $iterator->getSubPathName()); }   
+          mkdir($F4); }   
         else {
-          symlink($item, $F3 . DIRECTORY_SEPARATOR . $iterator->getSubPathName()); } } } } 
+          symlink($item, $F4); } } } } 
   // / Free un-needed memory.
-  $txt = $_POST['filesToDownload'] = $file = $file1 = $F2 = $F3 = $COPY_TEMP = $iterator = $item = $MAKELogFile = null;
-  unset ($txt, $_POST['filesToDownload'], $file, $file1, $F2, $F3, $COPY_TEMP, $iterator, $item, $MAKELogFile); }
+  $txt = $_POST['filesToDownload'] = $file = $file1 = $F2 = $F3 = $F4 = $COPY_TEMP = $iterator = $item = $MAKELogFile = null;
+  unset ($txt, $_POST['filesToDownload'], $file, $file1, $F2, $F3, $F4, $COPY_TEMP, $iterator, $item, $MAKELogFile); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -484,8 +490,7 @@ if (isset($_POST['convertSelected'])) {
       $txt = ('ERROR!!! HRConvert2381, '."Could not copy $file1 to $file2 on $Time".'!'); 
       $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
       echo nl2br('ERROR!!! HRConvert2381, There was a problem copying your file between internal HRCloud directories.
-        Please rename your file or try again later.'."\n");
-      die(); }
+        Please rename your file or try again later.'."\n"); }
     $convertcount = 0;
     $extension = str_replace(str_split('[]{};:$!#^&%@>*<'), '', $_POST['extension']);
     $pathname = str_replace('//', '/', $ConvertTempDir.$file);

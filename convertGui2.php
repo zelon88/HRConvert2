@@ -10,6 +10,7 @@ if ($fileCount == 1) {
 include ('header.php');
 ?>
 
+    <script type="text/javascript" src="Resources/jquery-3.3.1.min.js"></script>
     <div id="header-text" style="max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;">
       <h1>HRConvert2</h1>
       <hr />
@@ -19,7 +20,7 @@ include ('header.php');
     </div>
 
     <div align="center">
-      <img id='loadingCommandDiv' name='loadingCommandDiv' src='Resources/pacman.gif' style="max-width:64px; max-height:64px; display:none;"/>
+      <p><img id='loadingCommandDiv' name='loadingCommandDiv' src='Resources/pacman.gif' style="max-width:64px; max-height:64px; display:none;"/></p>
     </div>
 
     <div id="compressAll" name="compressAll" style="max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;">
@@ -44,6 +45,7 @@ include ('header.php');
       <?php
       foreach ($Files as $File) {
         $extension = getExtension($ConvertTempDir.'/'.$File);
+        $FileNoExt = str_replace($extension, '', $File);
         if (!in_array($extension, $convertArr)) continue;
         $ConvertGuiCounter1++;
       ?>
@@ -340,23 +342,56 @@ include ('header.php');
         <div id='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p>Convert This Image</p>
-          <p>Specify Filename: <input type="text" id='userphotofilename' name='userphotofilename' value='<?php echo str_replace('.', '_', $File); ?>'>
-          <select id='photoextension' name='photoextension'>
+          <p>Specify Filename: <input type="text" id='userphotofilename<?php echo $ConvertGuiCounter1; ?>' name='userphotofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '_', $File); ?>'>
+          <select id='photoextension<?php echo $ConvertGuiCounter1; ?>' name='photoextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="">Select Format</option>
             <option value="jpg">Jpg</option>
             <option value="bmp">Bmp</option>
             <option value="png">Png</option>
           </select></p>
           <p>Width and height: </p>
-          <p><input type="number" size="4" value="0" id='width' name='width' min="0" max="10000"> X <input type="number" size="4" value="0" id="height" name="height" min="0"  max="10000"></p> 
-          <p>Rotate: <input type="number" size="3" id='rotate' name='rotate' value="0" min="0" max="359"></p>
-          <input type="submit" id='convertPhotoSubmit' name='convertPhotoSubmit' value='Convert Image' onclick="toggle_visibility('loadingCommandDiv');">
+          <p><input type="number" size="4" value="0" id='width<?php echo $ConvertGuiCounter1; ?>' name='width<?php echo $ConvertGuiCounter1; ?>' min="0" max="10000"> X <input type="number" size="4" value="0" id="height<?php echo $ConvertGuiCounter1; ?>" name="height<?php echo $ConvertGuiCounter1; ?>" min="0"  max="10000"></p> 
+          <p>Rotate: <input type="number" size="3" id='rotate<?php echo $ConvertGuiCounter1; ?>' name='rotate<?php echo $ConvertGuiCounter1; ?>' value="0" min="0" max="359"></p>
+          <input type="submit" id='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' name='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' value='Convert Image' onclick="toggle_visibility('loadingCommandDiv');">
+
+          <script type="text/javascript">
+          $(document).ready(function () {
+            $('#convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
+              $.ajax({
+                type: "POST",
+                url: 'convertCore.php',
+                data: {
+                  Token1:'<?php echo $Token1; ?>',
+                  Token2:'<?php echo $Token2; ?>',
+                  convertSelected:'<?php echo $File; ?>',
+                  rotate:$('input[name="rotate<?php echo $ConvertGuiCounter1; ?>"]').val(),
+                  width:$('input[name="width<?php echo $ConvertGuiCounter1; ?>"]').val(),
+                  height:$('input[name="height<?php echo $ConvertGuiCounter1; ?>"]').val(),
+                  photoextension:$('input[name="photoextension<?php echo $ConvertGuiCounter1; ?>"]').val(),
+                  userphotofilename:$('input[name="userphotofilename<?php echo $ConvertGuiCounter1; ?>"]').val() },
+                  success: function(ReturnData) {
+                    $.ajax({
+                    type: 'POST',
+                    url: 'convertCore.php',
+                    data: { 
+                      Token1:'<?php echo $Token1; ?>',
+                      Token2:'<?php echo $Token2; ?>',
+                      download:"<?php echo $File; ?>"},
+                    success: function(returnFile) {
+                      toggle_visibility('loadingCommandDiv');
+                      window.location.href = "<?php echo 'DATA/'.$SesHash3.'/'.$FileNoExt; ?>"+$('#photoextension<?php echo $ConvertGuiCounter1; ?>').val(); }
+                    }); },
+                  error: function(ReturnData) {
+                    alert("Cannot convert this file!"); }
+              });
+            });
+          });
+          </script>
 
         <?php } ?>
       </div>
       <hr />
       <?php } ?>
-
     </div>
 
     <?php

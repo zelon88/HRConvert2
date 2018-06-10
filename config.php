@@ -27,12 +27,12 @@ $Accept_GPLv3_OpenSource_License = '1';
     // / Change these to something completely random and keep it a secret. Store your $Salts
     // / in hardcopy form or an encrypted drive in case of emergency.
     // / IF YOU LOSE YOUR SALTS YOU WILL BE UNABLE TO DECODE USER ID'S AFTER AN EMEREGENCY.
-$Salts1 = 'somethingSoRanDoMThatNobody_Will_evar+guess+itgdgdfgfdsfgdasfdas';
-$Salts2 = 'gdfsgdfsgsdfsomethingSoRanDoMThatNobody_Will_evar+guess+it';
-$Salts3 = 'somethingSoRanDoMThatNobody54534534534_Will_evar+guess+it';
-$Salts4 = 'somethingSoRanDoMThatNobody;lk;jll;;l_Will_evar+guess+it';
+$Salts1 = 'somethingSoRanDoMThatNobody_4Will_evar+guess+itgdgdfgfdsfgdasfdas';
+$Salts2 = 'gdfsgdfsgsdfsomethingSoRa33nDoMThatNobody_Will_evar+guess+it';
+$Salts3 = 'somethingSoRanDoMThatNobo423432dy54534534534_Will_evar+guess+it';
+$Salts4 = 'somethingSoRanDoMThat231;l_Will_evar+guess+it';
 $Salts5 = 'somethingSoRanDoMThatNobodyr3454r3r33_Will_evar+guess+it';
-$Salts6 = 'somethingSoRanDoMThatNobodyawryoglukfgy;/.5^&#&__Will_evar+guess+it';
+$Salts6 = 'somethingSoRanDoMThatNob2odyawryoglukfgy;/.5^&#&__Will_evar+guess+it';
   // / Externally or internally accesible domain or IP.
 $URL = 'https://www.honestrepair.net';
   // / Scan for viruses during directory scan. Use '1' for default. 
@@ -65,7 +65,7 @@ $InstLoc = '/var/www/html/HRProprietary/HRConvert2';
   // / (NO SLASH AFTER DIRECTORY!!!) ...  
 $ServerRootDir = '/var/www/html';
   // / The CloudLoc is where temporary data files are stored. (NO SLASH AFTER DIRECTORY!!!) ...  
-$ConvertLoc = '/mnt/0b7d4303-b1a7-4623-8360-715cb263c052/ConvertDATA';
+$ConvertLoc = '/mnt/0b3324303-b1a7-4223-8360-7343263c052/ConvertDATA';
   // / The CloudLoc is where permanent Log files are stored. (NO SLASH AFTER DIRECTORY!!!) ... 
 $LogDir = '/var/www/html/HRProprietary/HRConvert2/Logs';
 // / ------------------------------ 

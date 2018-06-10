@@ -168,13 +168,13 @@ var Dropzone = function (_Emitter) {
         /**
          * The timeout for the XHR requests in milliseconds (since `v4.4.0`).
          */
-        timeout: 30000,
+        timeout: 300000,
 
         /**
          * How many file uploads to process in parallel (See the
          * Enqueuing file uploads* documentation section for more info)
          */
-        parallelUploads: 2,
+        parallelUploads: 10,
 
         /**
          * Whether to send multiple files in one request. If
@@ -225,7 +225,7 @@ var Dropzone = function (_Emitter) {
          * the event `maxfilesexceeded` will be called. The dropzone element gets the
          * class `dz-max-files-reached` accordingly so you can provide visual feedback.
          */
-        maxFilesize: 256,
+        maxFilesize: 10000000,
 
         /**
          * The name of the file param that gets transferred.
@@ -258,7 +258,7 @@ var Dropzone = function (_Emitter) {
          * How the images should be scaled down in case both, `thumbnailWidth` and `thumbnailHeight` are provided.
          * Can be either `contain` or `crop`.
          */
-        thumbnailMethod: 'crop',
+        thumbnailMethod: 'contain',
 
         /**
          * If set, images will be resized to these dimensions before being **uploaded**.
@@ -419,7 +419,7 @@ var Dropzone = function (_Emitter) {
         /**
          * The text used before any files are dropped.
          */
-        dictDefaultMessage: "Drop files here to upload",
+        dictDefaultMessage: "Click, Tap, or Drop files here to upload.",
 
         /**
          * The text that replaces the default message text it the browser is not supported.
@@ -437,7 +437,7 @@ var Dropzone = function (_Emitter) {
          * If the filesize is too big.
          * `{{filesize}}` and `{{maxFilesize}}` will be replaced with the respective configuration values.
          */
-        dictFileTooBig: "File is too big ({{filesize}}MiB). Max filesize: {{maxFilesize}}MiB.",
+        dictFileTooBig: "File is too big ({{filesize}}MB). Max filesize: {{maxFilesize}}MB.",
 
         /**
          * If the file doesn't match the file type.

@@ -46,6 +46,7 @@ include ('header.php');
               <li>Flv</li>
               <li>Mpeg</li>
               <li>Wmv</li>
+              <li>Mov</li>
             </ol>
             <strong>Document Formats</strong>
             <ol>

@@ -65,7 +65,7 @@ if (!isset($Token2)) {
 
 // / -----------------------------------------------------------------------------------
 // / The following code sets the global variables for the session.
-$HRConvertVersion = 'v1.1';
+$HRConvertVersion = 'v1.2';
 $Date = date("m_d_y");
 $Time = date("F j, Y, g:i a"); 
 $Current_URL = "http$URLEcho://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
@@ -95,8 +95,8 @@ $SpreadsheetArray = array('csv', 'xls', 'xlsx', 'odf', 'ods');
 $PresentationArray = array('ppt', 'xps', 'potx', 'potm', 'pot', 'ppa', 'odp');
 $ImageArray = array('jpeg', 'jpg', 'png', 'bmp', 'gif', 'pdf');
 $ImageArray1 = array('jpeg', 'jpg', 'png', 'bmp', 'gif');
-$MediaArray = array('mp3', 'mp4', 'mov', 'aac', 'oog', 'wma', 'mp2', 'flac');
-$VideoArray = array('3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv');
+$MediaArray = array('mp3', 'aac', 'oog', 'wma', 'mp2', 'flac');
+$VideoArray = array('3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv', 'mov');
 $DrawingArray = array('svg', 'dxf', 'vdx', 'fig');
 $ModelArray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'ptx', 'dxf', 'u3d', 'vrml');
 $convertArr = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi', 'txt', 'doc', 'docx', 'rtf', 'xls', 'xlsx', 'odf', 'ods', 

@@ -10,7 +10,7 @@ if ($fileCount == 1) {
   $fcPlural2 = ' is'; }
 include ('header.php');
 ?>
-
+  <body>
     <script type="text/javascript" src="Resources/jquery-3.3.1.min.js"></script>
     <div id="header-text" style="max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;">
       <h1>HRConvert2</h1>
@@ -25,7 +25,10 @@ include ('header.php');
     </div>
 
     <div id="compressAll" name="compressAll" style="max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;">
-      <button id="scandocMoreOptionsButton" name="scandocMoreOptionsButton" class="info-button" onclick="toggle_visibility('compressAllOptions');">Bulk File Options</button>
+      <button id="backButton" name="backButton" style="width:50px;" class="info-button" onclick="window.history.back();">&#x2190;</button>
+      <button id="refreshButton" name="refreshButton" style="width:50px;" class="info-button" onclick="javascript:location.reload(true);">&#x21BB;</button>
+      <br /> <br />
+      <button id="scandocMoreOptionsButton" name="scandocMoreOptionsButton" class="info-button" onclick="toggle_visibility('compressAllOptions');">Bulk File Options</button> 
       <div id="compressAllOptions" name="compressAllOptions" align="center" style="display:none;">
         <p>Compress & Download All Files:</p>
         <p>Specify Filename: <input type="text" id='userarchallfilename' name='userarchallfilename' value='HRConvert2_Files-<?php echo $Date; ?>'></p> 
@@ -538,6 +541,7 @@ include ('header.php');
             <option value="flv">Flv</option>
             <option value="mpeg">Mpeg</option>
             <option value="wmv">Wmv</option>
+            <option value="mov">Mov</option>
           </select></p>
           <input type="submit" id="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Convert Video' onclick="toggle_visibility('loadingCommandDiv');">
           <script type="text/javascript">

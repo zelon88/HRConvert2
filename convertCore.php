@@ -65,7 +65,7 @@ if (!isset($Token2)) {
 
 // / -----------------------------------------------------------------------------------
 // / The following code sets the global variables for the session.
-$HRConvertVersion = 'v0.9.5';
+$HRConvertVersion = 'v1.0';
 $Date = date("m_d_y");
 $Time = date("F j, Y, g:i a"); 
 $Current_URL = "http$URLEcho://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
@@ -289,6 +289,75 @@ if (isset($download)) {
   unset ($txt, $_POST['filesToDownload'], $file, $file1, $F2, $F3, $F4, $COPY_TEMP, $iterator, $item, $MAKELogFile); }
 // / -----------------------------------------------------------------------------------
 
+// / The following code is performed when a user selects files for archiving.
+if (isset($_POST['archive'])) {
+  $txt = ('OP-Act: Initiated Archiver on '.$Time.'.');
+  $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
+  $_POST['archive'] = str_replace(str_split('[]{};:$!#^&%@>*<'), '', $_POST['archive']);
+  if (!is_array($_POST['filesToArchive'])) {
+    $_POST['filesToArchive'] = str_replace(str_split('[]{};:$!#^&%@>*<'), '', $_POST['filesToArchive']);
+    $_POST['filesToArchive'] = array($_POST['filesToArchive']); }
+  foreach ($_POST['filesToArchive'] as $key=>$TFile1) {
+    $TFile1 = str_replace(str_split('[]{};:$!#^&%@>*<'), '', $TFile1); 
+    $TFile1 = str_replace(' ', '\ ', $TFile1); 
+    $allowed =  array('mov', 'mp4', 'mkv', 'flv', 'ogv', 'wmv', 'mpg', 'mpeg', 'm4v', '3gp', 'dat', 'cfg', 'txt', 'doc', 'docx', 'rtf', 'xls', 'xlsx', 'csv', 'ods', 'odf', 'odt', 'jpg', 'mp3', 
+       'avi', 'wma', 'wav', 'ogg', 'jpeg', 'bmp', 'png', 'gif', 'pdf', 'abw', 'zip', '7z', 'rar', 'tar', 'tar.gz', 'tar.bz2', 'iso', 'vhd');
+    $archarray = array('zip', '7z', 'rar', 'tar', 'tar.gz', 'tar.bz2', 'iso', 'vhd');
+    $rararr = array('rar');
+    $ziparr = array('zip');
+    $tararr = array('7z', 'tar', 'tar.gz', 'tar.bz2', 'iso', 'vhd');
+    $filename = str_replace('//', '/', $ConvertDir.$TFile1);
+    $filename1 = pathinfo($filename, PATHINFO_BASENAME);
+    $ext = pathinfo($filename, PATHINFO_EXTENSION);
+    $_POST['archextension'] = str_replace(str_split('[]{};:$!#^&%@>*<'), '', $_POST['archextension']);
+    $UserExt = $_POST['archextension'];
+    $_POST['userfilename'] = str_replace(str_split('[]{};:$!#^&%@>*<'), '', $_POST['userfilename']);
+    $UserFileName = str_replace('//', '/', $_POST['userfilename']);
+    $UserFileName = str_replace(' ', '\ ', $UserFileName); 
+    $archSrc = str_replace('//', '/', $ConvertTempDir.$TFile1);
+    $archDst = str_replace('//', '/', $ConvertDir.$UserFileName);
+    if (!is_dir($filename)) {
+      if(!in_array($ext, $allowed)) { 
+        echo nl2br("ERROR!!! HRConvert2290, Unsupported File Format\n");
+        die(); } }
+    // / Check the Cloud Location with ClamAV before archiving, just in case.
+        if ($VirusScan == '1') {
+          shell_exec(str_replace('  ', ' ', str_replace('  ', ' ', 'clamscan -r '.$Thorough.' '.$archSrc.' | grep FOUND >> '.$ClamLogDir)));
+          $ClamLogFileDATA = file_get_contents($ClamLogDir);
+          if (strpos($ClamLogFileDATA, 'Virus Detected') == 'true' or strpos($ClamLogFileDATA, 'FOUND') == 'true') {
+            $txt = ('Warning!!! HRConvert2338, There were potentially infected files detected. The file
+              transfer could not be completed at this time. Please check your file for viruses or
+              try again later.'."\n");
+            $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);          
+            die($txt); } }
+      // / Handle archiving of rar compatible files.
+      if(in_array($UserExt, $rararr)) {
+        copy ($filename, $ConvertTempDir.$TFile1); 
+        shell_exec('rar a -ep '.$archDst.' '.$archSrc); 
+        $txt = ('OP-Act: '."Archived $filename to $UserFileName".'.'."$UserExt in $CloudUsrDir on $Time".'.');
+        echo nl2br ('OP-Act: '."Archived $filename to $UserFileName".'.'."$UserExt on $Time".'.'."\n".'<hr style="width:100%;"/>'."\n");  
+        $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } 
+      // / Handle archiving of .zip compatible files.
+      if(in_array($UserExt, $ziparr)) {
+        copy ($filename, $ConvertTempDir.$TFile1); 
+        shell_exec('zip -j '.$archDst.'.zip '.$archSrc); 
+        $txt = ('OP-Act: '."Archived $filename to $UserFileName".'.'."$UserExt in $CloudUsrDir on $Time".'.');
+        echo nl2br ('OP-Act: '."Archived $filename to $UserFileName".'.'."$UserExt on $Time".'.'."\n".'<hr style="width:100%;"/>'."\n");  
+        $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } 
+      // / Handle archiving of 7zipper compatible files.
+      if(in_array($UserExt, $tararr)) {
+        copy ($filename, $ConvertTempDir.$TFile1); 
+        shell_exec('7z a '.$archDst.'.'.$UserExt.' '.$archSrc); 
+        $txt = ('OP-Act: '."Archived $filename to $UserFileName".'.'."$UserExt in $CloudUsrDir on $Time".'.');
+        echo nl2br ('OP-Act: '."Archived $filename to $UserFileName".'.'."$UserExt on $Time".'.'."\n".'<hr style="width:100%;"/>'."\n");  
+        $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } } 
+      // / Free un-needed memory.
+      $_POST['archive'] = $txt = $filesToArchive = $key = $TFile1 = $allowed = $archarray = $rararr = $ziparr = $tararr = $filename = $filename1 
+       = $ext = $_POST['archextension'] = $UserExt = $_POST['userfilename'] = $UserFileName = $archSrc = $archDst = $ClamLogFileDATA = $MAKELogFile = null;
+      unset ($_POST['archive'], $filesToArchive, $key, $TFile1, $allowed, $archarray, $rararr, $ziparr, $tararr, $filename, $filename1, $ext,
+       $_POST['archextension'], $UserExt, $_POST['userfilename'], $UserFileName, $archSrc, $archDst, $ClamLogFileDATA, $MAKELogFile); }
+// / -----------------------------------------------------------------------------------
+
 // / -----------------------------------------------------------------------------------
 // / The following code will be performed when a user selects archives to extract.
 if (isset($_POST["dearchiveButton"])) {
@@ -498,7 +567,7 @@ if (isset($_POST['convertSelected'])) {
     $oldPathname = str_replace('//', '/', $ConvertDir.$file);
     $filename = pathinfo($pathname, PATHINFO_FILENAME);
     $oldExtension = pathinfo($pathname, PATHINFO_EXTENSION);
-    $newFile = str_replace('//', '/', str_replace(str_split('[]{};:$!#^&%@>*<'), '', $_POST['userconvertfilename'].'_'.$convertcount.'.'.$extension));
+    $newFile = str_replace('//', '/', str_replace(str_split('[]{};:$!#^&%@>*<'), '', $_POST['userconvertfilename'].'.'.$extension));
     $newPathname = str_replace('//', '/', $ConvertDir.$newFile);
     $docarray =  array('txt', 'doc', 'xls', 'xlsx', 'docx', 'rtf', 'odf', 'ods', 'odt', 'dat', 'cfg', 'pages', 'pptx', 'ppt', 'xps', 'potx', 'pot', 'ppa', 'odp', 'odf');
     $imgarray = array('jpg', 'jpeg', 'bmp', 'png', 'gif');
@@ -520,7 +589,7 @@ if (isset($_POST['convertSelected'])) {
     // / Code to increment the conversion in the event that an output file already exists.    
     while(file_exists($newPathname)) {
       $convertcount++;
-      $newFile = str_replace(str_split('[]{};:$!#^&%@>*<'), '', $_POST['userconvertfilename'].'_'.$convertcount.'.'.$extension);
+      $newFile = str_replace(str_split('[]{};:$!#^&%@>*<'), '', $_POST['userconvertfilename'].'.'.$extension);
       $newPathname = $ConvertDir.$newFile; }
           // / Code to convert document files.
           // / Note: Some servers may experience a delay between the script finishing and the
@@ -593,9 +662,9 @@ if (isset($_POST['convertSelected'])) {
             shell_exec("dia $pathname -e $newPathname"); } 
           // / Code to convert and manipulate video files.
           if (in_array($oldExtension, $videoarray)) { 
-            $txt = ("OP-Act, Executing \"HandBrakeCLI -i $pathname -o $newPathname\" on ".$Time.'.');
+            $txt = ("OP-Act, Executing \"ffmpeg -i $pathname -c:v libx264 $newPathname\" on ".$Time.'.');
             $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
-            shell_exec("HandBrakeCLI -i $pathname -o $newPathname"); } 
+            shell_exec("ffmpeg -i $pathname -c:v libx264 $newPathname"); } 
           // / Code to convert and manipulate audio files.
           if (in_array($oldExtension, $audioarray)) { 
             $ext = (' -f ' . $extension);
@@ -740,7 +809,7 @@ if (isset($_POST['pdfworkSelected'])) {
     $oldPathname = str_replace('//', '/', $ConvertDir.$file);
     $filename = pathinfo($pathname, PATHINFO_FILENAME);
     $oldExtension = pathinfo($pathname, PATHINFO_EXTENSION);
-    $newFile = str_replace(str_split('[]{};:$!#^&%@>*<'), '', $_POST['userpdfconvertfilename'].'_'.$pdfworkcount.'.'.$extension);
+    $newFile = str_replace(str_split('[]{};:$!#^&%@>*<'), '', $_POST['userpdfconvertfilename'].'.'.$extension);
     $newPathname = str_replace('//', '/', $ConvertDir.$newFile);
     $doc1array =  array('txt', 'pages', 'doc', 'xls', 'xlsx', 'docx', 'rtf', 'odf', 'ods', 'odt');
     $img1array = array('jpg', 'jpeg', 'bmp', 'png', 'gif');
@@ -748,7 +817,7 @@ if (isset($_POST['pdfworkSelected'])) {
       if (in_array($oldExtension, $allowedPDFw)) {
         while(file_exists($newPathname)) {
           $pdfworkcount++; 
-          $newFile = str_replace(str_split('[]{};:$!#^&%@>*<'), '', $_POST['userpdfconvertfilename'].'_'.$pdfworkcount.'.'.$extension);
+          $newFile = str_replace(str_split('[]{};:$!#^&%@>*<'), '', $_POST['userpdfconvertfilename'].'.'.$extension);
           $newPathname = str_replace('//', '/', $ConvertDir.$newFile); } } 
           // / Code to convert a PDF to a document.
           if (in_array($oldExtension, $pdf1array)) {

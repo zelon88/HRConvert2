@@ -1,0 +1,140 @@
+-----MINIMUM REQUIREMENTS-----
+HRConvert2 requires at least a Raspberri Pi Model B+ or greater. 
+HRConvert2 should run on any x86 or x64 based PC.
+HRConvert2 requires a Debian Linux-based operating system w/3rd party audio license.
+
+-----PREFACE-----
+For this guide, it is assumed that the user is installing HRConvert2
+on a PC which meets the above conditions. This guide will walk
+a new user through the installation of HRConvert2 on a freshly installed
+version of Lubuntu 16.04 LTS with no pre-existing dependencies. 
+
+For a walkthrough of installing a Ubuntu distro, visit.....
+http://www.ubuntu.com/download/desktop/install-ubuntu-desktop
+
+IMPORTANT NOTE: During this guide we will be setting-up a fully
+functional, yet somewhat customized, LAMP stack including 
+linux, Apache2.4, MySQL, and PHP7.0. If you DO NOT want to have
+a LAMP stack installed on your local machine DO NOT install this software.
+This software was designed to be run on a dedicated server setup for NAS
+duties.
+
+In the abscence of required dependencies, HRConvert2 will make every attempt 
+to complete a user-suppied operation while logging errors every step of the way. 
+Administrators are responsible for monitoring and maintaining the dependencies 
+of their servers.
+--------------------------------------------------
+
+-----STEP 1 - INSTALL APACHE 2.4-----
+-sudo apt-get update
+-sudo apt-get install apache2
+-sudo apt-get install curl
+--------------------------------------------------
+
+-----STEP 2 - INSTALL PHP7.1 & PLUGINS-----
+-sudo apt-get install php libapache2-mod-php php-mcrypt php-mysql
+-sudo apt-get install php-all-dev
+-sudo apt-get install php7.1-zip
+-sudo apt-get install php7.1-gd
+-sudo apt-get install php-curl
+**EDIT THE "php.ini" FILE LOCATED IN "/etc/php/7.1/apache2/php.ini"**
+-sudo leafpad /etc/php/7.1/apache2/php.ini
+**SEARCH FOR AND MODIFY THE FOLLOWING VALUES CAREFULLY**
+  max_execution_time = 90
+  max_input_time = 90
+  memory_limit = 512M
+  ;Use 256 - 384M for Raspberry Pis
+  display_errors = On
+  ;Leave display errors = Off if you're not debugging HRConvert2 youself
+  post_max_size = 3000M
+  upload_max_filesize = 3000M
+  max_file_uploads = 100
+  zlib.output_compression = On
+**SAVE THE MODIFIED "php.ini" FILE AND EXIT LEAFPAD**
+-sudo service apache2 restart
+--------------------------------------------------
+
+-----STEP 4 - INSTALL BASIC FEATURE DEPENDENCIES-----
+-sudo apt-get install clamav
+-sudo apt-get install libreoffice-common
+-sudo apt-get install unoconv
+-sudo chmod +x /etc/rc.local
+-sudo leafpad /etc/rc.local
+**ADD THE FOLLOWING LINE TO THE "rc.local" FILE **ABOVE** THE "exit 0" LINE**
+  /usr/bin/libreoffice/program/soffice.bin --headless --accept="socket,host=127.0.0.1,port=$soffice_port;urp;" --nofirststartwizard &
+**IF DOCUMENT CONVERSIONS DONT WORK...**
+          **-unoconv --listen**
+          **OR -unoconv -l**
+          **OR create a daemon to run unoconv --listen**
+-sudo apt-get install poppler-utils
+-sudo apt-get install rar
+-sudo apt-get install unrar
+-sudo apt-get install p7zip-full
+-sudo apt-get install imagemagick
+-sudo apt-get install ffmpeg
+-sudo apt-get install tesseract-ocr
+-sudo apt-get install meshlab
+-sudo apt-get install dia
+-sudo apt-get install pandoc
+**REBOOT THE SERVER**
+--------------------------------------------------
+
+-----STEP 5 - INSTALL HRConvert2-----
+**CREATE A DIRECTORY IN "/var/www/html" NAMED "HRProprietary"**
+**CREATE ANOTHER DIRECTORY IN "/var/www/html/HRProprietary" NAMED "HRConvert2"**
+**VISIT "http://github.com/zelon88/HRConvert2" AND DOWNLOAD THE LATEST HRConvert2 .zip FILE
+  TO YOUR DOWNLOADS FOLDER**
+**EXTRACT HRConvert2.zip TO YOUR DOWNLOADS FOLDER**
+**COPY THE CONTENTS OF THE "HRConvert2-master" FOLDER TO "/var/www/html/HRProprietary/HRConvert2"*
+-sudo leafpad /var/www/html/HRProprietary/HRConvert2/config.php
+**CAREFULLY READ AND COMPLETELY FILL OUT THE CONFIG.PHP FILE!!!**
+**HRConvert2 REQUIRES A SAFE LOCATION TO CREATE USER CLOUD DIRECTORIES. TO FACILITATE
+  THIS YOU MUST CREATE A !!!NEW!!! DIRECTORY AND ENTER IS AS THE "$CloudLoc"**
+**ONCE YOU HAVE CREATED A CLOUD LOCATION "$ConvertLoc" CONTINUE**
+          -sudo chmod -R 0755 /path/to/my/ConvertLoc
+          -sudo chown -R www-data /path/to/my/ConvertLoc
+          -sudo chgrp -R www-data /path/to/my/ConvertLoc
+**IF YOU DO NOT HAVE A VALID "$ConvertLoc" AND PROPER PERMISSIONS, HRConvert2 ...WILL...NOT...WORK!!!**
+-sudo leafpad /var/www/html/HRProprietary/HRConvert2/Applications/HRAI/adminINFO.php
+**CAREFULLY READ AND COMPLETELY FILL OUT YOUR ADMIN USER AND LOGIN INFO FOR HRAI**
+-sudo chmod -R 0755 /var/www/html
+-sudo chown -R www-data /var/www/html
+-sudo chgrp -R www-data /var/www/html
+**OPTIONAL -sudo useradd -g www-data USERNAME  #adds your user to www-data usergroup.**
+**MAKE SURE THAT ANY UPDATES YOU PERFORM TO HRConvert2 HAVE PROPER PERMISSIONS!!!**
+**SCRUTINIZE / DOUBLE-CHECK THE PERMISSIONS FOR ANY FILES ADDED TO /HRConvert2 AFTER 
+  INSTALLATION IS COMPLETE!!!**
+
+IMPORTANT NOTE: If you need to correct permissions later, perform the following commands 
+  from above again...
+               -sudo chmod -R 0755 /var/www/html
+               -sudo chown -R www-data /var/www/html
+               -sudo chgrp -R www-data /var/www/html
+--------------------------------------------------
+
+-----STEP 6 - VISIT YOUR CONVERTER!!!-----
+Go to http://localhost/HRProprietary/HRConvert2/convertCore.php to view your Converter! The computer you install HRConvert2 onto
+should be considered a staitionary server that you can safely point your "Static NAT" at and access from anywhere. To accomplish
+these things, follow the additional steps below. 
+--------------------------------------------------
+
+-----STEP 7 - ADD FIREWALL EXCEPTIONS AND SETUP STATIC NAT ON YOUR ROUTER-----
+-According to the manual for the manufacturer of your broadband router, find the local IP address where you can make changes to it's
+  configuration. Try entering "192.168.1.1" into a browser. If you are greeted with a login screen, check the bottom of your router or your
+  system administrator for the required information. If you are not greeted with any tangible login screen other than an error message, 
+  seek the owners manual for the specific make and manual for your router.
+-Once you have gained access to your router, seek the settings which control Firewall exceptions and Static NAT settings.
+  You should seek a way to enter the local IPv4 address of the machine running HRConvert2.
+  You should also seek a way to enter a "Static NAT" entry for the local IPv4 address of the machine running HRConvert2.
+  You should also forward port 80 to the internal IPv4 of the machine running HRConvert2.
+  To configure SSL encryption, add port 443 to your port forwarding rules and visit www.letsencrypt.com for instructions on obtaining and installing an SSL certificate.
+-HRConvert2 will create and maintain complete segregation of user files during operation, and will not impose restrictions on user uploads
+  (however PHP will, so verify that your php.ini file is set correctly!!!).
+-You and your users should now be able to access your server via any standard web browser by entering the IPv4 from your 
+  ISP into the address bar. Alternatively you can purchase a domain name and point it at the IPv4 instead to obtain a ".com" 
+  (or similar) address for your new installation.
+--------------------------------------------------
+
+If you have any problems with HRConvert2 please create an issue on http://github.com/zelon88/HRConvert2
+
+

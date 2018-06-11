@@ -7,8 +7,8 @@
 // / The following array sets some SAFE files that WILL NOT be deleted. These are skipped by the Janitor.
 $SAFEArr = array('', ' ', '.', '..', '...');
 
-if ($JanitorDeleteIndex == '1') {
-  unset($defaultApps['index.html']); }
+if ($JanitorDeleteIndex == '1' or $JanitorDeleteIndex === TRUE) {
+  unset($defaultApps[0]); }
 
 $CleanFilesRAW = $CleanFiles;
 // / The following code cleans whatever variables are set for $CleanDir and $CleanFiles. 

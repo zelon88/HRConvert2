@@ -65,9 +65,11 @@ if (!isset($Token2)) {
 
 // / -----------------------------------------------------------------------------------
 // / The following code sets the global variables for the session.
-$HRConvertVersion = 'v1.2';
+$HRConvertVersion = 'v1.3';
 $Date = date("m_d_y");
 $Time = date("F j, Y, g:i a"); 
+$JanitorFile = 'janitor.php';
+$JanitorDeleteIndex = FALSE;
 $Current_URL = "http$URLEcho://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 $SesHash = substr(hash('ripemd160', $Date.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6), -12);
 $SesHash2 = substr(hash('ripemd160', $SesHash.$Token1.$Date.$IP.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6), -12);
@@ -84,7 +86,7 @@ $LogFile = $LogDir.'/HRConvert2_'.$LogInc.'_'.$Date.'_'.$SesHash4.'_'.$SesHash.'
 $ClamLogFile = $LogDir.'/ClamLog_'.$Date.'_'.$SesHash4.'_'.$SesHash.'.txt';
 $defaultLogDir = $InstLoc.'/Logs';
 $defaultLogSize = '1048576';
-$defaultApps = array('.', '..', '..');
+$defaultApps = array('index.html', '.', '..', '..');
 $DangerousFiles = array('js', 'php', 'html', 'css');
 $DangerousFiles1 = array('.', '..', 'index.php', 'index.html');
 $ArchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi');
@@ -130,6 +132,9 @@ function getFilesize($File) {
 function symlinkmtime0($symlinkPath) {
   $stat = lstat($symlinkPath);
   return isset($stat['mtime']) ? $stat['mtime'] : null; }
+function filemtime0($filePath) {
+  $stat = filemtime($filePath);
+  return ($stat); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -188,7 +193,7 @@ if (file_exists($ConvertTemp)) {
     if (($now - symlinkmtime0($ConvertTemp.'/'.$DFile)) > ($Delete_Threshold * 60)) { // Time to keep files.
       if (is_file($DFile)) {
         @chmod ($DFile, 0755);
-        //unlink($DFile); 
+        @unlink($DFile); 
         $txt = ('OP-Act: Cleaned '.$DFiles.'/'.$DFile.' on '.$Time.'.');
         $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); }
       if (is_dir($DFile)) {
@@ -196,8 +201,34 @@ if (file_exists($ConvertTemp)) {
         @chmod ($CleanDir, 0755);
         $CleanFiles = scandir($DFiles.'/'.$DFile);
         include($JanitorFile); 
-        //@unlink($DFile.'/index.html');
-        @rmdir($DFile); } } } }
+        @unlink($DFile.'/index.html');
+        @rmdir($DFile); } 
+      $CleanDir = $ConvertTemp; 
+      $CleanFiles = scandir($ConvertTemp); 
+      include($JanitorFile); } } }
+if (file_exists($ConvertLoc)) {
+  $DFiles = scandir($ConvertLoc);
+  $now = time();
+  foreach ($DFiles as $DFile) {
+    if (in_array($DFile, $defaultApps)) continue;
+    if (($now - symlinkmtime0($ConvertLoc.'/'.$DFile)) > ($Delete_Threshold * 60)) { // Time to keep files.
+      if (is_file($DFile)) {
+        @chmod ($DFile, 0755);
+        @unlink($DFile); 
+        $txt = ('OP-Act: Cleaned '.$DFiles.'/'.$DFile.' on '.$Time.'.');
+        $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); }
+      if (is_dir($DFile)) {
+        $CleanDir = $DFiles.'/'.$DFile;
+        @chmod ($CleanDir, 0755);
+        $CleanFiles = scandir($DFiles.'/'.$DFile);
+        include($JanitorFile); 
+        @unlink($DFile.'/index.html');
+        @rmdir($DFile); } 
+      $CleanDir = $ConvertLoc; 
+      $CleanFiles = scandir($ConvertLoc);
+      $JanitorDeleteIndex = TRUE; 
+      include($JanitorFile); 
+      $JanitorDeleteIndex = FALSE; } } }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

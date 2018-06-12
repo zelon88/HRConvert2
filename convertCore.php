@@ -65,7 +65,7 @@ if (!isset($Token2)) {
 
 // / -----------------------------------------------------------------------------------
 // / The following code sets the global variables for the session.
-$HRConvertVersion = 'v1.4';
+$HRConvertVersion = 'v1.5';
 $Date = date("m_d_y");
 $Time = date("F j, Y, g:i a"); 
 $JanitorFile = 'janitor.php';
@@ -129,12 +129,21 @@ function getFilesize($File) {
   elseif (($Size < 1073741824) && ($Size > 1048575)) $Size = round($Size / 1048576, 1)." MB";
   else ($Size = round($Size/1073741824, 1)." GB");
   return ($Size); }
-function symlinkmtime0($symlinkPath) {
+function symlinkmtime($symlinkPath) {
   $stat = lstat($symlinkPath);
   return isset($stat['mtime']) ? $stat['mtime'] : null; }
-function filemtime0($filePath) {
+function fileTime($filePath) {
   $stat = filemtime($filePath);
   return ($stat); }
+function cleanFiles($path) {
+  global $ConvertLoc, $ConvertTemp;
+  $i = new DirectoryIterator($path);
+  foreach($i as $f) {
+    if($f->isFile()) {
+      unlink($f->getRealPath()); } 
+    else if(!$f->isDot() && $f->isDir()) {
+      cleanFiles($f->getRealPath()); } } 
+  if ($path !== $ConvertLoc && $path !== $ConvertTemp) rmdir($path); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -190,7 +199,7 @@ if (file_exists($ConvertTemp)) {
   foreach ($DFiles as $DFile) {
     if ($DFile == 'index.html') continue;
     if (in_array($DFile, $defaultApps)) continue;
-    if (($now - symlinkmtime0($ConvertTemp.'/'.$DFile)) > ($Delete_Threshold * 60)) { // Time to keep files.
+    if (($now - fileTime($ConvertTemp.'/'.$DFile)) > ($Delete_Threshold * 60)) { // Time to keep files.
       if (is_file($DFile)) {
         chmod ($DFile, 0755);
         if (file_exists($ConvertTemp.'/'.$DFile)) unlink($ConvertTemp.'/'.$DFile); 
@@ -199,38 +208,27 @@ if (file_exists($ConvertTemp)) {
       if (is_dir($DFile)) {
         $CleanDir = $ConvertTemp.'/'.$DFile;
         chmod ($CleanDir, 0755);
-        $CleanFiles = scandir($ConvertTemp.'/'.$DFile);
-        include($JanitorFile); 
-        if (file_exists($ConvertTemp.'/'.$DFile.'/index.html')) unlink($ConvertTemp.'/'.$DFile.'/index.html');
-        if (is_dir($ConvertTemp.'/'.$DFile)) rmdir($ConvertTemp.'/'.$DFile); } 
-      $CleanDir = $ConvertTemp; 
-      $CleanFiles = scandir($ConvertTemp); 
-      include($JanitorFile); } } }
+        cleanFiles($CleanDir); } 
+      cleanFiles($ConvertTemp); } } }
+
+
 if (file_exists($ConvertLoc)) {
-  $JanitorDeleteIndex = TRUE; 
   $DFiles = scandir($ConvertLoc);
   $now = time();
   foreach ($DFiles as $DFile) {
+    if ($DFile == 'index.html') continue;
     if (in_array($DFile, $defaultApps)) continue;
-    if (($now - symlinkmtime0($ConvertLoc.'/'.$DFile)) > ($Delete_Threshold * 60)) { // Time to keep files.
-      if (is_file($ConvertLoc.'/'.$DFile)) {
-        chmod ($ConvertLoc.'/'.$DFile, 0755);
+    if (($now - fileTime($ConvertLoc.'/'.$DFile)) > ($Delete_Threshold * 60)) { // Time to keep files.
+      if (is_file($DFile)) {
+        chmod ($DFile, 0755);
         if (file_exists($ConvertLoc.'/'.$DFile)) unlink($ConvertLoc.'/'.$DFile); 
         $txt = ('OP-Act: Cleaned '.$ConvertLoc.'/'.$DFile.' on '.$Time.'.');
         $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); }
-      if (is_dir($ConvertLoc.'/'.$DFile)) {
+      if (is_dir($DFile)) {
         $CleanDir = $ConvertLoc.'/'.$DFile;
         chmod ($CleanDir, 0755);
-        $CleanFiles = scandir($ConvertLoc.'/'.$DFile);
-        include($JanitorFile); 
-        if (file_exists($ConvertLoc.'/'.$DFile.'/index.html')) unlink($ConvertLoc.'/'.$DFile.'/index.html');
-        if (is_dir($ConvertLoc.'/'.$DFile)) rmdir($ConvertLoc.'/'.$DFile); } 
-      $CleanDir = $ConvertLoc; 
-      $CleanFiles = scandir($ConvertLoc);
-      include($JanitorFile); 
-      if (is_dir($ConvertLoc.'/'.$DFile)) rmdir($ConvertLoc.'/'.$DFile);
-      $JanitorDeleteIndex = FALSE; 
-      array_push($defaultApps, 'index.html'); } } }
+        cleanFiles($CleanDir); } 
+      cleanFiles($ConvertLoc); } } }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

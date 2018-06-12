@@ -65,7 +65,7 @@ if (!isset($Token2)) {
 
 // / -----------------------------------------------------------------------------------
 // / The following code sets the global variables for the session.
-$HRConvertVersion = 'v1.3';
+$HRConvertVersion = 'v1.4';
 $Date = date("m_d_y");
 $Time = date("F j, Y, g:i a"); 
 $JanitorFile = 'janitor.php';
@@ -192,43 +192,45 @@ if (file_exists($ConvertTemp)) {
     if (in_array($DFile, $defaultApps)) continue;
     if (($now - symlinkmtime0($ConvertTemp.'/'.$DFile)) > ($Delete_Threshold * 60)) { // Time to keep files.
       if (is_file($DFile)) {
-        @chmod ($DFile, 0755);
-        @unlink($DFile); 
-        $txt = ('OP-Act: Cleaned '.$DFiles.'/'.$DFile.' on '.$Time.'.');
+        chmod ($DFile, 0755);
+        if (file_exists($ConvertTemp.'/'.$DFile)) unlink($ConvertTemp.'/'.$DFile); 
+        $txt = ('OP-Act: Cleaned '.$ConvertTemp.'/'.$DFile.' on '.$Time.'.');
         $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); }
       if (is_dir($DFile)) {
-        $CleanDir = $DFiles.'/'.$DFile;
-        @chmod ($CleanDir, 0755);
-        $CleanFiles = scandir($DFiles.'/'.$DFile);
+        $CleanDir = $ConvertTemp.'/'.$DFile;
+        chmod ($CleanDir, 0755);
+        $CleanFiles = scandir($ConvertTemp.'/'.$DFile);
         include($JanitorFile); 
-        @unlink($DFile.'/index.html');
-        @rmdir($DFile); } 
+        if (file_exists($ConvertTemp.'/'.$DFile.'/index.html')) unlink($ConvertTemp.'/'.$DFile.'/index.html');
+        if (is_dir($ConvertTemp.'/'.$DFile)) rmdir($ConvertTemp.'/'.$DFile); } 
       $CleanDir = $ConvertTemp; 
       $CleanFiles = scandir($ConvertTemp); 
       include($JanitorFile); } } }
 if (file_exists($ConvertLoc)) {
+  $JanitorDeleteIndex = TRUE; 
   $DFiles = scandir($ConvertLoc);
   $now = time();
   foreach ($DFiles as $DFile) {
     if (in_array($DFile, $defaultApps)) continue;
     if (($now - symlinkmtime0($ConvertLoc.'/'.$DFile)) > ($Delete_Threshold * 60)) { // Time to keep files.
-      if (is_file($DFile)) {
-        @chmod ($DFile, 0755);
-        @unlink($DFile); 
-        $txt = ('OP-Act: Cleaned '.$DFiles.'/'.$DFile.' on '.$Time.'.');
+      if (is_file($ConvertLoc.'/'.$DFile)) {
+        chmod ($ConvertLoc.'/'.$DFile, 0755);
+        if (file_exists($ConvertLoc.'/'.$DFile)) unlink($ConvertLoc.'/'.$DFile); 
+        $txt = ('OP-Act: Cleaned '.$ConvertLoc.'/'.$DFile.' on '.$Time.'.');
         $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); }
-      if (is_dir($DFile)) {
-        $CleanDir = $DFiles.'/'.$DFile;
-        @chmod ($CleanDir, 0755);
-        $CleanFiles = scandir($DFiles.'/'.$DFile);
+      if (is_dir($ConvertLoc.'/'.$DFile)) {
+        $CleanDir = $ConvertLoc.'/'.$DFile;
+        chmod ($CleanDir, 0755);
+        $CleanFiles = scandir($ConvertLoc.'/'.$DFile);
         include($JanitorFile); 
-        @unlink($DFile.'/index.html');
-        @rmdir($DFile); } 
+        if (file_exists($ConvertLoc.'/'.$DFile.'/index.html')) unlink($ConvertLoc.'/'.$DFile.'/index.html');
+        if (is_dir($ConvertLoc.'/'.$DFile)) rmdir($ConvertLoc.'/'.$DFile); } 
       $CleanDir = $ConvertLoc; 
       $CleanFiles = scandir($ConvertLoc);
-      $JanitorDeleteIndex = TRUE; 
       include($JanitorFile); 
-      $JanitorDeleteIndex = FALSE; } } }
+      if (is_dir($ConvertLoc.'/'.$DFile)) rmdir($ConvertLoc.'/'.$DFile);
+      $JanitorDeleteIndex = FALSE; 
+      array_push($defaultApps, 'index.html'); } } }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

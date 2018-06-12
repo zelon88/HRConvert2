@@ -210,8 +210,6 @@ if (file_exists($ConvertTemp)) {
         chmod ($CleanDir, 0755);
         cleanFiles($CleanDir); } 
       cleanFiles($ConvertTemp); } } }
-
-
 if (file_exists($ConvertLoc)) {
   $DFiles = scandir($ConvertLoc);
   $now = time();

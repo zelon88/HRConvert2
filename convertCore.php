@@ -65,7 +65,7 @@ if (!isset($Token2)) {
 
 // / -----------------------------------------------------------------------------------
 // / The following code sets the global variables for the session.
-$HRConvertVersion = 'v1.5';
+$HRConvertVersion = 'v1.6';
 $Date = date("m_d_y");
 $Time = date("F j, Y, g:i a"); 
 $JanitorFile = 'janitor.php';
@@ -87,6 +87,8 @@ $ClamLogFile = $LogDir.'/ClamLog_'.$Date.'_'.$SesHash4.'_'.$SesHash.'.txt';
 $defaultLogDir = $InstLoc.'/Logs';
 $defaultLogSize = '1048576';
 $defaultApps = array('index.html', '.', '..', '..');
+$RequiredDirs = array($ConvertDir0, $ConvertDir, $ConvertTemp, $ConvertTempDir0, $ConvertTempDir);
+$RequiredIndexes = array($ConvertTemp, $ConvertTempDir0, $ConvertTempDir);
 $DangerousFiles = array('js', 'php', 'html', 'css');
 $DangerousFiles1 = array('.', '..', 'index.php', 'index.html');
 $ArchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi');
@@ -161,37 +163,6 @@ if (!file_exists($LogFile)) $MAKELogFile = file_put_contents($LogFile, 'OP-Act: 
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / The following code creates required data directoreis if they do not exist.
-if (!is_dir($ConvertLoc)) {
-  $txt = ('ERROR!!! HRConvert278, The specified $ConvertLoc does not exist at '.$ConvertLoc.' on '.$Time.'.');
-  $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); }
-if (!is_dir($ConvertDir0)) {
-  mkdir($ConvertDir0); 
-  $txt = ('OP-Act: Created a directory at '.$ConvertDir0.' on '.$Time.'.');
-  $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); 
-  copy ('index.html', $ConvertDir0.'/index.html'); }
-if (!is_dir($ConvertDir)) { 
-  mkdir($ConvertDir);
-  $txt = ('OP-Act: Created a directory at '.$ConvertDir.' on '.$Time.'.');
-  $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); }
-if (!is_dir($ConvertTemp)) {
-  mkdir($ConvertTemp); 
-  $txt = ('OP-Act: Created a directory at '.$ConvertTemp.' on '.$Time.'.');
-  $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); 
-  copy ('index.html', $ConvertTemp.'/index.html'); }
-if (!is_dir($ConvertTempDir0)) {
-  mkdir($ConvertTempDir0); 
-  $txt = ('OP-Act: Created a directory at '.$ConvertTempDir0.' on '.$Time.'.');
-  $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); 
-  copy ('index.html', $ConvertTempDir0.'/index.html'); }
-if (!is_dir($ConvertTempDir)) { 
-  mkdir($ConvertTempDir);
-  $txt = ('OP-Act: Created a directory at '.$ConvertTempDir.' on '.$Time.'.');
-  $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); 
-  copy ('index.html', $ConvertTempDir.'/index.html'); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
 // / The following code will clean up old files.
 if (file_exists($ConvertTemp)) {
   $DFiles = scandir($ConvertTemp);
@@ -227,6 +198,20 @@ if (file_exists($ConvertLoc)) {
         chmod ($CleanDir, 0755);
         cleanFiles($CleanDir); } 
       cleanFiles($ConvertLoc); } } }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / The following code creates required data directoreis if they do not exist.
+if (!is_dir($ConvertLoc)) {
+  $txt = ('ERROR!!! HRConvert278, The specified $ConvertLoc does not exist at '.$ConvertLoc.' on '.$Time.'.');
+  $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); }
+foreach ($RequiredDirs as $RequiredDir) { 
+  if (!is_dir($RequiredDir)) { 
+    mkdir($RequiredDir); 
+    $txt = ('OP-Act: Created a directory at '.$RequiredDir.' on '.$Time.'.');
+    $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } }
+foreach ($RequiredIndexes as $RequiredIndex) { 
+  copy ('index.html', $RequiredIndex.'/index.html'); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

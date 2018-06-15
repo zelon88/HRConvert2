@@ -9,7 +9,7 @@ A self-hosted drag-and-drop file conversion server that supports 59x file format
 
 ## Supported Formats
 
-# Audio Formats
+### Audio Formats
 Supports specific bitrate through the API.
 Mp2
 Mp3
@@ -18,8 +18,7 @@ Flac
 Ogg
 Wav
 Wma
-
-# Video Formats
+### Video Formats
 3gp
 Mkv
 Avi
@@ -28,21 +27,18 @@ Flv
 Mpeg
 Wmv
 Mov
-
-# Document Formats
+### Document Formats
 Doc
 Docx
 Txt
 Rtf
 Odf
 Pdf
-
-# Spreadsheet Formats
+### Spreadsheet Formats
 Xls
 Xlsx
 Ods
-
-# Presentation Formats
+### Presentation Formats
 Pages
 Pptx
 Ppt
@@ -53,21 +49,18 @@ Ppa
 Ppt
 Pptx
 Odp
-
-# Archive Formats
+### Archive Formats
 Can create, convert, and dearchive any of the following...
 Zip
 Rar
 Tar
 7z
-
-# Disk Image Formats
+### Disk Image Formats
 Can extract any of the following or convert to supported archive formats...
 Iso
 Vhd
 Vdi
-
-# Image Formats
+### Image Formats
 Supports resize & rotate through the GUI and API.
 Supports disable maintain aspect ratio through API.
 Jpg
@@ -76,8 +69,7 @@ Png
 Bmp
 Pdf
 Gif
-
-# 3D Model Formats
+### 3D Model Formats
 3ds
 Obj
 Collada
@@ -88,16 +80,14 @@ Ptx
 Dxf
 U3d
 Vrml
-
-# Drawing Files
+### Drawing Files
 Can output drawing files to image formats.
 Can convert between any of the following...
 Svg
 Dxf
 Fig
 Vdx
-
-# OCR Support
+### OCR Support
 OCR Operations support the following input formats...
 Jpg
 Jpeg

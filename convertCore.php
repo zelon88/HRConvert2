@@ -54,7 +54,7 @@ if (!empty($_SERVER['HTTPS']) && $_SERVER['SERVER_PORT'] == 443) {
 
 // / -----------------------------------------------------------------------------------
 // / The following code sets or validates a Token so it can be used as a unique idebtifier for the session.
-if (!isset($Token1)) {
+if (!isset($Token1) or strlen($Token1) < 19) {
   $Token1 = hash('ripemd160', rand(0, 1000000000).rand(0, 1000000000)); }
 if (isset($Token2)) {
   if ($Token2 !== hash('ripemd160', $Token1.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6)) {
@@ -65,7 +65,7 @@ if (!isset($Token2)) {
 
 // / -----------------------------------------------------------------------------------
 // / The following code sets the global variables for the session.
-$HRConvertVersion = 'v1.6';
+$HRConvertVersion = 'v1.6.5';
 $Date = date("m_d_y");
 $Time = date("F j, Y, g:i a"); 
 $JanitorFile = 'janitor.php';
@@ -203,7 +203,7 @@ if (file_exists($ConvertLoc)) {
 // / -----------------------------------------------------------------------------------
 // / The following code creates required data directoreis if they do not exist.
 if (!is_dir($ConvertLoc)) {
-  $txt = ('ERROR!!! HRConvert278, The specified $ConvertLoc does not exist at '.$ConvertLoc.' on '.$Time.'.');
+  $txt = ('ERROR!!! HRConvert278, The specified ConvertLoc does not exist at '.$ConvertLoc.' on '.$Time.'.');
   $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); }
 foreach ($RequiredDirs as $RequiredDir) { 
   if (!is_dir($RequiredDir)) { 
@@ -236,8 +236,8 @@ if(!empty($_FILES)) {
       $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
       echo nl2br($txt."\n"); 
       die(); }
-    $COPY_TEMP = move_uploaded_file($_FILES['file']['tmp_name'], $F3);
-    if (file_exists($F3)) {
+    $COPY_TEMP = copy($_FILES['file']['tmp_name'], $F3);
+    if (file_exists($F3) or $COPY_TEMP === FALSE) {
       $txt = ('OP-Act: '."Uploaded $file to $F3 on $Time".'.');
       echo nl2br ($txt."\n"); }
     if (!file_exists($F3)) {
@@ -303,6 +303,7 @@ if (isset($download)) {
   unset ($txt, $_POST['filesToDownload'], $file, $file1, $F2, $F3, $F4, $COPY_TEMP, $iterator, $item, $MAKELogFile); }
 // / -----------------------------------------------------------------------------------
 
+// / -----------------------------------------------------------------------------------
 // / The following code is performed when a user selects files for archiving.
 if (isset($_POST['archive'])) {
   $txt = ('OP-Act: Initiated Archiver on '.$Time.'.');
@@ -373,183 +374,6 @@ if (isset($_POST['archive'])) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / The following code will be performed when a user selects archives to extract.
-if (isset($_POST["dearchiveButton"])) {
-  $_POST['dearchiveButton'] = str_replace(str_split('[]{};:$!#^&%@>*<'), '', $_POST['dearchiveButton']);
-  $txt = ('OP-Act: Initiated Dearchiver on '.$Time.'.');
-  $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
-  $allowed =  array('zip', '7z', 'rar', 'tar', 'tar.gz', 'tar.bz2', 'iso', 'vhd');
-  $archarray = array('zip', '7z', 'rar', 'tar', 'tar.gz', 'tar.bz2', 'iso', 'vhd');
-  $rararr = array('rar');
-  $ziparr = array('zip');
-  $tararr = array('7z', 'tar', 'tar.gz', 'tar.bz2', 'iso', 'vhd');
-  if (isset($_POST["filesToDearchive"])) {
-    if (!is_array($_POST["filesToDearchive"])) $_POST['filesToDearchive'] = array($_POST['filesToDearchive']);
-    foreach (($_POST['filesToDearchive']) as $File) {
-      if ($File == '.' or $File == '..') continue;
-      // / The following code sets variables for each archive being extracted.
-      $File = str_replace(str_split('[]{};:$!#^&%@>*<'), '', $File); 
-      $File = str_replace(' ', '\ ', $File); 
-      $File = str_replace('//', '/', str_replace('//', '/', $File));   
-      // / The following code sets and detects the USER directory and filename variables to be used for the operation.
-      $dearchUserPath = str_replace('//', '/', $ConvertDir.'/'.$File);
-      $ext = pathinfo(str_replace('//', '/', $ConvertDir.'/'.$File), PATHINFO_EXTENSION); 
-      $dearchUserDir = str_replace('.'.$ext, '', $dearchUserPath);
-      $dearchUserFile = pathinfo($dearchUserPath, PATHINFO_FILENAME);
-      $dearchUserFilename = $dearchUserFile.'.'.$ext;
-      // / The following code sets the TEMP directory and filename variables to be used to copy files for the operation.
-      $dearchTempPath = str_replace('//', '/', $ConvertTempDir.'/'.$File);
-      $dearchTempDir = str_replace('.'.$ext, '', $dearchTempPath);
-      $dearchTempFile = $dearchUserFile;
-      $dearchTempFilename = $dearchUserFile.'.'.$ext;
-      // / The following code creates all of the temporary directories and file copies needed for the operation.
-      // / The following code is performed when a dearchTempDir already exists.
-      if (file_exists($dearchTempDir)) {
-        copy ('index.html', $dearchTempDir.'/index.html');
-        if (!is_dir($dearchTempDir)) {
-          mkdir ($dearchTempDir, 0755);  
-        if (is_dir($dearchTempDir)) {
-          $txt = ('OP-Act: Verified '.$dearchTempDir.' on '.$Time.'.');
-          $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } }
-        // / The follwing code creates a dearchTempDir if one does not exist, and checks again.
-        if (!is_dir($dearchTempDir)) {
-          mkdir($dearchTempDir, 0755); 
-          copy ('index.html', $dearchTempDir.'/index.html');
-        if (is_dir($dearchTempDir)) {
-          $txt = ('OP-Act: Created '.$dearchTempDir.' on '.$Time.'!');
-          $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } } 
-        // / The following double checks that all directories exist, and writes an error to the logfile if there are any.
-        if (!is_dir($dearchTempDir)) {
-          $txt = ('ERROR!!! HRConvert2390, Could not create a temp directory at '.$dearchTempDir.' on '.$Time.'!');
-          $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); 
-          die($txt); } 
-        if (!is_dir($dearchTempDir)) {
-          $txt = ('ERROR!!! HRConvert2394, Could not create a temp directory at '.$dearchTempDir.' on '.$Time.'!');
-          $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); 
-          die($txt); } }
-      if (!file_exists($dearchTempDir)) {
-        mkdir($dearchTempDir);
-        copy ('index.html', $dearchTempDir.'/index.html');
-        if (is_dir($dearchTempDir)) {
-          $txt = ('OP-Act: Created '.$dearchTempDir.' on '.$Time.'.');
-          $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } 
-        if (!is_dir($dearchTempDir)) {
-          $txt = ('ERROR!!! HRConvert2404, Could not create a temp directory at '.$dearchTempDir.' on '.$Time.'!');
-          $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } }
-      // / The following code creates all of the user directories and file copies needed for the operation.
-      // / The following code is performed when a dearchUserDir already exists.
-      if (file_exists($dearchUserDir)) {
-        copy ('index.html', $dearchUserDir.'/index.html');
-        if (!is_dir($dearchUserDir)) {
-          mkdir ($dearchUserDir, 0755);  
-        if (is_dir($dearchUserDir)) {
-          $txt = ('OP-Act: Verified '.$dearchUserDir.' on '.$Time.'.');
-          $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } }
-        // / The follwing code creates a dearchUserDir if one does not exist, and checks again.
-        if (!is_dir($dearchUserDir)) {
-          mkdir($dearchUserDir, 0755); 
-          copy ('index.html', $dearchUserDir.'/index.html');
-        if (is_dir($dearchUserDir)) {
-          $txt = ('OP-Act: Created '.$dearchUserDir.' on '.$Time.'!');
-          $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } } 
-        // / The following double checks that all directories exist, and writes an error to the logfile if there are any.
-        if (!is_dir($dearchUserDir)) {
-          $txt = ('ERROR!!! HRConvert2390, Could not create a user directory at '.$dearchUserDir.' on '.$Time.'!');
-          $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); 
-          die($txt); } }
-      if (!file_exists($dearchUserDir)) {
-        mkdir($dearchUserDir);
-        copy ('index.html', $dearchUserDir.'/index.html');
-        if (is_dir($dearchUserDir)) {
-          $txt = ('OP-Act: Created '.$dearchUserDir.' on '.$Time.'.');
-          $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } 
-        if (!is_dir($dearchUserDir)) {
-          $txt = ('ERROR!!! HRConvert2404, Could not create a user directory at '.$dearchUserDir.' on '.$Time.'!');
-          $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } }
-      // / The following code checks that the source files exist and are valid, and returns any errors that occur.
-      if (file_exists($dearchUserDir)) {
-        if (is_dir($dearchUserDir)) {
-          copy ($dearchUserPath, $dearchTempPath);
-          if (!file_exists($dearchTempPath)) {
-            $txt = ('ERROR!!! HRConvert2412, There was a problem copying '.$dearchUserPath.' to '.$dearchTempPath.' on '.$Time.'.');
-            $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); 
-            die($txt); } 
-          if (file_exists($dearchTempPath)) { 
-            $txt = ('OP-Act, Copied '.$dearchUserPath.' to '.$dearchTempPath.' on '.$Time.'.');
-            $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); 
-            // / Check the Cloud Location with ClamAV before dearchiving, just in case.
-            if ($VirusScan == '1') {
-              shell_exec(str_replace('  ', ' ', str_replace('  ', ' ', 'clamscan -r '.$Thorough.' '.$dearchTempPath.' | grep FOUND >> '.$ClamLogFile)));
-              $ClamLogFileDATA = file_get_contents($ClamLogFile);
-              if (strpos($ClamLogFileDATA, 'Virus Detected') == 'true' or strpos($ClamLogFileDATA, 'FOUND') == 'true') {
-                $txt = ('WARNING HRConvert2338, There were potentially infected files detected. The file
-                  transfer could not be completed at this time. Please check your file for viruses or
-                  try again later.'."\n");
-                $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);          
-                unlink($dearchTempPath);
-                die($txt); } 
-              @unlink($ClamLogFile); } } }
-        if (!is_dir($dearchUserDir)) {
-          $txt = ('ERROR!!! HRConvert2419, Discrepency detected! The dearchive directory supplied is not a directory on '.$Time.'!');
-          $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } }
-      if (!file_exists($dearchUserDir)) {
-          mkdir($dearchUserDir, 0755); 
-          if (file_exists($dearchUserDir)) {
-            $txt = ('OP-Act: Created '.$dearchUserDir.' on '.$Time.'.');
-            $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); 
-            die($txt); }
-          if (!file_exists($dearchUserDir)) {
-            $txt = ('ERROR!!! HRConvert2428, The dearchive directory was not detected on '.$Time.'!');
-            $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); 
-            die($txt); } }
-      // / Handle dearchiving of rar compatible files.
-      if(in_array($ext,$rararr)) {
-        $txt = ('OP-Act: Executing "unrar e '.$dearchTempPath.' '.$dearchUserDir.'" on '.$Time.'.');
-        $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
-        shell_exec('unrar e '.$dearchTempPath.' '.$dearchUserDir);
-        if (file_exists($dearchUserDir)) {
-          $txt = ('OP-Act: '."Dearchived $dearchTempPath to $dearchUserDir using method 1 on $Time".'.'); 
-          $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } }
-      // / Handle dearchiving of .zip compatible files.
-      if(in_array($ext,$ziparr)) {
-        $txt = ('OP-Act: Executing "unzip -o '.$dearchTempPath.' -d '.$dearchUserDir.'" on '.$Time.'.');
-        $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
-        shell_exec('unzip -o '.$dearchTempPath.' -d '.$dearchUserDir);
-        if (file_exists($dearchUserDir)) {
-          $txt = ('OP-Act: '."Dearchived $dearchTempPath to $dearchUserDir using method 2 on $Time".'.'); 
-          $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } } 
-      // / Handle dearchiving of 7zipper compatible files.
-      if(in_array($ext,$tararr)) {
-        $txt = ('OP-Act: Executing "7z e '.$dearchTempPath.' '.$dearchUserDir.'" on '.$Time.'.'); 
-        $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
-        shell_exec('7z e '.$dearchTempPath.' '.$dearchUserDir); 
-        if (file_exists($dearchUserDir)) {
-          $txt = ('OP-Act: '."Dearchived $dearchTempPath to $dearchUserDir using method 3 on $Time".'.'); 
-          $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } } }
-    if (file_exists($dearchUserDir)) {
-      $dearchFiles = scandir($dearchUserDir);
-      foreach ($dearchFiles as $dearchFile) {
-        $DangerousFiles = array('js', 'php', 'html', 'css');
-        $dearchFileLoc = $dearchUserDir.'/'.$dearchFile;
-        $ext = pathinfo($dearchFileLoc, PATHINFO_EXTENSION);
-        if (in_array($ext, $DangerousFiles) && $dearchFile !== 'index.html') {
-          unlink($dearchFileLoc);
-          $txt = ('ERROR!!! HRConvert2568, Unsupported file format, '.$ext.' on '.$Time."\n".'--------------------'."\n"); 
-          echo nl2br ('ERROR!!! HRConvert2568, Unsupported file format, '.$ext.' on '.$Time."\n".'--------------------'."\n"); 
-          $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } } }
-    // / Return an error if the extraction failed and no files were created.
-    if (!file_exists($dearchUserDir)) {
-      $txt = ('ERROR!!! HRConvert2449, There was a problem creating '.$dearchUserDir.' on '.$Time."\n".'--------------------'."\n"); 
-      echo nl2br ('ERROR!!! HRConvert2449, There was a problem creating '.$dearchUserDir.' on '.$Time."\n".'--------------------'."\n"); 
-      $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } } 
-  // / Free un-needed memory.
-  $_POST['dearchiveButton'] = $txt = $allowed = $archarray = $rararr = $ziparr = $tararr = $_POST["filesToDearchive"] = $File = $dearchUserPath = $ext
-   = $dearchUserDir = $dearchUserFile = $dearchUserFilename = $dearchTempPath = $dearchTempDir = $dearchTempFile = $dearchTempFilename = $ClamLogFileDATA = $MAKELogFile = null;
-  unset ($_POST['dearchiveButton'], $txt, $UDP, $allowed, $archarray, $rararr, $ziparr, $tararr, $_POST["filesToDearchive"], $File, $dearchUserPath, $ext, 
-   $dearchUserDir, $dearchUserfile, $dearchUserFilename, $dearchTempPath, $dearchTempDir, $dearchTempFile, $dearchTempFilename, $ClamLogFileDATA, $MAKELogFile); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
 // / The following code is performed when a user selects files to convert to other formats.
 if (isset($_POST['convertSelected'])) {
   $_POST['convertSelected'] = str_replace('//', '/', str_replace(str_split('[]{};:$!#^&%@>*<'), '', $_POST['convertSelected']));
@@ -557,7 +381,7 @@ if (isset($_POST['convertSelected'])) {
   $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
   if (!is_array($_POST['convertSelected'])) $_POST['convertSelected'] = array($_POST['convertSelected']);
   foreach ($_POST['convertSelected'] as $key => $file) {
-    $file = htmlentities(str_replace(str_split('[]{};:$!#^&%@>*<'), '', $file), ENT_QUOTES, 'UTF-8'); 
+    $file = str_replace(str_split('[]{};:$!#^&%@>*<'), '', $file); 
     $txt = ('OP-Act: User '.$UserID.' selected to Convert file '.$file.'.');
     $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
     $allowed =  array('svg', 'dxf', 'vdx', 'fig', '3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'ptx', 'dxf', 'u3d', 'vrml', 'mov', 'mp4', 'mkv', 'flv', 'ogv', 'wmv', 'mpg', 'mpeg', 'm4v', '3gp', 'flac', 'aac', 'dat', 
@@ -576,13 +400,12 @@ if (isset($_POST['convertSelected'])) {
         Please rename your file or try again later.'."\n"); }
     $convertcount = 0;
     $extension = str_replace(str_split('[]{};:$!#^&%@>*<'), '', $_POST['extension']);
-    $pathname = str_replace('//', '/', $ConvertTempDir.$file);
-    $pathname = str_replace(' ', '\ ', $pathname);
-    $oldPathname = str_replace('//', '/', $ConvertDir.$file);
+    $pathname = str_replace(' ', '\ ', str_replace('//', '/', $ConvertTempDir.$file));
+    $oldPathname = str_replace(' ', '\ ', str_replace('//', '/', $ConvertDir.$file));
     $filename = pathinfo($pathname, PATHINFO_FILENAME);
     $oldExtension = pathinfo($pathname, PATHINFO_EXTENSION);
     $newFile = str_replace('//', '/', str_replace(str_split('[]{};:$!#^&%@>*<'), '', $_POST['userconvertfilename'].'.'.$extension));
-    $newPathname = str_replace('//', '/', $ConvertDir.$newFile);
+    $newPathname = str_replace(' ', '\ ', str_replace('//', '/', $ConvertDir.$newFile));
     $docarray =  array('txt', 'doc', 'xls', 'xlsx', 'docx', 'rtf', 'odf', 'ods', 'odt', 'dat', 'cfg', 'pages', 'pptx', 'ppt', 'xps', 'potx', 'pot', 'ppa', 'odp', 'odf');
     $imgarray = array('jpg', 'jpeg', 'bmp', 'png', 'gif');
     $audioarray =  array('mp3', 'wma', 'wav', 'ogg', 'mp2', 'flac', 'aac');
@@ -617,7 +440,7 @@ if (isset($_POST['convertSelected'])) {
       if (file_exists('/usr/bin/unoconv')) {
         $txt = ('OP-Act: Verified the document conversion engine on '.$Time.'.');
         $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); 
-      // / The following code checks to see if Unoconv is in memory.
+        // / The following code checks to see if Unoconv is in memory.
         exec("pgrep soffice.bin", $DocEnginePID, $DocEngineStatus);
         if (count($DocEnginePID) == 0) {
           $txt = ('OP-Act: Starting the document conversion engine on '.$Time.'.');
@@ -825,13 +648,12 @@ if (isset($_POST['pdfworkSelected'])) {
       $extension = str_replace(str_split('[]{};:$!#^&%@>*<'), '', $_POST['pdfextension']); } 
     if (!isset($_POST['pdfextension'])) {
       $extension = 'pdf'; }
-    $pathname = str_replace('//', '/', $ConvertTempDir.$file); 
-    $pathname = str_replace(' ', '\ ', $pathname);
-    $oldPathname = str_replace('//', '/', $ConvertDir.$file);
+    $pathname = str_replace(' ', '\ ', str_replace('//', '/', $ConvertTempDir.$file)); 
+    $oldPathname = str_replace(' ', '\ ', str_replace('//', '/', $ConvertDir.$file));
     $filename = pathinfo($pathname, PATHINFO_FILENAME);
     $oldExtension = pathinfo($pathname, PATHINFO_EXTENSION);
     $newFile = str_replace(str_split('[]{};:$!#^&%@>*<'), '', $_POST['userpdfconvertfilename'].'.'.$extension);
-    $newPathname = str_replace('//', '/', $ConvertDir.$newFile);
+    $newPathname = str_replace(' ', '\ ', str_replace('//', '/', $ConvertDir.$newFile));
     $doc1array =  array('txt', 'pages', 'doc', 'xls', 'xlsx', 'docx', 'rtf', 'odf', 'ods', 'odt');
     $img1array = array('jpg', 'jpeg', 'bmp', 'png', 'gif');
     $pdf1array = array('pdf');
@@ -976,5 +798,4 @@ if (isset($_GET['showFiles']) or isset($_POST['showFiles'])) {
 if (!isset($_GET['showFiles'])) {
   require_once('convertGui1.php'); }
 // / -----------------------------------------------------------------------------------
-
 ?>

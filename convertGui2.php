@@ -642,6 +642,10 @@ include ('header.php');
             <option value="dxf">Dxf</option>
             <option value="vdx">Vdx</option>
             <option value="fig">Fig</option>
+            <option value="jpg">Jpg</option>
+            <option value="png">Png</option>
+            <option value="bmp">Bmp</option>
+            <option value="pdf">Pdf</option>
           </select></p>
           <input type="submit" id="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Convert Drawing' onclick="toggle_visibility('loadingCommandDiv');">     
           <script type="text/javascript">

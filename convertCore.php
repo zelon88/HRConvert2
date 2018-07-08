@@ -65,7 +65,7 @@ if (!isset($Token2)) {
 
 // / -----------------------------------------------------------------------------------
 // / The following code sets the global variables for the session.
-$HRConvertVersion = 'v1.7';
+$HRConvertVersion = 'v1.8';
 $Date = date("m_d_y");
 $Time = date("F j, Y, g:i a"); 
 $JanitorFile = 'janitor.php';

@@ -2,6 +2,8 @@
 include ('header.php');
 ?>
   <body>
+    <?php 
+    if (!isset($_GET['noGui'])) { ?>
     <div id="header-text" style="max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;">
       <h1>HRConvert2</h1>
       <h3>Online File Converter, Extractor, Compressor</h3>
@@ -119,10 +121,10 @@ include ('header.php');
             <p><i>Can output drawing files to image formats.</i></p>
             <p><i>Can convert between any of the following...</i></p>
             <ol>
-              <li>svg</li>
-              <li>dxf</li>
-              <li>fig</li>
-              <li>vdx</li>
+              <li>Svg</li>
+              <li>Dxf</li>
+              <li>Fig</li>
+              <li>Vdx</li>
             </ol>
             <strong>OCR Support</strong>
             <p><i>OCR Operations support the following input formats...</i></p>
@@ -145,9 +147,10 @@ include ('header.php');
             </ol>
           </div>
         </div>
-      </div>
-      <div id="call-to-action1" style="max-width:1000px; text-align:center;">
         <hr />
+      </div>
+      <?php } ?>
+      <div id="call-to-action1" style="max-width:1000px; text-align:center;">
         <p>Select files by clicking, tapping, or dropping files into the box below.</p>
       </div>
       <div id="dropzone" style="max-height:2000px; max-width:1000px; margin:25px;">

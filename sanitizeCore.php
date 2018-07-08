@@ -43,6 +43,13 @@ if (isset($_POST['Token2'])) {
   $Token2 = str_replace(str_split('~#[](){};:$!#^&%@>*<"\''), '', $_POST['Token2']); }
 // / -----------------------------------------------------------------------------------
 
+// / -----------------------------------------------------------------------------------
+// / Sanitize the noGui GET variable to disable the descriptive header text.
+// / Good for usage in a small iframe.
+if (isset($_POST['noGui'])) {
+  $_GET = str_replace(str_split('~#[](){};:$!#^&%@>*<"\''), '', $_GET['noGui']); }
+// / -----------------------------------------------------------------------------------
+
 // / Can be used to automatically download and install the latest HRConvert2 update from Github. 
 // / Will perform "AutoDownload", "AutoInstall", "AutoClean", and "CompatCheck" consecutively. 
   // / Accepts a value of '1' or 'true'.

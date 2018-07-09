@@ -13,8 +13,8 @@ include ('header.php');
   <body>
     <script type="text/javascript" src="Resources/jquery-3.3.1.min.js"></script>
     <div id="header-text" style="max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;">
-      <h1>HRConvert2</h1>
-      <hr />
+      <?php if (!isset($_GET['noGui'])) { ?><h1>HRConvert2</h1>
+      <hr /><?php } ?>
       <h3>File Conversion Options</h3>
       <p>You have uploaded <?php echo $fileCount; ?> valid file<?php echo $fcPlural1; ?> to HRConvert2.</p> 
       <p>Your file<?php echo $fcPlural2; ?> now ready to convert using the options below.</p>

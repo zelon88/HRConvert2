@@ -65,7 +65,7 @@ if (!isset($Token2)) {
 
 // / -----------------------------------------------------------------------------------
 // / The following code sets the global variables for the session.
-$HRConvertVersion = 'v1.8';
+$HRConvertVersion = 'v1.9';
 $Date = date("m_d_y");
 $Time = date("F j, Y, g:i a"); 
 $JanitorFile = 'janitor.php';
@@ -97,7 +97,7 @@ $DocumentArray = array('txt', 'doc', 'docx', 'rtf', 'xls', 'xlsx', 'odf', 'ods',
 $DocArray = array('txt', 'doc', 'docx', 'rtf', 'odf');
 $SpreadsheetArray = array('csv', 'xls', 'xlsx', 'odf', 'ods');
 $PresentationArray = array('ppt', 'xps', 'potx', 'potm', 'pot', 'ppa', 'odp');
-$ImageArray = array('jpeg', 'jpg', 'png', 'bmp', 'gif', 'pdf');
+$ImageArray = array('jpeg', 'jpg', 'png', 'bmp', 'gif');
 $ImageArray1 = array('jpeg', 'jpg', 'png', 'bmp', 'gif');
 $MediaArray = array('mp3', 'aac', 'oog', 'wma', 'mp2', 'flac');
 $VideoArray = array('3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv', 'mov');
@@ -220,7 +220,9 @@ if(!empty($_FILES)) {
   $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
   if (!is_array($_FILES['file']['name'])) $_FILES['file']['name'] = array($_FILES['file']['name']); 
   foreach ($_FILES['file']['name'] as $key=>$file) {
-    if ($file == '.' or $file == '..' or $file == 'index.html') continue;     
+    if ($file == '.' or $file == '..' or $file == 'index.html') continue; 
+    foreach ($DangerousFiles as $DangerousFile) { 
+      if (strpos($file, $DangerousFile) == TRUE) continue 2; }   
     $file = htmlentities(str_replace(str_split('\\/[](){};:$!#^&%@>*<'), '', $file), ENT_QUOTES, 'UTF-8');
     $F0 = pathinfo($file, PATHINFO_EXTENSION);
     if (in_array($F0, $DangerousFiles)) { 
@@ -271,6 +273,8 @@ if (isset($download)) {
   foreach ($download as $file) {
     $file = str_replace(str_split('[](){};:$!#^&%@>*<'), '', $file);
     if ($file == '.' or $file == '..' or $file == 'index.html') continue;
+    foreach ($DangerousFiles as $DangerousFile) { 
+      if (strpos($file, $DangerousFile) == TRUE) continue 2; }
     $file1 = trim($file, '/');
     $file = $ConvertDir.'/'.$file;
     if (!file_exists($file) or $file == "") {
@@ -291,6 +295,8 @@ if (isset($download)) {
       foreach ($iterator = new \RecursiveIteratorIterator(
         new \RecursiveDirectoryIterator($file, \RecursiveDirectoryIterator::SKIP_DOTS),
         \RecursiveIteratorIterator::SELF_FIRST) as $item) {
+        foreach ($DangerousFiles as $DangerousFile) { 
+          if (strpos($item, $DangerousFile) == TRUE) continue 2; }
         $F4 = $F3 . DIRECTORY_SEPARATOR . $iterator->getSubPathName();
         if ($item->isDir()) {
           mkdir($F4); }   
@@ -312,6 +318,8 @@ if (isset($_POST['archive'])) {
     $_POST['filesToArchive'] = array($_POST['filesToArchive']); }
   foreach ($_POST['filesToArchive'] as $key=>$TFile1) {
     $TFile1 = str_replace(' ', '\ ', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $TFile1)); 
+    foreach ($DangerousFiles as $DangerousFile) { 
+      if (strpos($TFile1, $DangerousFile) == TRUE) continue 2; }
     $allowed =  array('mov', 'mp4', 'mkv', 'flv', 'ogv', 'wmv', 'mpg', 'mpeg', 'm4v', '3gp', 'dat', 'cfg', 'txt', 'doc', 'docx', 'rtf', 'xls', 'xlsx', 'csv', 'ods', 'odf', 'odt', 'jpg', 'mp3', 
        'avi', 'wma', 'wav', 'ogg', 'jpeg', 'bmp', 'png', 'gif', 'pdf', 'abw', 'zip', '7z', 'rar', 'tar', 'tar.gz', 'tar.bz2', 'iso', 'vhd');
     $archarray = array('zip', '7z', 'rar', 'tar', 'tar.gz', 'tar.bz2', 'iso', 'vhd');
@@ -378,6 +386,8 @@ if (isset($_POST['convertSelected'])) {
   if (!is_array($_POST['convertSelected'])) $_POST['convertSelected'] = array($_POST['convertSelected']);
   foreach ($_POST['convertSelected'] as $key => $file) {
     $file = str_replace(str_split('[](){};:$!#^&%@>*<'), '', $file); 
+    foreach ($DangerousFiles as $DangerousFile) { 
+      if (strpos($file, $DangerousFile) == TRUE) continue 2; }
     $txt = ('OP-Act: User '.$UserID.' selected to Convert file '.$file.'.');
     $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
     $allowed =  array('svg', 'dxf', 'vdx', 'fig', '3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'ptx', 'dxf', 'u3d', 'vrml', 'mov', 'mp4', 'mkv', 'flv', 'ogv', 'wmv', 'mpg', 'mpeg', 'm4v', '3gp', 'flac', 'aac', 'dat', 
@@ -624,6 +634,8 @@ if (isset($_POST['pdfworkSelected'])) {
   if (!is_array($_POST['pdfworkSelected'])) $_POST['pdfworkSelected'] = array($_POST['pdfworkSelected']);
   foreach ($_POST['pdfworkSelected'] as $file) {
     $file = str_replace(str_split('[](){};:$!#^&%@>*<'), '', $file);
+    foreach ($DangerousFiles as $DangerousFile) { 
+      if (strpos($file, $DangerousFile) == TRUE) continue 2; }
     $txt = ('OP-Act: User '.$UserID.' selected to PDFWork file '.$file.' on '.$Time.'.');
     $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
     $allowedPDFw =  array('txt', 'doc', 'docx', 'rtf' ,'xls', 'xlsx', 'ods', 'odf', 'odt', 'jpg', 'jpeg', 'bmp', 'png', 'gif', 'pdf', 'abw');

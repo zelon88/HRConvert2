@@ -1,0 +1,9 @@
+----------
+COMMIT 7/8/2018
+v1.9 - Improve security.
+
+-v1.9.
+-Added checks for dangerous files to all Convert operations and to the GUI.
+-Fix PDF files showing the image options button when there is no div to display.
+-Added this changelog to keep track of thoughts, changes, and ideas.
+----------

@@ -84,6 +84,7 @@ include ('header.php');
               <li>Zip</li>
               <li>Rar</li>
               <li>Tar</li>
+              <li>Tar.Bz2</li>
               <li>7z</li>
             </ol>
             <strong>Disk Image Formats</strong>
@@ -159,18 +160,18 @@ include ('header.php');
         <input type="hidden" id="token2" name="Token2" value="<?php echo $Token2; ?>">
         </form>
       </div>
+      <div align="center">
+        <form action="convertCore.php?showFiles=1<?php if (isset($_GET['noGui'])) echo '&noGui=TRUE'; ?>" method="post">
+          <input type="hidden" id="token1" name="Token1" value="<?php echo $Token1; ?>">
+          <input type="hidden" id="token2" name="Token2" value="<?php echo $Token2; ?>">
+          <input type="submit" id="continue-button" class="info-button" value="Continue ...">
+        </form>
+        </form>
+
+        <br />
+        <hr />    
+      </div>
     </div>
-    <div align="center">
-      <form action="convertCore.php?showFiles=1<?php if (isset($_GET['noGui'])) echo '&noGui=TRUE'; ?>" method="post">
-        <input type="hidden" id="token1" name="Token1" value="<?php echo $Token1; ?>">
-        <input type="hidden" id="token2" name="Token2" value="<?php echo $Token2; ?>">
-        <input type="submit" id="continue-button" class="info-button" value="Continue ...">
-      </form>
-      </form>
-      
-    </div>
-    <br />
-    <hr />    
     <?php
     include ('footer.php');
     ?>

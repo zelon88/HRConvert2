@@ -1,3 +1,16 @@
+
+----------
+COMMIT 7/20/2018
+v2.0 - Polish some rough edges in the back end.
+
+-v2.0.
+-Consolidate some code in similar fashion to the recent HRC2 refactor.
+-Now when no extension is specified a default will be used instead of displaying a 404 error.
+-Tweak auto-cleaner to make it work in a safer, more reliable way.
+-Add conversion and archive support for tar.bz2.
+-Now when bulk archives are created any converted files will be included in the archive as well as the originals.
+-Fix the way files sync between locations and the way symlinks are controlled.
+
 ----------
 COMMIT 7/8/2018
 v1.9 - Improve security.

@@ -33,11 +33,12 @@ include ('header.php');
         <p>Compress & Download All Files:</p>
         <p>Specify Filename: <input type="text" id='userarchallfilename' name='userarchallfilename' value='HRConvert2_Files-<?php echo $Date; ?>'></p> 
         <select id='archallextension' name='archallextension'> 
-          <option value="">Select Format</option>
+          <option value="zip">Select Format</option>
           <option value="zip">Zip</option>
           <option value="rar">Rar</option>
           <option value="tar">Tar</option>
           <option value="7z">7z</option>
+          <option value="tar.bz2">Tar.Bz2</option>
         </select>
         <input type="submit" id="archallSubmit" name="archallSubmit" class="info-button" value='Compress & Download' onclick="toggle_visibility('loadingCommandDiv');">
       
@@ -45,6 +46,9 @@ include ('header.php');
         $(document).ready(function () {
           $('#archallSubmit').click(function() {
             var archfiles = <?php echo json_encode($Files); ?>;
+            var extension = $('#archallextension').val();
+            if (extension === "") { 
+              extension = 'zip'; } 
             $.ajax({
               type: "POST",
               url: 'convertCore.php',
@@ -53,7 +57,7 @@ include ('header.php');
                 Token2:'<?php echo $Token2; ?>',
                 archive:'1',
                 filesToArchive:archfiles,
-                archextension:$('#archallextension').val(),
+                archextension:extension,
                 userfilename:$('input[name="userarchallfilename"]').val() },
                 success: function(ReturnData) {
                   $.ajax({
@@ -62,10 +66,10 @@ include ('header.php');
                   data: { 
                     Token1:'<?php echo $Token1; ?>',
                     Token2:'<?php echo $Token2; ?>',
-                    download:$('input[name="userarchallfilename"]').val()+'.'+$('#archallextension').val()},
+                    download:$('input[name="userarchallfilename"]').val()+'.'+extension},
                   success: function(returnFile) {
                     toggle_visibility('loadingCommandDiv');
-                    window.location.href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+$('input[name="userarchallfilename"]').val()+'.'+$('#archallextension').val(); }
+                    window.location.href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+$('input[name="userarchallfilename"]').val()+'.'+extension; }
                   }); },
                 error: function(ReturnData) {
                   alert("<?php echo $Alert; ?>"); }
@@ -187,7 +191,7 @@ include ('header.php');
           <p>Archive This File</p>
           <p>Specify Filename: <input type="text" id='userarchfilefilename<?php echo $ConvertGuiCounter1; ?>' name='userarchfilefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='archfileextension<?php echo $ConvertGuiCounter1; ?>' name='archfileextension<?php echo $ConvertGuiCounter1; ?>'> 
-            <option value="">Select Format</option>
+            <option value="zip">Select Format</option>
             <option value="zip">Zip</option>
             <option value="rar">Rar</option>
             <option value="tar">Tar</option>
@@ -240,7 +244,7 @@ include ('header.php');
             <option value="2">Method 2 (Advanced)</option>
           </select>
           <select id='pdfextension<?php echo $ConvertGuiCounter1; ?>' name='pdfextension<?php echo $ConvertGuiCounter1; ?>'>   
-            <option value="">Select Format</option> 
+            <option value="pdf">Select Format</option> 
             <option value="pdf">Pdf</option>   
             <option value="doc">Doc</option>
             <option value="docx">Docx</option>
@@ -290,7 +294,7 @@ include ('header.php');
           <p>Convert This Archive</p>
           <p>Specify Filename: <input type="text" id='userarchivefilename<?php echo $ConvertGuiCounter1; ?>' name='userarchivefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='archiveextension<?php echo $ConvertGuiCounter1; ?>' name='archiveextension<?php echo $ConvertGuiCounter1; ?>'> 
-            <option value="">Select Format</option>
+            <option value="zip">Select Format</option>
             <option value="zip">Zip</option>
             <option value="rar">Rar</option>
             <option value="tar">Tar</option>
@@ -337,7 +341,7 @@ include ('header.php');
           <p>Convert This Document</p>
           <p>Specify Filename: <input type="text" id='userdocfilename<?php echo $ConvertGuiCounter1; ?>' name='userdocfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='docextension<?php echo $ConvertGuiCounter1; ?>' name='docextension<?php echo $ConvertGuiCounter1; ?>'> 
-            <option value="">Select Format</option>
+            <option value="txt">Select Format</option>
             <option value="doc">Doc</option>
             <option value="docx">Docx</option>
             <option value="rtf">Rtf</option>
@@ -386,7 +390,7 @@ include ('header.php');
           <p>Convert This Spreadsheet</p>
           <p>Specify Filename: <input type="text" id='userspreadfilename<?php echo $ConvertGuiCounter1; ?>' name='userspreadfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='spreadextension<?php echo $ConvertGuiCounter1; ?>' name='spreadextension<?php echo $ConvertGuiCounter1; ?>'>
-            <option value="">Select Format</option> 
+            <option value="ods">Select Format</option> 
             <option value="xls">Xls</option>
             <option value="xlsx">Xlsx</option>
             <option value="ods">Ods</option>
@@ -433,7 +437,7 @@ include ('header.php');
           <p>Convert This Presentation</p>
           <p>Specify Filename: <input type="text" id='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' name='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='presentationextension<?php echo $ConvertGuiCounter1; ?>' name='presentationextension<?php echo $ConvertGuiCounter1; ?>'>
-            <option value="">Select Format</option>
+            <option value="odp">Select Format</option>
             <option value="pages">Pages</option>
             <option value="pptx">Pptx</option>
             <option value="ppt">Ppt</option>
@@ -484,7 +488,7 @@ include ('header.php');
           <p>Convert This Audio</p>
           <p>Specify Filename: <input type="text" id='useraudiofilename<?php echo $ConvertGuiCounter1; ?>' name='useraudiofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='audioextension<?php echo $ConvertGuiCounter1; ?>' name='audioextension<?php echo $ConvertGuiCounter1; ?>'> 
-            <option value="">Select Format</option>
+            <option value="mp3">Select Format</option>
             <option value="mp2">Mp2</option>  
             <option value="mp3">Mp3</option>
             <option value="wav">Wav</option>
@@ -533,7 +537,7 @@ include ('header.php');
           <p>Convert This Video</p>
           <p>Specify Filename: <input type="text" id='uservideofilename<?php echo $ConvertGuiCounter1; ?>' name='uservideofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='videoextension<?php echo $ConvertGuiCounter1; ?>' name='videoextension<?php echo $ConvertGuiCounter1; ?>'>
-            <option value="">Select Format</option> 
+            <option value="mp4">Select Format</option> 
             <option value="3gp">3gp</option> 
             <option value="mkv">Mkv</option> 
             <option value="avi">Avi</option>
@@ -584,7 +588,7 @@ include ('header.php');
           <p>Convert This 3D Model</p>
           <p>Specify Filename: <input type="text" id='usermodelfilename<?php echo $ConvertGuiCounter1; ?>' name='usermodelfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='modelextension<?php echo $ConvertGuiCounter1; ?>' name='modelextension<?php echo $ConvertGuiCounter1; ?>'>
-            <option value="">Select Format</option>
+            <option value="3ds">Select Format</option>
             <option value="3ds">3ds</option>
             <option value="collada">Collada</option>
             <option value="obj">Obj</option>
@@ -637,7 +641,7 @@ include ('header.php');
           <p>Convert This Technical Drawing Or Vector File</p>
           <p>Specify Filename: <input type="text" id='userdrawingfilename<?php echo $ConvertGuiCounter1; ?>' name='userdrawingfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='drawingextension<?php echo $ConvertGuiCounter1; ?>' name='drawingextension<?php echo $ConvertGuiCounter1; ?>'>
-            <option value="">Select Format</option>
+            <option value="jpg">Select Format</option>
             <option value="svg">Svg</option>
             <option value="dxf">Dxf</option>
             <option value="vdx">Vdx</option>
@@ -688,7 +692,7 @@ include ('header.php');
           <p>Convert This Image</p>
           <p>Specify Filename: <input type="text" id='userphotofilename<?php echo $ConvertGuiCounter1; ?>' name='userphotofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='photoextension<?php echo $ConvertGuiCounter1; ?>' name='photoextension<?php echo $ConvertGuiCounter1; ?>'>
-            <option value="">Select Format</option>
+            <option value="jpg">Select Format</option>
             <option value="jpg">Jpg</option>
             <option value="bmp">Bmp</option>
             <option value="png">Png</option>

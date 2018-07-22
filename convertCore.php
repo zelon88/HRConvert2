@@ -51,7 +51,7 @@ if (!isset($Token2)) $Token2 = hash('ripemd160', $Token1.$Salts1.$Salts2.$Salts3
 
 // / -----------------------------------------------------------------------------------
 // / The following code sets the global variables for the session.
-$HRConvertVersion = 'v2.0';
+$HRConvertVersion = 'v2.1';
 $Date = date("m_d_y");
 $Time = date("F j, Y, g:i a"); 
 $JanitorFile = 'janitor.php';
@@ -111,23 +111,24 @@ function getFiles($pathToFiles) {
 function getExtension($pathToFile) { 
   return pathinfo($pathToFile, PATHINFO_EXTENSION); }
 function getFilesize($File) { 
-  $Size = filesize($File);
+  $Size = @filesize($File);
   if ($Size < 1024) $Size=$Size." Bytes"; 
   elseif (($Size < 1048576) && ($Size > 1023)) $Size = round($Size / 1024, 1)." KB";
   elseif (($Size < 1073741824) && ($Size > 1048575)) $Size = round($Size / 1048576, 1)." MB";
   else ($Size = round($Size/1073741824, 1)." GB");
   return ($Size); }
 function symlinkmtime($symlinkPath) { 
-  $stat = lstat($symlinkPath);
+  $stat = @lstat($symlinkPath);
   return isset($stat['mtime']) ? $stat['mtime'] : null; }
 function fileTime($filePath) {
   if (file_exists($filePath)) {
-    $stat = filemtime($filePath);
+    $stat = @filemtime($filePath);
     return ($stat); } }
 function is_dir_empty($dir) { 
-  $contents = scandir($dir);
-  foreach ($contents as $content) { 
-    if ($content == '.' or $content == '..') return FALSE; }
+  if (is_dir($dir)) { 
+    $contents = scandir($dir);
+    foreach ($contents as $content) { 
+      if ($content == '.' or $content == '..') return FALSE; } }
   return TRUE; }
 function cleanFiles($path) { 
   global $ConvertLoc, $ConvertTemp, $InstLoc, $defaultApps;
@@ -135,7 +136,7 @@ function cleanFiles($path) {
     $i = scandir($path);
     foreach($i as $f) { 
       if (is_file($path.'/'.$f) && !in_array(basename($path.'/'.$f), $defaultApps)) @unlink($path.'/'.$f);  
-      if (is_dir($path.'/'.$f) && !in_array(basename($path.'/'.$f), $defaultApps) && is_dir_empty($path)) rmdir($path.'/'.$f);
+      if (is_dir($path.'/'.$f) && !in_array(basename($path.'/'.$f), $defaultApps) && is_dir_empty($path)) @rmdir($path.'/'.$f);
       if (is_dir($path.'/'.$f) && !in_array(basename($path.'/'.$f), $defaultApps) && !is_dir_empty($path)) cleanFiles($path.'/'.$f); } 
     if ($path !== $ConvertLoc && $path !== $ConvertTemp) @rmdir($path); } }
 // / -----------------------------------------------------------------------------------
@@ -165,9 +166,9 @@ if (file_exists($ConvertTemp)) {
     if ($DFilePath == $ConvertTemp.'/index.html') continue; 
     if ($now - fileTime($DFilePath) > ($Delete_Threshold * 60)) { // Time to keep files.
       if (is_dir($DFilePath)) { 
-        chmod ($DFilePath, 0755);
+        @chmod ($DFilePath, 0755);
         cleanFiles($DFilePath);
-        if (is_dir_empty($DFilePath)) rmdir($DFilePath); } } } }
+        if (is_dir_empty($DFilePath)) @rmdir($DFilePath); } } } }
 if (file_exists($ConvertLoc)) { 
   $DFiles = array_diff(scandir($ConvertLoc), array('..', '.'));
   $now = time();
@@ -176,9 +177,9 @@ if (file_exists($ConvertLoc)) {
     $DFilePath = $ConvertLoc.'/'.$DFile;
     if ($now - fileTime($DFilePath) > ($Delete_Threshold * 60)) { // Time to keep files.
       if (is_dir($DFilePath)) { 
-        chmod ($DFilePath, 0755);
+        @chmod ($DFilePath, 0755);
         cleanFiles($DFilePath); 
-        if (is_dir_empty($DFilePath)) rmdir($DFilePath); } } } }
+        if (is_dir_empty($DFilePath)) @rmdir($DFilePath); } } } }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -188,7 +189,7 @@ if (!is_dir($ConvertLoc)) {
   $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); }
 foreach ($RequiredDirs as $RequiredDir) { 
   if (!is_dir($RequiredDir)) { 
-    mkdir($RequiredDir); 
+    @mkdir($RequiredDir); 
     $txt = ('OP-Act: Created a directory at '.$RequiredDir.' on '.$Time.'.');
     $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } }
 foreach ($RequiredIndexes as $RequiredIndex) { 
@@ -227,7 +228,7 @@ if(!empty($_FILES)) {
       $txt = ('ERROR!!!HRConvert2230, Could not upload '.$file.' to '.$F3.' on '.$Time.'!');
       echo nl2br ($txt."\n"); }
     $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
-    chmod($F3, 0755); 
+    @chmod($F3, 0755); 
     // / The following code checks the Cloud Location with ClamAV after copying, just in case.
     if ($VirusScan == '1') {
       shell_exec(str_replace('  ', ' ', str_replace('  ', ' ', 'clamscan -r '.$Thorough.' '.$F3.' | grep FOUND >> '.$ClamLogFile)));
@@ -273,7 +274,7 @@ if (isset($download)) {
       $txt = ('OP-Act: '."Submitted $file to $F3 on $Time".'.');
       $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); }
     if (is_dir($file)) { 
-      mkdir($F3, 0755);
+      @mkdir($F3, 0755);
       foreach ($iterator = new \RecursiveIteratorIterator(
         new \RecursiveDirectoryIterator($file, \RecursiveDirectoryIterator::SKIP_DOTS),
         \RecursiveIteratorIterator::SELF_FIRST) as $item) {
@@ -281,9 +282,9 @@ if (isset($download)) {
           if (strpos($item, $DangerousFile) == TRUE) continue 2; }
         $F4 = $F3 . DIRECTORY_SEPARATOR . $iterator->getSubPathName();
         if ($item->isDir()) {
-          mkdir($F4); }   
+          @mkdir($F4); }   
         else {
-          symlink($item, $F4); } } } } 
+          @symlink($item, $F4); } } } } 
   // / Free un-needed memory.
   $txt = $_POST['filesToDownload'] = $file = $file1 = $F2 = $F3 = $F4 = $COPY_TEMP = $iterator = $item = $MAKELogFile = null;
   unset ($txt, $_POST['filesToDownload'], $file, $file1, $F2, $F3, $F4, $COPY_TEMP, $iterator, $item, $MAKELogFile); }

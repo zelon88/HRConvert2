@@ -34,8 +34,8 @@ of their servers.
 -----STEP 2 - INSTALL PHP7.1 & PLUGINS-----
 -sudo apt-get install php libapache2-mod-php php-mcrypt php-mysql
 -sudo apt-get install php-all-dev
--sudo apt-get install php7.1-zip
--sudo apt-get install php7.1-gd
+-sudo apt-get install php7.1-zip (Replace version number with whatever version you want)
+-sudo apt-get install php7.1-gd (Replace version number with whatever version you want)
 -sudo apt-get install php-curl
 **EDIT THE "php.ini" FILE LOCATED IN "/etc/php/7.1/apache2/php.ini"**
 -sudo leafpad /etc/php/7.1/apache2/php.ini
@@ -88,14 +88,13 @@ of their servers.
 **COPY THE CONTENTS OF THE "HRConvert2-master" FOLDER TO "/var/www/html/HRProprietary/HRConvert2"*
 -sudo leafpad /var/www/html/HRProprietary/HRConvert2/config.php
 **CAREFULLY READ AND COMPLETELY FILL OUT THE CONFIG.PHP FILE!!!**
-**HRConvert2 REQUIRES A SAFE LOCATION TO CREATE USER CLOUD DIRECTORIES. TO FACILITATE
-  THIS YOU MUST CREATE A !!!NEW!!! DIRECTORY AND ENTER IS AS THE "$CloudLoc"**
+**HRConvert2 REQUIRES A SAFE LOCATION TO CREATE USER CONVERT DIRECTORIES. TO FACILITATE
+  THIS YOU MUST CREATE A !!!NEW!!! DIRECTORY AND ENTER IS AS THE "$ConvertLoc"**
 **ONCE YOU HAVE CREATED A CLOUD LOCATION "$ConvertLoc" CONTINUE**
           -sudo chmod -R 0755 /path/to/my/ConvertLoc
           -sudo chown -R www-data /path/to/my/ConvertLoc
           -sudo chgrp -R www-data /path/to/my/ConvertLoc
 **IF YOU DO NOT HAVE A VALID "$ConvertLoc" AND PROPER PERMISSIONS, HRConvert2 ...WILL...NOT...WORK!!!**
--sudo leafpad /var/www/html/HRProprietary/HRConvert2/Applications/HRAI/adminINFO.php
 **CAREFULLY READ AND COMPLETELY FILL OUT YOUR ADMIN USER AND LOGIN INFO FOR HRAI**
 -sudo chmod -R 0755 /var/www/html
 -sudo chown -R www-data /var/www/html

@@ -32,7 +32,6 @@ set_time_limit(0);
 
 // / The following blocks of code each represent a distnct HRConvert2 API input.
 // / To use the official API, satisfy the corresponding POST or GET variables below.
-// / API inputs require that the user be logged in. Non-logged-in users will receieve a login screen.
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

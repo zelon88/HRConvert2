@@ -38,12 +38,12 @@ else $IP = htmlentities(str_replace(str_split('~#[](){};:$!#^&%@>*<"\''), '', $_
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / The following code sets an echp variable that adjusts printed URL's to https when SSL is enabled.
+// / The following code sets an echo variable that adjusts printed URL's to https when SSL is enabled.
 if (!empty($_SERVER['HTTPS']) && $_SERVER['SERVER_PORT'] == 443) $URLEcho = 's'; 
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / The following code sets or validates a Token so it can be used as a unique idebtifier for the session.
+// / The following code sets or validates a Token so it can be used as a unique identifier for the session.
 if (!isset($Token1) or strlen($Token1) < 19) $Token1 = hash('ripemd160', rand(0, 1000000000).rand(0, 1000000000)); 
 if (isset($Token2)) if ($Token2 !== hash('ripemd160', $Token1.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6)) die('ERROR!!! HRConvert263, Authentication error!!!');
 if (!isset($Token2)) $Token2 = hash('ripemd160', $Token1.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6); 
@@ -51,7 +51,7 @@ if (!isset($Token2)) $Token2 = hash('ripemd160', $Token1.$Salts1.$Salts2.$Salts3
 
 // / -----------------------------------------------------------------------------------
 // / The following code sets the global variables for the session.
-$HRConvertVersion = 'v2.1';
+$HRConvertVersion = 'v2.2';
 $Date = date("m_d_y");
 $Time = date("F j, Y, g:i a"); 
 $JanitorFile = 'janitor.php';

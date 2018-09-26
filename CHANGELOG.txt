@@ -1,3 +1,10 @@
+COMMIT 9/25/2018
+v2.2 - Fix typos in comments.
+
+-v2.2.
+-Fix typos in comments.
+
+--------------------
 COMMIT 7/22/2018
 v2.1 - Fix occasional warnings during file cleanup.
 

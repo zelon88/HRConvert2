@@ -31,7 +31,7 @@ of their servers.
 -sudo apt-get install curl
 --------------------------------------------------
 
------STEP 2 - INSTALL PHP7.1 & PLUGINS-----
+-----STEP 2 - INSTALL PHP7 & PLUGINS-----
 -sudo apt-get install php libapache2-mod-php php-mysql
 -sudo apt-get install php-all-dev
 **YOU MAY NEED TO CHANGE THE VERSIONS BELOW DEPENDING ON YOUR UBUNTU/PHP VERSION**

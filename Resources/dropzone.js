@@ -338,7 +338,7 @@ var Dropzone = function (_Emitter) {
          * [`accept`](https://developer.mozilla.org/en-US/docs/HTML/Element/input#attr-accept)
          * parameter on the hidden file input as well.
          */
-        acceptedFiles: ".zip,.rar,.tar,.bz,.gz,.bz2,.7z,.iso,.vhd,.vdi,.txt,.doc,.docx,.rtf,.xls,.xlsx,.odf,.ods,.pptx,.ppt,.xps,.potx,.potm,.pot,.ppa,.odp,.jpeg,.jpg,.png,.bmp,.gif,.pdf,.mp3,.mp4,.mov,.aac,.oog,.wma,.mp2,.flac,3gp,.mkv,.avi,.mp4,.flv,.mpeg,.wmv,.svg,.dxf,.vdx,.fig,.3ds,.obj,.collada,.off,.ply,.stl,.ptx,.dxf,.u3d,.vrml",
+        acceptedFiles: ".m4a,.m4v,.m4p,.exe,.com,.dll,.vbs,.hta,.jar,.zip,.rar,.tar,.bz,.gz,.bz2,.7z,.iso,.vhd,.vdi,.txt,.doc,.docx,.rtf,.xls,.xlsx,.odf,.ods,.pptx,.ppt,.xps,.potx,.potm,.pot,.ppa,.odp,.jpeg,.jpg,.png,.bmp,.gif,.pdf,.mp3,.mp4,.mov,.aac,.oog,.wma,.mp2,.flac,3gp,.mkv,.avi,.mp4,.flv,.mpeg,.wmv,.svg,.dxf,.vdx,.fig,.3ds,.obj,.collada,.off,.ply,.stl,.ptx,.dxf,.u3d,.vrml",
 
         /**
          * **Deprecated!**

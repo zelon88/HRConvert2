@@ -51,7 +51,7 @@ if (!isset($Token2)) $Token2 = hash('ripemd160', $Token1.$Salts1.$Salts2.$Salts3
 
 // / -----------------------------------------------------------------------------------
 // / The following code sets the global variables for the session.
-$HRConvertVersion = 'v2.2';
+$HRConvertVersion = 'v2.3';
 $Date = date("m_d_y");
 $Time = date("F j, Y, g:i a"); 
 $JanitorFile = 'janitor.php';
@@ -75,7 +75,7 @@ $defaultLogSize = '1048576';
 $defaultApps = array('.', '..');
 $RequiredDirs = array($ConvertDir0, $ConvertDir, $ConvertTemp, $ConvertTempDir0, $ConvertTempDir);
 $RequiredIndexes = array($ConvertTemp, $ConvertTempDir0, $ConvertTempDir);
-$DangerousFiles = array('js', 'php', 'html', 'css');
+$DangerousFiles = array('js', 'php', 'html', 'css', 'phar');
 $DangerousFiles1 = array('.', '..', 'index.php', 'index.html');
 $ArchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi', 'tar.bz2', 'tar.gz');
 $DearchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd');
@@ -85,13 +85,13 @@ $SpreadsheetArray = array('csv', 'xls', 'xlsx', 'odf', 'ods');
 $PresentationArray = array('ppt', 'xps', 'potx', 'potm', 'pot', 'ppa', 'odp');
 $ImageArray = array('jpeg', 'jpg', 'png', 'bmp', 'gif');
 $ImageArray1 = array('jpeg', 'jpg', 'png', 'bmp', 'gif');
-$MediaArray = array('mp3', 'aac', 'oog', 'wma', 'mp2', 'flac');
-$VideoArray = array('3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv', 'mov');
+$MediaArray = array('mp3', 'aac', 'oog', 'wma', 'mp2', 'flac', 'm4a', 'm4p');
+$VideoArray = array('3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv', 'mov', 'm4v');
 $DrawingArray = array('svg', 'dxf', 'vdx', 'fig');
 $ModelArray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'ptx', 'dxf', 'u3d', 'vrml');
 $convertArr = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi', 'tar.bz2', 'tar.gz', 'txt', 'doc', 'docx', 'rtf', 'xls', 'xlsx', 'odf', 'ods', 
- 'pptx', 'ppt', 'xps', 'potx', 'potm', 'pot', 'ppa', 'odp', 'jpeg', 'jpg', 'png', 'bmp', 'gif', 'pdf','mp3', 'mp4', 'mov', 'aac', 'oog', 'wma', 'mp2', 'flac',
- '3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv', 'svg', 'dxf', 'vdx', 'fig', '3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'ptx', 'dxf', 'u3d', 'vrml');
+ 'pptx', 'ppt', 'xps', 'potx', 'potm', 'pot', 'ppa', 'odp', 'jpeg', 'jpg', 'png', 'bmp', 'gif', 'pdf','mp3', 'mp4', 'mov', 'aac', 'oog', 'wma', 'mp2', 'flac', 'm4a',
+ '3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv', 'svg', 'dxf', 'vdx', 'fig', '3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'ptx', 'dxf', 'u3d', 'vrml', 'm4v', 'm4p');
 $pdfWorkArr = array('pdf', 'jpg', 'jpeg', 'png', 'bmp', 'gif');
 $imgArr = array('jpg', 'jpeg', 'png', 'bmp', 'gif');
 $fileArray1 = array();

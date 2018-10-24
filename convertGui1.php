@@ -38,6 +38,8 @@ include ('header.php');
               <li>Ogg</li>
               <li>Wav</li>
               <li>Wma</li>
+              <li>M4a</li>
+              <li>M4p</li>
             </ol>
             <strong>Video Formats</strong>
             <ol>
@@ -49,6 +51,7 @@ include ('header.php');
               <li>Mpeg</li>
               <li>Wmv</li>
               <li>Mov</li>
+              <li>M4v</li>
             </ol>
             <strong>Document Formats</strong>
             <ol>

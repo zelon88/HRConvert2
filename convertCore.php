@@ -34,7 +34,7 @@ else require_once ('sanitizeCore.php');
   // / If it is not unique we will adjust it later.
 if (!empty($_SERVER['HTTP_CLIENT_IP'])) $IP = htmlentities(str_replace(str_split('~#[](){};:$!#^&%@>*<"\''), '', $_SERVER['HTTP_CLIENT_IP']), ENT_QUOTES, 'UTF-8'); 
 elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) $IP = htmlentities(str_replace(str_split('~#[](){};:$!#^&%@>*<"\''), '', $_SERVER['HTTP_X_FORWARDED_FOR']), ENT_QUOTES, 'UTF-8'); 
-else $IP = htmlentities(str_replace(str_split('~#[](){};:$!#^&%@>*<"\''), '', $_SERVER['REMOTE_ADDR']), ENT_QUOTES, 'UTF-8'); 
+else $IP = htmlentities(str_replace('..', '', str_replace(str_split('~#[](){};:$!#^&%@>*<"\''), '', $_SERVER['REMOTE_ADDR'])), ENT_QUOTES, 'UTF-8'); 
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -61,15 +61,15 @@ $SesHash = substr(hash('ripemd160', $Date.$Salts1.$Salts2.$Salts3.$Salts4.$Salts
 $SesHash2 = substr(hash('ripemd160', $SesHash.$Token1.$Date.$IP.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6), -12);
 $SesHash3 = $SesHash.'/'.$SesHash2;
 $SesHash4 = hash('ripemd160', $Salts6.$Salts5.$Salts4.$Salts3.$Salts2.$Salts1);
-$ConvertDir0 = $ConvertLoc.'/'.$SesHash;
-$ConvertDir = $ConvertDir0.'/'.$SesHash2.'/';
+$ConvertDir0 = str_replace('..', '', $ConvertLoc.'/'.$SesHash);
+$ConvertDir = str_replace('..', '', $ConvertDir0.'/'.$SesHash2.'/');
 $ConvertTemp = $InstLoc.'/DATA';
-$ConvertTempDir0 = $ConvertTemp.'/'.$SesHash;
-$ConvertTempDir = $ConvertTempDir0.'/'.$SesHash2.'/';
+$ConvertTempDir0 = str_replace('..', '', $ConvertTemp.'/'.$SesHash);
+$ConvertTempDir = str_replace('..', '', $ConvertTempDir0.'/'.$SesHash2.'/');
 $LogInc = '0';
 $ConvertGuiCounter1 = 0;
-$LogFile = $LogDir.'/HRConvert2_'.$LogInc.'_'.$Date.'_'.$SesHash4.'_'.$SesHash.'.txt';
-$ClamLogFile = $LogDir.'/ClamLog_'.$Date.'_'.$SesHash4.'_'.$SesHash.'.txt';
+$LogFile = str_replace('..', '', $LogDir.'/HRConvert2_'.$LogInc.'_'.$Date.'_'.$SesHash4.'_'.$SesHash.'.txt');
+$ClamLogFile = str_replace('..', '', $LogDir.'/ClamLog_'.$Date.'_'.$SesHash4.'_'.$SesHash.'.txt');
 $defaultLogDir = $InstLoc.'/Logs';
 $defaultLogSize = '1048576';
 $defaultApps = array('.', '..');
@@ -206,7 +206,7 @@ if(!empty($_FILES)) {
     if ($file == '.' or $file == '..' or $file == 'index.html') continue; 
     foreach ($DangerousFiles as $DangerousFile) { 
       if (strpos($file, $DangerousFile) == TRUE) continue 2; }   
-    $file = htmlentities(str_replace(str_split('\\/[](){};:$!#^&%@>*<'), '', $file), ENT_QUOTES, 'UTF-8');
+    $file = htmlentities(str_replace('..', '', str_replace(str_split('\\/[](){};:$!#^&%@>*<'), '', $file)), ENT_QUOTES, 'UTF-8');
     $F0 = pathinfo($file, PATHINFO_EXTENSION);
     if (in_array($F0, $DangerousFiles)) { 
       $txt = ("ERROR!!! HRConvert2103, Unsupported file format, $F0 on $Time.");
@@ -214,7 +214,7 @@ if(!empty($_FILES)) {
       echo nl2br($txt."\n"); 
       continue; }
     $F2 = pathinfo($file, PATHINFO_BASENAME);
-    $F3 = str_replace(' ', '_', str_replace('//', '/', $ConvertDir.'/'.$F2));
+    $F3 = str_replace('..', '', str_replace(' ', '_', str_replace('//', '/', $ConvertDir.'/'.$F2)));
     if($file == "") {
       $txt = ("ERROR!!! HRConvert2160, No file specified on $Time.");
       $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
@@ -249,12 +249,12 @@ if(!empty($_FILES)) {
 // / -----------------------------------------------------------------------------------
 // / The following code is performed when a user downloads a selection of files.
 if (isset($download)) {
-  $download = str_replace(str_split('[](){};:$!#^&%@>*<'), '', $download);
+  $download = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $download));
   $txt = ('OP-Act: Initiated Downloader with input '.$download.' on '.$Time.'.');
   $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
   if (!is_array($download)) $download = array($download); 
   foreach ($download as $file) {
-    $file = str_replace(str_split('[](){};:$!#^&%@>*<'), '', $file);
+    $file = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $file));
     if ($file == '.' or $file == '..' or $file == 'index.html') continue;
     foreach ($DangerousFiles as $DangerousFile) { 
       if (strpos($file, $DangerousFile) == TRUE) continue 2; }
@@ -295,12 +295,12 @@ if (isset($download)) {
 if (isset($_POST['archive'])) {
   $txt = ('OP-Act: Initiated Archiver on '.$Time.'.');
   $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
-  $_POST['archive'] = str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['archive']);
+  $_POST['archive'] = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['archive']));
   if (!is_array($_POST['filesToArchive'])) {
-    $_POST['filesToArchive'] = str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['filesToArchive']);
+    $_POST['filesToArchive'] = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['filesToArchive']));
     $_POST['filesToArchive'] = array($_POST['filesToArchive']); }
   foreach ($_POST['filesToArchive'] as $key=>$TFile1) {
-    $TFile1 = str_replace(' ', '\ ', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $TFile1)); 
+    $TFile1 = str_replace('..', '', str_replace(' ', '\ ', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $TFile1))); 
     foreach ($DangerousFiles as $DangerousFile) { 
       if (strpos($TFile1, $DangerousFile) == TRUE) continue 2; }
     $allowed =  array('mov', 'mp4', 'mkv', 'flv', 'ogv', 'wmv', 'mpg', 'mpeg', 'm4v', '3gp', 'dat', 'cfg', 'txt', 'doc', 'docx', 'rtf', 'xls', 'xlsx', 'csv', 'ods', 'odf', 'odt', 'jpg', 'mp3', 
@@ -309,15 +309,15 @@ if (isset($_POST['archive'])) {
     $rararr = array('rar');
     $ziparr = array('zip');
     $tararr = array('7z', 'tar', 'tar.gz', 'tar.bz2', 'iso', 'vhd');
-    $filename = str_replace('//', '/', $ConvertDir.$TFile1);
+    $filename = str_replace('..', '', str_replace('//', '/', $ConvertDir.$TFile1));
     $filename1 = pathinfo($filename, PATHINFO_BASENAME);
     $ext = pathinfo($filename, PATHINFO_EXTENSION);
-    $_POST['archextension'] = str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['archextension']);
+    $_POST['archextension'] = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['archextension']));
     $UserExt = $_POST['archextension'];
-    $_POST['userfilename'] = str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['userfilename']);
-    $UserFileName = str_replace(' ', '\ ', str_replace('//', '/', $_POST['userfilename']));
-    $archSrc = str_replace('//', '/', $ConvertTempDir.$TFile1);
-    $archDst = str_replace('//', '/', $ConvertDir.$UserFileName);
+    $_POST['userfilename'] = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['userfilename']));
+    $UserFileName = str_replace('..', '', str_replace(' ', '\ ', str_replace('//', '/', $_POST['userfilename'])));
+    $archSrc = str_replace('..', '', str_replace('//', '/', $ConvertTempDir.$TFile1));
+    $archDst = str_replace('..', '', str_replace('//', '/', $ConvertDir.$UserFileName));
     if (!is_dir($filename)) {
       if(!in_array($ext, $allowed)) { 
         echo nl2br("ERROR!!! HRConvert2290, Unsupported File Format\n");
@@ -363,12 +363,12 @@ if (isset($_POST['archive'])) {
 // / -----------------------------------------------------------------------------------
 // / The following code is performed when a user selects files to convert to other formats.
 if (isset($_POST['convertSelected'])) {
-  $_POST['convertSelected'] = str_replace('//', '/', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['convertSelected']));
+  $_POST['convertSelected'] = str_replace('..', '', str_replace('//', '/', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['convertSelected'])));
   $txt = ('OP-Act: Initiated HRConvert2 on '.$Time.'.');
   $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
   if (!is_array($_POST['convertSelected'])) $_POST['convertSelected'] = array($_POST['convertSelected']);
   foreach ($_POST['convertSelected'] as $key => $file) {
-    $file = str_replace(str_split('[](){};:$!#^&%@>*<'), '', $file); 
+    $file = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $file)); 
     foreach ($DangerousFiles as $DangerousFile) { 
       if (strpos($file, $DangerousFile) == TRUE) continue 2; }
     $txt = ('OP-Act: User '.$UserID.' selected to Convert file '.$file.'.');
@@ -376,8 +376,8 @@ if (isset($_POST['convertSelected'])) {
     $allowed =  array('svg', 'dxf', 'vdx', 'fig', '3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'ptx', 'dxf', 'u3d', 'vrml', 'mov', 'mp4', 'mkv', 'flv', 'ogv', 'wmv', 'mpg', 'mpeg', 'm4v', '3gp', 'flac', 'aac', 'dat', 
       'cfg', 'txt', 'doc', 'docx', 'rtf' ,'xls', 'xlsx', 'ods', 'odf', 'odt', 'jpg', 'mp3', 'zip', 'rar', 'tar', 'tar.gz', 'tar.bz', 'tar.bZ2', '3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv', 
       'avi', 'aac', 'mp2', 'wma', 'wav', 'ogg', 'jpeg', 'bmp', 'png', 'gif', 'pdf', 'abw', 'iso', 'vhd', 'vdi', 'pages', 'pptx', 'ppt', 'xps', 'potx', 'pot', 'ppa', 'ppa', 'odp');
-    $file1 = str_replace('//', '/', $ConvertDir.$file);
-    $file2 = str_replace('//', '/', $ConvertTempDir.$file);
+    $file1 = str_replace('..', '', str_replace('//', '/', $ConvertDir.$file));
+    $file2 = str_replace('..', '', str_replace('//', '/', $ConvertTempDir.$file));
     copy($file1, $file2); 
     if (file_exists($file2)) {
       $txt = ('OP-Act: '."Copied $file1 to $file2 on $Time".'.'); 
@@ -388,13 +388,13 @@ if (isset($_POST['convertSelected'])) {
       echo nl2br('ERROR!!! HRConvert2381, There was a problem copying your file between internal HRCloud directories.
         Please rename your file or try again later.'."\n"); }
     $convertcount = 0;
-    $extension = str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['extension']);
-    $pathname = str_replace(' ', '\ ', str_replace('//', '/', $ConvertTempDir.$file));
-    $oldPathname = str_replace(' ', '\ ', str_replace('//', '/', $ConvertDir.$file));
+    $extension = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['extension']));
+    $pathname = str_replace('..', '', str_replace(' ', '\ ', str_replace('//', '/', $ConvertTempDir.$file)));
+    $oldPathname = str_replace('..', '', str_replace(' ', '\ ', str_replace('//', '/', $ConvertDir.$file)));
     $filename = pathinfo($pathname, PATHINFO_FILENAME);
     $oldExtension = pathinfo($pathname, PATHINFO_EXTENSION);
-    $newFile = str_replace('//', '/', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['userconvertfilename'].'.'.$extension));
-    $newPathname = str_replace(' ', '\ ', str_replace('//', '/', $ConvertDir.$newFile));
+    $newFile = str_replace('..', '', str_replace('//', '/', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['userconvertfilename'].'.'.$extension)));
+    $newPathname = str_replace('..', '', str_replace(' ', '\ ', str_replace('//', '/', $ConvertDir.$newFile)));
     $docarray =  array('txt', 'doc', 'xls', 'xlsx', 'docx', 'rtf', 'odf', 'ods', 'odt', 'dat', 'cfg', 'pages', 'pptx', 'ppt', 'xps', 'potx', 'pot', 'ppa', 'odp', 'odf');
     $imgarray = array('jpg', 'jpeg', 'bmp', 'png', 'gif');
     $audioarray =  array('mp3', 'wma', 'wav', 'ogg', 'mp2', 'flac', 'aac');
@@ -414,7 +414,7 @@ if (isset($_POST['convertSelected'])) {
     $abwuno = array('docx', 'pdf', 'txt', 'rtf', 'odf', 'dat', 'cfg');
     // / Code to increment the conversion in the event that an output file already exists.    
     while(file_exists($newPathname)) {
-      $newFile = str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['userconvertfilename'].'.'.$extension);
+      $newFile = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['userconvertfilename'].'.'.$extension));
       $newPathname = $ConvertDir.$newFile; }
     // / Code to convert document files.
     // / Note: Some servers may experience a delay between the script finishing and the
@@ -462,9 +462,9 @@ if (isset($_POST['convertSelected'])) {
           die($txt); } } }
     // / Code to convert and manipulate image files.
     if (in_array($oldExtension, $imgarray)) {
-      $height = str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['height']);
-      $width = str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['width']);
-      $_POST["rotate"] = str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['rotate']);
+      $height = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['height']));
+      $width = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['width']));
+      $_POST["rotate"] = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['rotate']));
       $rotate = ('-rotate '.$_POST["rotate"]);
       $wxh = $width.'x'.$height;
       if ($wxh == '0x0' or $wxh =='x0' or $wxh == '0x' or $wxh == '0' or $wxh == '00' or $wxh == '' or $wxh == ' ') {       
@@ -494,7 +494,7 @@ if (isset($_POST['convertSelected'])) {
     if (in_array($oldExtension, $audioarray)) { 
       $ext = (' -f ' . $extension);
         if (isset($_POST['bitrate'])) {
-          $bitrate = str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['bitrate']); }
+          $bitrate = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['bitrate'])); }
         if (!isset($_POST['bitrate'])) {
           $bitrate = 'auto'; }                  
       if ($bitrate = 'auto') {
@@ -610,13 +610,13 @@ if (isset($_POST['convertSelected'])) {
 // / -----------------------------------------------------------------------------------
 // / The following code is performed whenever a user selects a document or PDF for manipulation.
 if (isset($_POST['pdfworkSelected'])) {
-  $_POST['pdfworkSelected'] = str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['pdfworkSelected']);
+  $_POST['pdfworkSelected'] = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['pdfworkSelected']));
   $txt = ('OP-Act: Initiated PDFWork on '.$Time.'.');
   $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
   $pdfworkcount = '0';
   if (!is_array($_POST['pdfworkSelected'])) $_POST['pdfworkSelected'] = array($_POST['pdfworkSelected']);
   foreach ($_POST['pdfworkSelected'] as $file) {
-    $file = str_replace(str_split('[](){};:$!#^&%@>*<'), '', $file);
+    $file = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $file));
     foreach ($DangerousFiles as $DangerousFile) { 
       if (strpos($file, $DangerousFile) == TRUE) continue 2; }
     $txt = ('OP-Act: User '.$UserID.' selected to PDFWork file '.$file.' on '.$Time.'.');
@@ -636,28 +636,28 @@ if (isset($_POST['pdfworkSelected'])) {
       die(); }
     // / If no output format is selected the default of PDF is used instead.
     if (isset($_POST['pdfextension'])) {
-      $extension = str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['pdfextension']); } 
+      $extension = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['pdfextension'])); } 
     if (!isset($_POST['pdfextension'])) {
       $extension = 'pdf'; }
-    $pathname = str_replace(' ', '\ ', str_replace('//', '/', $ConvertTempDir.$file)); 
-    $oldPathname = str_replace(' ', '\ ', str_replace('//', '/', $ConvertDir.$file));
+    $pathname = str_replace('..', '', str_replace(' ', '\ ', str_replace('//', '/', $ConvertTempDir.$file))); 
+    $oldPathname = str_replace('..', '', str_replace(' ', '\ ', str_replace('//', '/', $ConvertDir.$file)));
     $filename = pathinfo($pathname, PATHINFO_FILENAME);
     $oldExtension = pathinfo($pathname, PATHINFO_EXTENSION);
-    $newFile = str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['userpdfconvertfilename'].'.'.$extension);
-    $newPathname = str_replace(' ', '\ ', str_replace('//', '/', $ConvertDir.$newFile));
+    $newFile = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['userpdfconvertfilename'].'.'.$extension));
+    $newPathname = str_replace('..', '', str_replace(' ', '\ ', str_replace('//', '/', $ConvertDir.$newFile)));
     $doc1array =  array('txt', 'pages', 'doc', 'xls', 'xlsx', 'docx', 'rtf', 'odf', 'ods', 'odt');
     $img1array = array('jpg', 'jpeg', 'bmp', 'png', 'gif');
     $pdf1array = array('pdf');
       if (in_array($oldExtension, $allowedPDFw)) {
         while(file_exists($newPathname)) {
           $pdfworkcount++; 
-          $newFile = str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['userpdfconvertfilename'].'.'.$extension);
-          $newPathname = str_replace('//', '/', $ConvertDir.$newFile); } } 
+          $newFile = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['userpdfconvertfilename'].'.'.$extension));
+          $newPathname = str_replace('..', '', str_replace('//', '/', $ConvertDir.$newFile)); } } 
           // / Code to convert a PDF to a document.
           if (in_array($oldExtension, $pdf1array)) {
             if (in_array($extension, $doc1array)) {
-              $pathnameTEMP = str_replace('.'.$oldExtension, '.txt', $pathname);
-              $_POST['method'] = str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['method']);
+              $pathnameTEMP = str_replace('..', '', str_replace('.'.$oldExtension, '.txt', $pathname));
+              $_POST['method'] = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['method']));
               if ($_POST['method1'] == '0' or $_POST['method1'] == '') {
                 shell_exec("pdftotext -layout $pathname $pathnameTEMP"); 
                 $txt = ('OP-Act: '."Converted $pathnameTEMP1 to $pathnameTEMP on $Time".' using method 0.'); 
@@ -673,27 +673,27 @@ if (isset($_POST['pdfworkSelected'])) {
                   echo ($txt."\n".'--------------------'."\n"); 
                   $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } }          
               if ($_POST['method1'] == '1') {
-                $pathnameTEMP1 = str_replace('.'.$oldExtension, '.jpg' , $pathname);
+                $pathnameTEMP1 = str_replace('..', '', str_replace('.'.$oldExtension, '.jpg' , $pathname));
                 shell_exec("convert $pathname $pathnameTEMP1");
                 if (!file_exists($pathnameTEMP1)) {
                   $PagedFilesArrRAW = scandir($ConvertTempDir);
                   foreach ($PagedFilesArrRAW as $PagedFile) {
-                    $pathnameTEMP1 = str_replace('.'.$oldExtension, '.jpg' , $pathname);
+                    $pathnameTEMP1 = str_replace('..', '', str_replace('.'.$oldExtension, '.jpg' , $pathname));
                     if ($PagedFile == '.' or $PagedFile == '..' or $PagedFile == '.AppData' or $PagedFile == 'index.html') continue;
                     if (strpos($PagedFile, '.txt') !== false) continue;
                     if (strpos($PagedFile, '.pdf') !== false) continue;
-                    $CleanFilname = str_replace($oldExtension, '', $filename);
+                    $CleanFilname = str_replace('..', '', str_replace($oldExtension, '', $filename));
                     $CleanPathnamePages = str_replace('.jpg', '', $PagedFile);
                     $CleanPathnamePages = str_replace('.txt', '', $CleanPathnamePages);
                     $CleanPathnamePages = str_replace('.pdf', '', $CleanPathnamePages);
                     $CleanPathnamePages = str_replace($CleanFilname, '', $CleanPathnamePages);                    
-                    $CleanPathnamePages = str_replace('-', '', $CleanPathnamePages);
+                    $CleanPathnamePages = str_replace('..', '', str_replace('-', '', $CleanPathnamePages));
                     $PageNumber = $CleanPathnamePages;
                     if (is_numeric($PageNumber)) {
-                      $pathnameTEMP1 = str_replace('.jpg', '-'.$PageNumber.'.jpg', $pathnameTEMP1);
-                      $pathnameTEMP = str_replace('.'.$oldExtension, '-'.$PageNumber.'.txt', $pathname); 
-                      $pathnameTEMPTesseract = str_replace('.'.$oldExtension, '-'.$PageNumber, $pathname); 
-                      $pathnameTEMP0 = str_replace('-'.$PageNumber.'.txt', '.txt', $pathnameTEMP); 
+                      $pathnameTEMP1 = str_replace('..', '', str_replace('.jpg', '-'.$PageNumber.'.jpg', $pathnameTEMP1));
+                      $pathnameTEMP = str_replace('..', '', str_replace('.'.$oldExtension, '-'.$PageNumber.'.txt', $pathname)); 
+                      $pathnameTEMPTesseract = str_replace('..', '', str_replace('.'.$oldExtension, '-'.$PageNumber, $pathname)); 
+                      $pathnameTEMP0 = str_replace('..', '', str_replace('-'.$PageNumber.'.txt', '.txt', $pathnameTEMP)); 
                       echo nl2br("\n".$pathnameTEMP."\n");
                       shell_exec("tesseract $pathnameTEMP1 $pathnameTEMPTesseract");
                       $READPAGEDATA = file_get_contents($pathnameTEMP);
@@ -707,7 +707,7 @@ if (isset($_POST['pdfworkSelected'])) {
                         $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);   
                         echo ($txt."\n".'--------------------'."\n"); } } } }
                     if ($multiple !== '1') {
-                    $pathnameTEMPTesseract = str_replace('.'.$txt, '', $pathnameTEMP);
+                    $pathnameTEMPTesseract = str_replace('..', '', str_replace('.'.$txt, '', $pathnameTEMP));
                     shell_exec("tesseract $pathnameTEMP1 $pathnameTEMPTesseract");
                     $txt = ('OP-Act: '."Converted $pathnameTEMP1 to $pathnameTEMP on $Time".' using method 1.'); 
                     echo ($txt."\n".'--------------------'."\n");    
@@ -721,13 +721,13 @@ if (isset($_POST['pdfworkSelected'])) {
                 $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } } 
           // / Code to convert an image to a PDF.
           if (in_array($oldExtension, $img1array)) {
-            $pathnameTEMP = str_replace('.'.$oldExtension, '.txt' , $pathname);
-            $pathnameTEMPTesseract = str_replace('.'.$oldExtension, '', $pathname);
+            $pathnameTEMP = str_replace('..', '', str_replace('.'.$oldExtension, '.txt' , $pathname));
+            $pathnameTEMPTesseract = str_replace('..', '', str_replace('.'.$oldExtension, '', $pathname));
             $imgmethod = '1';
             shell_exec("tesseract $pathname $pathnameTEMPTesseract"); 
             if (!file_exists($pathnameTEMP)) {
               $imgmethod = '2';
-              $pathnameTEMP3 = str_replace('.'.$oldExtension, '.pdf' , $pathname);
+              $pathnameTEMP3 = str_replace('..', '', str_replace('.'.$oldExtension, '.pdf' , $pathname));
               system("/usr/bin/unoconv -o $pathnameTEMP3 -f pdf $pathname");
               shell_exec("pdftotext -layout $pathnameTEMP3 $pathnameTEMP"); } 
             if (file_exists($pathnameTEMP)) {

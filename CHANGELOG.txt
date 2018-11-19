@@ -1,3 +1,11 @@
+COMMIT 11/18/2018
+v2.4 - Improve sanitization.
+
+-v2.4.
+-Improve sanitization.
+-Based on input from neogeovr on Reddit.
+
+--------------------
 COMMIT 10/23/2018
 v2.3 - Add support for m4a, m4p, m4v files.
 

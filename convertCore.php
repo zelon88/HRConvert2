@@ -18,7 +18,7 @@
 // / DEPENDENCY REQUIREMENTS ... 
 // / This application requires Debian Linux (w/3rd Party audio license), 
 // / Apache 2.4, PHP 7.0+, JScript, WordPress & mySql (optional), LibreOffice, Unoconv, 
-// / ClamAV, Tesseract, Rar, Unrar, Unzip, 7zipper, FFMPEG, PDF2TXT, and ImageMagick.
+// / ClamAV, Tesseract, Rar, Unrar, Unzip, 7zipper, FFMPEG, PDF2TXT, Dia and ImageMagick.
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

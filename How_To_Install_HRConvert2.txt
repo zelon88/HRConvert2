@@ -56,10 +56,10 @@ of their servers.
 --------------------------------------------------
 
 -----STEP 4 - INSTALL BASIC FEATURE DEPENDENCIES-----
--sudo apt-get install clamav && sudo apt-get install libreoffice-common && sudo apt-get install unoconv
+-sudo apt-get install clamav && sudo apt-get install libreoffice-common && sudo apt-get install unoconv && sudo apt-get install default-jre
 -sudo leafpad /etc/rc.local
 **ADD THE FOLLOWING LINE TO THE "rc.local" FILE **ABOVE** THE "exit 0" LINE**
-  /usr/bin/libreoffice/program/soffice.bin --headless --accept="socket,host=127.0.0.1,port=$soffice_port;urp;" --nofirststartwizard &
+  /usr/bin/soffice --headless --accept="socket,host=127.0.0.1,port=$soffice_port;urp;" --nofirststartwizard &
 **IF YOU DO NOT HAVE AN rc.local FILE, COPY AND PASTE THE INCLUDED ONE**
 -sudo chmod +x /etc/rc.local
 -sudo systemctl enable rc-local.service

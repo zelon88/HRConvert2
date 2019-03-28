@@ -26,13 +26,12 @@ of their servers.
 --------------------------------------------------
 
 -----STEP 0 - INSTALL WITH DOCKER-----
-The easiest way to install HRConvert2 is by using this Docker image created by
+The easiest way to install HRConvert2 is by using the Docker image created by
 Github user dwaaan. Thanks dwaaan!
 
 For more information about the docker image, visit...
 https://github.com/dwaaan/HRConvert2-Docker
 --------------------------------------------------
-
 
 -----STEP 1 - INSTALL APACHE 2.4-----
 -sudo apt-get update

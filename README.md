@@ -1,7 +1,9 @@
 *[OFFICIAL WEBSITE (Try HRConvert2!)](https://honestrepair.net)*
 -----------------------------------------------
 **[Installation Instructions](https://github.com/zelon88/HRConvert2/blob/master/How_To_Install_HRConvert2.txt)**
----
+-----------------------------------------------
+**[Docker Image by dwaaan](https://github.com/dwaaan/HRConvert2-Docker)**
+-----------------------------------------------
 # HRConvert2
 
 ### A self-hosted drag-and-drop file conversion server that supports 59x file formats.

@@ -23,10 +23,10 @@
 
 // / -----------------------------------------------------------------------------------
 // / The following code will load required HRConvert2 files.
-if (!file_exists('config.php')) die ('ERROR!!! HRConvert226, Cannot process the HRConvert2 Configuration file (config.php)!'.PHP_EOL.'<br />'); 
-else require_once ('config.php'); 
-if (!file_exists('sanitizeCore.php')) die ('ERROR!!! HRConvert233, Cannot process the HRConvert2 Sanitize Core file (sanitizeCore.php)!'.PHP_EOL.'<br />'); 
-else require_once ('sanitizeCore.php'); 
+if (!file_exists(realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR.'config.php')) die ('ERROR!!! HRConvert226, Cannot process the HRConvert2 Configuration file (config.php)!'.PHP_EOL.'<br />'); 
+else require_once (realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR.'config.php'); 
+if (!file_exists(realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR.'sanitizeCore.php')) die ('ERROR!!! HRConvert233, Cannot process the HRConvert2 Sanitize Core file (sanitizeCore.php)!'.PHP_EOL.'<br />'); 
+else require_once (realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR.'sanitizeCore.php'); 
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -51,7 +51,7 @@ if (!isset($Token2)) $Token2 = hash('ripemd160', $Token1.$Salts1.$Salts2.$Salts3
 
 // / -----------------------------------------------------------------------------------
 // / The following code sets the global variables for the session.
-$HRConvertVersion = 'v2.4';
+$HRConvertVersion = 'v2.5';
 $Date = date("m_d_y");
 $Time = date("F j, Y, g:i a"); 
 $JanitorFile = 'janitor.php';

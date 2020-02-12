@@ -92,8 +92,8 @@ if (isset($_POST['CheckCompat'])) {
   // / Must specify $_POST['filesToDownload'] as a string or an array of filenames in the CloudLoc.
 if (isset($_POST['download'])) {
   $download = htmlentities(str_replace('..', '', str_replace(str_split('~#[]{};:$!#^&%@>*<|'), '', $_POST['download'])), ENT_QUOTES, 'UTF-8'); 
-  if (isset($_POST['filesToUpload'])) {
-    $_POST['filesToDownload'] = htmlentities(sstr_replace('..', '', tr_replace(str_split('\\/~#[]{};:$!#^&%@>*<|"\''), '', $_POST['filesToDownload'])), ENT_QUOTES, 'UTF-8');   
+  if (isset($_POST['filesToDownload'])) {
+    $_POST['filesToDownload'] = htmlentities(str_replace('..', '', str_replace(str_split('\\/~#[]{};:$!#^&%@>*<|"\''), '', $_POST['filesToDownload'])), ENT_QUOTES, 'UTF-8');   
     if (!is_array($_POST['filesToDownload'])) {
       $_POST['filesToDownload'] = array($_POST['filesToDownload']); 
       $_POST['filesToDownload'] = htmlentities(str_replace('..', '', str_replace(str_split('~#[]{};:$!#^&%@>*<|"\''), '', $_POST['filesToDownload'])), ENT_QUOTES, 'UTF-8'); } } }

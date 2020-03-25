@@ -1,111 +1,35 @@
-*[OFFICIAL WEBSITE (Try HRConvert2!)](https://honestrepair.net)*
------------------------------------------------
-**[Installation Instructions](https://github.com/zelon88/HRConvert2/blob/master/How_To_Install_HRConvert2.txt)**
------------------------------------------------
-**[Docker Image by dwaaan](https://github.com/dwaaan/HRConvert2-Docker)**
------------------------------------------------
-# HRConvert2
+# Of Ether Converter
 
-### A self-hosted drag-and-drop file conversion server that supports 59x file formats.
+Docker deployment of a custom variant of HRConvert2 from https://github.com/zelon88/HRConvert2 - A self-hosted, drag-and-drop, & nosql file conversion server that supports 60+ file formats.
 
-![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Screenshots/HRConvert2-1.png)
----
-### Supported Formats
-#### Audio Formats
-Supports specific bitrate through the API.
-- Mp2
-- Mp3
-- Avi
-- Flac
-- Ogg
-- Wav
-- Wma
-#### Video Formats
-- 3gp
-- Mkv
-- Avi
-- Mp4
-- Flv
-- Mpeg
-- Wmv
-- Mov
-#### Document Formats
-- Doc
-- Docx
-- Txt
-- Rtf
-- Odf
-- Pdf
-#### Spreadsheet Formats
-- Xls
-- Xlsx
-- Ods
-#### Presentation Formats
-- Pages
-- Pptx
-- Ppt
-- Xps
-- Pot
-- Potx
-- Ppa
-- Ppt
-- Pptx
-- Odp
-#### Archive Formats
-Can create, convert, and dearchive any of the following...
-- Zip
-- Rar
-- Tar
-- 7z
-#### Disk Image Formats
-Can extract any of the following or convert to supported archive formats...
-- Iso
-- Vhd
-- Vdi
-#### Image Formats
-Supports resize & rotate through the GUI and API.
-Supports disable maintain aspect ratio through API.
-- Jpg
-- Jpeg
-- Png
-- Bmp
-- Pdf
-- Gif
-#### 3D Model Formats
-- 3ds
-- Obj
-- Collada
-- Off
-- Ply
-- Stl
-- Ptx
-- Dxf
-- U3d
-- Vrml
-#### Drawing Files
-Can output drawing files to image formats.
-Can convert between any of the following...
-- Svg
-- Dxf
-- Fig
-- Vdx
-#### OCR Support
-OCR Operations support the following input formats...
-- Jpg
-- Jpeg
-- Png
-- Bmp
-- Pdf
-- Gif
-OCR Operations support the following output formats...
-- Doc
-- Docx
-- Txt
-- Rtf
-- Odf
-- Pdf
----
-# Screenshots
-![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Screenshots/HRConvert2-1.png)	
-![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Screenshots/HRConvert2-2.png)
-![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Screenshots/HRConvert2-3.png)	
+![Of Ether Converter](https://github.com/techyowl/Of-Ether-Converter/blob/master/HRConvert2/Screenshots/of-ether-converter-1.jpg)
+
+## Docker Files based on the work on Docker Hub here
+https://hub.docker.com/r/dwaaan/hrconvert2-docker
+
+## Requirements
+
+- At least 512M RAM
+- At Least 1 CPU Core
+- Docker installed
+- Docker Compose installed
+- A FQDN or local IP e.g. example.com or 192.168.0.24
+- A Logo
+
+## Tested On
+
+- Ubuntu 18.04
+  - Used `sudo apt install docker docker-compose`
+
+
+## Deployment Guide
+
+1. git clone https://github.com/techyowl/Of-Ether-Converter
+2. Edit HRConvert2/config.php
+3. Set Site Title & Site Logo Path at bottom.  
+4. Update salts to be randomly set for your server each with high entropy.
+5. (optional)Edit docker-compose.yml changing only the port 8085 to be your desired exposed port for the converter.
+6. run `docker-compose up -d`
+7. open browser to your FQDN or Local IP with your desired port or :8085 and have fun using your instance of Of Ether Converter.
+
+*[OFFICIAL WEBSITE (Try Of Ether Apps!)](https://www.ofether.com)*

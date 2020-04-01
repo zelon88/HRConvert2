@@ -54,7 +54,7 @@ COPY uploads.ini /etc/php/7.2/apache2/conf.d/uploads.ini
 RUN rm -f /var/www/html/index.html
 
 WORKDIR /var/www/
-ADD ./HRConvert2 ./html
+ADD HRConvert2 /var/www/html
 
 
 RUN chmod -R 0755 /var/www && \

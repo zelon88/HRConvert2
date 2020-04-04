@@ -29,6 +29,7 @@ apt-get -qq install -y \
 	wget \
 	curl \
 	nano \
+	rsync \
 && \
 apt-get -qq remove -y libreoffice-gnome software-properties-common && \
 apt-get -qq autoremove -y -q && \
@@ -46,20 +47,13 @@ ENV APACHE_LOG_DIR   /var/log/apache2
 
 RUN mkdir -p $APACHE_RUN_DIR && \
 mkdir -p $APACHE_LOCK_DIR && \
-mkdir -p $APACHE_LOG_DIR
+mkdir -p $APACHE_LOG_DIR && \
+mkdir -p /var/www/temp
 
 
 COPY uploads.ini /etc/php/7.2/apache2/conf.d/uploads.ini
 
 RUN rm -f /var/www/html/index.html
-
-WORKDIR /var/www/
-ADD HRConvert2 /var/www/html
-
-
-RUN chmod -R 0755 /var/www && \
-chown -R www-data /var/www && \
-chgrp -R www-data /var/www
 
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.6 0
 
@@ -72,7 +66,17 @@ RUN \
     chmod +xr /usr/bin/unoconv && \
     sed -i 's/env python$/env python3.6/' /usr/bin/unoconv
 
-RUN chown -R www-data:www-data /var/www
+
+RUN wget https://github.com/techyowl/Of-Ether-Converter/archive/v2.7-production.zip -O /tmp/2.7.zip && \
+unzip /tmp/2.7.zip -d /tmp/ && \
+rsync -avh /tmp/Of-Ether-Converter-2.7-production/HRConvert2/ /var/www/html/ --delete && \
+rm -rf /var/www/html/config.php
+
+RUN chmod -R 0755 /var/www/html && \
+chown -R www-data:www-data /var/www/html && \
+chmod -R 0755 /var/www/temp && \
+chown -R www-data:www-data /var/www/temp
+
 ENV HOME /var/www
 
 ADD start.sh /

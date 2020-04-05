@@ -1,0 +1,73 @@
+Commit - 3/25/2020
+v2.7 - Add SWF Support and changed styling
+
+-v2.7.
+-Add ability to convert swf files as videos.
+-Changed styling from green to blue and flattened design and updated icons.
+-Merged @dwaaan Docker repo into main repo for easy redeployment.
+-Moved from subdirectory to root directory.
+-Added config options for site title and site logo path
+-Changed Token1 init to be based on php session given how reload button breaks on safari devices starting with macOS Catalina.
+-Added link to already converted file on the file queue list
+-Changed name to Of Ether Converter for public deployment.
+-Fixed docker container to use stable versions of unoconv and libreoffice and python3 so ocr and document conversions work.
+
+COMMIT - 2/11/2020
+v2.6 - Improve sanitization per Issue #4.
+
+-v2.6.
+-Improve sanitization per Issue #4.
+-Github user @robre pointed out some typos in sanitizeCore.php, specifically lines 95 & line 96 from v2.4.
+-These bugs mean to me that I need to review more of this code.
+-Thank you, @robre!
+
+--------------------
+COMMIT 11/18/2018
+v2.4 - Improve sanitization.
+
+-v2.4.
+-Improve sanitization.
+-Based on input from neogeovr on Reddit.
+
+--------------------
+COMMIT 10/23/2018
+v2.3 - Add support for m4a, m4p, m4v files.
+
+-v2.3.
+-Add support for m4a, m4p, and m4v input files.
+
+--------------------
+COMMIT 9/25/2018
+v2.2 - Fix typos in comments.
+
+-v2.2.
+-Fix typos in comments.
+
+--------------------
+COMMIT 7/22/2018
+v2.1 - Fix occasional warnings during file cleanup.
+
+-v2.1.
+-Fix occasional warnings.
+
+----------
+COMMIT 7/20/2018
+v2.0 - Polish some rough edges in the back end.
+
+-v2.0.
+-Consolidate some code in similar fashion to the recent HRC2 refactor.
+-Now when no extension is specified a default will be used instead of displaying a 404 error.
+-Tweak auto-cleaner to make it work in a safer, more reliable way.
+-Add conversion and archive support for tar.bz2.
+-Now when bulk archives are created any converted files will be included in the archive as well as the originals.
+-Fix the way files sync between locations and the way symlinks are controlled.
+
+----------
+COMMIT 7/8/2018
+v1.9 - Improve security.
+
+-v1.9.
+-Added checks for dangerous files to all Convert operations and to the GUI.
+-Fix PDF files showing the image options button when there is no div to display.
+-Added this changelog to keep track of thoughts, changes, and ideas.
+----------

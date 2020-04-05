@@ -1,0 +1,6 @@
+.DS_Store
+
+HRConvert2/DATA/*
+!HRConvert2/DATA/index.html
+HRConvert2/Logs/*
+!HRConvert2/Logs/index.html

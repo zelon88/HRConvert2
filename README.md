@@ -1,4 +1,4 @@
-*[OFFICIAL WEBSITE (Try HRConvert2!)](https://honestrepair.net)*
+[Join the HonestRepair Slack Team!](https://join.slack.com/t/honestrepair/shared_invite/zt-15jd9y01x-5tPNbaWwui4rJ~WsKqjZsg)
 -----------------------------------------------
 **[Installation Instructions](https://github.com/zelon88/HRConvert2/blob/master/How_To_Install_HRConvert2.txt)**
 -----------------------------------------------

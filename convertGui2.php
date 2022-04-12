@@ -9,14 +9,17 @@ if ($fileCount == 1) {
   $fcPlural1 = '';
   $fcPlural2 = ' is'; }
 include ('header.php');
+if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
+if (!isset($ApplicationTitle)) $ApplicationTitle = 'Convert Anything!'; 
+if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
 ?>
   <body>
-    <script type="text/javascript" src="Resources/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="Resources/jquery-3.6.0.min.js"></script>
     <div id="header-text" style="max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;">
-      <?php if (!isset($_GET['noGui'])) { ?><h1>HRConvert2</h1>
+      <?php if (!isset($_GET['noGui'])) { ?><h1><?php echo $ApplicationName; ?></h1>
       <hr /><?php } ?>
       <h3>File Conversion Options</h3>
-      <p>You have uploaded <?php echo $fileCount; ?> valid file<?php echo $fcPlural1; ?> to HRConvert2.</p> 
+      <p>You have uploaded <?php echo $fileCount; ?> valid file<?php echo $fcPlural1; ?> to <?php echo $ApplicationName; ?>.</p> 
       <p>Your file<?php echo $fcPlural2; ?> now ready to convert using the options below.</p>
     </div>
 
@@ -38,15 +41,13 @@ include ('header.php');
           <option value="rar">Rar</option>
           <option value="tar">Tar</option>
           <option value="7z">7z</option>
-          <option value="tar.bz2">Tar.Bz2</option>
         </select>
         <input type="submit" id="archallSubmit" name="archallSubmit" class="info-button" value='Compress & Download' onclick="toggle_visibility('loadingCommandDiv');">
       
         <script type="text/javascript">
         $(document).ready(function () {
-          $('#archallSubmit').click(function() {
-            var archfiles = <?php echo json_encode($Files); ?>;
-            var extension = $('#archallextension').val();
+          $('#archallSubmit').click(function() { 
+            var extension = document.getElementById('archallextension').value;
             if (extension === "") { 
               extension = 'zip'; } 
             $.ajax({
@@ -56,9 +57,9 @@ include ('header.php');
                 Token1:'<?php echo $Token1; ?>',
                 Token2:'<?php echo $Token2; ?>',
                 archive:'1',
-                filesToArchive:archfiles,
+                filesToArchive:<?php echo json_encode($Files); ?>,
                 archextension:extension,
-                userfilename:$('input[name="userarchallfilename"]').val() },
+                userfilename:document.getElementById('userarchallfilename').value },
                 success: function(ReturnData) {
                   $.ajax({
                   type: 'POST',
@@ -74,8 +75,7 @@ include ('header.php');
                 error: function(ReturnData) {
                   alert("<?php echo $Alert; ?>"); }
             });
-          });
-        });
+          }); });
         </script>
 
       </div>
@@ -250,7 +250,7 @@ include ('header.php');
             <option value="docx">Docx</option>
             <option value="rtf">Rtf</option>
             <option value="txt">Txt</option>
-            <option value="odf">Odf</option>
+            <option value="odt">Odt</option>
           </select></p>
           <p><input type="submit" id='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' name='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' value='Convert Into Document' onclick="toggle_visibility('loadingCommandDiv');"></p>
           <script type="text/javascript">
@@ -346,7 +346,7 @@ include ('header.php');
             <option value="docx">Docx</option>
             <option value="rtf">Rtf</option>
             <option value="txt">Txt</option>
-            <option value="odf">Odf</option>
+            <option value="odt">Odt</option>
             <option value="pdf">Pdf</option>
           </select></p>
           <input type="submit" id="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Convert Document' onclick="toggle_visibility('loadingCommandDiv');">

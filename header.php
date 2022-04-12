@@ -1,3 +1,5 @@
+<?php if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
+if (!isset($ApplicationTitle)) $ApplicationTitle = 'Convert Anything!'; ?>
 <html>
   <head>
     <meta charset="UTF-8">
@@ -10,6 +12,6 @@
       body {
         font-family: <?php echo $Font; ?>; }
     </style>
-    <title>HRConvert2-Convert anything!</title>
+    <title><?php echo $ApplicationName; ?> - <?php echo $ApplicationTitle; ?></title>
   </head>
   

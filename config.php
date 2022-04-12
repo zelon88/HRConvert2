@@ -34,26 +34,10 @@ $Salts4 = 'somethingSoRanDoMThat231;l_Will_evar+guess+it';
 $Salts5 = 'somethingSoRanDoMThatNobodyr3454r3r33_Will_evar+guess+it';
 $Salts6 = 'somethingSoRanDoMThatNob2odyawryoglukfgy;/.5^&#&__Will_evar+guess+it';
   // / Externally or internally accesible domain or IP.
-$URL = 'https://www.honestrepair.net';
+$URL = 'localhost';
   // / Scan for viruses during directory scan. Use '1' for default. 
    // / (ClamAV MUST be installed on the localhost!!!).
-$VirusScan = '1';
-  // / Use multi-threaded virus scanning. Virus scanning is extremely resource intensive. 
-    // / If you are running an older machine (Rpi, CoreDuo, or any single-core CPU) leave 
-    // / this setting disabled '0'.
-$HighPerformanceAV = '1';
-  // / Thorough A/V scanning requires stricter permissions, and may require additional 
-    // / ClamAV user, usergroup, and permissions configuration.
-    // / Disable '0' if you experience errors.
-    // / Enable '0' if you experience false-negatives.
-$ThoroughAV = '0';
-  // / Persistent A/V scanning will try to achieve the highest level of scanning that is
-    // / possible with available permissions. 
-    // / When enabled; If errors are encountered ANY AND EVERY attempt to recover from the 
-      // / error will be made. No expense will be spared to complete the operation.
-    // / When disabled; If errors are encountered, NO ATTEMPTS to recover from the error
-      // / will be made. The operation will be abandoned and abort after reasonable effort.
-$PersistentAV = '1';
+$VirusScan = FALSE;
 // / ------------------------------
 
 // / ------------------------------ 
@@ -65,20 +49,31 @@ $InstLoc = '/var/www/html/HRProprietary/HRConvert2';
   // / (NO SLASH AFTER DIRECTORY!!!) ...  
 $ServerRootDir = '/var/www/html';
   // / The CloudLoc is where temporary data files are stored. (NO SLASH AFTER DIRECTORY!!!) ...  
-$ConvertLoc = '/mnt/0b3324303-b1a7-4223-8360-7343263c052/ConvertDATA';
+$ConvertLoc = '/home/justin/Documents/Projects/DATA/ConvertDATA';
   // / The CloudLoc is where permanent Log files are stored. (NO SLASH AFTER DIRECTORY!!!) ... 
 $LogDir = '/var/www/html/HRProprietary/HRConvert2/Logs';
 // / ------------------------------ 
 
 // / ------------------------------ 
 // / General Information ...
-    // / Default is '30'.
+  // / The default name to display for this application.
+  // / You can change this to make it fit with other services your organization provides.
+$ApplicationName = 'HRConvert2';
+  // / The default title to display in taskbars & window managers.
+  // / You can change this to make it fit with other services your organization provides.
+$ApplicationTitle = 'Convert Anything!';
+    // / Age in minutes of files to be deleted.
     // / Set to '0' to keep files indefinately.
+    // / Default is '30'.
 $Delete_Threshold = '30';
   // / Number of bytes to store in each logfile before splitting to a new one.
 $MaxLogSize = '1048576';
   // / The default font to use throughout HRConvert2 GUI elements.
 $Font = 'Arial';
+  // / Set whether or not to display a full GUI by default.
+$ShowGUI = TRUE;
+  // / Set whether or not to display the Terms of Service & Privacy Policy links.
+$ShowFinePrint = TRUE;
   // / Terms of Service URL.
 $TOSURL = 'https://www.honestrepair.net/index.php/terms-of-service/';
   // / Privacy Policy URL.

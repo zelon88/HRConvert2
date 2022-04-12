@@ -1,17 +1,19 @@
 <?php 
 include ('header.php');
-?>
+if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
+if (!isset($ApplicationTitle)) $ApplicationTitle = 'Convert Anything!'; 
+if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE; ?>
   <body>
     <?php 
     if (!isset($_GET['noGui'])) { ?>
     <div id="header-text" style="max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;">
-      <h1>HRConvert2</h1>
+      <h1><?php echo $ApplicationName; ?></h1>
       <h3>Online File Converter, Extractor, Compressor</h3>
       <hr />
     </div>
     <div id="main" align="center">
       <div id="overview" style="max-width:1000px; text-align:left; margin:25px;">
-      	<p id="info" style="display:block;">HRConvert2 is an open-source web-app that converts files without tracking users across the net or infringing on your intellectual property.</p>
+      	<p id="info" style="display:block;"><?php echo $ApplicationName; ?> is based off the open-source web-app <a href='https://github.com/zelon88/HRConvert2'>HRConvert2</a> by <a href='https://github.com/zelon88'>Zelon88</a> that converts files without tracking users across the net or infringing on your intellectual property.</p>
         <button id="more-info-button" class="info-button" onclick="toggle_visibility('more-info'); toggle_visibility('more-info-button'); toggle_visibility('supported-formats-show-button'); 
           toggle_visibility('less-info-button');" style="text-align:center; display:block; margin-left:auto; margin-right:auto;"><i>More Info ...</i></button>
         <button id="less-info-button" class="info-button" onclick="toggle_visibility('more-info'); toggle_visibility('more-info-button'); toggle_visibility('supported-formats-show-button'); 
@@ -19,7 +21,7 @@ include ('header.php');
         <div id="more-info" style="display:none;">
           <hr />
           <p>All user-supplied data is erased automatically, so you don't need to worry about forfeiting your personal information or property while using our services.</p>
-          <p>Currently HRConvert2 supports 60x different file formats, including documents, spreadsheets, images, media, 3d models, CAD drawings, vector files, archives, disk images, & more.</p> 
+          <p>Currently <?php echo $ApplicationName; ?> supports 60x different file formats, including documents, spreadsheets, images, media, 3d models, CAD drawings, vector files, archives, disk images, & more.</p> 
           <button id="supported-formats-show-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
             toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>View Supported Formats ...</i></button>
           <button id="supported-formats-hide-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
@@ -59,7 +61,7 @@ include ('header.php');
               <li>Docx</li>
               <li>Txt</li>
               <li>Rtf</li>
-              <li>Odf</li>
+              <li>Odt</li>
               <li>Pdf</li>
             </ol>
             <strong>Spreadsheet Formats</strong>
@@ -146,7 +148,7 @@ include ('header.php');
               <li>Docx</li>
               <li>Txt</li>
               <li>Rtf</li>
-              <li>Odf</li>
+              <li>Odt</li>
               <li>Pdf</li>
             </ol>
           </div>
@@ -154,27 +156,33 @@ include ('header.php');
         <hr />
       </div>
       <?php } ?>
-      <div id="call-to-action1" style="max-width:1000px; text-align:center;">
-        <p>Select files by clicking, tapping, or dropping files into the box below.</p>
-      </div>
-      <div id="dropzone" style="max-height:2000px; max-width:1000px; margin:25px;">
-        <form action="convertCore.php" class="dropzone" id="filesToUpload" name="filesToUpload" method="post" enctype="multipart/form-data">
-        <input type="hidden" id="token1" name="Token1" value="<?php echo $Token1; ?>">
-        <input type="hidden" id="token2" name="Token2" value="<?php echo $Token2; ?>">
-        </form>
+      <div align="center">
+        <div id="call-to-action1" style="max-width:1000px; text-align:center;">
+          <p>Select files by clicking, tapping, or dropping files into the box below.</p>
+        </div>
       </div>
       <div align="center">
-        <form action="convertCore.php?showFiles=1<?php if (isset($_GET['noGui'])) echo '&noGui=TRUE'; ?>" method="post">
+        <div id="dropzone" style="max-height:1000px; max-width:1000px; margin:25px;">
+          <form action="convertCore.php" class="dropzone" id="filesToUpload" name="filesToUpload" method="post" enctype="multipart/form-data">
           <input type="hidden" id="token1" name="Token1" value="<?php echo $Token1; ?>">
           <input type="hidden" id="token2" name="Token2" value="<?php echo $Token2; ?>">
-          <input type="submit" id="continue-button" class="info-button" value="Continue ...">
-        </form>
-        </form>
-
-        <br />
-        <hr />    
+          </form>
+        </div>
       </div>
+      <div align="center">
+        <div id="continue" style="max-width:1000px; text-align:center;">
+          <form action="convertCore.php?showFiles=1<?php if (isset($_GET['noGui'])) echo '&noGui=TRUE'; ?>" method="post">
+            <input type="hidden" id="token1" name="Token1" value="<?php echo $Token1; ?>">
+            <input type="hidden" id="token2" name="Token2" value="<?php echo $Token2; ?>">
+            <input type="submit" id="continue-button" class="info-button" value="Continue ...">
+          </form>
+          <br />
+          <hr />
+        </div>
+      </div>
+
+      <?php if (!isset($_GET['noGui'])) { ?>
     </div>
-    <?php
+    <?php }
     include ('footer.php');
     ?>

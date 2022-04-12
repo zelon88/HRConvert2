@@ -34,7 +34,7 @@ Supports specific bitrate through the API.
 - Docx
 - Txt
 - Rtf
-- Odf
+- Odt
 - Pdf
 #### Spreadsheet Formats
 - Xls
@@ -102,7 +102,7 @@ OCR Operations support the following output formats...
 - Docx
 - Txt
 - Rtf
-- Odf
+- Odt
 - Pdf
 ---
 # Screenshots

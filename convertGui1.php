@@ -115,7 +115,6 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE; ?>
               <li>Dib</li>
               <li>Flif</li>
               <li>Avif</li>
-
               <li>Crw</li>
               <li>Dcr</li>
               <li>Gplt</li>

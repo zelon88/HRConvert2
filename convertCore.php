@@ -52,7 +52,7 @@ if (!isset($Token2)) $Token2 = hash('ripemd160', $Token1.$Salts1.$Salts2.$Salts3
 
 // / -----------------------------------------------------------------------------------
 // / The following code sets the global variables for the session.
-$HRConvertVersion = 'v2.7.1';
+$HRConvertVersion = 'v2.7.2';
 $Date = date("m_d_y");
 $Time = date("F j, Y, g:i a"); 
 $JanitorFile = 'janitor.php';
@@ -581,6 +581,7 @@ if (isset($_POST['pdfworkSelected'])) {
     $doc1array =  array('txt', 'pages', 'doc', 'xls', 'xlsx', 'docx', 'rtf', 'odt', 'ods', 'odt');
     $img1array = array('jpg', 'jpeg', 'bmp', 'webp', 'png', 'gif');
     $pdf1array = array('pdf');
+    $multiple = FALSE; 
       if (in_array(strtolower($oldExtension), $AllowedPDFw)) {
         while (file_exists($newPathname)) {
           $newFile = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['userpdfconvertfilename'].'.'.$extension));
@@ -590,17 +591,17 @@ if (isset($_POST['pdfworkSelected'])) {
             if (in_array($extension, $doc1array)) {
               $pathnameTEMP = str_replace('..', '', str_replace('.'.$oldExtension, '.txt', $pathname));
               $_POST['method'] = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['method']));
-              if ($_POST['method1'] == '0' or $_POST['method1'] == '') {
+              if ($_POST['method'] == '0' or $_POST['method'] == '') {
                 shell_exec("pdftotext -layout $pathname $pathnameTEMP"); 
                 $txt = ('OP-Act: '."Converted $pathnameTEMP1 to $pathnameTEMP on $Time".' using method 0.'); 
                 $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); 
                 if ((!file_exists($pathnameTEMP) or filesize($pathnameTEMP) < '5')) { 
                   $txt = ('Warning!!! HRC2591, There was a problem using the selected method to convert your file. Switching to automatic method and retrying the conversion.'); 
                   $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
-                  $_POST['method1'] = '1'; 
+                  $_POST['method'] = '1'; 
                   $txt = ('OP-Act: Attempting PDFWork conversion "method 2" on '.$Time.'.'); 
                   $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } }
-              if ($_POST['method1'] == '1') {
+              if ($_POST['method'] == '1') {
                 $pathnameTEMP1 = str_replace('..', '', str_replace('.'.$oldExtension, '.jpg' , $pathname));
                 shell_exec("convert $pathname $pathnameTEMP1");
                 if (!file_exists($pathnameTEMP1)) {
@@ -625,18 +626,18 @@ if (isset($_POST['pdfworkSelected'])) {
                       shell_exec("tesseract $pathnameTEMP1 $pathnameTEMPTesseract");
                       $READPAGEDATA = file_get_contents($pathnameTEMP);
                       $WRITEDOCUMENT = file_put_contents($pathnameTEMP0, $READPAGEDATA.PHP_EOL, FILE_APPEND);
-                      $multiple = '1'; 
+                      $multiple = TRUE; 
                       $txt = ('OP-Act: '."Converted $pathnameTEMP1 to $pathnameTEMP on $Time".' using method 1.'); 
                       $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
                       $pathnameTEMP = $pathnameTEMP0;
                       if (!file_exists($pathnameTEMP0)) {
                         $txt = ('ERROR!!! HRConvert2617, HRC2610, $pathnameTEMP0 does not exist on '.$Time.'.'); 
                         $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } } } }
-                    if ($multiple !== '1') {
-                    $pathnameTEMPTesseract = str_replace('..', '', str_replace('.'.$txt, '', $pathnameTEMP));
-                    shell_exec("tesseract $pathnameTEMP1 $pathnameTEMPTesseract");
-                    $txt = ('OP-Act: '."Converted $pathnameTEMP1 to $pathnameTEMP on $Time".' using method 1.');    
-                    $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } } } } 
+                    if (!$multiple) {
+                      $pathnameTEMPTesseract = str_replace('..', '', str_replace('.'.$txt, '', $pathnameTEMP));
+                      shell_exec("tesseract $pathnameTEMP1 $pathnameTEMPTesseract");
+                      $txt = ('OP-Act: '."Converted $pathnameTEMP1 to $pathnameTEMP on $Time".' using method 1.');    
+                      $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } } } } 
             // / Code to convert a document to a PDF.
             if (in_array(strtolower($oldExtension), $doc1array)) { 
               if (in_array($extension, $pdf1array)) {
@@ -678,9 +679,8 @@ if (isset($_POST['pdfworkSelected'])) {
           $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
           die('ERROR!!! HRConvert2620'); } } 
   // / Free un-needed memory.
-  $_POST['pdfworkSelected'] = $txt = $MAKELogFile = $file = $file1 = $file2 = $_POST['pdfextension'] = $extension = $pathname 
-   = $oldPathname = $filename = $oldExtension = $newFile = $newPathname = $doc1array = $img1array = $pdf1array = $pathnameTEMP = $_POST['method'] = $_POST['method1'] = $pathnameTEMP1 = $PagedFilesArrRAW = $PagedFile = $CleanFilname = $CleanPathnamePages = $PageNumber = $READPAGEDATA = $WRITEDOCUMENT = $multiple = $pathnameTEMP0 = $pathnameTEMPTesseract = $pathnameTEMP0 = $imgmethod = $pathnameTEMP3 = null;
-  unset ($_POST['pdfworkSelected'], $txt, $MAKELogFile, $file, $file1, $file2, $_POST['pdfextension'], $extension, $pathname, $oldPathname , $filename, $oldExtension, $newFile, $newPathname, $doc1array, $img1array, $pdf1array, $pathnameTEMP, $_POST['method'], $_POST['method1'], $pathnameTEMP1, $PagedFilesArrRAW, $PagedFile, $CleanFilname, $CleanPathnamePages, $PageNumber, $READPAGEDATA, $WRITEDOCUMENT, $multiple, $pathnameTEMP0, $pathnameTEMPTesseract, $pathnameTEMP0, $imgmethod, $pathnameTEMP3); }
+  $_POST['pdfworkSelected'] = $txt = $MAKELogFile = $file = $file1 = $file2 = $_POST['pdfextension'] = $extension = $pathname = $oldPathname = $filename = $oldExtension = $newFile = $newPathname = $doc1array = $img1array = $pdf1array = $pathnameTEMP = $_POST['method']= $pathnameTEMP1 = $PagedFilesArrRAW = $PagedFile = $CleanFilname = $CleanPathnamePages = $PageNumber = $READPAGEDATA = $WRITEDOCUMENT = $multiple = $pathnameTEMP0 = $pathnameTEMPTesseract = $pathnameTEMP0 = $imgmethod = $pathnameTEMP3 = null;
+  unset ($_POST['pdfworkSelected'], $txt, $MAKELogFile, $file, $file1, $file2, $_POST['pdfextension'], $extension, $pathname, $oldPathname , $filename, $oldExtension, $newFile, $newPathname, $doc1array, $img1array, $pdf1array, $pathnameTEMP, $_POST['method'], $pathnameTEMP1, $PagedFilesArrRAW, $PagedFile, $CleanFilname, $CleanPathnamePages, $PageNumber, $READPAGEDATA, $WRITEDOCUMENT, $multiple, $pathnameTEMP0, $pathnameTEMPTesseract, $pathnameTEMP0, $imgmethod, $pathnameTEMP3); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

@@ -263,7 +263,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
                   Token1:'<?php echo $Token1; ?>',
                   Token2:'<?php echo $Token2; ?>',
                   pdfworkSelected:'<?php echo $File; ?>',
-                  method1:$('#pdfmethod<?php echo $ConvertGuiCounter1; ?>').val(),
+                  method:$('#pdfmethod<?php echo $ConvertGuiCounter1; ?>').val(),
                   pdfextension:$('#pdfextension<?php echo $ConvertGuiCounter1; ?>').val(),
                   userpdfconvertfilename:$('input[name="userpdffilename<?php echo $ConvertGuiCounter1; ?>"]').val() },
                   success: function(ReturnData) {

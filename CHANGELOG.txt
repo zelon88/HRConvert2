@@ -1,4 +1,12 @@
 COMMIT - 4/13/2022
+v2.7.2 - Fixed bugs reported by a Reddit user.
+
+-v2.7.2.
+-Fix undefined variable errors in sanitizeCore.php and convertCore.php when converting PDF files.
+-Fixed multiple page detection code.
+
+--------------------
+COMMIT - 4/13/2022
 v2.7.1 - Add a ton of supported image formats.
 
 -v2.7.1
@@ -25,6 +33,7 @@ v2.7.1 - Add a ton of supported image formats.
 -Clean up formatting of config.php.
 -Clean up some mis-indented code blocks (brackets were correct).
 
+--------------------
 COMMIT - 4/11/2022
 v2.7 - v2.7 - Fix a ton of bugs, make compatible w/PHP8.
 

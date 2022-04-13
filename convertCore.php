@@ -27,6 +27,8 @@ if (!file_exists(realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR.'config.php')) 
 else require_once (realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR.'config.php'); 
 if (!file_exists(realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR.'sanitizeCore.php')) die ('ERROR!!! HRConvert233, Cannot process the HRConvert2 Sanitize Core file (sanitizeCore.php)!'.PHP_EOL.'<br />'); 
 else require_once (realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR.'sanitizeCore.php'); 
+if (!file_exists(realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR.'styleCore.php')) die ('ERROR!!! HRConvert231, Cannot process the HRConvert2 Style Core file (styleCore.php)!'.PHP_EOL.'<br />'); 
+else require_once (realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR.'styleCore.php'); 
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -51,8 +53,33 @@ if (!isset($Token2)) $Token2 = hash('ripemd160', $Token1.$Salts1.$Salts2.$Salts3
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / The following code sets the styles to use for for the session.
+$ButtonCode = $defaultButtonCode;
+if (isset($ButtonStyle)) { 
+  if (strtolower($ButtonStyle) === 'green') $ButtonCode = $greenButtonCode;
+  if (strtolower($ButtonStyle) === 'blue') $ButtonCode = $blueButtonCode;
+  if (strtolower($ButtonStyle) === 'red') $ButtonCode = $redButtonCode; 
+  if (strtolower($ButtonStyle) === 'grey') $ButtonCode = $defaultButtonCode; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / The following code sets the language to use for the session.
+$LanguageToUse = 'en-us';
+$SupportedLanguages = array('en-us', 'fr-fr');
+if (isset($_GET['language'])) $_GET['language'] = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_GET['language']));
+
+if (isset($DefaultLanguage)) if (in_array($DefaultLanguage, $SupportedLanguages)) $LanguageToUse = $DefaultLanguage;
+
+if (isset($AllowUserSelectableLanguage)) { 
+  if ($AllowUserSelectableLanguage) if (isset($_GET['language'])) if (in_array($_GET['language'], $SupportedLanguages)) $LanguageToUse = $_GET['language'];
+  if (!$AllowUserSelectableLanguage) $LanguageToUse = $DefaultLanguage; }
+
+$_GET['language'] = $LanguageToUse;
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / The following code sets the global variables for the session.
-$HRConvertVersion = 'v2.7.2';
+$HRConvertVersion = 'v2.7.3';
 $Date = date("m_d_y");
 $Time = date("F j, Y, g:i a"); 
 $JanitorFile = 'janitor.php';
@@ -83,7 +110,7 @@ $DangerousFiles1 = array('.', '..', 'index.php', 'index.html');
 $ArchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi', 'tar.bz2', 'tar.gz');
 $DearchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd');
 $DocumentArray = array('txt', 'doc', 'docx', 'rtf', 'xls', 'xlsx', 'odt', 'ods', 'pptx', 'ppt', 'xps', 'potx', 'potm', 'pot', 'ppa', 'odp');
-$DocArray = array('txt', 'doc', 'docx', 'rtf', 'odt');
+$DocArray = array('txt', 'doc', 'docx', 'rtf', 'odt', 'abw');
 $SpreadsheetArray = array('csv', 'xls', 'xlsx', 'odt', 'ods');
 $PresentationArray = array('ppt', 'xps', 'potx', 'potm', 'pot', 'ppa', 'odp');
 $ImageArray = array('jpeg', 'jpg', 'png', 'bmp', 'webp', 'gif', 'avif', 'crw', 'ico', 'cin', 'xwd', 'dcr', 'dds', 'dib', 'flif', 'gplt', 'nef', 'orf', 'ora', 'sct', 'sfw', 'xcf', 'xwg');
@@ -91,7 +118,7 @@ $MediaArray = array('mp3', 'aac', 'oog', 'wma', 'mp2', 'flac', 'm4a', 'm4p');
 $VideoArray = array('3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv', 'mov', 'm4v');
 $DrawingArray = array('svg', 'dxf', 'vdx', 'fig');
 $ModelArray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'ptx', 'dxf', 'u3d', 'vrml');
-$ConvertArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi', 'tar.bz2', 'tar.gz', 'txt', 'doc', 'docx', 'rtf', 'xls', 'xlsx', 'odt', 'ods', 'pptx', 'ppt', 'xps', 'potx', 'potm', 'pot', 'ppa', 'odp', 'jpeg', 'jpg', 'png', 'bmp', 'webp', 'avif', 'crw', 'ico', 'cin', 'xwd', 'dcr', 'dds', 'dib', 'flif', 'gplt', 'nef', 'orf', 'ora', 'sct', 'sfw', 'xcf', 'xwg', 'gif', 'pdf', 'mp3', 'mp4', 'mov', 'aac', 'oog', 'wma', 'mp2', 'flac', 'm4a', '3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv', 'svg', 'dxf', 'vdx', 'fig', '3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'ptx', 'dxf', 'u3d', 'vrml', 'm4v', 'm4p');
+$ConvertArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi', 'tar.bz2', 'tar.gz', 'txt', 'doc', 'docx', 'rtf', 'xls', 'xlsx', 'odt', 'ods', 'pptx', 'ppt', 'xps', 'potx', 'potm', 'pot', 'ppa', 'odp', 'jpeg', 'jpg', 'png', 'bmp', 'webp', 'avif', 'crw', 'ico', 'cin', 'xwd', 'dcr', 'dds', 'dib', 'flif', 'gplt', 'nef', 'orf', 'ora', 'sct', 'sfw', 'xcf', 'xwg', 'gif', 'pdf', 'abw', 'mp3', 'mp4', 'mov', 'aac', 'oog', 'wma', 'mp2', 'flac', 'm4a', '3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv', 'svg', 'dxf', 'vdx', 'fig', '3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'ptx', 'dxf', 'u3d', 'vrml', 'm4v', 'm4p');
 $PDFWorkArr = array('pdf', 'jpg', 'jpeg', 'png', 'bmp', 'webp', 'gif');
 // / -----------------------------------------------------------------------------------
 
@@ -136,6 +163,7 @@ function cleanFiles($path) {
       if (is_dir($path.DIRECTORY_SEPARATOR.$f) && !in_array(basename($path.DIRECTORY_SEPARATOR.$f), $DefaultApps) && is_dir_empty($path)) @rmdir($path.DIRECTORY_SEPARATOR.$f);
       if (is_dir($path.DIRECTORY_SEPARATOR.$f) && !in_array(basename($path.DIRECTORY_SEPARATOR.$f), $DefaultApps) && !is_dir_empty($path)) cleanFiles($path.DIRECTORY_SEPARATOR.$f); } 
     if ($path !== $ConvertLoc && $path !== $ConvertTemp) @rmdir($path); } }
+
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -368,14 +396,13 @@ if (isset($_POST['convertSelected'])) {
     $filename = pathinfo($pathname, PATHINFO_FILENAME);
     $oldExtension = pathinfo($pathname, PATHINFO_EXTENSION);
     $newPathname = str_replace('..', '', str_replace(' ', '\ ', str_replace(DIRECTORY_SEPARATOR.DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR, $ConvertDir.str_replace('..', '', str_replace(DIRECTORY_SEPARATOR.DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR, str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['userconvertfilename'].'.'.$extension))))));
-    $docarray =  array('txt', 'doc', 'xls', 'xlsx', 'docx', 'rtf', 'ods', 'odt', 'dat', 'cfg', 'pages', 'pptx', 'ppt', 'xps', 'potx', 'pot', 'ppa', 'odp', 'odt');
+    $docarray =  array('txt', 'doc', 'xls', 'xlsx', 'docx', 'rtf', 'ods', 'odt', 'dat', 'cfg', 'pages', 'pptx', 'ppt', 'xps', 'potx', 'pot', 'ppa', 'odp', 'odt', 'abw');
     $imgarray = array('jpg', 'jpeg', 'bmp', 'webp', 'png', 'avif', 'crw', 'ico', 'cin', 'xwd', 'dcr', 'dds', 'dib', 'flif', 'gplt', 'nef', 'orf', 'ora', 'sct', 'sfw', 'xcf', 'xwg', 'gif');
     $audioarray =  array('mp3', 'wma', 'wav', 'ogg', 'mp2', 'flac', 'aac');
     $videoarray =  array('3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv');
     $ModelArray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'ptx', 'dxf', 'u3d', 'vrml');
     $drawingarray = array('xvg', 'dxf', 'vdx', 'fig');
     $pdfarray = array('pdf');
-    $abwarray = array('abw');
     $archarray = array('zip', '7z', 'rar', 'tar', 'tar.gz', 'tar.bz2', 'iso', 'vhd',);
     $array7z = array('7z', 'zip', 'rar', 'iso', 'vhd');
     $array7zo = array('7z', 'zip');
@@ -383,8 +410,6 @@ if (isset($_POST['convertSelected'])) {
     $array7zo2 = array('vhd', 'iso');
     $arraytaro = array('tar.gz', 'tar.bz2', 'tar');
     $arrayraro = array('rar',);
-    $abwstd = array('doc', 'abw');
-    $abwuno = array('docx', 'pdf', 'txt', 'rtf', 'odt', 'dat', 'cfg');
     // / Code to increment the conversion in the event that an output file already exists.
     while (file_exists($newPathname)) $newPathname = $ConvertDir.str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['userconvertfilename'].'.'.$extension));
     if (in_array(strtolower($oldExtension), $Allowed)) { 
@@ -543,8 +568,8 @@ if (isset($_POST['convertSelected'])) {
     $txt = ('OP-Act: File '.$newPathname.' was created on '.$Time.'.');
     $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } } 
   // / Free un-needed memory.
-  $_POST['convertSelected'] = $txt = $key = $file = $file1 = $file2 = $extension = $pathname = $oldPathname = $filename = $oldExtension= $newPathname = $docarray = $imgarray = $audioarray = $videoarray = $ModelArray = $drawingarray = $pdfarray = $abwarray = $archarray = $array7z = $array7zo = $arrayzipo = $arraytaro = $arrayraro = $abwstd = $abwuno = $_POST['userconvertfilename'] = $returnDATA = $returnDATALINE = $stopper = $height = $width = $_POST['height'] = $_POST['width'] = $rotate = $_POST['rotate'] = $wxh = $bitrate = $_POST['bitrate'] = $safedir2 = $safedir3 = $safedir4 = $delFiles = $delFile = $MAKELogFile = null;
-  unset ($_POST['convertSelected'], $txt, $key, $file, $file1, $file2, $extension, $pathname, $oldPathname, $filename, $oldExtension, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $ModelArray, $drawingarray, $pdfarray, $abwarray, $archarray, $array7z, $array7zo, $arrayzipo, $arraytaro, $arrayraro, $abwstd, $abwuno, $_POST['userconvertfilename'], $returnDATA, $returnDATALINE, $stopper, $height, $width, $_POST['height'], $_POST['width'], $rotate, $_POST['rotate'], $wxh, $bitrate, $_POST['bitrate'], $safedir2, $safedir3, $safedir4, $delFiles, $delFile, $MAKELogFile ); }
+  $_POST['convertSelected'] = $txt = $key = $file = $file1 = $file2 = $extension = $pathname = $oldPathname = $filename = $oldExtension= $newPathname = $docarray = $imgarray = $audioarray = $videoarray = $ModelArray = $drawingarray = $pdfarray = $archarray = $array7z = $array7zo = $arrayzipo = $arraytaro = $arrayraro = $_POST['userconvertfilename'] = $returnDATA = $returnDATALINE = $stopper = $height = $width = $_POST['height'] = $_POST['width'] = $rotate = $_POST['rotate'] = $wxh = $bitrate = $_POST['bitrate'] = $safedir2 = $safedir3 = $safedir4 = $delFiles = $delFile = $MAKELogFile = null;
+  unset ($_POST['convertSelected'], $txt, $key, $file, $file1, $file2, $extension, $pathname, $oldPathname, $filename, $oldExtension, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $ModelArray, $drawingarray, $pdfarray, $archarray, $array7z, $array7zo, $arrayzipo, $arraytaro, $arrayraro, $_POST['userconvertfilename'], $returnDATA, $returnDATALINE, $stopper, $height, $width, $_POST['height'], $_POST['width'], $rotate, $_POST['rotate'], $wxh, $bitrate, $_POST['bitrate'], $safedir2, $safedir3, $safedir4, $delFiles, $delFile, $MAKELogFile ); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -661,7 +686,7 @@ if (isset($_POST['pdfworkSelected'])) {
             if (!file_exists($pathnameTEMP)) {
               $txt = ('ERROR!!! HRConvert2667, '."Could not convert $pathname to $pathnameTEMP1 on $Time".' using method '.$imgmethod.'.'); 
               $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } }
-          // / If the output file is a txt file we leave it as-is.
+        // / If the output file is a txt file we leave it as-is.
         if (!file_exists($newPathname)) { 
           if ($extension == 'txt') { 
             if (file_exists($pathnameTEMP)) {
@@ -697,7 +722,15 @@ foreach ($iterator = new \RecursiveIteratorIterator (
 // / The following code prepares & loads the GUI.
 if (isset($ShowGUI)) if (!$ShowGUI) $_GET['noGui'] = TRUE;
 
-if (isset($_GET['showFiles']) or isset($_POST['showFiles'])) require_once('convertGui2.php'); 
-if (!isset($_GET['showFiles'])) require_once('convertGui1.php'); 
+if (isset($_GET['showFiles']) or isset($_POST['showFiles'])) { 
+  require_once('Languages/'.$LanguageToUse.'/header.php');
+  require_once('Languages/'.$LanguageToUse.'/convertGui2.php'); 
+  require_once('Languages/'.$LanguageToUse.'/footer.php'); }
+
+
+if (!isset($_GET['showFiles'])) { 
+  require_once('Languages/'.$LanguageToUse.'/header.php');
+  require_once('Languages/'.$LanguageToUse.'/convertGui1.php'); 
+  require_once('Languages/'.$LanguageToUse.'/footer.php'); }
 // / -----------------------------------------------------------------------------------
 ?>

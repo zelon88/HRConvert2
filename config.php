@@ -60,6 +60,16 @@ $ApplicationName = 'HRConvert2';
 // /   The default title to display in taskbars & window managers.
 // /   You can change this to make it fit with other services your organization provides.
 $ApplicationTitle = 'Convert Anything!';
+// /   The default language for GUI elements.
+// /   Uses Microsoft Language Strings. 
+// /     https://docs.microsoft.com/en-us/cpp/c-runtime-library/language-strings?view=msvc-170 
+// /   If the specified locale is not available 'en-us' will be used instead.
+$DefaultLanguage = 'en-us';
+// /   Enable or disable dynamic language selection via the $_GET['language'] variable.
+// /   If set to TRUE a user will be able to select different languages via $_GET['language'].
+// /   If a user attempts a language that is not available $DefaultLanguage will be used instead.
+// /   If set to FALSE the $DefaultLanguage will always be used.
+$AllowUserSelectableLanguage = TRUE;
 // /   Age in minutes of files to be deleted.
 // /   Set to '0' to keep files indefinately.
 // /   Default is '30'.
@@ -68,6 +78,9 @@ $Delete_Threshold = '30';
 $MaxLogSize = '1048576';
 // /   The default font to use throughout HRConvert2 GUI elements.
 $Font = 'Arial';
+// /   The default color scheme to use for buttons.
+// /   Valid options are 'RED', 'GREEN', 'BLUE', or 'GREY'.
+$ButtonStyle = 'GREY';
 // /   Set whether or not to display a full GUI by default.
 $ShowGUI = TRUE;
 // /   Set whether or not to display the Terms of Service & Privacy Policy links.

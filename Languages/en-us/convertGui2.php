@@ -8,7 +8,6 @@ if (!is_numeric($fileCount)) $fileCount = 'an unknown number of';
 if ($fileCount == 1) {
   $fcPlural1 = '';
   $fcPlural2 = ' is'; }
-include ('header.php');
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
 if (!isset($ApplicationTitle)) $ApplicationTitle = 'Convert Anything!'; 
 if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
@@ -745,7 +744,3 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
       <hr />
       <?php } ?>
     </div>
-
-    <?php
-    include ('footer.php');
-    ?>

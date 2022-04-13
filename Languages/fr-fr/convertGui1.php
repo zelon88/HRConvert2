@@ -1,5 +1,4 @@
 <?php 
-include ('header.php');
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
 if (!isset($ApplicationTitle)) $ApplicationTitle = 'Convert Anything!'; 
 if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE; ?>
@@ -13,25 +12,25 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE; ?>
     </div>
     <div id="main" align="center">
       <div id="overview" style="max-width:1000px; text-align:left; margin:25px;">
-      	<p id="info" style="display:block;"><?php echo $ApplicationName; ?> is based off the open-source web-app <a href='https://github.com/zelon88/HRConvert2'>HRConvert2</a> by <a href='https://github.com/zelon88'>Zelon88</a> that converts files without tracking users across the net or infringing on your intellectual property.</p>
+      	<p id="info" style="display:block;"><?php echo $ApplicationName; ?> est basé sur l'application web open-source <a href='https://github.com/zelon88/HRConvert2'>HRConvert2</a> par <a href='https://github.com/zelon88'>Zelon88</a> qui convertit les fichiers sans suivre les utilisateurs sur le net ni enfreindre votre propriété intellectuelle.</p>
         <button id="more-info-button" class="info-button" onclick="toggle_visibility('more-info'); toggle_visibility('more-info-button'); toggle_visibility('supported-formats-show-button'); 
           toggle_visibility('less-info-button');" style="text-align:center; display:block; margin-left:auto; margin-right:auto;"><i>More Info ...</i></button>
         <button id="less-info-button" class="info-button" onclick="toggle_visibility('more-info'); toggle_visibility('more-info-button'); toggle_visibility('supported-formats-show-button'); 
           toggle_visibility('less-info-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Less Info ...</i></button>
         <div id="more-info" style="display:none;">
           <hr />
-          <p>All user-supplied data is erased automatically, so you don't need to worry about forfeiting your personal information or property while using our services.</p>
-          <p>Currently <?php echo $ApplicationName; ?> supports 60x different file formats, including documents, spreadsheets, images, media, 3d models, CAD drawings, vector files, archives, disk images, & more.</p> 
+          <p>Toutes les données fournies par l'utilisateur sont automatiquement effacées, vous n'avez donc pas à vous soucier de la perte de vos informations personnelles ou de vos biens lors de l'utilisation de nos services.</p>
+          <p><?php echo $ApplicationName; ?> prend en charge 75 formats de fichiers différents, y compris les documents, les feuilles de calcul, les images, les médias, les modèles 3D, les dessins CAO, les fichiers vectoriels, les archives, les images de disque, etc.</p> 
           <button id="supported-formats-show-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
-            toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>View Supported Formats ...</i></button>
+            toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Afficher les formats pris en charge ...</i></button>
           <button id="supported-formats-hide-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
-            toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Hide Supported Formats ...</i></button>
+            toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Masquer les formats pris en charge ...</i></button>
           <br>
           <div id="supported-formats" class="supported-formats" style="margin-left:33%; display:none;">
-            <h3>Supported Formats</h3>
+            <h3>Formats pris en charge</h3>
             <hr />
-            <strong>Audio Formats</strong>
-            <p><i>Supports specific bitrate through the API.</i></p>
+            <strong>Formats d'Audio</strong>
+            <p><i>Prend en charge un débit binaire spécifique via l'API.</i></p>
             <ol>
               <li>Mp2</li>
               <li>Mp3</li>
@@ -43,7 +42,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE; ?>
               <li>M4a</li>
               <li>M4p</li>
             </ol>
-            <strong>Video Formats</strong>
+            <strong>Formats de Vidéo</strong>
             <ol>
               <li>3gp</li>
               <li>Mkv</li>
@@ -55,7 +54,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE; ?>
               <li>Mov</li>
               <li>M4v</li>
             </ol>
-            <strong>Document Formats</strong>
+            <strong>Formats de Documents</strong>
             <ol>
               <li>Doc</li>
               <li>Docx</li>
@@ -64,13 +63,13 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE; ?>
               <li>Odt</li>
               <li>Pdf</li>
             </ol>
-            <strong>Spreadsheet Formats</strong>
+            <strong>Formats de Feuille De Calcul</strong>
             <ol>
               <li>Xls</li>
               <li>Xlsx</li>
               <li>Ods</li>
             </ol>
-            <strong>Presentation Formats</strong>
+            <strong>Formats de Présentation</strong>
             <ol>
               <li>Pages</li>
               <li>Pptx</li>
@@ -83,8 +82,8 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE; ?>
               <li>Pptx</li>
               <li>Odp</li>
             </ol>
-            <strong>Archive Formats</strong>
-              <p><i>Can create, convert, and dearchive any of the following...</i></p>
+            <strong>Formats d'Archives</strong>
+              <p><i>Peut créer, convertir et désarchiver n'importe lequel des éléments suivants...</i></p>
             <ol>
               <li>Zip</li>
               <li>Rar</li>
@@ -92,17 +91,17 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE; ?>
               <li>Tar.Bz2</li>
               <li>7z</li>
             </ol>
-            <strong>Disk Image Formats</strong>
-            <p><i>Can extract any of the following or convert to supported archive formats...</i></p>
+            <strong>Formats d'Image Disque</strong>
+            <p><i>Peut extraire l'un des éléments suivants ou convertir vers des formats d'archive pris en charge...</i></p>
             <ol>
               <li>Iso</li>
               <li>Vhd</li>
               <li>Vdi</li>
             </ol>
-            <strong>Image Formats</strong>
-            <p><i>Supports resize & rotate through the GUI and API.</i></p>
-            <p><i>Supports disable maintain aspect ratio through API.</i></p>
-            <p><i>Image Conversion Operations support the following input formats...</i></p>
+            <strong>Formats d'Images</strong>
+            <p><i>Prend en charge le redimensionnement et la rotation via interface graphique et interface de programmation d'applications.</i></p>
+            <p><i>Prend en charge la désactivation du maintien des proportions via interface de programmation d'applications.</i></p>
+            <p><i>Les opérations de conversion d'image prennent en charge les formats d'entrée suivants...</i></p>
             <ol>
               <li>Jpg</li>
               <li>Jpeg</li>
@@ -128,7 +127,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE; ?>
               <li>Avif</li>
               <li>Ico</li>
             </ol>   
-            <p><i>Image Conversion Operations support the following output formats...</i></p>
+            <p><i>Les opérations de conversion d'image prennent en charge les formats de sortie suivants...</i></p>
             <ol>
               <li>Jpg</li>
               <li>Jpeg</li>
@@ -141,7 +140,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE; ?>
               <li>Flif</li>
               <li>Avif</li>
             </ol>
-            <strong>3D Model Formats</strong>
+            <strong>Formats de Modèle 3D</strong>
             <ol>
               <li>3ds</li>
               <li>Obj</li>
@@ -154,17 +153,17 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE; ?>
               <li>U3d</li>
               <li>Vrml</li>
             </ol>
-            <strong>Drawing Files</strong>
-            <p><i>Can output drawing files to image formats.</i></p>
-            <p><i>Can convert between any of the following...</i></p>
+            <strong>Formats de Dessin</strong>
+            <p><i>Peut produire des fichiers de dessin aux formats d'image.</i></p>
+            <p><i>Peut convertir entre l'un des éléments suivants...</i></p>
             <ol>
               <li>Svg</li>
               <li>Dxf</li>
               <li>Fig</li>
               <li>Vdx</li>
             </ol>
-            <strong>OCR Support</strong>
-            <p><i>OCR Operations support the following input formats...</i></p>
+            <strong>Prise en charge de la ROC</strong>
+            <p><i>Les opérations ROC prennent en charge les formats d'entrée suivants...</i></p>
             <ol>
               <li>Jpg</li>
               <li>Jpeg</li>
@@ -173,7 +172,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE; ?>
               <li>Pdf</li>
               <li>Gif</li>
               </ol>
-            <p><i>OCR Operations support the following output formats...</i></p>
+            <p><i>Les opérations ROC prennent en charge les formats de sortie suivants...</i></p>
             <ol>
               <li>Doc</li>
               <li>Docx</li>
@@ -189,7 +188,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE; ?>
       <?php } ?>
       <div align="center">
         <div id="call-to-action1" style="max-width:1000px; text-align:center;">
-          <p>Select files by clicking, tapping, or dropping files into the box below.</p>
+          <p>Sélectionnez des fichiers en cliquant, en appuyant ou en déposant des fichiers dans la zone ci-dessous.</p>
         </div>
       </div>
       <div align="center">
@@ -202,7 +201,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE; ?>
       </div>
       <div align="center">
         <div id="continue" style="max-width:1000px; text-align:center;">
-          <form action="convertCore.php?showFiles=1<?php if (isset($_GET['noGui'])) echo '&noGui=TRUE'; ?>" method="post">
+          <form action="convertCore.php?showFiles=1<?php if (isset($_GET['noGui'])) echo '&noGui=TRUE'; if (isset($_GET['language'])) echo '&language='.$_GET['language']; ?>" method="post">
             <input type="hidden" id="token1" name="Token1" value="<?php echo $Token1; ?>">
             <input type="hidden" id="token2" name="Token2" value="<?php echo $Token2; ?>">
             <input type="submit" id="continue-button" class="info-button" value="Continue ...">
@@ -214,6 +213,4 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE; ?>
 
       <?php if (!isset($_GET['noGui'])) { ?>
     </div>
-    <?php }
-    include ('footer.php');
-    ?>
+    <?php } ?>

@@ -1,4 +1,24 @@
 COMMIT - 4/13/2022
+v2.7.3 - Added multiple color schemes, French language translation, & dynamic language selection.
+
+-v2.7.3.
+-Remove winetrics dependency from installation instructions.
+-Add gnuplot dependency to installation instructions.
+-Consolidated some of the installation instructions.
+-Added the ability to control button color via config.php.
+  -Set $ButtonStyles to one of the approved options listed in config.php. 
+  -If the config entry is not defined a default will be used instead (grey).
+  -Supports RED, GREEN, BLUE, and GREY.
+-Updated index.html files in subdirectories to the latest version from root directory.
+-Moved the UI to the Languages subdirectory.
+-Added French language UI.
+-Added the ability to easily add more language packs.
+-Added ability to control language display via $_GET request.
+-Added ability to disable $_GET request language selection in config.php.
+-Reworked the way the GUI is assembled to make it compatible with multiple language packs.
+
+--------------------
+COMMIT - 4/13/2022
 v2.7.2 - Fixed bugs reported by a Reddit user.
 
 -v2.7.2.

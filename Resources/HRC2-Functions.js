@@ -9,5 +9,3 @@ function toggle_visibility(id) {
 // / The following code gives a nice onclick function for making a back button.
 function goBack() {
   window.history.back(); }
-
-

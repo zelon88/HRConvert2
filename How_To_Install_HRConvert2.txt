@@ -61,7 +61,7 @@ https://github.com/dwaaan/HRConvert2-Docker
 --------------------------------------------------
 
 -----STEP 3 - INSTALL BASIC FEATURE DEPENDENCIES-----
--sudo apt-get install clamav && sudo apt-get install unoconv && sudo apt-get install default-jre
+-sudo apt-get install clamav && sudo apt-get install unoconv && sudo apt-get install default-jre && sudo apt-get install rar && sudo apt-get install unrar && sudo apt-get install p7zip-full && sudo apt-get install imagemagick && sudo apt-get install ffmpeg && sudo apt-get install tesseract-ocr && sudo apt-get install meshlab && sudo apt-get install dia && sudo apt-get install pandoc && sudo apt-get install poppler-utils && sudo apt-get install nodejs && sudo apt-get install gnuplot && sudo apt install libnode-dev && sudo apt install node-gyp && sudo apt install npm
 -sudo chown -R www-data:www-data /var/www
 -sudo featherpad /etc/rc.local
   **ADD THE FOLLOWING LINE TO THE "rc.local" FILE **ABOVE** THE "exit 0" LINE**
@@ -73,9 +73,6 @@ https://github.com/dwaaan/HRConvert2-Docker
           **COPY AND PASTE THE INCLUDED "rc-local.service" FILE TO "/etc/systemd/system/rc-local.service"**
           **-sudo chmod +x /etc/rc.local**
           **-sudo systemctl enable rc-local.service**
--sudo apt-get install rar && sudo apt-get install unrar && sudo apt-get install p7zip-full && sudo apt-get install imagemagick && sudo apt-get install ffmpeg && sudo apt-get install tesseract-ocr && sudo apt-get install meshlab && sudo apt-get install dia && sudo apt-get install pandoc && sudo apt-get install poppler-utils && sudo apt-get install nodejs && sudo apt-get install winetricks
--sudo apt install libnode-dev && sudo apt install node-gyp && sudo apt install npm && sudo apt-get install acpi
--sudo npm install nativefier -g
 **REBOOT THE SERVER**
 **IF DOCUMENT CONVERSIONS DONT WORK...**
           **-unoconv --listen**

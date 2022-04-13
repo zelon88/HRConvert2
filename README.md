@@ -6,7 +6,7 @@
 -----------------------------------------------
 # HRConvert2
 
-### A self-hosted drag-and-drop file conversion server that supports 59x file formats.
+### A self-hosted drag-and-drop file conversion server that supports 75x file formats.
 
 ![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Screenshots/HRConvert2-1.png)
 ---
@@ -71,6 +71,22 @@ Supports disable maintain aspect ratio through API.
 - Bmp
 - Pdf
 - Gif
+- CRW
+- CIN
+- DCR
+- DDS
+- DIB
+- FLIF
+- GPLT
+- NEF
+- ORF
+- ORA
+- SCT
+- SFW
+- XCF
+- XWD
+- AVIF
+- ICO
 #### 3D Model Formats
 - 3ds
 - Obj

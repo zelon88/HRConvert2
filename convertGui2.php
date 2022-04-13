@@ -88,7 +88,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
       foreach ($Files as $File) {
         $extension = getExtension($ConvertTempDir.'/'.$File);
         $FileNoExt = str_replace($extension, '', $File);
-        if (!in_array($extension, $convertArr)) continue;
+        if (!in_array($extension, $ConvertArray)) continue;
         $ConvertGuiCounter1++;
       ?>
 
@@ -101,7 +101,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
           <img id="archfileXButton<?php echo $ConvertGuiCounter1; ?>" name="archfileXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:left; display:none;" 
            onclick="toggle_visibility('archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archfileButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archfileXButton<?php echo $ConvertGuiCounter1; ?>');"/> 
          
-          <?php if (in_array($extension, $pdfWorkArr)) { ?>          
+          <?php if (in_array($extension, $PDFWorkArr)) { ?>          
           <a style="float:left;">&nbsp;|&nbsp;</a>
           
           <img id="docscanButton<?php echo $ConvertGuiCounter1; ?>" name="docscanButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/docscan.png" style="float:left; display:block;" 
@@ -232,7 +232,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         </div>
         <?php
 
-        if (in_array($extension, $pdfWorkArr)) { 
+        if (in_array($extension, $PDFWorkArr)) { 
         ?>
         <div id='pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
@@ -685,7 +685,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         </div>
         <?php } 
 
-        if (in_array($extension, $ImageArray1)) {
+        if (in_array($extension, $ImageArray)) {
         ?>
         <div id='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
@@ -695,9 +695,15 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             <option value="jpg">Select Format</option>
             <option value="jpg">Jpg</option>
             <option value="bmp">Bmp</option>
+            <option value="webp">Webp</option>
             <option value="png">Png</option>
+            <option value="cin">Cin</option>
+            <option value="dds">Dds</option>
+            <option value="dib">Dib</option>
+            <option value="flif">Flif</option>
+            <option value="avif">Avif</option>
           </select></p>
-          <p>Width and height: </p>
+          <p>Width & height: </p>
           <p><input type="number" size="4" value="0" id='width<?php echo $ConvertGuiCounter1; ?>' name='width<?php echo $ConvertGuiCounter1; ?>' min="0" max="10000"> X <input type="number" size="4" value="0" id="height<?php echo $ConvertGuiCounter1; ?>" name="height<?php echo $ConvertGuiCounter1; ?>" min="0"  max="10000"></p> 
           <p>Rotate: <input type="number" size="3" id='rotate<?php echo $ConvertGuiCounter1; ?>' name='rotate<?php echo $ConvertGuiCounter1; ?>' value="0" min="0" max="359"></p>
           <input type="submit" id='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' name='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' value='Convert Image' onclick="toggle_visibility('loadingCommandDiv');">

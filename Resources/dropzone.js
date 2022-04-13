@@ -338,7 +338,7 @@ var Dropzone = function (_Emitter) {
          * [`accept`](https://developer.mozilla.org/en-US/docs/HTML/Element/input#attr-accept)
          * parameter on the hidden file input as well.
          */
-        acceptedFiles: ".m4a,.m4v,.m4p,.exe,.com,.dll,.vbs,.hta,.jar,.zip,.rar,.tar,.bz,.gz,.bz2,.7z,.iso,.vhd,.vdi,.txt,.doc,.docx,.rtf,.xls,.xlsx,.odf,.ods,.pptx,.ppt,.xps,.potx,.potm,.pot,.ppa,.odp,.jpeg,.jpg,.png,.bmp,.gif,.pdf,.mp3,.mp4,.mov,.aac,.oog,.wma,.mp2,.flac,3gp,.mkv,.avi,.mp4,.flv,.mpeg,.wmv,.svg,.dxf,.vdx,.fig,.3ds,.obj,.collada,.off,.ply,.stl,.ptx,.dxf,.u3d,.vrml",
+        acceptedFiles: ".svg,.dxf,.vdx,.fig,.3ds,.obj,.collada,.off,.ply,.stl,.ptx,.dxf,.u3d,.vrml,.mov,.mp4,.mkv,.flv,.ogv,.wmv,.mpg,.mpeg,.m4v,.3gp,.flac,.aac,.dat,.cfg,.txt,.doc,.docx,.rtf,.xls,.xlsx,.ods,.odt,.odt,.jpg,.mp3,.zip,.rar,.tar,.tar.gz,.tar.bz,.tar.bZ2,.3gp,.mkv,.avi,.mp4,.flv,.mpeg,.wmv,.avi,.aac,.mp2,.wma,.wav,.ogg,.jpeg,.bmp,.webp,.png,.avif,.crw,.ico,.xwd,.cin,.dcr,.dds,.dib,.flif,.gplt,.nef,.orf,.ora,.sct,.sfw,.xcf,.xwg,.gif,.pdf,.abw,.iso,.vhd,.vdi,.pages,.pptx,.ppt,.xps,.potx,.pot,.ppa,.ppa,.odp",
 
         /**
          * **Deprecated!**

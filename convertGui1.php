@@ -102,13 +102,45 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE; ?>
             <strong>Image Formats</strong>
             <p><i>Supports resize & rotate through the GUI and API.</i></p>
             <p><i>Supports disable maintain aspect ratio through API.</i></p>
+            <p><i>Image Conversion Operations support the following input formats...</i></p>
             <ol>
               <li>Jpg</li>
               <li>Jpeg</li>
               <li>Png</li>
               <li>Bmp</li>
-              <li>Pdf</li>
+              <li>Webp</li>
               <li>Gif</li>
+              <li>Cin</li>
+              <li>Dds</li>
+              <li>Dib</li>
+              <li>Flif</li>
+              <li>Avif</li>
+
+              <li>Crw</li>
+              <li>Dcr</li>
+              <li>Gplt</li>
+              <li>Nef</li>
+              <li>Orf</li>
+              <li>Ora</li>
+              <li>Sct</li>
+              <li>Sfw</li>
+              <li>Xcf</li>
+              <li>Xwd</li>
+              <li>Avif</li>
+              <li>Ico</li>
+            </ol>   
+            <p><i>Image Conversion Operations support the following output formats...</i></p>
+            <ol>
+              <li>Jpg</li>
+              <li>Jpeg</li>
+              <li>Png</li>
+              <li>Bmp</li>
+              <li>Webp</li>
+              <li>Cin</li>
+              <li>Dds</li>
+              <li>Dib</li>
+              <li>Flif</li>
+              <li>Avif</li>
             </ol>
             <strong>3D Model Formats</strong>
             <ol>

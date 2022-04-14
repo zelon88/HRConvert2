@@ -61,10 +61,10 @@ $ApplicationName = 'HRConvert2';
 // /   You can change this to make it fit with other services your organization provides.
 $ApplicationTitle = 'Convert Anything!';
 // /   The default language for GUI elements.
-// /   Uses Microsoft Language Strings. 
-// /     https://docs.microsoft.com/en-us/cpp/c-runtime-library/language-strings?view=msvc-170 
+// /   Uses ISO 639-1 language standard.
+// /    https://www.andiamo.co.uk/resources/iso-language-codes/
 // /   If the specified locale is not available 'en-us' will be used instead.
-$DefaultLanguage = 'en-us';
+$DefaultLanguage = 'en';
 // /   Enable or disable dynamic language selection via the $_GET['language'] variable.
 // /   If set to TRUE a user will be able to select different languages via $_GET['language'].
 // /   If a user attempts a language that is not available $DefaultLanguage will be used instead.
@@ -80,7 +80,7 @@ $MaxLogSize = '1048576';
 $Font = 'Arial';
 // /   The default color scheme to use for buttons.
 // /   Valid options are 'RED', 'GREEN', 'BLUE', or 'GREY'.
-$ButtonStyle = 'GREY';
+$ButtonStyle = 'GREEN';
 // /   Set whether or not to display a full GUI by default.
 $ShowGUI = TRUE;
 // /   Set whether or not to display the Terms of Service & Privacy Policy links.

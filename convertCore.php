@@ -64,22 +64,19 @@ if (isset($ButtonStyle)) {
 
 // / -----------------------------------------------------------------------------------
 // / The following code sets the language to use for the session.
-$LanguageToUse = 'en-us';
-$SupportedLanguages = array('en-us', 'fr-fr');
+$LanguageToUse = 'en';
+$SupportedLanguages = array('en', 'fr', 'es', 'zh', 'hi', 'ar');
 if (isset($_GET['language'])) $_GET['language'] = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_GET['language']));
-
 if (isset($DefaultLanguage)) if (in_array($DefaultLanguage, $SupportedLanguages)) $LanguageToUse = $DefaultLanguage;
-
 if (isset($AllowUserSelectableLanguage)) { 
   if ($AllowUserSelectableLanguage) if (isset($_GET['language'])) if (in_array($_GET['language'], $SupportedLanguages)) $LanguageToUse = $_GET['language'];
   if (!$AllowUserSelectableLanguage) $LanguageToUse = $DefaultLanguage; }
-
 $_GET['language'] = $LanguageToUse;
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / The following code sets the global variables for the session.
-$HRConvertVersion = 'v2.7.3';
+$HRConvertVersion = 'v2.7.4';
 $Date = date("m_d_y");
 $Time = date("F j, Y, g:i a"); 
 $JanitorFile = 'janitor.php';

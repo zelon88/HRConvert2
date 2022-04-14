@@ -35,55 +35,53 @@ set_time_limit(0);
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / Sanitize the Token GET variable.
-if (isset($_POST['Token1'])) {
-  $Token1 = str_replace('..', '', str_replace(str_split('~#[]{};:$!#^&%@>*<|"\''), '', $_POST['Token1'])); }
-if (isset($_POST['Token2'])) {
-  $Token2 = str_replace('..', '', str_replace(str_split('~#[]{};:$!#^&%@>*<|"\''), '', $_POST['Token2'])); }
+// / Sanitize the Language GET variable.
+if (isset($_GET['language'])) $_GET['language'] = strtolower(str_replace('..', '', str_replace(str_split('~#[]{};:$!#^&%@>*<|"\''), '', $_GET['language'])));
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Sanitize the Token POST variable.
+if (isset($_POST['Token1'])) $Token1 = str_replace('..', '', str_replace(str_split('~#[]{};:$!#^&%@>*<|"\''), '', $_POST['Token1']));
+if (isset($_POST['Token2'])) $Token2 = str_replace('..', '', str_replace(str_split('~#[]{};:$!#^&%@>*<|"\''), '', $_POST['Token2']));
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / Sanitize the noGui GET variable to disable the descriptive header text.
 // / Good for usage in a small iframe.
-if (isset($_POST['noGui'])) {
-  $_GET = str_replace('..', '', str_replace(str_split('~#[]{};:$!#^&%@>*<|"\''), '', $_GET['noGui'])); }
+if (isset($_POST['noGui'])) $_GET = str_replace('..', '', str_replace(str_split('~#[]{};:$!#^&%@>*<|"\''), '', $_GET['noGui'])); 
 // / -----------------------------------------------------------------------------------
 
 // / Can be used to automatically download and install the latest HRConvert2 update from Github. 
 // / Will perform "AutoDownload", "AutoInstall", "AutoClean", and "CompatCheck" consecutively. 
   // / Accepts a value of '1' or 'true'.
   // / ONLY ADMINISTRATORS CAN AUTO-UPDATE HRC2 !!!
-if (isset($_POST['AutoUpdate'])) {
-  $AutoUpdatePOST = htmlentities(str_replace('..', '', str_replace(str_split('~#[]{};:$!#^&%@>*<|"\''), '', $_POST['AutoUpdate'])), ENT_QUOTES, 'UTF-8'); }
+if (isset($_POST['AutoUpdate'])) $AutoUpdatePOST = htmlentities(str_replace('..', '', str_replace(str_split('~#[]{};:$!#^&%@>*<|"\''), '', $_POST['AutoUpdate'])), ENT_QUOTES, 'UTF-8');
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / Can be used to automatically download the latest HRConvert2 package from Github.
   // / DOES NOT INSTALL OR REPLACE ANYTHING !!!
   // / ONLY ADMINISTRATORS CAN DOWNLOAD HRC2 UPDATES !!!
-if (isset($_POST['AutoDownload'])) {
-  $AutoDownloadPOST = htmlentities(str_replace('..', '', str_replace(str_split('~#[]{};:$!#^&%@>*<|"\''), '', $_POST['AutoDownload'])), ENT_QUOTES, 'UTF-8'); }
+if (isset($_POST['AutoDownload'])) $AutoDownloadPOST = htmlentities(str_replace('..', '', str_replace(str_split('~#[]{};:$!#^&%@>*<|"\''), '', $_POST['AutoDownload'])), ENT_QUOTES, 'UTF-8');
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / Can be used to automatically install an official HRC2 update package that was download manually.
   // / WILL EXTRACT AND OVER-WRITE HRC2 SYSTEM FILES WITH ONES FROM /Resources/TEMP
-if (isset($_POST['AutoInstall'])) {
-  $AutoInstallPOST = htmlentities(str_replace('..', '', str_replace(str_split('~#[]{};:$!#^&%@>*<|"\''), '', $_POST['AutoInstall'])), ENT_QUOTES, 'UTF-8'); }
+if (isset($_POST['AutoInstall'])) $AutoInstallPOST = htmlentities(str_replace('..', '', str_replace(str_split('~#[]{};:$!#^&%@>*<|"\''), '', $_POST['AutoInstall'])), ENT_QUOTES, 'UTF-8');
+// / -----------------------------------------------------------------------------------
 
+// / -----------------------------------------------------------------------------------
 // / Can be used to clean up the HRC2 temp directories and perform compatibility adjustments after a manual update.
   // / ONLY ADMINISTRATORS CAN DOWNLOAD HRC2 UPDATES !!!
-if (isset($_POST['AutoClean'])) {
-  $AutoCleanPOST = htmlentities(str_replace('..', '', str_replace(str_split('~#[]{};:$!#^&%@>*<|"\''), '', $_POST['AutoClean'])), ENT_QUOTES, 'UTF-8'); }
+if (isset($_POST['AutoClean'])) $AutoCleanPOST = htmlentities(str_replace('..', '', str_replace(str_split('~#[]{};:$!#^&%@>*<|"\''), '', $_POST['AutoClean'])), ENT_QUOTES, 'UTF-8');
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / Can be used to automatically check for and repair compatibility bugs and known issues.
   // / Accepts a value of '1' or 'true'.
-if (isset($_POST['CheckCompatibility'])) {
-  $CheckCompatPOST = htmlentities(str_replace('..', '', str_replace(str_split('~#[]{};:$!#^&%@>*<|"\''), '', $_POST['CheckCompatibility'])), ENT_QUOTES, 'UTF-8'); }
-if (isset($_POST['CheckCompat'])) {
-  $CheckCompatPOST = htmlentities(str_replace('..', '', str_replace(str_split('~#[]{};:$!#^&%@>*<|"\''), '', $_POST['CheckCompat'])), ENT_QUOTES, 'UTF-8'); }
+if (isset($_POST['CheckCompatibility'])) $CheckCompatPOST = htmlentities(str_replace('..', '', str_replace(str_split('~#[]{};:$!#^&%@>*<|"\''), '', $_POST['CheckCompatibility'])), ENT_QUOTES, 'UTF-8');
+if (isset($_POST['CheckCompat'])) $CheckCompatPOST = htmlentities(str_replace('..', '', str_replace(str_split('~#[]{};:$!#^&%@>*<|"\''), '', $_POST['CheckCompat'])), ENT_QUOTES, 'UTF-8');
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

@@ -1,4 +1,17 @@
 COMMIT - 4/13/2022
+v2.7.4 - Added 4 language translations.
+
+-v2.7.4.
+-Switch from Microsoft Locale Codes to ISO 639-1 language standard.
+-Updated English, French translations (en & fr).
+-Added Spanish language translation (es).
+-Added Chinese (Simplified) language translation (zh).
+-Added Hindi language translation (hi).
+-Added Arabic language translation (ar).
+-Added a bunch of updated screenshots.
+
+--------------------
+COMMIT - 4/13/2022
 v2.7.3 - Added multiple color schemes, French language translation, & dynamic language selection.
 
 -v2.7.3.

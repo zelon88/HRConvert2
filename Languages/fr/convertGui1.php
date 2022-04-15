@@ -1,7 +1,9 @@
 <?php 
+if (!isset($CoreLoaded)) die('ERREUR!!! HRC25, Ce fichier ne peut pas traiter votre demande ! Veuillez soumettre votre fichier à convertCore.php à la place !');
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
 if (!isset($ApplicationTitle)) $ApplicationTitle = 'Convertissez n\'importe quoi!'; 
-if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE; ?>
+if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE; 
+?>
   <body>
     <?php 
     if (!isset($_GET['noGui'])) { ?>
@@ -14,17 +16,17 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE; ?>
       <div id="overview" style="max-width:1000px; text-align:left; margin:25px;">
       	<p id="info" style="display:block;"><?php echo $ApplicationName; ?> est basé sur l'application web open-source <a href='https://github.com/zelon88/HRConvert2'>HRConvert2</a> par <a href='https://github.com/zelon88'>Zelon88</a> qui convertit les fichiers sans suivre les utilisateurs sur le net ni enfreindre votre propriété intellectuelle.</p>
         <button id="more-info-button" class="info-button" onclick="toggle_visibility('more-info'); toggle_visibility('more-info-button'); toggle_visibility('supported-formats-show-button'); 
-          toggle_visibility('less-info-button');" style="text-align:center; display:block; margin-left:auto; margin-right:auto;"><i>Plus d'Informations ...</i></button>
+          toggle_visibility('less-info-button');" style="text-align:center; display:block; margin-left:auto; margin-right:auto;"><i>Plus d'Informations...</i></button>
         <button id="less-info-button" class="info-button" onclick="toggle_visibility('more-info'); toggle_visibility('more-info-button'); toggle_visibility('supported-formats-show-button'); 
-          toggle_visibility('less-info-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Moins d'Informations ...</i></button>
+          toggle_visibility('less-info-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Moins d'Informations...</i></button>
         <div id="more-info" style="display:none;">
           <hr />
           <p>Toutes les données fournies par l'utilisateur sont automatiquement effacées, vous n'avez donc pas à vous soucier de la perte de vos informations personnelles ou de vos biens lors de l'utilisation de nos services.</p>
           <p><?php echo $ApplicationName; ?> prend en charge 75 formats de fichiers différents, y compris les documents, les feuilles de calcul, les images, les médias, les modèles 3D, les dessins CAO, les fichiers vectoriels, les archives, les images de disque, etc.</p> 
           <button id="supported-formats-show-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
-            toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Afficher les formats pris en charge ...</i></button>
+            toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Afficher les formats pris en charge...</i></button>
           <button id="supported-formats-hide-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
-            toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Masquer les formats pris en charge ...</i></button>
+            toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Masquer les formats pris en charge...</i></button>
           <br>
           <div id="supported-formats" class="supported-formats" style="margin-left:33%; display:none;">
             <h3>Formats pris en charge</h3>
@@ -204,7 +206,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE; ?>
           <form action="convertCore.php?showFiles=1<?php if (isset($_GET['noGui'])) echo '&noGui=TRUE'; if (isset($_GET['language'])) echo '&language='.$_GET['language']; ?>" method="post">
             <input type="hidden" id="token1" name="Token1" value="<?php echo $Token1; ?>">
             <input type="hidden" id="token2" name="Token2" value="<?php echo $Token2; ?>">
-            <input type="submit" id="continue-button" class="info-button" value="Continuez ...">
+            <input type="submit" id="continue-button" class="info-button" value="Continuez...">
           </form>
           <br />
           <?php if (!isset($_GET['noGui'])) { ?>

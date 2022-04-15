@@ -65,7 +65,7 @@ if (isset($ButtonStyle)) {
 // / -----------------------------------------------------------------------------------
 // / The following code sets the language to use for the session.
 $LanguageToUse = 'en';
-$SupportedLanguages = array('en', 'fr', 'es', 'zh', 'hi', 'ar');
+$SupportedLanguages = array('en', 'fr', 'es', 'zh', 'hi', 'ar', 'ru', 'uk', 'bn', 'de', 'ko', 'it', 'pt');
 if (isset($_GET['language'])) $_GET['language'] = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_GET['language']));
 if (isset($DefaultLanguage)) if (in_array($DefaultLanguage, $SupportedLanguages)) $LanguageToUse = $DefaultLanguage;
 if (isset($AllowUserSelectableLanguage)) { 
@@ -76,9 +76,10 @@ $_GET['language'] = $LanguageToUse;
 
 // / -----------------------------------------------------------------------------------
 // / The following code sets the global variables for the session.
-$HRConvertVersion = 'v2.7.4';
+$HRConvertVersion = 'v2.7.5';
 $Date = date("m_d_y");
-$Time = date("F j, Y, g:i a"); 
+$Time = date("F j, Y, g:i a");
+$CoreLoaded = TRUE;
 $JanitorFile = 'janitor.php';
 $JanitorDeleteIndex = FALSE;
 $Current_URL = "http$URLEcho://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
@@ -450,7 +451,7 @@ if (isset($_POST['convertSelected'])) {
           if ($stopper == 10) {
             $txt = ('ERROR!!! HRConvert2425, The converter timed out while copying your file. ');
             $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
-            die('ERROR!!! HRConvert2425'); } } }
+            die('ERROR!!! HRConvert2425'); } } }  
       // / Code to convert and manipulate image files.
       if (in_array(strtolower($oldExtension), $imgarray)) {
         $height = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['height']));
@@ -458,14 +459,14 @@ if (isset($_POST['convertSelected'])) {
         $_POST["rotate"] = str_replace('..', '', str_replace(str_split('[](){};:$!#^&%@>*<'), '', $_POST['rotate']));
         $rotate = ('-rotate '.$_POST["rotate"]);
         $wxh = $width.'x'.$height;
-        if ($wxh == '0x0' or $wxh =='x0' or $wxh == '0x' or $wxh == '0' or $wxh == '00' or $wxh == '' or $wxh == ' ') {       
+        if ($wxh == '0x0' or $wxh =='x0' or $wxh == '0x' or $wxh == '0' or $wxh == '00' or $wxh == '' or $wxh == ' ') {
           $txt = ("OP-Act, Executing \"convert -background none $pathname $rotate $newPathname\" on ".$Time.'.');
           $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
           shell_exec("convert -background none $pathname $rotate $newPathname"); } 
         else {
           $txt = ("OP-Act, Executing \"convert -background none -resize $wxh $rotate $pathname $newPathname\" on ".$Time.'.');
           $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
-          shell_exec("convert -background none -resize $wxh $rotate $pathname $newPathname"); } }
+          shell_exec("convert -background none -resize $wxh $rotate $pathname $newPathname"); } } 
       // / Code to convert and manipulate 3d model files.
       if (in_array(strtolower($oldExtension), $ModelArray)) { 
         $txt = ("OP-Act, Executing \"meshlabserver -i $pathname -o $newPathname\" on ".$Time.'.');
@@ -515,27 +516,21 @@ if (isset($_POST['convertSelected'])) {
         if (in_array(strtolower($oldExtension), $arraytaro)) {
           shell_exec("7z x $pathname -o$safedir2"); }
         $txt = ("OP-Act, Executing \"7z x $pathname -o$safedir2\" on ".$Time.'.');
-        $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); 
+        $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } 
         // / Code to rearchive files using 7z.
         if (in_array($extension,$array7zo)) {
           $txt = ("OP-Act, Executing \"7z a -t$extension $safedir3 $safedir2\" on ".$Time.'.');
           $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
+          if (file_exists($safedir3)) @unlink($safedir3);
           shell_exec('7z a -t'.$extension.' '.$safedir3.' '.$safedir2);
-          @copy($safedir3, $newPathname); 
-          // / Code to cleanup temporary files created using 7z.
-          if (file_exists($safedir3)) {
-            @chmod($safedir3, 0755); 
-            @unlink($safedir3); } }
+          @copy($safedir3, $newPathname); }
         // / Code to rearchive files using zip.
         if (in_array($extension,$arrayzipo)) {
           $txt = ("OP-Act, Executing \"zip -r -j $safedir4 $safedir2\" on ".$Time.'.');
           $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
+          if (file_exists($safedir3)) @unlink($safedir4);
           shell_exec('zip -r -j '.$safedir4.' '.$safedir2);
-          @copy($safedir4, $newPathname); 
-          // / Code to cleanup temporary files created using zip.
-          if (file_exists($safedir4)) {
-            @chmod($safedir4, 0755); 
-            @unlink($safedir4); } }
+          @copy($safedir4, $newPathname); }
         // / Code to rearachive files using tar.
         if (in_array($extension, $arraytaro)) {
           $txt = ("OP-Act, Executing \"tar -cjf '.$newPathname -C $safedir2 ".'. on '.$Time.'.');
@@ -545,25 +540,25 @@ if (isset($_POST['convertSelected'])) {
         if (in_array($extension, $arrayraro)) {
           $txt = ("OP-Act, Executing \"rar a -ep1 -r $newPathname $safedir2\" on ".$Time.'.');
           $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
-          shell_exec('rar a -ep1 -r '.$newPathname.' '.$safedir2); } 
-        // / Code to clean up temporary files & directories.
-        $delFiles = glob($safedir2 . '/*');
-        foreach ($delFiles as $delFile) {
-          if (is_file($delFile)) {
-            @chmod($delFile, 0755);
-            @unlink($delFile); }
-          elseif (is_dir($delFile)) {
-            @chmod($delFile, 0755);
-            @rmdir($delFile); } }
-            @rmdir($safedir2); } }
-  // / Error handler & logger for converting files.
-  if (!file_exists($newPathname)) {
-    $txt = ('ERROR!!! HRConvert2524, '."Conversion failed! $newPathname could not be created from $oldPathname".'!');
-    $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
-    die('ERROR!!! HRConvert2524'); } 
-  if (file_exists($newPathname)) {
-    $txt = ('OP-Act: File '.$newPathname.' was created on '.$Time.'.');
-    $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); } } 
+          shell_exec('rar a -ep1 -r '.$newPathname.' '.$safedir2); }  
+    // / Error handler & logger for converting files.
+    if (!file_exists($newPathname)) {
+      $txt = ('ERROR!!! HRConvert2524, '."Conversion failed! $newPathname could not be created from $oldPathname".'!');
+      $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND);
+      die('ERROR!!! HRConvert2524'); } 
+    if (file_exists($newPathname)) {
+      $txt = ('OP-Act: File '.$newPathname.' was created on '.$Time.'.');
+      $MAKELogFile = file_put_contents($LogFile, $txt.PHP_EOL, FILE_APPEND); }  
+    // / Code to clean up temporary files & directories.
+    $delFiles = glob($safedir2 . '/*');
+    foreach ($delFiles as $delFile) {
+      if (is_file($delFile)) {
+        @chmod($delFile, 0755);
+        @unlink($delFile); }
+      elseif (is_dir($delFile)) {
+        @chmod($delFile, 0755);
+        @rmdir($delFile); } 
+      @rmdir($safedir2); } } }
   // / Free un-needed memory.
   $_POST['convertSelected'] = $txt = $key = $file = $file1 = $file2 = $extension = $pathname = $oldPathname = $filename = $oldExtension= $newPathname = $docarray = $imgarray = $audioarray = $videoarray = $ModelArray = $drawingarray = $pdfarray = $archarray = $array7z = $array7zo = $arrayzipo = $arraytaro = $arrayraro = $_POST['userconvertfilename'] = $returnDATA = $returnDATALINE = $stopper = $height = $width = $_POST['height'] = $_POST['width'] = $rotate = $_POST['rotate'] = $wxh = $bitrate = $_POST['bitrate'] = $safedir2 = $safedir3 = $safedir4 = $delFiles = $delFile = $MAKELogFile = null;
   unset ($_POST['convertSelected'], $txt, $key, $file, $file1, $file2, $extension, $pathname, $oldPathname, $filename, $oldExtension, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $ModelArray, $drawingarray, $pdfarray, $archarray, $array7z, $array7zo, $arrayzipo, $arraytaro, $arrayraro, $_POST['userconvertfilename'], $returnDATA, $returnDATALINE, $stopper, $height, $width, $_POST['height'], $_POST['width'], $rotate, $_POST['rotate'], $wxh, $bitrate, $_POST['bitrate'], $safedir2, $safedir3, $safedir4, $delFiles, $delFile, $MAKELogFile ); }

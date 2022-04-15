@@ -121,6 +121,22 @@ OCR Operations support the following output formats...
 - Odt
 - Pdf
 ---
+# Supported Languages
+Languages can be forced via policy or dynamically selected by the user by appending `?language=en` to the server URL.
+- English (en)
+- French (fr)
+- Spanish (sp)
+- Chinese, Simplified (zh)
+- Hindi (hi)
+- Arabic (ar)
+- Russian (ru)
+- Ukranian (uk)
+- Bengli (bn)
+- German (de)
+- Korean (ko)
+- Italian (it)
+- Portuguese (pt)
+
 # Screenshots
 ![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Screenshots/HRConvert2-2.png)
 ![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Screenshots/HRConvert2-3.png)

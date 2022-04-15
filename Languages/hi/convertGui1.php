@@ -1,7 +1,9 @@
 <?php 
+if (!isset($CoreLoaded)) die('त्रुटि!!! HRC25, यह फ़ाइल आपके अनुरोध को संसाधित नहीं कर सकती है! इसके बजाय कृपया अपनी फ़ाइल ConvertCore.php पर सबमिट करें!');
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
 if (!isset($ApplicationTitle)) $ApplicationTitle = 'कुछ भी कनवर्ट करें!'; 
-if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE; ?>
+if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
+?>
   <body>
     <?php 
     if (!isset($_GET['noGui'])) { ?>

@@ -1,38 +1,38 @@
 <?php 
-if (!isset($CoreLoaded)) die('¡¡¡ERROR!!! HRC25, ¡Este archivo no puede procesar su solicitud! ¡Envíe su archivo a convertCore.php en su lugar!');
+if (!isset($CoreLoaded)) die('ERRO!!! HRC25, Este arquivo não pode processar sua solicitação! Por favor, envie seu arquivo para convertCore.php!');
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
-if (!isset($ApplicationTitle)) $ApplicationTitle = '¡Convierte Cualquier Cosa!'; 
-if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE; 
+if (!isset($ApplicationTitle)) $ApplicationTitle = 'Converta Qualquer Coisa!'; 
+if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
 ?>
   <body>
     <?php 
     if (!isset($_GET['noGui'])) { ?>
     <div id="header-text" style="max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;">
       <h1><?php echo $ApplicationName; ?></h1>
-      <h3>Convertidor de Archivos en Línea, Extractor, Compresor</h3>
+      <h3>Conversor de Arquivos Online, Extrator, Compressor</h3>
       <hr />
     </div>
     <div id="main" align="center">
       <div id="overview" style="max-width:1000px; text-align:left; margin:25px;">
-      	<p id="info" style="display:block;"><?php echo $ApplicationName; ?> se basa en la aplicación web de código abierto <a href='https://github.com/zelon88/HRConvert2'>HRConvert2</a> por <a href='https://github.com/zelon88'>Zelon88</a> que convierte archivos sin rastrear a los usuarios a través de la red o infringir su propiedad intelectual.</p>
+      	<p id="info" style="display:block;">O <?php echo $ApplicationName; ?> é baseado no aplicativo web de código aberto <a href='https://github.com/zelon88/HRConvert2'>HRConvert2</a> da <a href='https://github.com/zelon88'>Zelon88</a>. Ele foi projetado para converter arquivos sem rastrear usuários pela Internet ou infringir sua propriedade intelectual.</p>
         <button id="more-info-button" class="info-button" onclick="toggle_visibility('more-info'); toggle_visibility('more-info-button'); toggle_visibility('supported-formats-show-button'); 
-          toggle_visibility('less-info-button');" style="text-align:center; display:block; margin-left:auto; margin-right:auto;"><i>Más Información ...</i></button>
+          toggle_visibility('less-info-button');" style="text-align:center; display:block; margin-left:auto; margin-right:auto;"><i>Mais Informações...</i></button>
         <button id="less-info-button" class="info-button" onclick="toggle_visibility('more-info'); toggle_visibility('more-info-button'); toggle_visibility('supported-formats-show-button'); 
-          toggle_visibility('less-info-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Menos Información ...</i></button>
+          toggle_visibility('less-info-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Menos Informações...</i></button>
         <div id="more-info" style="display:none;">
           <hr />
-          <p>Todos los datos proporcionados por el usuario se borran automáticamente, por lo que no debe preocuparse por perder su información personal o propiedad mientras utiliza nuestros servicios.</p>
-          <p><?php echo $ApplicationName; ?> admite 75 formatos de archivo diferentes, incluidos documentos, hojas de cálculo, imágenes, medios, modelos 3D, dibujo asistido por computadora, archivos vectoriales, archivos, imágenes de disco y más.</p> 
+          <p>Todos os dados fornecidos pelo usuário são apagados automaticamente, para que você não precise se preocupar em perder suas informações pessoais ou propriedades ao usar nossos serviços.</p>
+          <p>Atualmente <?php echo $ApplicationName; ?> suporta 75 formatos de arquivo diferentes, incluindo documentos, planilhas, imagens, mídia, modelos tridimensionais, desenhos técnicos, arquivos vetoriais, arquivos, imagens de disco e muito mais.</p> 
           <button id="supported-formats-show-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
-            toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Ver Formatos Admitidos ...</i></button>
+            toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Ver Formatos Suportados...</i></button>
           <button id="supported-formats-hide-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
-            toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Ocultar Formatos Admitidos ...</i></button>
+            toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Ocultar Formatos Suportados...</i></button>
           <br>
           <div id="supported-formats" class="supported-formats" style="margin-left:33%; display:none;">
-            <h3>Formatos Compatibles</h3>
+            <h3>Formatos Suportados</h3>
             <hr />
-            <strong>Formatos de Audio</strong>
-            <p><i>Admite tasa de bits específica a través de la interfaz para programas de aplicación.</i></p>
+            <strong>Formatos de Áudio</strong>
+            <p><i>Suporta taxa de bits específica por meio da interface de programação do aplicativo.</i></p>
             <ol>
               <li>Mp2</li>
               <li>Mp3</li>
@@ -44,7 +44,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>M4a</li>
               <li>M4p</li>
             </ol>
-            <strong>Formatos de Video</strong>
+            <strong>Formatos de Vídeo</strong>
             <ol>
               <li>3gp</li>
               <li>Mkv</li>
@@ -65,13 +65,13 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Odt</li>
               <li>Pdf</li>
             </ol>
-            <strong>Formatos de Hoja de Cálculo</strong>
+            <strong>Formatos de Planilha</strong>
             <ol>
               <li>Xls</li>
               <li>Xlsx</li>
               <li>Ods</li>
             </ol>
-            <strong>Formatos de Presentación</strong>
+            <strong>Formatos de Apresentação</strong>
             <ol>
               <li>Pages</li>
               <li>Pptx</li>
@@ -84,8 +84,8 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Pptx</li>
               <li>Odp</li>
             </ol>
-            <strong>Formatos de Archivo</strong>
-              <p><i>Puede crear, convertir y desarchivar cualquiera de los siguientes...</i></p>
+            <strong>Formatos de Arquivo</strong>
+              <p><i>Pode criar, converter e desarquivar qualquer um dos itens a seguir...</i></p>
             <ol>
               <li>Zip</li>
               <li>Rar</li>
@@ -93,17 +93,17 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Tar.Bz2</li>
               <li>7z</li>
             </ol>
-            <strong>Formatos de Imagen de Disco</strong>
-            <p><i>Puede extraer cualquiera de los siguientes o convertir a formatos de archivo compatibles...</i></p>
+            <strong>Formatos de Imagem de Disco</strong>
+            <p><i>Pode extrair qualquer um dos seguintes ou converter para formatos de arquivo suportados...</i></p>
             <ol>
               <li>Iso</li>
               <li>Vhd</li>
               <li>Vdi</li>
             </ol>
-            <strong>Formatos de Imagen</strong>
-            <p><i>Admite cambiar el tamaño y rotar a través de la interfaz gráfica de usuario y la interfaz para programas de aplicación.</i></p>
-            <p><i>Admite deshabilitar mantener la relación de aspecto a través para programas de aplicación.</i></p>
-            <p><i>Las operaciones de conversión de imágenes admiten los siguientes formatos de entrada...</i></p>
+            <strong>Formatos de Imagem</strong>
+            <p><i>Suporta redimensionamento e rotação através da interface gráfica do usuário e da interface de programação de aplicativos.</i></p>
+            <p><i>Suporta desabilitar a manutenção da proporção por meio da interface de programação de aplicativos.</i></p>
+            <p><i>As operações de conversão de imagem são compatíveis com os seguintes formatos de entrada...</i></p>
             <ol>
               <li>Jpg</li>
               <li>Jpeg</li>
@@ -129,7 +129,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Avif</li>
               <li>Ico</li>
             </ol>   
-            <p><i>Las operaciones de conversión de imágenes admiten los siguientes formatos de salidas...</i></p>
+            <p><i>As operações de conversão de imagem são compatíveis com os seguintes formatos de saída...</i></p>
             <ol>
               <li>Jpg</li>
               <li>Jpeg</li>
@@ -142,7 +142,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Flif</li>
               <li>Avif</li>
             </ol>
-            <strong>Formatos de modelos 3D</strong>
+            <strong>Formatos de Modelos Tridimensionais</strong>
             <ol>
               <li>3ds</li>
               <li>Obj</li>
@@ -155,17 +155,17 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>U3d</li>
               <li>Vrml</li>
             </ol>
-            <strong>Formatos de Dibujo</strong>
-            <p><i>Puede exportar archivos de dibujo a formatos de imagen.</i></p>
-            <p><i>Puede convertir entre cualquiera de los siguientes...</i></p>
+            <strong>Formatos de Desenho</strong>
+            <p><i>Pode produzir arquivos de desenho para formatos de imagem.</i></p>
+            <p><i>Pode converter entre qualquer um dos seguintes...</i></p>
             <ol>
               <li>Svg</li>
               <li>Dxf</li>
               <li>Fig</li>
               <li>Vdx</li>
             </ol>
-            <strong>Soporte de Lector Óptico de Caracteres</strong>
-            <p><i>Las operaciones de LOC admiten los siguientes formatos de entrada...</i></p>
+            <strong>Suporte ao Reconhecimento Óptico de Caracteres</strong>
+            <p><i>As operações de reconhecimento óptico de caracteres suportam os seguintes formatos de entrada...</i></p>
             <ol>
               <li>Jpg</li>
               <li>Jpeg</li>
@@ -174,7 +174,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Pdf</li>
               <li>Gif</li>
               </ol>
-            <p><i>Las operaciones de LOC admiten los siguientes formatos de salida...</i></p>
+            <p><i>As operações de reconhecimento óptico de caracteres suportam os seguintes formatos de saída...</i></p>
             <ol>
               <li>Doc</li>
               <li>Docx</li>
@@ -190,7 +190,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
       <?php } ?>
       <div align="center">
         <div id="call-to-action1" style="max-width:1000px; text-align:center;">
-          <p>Seleccione archivos haciendo clic, tocando o soltando archivos en el cuadro a continuación.</p>
+          <p>Selecione os arquivos clicando, tocando ou soltando os arquivos na caixa abaixo.</p>
         </div>
       </div>
       <div align="center">
@@ -206,7 +206,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
           <form action="convertCore.php?showFiles=1<?php if (isset($_GET['noGui'])) echo '&noGui=TRUE'; if (isset($_GET['language'])) echo '&language='.$_GET['language']; ?>" method="post">
             <input type="hidden" id="token1" name="Token1" value="<?php echo $Token1; ?>">
             <input type="hidden" id="token2" name="Token2" value="<?php echo $Token2; ?>">
-            <input type="submit" id="continue-button" class="info-button" value="Continuar ...">
+            <input type="submit" id="continue-button" class="info-button" value="Continuar...">
           </form>
           <br />
           <?php if (!isset($_GET['noGui'])) { ?>

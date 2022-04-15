@@ -1,24 +1,25 @@
 <?php
-if (!isset($CoreLoaded)) die('错误！！！ HRC25，此文件无法处理您的请求！ 请改为将您的文件提交到 convertCore.php！');
-$Alert = '无法转换此文件！ 尝试更改名称。';
+if (!isset($CoreLoaded)) die('ОШИБКА!!! HRC25, Этот файл не может обработать ваш запрос! Вместо этого отправьте файл на convertCore.php!');
+$Alert = 'Невозможно преобразовать этот файл! Попробуйте изменить имя.';
 $Files = getFiles($ConvertTempDir);
 $fileCount = count($Files);
 $fcPlural1 = '';
 if (!is_numeric($fileCount)) $fileCount = 0;
-if ($fileCount === 0) $fcPlural1 = '您尚未将任何有效文件上传到 ';
-else $fcPlural1 = '您已将 '.$fileCount.' 个有效文件上传到 '; 
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
-if (!isset($ApplicationTitle)) $ApplicationTitle = '转换任何东西！'; 
+if (!isset($ApplicationTitle)) $ApplicationTitle = 'Конвертируйте что угодно!'; 
 if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
+if ($fileCount === 0) $fcPlural1 = 'Вы загрузили 0 действительных файлов в '.$ApplicationName.'.';
+if ($fileCount === 1) $fcPlural1 = 'Вы загрузили 1 действительный файл в '.$ApplicationName.'.'; 
+if ($fileCount >= 2) $fcPlural1 = 'Вы загрузили '.$fileCount.' действительных файла в '.$ApplicationName.'.';
 ?>
   <body>
     <script type="text/javascript" src="Resources/jquery-3.6.0.min.js"></script>
     <div id="header-text" style="max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;">
       <?php if (!isset($_GET['noGui'])) { ?><h1><?php echo $ApplicationName; ?></h1>
       <hr /><?php } ?>
-      <h3>文件转换选项</h3>
-      <p><?php echo $fcPlural1.$ApplicationName; ?>.</p> 
-      <p>您的文件现在可以使用以下选项进行转换。</p>
+      <h3>Параметры преобразования файлов</h3>
+      <p><?php echo $fcPlural1; ?></p> 
+      <p>Теперь ваши файлы готовы к конвертации с использованием приведенных ниже параметров.</p>
     </div>
 
     <div align="center">
@@ -29,18 +30,18 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
       <button id="backButton" name="backButton" style="width:50px;" class="info-button" onclick="window.history.back();">&#x2190;</button>
       <button id="refreshButton" name="refreshButton" style="width:50px;" class="info-button" onclick="javascript:location.reload(true);">&#x21BB;</button>
       <br /> <br />
-      <button id="scandocMoreOptionsButton" name="scandocMoreOptionsButton" class="info-button" onclick="toggle_visibility('compressAllOptions');">批量文件选项</button> 
+      <button id="scandocMoreOptionsButton" name="scandocMoreOptionsButton" class="info-button" onclick="toggle_visibility('compressAllOptions');">Параметры массового файла</button> 
       <div id="compressAllOptions" name="compressAllOptions" align="center" style="display:none;">
-        <p>压缩和下载所有文件</p>
-        <p>指定文件名： <input type="text" id='userarchallfilename' name='userarchallfilename' value='HRConvert2_Files-<?php echo $Date; ?>'></p> 
+        <p>Сжать и загрузить все файлы</p>
+        <p>Укажите имя файла: <input type="text" id='userarchallfilename' name='userarchallfilename' value='HRConvert2_Files-<?php echo $Date; ?>'></p> 
         <select id='archallextension' name='archallextension'> 
-          <option value="zip">文件格式</option>
+          <option value="zip">Формат</option>
           <option value="zip">Zip</option>
           <option value="rar">Rar</option>
           <option value="tar">Tar</option>
           <option value="7z">7z</option>
         </select>
-        <input type="submit" id="archallSubmit" name="archallSubmit" class="info-button" value='压缩和下载' onclick="toggle_visibility('loadingCommandDiv');">
+        <input type="submit" id="archallSubmit" name="archallSubmit" class="info-button" value='Сжать и скачать' onclick="toggle_visibility('loadingCommandDiv');">
       
         <script type="text/javascript">
         $(document).ready(function () {
@@ -186,16 +187,16 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
 
         <div id='archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p>存档此文件</p>
-          <p>指定文件名： <input type="text" id='userarchfilefilename<?php echo $ConvertGuiCounter1; ?>' name='userarchfilefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p>Архивировать этот файл</p>
+          <p>Укажите имя файла: <input type="text" id='userarchfilefilename<?php echo $ConvertGuiCounter1; ?>' name='userarchfilefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='archfileextension<?php echo $ConvertGuiCounter1; ?>' name='archfileextension<?php echo $ConvertGuiCounter1; ?>'> 
-            <option value="zip">文件格式</option>
+            <option value="zip">Формат</option>
             <option value="zip">Zip</option>
             <option value="rar">Rar</option>
             <option value="tar">Tar</option>
             <option value="7z">7z</option>
           </select></p>
-          <input type="submit" id="archfileSubmit<?php echo $ConvertGuiCounter1; ?>" name="archfileSubmit<?php echo $ConvertGuiCounter1; ?>" value='存档文件' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="archfileSubmit<?php echo $ConvertGuiCounter1; ?>" name="archfileSubmit<?php echo $ConvertGuiCounter1; ?>" value='Архивный файл' onclick="toggle_visibility('loadingCommandDiv');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#archfileSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -234,15 +235,15 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         ?>
         <div id='pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p>对该文件执行光学字符识别</p>
-          <p>指定文件名： <input type="text" id='userpdffilename<?php echo $ConvertGuiCounter1; ?>' name='userpdffilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p>Выполнить оптическое распознавание символов в этом файле</p>
+          <p>Укажите имя файла: <input type="text" id='userpdffilename<?php echo $ConvertGuiCounter1; ?>' name='userpdffilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='pdfmethod<?php echo $ConvertGuiCounter1; ?>' name='pdfmethod<?php echo $ConvertGuiCounter1; ?>'>   
-            <option value="0">方法</option>  
-            <option value="1">方法 1 (简单的)</option>
-            <option value="2">方法 2 (先进的)</option>
+            <option value="0">Метод</option>  
+            <option value="1">Метод 1 (Простой)</option>
+            <option value="2">Метод 2 (Передовой)</option>
           </select>
           <select id='pdfextension<?php echo $ConvertGuiCounter1; ?>' name='pdfextension<?php echo $ConvertGuiCounter1; ?>'>   
-            <option value="pdf">文件格式</option> 
+            <option value="pdf">Формат</option> 
             <option value="pdf">Pdf</option>   
             <option value="doc">Doc</option>
             <option value="docx">Docx</option>
@@ -250,7 +251,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             <option value="txt">Txt</option>
             <option value="odt">Odt</option>
           </select></p>
-          <p><input type="submit" id='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' name='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' value='转换成文档' onclick="toggle_visibility('loadingCommandDiv');"></p>
+          <p><input type="submit" id='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' name='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' value='Преобразовать в документ' onclick="toggle_visibility('loadingCommandDiv');"></p>
           <script type="text/javascript">
           $(document).ready(function () {
             $('#pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -289,16 +290,16 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         ?>
         <div id='archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p>转换此档案</p>
-          <p>指定文件名： <input type="text" id='userarchivefilename<?php echo $ConvertGuiCounter1; ?>' name='userarchivefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p>Конвертировать этот архив</p>
+          <p>Укажите имя файла: <input type="text" id='userarchivefilename<?php echo $ConvertGuiCounter1; ?>' name='userarchivefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='archiveextension<?php echo $ConvertGuiCounter1; ?>' name='archiveextension<?php echo $ConvertGuiCounter1; ?>'> 
-            <option value="zip">文件格式</option>
+            <option value="zip">Формат</option>
             <option value="zip">Zip</option>
             <option value="rar">Rar</option>
             <option value="tar">Tar</option>
             <option value="7z">7z</option>
           </select></p>
-          <input type="submit" id="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='存档文件' onclick="toggle_visibility('loadingCommandDiv'); display:none;">
+          <input type="submit" id="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Архивные файлы' onclick="toggle_visibility('loadingCommandDiv'); display:none;">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -336,10 +337,10 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         ?>
         <div id='docOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='docOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p>转换此文档</p>
-          <p>指定文件名： <input type="text" id='userdocfilename<?php echo $ConvertGuiCounter1; ?>' name='userdocfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p>Преобразовать этот документ</p>
+          <p>Укажите имя файла: <input type="text" id='userdocfilename<?php echo $ConvertGuiCounter1; ?>' name='userdocfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='docextension<?php echo $ConvertGuiCounter1; ?>' name='docextension<?php echo $ConvertGuiCounter1; ?>'> 
-            <option value="txt">文件格式</option>
+            <option value="txt">Формат</option>
             <option value="doc">Doc</option>
             <option value="docx">Docx</option>
             <option value="rtf">Rtf</option>
@@ -347,7 +348,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             <option value="odt">Odt</option>
             <option value="pdf">Pdf</option>
           </select></p>
-          <input type="submit" id="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='转换文档' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Конвертировать документ' onclick="toggle_visibility('loadingCommandDiv');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#docconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -385,16 +386,16 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         ?>
         <div id='spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p>转换此电子表格</p>
-          <p>指定文件名： <input type="text" id='userspreadfilename<?php echo $ConvertGuiCounter1; ?>' name='userspreadfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p>Преобразовать эту таблицу</p>
+          <p>Укажите имя файла: <input type="text" id='userspreadfilename<?php echo $ConvertGuiCounter1; ?>' name='userspreadfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='spreadextension<?php echo $ConvertGuiCounter1; ?>' name='spreadextension<?php echo $ConvertGuiCounter1; ?>'>
-            <option value="ods">文件格式</option> 
+            <option value="ods">Формат</option> 
             <option value="xls">Xls</option>
             <option value="xlsx">Xlsx</option>
             <option value="ods">Ods</option>
             <option value="pdf">Pdf</option>
           </select></p>
-          <input type="submit" id="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='转换电子表格' onclick="toggle_visibility('loadingCommandDiv');">        
+          <input type="submit" id="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Преобразовать электронную таблицу' onclick="toggle_visibility('loadingCommandDiv');">        
           <script type="text/javascript">
           $(document).ready(function () {
             $('#spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -432,10 +433,10 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         ?>
         <div id='presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p>转换此演示文稿</p>
-          <p>指定文件名： <input type="text" id='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' name='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p>Преобразовать эту презентацию</p>
+          <p>Укажите имя файла: <input type="text" id='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' name='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='presentationextension<?php echo $ConvertGuiCounter1; ?>' name='presentationextension<?php echo $ConvertGuiCounter1; ?>'>
-            <option value="odp">文件格式</option>
+            <option value="odp">Формат</option>
             <option value="pages">Pages</option>
             <option value="pptx">Pptx</option>
             <option value="ppt">Ppt</option>
@@ -445,7 +446,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             <option value="ppa">Ppa</option>
             <option value="odp">Odp</option>
           </select></p>
-          <input type="submit" id="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='转换演示文稿' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Преобразовать презентацию' onclick="toggle_visibility('loadingCommandDiv');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -483,10 +484,10 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         ?>
         <div id='audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p>转换此音频</p>
-          <p>指定文件名： <input type="text" id='useraudiofilename<?php echo $ConvertGuiCounter1; ?>' name='useraudiofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p>Конвертировать это аудио</p>
+          <p>Укажите имя файла: <input type="text" id='useraudiofilename<?php echo $ConvertGuiCounter1; ?>' name='useraudiofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='audioextension<?php echo $ConvertGuiCounter1; ?>' name='audioextension<?php echo $ConvertGuiCounter1; ?>'> 
-            <option value="mp3">文件格式</option>
+            <option value="mp3">Формат</option>
             <option value="mp2">Mp2</option>  
             <option value="mp3">Mp3</option>
             <option value="wav">Wav</option>
@@ -494,7 +495,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             <option value="flac">Flac</option>
             <option value="ogg">Ogg</option>
           </select></p>
-          <input type="submit" id="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='转换音频' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Конвертировать аудио' onclick="toggle_visibility('loadingCommandDiv');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -532,10 +533,10 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         ?>
         <div id='videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p>转换此视频</p>
-          <p>指定文件名： <input type="text" id='uservideofilename<?php echo $ConvertGuiCounter1; ?>' name='uservideofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p>Конвертировать это видео</p>
+          <p>Укажите имя файла: <input type="text" id='uservideofilename<?php echo $ConvertGuiCounter1; ?>' name='uservideofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='videoextension<?php echo $ConvertGuiCounter1; ?>' name='videoextension<?php echo $ConvertGuiCounter1; ?>'>
-            <option value="mp4">文件格式</option> 
+            <option value="mp4">Формат</option> 
             <option value="3gp">3gp</option> 
             <option value="mkv">Mkv</option> 
             <option value="avi">Avi</option>
@@ -545,7 +546,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             <option value="wmv">Wmv</option>
             <option value="mov">Mov</option>
           </select></p>
-          <input type="submit" id="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='转换视频' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Конвертировать видео' onclick="toggle_visibility('loadingCommandDiv');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -583,10 +584,10 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         ?>
         <div id='modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p>转换此三维模型</p>
-          <p>指定文件名： <input type="text" id='usermodelfilename<?php echo $ConvertGuiCounter1; ?>' name='usermodelfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p>Преобразуйте эту трехмерную модель</p>
+          <p>Укажите имя файла: <input type="text" id='usermodelfilename<?php echo $ConvertGuiCounter1; ?>' name='usermodelfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='modelextension<?php echo $ConvertGuiCounter1; ?>' name='modelextension<?php echo $ConvertGuiCounter1; ?>'>
-            <option value="3ds">文件格式</option>
+            <option value="3ds">Формат</option>
             <option value="3ds">3ds</option>
             <option value="collada">Collada</option>
             <option value="obj">Obj</option>
@@ -598,7 +599,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             <option value="u3d">U3d</option>
             <option value="vrml">Vrml</option>
           </select></p>
-          <input type="submit" id="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='转换模型' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Преобразовать модель' onclick="toggle_visibility('loadingCommandDiv');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -636,10 +637,10 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         ?>
         <div id='drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p>转换此技术图纸或矢量文件</p>
-          <p>指定文件名： <input type="text" id='userdrawingfilename<?php echo $ConvertGuiCounter1; ?>' name='userdrawingfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p>Конвертируйте этот технический чертеж или векторный файл</p>
+          <p>Укажите имя файла: <input type="text" id='userdrawingfilename<?php echo $ConvertGuiCounter1; ?>' name='userdrawingfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='drawingextension<?php echo $ConvertGuiCounter1; ?>' name='drawingextension<?php echo $ConvertGuiCounter1; ?>'>
-            <option value="jpg">文件格式</option>
+            <option value="jpg">Формат</option>
             <option value="svg">Svg</option>
             <option value="dxf">Dxf</option>
             <option value="vdx">Vdx</option>
@@ -649,7 +650,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             <option value="bmp">Bmp</option>
             <option value="pdf">Pdf</option>
           </select></p>
-          <input type="submit" id="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='转换绘图' onclick="toggle_visibility('loadingCommandDiv');">     
+          <input type="submit" id="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Преобразование чертежа' onclick="toggle_visibility('loadingCommandDiv');">     
           <script type="text/javascript">
           $(document).ready(function () {
             $('#drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -687,10 +688,10 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         ?>
         <div id='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p>转换此图像</p>
-          <p>指定文件名： <input type="text" id='userphotofilename<?php echo $ConvertGuiCounter1; ?>' name='userphotofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p>Преобразовать это изображение</p>
+          <p>Укажите имя файла: <input type="text" id='userphotofilename<?php echo $ConvertGuiCounter1; ?>' name='userphotofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='photoextension<?php echo $ConvertGuiCounter1; ?>' name='photoextension<?php echo $ConvertGuiCounter1; ?>'>
-            <option value="jpg">文件格式</option>
+            <option value="jpg">Формат</option>
             <option value="jpg">Jpg</option>
             <option value="bmp">Bmp</option>
             <option value="webp">Webp</option>
@@ -701,10 +702,10 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             <option value="flif">Flif</option>
             <option value="avif">Avif</option>
           </select></p>
-          <p>宽度和高度： </p>
+          <p>Ширина высота: </p>
           <p><input type="number" size="4" value="0" id='width<?php echo $ConvertGuiCounter1; ?>' name='width<?php echo $ConvertGuiCounter1; ?>' min="0" max="10000"> X <input type="number" size="4" value="0" id="height<?php echo $ConvertGuiCounter1; ?>" name="height<?php echo $ConvertGuiCounter1; ?>" min="0"  max="10000"></p> 
-          <p>旋转： <input type="number" size="3" id='rotate<?php echo $ConvertGuiCounter1; ?>' name='rotate<?php echo $ConvertGuiCounter1; ?>' value="0" min="0" max="359"></p>
-          <input type="submit" id='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' name='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' value='转换图像' onclick="toggle_visibility('loadingCommandDiv');">
+          <p>Повернуть: <input type="number" size="3" id='rotate<?php echo $ConvertGuiCounter1; ?>' name='rotate<?php echo $ConvertGuiCounter1; ?>' value="0" min="0" max="359"></p>
+          <input type="submit" id='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' name='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' value='Преобразовать изображение' onclick="toggle_visibility('loadingCommandDiv');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {

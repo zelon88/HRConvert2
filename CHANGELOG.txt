@@ -1,4 +1,20 @@
 COMMIT - 4/13/2022
+v2.7.5 - Added 7 language translations, fixed compression bug.
+
+-v2.7.5.
+-Added code to each UI in Languages to prevent execution without the core having been loaded already.
+-Fixed a bug when creating archives in .zip and .7z format.
+-Touched up README.md.
+-Added Russian language translation (ru).
+-Added Ukranian language translation (uk).
+-Added Bengali language translation (bn).
+-Added German language translation (de).
+-Added Korean language translation (ko).
+-Added Italian language translation (it).
+-Added Portugese language translation (pt).
+
+--------------------
+COMMIT - 4/13/2022
 v2.7.4 - Added 4 language translations.
 
 -v2.7.4.

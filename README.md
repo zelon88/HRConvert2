@@ -12,22 +12,22 @@
 
 ---
 #### Features
--Converts 75 different file formats.
--Self hosted. Installs on a home server!
--All conversions are performed locally on your server.
--Performs Optical Character Recognition (OCR) on PDFs & images.
--Can scan files for viruses in real-time with ClamAV.
--Minimalistic drag & drop interface.
--Each user gets their own temporary scratch space!
--End users can switch between 11 languages by appending it to the URL like this: `?language=en`
--Safe enough for public facing environments (when properly implemented).
--No databases. No cookies. No cache files. 
--Installs cleanly alongside other popular software (like WordPress).
--Does not make external connections.
--All JS is locally installed. No bulky frameworks. No analytics. No Google Fonts.
--No tracking capabilities whatsoever.
--Comes with 4 color schemes set in config.php.
--Secure, performant, & compact codebase that's been open-source for years.
+- Converts 75 different file formats.
+- Self hosted. Installs on a home server!
+- All conversions are performed locally on your server.
+- Performs Optical Character Recognition (OCR) on PDFs & images.
+- Can scan files for viruses in real-time with ClamAV.
+- Minimalistic drag & drop interface.
+- Each user gets their own temporary scratch space!
+- End users can switch between 11 languages by appending it to the URL like this: `?language=en`
+- Safe enough for public facing environments (when properly implemented).
+- No databases. No cookies. No cache files. 
+- Installs cleanly alongside other popular software (like WordPress).
+- Does not make external connections.
+- All JS is locally installed. No bulky frameworks. No analytics. No Google Fonts.
+- No tracking capabilities whatsoever.
+- Comes with 4 color schemes set in config.php.
+- Secure, performant, & compact codebase that's been open-source for years.
 
 ---
 ### Supported Formats

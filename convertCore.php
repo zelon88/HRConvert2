@@ -295,11 +295,13 @@ function verifyLanguage() {
 // / A function to set the global variables for the session.
 function verifyGlobals() { 
   // / Set variables.
-  global $URLEcho, $HRConvertVersion, $Date, $Time, $Current_URL, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $DangerousFiles1, $ArchiveArray, $DearchiveArray, $DocumentArray, $DocArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $DrawingArray, $ModelArray, $ConvertArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes;
-  $HRConvertVersion = 'v2.8';
+  global $URLEcho, $HRConvertVersion, $Date, $Time, $Current_URL, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $DangerousFiles1, $ArchiveArray, $DearchiveArray, $DocumentArray, $DocArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $DrawingArray, $ModelArray, $ConvertArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol;
+  $HRConvertVersion = 'v2.8.1';
   $CoreLoaded = $GlobalsAreVerified = TRUE;
   $SupportedConversionTypes = array('Document', 'Image', 'Model', 'Drawing', 'Video', 'Audio', 'Archive');  
   $DirSep = DIRECTORY_SEPARATOR;
+  $Lol = PHP_EOL;
+  $Lolol = $Lolol;
   $Current_URL = "http$URLEcho://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
   $convertDir0 = str_replace('..', '', $ConvertLoc.$DirSep.$SesHash);
   $ConvertDir = str_replace('..', '', $convertDir0.$DirSep.$SesHash2.$DirSep);
@@ -324,7 +326,7 @@ function verifyGlobals() {
   $VideoArray = array('3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv', 'mov', 'm4v');
   $DrawingArray = array('svg', 'dxf', 'vdx', 'fig');
   $ModelArray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'ptx', 'dxf', 'u3d', 'vrml');
-  $ConvertArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi', 'tar.bz2', 'tar.gz', 'txt', 'doc', 'docx', 'rtf', 'xls', 'xlsx', 'odt', 'ods', 'pptx', 'ppt', 'xps', 'potx', 'potm', 'pot', 'ppa', 'odp', 'jpeg', 'jpg', 'png', 'bmp', 'webp', 'avif', 'crw', 'ico', 'cin', 'xwd', 'dcr', 'dds', 'dib', 'flif', 'gplt', 'nef', 'orf', 'ora', 'sct', 'sfw', 'xcf', 'xwg', 'gif', 'pdf', 'abw', 'mp3', 'mp4', 'mov', 'aac', 'oog', 'wma', 'mp2', 'flac', 'm4a', '3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv', 'svg', 'dxf', 'vdx', 'fig', '3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'ptx', 'dxf', 'u3d', 'vrml', 'm4v', 'm4p');
+  $ConvertArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi', 'tar.bz2', 'tar.gz', 'txt', 'doc', 'docx', 'rtf', 'xls', 'xlsx', 'odt', 'ods', 'pptx', 'ppt', 'xps', 'potx', 'potm', 'pot', 'ppa', 'odp', 'jpeg', 'jpg', 'png', 'bmp', 'webp', 'avif', 'crw', 'ico', 'cin', 'xwd', 'dcr', 'dds', 'dib', 'flif', 'gplt', 'nef', 'orf', 'ora', 'sct', 'sfw', 'xcf', 'xwg', 'gif', 'pdf', 'abw', 'mp3', 'mp4', 'mov', 'aac', 'oog', 'wma', 'mp2', 'flac', 'm4a', '3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv', 'svg', 'dxf', 'vdx', 'fig', '3ds', 'obj', 'collada', 'off', 'ogg', 'ply', 'stl', 'ptx', 'dxf', 'u3d', 'vrml', 'm4v', 'm4p');
   $PDFWorkArr = array('pdf', 'jpg', 'jpeg', 'png', 'bmp', 'webp', 'gif');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $convertDir0 = $convertTempDir0 = NULL;
@@ -420,7 +422,7 @@ function is_dir_empty($dir) {
 // / A function to scan an input file or folder for viruses with ClamAV.
 function virusScan($path) { 
   // / Set variables.
-  global $Verbose, $ClamLogFile;
+  global $Verbose, $ClamLogFile, $Lol, $Lolol;
   $ScanComplete = TRUE;
   $VirusFound = FALSE;
   $returnData = shell_exec(str_replace('  ', ' ', str_replace('  ', ' ', 'clamscan -r '.$path.' | grep FOUND >> '.$ClamLogFile)));
@@ -428,7 +430,7 @@ function virusScan($path) {
   if (strpos($clamLogFileDATA, 'Virus Detected') === TRUE or strpos($clamLogFileDATA, 'FOUND') === TRUE) {
     $ScanComplete = FALSE;
     errorEntry('There were potentially infected files detected at '.$path, 10000, FALSE);
-    errorEntry('ClamAV output the following: '.$str_replace(PHP_EOL, PHP_EOL.'  ', str_replace(PHP_EOL.PHP_EOL, PHP_EOL, str_replace(PHP_EOL.PHP_EOL, PHP_EOL, trim($returnData)))), 10001, FALSE);
+    errorEntry('ClamAV output the following: '.$str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))), 10001, FALSE);
     if (is_file($path) or !is_dir) @unlink($path);
     die('WARNING!!! Virus Detected! HRConvert2-10000'); } 
   $returnData = $clamLogFileDATA = $path = NULL;
@@ -547,7 +549,7 @@ function cleanConvertLoc() {
 // / A function to verify that the document conversion engine is installed & running.
 function verifyDocumentConversionEngine() { 
   // / Set variables.
-  global $Verbose;
+  global $VerboseC;
   $DocEnginePID = 0;
   $DocumentEngineStarted = FALSE;
   // / Determine if the document conversion engine (Unoconv) is installed.
@@ -555,13 +557,13 @@ function verifyDocumentConversionEngine() {
   if (file_exists('/usr/bin/unoconv')) {
     if ($Verbose) logEntry('Verified the document conversion engine installation.');
     $DocEnginePID = shell_exec('pgrep soffice.bin');
-    if ($Verbose) logEntry('The document conversion engine PID is: '.str_replace(PHP_EOL, '', str_replace(PHP_EOL.PHP_EOL, PHP_EOL, str_replace(PHP_EOL.PHP_EOL, PHP_EOL, trim($DocEnginePID)))));
+    if ($Verbose) logEntry('The document conversion engine PID is: '.str_replace($Lol, '', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($DocEnginePID)))));
     // / Determine if the document conversion engine is already running.
     if ($DocEnginePID === 0 && $DocEnginePID === '' && $DocEnginePID === NULL && !$DocEnginePID) {
       // / Try to start the document conversion engine.
       if ($Verbose)logEntry('Starting the document conversion engine.');
       $returnData = shell_exec('/usr/bin/unoconv -l &');
-    if ($Verbose && trim($returnData) !== '') logEntry('The document conversion engine PID is: '.str_replace(PHP_EOL, '', str_replace(PHP_EOL.PHP_EOL, PHP_EOL, str_replace(PHP_EOL.PHP_EOL, PHP_EOL, trim($DocEnginePID))))); } }
+    if ($Verbose && trim($returnData) !== '') logEntry('The document conversion engine PID is: '.str_replace($Lol, '', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($DocEnginePID))))); } }
   $DocumentEnginePID = trim($DocEnginePID);
   // / Write the document engine PID to the log file.
   if ($DocEnginePID !== 0 && $DocEnginePID !== '' && $DocEnginePID !== NULL) { 
@@ -577,7 +579,7 @@ function verifyDocumentConversionEngine() {
 // / A function to convert document formats.
 function convertDocuments($pathname, $newPathname, $extension) { 
   // / Set variables.
-  global $Verbose;
+  global $Verbose, $Lol, $Lolol;
   $ConversionSuccess = $ConversionErrors = $returnData = FALSE;
   $stopper = 0;
   // / The following code verifies that the document conversion engine is installed & running.
@@ -596,7 +598,7 @@ function convertDocuments($pathname, $newPathname, $extension) {
       if ($stopper === 5) { 
         $ConversionErrors = TRUE;
         errorEntry('The document conversion engine timed out!', 7001, FALSE); } }
-    if ($Verbose && trim($returnData) !== '') logEntry('Unoconv returned the following: '.PHP_EOL.'  '.str_replace(PHP_EOL, PHP_EOL.'  ', str_replace(PHP_EOL.PHP_EOL, PHP_EOL, str_replace(PHP_EOL.PHP_EOL, PHP_EOL, trim($returnData))))); }
+    if ($Verbose && trim($returnData) !== '') logEntry('Unoconv returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); }
   if (file_exists($newPathname)) $ConversionSuccess = TRUE; 
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $stopper = $pathname = $newPathname = $extension = $returnData = $documentEngineStarted = $documentEnginePID = NULL;
@@ -608,7 +610,7 @@ function convertDocuments($pathname, $newPathname, $extension) {
 // / A function to convert image formats.
 function convertImages($pathname, $newPathname, $height, $width, $rotate) { 
   // / Set variables.
-  global $Verbose;
+  global $Verbose, $Lol, $Lolol;
   $returnData = $ConversionSuccess = $ConversionErrors = $imgMethod = FALSE;
   $stopper = 0;
   $rotate = '-rotate '.$rotate;
@@ -634,7 +636,7 @@ function convertImages($pathname, $newPathname, $height, $width, $rotate) {
   if ($stopper === 5) { 
     $ConversionErrors = TRUE;
     errorEntry('The image converter timed out!', 12000, FALSE); }
-  if ($Verbose && trim($returnData) !== '') logEntry('ImageMagick returned the following: '.PHP_EOL.'  '.str_replace(PHP_EOL, PHP_EOL.'  ', str_replace(PHP_EOL.PHP_EOL, PHP_EOL, str_replace(PHP_EOL.PHP_EOL, PHP_EOL, trim($returnData)))));
+  if ($Verbose && trim($returnData) !== '') logEntry('ImageMagick returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
   if (file_exists($newPathname)) $ConversionSuccess = TRUE; 
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $returnData = $stopper = $pathname = $newPathname = $height = $width = $extension = $wxh = $rotate = $imgMethod = NULL;
@@ -646,7 +648,7 @@ function convertImages($pathname, $newPathname, $height, $width, $rotate) {
 // / A function to convert 3D model formats.
 function convertModels($pathname, $newPathname) { 
   // / Set variables.
-  global $Verbose;
+  global $Verbose, $Lol, $Lolol;
   $ConversionSuccess = $ConversionErrors = FALSE;
   $stopper = 0;
   if ($Verbose) logEntry('Converting model.');
@@ -657,7 +659,7 @@ function convertModels($pathname, $newPathname) {
     if ($stopper === 5) { 
       $ConversionErrors = TRUE;
       errorEntry('The model converter timed out!', 8000, FALSE); } }
-  if ($Verbose && trim($returnData) !== '') logEntry('Meshlab returned the following: '.PHP_EOL.'  '.str_replace(PHP_EOL, PHP_EOL.'  ', str_replace(PHP_EOL.PHP_EOL, PHP_EOL, str_replace(PHP_EOL.PHP_EOL, PHP_EOL, trim($returnData)))));
+  if ($Verbose && trim($returnData) !== '') logEntry('Meshlab returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $returnData = $stopper = $pathname = $newPathname = NULL;
@@ -669,7 +671,7 @@ function convertModels($pathname, $newPathname) {
 // / A function to convert 2D vector drawing formats.
 function convertDrawings($pathname, $newPathname) { 
   // / Set variables.
-  global $Verbose;
+  global $Verbose, $Lol, $Lolol;
   $ConversionSuccess = $ConversionErrors = FALSE;
   $stopper = 0;
   if ($Verbose) logEntry('Converting drawing.');
@@ -680,7 +682,7 @@ function convertDrawings($pathname, $newPathname) {
     if ($stopper === 5) { 
       $ConversionErrors = TRUE;
       errorEntry('The drawing converter timed out!', 14000, FALSE); } }
-  if ($Verbose && trim($returnData) !== '') logEntry('Dia returned the following: '.PHP_EOL.'  '.str_replace(PHP_EOL, PHP_EOL.'  ', str_replace(PHP_EOL.PHP_EOL, PHP_EOL, str_replace(PHP_EOL.PHP_EOL, PHP_EOL, trim($returnData)))));
+  if ($Verbose && trim($returnData) !== '') logEntry('Dia returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $returnData = $stopper = $pathname = $newPathname = NULL;
@@ -692,7 +694,7 @@ function convertDrawings($pathname, $newPathname) {
 // / A function to convert video formats.
 function convertVideos($pathname, $newPathname) { 
   // / Set variables.
-  global $Verbose;
+  global $Verbose, $Lol, $Lolol;
   $ConversionSuccess = $ConversionErrors = FALSE;
   $stopper = 0;
   if ($Verbose) logEntry('Converting video.');
@@ -703,7 +705,7 @@ function convertVideos($pathname, $newPathname) {
     if ($stopper === 5) { 
       $ConversionErrors = TRUE;
       errorEntry('The video converter timed out!', 13000, FALSE); } }
-  if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.PHP_EOL.'  '.str_replace(PHP_EOL, PHP_EOL.'  ', str_replace(PHP_EOL.PHP_EOL, PHP_EOL, str_replace(PHP_EOL.PHP_EOL, PHP_EOL, trim($returnData)))));
+  if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $returnData = $stopper = $pathname = $newPathname = NULL;
@@ -715,7 +717,7 @@ function convertVideos($pathname, $newPathname) {
 // / A function to convert audio formats.
 function convertAudio($pathname, $newPathname, $extension, $bitrate) { 
   // / Set variables.
-  global $Verbose;
+  global $Verbose, $Lol, $Lolol;
   $ConversionSuccess = $ConversionErrors = FALSE;
   $stopper = 0;
   $ext = ' -f ' . $extension;
@@ -732,7 +734,7 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
     if ($stopper === 5) { 
       $ConversionErrors = TRUE;
       errorEntry('The video converter timed out!', 15000, FALSE); } }
-  if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.PHP_EOL.'  '.str_replace(PHP_EOL, PHP_EOL.'  ', str_replace(PHP_EOL.PHP_EOL, PHP_EOL, str_replace(PHP_EOL.PHP_EOL, PHP_EOL, trim($returnData)))));
+  if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $returnData = $stopper = $pathname = $newPathname = $ext = $extension = NULL;
@@ -744,7 +746,7 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
 // / A function to convert archive & disk image formats.
 function convertArchives($pathname, $newPathname, $extension) { 
   // / Set variables.
-  global $Verbose, $ConvertDir;
+  global $Verbose, $ConvertDir, $Lol, $Lolol;
   $ConversionSuccess = $ConversionErrors = FALSE;
   $filename = pathinfo($pathname, PATHINFO_FILENAME);
   $safedir2 = $ConvertDir.$filename;
@@ -778,7 +780,7 @@ function convertArchives($pathname, $newPathname, $extension) {
     $returnData = shell_exec('7z x -aoa '.$pathname.' -o'.$safedir2); } 
   if (in_array(strtolower($oldExtension), $arraytaro)) {
     $returnData = shell_exec('7z x -aoa '.$pathname.' -o'.$safedir2); }
-  if ($Verbose) logEntry('The extractor returned the following: '.PHP_EOL.'  '.str_replace(PHP_EOL, PHP_EOL.'  ', str_replace(PHP_EOL.PHP_EOL, PHP_EOL, str_replace(PHP_EOL.PHP_EOL, PHP_EOL, trim($returnData)))));
+  if ($Verbose) logEntry('The extractor returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
   if ($Verbose) logEntry('Archiving file '.$safedir2.' to '.$newPathname.'.');
   // / Code to rearchive files using 7z.
   if (in_array($extension, $array7zo)) {
@@ -792,7 +794,7 @@ function convertArchives($pathname, $newPathname, $extension) {
   if (in_array($extension, $arraytaro)) $returnData = shell_exec('tar -cjf '.$newPathname.' -C '.$safedir2.' .'); 
   // / Code to rearchive files using rar.
   if (in_array($extension, $arrayraro)) $returnData = shell_exec('rar a -ep1 -r '.$newPathname.' '.$safedir2); 
-  if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.PHP_EOL.'  '.str_replace(PHP_EOL, PHP_EOL.'  ', str_replace(PHP_EOL.PHP_EOL, PHP_EOL, str_replace(PHP_EOL.PHP_EOL, PHP_EOL, trim($returnData)))));
+  if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
   // / Check if any errors occurred.
   if (!file_exists($newPathname)) $ConversionErrors = TRUE;
   else $ConversionSuccess = TRUE;
@@ -904,8 +906,8 @@ function showGUI($ShowGUI, $LanguageToUse, $ButtonCode) {
 // / A function to upload a selection of files.
 function uploadFiles() { 
   // / Set variables
-  global $DangerousFiles, $ConvertDir, $LogFile, $Verbose, $VirusScan;
-  $UploadComplete = $UploadErrors = FALSE;
+  global $DangerousFiles, $VirusScan, $ConvertDir, $LogFile, $Verbose;
+  $UploadComplete = $UploadErrors = $virusFound = FALSE;
   // / Make sure the input files are formatted into an array.
   if (!is_array($_FILES['file']['name'])) $_FILES['file']['name'] = array($_FILES['file']['name']); 
   // / Iterate through the array of input files.
@@ -935,7 +937,8 @@ function uploadFiles() {
       if ($Verbose) logEntry('Starting virus scan.');
       list ($scanComplete, $virusFound) = virusScan($f1); 
       if (!$scanComplete) errorEntry('Could not perform a virus scan!', 2002, TRUE);
-      if ($virusFound) errorEntry('Virus detected!', 2003, TRUE); } }
+      if ($virusFound) errorEntry('Virus detected!', 2003, TRUE);
+      if ($Verbose) logEntry('Virus scan complete.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $file = $f0 = $f1 = $dangerousFile = $scanComplete = $virusFound = $sanitized = NULL;
   unset ($file, $f0, $f1, $dangerousFile, $sanitized); 
@@ -980,8 +983,8 @@ function downloadFiles($Download) {
 // / A function to archive a selection of files.
 function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) { 
   // / Set variables.
-  global $Verbose, $VirusScan, $ConvertTempDir;
-  $ArchiveComplete = $ArchiveErrors = FALSE;
+  global $Verbose, $VirusScan, $ConvertTempDir, $Lol, $Lolol;
+  $ArchiveComplete = $ArchiveErrors = $virusFound = FALSE;
   $clean = $copy = TRUE;
   $rararr = array('rar');
   $ziparr = array('zip');
@@ -1005,7 +1008,8 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
       if ($Verbose) logEntry('Starting virus scan.');
       list ($scanComplete, $virusFound) = virusScan($pathname); 
       if (!$scanComplete) errorEntry('Could not perform a virus scan!', 4001, TRUE);
-      if ($virusFound) errorEntry('Virus detected!', 4002, TRUE); } 
+      if ($virusFound) errorEntry('Virus detected!', 4002, TRUE); 
+      if ($Verbose) logEntry('Virus scan complete.'); } 
     // / Handle archiving of rar compatible files. 
     if (in_array($UserExtension, $rararr)) {
       $returnData = shell_exec('rar a -ep '.$newPathname.' '.$pathname); } 
@@ -1015,7 +1019,7 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
     // / Handle archiving of 7zipper compatible files.
     if (in_array($UserExtension, $tararr)) {
       $returnData = shell_exec('7z a '.$newPathname.' '.$pathname); } 
-    if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.PHP_EOL.'  '.str_replace(PHP_EOL, PHP_EOL.'  ', str_replace(PHP_EOL.PHP_EOL, PHP_EOL, str_replace(PHP_EOL.PHP_EOL, PHP_EOL, trim($returnData)))));
+    if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lol, $Lolol, $Lol, str_replace($Lol, $Lolol, $Lol, trim($returnData)))));
     if (!file_exists($newPathname)) { 
       $ArchiveError = TRUE;
       errorEntry('Could not archive file '.$pathname.' to '.$newPathname.'!', 4003, FALSE); }
@@ -1034,7 +1038,7 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
   // / Set variables.
   global $Verbose, $VirusScan;
   $clean = $copy = TRUE;
-  $MainConversionSuccess = $MainConversionErrors = FALSE;
+  $MainConversionSuccess = $MainConversionErrors = $virusFound = FALSE;
   $docarray =  array('txt', 'doc', 'xls', 'xlsx', 'docx', 'rtf', 'ods', 'odt', 'dat', 'cfg', 'pages', 'pptx', 'ppt', 'xps', 'potx', 'pot', 'ppa', 'odp', 'odt', 'abw');
   $imgarray = array('jpg', 'jpeg', 'bmp', 'webp', 'png', 'avif', 'crw', 'ico', 'cin', 'xwd', 'dcr', 'dds', 'dib', 'flif', 'gplt', 'nef', 'orf', 'ora', 'sct', 'sfw', 'xcf', 'xwg', 'gif');
   $modelarray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'ptx', 'dxf', 'u3d', 'vrml');
@@ -1071,7 +1075,8 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
       if ($Verbose) logEntry('Starting virus scan.');
       list ($scanComplete, $virusFound) = virusScan($newPathname); 
       if (!$scanComplete) errorEntry('Could not perform a virus scan!', 5001, TRUE);
-      if ($virusFound) errorEntry('Virus detected!', 5002, TRUE); } 
+      if ($virusFound) errorEntry('Virus detected!', 5002, TRUE); 
+      if ($Verbose) logEntry('Virus scan complete.'); } 
     // / Iterate through the array of supported formats & call the appropriate code to perform the conversion.
     foreach ($arrayArray as $arrKey => $arrArray) { 
       // / Code to convert & manipulate files.
@@ -1093,16 +1098,16 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
       $MainConversionSuccess = TRUE;
       if ($Verbose) logEntry('Created a file at '.$newPathname.'.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $txt = $key = $file = $pathname = $oldPathname = $oldExtension= $newPathname = $docarray = $imgarray = $audioarray = $videoarray = $modelarray = $drawingarray = $pdfarray = $archarray = $array7z = $array7zo = $arrayzipo = $arraytaro = $arrayraro = $arrayArray = $arrayKey = $sanitized = $fileIsVerified = NULL;
-  unset ($txt, $key, $file, $pathname, $oldPathname, $oldExtension, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $modelarray, $drawingarray, $pdfarray, $archarray, $array7z, $array7zo, $arrayzipo, $arraytaro, $arrayraro, $arrayArray, $arrayKey, $sanitized, $fileIsVerified); 
+  $txt = $key = $file = $pathname = $oldPathname = $oldExtension= $newPathname = $docarray = $imgarray = $audioarray = $videoarray = $modelarray = $drawingarray = $pdfarray = $archarray = $array7z = $array7zo = $arrayzipo = $arraytaro = $arrayraro = $arrayArray = $arrayKey = $sanitized = $fileIsVerified = $scanComplete = $virusFound = NULL;
+  unset ($txt, $key, $file, $pathname, $oldPathname, $oldExtension, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $modelarray, $drawingarray, $pdfarray, $archarray, $array7z, $array7zo, $arrayzipo, $arraytaro, $arrayraro, $arrayArray, $arrayKey, $sanitized, $fileIsVerified, $scanComplete, $virusFound); 
   return array($MainConversionSuccess, $MainConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to OCR a selection of files.
 function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) { 
-  global $Verbose, $ConvertTempDir, $ConvertDir;
-  $OperationSuccessful = $OperationErrors = $multiple = FALSE;
+  global $Verbose, $VirusScan, $ConvertTempDir, $ConvertDir, $Lol, $Lolol;
+  $OperationSuccessful = $OperationErrors = $multiple = $virusFound = FALSE;
   $clean = $copy = TRUE;
   $doc1array =  array('txt', 'pages', 'doc', 'xls', 'xlsx', 'docx', 'rtf', 'odt', 'ods');
   $img1array = array('jpg', 'jpeg', 'bmp', 'webp', 'png', 'gif');
@@ -1126,7 +1131,8 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
       if ($Verbose) logEntry('Starting virus scan.');
       list ($scanComplete, $virusFound) = virusScan($newPathname); 
       if (!$scanComplete) errorEntry('Could not perform a virus scan!', 11001, TRUE);
-      if ($virusFound) errorEntry('Virus detected!', 11002, TRUE); } 
+      if ($virusFound) errorEntry('Virus detected!', 11002, TRUE);
+      if ($Verbose) logEntry('Virus scan complete.'); } 
     if (in_array(strtolower($oldExtension), $allowedOCR)) {
       // / Code to convert a PDF to a document.
       if (in_array(strtolower($oldExtension), $pdf1array)) {
@@ -1136,7 +1142,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
             if ($Verbose) logEntry('Performing OCR using method 0.');
             // / Perform the conversion using PDFTOTEXT.
             $returnData = shell_exec('pdftotext -layout '.$pathname.' '.$pathnameTEMP); 
-            if ($Verbose && trim($returnData) !== '') logEntry('The converter returned the following: '.PHP_EOL.'  '.str_replace(PHP_EOL, PHP_EOL.'  ', str_replace(PHP_EOL.PHP_EOL, PHP_EOL, str_replace(PHP_EOL.PHP_EOL, PHP_EOL, trim($returnData)))));
+            if ($Verbose && trim($returnData) !== '') logEntry('The converter returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
             if (!file_exists($pathnameTEMP)) { 
               errorEntry('Could not complete the conversion using method 0. Reattempting using method 1.', 11003, FALSE);
               $Method = 1; } }
@@ -1146,7 +1152,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
               if ($Verbose) logEntry('Performing OCR intermediate operation using method 0.');
               // / Perform the conversion using ImageMagick.
               $returnData = shell_exec('convert '.$pathname.' '.$pathnameTEMP1);
-              if ($Verbose && trim($returnData) !== '') logEntry('The converter returned the following: '.PHP_EOL.'  '.str_replace(PHP_EOL, PHP_EOL.'  ', str_replace(PHP_EOL.PHP_EOL, PHP_EOL, str_replace(PHP_EOL.PHP_EOL, PHP_EOL, trim($returnData)))));
+              if ($Verbose && trim($returnData) !== '') logEntry('The converter returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
               // / If a file doesn't exist there is a good chance it is because ImageMagick has split the pages up.
               if (!file_exists($pathnameTEMP1)) {
                 // / Scan the current directory for files matching the filename.
@@ -1168,11 +1174,11 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
                   if ($Verbose) logEntry('Performing OCR final operation using method 0.');
                   // / Perform the conversion using Tesseract.
                   $returnData = shell_exec('tesseract '.$pathnameTEMP1.' '.$pathnameTEMPTesseract);
-                  if ($Verbose && trim($returnData) !== '') logEntry('The converter returned the following: '.PHP_EOL.'  '.str_replace(PHP_EOL, PHP_EOL.'  ', str_replace(PHP_EOL.PHP_EOL, PHP_EOL, str_replace(PHP_EOL.PHP_EOL, PHP_EOL, trim($returnData)))));
+                  if ($Verbose && trim($returnData) !== '') logEntry('The converter returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
                   if (!file_exists($pathnameTEMP)) errorEntry('Could not complete the conversion using method 1.', 11004, FALSE); 
                   // / Recompile all of the text files into one big text file.
                   $readPageData = file_get_contents($pathnameTEMP);
-                  $writePageData = file_put_contents($pathnameTEMP0, $readPageData.PHP_EOL, FILE_APPEND);
+                  $writePageData = file_put_contents($pathnameTEMP0, $readPageData.$Lol, FILE_APPEND);
                   $multiple = TRUE; 
                   if (!file_exists($pathnameTEMP0)) errorEntry('Could not OCR file!', 11005, FALSE); } }
                   if ($Verbose) logEntry('Converted file '.$pathnameTEMP1.' to '.$pathnameTEMP.'.'); 
@@ -1180,7 +1186,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
                 $pathnameTEMPTesseract = str_replace('..', '', str_replace('.txt', '', $pathnameTEMP));
                 if ($Verbose) logEntry('Performing OCR final using method 0.');
                 $returnData = shell_exec('tesseract '.$pathnameTEMP1.' '.$pathnameTEMPTesseract); 
-                if ($Verbose && trim($returnData) !== '') logEntry('The converter returned the following: '.PHP_EOL.'  '.str_replace(PHP_EOL, PHP_EOL.'  ', str_replace(PHP_EOL.PHP_EOL, PHP_EOL, str_replace(PHP_EOL.PHP_EOL, PHP_EOL, trim($returnData))))); } } }
+                if ($Verbose && trim($returnData) !== '') logEntry('The converter returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); } } }
           // / Code to convert a document to a PDF.
         if (in_array(strtolower($oldExtension), $doc1array)) { 
           if (in_array($UserExtension, $pdf1array)) {
@@ -1191,14 +1197,14 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
               errorEntry('Could not verify the document conversion engine!', 11006, FALSE); }
             // / Perform the conversion using Unoconv.
             $returnData = shell_execs('/usr/bin/unoconv -o '.$newPathname.' -f pdf '.$pathname); 
-            if ($Verbose && trim($returnData) !== '') logEntry('The converter returned the following: '.PHP_EOL.'  '.str_replace(PHP_EOL, PHP_EOL.'  ', str_replace(PHP_EOL.PHP_EOL, PHP_EOL, str_replace(PHP_EOL.PHP_EOL, PHP_EOL, trim($returnData))))); } } 
+            if ($Verbose && trim($returnData) !== '') logEntry('The converter returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); } } 
           // / Code to convert an image to a PDF.
         if (in_array(strtolower($oldExtension), $img1array)) {
           $pathnameTEMPTesseract = str_replace('..', '', str_replace('.'.$oldExtension, '', $pathname));
           if ($Verbose) logEntry('Performing OCR operation using method 0.');
           // / Perform the conversion using Unoconv.
           $returnData = shell_exec('tesseract '.$pathname.' '.$pathnameTEMPTesseract); 
-          if ($Verbose && trim($returnData) !== '') logEntry('The converter returned the following: '.PHP_EOL.'  '.str_replace(PHP_EOL, PHP_EOL.'  ', str_replace(PHP_EOL.PHP_EOL, PHP_EOL, str_replace(PHP_EOL.PHP_EOL, PHP_EOL, trim($returnData)))));
+          if ($Verbose && trim($returnData) !== '') logEntry('The converter returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
           if (!file_exists($pathnameTEMP)) {
             $pathnameTEMP3 = str_replace('..', '', str_replace('.'.$oldExtension, '.pdf' , $pathname));
             // / The following code verifies that the document conversion engine is installed & running.
@@ -1212,7 +1218,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
             if ($Verbose && trim($returnData) !== '') logEntry('Performing OCR final operation using method 0.');
             // / Perform the conversion using PDFTOTEXT.
             $returnData = shell_exec('pdftotext -layout '.$pathnameTEMP3.' '.$pathnameTEMP);
-            if ($Verbose && trim($returnData) !== '') logEntry('The converter returned the following: '.PHP_EOL.'  '.str_replace(PHP_EOL, PHP_EOL.'  ', str_replace(PHP_EOL.PHP_EOL, PHP_EOL, str_replace(PHP_EOL.PHP_EOL, PHP_EOL, trim($returnData))))); } 
+            if ($Verbose && trim($returnData) !== '') logEntry('The converter returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); } 
           if (file_exists($pathnameTEMP)) logEntry('Created an intermediate file at '.$pathnameTEMP.'.');
           if (!file_exists($pathnameTEMP)) {
             $OperationErrors = TRUE; 
@@ -1226,7 +1232,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
       if ($UserExtension !== 'txt') {
         // / Perform the conversion using Unoconv.
         $returnData = shell_exec('/usr/bin/unoconv -o '.$newPathname.' -f '.$UserExtension.' '.$pathnameTEMP);
-        if ($Verbose && trim($returnData) !== '') logEntry('The converter returned the following: '.PHP_EOL.'  '.str_replace(PHP_EOL, PHP_EOL.'  ', str_replace(PHP_EOL.PHP_EOL, PHP_EOL, str_replace(PHP_EOL.PHP_EOL, PHP_EOL, trim($returnData))))); }
+        if ($Verbose && trim($returnData) !== '') logEntry('The converter returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); }
       // / Error handler for if the output file does not exist.
       if (file_exists($newPathname)) {
         $OperationSuccessful = TRUE;
@@ -1242,11 +1248,11 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
 
 // / The following code resets PHP's time limit for execution.
 $TimeReset = setTimeLimit();
-if (!$TimeReset) die('ERROR!!! '.$Time.': HRConvert2-4: Could not set the execution timer!');
+if (!$TimeReset) die('ERROR!!! HRConvert2-4: Could not set the execution timer!');
 
 // / The following code sets date & time related variables.
 list ($TimeIsSet, $Date, $Time) = verifyTime();
-if (!$TimeIsSet or !$Date or !$Time) die('ERROR!!! '.$Time.': HRConvert2-5: Could not verify timezone!');
+if (!$TimeIsSet or !$Date or !$Time) die('ERROR!!! HRConvert2-5: Could not verify timezone!');
 
 // / The following code verifies that the installation is valid.
 list ($InstallationIsVerified, $ConfigFile, $StyleCoreFile) = verifyInstallation();

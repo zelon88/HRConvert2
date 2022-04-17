@@ -140,6 +140,7 @@ OCR Operations support the following output formats...
 - Rtf
 - Odt
 - Pdf
+
 ---
 # Supported Languages
 Languages can be forced via policy or dynamically selected by the user by appending `?language=en` to the server URL.
@@ -159,12 +160,20 @@ Developers can craft link or redirects to load the correct language for each use
 - Italian (it)
 - Portuguese (pt)
 
+---
 # Screenshots
 ![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Screenshots/HRConvert2-2.png)
+
 ![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Screenshots/HRConvert2-3.png)
+
 ![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Screenshots/HRConvert2-4.png)
+
 ![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Screenshots/HRConvert2-5.png)
+
 ![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Screenshots/HRConvert2-6.png)
+
 ![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Screenshots/HRConvert2-7.png)
+
 ![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Screenshots/HRConvert2-8.png)
+
 ![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Screenshots/HRConvert2-9.png)

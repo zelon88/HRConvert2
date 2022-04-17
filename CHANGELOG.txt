@@ -1,3 +1,17 @@
+COMMIT - 4/17/2022
+v2.8.1 - Update DropZone version, update stylesheet, fix bugs.
+
+-v2.8.
+-Shortened some of the longer lines of code in convertCore.php.
+-Fixed bugs during some operations when $VirusScan is set to TRUE in config.php.
+-Update dropzone.js & dropone.css to latest release.
+-Thinking about adding the option to scan with ClamAV & zelon88/ScanCore.
+  -This will effectively merge the zelon88/HRScan2 project into HRConvert2.
+-Thinking about adding Pell editor (port from HRCloud2 & update) to enable real-time in browser document editing.
+-Going to start working on the next feature release.
+  -Tick... Tock.
+
+--------------------
 COMMIT - 4/14/2022
 v2.8 - Major convertCore.php refactor. Complete modular redesign. Same functionality, same look, more predictable & consistent. Easier to maintain.
 

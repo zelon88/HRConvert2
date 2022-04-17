@@ -7086,7 +7086,7 @@ var defaultOptions = {
   /**
    * The maximum filesize (in bytes) that is allowed to be uploaded.
    */
-  maxFilesize: 256,
+  maxFilesize: 53687091200,
 
   /**
    * The name of the file param that gets transferred.
@@ -7291,7 +7291,7 @@ var defaultOptions = {
   /**
    * The text used before any files are dropped.
    */
-  dictDefaultMessage: "Drop files here to upload",
+  dictDefaultMessage: "Click, Tap, or Drop files here to upload.",
 
   /**
    * The text that replaces the default message text it the browser is not supported.
@@ -7325,12 +7325,12 @@ var defaultOptions = {
   /**
    * If `addRemoveLinks` is true, the text to be used for the cancel upload link.
    */
-  dictCancelUpload: "Cancel upload",
+  dictCancelUpload: "Cancel Upload",
 
   /**
    * The text that is displayed if an upload was manually canceled
    */
-  dictUploadCanceled: "Upload canceled.",
+  dictUploadCanceled: "Upload @anceled!",
 
   /**
    * If `addRemoveLinks` is true, the text to be used for confirmation when cancelling upload.
@@ -7340,7 +7340,7 @@ var defaultOptions = {
   /**
    * If `addRemoveLinks` is true, the text to be used to remove a file.
    */
-  dictRemoveFile: "Remove file",
+  dictRemoveFile: "Remove File",
 
   /**
    * If this is not null, then the user will be prompted before removing a file.

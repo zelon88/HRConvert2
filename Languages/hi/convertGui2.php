@@ -1,7 +1,7 @@
 <?php
 if (!isset($CoreLoaded)) die('त्रुटि!!! HRC25, यह फ़ाइल आपके अनुरोध को संसाधित नहीं कर सकती है! इसके बजाय कृपया अपनी फ़ाइल ConvertCore.php पर सबमिट करें!');
 $Alert = 'इस फ़ाइल को परिवर्तित नहीं कर सकता! नाम बदलने का प्रयास करें।';
-$Files = getFiles($ConvertTempDir);
+$Files = getFiles($ConvertDir);
 $fileCount = count($Files);
 $fcPlural1 = '';
 if (!is_numeric($fileCount)) $fileCount = 0;

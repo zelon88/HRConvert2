@@ -6,9 +6,29 @@
 -----------------------------------------------
 # HRConvert2
 
-### A self-hosted drag-and-drop file conversion server that supports 75x file formats. Now includes 4 color schemes and 6 language packs. 
+### A self-hosted drag-and-drop file conversion server that supports 75 file formats with 4 color schemes, with 11 end-user selctable languages. 
 
 ![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Screenshots/HRConvert2-1.png)
+
+---
+#### Features
+-Converts 75 different file formats.
+-Self hosted. Installs on a home server!
+-All conversions are performed locally on your server.
+-Performs Optical Character Recognition (OCR) on PDFs & images.
+-Can scan files for viruses in real-time with ClamAV.
+-Minimalistic drag & drop interface.
+-Each user gets their own temporary scratch space!
+-End users can switch between 11 languages by appending it to the URL like this: `?language=en`
+-Safe enough for public facing environments (when properly implemented).
+-No databases. No cookies. No cache files. 
+-Installs cleanly alongside other popular software (like WordPress).
+-Does not make external connections.
+-All JS is locally installed. No bulky frameworks. No analytics. No Google Fonts.
+-No tracking capabilities whatsoever.
+-Comes with 4 color schemes set in config.php.
+-Secure, performant, & compact codebase that's been open-source for years.
+
 ---
 ### Supported Formats
 #### Audio Formats
@@ -123,6 +143,8 @@ OCR Operations support the following output formats...
 ---
 # Supported Languages
 Languages can be forced via policy or dynamically selected by the user by appending `?language=en` to the server URL.
+No need install additional language pakcs to switch languages. Translations are built-in. 
+Developers can craft link or redirects to load the correct language for each user or set the language once & forget it.
 - English (en)
 - French (fr)
 - Spanish (sp)
@@ -131,7 +153,7 @@ Languages can be forced via policy or dynamically selected by the user by append
 - Arabic (ar)
 - Russian (ru)
 - Ukranian (uk)
-- Bengli (bn)
+- Bengali (bn)
 - German (de)
 - Korean (ko)
 - Italian (it)

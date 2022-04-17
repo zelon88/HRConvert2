@@ -1,11 +1,14 @@
-// / The following code toggles the visisbility of the selected object between block and none.
+// / -----------------------------------------------------------------------------------
+// / A function to toggle the visibility of an HTML element. 
+// / Switches the 'Visibility' property between 'block' & 'none'.
 function toggle_visibility(id) {
   var e = document.getElementById(id);
-  if(e.style.display == 'none')
-     e.style.display = 'block';
-  else
-     e.style.display = 'none'; }
+  if (e.style.display == 'block') e.style.display = 'none';
+  else e.style.display = 'block'; }
+// / -----------------------------------------------------------------------------------
 
-// / The following code gives a nice onclick function for making a back button.
+// / -----------------------------------------------------------------------------------
+// / A function to trigger the browsers back functionality when called.
 function goBack() {
   window.history.back(); }
+// / -----------------------------------------------------------------------------------

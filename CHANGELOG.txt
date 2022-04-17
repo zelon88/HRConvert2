@@ -1,3 +1,80 @@
+COMMIT - 4/14/2022
+v2.8 - Major convertCore.php refactor. Complete modular redesign. Same functionality, same look, more predictable & consistent. Easier to maintain.
+
+-v2.8.
+-Refactor the core.
+  -The original codebase was developed more than 4 years ago.
+    -The first unpublished experiments began in 2014.
+  -The "generation" of the HRConvert2 codebase until today was "Valkyrie".
+    -HonestRepair server side software comes in 3 generations. 
+    -The first generation is unsafe to use. It is part of the "zelon88/HRToolkitTools" repo.
+      -It was called the "Genesis" engine because it was a proof-of-concept design.
+      -Hence the name "Genesis".
+    -The second generation is performant & safe to use but hard to maintain.
+      -It is called the "Valkyrie" engine because the runtime environment is "dynamically constructed".
+      -The "Valkyrie" in Norse mythology is any of a group of maidens who serves the god Odin.
+      -Valkyrie's were also the "Choosers of the slain" and decided who would die on the battlefield.
+      -Because the "Valkyrie" codebase is made up of one main core served by smaller cores that dynamically call dependencies.
+      -Hence the name "Valkyrie" is very fitting.
+    -The third and current generation is called "Diablo". It is secure, performant, & modular.
+      -"Diablo" is Spanish for Devil. 
+      -The coding convention was introduced in the "Zelon88/HRCloud3" alpha repo and is currently under active development. 
+      -If you're a major Cloud provider you should fear Diablo.
+  -Removes most core output except from log files or when logs cannot be reached.
+  -Uses a more consistent logging/error catching mechanism.
+  -Makes the core extremely modular and easy to work on.
+  -Adding new features is easier because logging and error functions are repeatable & consistent.
+  -Output is consistent.
+  -Logic flow is capable of withstanding non-fatal errors.
+    -Before we stopped execution for a lot more things.
+    -Logic behavior is more intuitive.
+  -Errors produced use incremental error numbers that can be easily adjusted or documented.
+  -Log generation happens earlier during execution, meaning more logs can be captured.
+    -More logs means problems are easier to identify & debug.
+  -Switching to a modern design will mean more interoperability of functions between applications.
+    -It becomes easier to apply simiilar patches to other products.
+  -I don't have to look at my old code anymore.
+    -Programmers grow. Programming styles change. 
+    -I am a better programmer now than I was when I first wrote this.
+    -There will probably be bugs introduced and regressions but at least I'll enjoy working on the codebase again.
+    -This work needed to get done eventually anyway considering it will be needed for HRCloud3.
+-Added $Verbose config entry for controlling the amount of logging performed.
+  -If $Verbose is set to TRUE every significant operation will create a log entry.
+  -If $Verbose is set to FALSE only errors will create a log entry.
+-$VirusScan config entry now only accepts boolean values.
+-Improve formatting of config.php file for readability.
+-All conversions except archive conversions now receive 5 conversion attempts.
+  -Previously it was only for documents and the threshold was 10 attempts.
+-Reworked the way the document conversion engine is started and verified.
+-Removed a lot of unused variables.
+-Started using the same capitalization scheme as HRCloud3 (Diablo style).
+  -Lower case first letter variables denote highly limited scope.
+  -Upper case first letter variables denote very wide (almost global) scope.
+  -I know that PHP takes care of memory cleanup, and I know how variable scope works in functions.
+    -I also don't care. 
+    -Doing the capitalization scheme and manually NULL'ing + unsetting variables helps me keep track of variables.
+    -I came up with this scheme exactly because I kept seeing dead variables in my code and I wanted it to stop.
+    -This forces accountability for all variables and puts visiblity on most of them.
+    -So when one of them isn't used anywhere it kind of stands out.
+-Refactored Javascript a tiny bit.
+-Now the core will remember when you leave and come back for a short while.
+-Added unique identifier for logs. 
+  -Makes searching logs much easier because requests group together.
+-Core now captures the stdout of it's dependencies.
+  -Writes to log if $Verbose is set to TRUE.
+-Changed extraction behaviour for archive conversions.
+  -Archive conversions where the destination folder already exists will have the new contents ADDED to the original archive instead of replacing them.
+  -You can now build archives in this fashion, admittedly it is not for the faint of heart.
+-Remove sanitizeCore.php.
+  -This has been replaced by the verifyGlobals() function in convertCore.php.
+  -This was a suggestion made about 5 years ago on Reddit. It finally happened!
+-I worked on this commit for 30 hours straight with no sleep.
+  -With only one consecutive 90 minute break to take a phone call.
+  -Then I took a 3 hour nap and finished the rest, over the next 8 hours.
+  -I am recovering from a broken leg and surgery to fix it and I still have a couple more weeks to go.
+  -Send halp!
+
+--------------------
 COMMIT - 4/13/2022
 v2.7.5 - Added 7 language translations, fixed compression bug.
 

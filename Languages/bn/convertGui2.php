@@ -1,7 +1,7 @@
 <?php
 if (!isset($CoreLoaded)) die('ত্রুটি!!! HRC25, এই ফাইলটি আপনার অনুরোধ প্রক্রিয়া করতে পারে না! পরিবর্তে convertCore.php এ আপনার ফাইল জমা দিন!');
 $Alert = 'এই ফাইলটি রূপান্তর করা যাবে না! নাম পরিবর্তন করার চেষ্টা করুন।';
-$Files = getFiles($ConvertTempDir);
+$Files = getFiles($ConvertDir);
 $fileCount = count($Files);
 $fcPlural1 = '';
 if (!is_numeric($fileCount)) $fileCount = 0;

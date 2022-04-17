@@ -1,7 +1,7 @@
 <?php
 if (!isset($CoreLoaded)) die('ПОМИЛКА!!! HRC25, цей файл не може обробити ваш запит! Натомість надішліть свій файл у convertCore.php!');
 $Alert = 'Неможливо конвертувати цей файл! Спробуйте змінити назву.';
-$Files = getFiles($ConvertTempDir);
+$Files = getFiles($ConvertDir);
 $fileCount = count($Files);
 $fcPlural1 = '';
 if (!is_numeric($fileCount)) $fileCount = 0;

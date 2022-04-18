@@ -7330,7 +7330,7 @@ var defaultOptions = {
   /**
    * The text that is displayed if an upload was manually canceled
    */
-  dictUploadCanceled: "Upload @anceled!",
+  dictUploadCanceled: "Upload Canceled!",
 
   /**
    * If `addRemoveLinks` is true, the text to be used for confirmation when cancelling upload.

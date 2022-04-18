@@ -1,7 +1,39 @@
 COMMIT - 4/17/2022
+v2.8.2 - Adding documentation, polishing edges.
+
+-v2.8.2.
+-"Polishing the edges" of the repo, so to speak.
+-Cleaning up directory structure.
+  -Added Documentation directory.
+  -Moved Documentation to the documentation directory.
+  -Added ERROR_DESCRIPTIONS with detailed descriptions of every error message produced in the logs.
+    -Still need to add more messages.
+  -Renamed How_To_Install_HRConvert.txt to INSTALLATION_INSTRUCTIONS.txt & moved to Documentation directory.
+  -Moved ICON_CREDITS.txt to Documentation directory.
+  -Cleaned up the comment intro section to all PHP files to have the same basic formatting & structure.
+  -Polish the README some more.
+  -Make logs respect the $ApplicationName variable as soon as it becomes available.
+    -No more hardcoded "HRConvert2" in log entries.
+  -Moved styleCore.php to Resources directory, since it only contains 4 front-end related variables and no logic of its own.
+  -The goal is to cleanup the root of the repo to make it more presentable & approacable for newbies.
+    -All the important files related to logic are in the root of the repo.
+    -Makes the repo more modular as well.
+-Make $_GET['language'] codes language case-insensitive.
+-Log files are now named after the $ApplicationName variable set in config.php rather than using HRConvert2 in the filename.
+-Reordered some logic.
+-Disable GUI compilation when responding to a file operation request.
+  -The front end doesn't use output from the core anyway.
+  -This clears the way to enable such functionality by controlling the when GUI elements are actually needed.
+-No longer throws 404 errors when a file conversion fails.
+-No longer opens compatible files in the browser but starts a download instead.
+-No more HTML undefined errors when requesitng a download.
+-Added a check to verifySessionHash() function to make sure the $Salts variables are formatted as strings.
+  
+--------------------
+COMMIT - 4/17/2022
 v2.8.1 - Update DropZone version, update stylesheet, fix bugs.
 
--v2.8.
+-v2.8.1.
 -Shortened some of the longer lines of code in convertCore.php.
 -Fixed bugs during some operations when $VirusScan is set to TRUE in config.php.
 -Update dropzone.js & dropone.css to latest release.

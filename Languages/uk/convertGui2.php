@@ -1,5 +1,4 @@
 <?php
-if (!isset($CoreLoaded)) die('ПОМИЛКА!!! HRC25, цей файл не може обробити ваш запит! Натомість надішліть свій файл у convertCore.php!');
 $Alert = 'Неможливо конвертувати цей файл! Спробуйте змінити назву.';
 $Files = getFiles($ConvertDir);
 $fileCount = count($Files);
@@ -7,6 +6,7 @@ $fcPlural1 = '';
 if (!is_numeric($fileCount)) $fileCount = 0;
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
 if (!isset($ApplicationTitle)) $ApplicationTitle = 'Перетворюйте будь-що!'; 
+if (!isset($CoreLoaded)) die('ПОМИЛКА!!! '.$ApplicationName.'-2, цей файл не може обробити ваш запит! Натомість надішліть свій файл у convertCore.php!');
 if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
 if ($fileCount == 0) $fcPlural1 = 'Ви завантажили 0 дійсних файлів до '.$ApplicationName.'.';
 if ($fileCount == 1) $fcPlural1 = 'Ви завантажили 1 дійсний файл до '.$ApplicationName.'.'; 
@@ -25,8 +25,9 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
       <p>Тепер ваші файли готові до конвертації за допомогою наведених нижче параметрів.</p>
     </div>
 
-    <div align="center">
+    <div id='utility' align="center">
       <p><img id='loadingCommandDiv' name='loadingCommandDiv' src='Resources/pacman.gif' style="max-width:64px; max-height:64px; display:none;"/></p>
+      <a id='downloadTarget' href='about:blank' style="display: none;" download></a>
     </div>
 
     <div id="compressAll" name="compressAll" style="max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;">
@@ -69,15 +70,14 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                   data: { 
                     Token1:'<?php echo $Token1; ?>',
                     Token2:'<?php echo $Token2; ?>',
-                    download:$('input[name="userarchallfilename"]').val()+'.'+extension},
+                    download:document.getElementById('userarchallfilename').value+'.'+extension },
                   success: function(returnFile) {
-                    toggle_visibility('loadingCommandDiv');
-                    window.location.href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+$('input[name="userarchallfilename"]').val()+'.'+extension; }
+                    document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userarchallfilename').value+'.'+extension; 
+                    document.getElementById('downloadTarget').click(); }
                   }); },
                 error: function(ReturnData) {
                   alert("<?php echo $Alert; ?>"); }
-            });
-          }); });
+            }); }); });
         </script>
 
       </div>
@@ -211,8 +211,8 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                   Token2:'<?php echo $Token2; ?>',
                   archive:'<?php echo $File; ?>',
                   filesToArchive:'<?php echo $File; ?>',
-                  archextension:$('#archfileextension<?php echo $ConvertGuiCounter1; ?>').val(),
-                  userfilename:$('input[name="userarchfilefilename<?php echo $ConvertGuiCounter1; ?>"]').val() },
+                  archextension:document.getElementById('archfileextension<?php echo $ConvertGuiCounter1; ?>').value,
+                  userfilename:document.getElementById('userarchfilefilename<?php echo $ConvertGuiCounter1; ?>').value },
                   success: function(ReturnData) {
                     $.ajax({
                     type: 'POST',
@@ -220,10 +220,10 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                     data: { 
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
-                      download:$('input[name="userarchfilefilename<?php echo $ConvertGuiCounter1; ?>"]').val()+'.'+$('#archfileextension<?php echo $ConvertGuiCounter1; ?>').val()},
+                      download:document.getElementById('userarchfilefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archfileextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
-                      window.location.href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+$('input[name="userarchfilefilename<?php echo $ConvertGuiCounter1; ?>"]').val()+'.'+$('#archfileextension<?php echo $ConvertGuiCounter1; ?>').val(); }
+                      iframe = $('<iframe />').attr('src', "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userarchfilefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archfileextension<?php echo $ConvertGuiCounter1; ?>').value).hide().appendTo('body'); }
                     }); },
                   error: function(ReturnData) {
                     alert("<?php echo $Alert; ?>"); }
@@ -265,9 +265,9 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                   Token1:'<?php echo $Token1; ?>',
                   Token2:'<?php echo $Token2; ?>',
                   pdfworkSelected:'<?php echo $File; ?>',
-                  method:$('#pdfmethod<?php echo $ConvertGuiCounter1; ?>').val(),
-                  pdfextension:$('#pdfextension<?php echo $ConvertGuiCounter1; ?>').val(),
-                  userpdfconvertfilename:$('input[name="userpdffilename<?php echo $ConvertGuiCounter1; ?>"]').val() },
+                  method:document.getElementById('pdfmethod<?php echo $ConvertGuiCounter1; ?>').value,
+                  pdfextension:document.getElementById('pdfextension<?php echo $ConvertGuiCounter1; ?>').value,
+                  userpdfconvertfilename:document.getElementById('userpdffilename<?php echo $ConvertGuiCounter1; ?>').value },
                   success: function(ReturnData) {
                     $.ajax({
                     type: 'POST',
@@ -275,10 +275,10 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                     data: { 
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
-                      download:$('input[name="userpdffilename<?php echo $ConvertGuiCounter1; ?>"]').val()+'.'+$('#pdfextension<?php echo $ConvertGuiCounter1; ?>').val()},
+                      download:document.getElementById('userpdffilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('pdfextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
-                      window.location.href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+$('input[name="userpdffilename<?php echo $ConvertGuiCounter1; ?>"]').val()+'.'+$('#pdfextension<?php echo $ConvertGuiCounter1; ?>').val(); }
+                      iframe = $('<iframe />').attr('src', "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userpdffilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('pdfextension<?php echo $ConvertGuiCounter1; ?>').value).hide().appendTo('body'); }
                     }); },
                   error: function(ReturnData) {
                     alert("<?php echo $Alert; ?>"); }
@@ -313,8 +313,8 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                   Token1:'<?php echo $Token1; ?>',
                   Token2:'<?php echo $Token2; ?>',
                   convertSelected:'<?php echo $File; ?>',
-                  extension:$('#archiveextension<?php echo $ConvertGuiCounter1; ?>').val(),
-                  userconvertfilename:$('input[name="userarchivefilename<?php echo $ConvertGuiCounter1; ?>"]').val() },
+                  extension:document.getElementById('archiveextension<?php echo $ConvertGuiCounter1; ?>').value,
+                  userconvertfilename:document.getElementById('userarchivefilename<?php echo $ConvertGuiCounter1; ?>').value },
                   success: function(ReturnData) {
                     $.ajax({
                     type: 'POST',
@@ -322,10 +322,10 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                     data: { 
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
-                      download:$('input[name="userarchivefilename<?php echo $ConvertGuiCounter1; ?>"]').val()+'.'+$('#archiveextension<?php echo $ConvertGuiCounter1; ?>').val()},
+                      download:document.getElementById('userarchivefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archiveextension<?php echo $ConvertGuiCounter1; ?>').value() },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
-                      window.location.href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+$('input[name="userarchivefilename<?php echo $ConvertGuiCounter1; ?>"]').val()+'.'+$('#archiveextension<?php echo $ConvertGuiCounter1; ?>').val(); }
+                      iframe = $('<iframe />').attr('src', "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userarchivefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archiveextension<?php echo $ConvertGuiCounter1; ?>').value).hide().appendTo('body'); }
                     }); },
                   error: function(ReturnData) {
                     alert("<?php echo $Alert; ?>"); }
@@ -362,8 +362,8 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                   Token1:'<?php echo $Token1; ?>',
                   Token2:'<?php echo $Token2; ?>',
                   convertSelected:'<?php echo $File; ?>',
-                  extension:$('#docextension<?php echo $ConvertGuiCounter1; ?>').val(),
-                  userconvertfilename:$('input[name="userdocfilename<?php echo $ConvertGuiCounter1; ?>"]').val() },
+                  extension:document.getElementById('docextension<?php echo $ConvertGuiCounter1; ?>').value,
+                  userconvertfilename:document.getElementById('userdocfilename<?php echo $ConvertGuiCounter1; ?>').value },
                   success: function(ReturnData) {
                     $.ajax({
                     type: 'POST',
@@ -371,10 +371,10 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                     data: { 
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
-                      download:$('input[name="userdocfilename<?php echo $ConvertGuiCounter1; ?>"]').val()+'.'+$('#docextension<?php echo $ConvertGuiCounter1; ?>').val()},
+                      download:document.getElementById('userdocfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('docextension<?php echo $ConvertGuiCounter1; ?>').value() },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
-                      window.location.href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+$('input[name="userdocfilename<?php echo $ConvertGuiCounter1; ?>"]').val()+'.'+$('#docextension<?php echo $ConvertGuiCounter1; ?>').val(); }
+                      iframe = $('<iframe />').attr('src', "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userdocfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('docextension<?php echo $ConvertGuiCounter1; ?>').value).hide().appendTo('body'); }
                     }); },
                   error: function(ReturnData) {
                     alert("<?php echo $Alert; ?>"); }
@@ -409,8 +409,8 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                   Token1:'<?php echo $Token1; ?>',
                   Token2:'<?php echo $Token2; ?>',
                   convertSelected:'<?php echo $File; ?>',
-                  extension:$('#spreadextension<?php echo $ConvertGuiCounter1; ?>').val(),
-                  userconvertfilename:$('input[name="userspreadfilename<?php echo $ConvertGuiCounter1; ?>"]').val() },
+                  extension:document.getElementById('spreadextension<?php echo $ConvertGuiCounter1; ?>').value,
+                  userconvertfilename:document.getElementById('userspreadfilename<?php echo $ConvertGuiCounter1; ?>').value },
                   success: function(ReturnData) {
                     $.ajax({
                     type: 'POST',
@@ -418,10 +418,10 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                     data: { 
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
-                      download:$('input[name="userspreadfilename<?php echo $ConvertGuiCounter1; ?>"]').val()+'.'+$('#spreadextension<?php echo $ConvertGuiCounter1; ?>').val()},
+                      download:document.getElementById('userspreadfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('spreadextension<?php echo $ConvertGuiCounter1; ?>').value() },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
-                      window.location.href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+$('input[name="userspreadfilename<?php echo $ConvertGuiCounter1; ?>"]').val()+'.'+$('#spreadextension<?php echo $ConvertGuiCounter1; ?>').val(); }
+                      iframe = $('<iframe />').attr('src', "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userspreadfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('spreadextension<?php echo $ConvertGuiCounter1; ?>').value).hide().appendTo('body'); }
                     }); },
                   error: function(ReturnData) {
                     alert("<?php echo $Alert; ?>"); }
@@ -460,8 +460,8 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                   Token1:'<?php echo $Token1; ?>',
                   Token2:'<?php echo $Token2; ?>',
                   convertSelected:'<?php echo $File; ?>',
-                  extension:$('#presentationextension<?php echo $ConvertGuiCounter1; ?>').val(),
-                  userconvertfilename:$('input[name="userpresentationfilename<?php echo $ConvertGuiCounter1; ?>"]').val() },
+                  extension:document.getElementById('presentationextension<?php echo $ConvertGuiCounter1; ?>').value,
+                  userconvertfilename:document.getElementById('userpresentationfilename<?php echo $ConvertGuiCounter1; ?>').value },
                   success: function(ReturnData) {
                     $.ajax({
                     type: 'POST',
@@ -469,10 +469,10 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                     data: { 
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
-                      download:$('input[name="userphotofilename<?php echo $ConvertGuiCounter1; ?>"]').val()+'.'+$('#presentationextension<?php echo $ConvertGuiCounter1; ?>').val()},
+                      download:document.getElementById('userpresentationfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('presentationextension<?php echo $ConvertGuiCounter1; ?>').value() },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
-                      window.location.href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+$('input[name="userpresentationfilename<?php echo $ConvertGuiCounter1; ?>"]').val()+'.'+$('#presentationextension<?php echo $ConvertGuiCounter1; ?>').val(); }
+                      iframe = $('<iframe />').attr('src', "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userpresentationfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('presentationextension<?php echo $ConvertGuiCounter1; ?>').value).hide().appendTo('body'); }
                     }); },
                   error: function(ReturnData) {
                     alert("<?php echo $Alert; ?>"); }
@@ -509,8 +509,8 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                   Token1:'<?php echo $Token1; ?>',
                   Token2:'<?php echo $Token2; ?>',
                   convertSelected:'<?php echo $File; ?>',
-                  extension:$('#audioextension<?php echo $ConvertGuiCounter1; ?>').val(),
-                  userconvertfilename:$('input[name="useraudiofilename<?php echo $ConvertGuiCounter1; ?>"]').val() },
+                  extension:document.getElementById('audioextension<?php echo $ConvertGuiCounter1; ?>').value,
+                  userconvertfilename:document.getElementById('useraudiofilename<?php echo $ConvertGuiCounter1; ?>').value },
                   success: function(ReturnData) {
                     $.ajax({
                     type: 'POST',
@@ -518,10 +518,10 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                     data: { 
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
-                      download:$('input[name="useraudiofilename<?php echo $ConvertGuiCounter1; ?>"]').val()+'.'+$('#audioextension<?php echo $ConvertGuiCounter1; ?>').val()},
+                      ownload:document.getElementById('useraudiofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('audioextension<?php echo $ConvertGuiCounter1; ?>').value() },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
-                      window.location.href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+$('input[name="useraudiofilename<?php echo $ConvertGuiCounter1; ?>"]').val()+'.'+$('#audioextension<?php echo $ConvertGuiCounter1; ?>').val(); }
+                      iframe = $('<iframe />').attr('src', "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('useraudiofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('audioextension<?php echo $ConvertGuiCounter1; ?>').value).hide().appendTo('body'); }
                     }); },
                   error: function(ReturnData) {
                     alert("<?php echo $Alert; ?>"); }
@@ -560,8 +560,8 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                   Token1:'<?php echo $Token1; ?>',
                   Token2:'<?php echo $Token2; ?>',
                   convertSelected:'<?php echo $File; ?>',
-                  extension:$('#videoextension<?php echo $ConvertGuiCounter1; ?>').val(),
-                  userconvertfilename:$('input[name="uservideofilename<?php echo $ConvertGuiCounter1; ?>"]').val() },
+                  extension:document.getElementById('videoextension<?php echo $ConvertGuiCounter1; ?>').value,
+                  userconvertfilename:document.getElementById('uservideofilename<?php echo $ConvertGuiCounter1; ?>').value },
                   success: function(ReturnData) {
                     $.ajax({
                     type: 'POST',
@@ -569,10 +569,10 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                     data: { 
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
-                      download:$('input[name="uservideofilename<?php echo $ConvertGuiCounter1; ?>"]').val()+'.'+$('#videoextension<?php echo $ConvertGuiCounter1; ?>').val()},
+                      download:document.getElementById('uservideofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('videoextension<?php echo $ConvertGuiCounter1; ?>').value() },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
-                      window.location.href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+$('input[name="uservideofilename<?php echo $ConvertGuiCounter1; ?>"]').val()+'.'+$('#videoextension<?php echo $ConvertGuiCounter1; ?>').val(); }
+                      iframe = $('<iframe />').attr('src', "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('uservideofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('videoextension<?php echo $ConvertGuiCounter1; ?>').value).hide().appendTo('body'); }
                     }); },
                   error: function(ReturnData) {
                     alert("<?php echo $Alert; ?>"); }
@@ -613,8 +613,8 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                   Token1:'<?php echo $Token1; ?>',
                   Token2:'<?php echo $Token2; ?>',
                   convertSelected:'<?php echo $File; ?>',
-                  extension:$('#modelextension<?php echo $ConvertGuiCounter1; ?>').val(),
-                  userconvertfilename:$('input[name="usermodelfilename<?php echo $ConvertGuiCounter1; ?>"]').val() },
+                  extension:document.getElementById('modelextension<?php echo $ConvertGuiCounter1; ?>').value,
+                  userconvertfilename:document.getElementById('usermodelfilename<?php echo $ConvertGuiCounter1; ?>').value },
                   success: function(ReturnData) {
                     $.ajax({
                     type: 'POST',
@@ -622,10 +622,10 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                     data: { 
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
-                      download:$('input[name="usermodelfilename<?php echo $ConvertGuiCounter1; ?>"]').val()+'.'+$('#modelextension<?php echo $ConvertGuiCounter1; ?>').val()},
+                      download:document.getElementById('usermodelfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('modelextension<?php echo $ConvertGuiCounter1; ?>').value() },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
-                      window.location.href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+$('input[name="usermodelfilename<?php echo $ConvertGuiCounter1; ?>"]').val()+'.'+$('#modelextension<?php echo $ConvertGuiCounter1; ?>').val(); }
+                      iframe = $('<iframe />').attr('src', "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('usermodelfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('modelextension<?php echo $ConvertGuiCounter1; ?>').value).hide().appendTo('body'); }
                     }); },
                   error: function(ReturnData) {
                     alert("<?php echo $Alert; ?>"); }
@@ -664,8 +664,8 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                   Token1:'<?php echo $Token1; ?>',
                   Token2:'<?php echo $Token2; ?>',
                   convertSelected:'<?php echo $File; ?>',
-                  extension:$('#drawingextension<?php echo $ConvertGuiCounter1; ?>').val(),
-                  userconvertfilename:$('input[name="userdrawingfilename<?php echo $ConvertGuiCounter1; ?>"]').val() },
+                  extension:document.getElementById('drawingextension<?php echo $ConvertGuiCounter1; ?>').value,
+                  userconvertfilename:document.getElementById('userdrawingfilename<?php echo $ConvertGuiCounter1; ?>').value },
                   success: function(ReturnData) {
                     $.ajax({
                     type: 'POST',
@@ -673,10 +673,10 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                     data: { 
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
-                      download:$('input[name="drawingfilename<?php echo $ConvertGuiCounter1; ?>"]').val()+'.'+$('#drawingextension<?php echo $ConvertGuiCounter1; ?>').val()},
+                      download:document.getElementById('drawingfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('drawingextension<?php echo $ConvertGuiCounter1; ?>').value() },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
-                      window.location.href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+$('input[name="userdrawingfilename<?php echo $ConvertGuiCounter1; ?>"]').val()+'.'+$('#drawingextension<?php echo $ConvertGuiCounter1; ?>').val(); }
+                      iframe = $('<iframe />').attr('src', "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userdrawingfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('drawingextension<?php echo $ConvertGuiCounter1; ?>').value).hide().appendTo('body'); }
                     }); },
                   error: function(ReturnData) {
                     alert("<?php echo $Alert; ?>"); }
@@ -722,8 +722,8 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                   rotate:$('#rotate<?php echo $ConvertGuiCounter1; ?>').val(),
                   width:$('#width<?php echo $ConvertGuiCounter1; ?>').val(),
                   height:$('#height<?php echo $ConvertGuiCounter1; ?>').val(),
-                  extension:$('#photoextension<?php echo $ConvertGuiCounter1; ?>').val(),
-                  userconvertfilename:$('input[name="userphotofilename<?php echo $ConvertGuiCounter1; ?>"]').val() },
+                  extension:document.getElementById('photoextension<?php echo $ConvertGuiCounter1; ?>').value,
+                  userconvertfilename:document.getElementById('userphotofilename<?php echo $ConvertGuiCounter1; ?>').value },
                   success: function(ReturnData) {
                     $.ajax({
                     type: 'POST',
@@ -731,10 +731,10 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                     data: { 
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
-                      download:$('input[name="userphotofilename<?php echo $ConvertGuiCounter1; ?>"]').val()+'.'+$('#photoextension<?php echo $ConvertGuiCounter1; ?>').val()},
+                      download:document.getElementById('userphotofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('photoextension<?php echo $ConvertGuiCounter1; ?>').value() },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
-                      window.location.href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+$('input[name="userphotofilename<?php echo $ConvertGuiCounter1; ?>"]').val()+'.'+$('#photoextension<?php echo $ConvertGuiCounter1; ?>').val(); }
+                      iframe = $('<iframe />').attr('src', "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userphotofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('photoextension<?php echo $ConvertGuiCounter1; ?>').value).hide().appendTo('body'); }
                     }); },
                   error: function(ReturnData) {
                     alert("<?php echo $Alert; ?>"); }

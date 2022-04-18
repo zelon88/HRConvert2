@@ -1,7 +1,7 @@
 <?php 
-if (!isset($CoreLoaded)) die('ERROR!!! HRC25, This file cannot process your request! Please submit your file to convertCore.php instead!');
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
 if (!isset($ApplicationTitle)) $ApplicationTitle = 'Convert Anything!'; 
+if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
 if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
 ?>
   <body>

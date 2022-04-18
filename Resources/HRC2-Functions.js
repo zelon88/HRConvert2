@@ -1,5 +1,5 @@
 // / -----------------------------------------------------------------------------------
-// / A function to toggle the visibility of an HTML element. 
+// / A function to toggle the visibility of an HTML element.
 // / Switches the 'Visibility' property between 'block' & 'none'.
 function toggle_visibility(id) {
   var e = document.getElementById(id);

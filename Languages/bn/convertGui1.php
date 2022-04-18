@@ -1,7 +1,7 @@
 <?php 
-if (!isset($CoreLoaded)) die('ত্রুটি!!! HRC25, এই ফাইলটি আপনার অনুরোধ প্রক্রিয়া করতে পারে না! পরিবর্তে convertCore.php এ আপনার ফাইল জমা দিন!');
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
 if (!isset($ApplicationTitle)) $ApplicationTitle = 'কিছু রূপান্তর!'; 
+if (!isset($CoreLoaded)) die('ত্রুটি!!! '.$ApplicationName.'-2, এই ফাইলটি আপনার অনুরোধ প্রক্রিয়া করতে পারে না! পরিবর্তে convertCore.php এ আপনার ফাইল জমা দিন!');
 if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
 ?>
   <body>

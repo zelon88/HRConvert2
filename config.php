@@ -1,15 +1,34 @@
 <?php
-// / ------------------------------
-// / ---Application Information---
-// / 
-// This file contains the configuration data for the HRConvert2 Server application.
-// Make sure to fill out the information below 100% accuratly BEFORE you attempt to run
-// any HRConvert2 Server application scripts. Severe filesystem damage could result.
-// / 
-// BE SURE TO FILL OUT ALL INFORMATION ACCURATELY !!!
-// PRESERVE ALL SYNTAX AND FORMATTING !!!
-// SERIOUS FILESYSTEM DAMAGE COULD RESULT FROM INCORRECT DATABASE OR DIRECTORY INFO !!!
-// / ------------------------------
+// / -----------------------------------------------------------------------------------
+// / APPLICATION INFORMATION ...
+// / HRConvert2, Copyright on 4/11/2022 by Justin Grimes, www.github.com/zelon88
+// /
+// / LICENSE INFORMATION ...
+// / This project is protected by the GNU GPLv3 Open-Source license.
+// / https://www.gnu.org/licenses/gpl-3.0.html
+// /
+// / APPLICATION INFORMATION ...
+// / This application is designed to provide a web-interface for converting file formats
+// / on a server for users of any web browser without authentication. 
+// /
+// / FILE INFORMATION
+// / This file contains the dynamic stylesheets for HRConvert2.
+// / Fill out this file completely & accurately before running the application.
+// / Serious filesystem damage could occur from incorrect directory settings.
+// / Be careful to preserve all syntax & formatting.
+// /
+// / HARDWARE REQUIREMENTS ... 
+// / This application requires at least a Raspberry Pi Model B+ or greater.
+// / This application will run on just about any x86 or x64 computer.
+// /
+// / DEPENDENCY REQUIREMENTS ... 
+// / This application requires Debian Linux (w/3rd Party audio license), 
+// / Apache 2.4, PHP 7+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip, 
+// / 7zipper, FFMPEG, PDFTOTEXT, Dia, PopplerUtils, MeshLab & ImageMagick.
+// /
+// / <3 Open-Source
+// / -----------------------------------------------------------------------------------
+
 
 // / ------------------------------  
 // / ---Security Informations---
@@ -26,6 +45,7 @@ $Salts5 = 'somethingSoRanDoMThatNobodyr3454r3r33_Will_evar+guess+it';
 $Salts6 = 'somethingSoRanDoMThatNob2odyawryoglukfgy;/.5^&#&__Will_evar+guess+it';
 // /  --Server URL--
 // /   Externally or internally accesible domain or IP.
+// /   Do not include a trailing slash.
 $URL = 'localhost';
 // /  --Virus Scanning--
 // /   Scan for viruses during directory scan.
@@ -41,17 +61,20 @@ $VirusScan = FALSE;
 // / 
 // /  --Installation Directory--
 // /   Install HRConvert2 to the following directory.
-// /   DO NOT CHANGE THE DEFAULT INSTALL DIRECTORY!!! 
+// /   Do not include a trailing slash.
+// /   Changing this value is not recommended. 
 $InstLoc = '/var/www/html/HRProprietary/HRConvert2';
 // /  --Server Root Directory--
 // /   This should be pointed at the root of your web server directory.
-// /   (NO SLASH AFTER DIRECTORY!!!) ...  
+// /   Do not include a trailing slash.
 $ServerRootDir = '/var/www/html';
 // /  --Data Storage Location--
-// /   This is where temporary data files are stored. (NO SLASH AFTER DIRECTORY!!!) ...  
+// /   This is where temporary data files are stored. 
+// /   Do not include a trailing slash.
 $ConvertLoc = '/home/justin/Documents/Projects/DATA/ConvertDATA';
 // /  --Log Storage Location--
-// /   This is where permanent Log files are stored. (NO SLASH AFTER DIRECTORY!!!) ... 
+// /   This is where permanent Log files are stored. 
+// /   (NO SLASH AFTER DIRECTORY!!!) ... 
 $LogDir = '/var/www/html/HRProprietary/HRConvert2/Logs';
 // / ------------------------------ 
 
@@ -86,8 +109,8 @@ $DefaultLanguage = 'en';
 $AllowUserSelectableLanguage = TRUE;
 // /  --File Deletion Age Theshold--
 // /   Age in minutes of files to be deleted.
-// /   Set to '0' to keep files indefinately.
-// /   Default is '30'.
+// /   Set to 0 to keep files indefinately.
+// /   Default is 30.
 $DeleteThreshold = 30;
 // /  --Enhanced Logging Verbosity--
 // /   Enable verbose logging.
@@ -96,7 +119,7 @@ $DeleteThreshold = 30;
 $Verbose = TRUE;
 // /  --Maximum Log File Size--
 // /   Set the number of bytes to store in each logfile before splitting to a new one.
-$MaxLogSize = '1048576';
+$MaxLogSize = 1048576;
 // /  --UI Element Font--
 // /   Set the default font to use throughout HRConvert2 GUI elements.
 // /   Whatever font you choose must be installed on the client's machine.

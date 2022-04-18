@@ -1,0 +1,233 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+APPLICATION INFORMATION ...
+HRConvert2, Copyright on 4/11/2022 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
+
+FILE INFORMATION
+This plain text file contains descriptions of all the native error messages contained in or produced by the HRConvert2 Diablo engine. 
+These descriptions should give administrators a starting point for debugging problems with HRConvert2 installations. 
+Each section in this file contains information about a different error message. The first one is an example to demonstrate the structure of this file.
+Details about each section are below.
+
+HARDWARE REQUIREMENTS ... 
+This application requires at least a Raspberry Pi Model B+ or greater. 
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ... 
+This application requires Debian Linux (w/3rd Party audio license), Apache 2.4, PHP 7+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip, 7zipper, 
+FFMPEG, PDFTOTEXT, Dia, PopplerUtils, MeshLab & ImageMagick.
+
+ADDITIONAL INFORMATION
+HRConvert2 logs information about it's operational activity to the Logs subdirectory where HRConvert2 is installed. 
+Log entries that represent normal, expected behavior begin with 'OP-Act:' to signify "Operational Activity".
+Log entries that represent abnormal behavior begin with ERROR!!!
+If a log file does not exist; HRConvert2 will attempt to create one. 
+If an attempt to create a log file or write log entries fails for any reason; HRConvert2 will output errors directly to the page instead. 
+If a log file exists, was created on the current date, and is smaller than the "Maximum Log File Size" in config.php; HRConvert2 will append log entries to it. 
+Once the "Maximum Log File Size" specified in config.php has been reached; HRConvert2 will create a new log file with a numerically incremented file name.
+Actual maximum log file size will vary slightly from the "Maximum Log File Size" because it must be exceeded before HRConvert2 will replace it. 
+Typically the "Maximum Log File Size" is only exceeded by a small number of bytes.
+Time will be ommitted from logs in situations where time has not been initialized yet.
+The application name will be replaced with 'HRConvert2' in logs in situations where the config.php has not been initialized yet. 
+The log number will be replaced with '###' in the event that the error number supplied by the calling code was invalid.
+If "Enhanced Logging Verbosity" is enabled in config.php; all significant core operations will produce a log entry.
+If "Enhanced Logging Verbosity" is disabled in config.php; only warnings and errors during core operations will produce a log entry.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+~~START OF EXAMPLE~~
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  The exact error response produced by the application. Text wrapped in angle brackets < > denote encoded information. For example, "<TIMESTAMP>"
+  would actually be replaced with an abbreviated date. <REQUEST_IDENTIFIER> will be replaced with a short but unique number to identify related log events. 
+  <APPLICATION_NAME> will be replaced with whatever the --Application Name-- is set to in config.php.
+
+FILE
+  The file path pointing to the file which contains this error message. File is relative to the root HRConvert2 installation directory. 
+  <SELECTED_LANGUAGE> will be replaced with the ISO 639-1 code that represents the language that was used during the event.
+
+FATAL
+  Whether or not the occurance of this error will halt execution of the application. Will either be YES or NO.
+
+ERROR DESCRIPTION
+  A brief and concise description of the error message as well as possible causes & solutions.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+~~END OF EXAMPLE~~
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! HRConvert2-0: Cannot process the HRConvert2 Configuration file (config.php)!
+
+FILE
+  /convertCore.php
+
+FATAL
+  YES
+
+ERROR DESCRIPTION
+  The config.php file located in the installation directory which is required for HRConvert2 to run is missing or unreachable.
+  This may be the result of incorrect file permission levels on the installation directory or config.php file.
+  This may be the result of incorrect user or group associations for the www-data user or group.
+  This could be because HRConvert2 is running on an unsupported operating system or PHP version.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! HRConvert2-1: Cannot process the HRConvert2 Style Core file (styleCore.php)!
+
+FILE
+  /convertCore.php
+
+FATAL
+  YES
+
+ERROR DESCRIPTION
+  The styleCore.php is a component of HRConvert2 and cannot support execution outside the context of the HRConvert2 convertCore.php file.
+  This may be the result of running the styleCore.php file improperly, such as via a command line interpreter or directly via an internet browser.
+  In practice, no user or admin should ever have to call, execute, or visit the styleCore.php file directly. All requests should be directed to core.php instead.
+  The convertCore.php file has built in mechanisms for validating, activating, and loading the styleCore.php file. 
+  If you are making requests to convertCore.php file and receiving this error, the installation has probably become corrupt. 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! HRConvert-4: This file cannot process your request! Please submit your file to convertCore.php instead!
+
+FILE
+  /Languages/<SELECTED_LANGUAGE>/header.php
+  /Languages/<SELECTED_LANGUAGE>/convertGui1.php
+  /Languages/<SELECTED_LANGUAGE>/convertGui2.php
+  /Languages/<SELECTED_LANGUAGE>/footer.php
+
+FATAL
+  YES
+
+ERROR DESCRIPTION
+  A 3rd party application is imporperly attemptint to submit data to the HRConvert2 API. 
+  The application is being fuzzed or scanned for vulnerabilities.
+  This is the only core error message that is translated to the language used during the request.
+  Because this error takes place before the logging environment is initialized; this error will not be logged.
+  Because this error takes place before the configuration file has been initialized; the Application Name configuration entry will not be used.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! HRConvert-3: Could not set the execution timer!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+ERROR DESCRIPTION
+  The PHP installation on the server is damaged or corrupt.
+  The application has become corrupt.
+  Because this error takes place before the logging environment is initialized; this error will not be logged.
+  Because this error takes place before the time environment is initialized; this error will not contain a timestamp.
+  Because this error takes place before the configuration file has been initialized; the Application Name configuration entry will not be used.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! HRConvert-4: Could not verify timezone!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+ERROR DESCRIPTION
+  The PHP configuration is setup using an invalid timezone option.
+  The PHP installation on the server is damaged or corrupt.
+  The application has become corrupt.
+  Because this error takes place before the logging environment is initialized; this error will not be logged.
+  Because this error takes place before the time environment is initialized; this error will not contain a timestamp.
+  Because this error takes place before the configuration file has been initialized; the Application Name configuration entry will not be used.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, HRConvert-5: Could not verify installation!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+ERROR DESCRIPTION
+  The PHP configuration is setup using an invalid timezone option.
+  The PHP installation on the server is damaged or corrupt.
+  The application has become corrupt.
+  Because this error takes place before the logging environment is initialized; this error will not be logged.
+  Because this error takes place before the configuration file has been initialized; the Application Name configuration entry will not be used.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6: Could not verify inputs!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+ERROR DESCRIPTION
+  One of the $_POST or $_GET variables submitted was of an invalid type.
+  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  The request was incomplete, malformed, or corrupt.
+  Because this error takes place before the logging environment is initialized; this error will not be logged.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-7: Could not verify session!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+ERROR DESCRIPTION
+  The application has become corrupt.
+  The user is maliciously spoofing their IP or User Agent String.
+  Because this error takes place before the logging environment is initialized; this error will not be logged.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-8: Could not verify unique session identifier!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+ERROR DESCRIPTION
+  The application has become corrupt.
+  The Security Salts contained in the config.php file are not properly formatted as PHP string variables.
+  Because this error takes place before the logging environment is initialized; this error will not be logged.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

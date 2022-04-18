@@ -6,7 +6,7 @@
 -----------------------------------------------
 # HRConvert2
 
-### A self-hosted drag-and-drop file conversion server that supports 75 file formats with 4 color schemes, with 11 end-user selctable languages. 
+### A self-hosted drag-and-drop file conversion server that supports 75 file formats with 4 color schemes, with 13 end-user selctable languages. 
 
 ![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Screenshots/HRConvert2-1.png)
 
@@ -19,7 +19,7 @@
 - Can scan files for viruses in real-time with ClamAV.
 - Minimalistic drag & drop interface.
 - Each user gets their own temporary scratch space!
-- End users can switch between 11 languages by appending it to the URL like this: `?language=en`
+- End users can switch between 13 languages by appending it to the URL like this: `?language=en`
 - Safe enough for public facing environments (when properly implemented).
 - No databases. No cookies. No cache files. 
 - Installs cleanly alongside other popular software (like WordPress).

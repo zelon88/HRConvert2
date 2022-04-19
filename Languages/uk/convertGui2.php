@@ -223,7 +223,8 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                       download:document.getElementById('userarchfilefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archfileextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
-                      iframe = $('<iframe />').attr('src', "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userarchfilefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archfileextension<?php echo $ConvertGuiCounter1; ?>').value).hide().appendTo('body'); }
+                      document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userarchfilefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archfileextension<?php echo $ConvertGuiCounter1; ?>').value; 
+                      document.getElementById('downloadTarget').click(); }
                     }); },
                   error: function(ReturnData) {
                     alert("<?php echo $Alert; ?>"); }
@@ -278,7 +279,8 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                       download:document.getElementById('userpdffilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('pdfextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
-                      iframe = $('<iframe />').attr('src', "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userpdffilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('pdfextension<?php echo $ConvertGuiCounter1; ?>').value).hide().appendTo('body'); }
+                      document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userpdffilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('pdfextension<?php echo $ConvertGuiCounter1; ?>').value; 
+                      document.getElementById('downloadTarget').click(); }
                     }); },
                   error: function(ReturnData) {
                     alert("<?php echo $Alert; ?>"); }
@@ -322,10 +324,11 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                     data: { 
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
-                      download:document.getElementById('userarchivefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archiveextension<?php echo $ConvertGuiCounter1; ?>').value() },
+                      download:document.getElementById('userarchivefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archiveextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
-                      iframe = $('<iframe />').attr('src', "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userarchivefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archiveextension<?php echo $ConvertGuiCounter1; ?>').value).hide().appendTo('body'); }
+                      document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userarchivefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archiveextension<?php echo $ConvertGuiCounter1; ?>').value; 
+                      document.getElementById('downloadTarget').click(); }
                     }); },
                   error: function(ReturnData) {
                     alert("<?php echo $Alert; ?>"); }
@@ -371,10 +374,12 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                     data: { 
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
-                      download:document.getElementById('userdocfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('docextension<?php echo $ConvertGuiCounter1; ?>').value() },
+                      download:document.getElementById('userdocfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('docextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
-                      iframe = $('<iframe />').attr('src', "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userdocfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('docextension<?php echo $ConvertGuiCounter1; ?>').value).hide().appendTo('body'); }
+                      document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userdocfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('docextension<?php echo $ConvertGuiCounter1; ?>').value; 
+                      document.getElementById('downloadTarget').click(); }
+
                     }); },
                   error: function(ReturnData) {
                     alert("<?php echo $Alert; ?>"); }
@@ -418,10 +423,11 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                     data: { 
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
-                      download:document.getElementById('userspreadfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('spreadextension<?php echo $ConvertGuiCounter1; ?>').value() },
+                      download:document.getElementById('userspreadfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('spreadextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
-                      iframe = $('<iframe />').attr('src', "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userspreadfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('spreadextension<?php echo $ConvertGuiCounter1; ?>').value).hide().appendTo('body'); }
+                      document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userspreadfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('spreadextension<?php echo $ConvertGuiCounter1; ?>').value; 
+                      document.getElementById('downloadTarget').click(); }
                     }); },
                   error: function(ReturnData) {
                     alert("<?php echo $Alert; ?>"); }
@@ -469,10 +475,11 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                     data: { 
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
-                      download:document.getElementById('userpresentationfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('presentationextension<?php echo $ConvertGuiCounter1; ?>').value() },
+                      download:document.getElementById('userpresentationfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('presentationextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
-                      iframe = $('<iframe />').attr('src', "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userpresentationfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('presentationextension<?php echo $ConvertGuiCounter1; ?>').value).hide().appendTo('body'); }
+                      document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userspreadfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('presentationextension<?php echo $ConvertGuiCounter1; ?>').value; 
+                      document.getElementById('downloadTarget').click(); }
                     }); },
                   error: function(ReturnData) {
                     alert("<?php echo $Alert; ?>"); }
@@ -518,10 +525,11 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                     data: { 
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
-                      ownload:document.getElementById('useraudiofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('audioextension<?php echo $ConvertGuiCounter1; ?>').value() },
+                      ownload:document.getElementById('useraudiofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('audioextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
-                      iframe = $('<iframe />').attr('src', "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('useraudiofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('audioextension<?php echo $ConvertGuiCounter1; ?>').value).hide().appendTo('body'); }
+                      document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('useraudiofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('audioextension<?php echo $ConvertGuiCounter1; ?>').value; 
+                      document.getElementById('downloadTarget').click(); }
                     }); },
                   error: function(ReturnData) {
                     alert("<?php echo $Alert; ?>"); }
@@ -569,10 +577,11 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                     data: { 
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
-                      download:document.getElementById('uservideofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('videoextension<?php echo $ConvertGuiCounter1; ?>').value() },
+                      download:document.getElementById('uservideofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('videoextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
-                      iframe = $('<iframe />').attr('src', "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('uservideofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('videoextension<?php echo $ConvertGuiCounter1; ?>').value).hide().appendTo('body'); }
+                      document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('uservideofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('videoextension<?php echo $ConvertGuiCounter1; ?>').value; 
+                      document.getElementById('downloadTarget').click(); }
                     }); },
                   error: function(ReturnData) {
                     alert("<?php echo $Alert; ?>"); }
@@ -622,10 +631,11 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                     data: { 
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
-                      download:document.getElementById('usermodelfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('modelextension<?php echo $ConvertGuiCounter1; ?>').value() },
+                      download:document.getElementById('usermodelfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('modelextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
-                      iframe = $('<iframe />').attr('src', "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('usermodelfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('modelextension<?php echo $ConvertGuiCounter1; ?>').value).hide().appendTo('body'); }
+                      document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('usermodelfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('modelextension<?php echo $ConvertGuiCounter1; ?>').value; 
+                      document.getElementById('downloadTarget').click(); }
                     }); },
                   error: function(ReturnData) {
                     alert("<?php echo $Alert; ?>"); }
@@ -673,10 +683,11 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                     data: { 
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
-                      download:document.getElementById('drawingfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('drawingextension<?php echo $ConvertGuiCounter1; ?>').value() },
+                      download:document.getElementById('drawingfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('drawingextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
-                      iframe = $('<iframe />').attr('src', "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userdrawingfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('drawingextension<?php echo $ConvertGuiCounter1; ?>').value).hide().appendTo('body'); }
+                      document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userdrawingfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('drawingextension<?php echo $ConvertGuiCounter1; ?>').value; 
+                      document.getElementById('downloadTarget').click(); }
                     }); },
                   error: function(ReturnData) {
                     alert("<?php echo $Alert; ?>"); }
@@ -731,10 +742,11 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
                     data: { 
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
-                      download:document.getElementById('userphotofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('photoextension<?php echo $ConvertGuiCounter1; ?>').value() },
+                      download:document.getElementById('userphotofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('photoextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
-                      iframe = $('<iframe />').attr('src', "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userphotofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('photoextension<?php echo $ConvertGuiCounter1; ?>').value).hide().appendTo('body'); }
+                      document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userphotofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('photoextension<?php echo $ConvertGuiCounter1; ?>').value; 
+                      document.getElementById('downloadTarget').click(); }
                     }); },
                   error: function(ReturnData) {
                     alert("<?php echo $Alert; ?>"); }

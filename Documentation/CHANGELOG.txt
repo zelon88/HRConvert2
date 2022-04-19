@@ -1,3 +1,16 @@
+COMMIT 4/19/2022
+v2.8.3 - Reordered some error numbers. Finished ERROR_DESCRIPTIONS.txt.
+
+-v2.8.3.
+-Fixed Dropzone box translation not happening after updating dropzone to latest version.
+-Reodered some error numbers.
+-Finished adding errors and descriptions to ERROR_DESCRIPTIONS.txt.
+-Took some updated screenshots.
+-Saved pending changes to UI docs that should have been uploaded yesterday.
+-Updated Slack Team link in README.md.
+
+
+--------------------
 COMMIT - 4/17/2022
 v2.8.2 - Adding documentation, polishing edges.
 
@@ -28,7 +41,7 @@ v2.8.2 - Adding documentation, polishing edges.
 -No longer opens compatible files in the browser but starts a download instead.
 -No more HTML undefined errors when requesitng a download.
 -Added a check to verifySessionHash() function to make sure the $Salts variables are formatted as strings.
-  
+
 --------------------
 COMMIT - 4/17/2022
 v2.8.1 - Update DropZone version, update stylesheet, fix bugs.

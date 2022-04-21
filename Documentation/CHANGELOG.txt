@@ -1,3 +1,14 @@
+COMMIT 4/21/2022
+v2.8.9 - Added Share File button, option to disable in config.php.
+
+-v2.8.9.
+-Added a "Share File" button to convertGui2.php for creating & copying a link to the file.
+-Allows users to generate shareable URLs.
+-Added $AllowUserShare in conig.php for disabling the share file feature.
+-Currently the Share file feature is only avaialble in the English language pack.
+-I expect to have all the language packs caught up in the next update.
+
+--------------------
 COMMIT 4/20/2022
 v2.8.8 - Discovered bugs in ScanCore routine, improve User Virus Scanning.
 

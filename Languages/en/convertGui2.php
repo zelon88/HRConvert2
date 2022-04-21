@@ -1,6 +1,8 @@
 <?php
 $Alert = 'Cannot convert this file! Try changing the name.';
 $Alert1 = 'Cannot perform a virus scan on this file!';
+$Alert2 = 'File Link Copied to Clipboard!';
+$Alert3 = 'Operation Failed!';
 $FCPlural1 = 's';
 $FCPlural2 = 's are';
 if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
@@ -153,6 +155,16 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
               error: function(ReturnData) {
                 alert("<?php echo $Alert; ?>"); } }); }); });
           </script>
+
+          <?php if ($AllowUserShare) { ?>
+          <a style="float:left;">&nbsp;|&nbsp;</a>
+          <img id="sharefilebutton<?php echo $ConvertGuiCounter1; ?>" name="sharefilebutton<?php echo $ConvertGuiCounter1; ?>" src="Resources/link.png" style="float:left; display:block;" 
+           onclick="toggle_visibility('sharefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('sharefilebutton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('shareXfilebutton<?php echo $ConvertGuiCounter1; ?>');"/>
+          <img id="shareXfilebutton<?php echo $ConvertGuiCounter1; ?>" name="shareXfilebutton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:left; display:none;" 
+           onclick="toggle_visibility('sharefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('sharefilebutton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('shareXfilebutton<?php echo $ConvertGuiCounter1; ?>');"/>
+          
+          <?php } ?>
+
           <?php if ($AllowUserVirusScan) { ?>
           <a style="float:left;">&nbsp;|&nbsp;</a>
           <img id="scanfilebutton<?php echo $ConvertGuiCounter1; ?>" name="scanfilebutton<?php echo $ConvertGuiCounter1; ?>" src="Resources/scan.png" style="float:left; display:block;" 
@@ -291,7 +303,56 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
                     alert("<?php echo $Alert; ?>"); } }); }); });
           </script>
         </div>
-        <?php if ($AllowUserVirusScan) { ?>
+
+        <?php if ($AllowUserShare) { ?>
+        <div id='sharefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='sharefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+          <p style="max-width:1000px;"></p>
+          <p><strong>Share This File</strong></p>
+          <p id='sharelinkStatus<?php echo $ConvertGuiCounter1; ?>' name='sharelinkStatus<?php echo $ConvertGuiCounter1; ?>'>Link Status: <i>Not Generated</i></p>
+          <p id='shareclipStatus<?php echo $ConvertGuiCounter1; ?>' name='shareclipStatus<?php echo $ConvertGuiCounter1; ?>'>Clipboard Status: <i>Not Copied</i></p>
+          <p id='sharelinkURL<?php echo $ConvertGuiCounter1; ?>' name='sharelinkURL<?php echo $ConvertGuiCounter1; ?>'>File Link: <i>Not Generated</i></p>
+
+          <input type="submit" id="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" name="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" value='Generate Link & Copy to Clipboard' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" name="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" value='Generate Link' onclick="toggle_visibility('loadingCommandDiv');">
+
+          <script type="text/javascript">
+          $(document).ready(function () {
+            $('#sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
+              $.ajax({
+              type: 'POST',
+              url: 'convertCore.php',
+              data: { 
+                Token1:'<?php echo $Token1; ?>',
+                Token2:'<?php echo $Token2; ?>',
+                download:'<?php echo $File; ?>' },
+              success: function(returnFile) {
+                toggle_visibility('loadingCommandDiv');
+                document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = 'Link Status: <i>Generated</i>';
+                document.getElementById('shareclipStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = 'Clipboard Status: <i>Copied</i>';
+                document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = 'File Link: <i><?php echo $FullURL.'/DATA/'.$SesHash3.'/'.$File; ?></i>';
+                copy_share_link("<?php echo $FullURL.'/DATA/'.$SesHash3.'/'.$File; ?>");
+                alert("<?php echo $Alert2; ?>"); },
+              error: function(ReturnData) {
+                alert("<?php echo $Alert3; ?>"); } }); });
+            $('#sharecopybutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
+              $.ajax({
+              type: 'POST',
+              url: 'convertCore.php',
+              data: { 
+                Token1:'<?php echo $Token1; ?>',
+                Token2:'<?php echo $Token2; ?>',
+                download:'<?php echo $File; ?>' },
+              success: function(returnFile) {
+                toggle_visibility('loadingCommandDiv');
+                document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = 'Link Status: <i>Generated</i>';
+                document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = 'File Link: <i><?php echo $FullURL.'/DATA/'.$SesHash3.'/'.$File; ?></i>'; },
+              error: function(ReturnData) {
+                alert("<?php echo $Alert3; ?>"); } }); }); });
+          </script>
+        </div>
+        <?php }
+
+        if ($AllowUserVirusScan) { ?>
         <div id='scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong>Scan This File For Viruses</strong></p>
@@ -320,9 +381,9 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'.$ConsolidatedLogFileName; ?>"; 
-                      document.getElementById('downloadTarget').click() } }); },
-                    error: function(ReturnData) {
-                      alert("<?php echo $Alert1; ?>"); } }); });
+                      document.getElementById('downloadTarget').click(); } }); },
+                  error: function(ReturnData) {
+                    alert("<?php echo $Alert1; ?>"); } }); });
             $('#clamscanbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
                 type: "POST",
@@ -343,9 +404,9 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'.$ConsolidatedLogFileName; ?>"; 
-                      document.getElementById('downloadTarget').click() } }); },
-                    error: function(ReturnData) {
-                      alert("<?php echo $Alert1; ?>"); } }); });
+                      document.getElementById('downloadTarget').click(); } }); },
+                  error: function(ReturnData) {
+                    alert("<?php echo $Alert1; ?>"); } }); });
             $('#scanallbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
                 type: "POST",
@@ -366,9 +427,9 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'.$ConsolidatedLogFileName; ?>"; 
-                      document.getElementById('downloadTarget').click() } }); },
-                    error: function(ReturnData) {
-                      alert("<?php echo $Alert1; ?>"); } }); }); });
+                      document.getElementById('downloadTarget').click(); } }); },
+                  error: function(ReturnData) {
+                    alert("<?php echo $Alert1; ?>"); } }); }); });
           </script>
         </div>
         <?php }

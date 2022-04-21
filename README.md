@@ -6,7 +6,7 @@
 -----------------------------------------------
 # HRConvert2
 
-### A self-hosted drag-and-drop file conversion server that supports 75 file formats with 4 color schemes & 13 end-user selctable languages. 
+### A self-hosted drag-and-drop file conversion server & file sharing tool that supports 75 file formats with 4 color schemes & 13 end-user selctable languages. 
 
 ![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/HRConvert2-1.png)
 
@@ -16,7 +16,9 @@
 - Self hosted. Installs on a home server!
 - All conversions are performed locally on your server.
 - Performs Optical Character Recognition (OCR) on PDFs & images.
-- Can scan files for viruses in real-time with ClamAV.
+- Can scan files for viruses automatically in the background with ClamAV.
+- Allows users to scan files for viruses on-demand using ClamAV or [zelon88/scanCore](https://github.com/zelon88/scanCore).
+- Allows users to generate temporary links for sharing files.
 - Minimalistic drag & drop interface.
 - Each user gets their own temporary scratch space!
 - End users can switch between 13 languages by appending it to the URL like this: `?language=en`

@@ -152,6 +152,16 @@ $DefaultLanguage = 'en';
 // /   To submit a $_GET request append ?language=<CODE> to the URL & repalce <CODE> with a 2 digit ISO 639-1 language code.
 // /   If a user attempts a language that is not available --Default Language-- will be used instead.
 $AllowUserSelectableLanguage = TRUE;
+// /  --User Shareable File Links--
+// /   Allow users to generate shareable URLs for the files they upload or convert.
+// /   If set to TRUE the user will be provided with buttons to create URLs to files that can be copied & pasted elsewhere.
+// /   If set to FALSE the user will not be provided with the buttons to create URLs to files.
+// /   Regardless of what this is set to, URLs still need to be created during normal download routines to enable downloads.
+// /   A savvy user could still craft a shareable download link by requesting & cancelling a download after receiving the URL.
+// /   This does not change the behavior of normal file cleanup. 
+// /   Files with active links will still be removed after the --File Deletion Age Threshold-- is met.
+// /   Active file links will break after the --File Deletion Age Theshold-- is met.
+$AllowUserShare = TRUE;
 // /  --File Deletion Age Theshold--
 // /   Age in minutes of files to be deleted.
 // /   Set to 0 to keep files indefinately.

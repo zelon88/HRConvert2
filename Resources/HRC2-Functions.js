@@ -12,3 +12,11 @@ function toggle_visibility(id) {
 function goBack() {
   window.history.back(); }
 // / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to copy an input URL to a users clipboard and output an alert in the local language.
+function copy_share_link(url) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url); }
+  else alert('Your brower does not support copying to the clipboard!'); }
+// / -----------------------------------------------------------------------------------

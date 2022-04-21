@@ -1,5 +1,0 @@
-Op-Act, April 21, 2022, 2:30 am, c485abed5991/b87ba414559e: Created a User ScanCore Log File.
-Op-Act, April 21, 2022, 2:30 am, c485abed5991/b87ba414559e: Initiating User Virus Scan with ScanCore.
-Op-Act, April 21, 2022, 2:30 am, c485abed5991/b87ba414559e: Scanning eicar.com.txt.
-April 21, 2022, 2:30 am, Scanning file "/home/justin/Documents/Projects/DATA/ConvertDATA/c485abed5991/b87ba414559e/eicar.com.txt".
-April 21, 2022, 2:30 am, Infected: /home/justin/Documents/Projects/DATA/ConvertDATA/c485abed5991/b87ba414559e/eicar.com.txt (Trojan Eicar.4, SHA256 Hash Match: 275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f)

@@ -1533,7 +1533,7 @@ function userScanCoreScan($FilesToScan) {
       $txt = 'No infection detected in '.$file.'.';
       if ($Verbose) logEntry($txt);
       userVirusLogEntry($txt, 'scancore'); }
-    if (strpos($scanCoreLogFileDATA, 'Virus Detected') !== FALSE or strpos($scanCoreLogFileDATA, 'FOUND') !== FALSE) {
+    if (strpos($scanCoreLogFileDATA, 'Infected') !== FALSE or strpos($scanCoreLogFileDATA, 'FOUND') !== FALSE) {
       $UserVirusFound = TRUE;
       $txt = 'WARNING!!! Portentially infected file detected at '.$file.'!';
       if ($Verbose) logEntry($txt);

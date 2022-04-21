@@ -1,15 +1,15 @@
 <?php
 $Alert = '이 파일을 변환할 수 없습니다! 이름을 변경해 보십시오.';
 $Files = getFiles($ConvertDir);
-$fileCount = count($Files);
-$fcPlural1 = '';
-if (!is_numeric($fileCount)) $fileCount = 0;
+$FileCount = count($Files);
+$FCPlural1 = '';
+if (!is_numeric($FileCount)) $FileCount = 0;
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
 if (!isset($ApplicationTitle)) $ApplicationTitle = '무엇이든 변환하십시오!'; 
 if (!isset($CoreLoaded)) die('오류!!! '.$ApplicationName.'-2, 이 파일은 귀하의 요청을 처리할 수 없습니다! 대신 파일을 convertCore.php로 제출하십시오!');
 if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
-if ($fileCount === 0) $fcPlural1 = $ApplicationName.'에 업로드된 유효한 파일 0개.';
-if ($fileCount >= 1) $fcPlural1 = $fileCount.'개의 유효한 파일이 '.$ApplicationName.'에 업로드되었습니다.'; 
+if ($FileCount === 0) $FCPlural1 = $ApplicationName.'에 업로드된 유효한 파일 0개.';
+if ($FileCount >= 1) $FCPlural1 = $FileCount.'개의 유효한 파일이 '.$ApplicationName.'에 업로드되었습니다.'; 
 ?>
   <body>
     <script type="text/javascript" src="Resources/jquery-3.6.0.min.js"></script>
@@ -17,7 +17,7 @@ if ($fileCount >= 1) $fcPlural1 = $fileCount.'개의 유효한 파일이 '.$Appl
       <?php if (!isset($_GET['noGui'])) { ?><h1><?php echo $ApplicationName; ?></h1>
       <hr /><?php } ?>
       <h3>파일 변환 옵션</h3>
-      <p><?php echo $fcPlural1; ?></p> 
+      <p><?php echo $FCPlural1; ?></p> 
       <p>아래 옵션을 사용하여 파일을 변환할 수 있습니다.</p>
     </div>
 

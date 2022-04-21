@@ -1,17 +1,17 @@
 <?php
 $Alert = 'এই ফাইলটি রূপান্তর করা যাবে না! নাম পরিবর্তন করার চেষ্টা করুন।';
 $Files = getFiles($ConvertDir);
-$fileCount = count($Files);
-$fcPlural1 = '';
-if (!is_numeric($fileCount)) $fileCount = 0;
+$FileCount = count($Files);
+$FCPlural1 = '';
+if (!is_numeric($FileCount)) $FileCount = 0;
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
 if (!isset($ApplicationTitle)) $ApplicationTitle = 'কিছু রূপান্তর!'; 
 if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
 if (!isset($CoreLoaded)) die('ত্রুটি!!! '.$ApplicationName.'-2, এই ফাইলটি আপনার অনুরোধ প্রক্রিয়া করতে পারে না! পরিবর্তে convertCore.php এ আপনার ফাইল জমা দিন!');
-if ($fileCount === 0) $fcPlural1 = 'আপনি '.$ApplicationName.'-2 এ 0টি বৈধ ফাইল আপলোড করেছেন।';
-if ($fileCount === 1) $fcPlural1 = 'আপনি '.$ApplicationName.'-2 এ 1টি বৈধ ফাইল আপলোড করেছেন৷'; 
-if ($fileCount === 2) $fcPlural1 = 'আপনি '.$ApplicationName.'-2 এ 2টি বৈধ ফাইল আপলোড করেছেন৷';
-if ($fileCount >= 3) $fcPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$fileCount.'টি বৈধ ফাইল আপলোড করেছেন।';
+if ($FileCount === 0) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ 0টি বৈধ ফাইল আপলোড করেছেন।';
+if ($FileCount === 1) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ 1টি বৈধ ফাইল আপলোড করেছেন৷'; 
+if ($FileCount === 2) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ 2টি বৈধ ফাইল আপলোড করেছেন৷';
+if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$FileCount.'টি বৈধ ফাইল আপলোড করেছেন।';
 ?>
   <body>
     <script type="text/javascript" src="Resources/jquery-3.6.0.min.js"></script>
@@ -19,7 +19,7 @@ if ($fileCount >= 3) $fcPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$fi
       <?php if (!isset($_GET['noGui'])) { ?><h1><?php echo $ApplicationName; ?></h1>
       <hr /><?php } ?>
       <h3>ফাইল রূপান্তর বিকল্প</h3>
-      <p><?php echo $fcPlural1; ?></p> 
+      <p><?php echo $FCPlural1; ?></p> 
       <p>আপনার ফাইলগুলি এখন নীচের বিকল্পগুলি ব্যবহার করে রূপান্তর করার জন্য প্রস্তুত৷</p>
     </div>
 

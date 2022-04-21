@@ -1,20 +1,20 @@
 <?php
 $Alert = 'لا يمكن تحويل هذا الملف! حاول تغيير الاسم.';
-$Files = getFiles($ConvertDir);
-$fileCount = count($Files);
-$fcPlural1 = '';
-if (!is_numeric($fileCount)) $fileCount = 0;
+$Alert1 = 'Cannot perform a virus scan on this file!';
+$FCPlural1 = 's';
+$FCPlural2 = 's are';
+if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
+if (!is_numeric($FileCount)) $FileCount = 0;
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
 if (!isset($ApplicationTitle)) $ApplicationTitle = 'تحويل أي شيء!'; 
 if (!isset($CoreLoaded)) die('خطأ!!! '.$ApplicationName.'-2، لا يمكن لهذا الملف معالجة طلبك! يرجى إرسال ملفك إلى convertCore.php بدلاً من ذلك!');
-if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
-if ($fileCount === 0) $fcPlural1 = 'لقد قمت بتحميل 0 ملفات صالحة إلى '.$ApplicationName.'.';
-if ($fileCount === 1) $fcPlural1 = 'لقد قمت بتحميل ملف واحد صالح إلى '.$ApplicationName.'.'; 
-if ($fileCount === 2) $fcPlural1 = 'لقد قمت بتحميل ملفين صالحين إلى '.$ApplicationName.'.';
-if ($fileCount >= 3) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' ملفات صالحة إلى '.$ApplicationName.'.';
-if ($fileCount >= 11) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' ملفًا صالحًا إلى '.$ApplicationName.'.';
-if ($fileCount === 100) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.'  ملف صالح إلى '.$ApplicationName.'.';
-if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' ملفًا صالحًا إلى '.$ApplicationName.'.';
+if ($FileCount === 0) $FCPlural1 = 'لقد قمت بتحميل 0 ملفات صالحة إلى '.$ApplicationName.'.';
+if ($FileCount === 1) $FCPlural1 = 'لقد قمت بتحميل ملف واحد صالح إلى '.$ApplicationName.'.'; 
+if ($FileCount === 2) $FCPlural1 = 'لقد قمت بتحميل ملفين صالحين إلى '.$ApplicationName.'.';
+if ($FileCount >= 3) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' ملفات صالحة إلى '.$ApplicationName.'.';
+if ($FileCount >= 11) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' ملفًا صالحًا إلى '.$ApplicationName.'.';
+if ($FileCount === 100) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.'  ملف صالح إلى '.$ApplicationName.'.';
+if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' ملفًا صالحًا إلى '.$ApplicationName.'.';
 ?>
   <body>
     <script type="text/javascript" src="Resources/jquery-3.6.0.min.js"></script>
@@ -22,22 +22,64 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
       <?php if (!isset($_GET['noGui'])) { ?><h1><?php echo $ApplicationName; ?></h1>
       <hr /><?php } ?>
       <h3>خيارات تحويل الملف</h3>
-      <p><?php echo $fcPlural1; ?></p> 
+      <p><?php echo $FCPlural1; ?></p> 
       <p>ملفاتك جاهزة الآن للتحويل باستخدام الخيارات أدناه.</p>
     </div>
 
     <div id='utility' align="center">
-      <p><img id='loadingCommandDiv' name='loadingCommandDiv' src='Resources/pacman.gif' style="max-width:64px; max-height:64px; display:none;"/></p>
+      <p><img id='loadingCommandDiv' name='loadingCommandDiv' src='<?php echo $PacmanLoc; ?>' style="max-width:64px; max-height:64px; display:none;"/></p>
       <a id='downloadTarget' href='about:blank' style="display: none;" download></a>
     </div>
 
-    <div id="compressAll" name="compressAll" style="max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;">
+    <div id="compressAll" name="compressAll" style="max-width:1000px; margin-left: auto; margin-right: auto; text-align:center;">
       <button id="backButton" name="backButton" style="width:50px;" class="info-button" onclick="window.history.back();">&#x2190;</button>
       <button id="refreshButton" name="refreshButton" style="width:50px;" class="info-button" onclick="javascript:location.reload(true);">&#x21BB;</button>
       <br /> <br />
       <button id="scandocMoreOptionsButton" name="scandocMoreOptionsButton" class="info-button" onclick="toggle_visibility('compressAllOptions');">خيارات الملفات المجمعة</button> 
       <div id="compressAllOptions" name="compressAllOptions" align="center" style="display:none;">
-        <p>ضغط وتنزيل كافة الملفات</p>
+        <?php if ($AllowUserVirusScan) { ?>
+        <hr style='width: 50%;' />
+        <p><strong>فحص جميع الملفات بحثًا عن الفيروسات</strong></p>
+        <p>المسح باستخدام ClamAV<input type="checkbox" id="clamscanall" value="clamscanall" name="clamScan" checked></p>
+        <p>المسح باستخدام ScanCore <input type="checkbox" id="scancoreall" value="scancoreall" name="phpavScan" checked></p>
+        <p><input type="submit" id="scanAllButton" name="scanAllButton" class="info-button" value='مسح الكل' onclick="toggle_visibility('loadingCommandDiv');"></p>
+        <script type="text/javascript">
+        $(document).ready(function () {
+          $('#scanAllButton').click(function() {
+            var scanfiles = <?php echo json_encode($Files); ?>;
+            var scanType = 'all';
+            if($("input#clamscanall").is(":checked")) {
+              var scanType = 'clamav'; }
+            if($("input#scancoreall").is(":checked")) {
+              var scanType = 'scancore'; }
+            if($("input#clamscanall").is(":checked") && $("input#scancoreall").is(":checked")) {
+              var scanType = 'all'; }
+            $.ajax({
+              type: "POST",
+              url: 'convertCore.php',
+              data: {
+                Token1:'<?php echo $Token1; ?>',
+                Token2:'<?php echo $Token2; ?>',
+                scantype:scanType,
+                filesToScan:scanfiles },
+                success: function(ReturnData) {
+                  $.ajax({
+                  type: 'POST',
+                  url: 'convertCore.php',
+                  data: { 
+                    Token1:'<?php echo $Token1; ?>',
+                    Token2:'<?php echo $Token2; ?>',
+                    download:'<?php echo $ConsolidatedLogFileName; ?>' },
+                  success: function(returnFile) {
+                    toggle_visibility('loadingCommandDiv');
+                    document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'.$ConsolidatedLogFileName; ?>"; 
+                    document.getElementById('downloadTarget').click(); } }); },
+                  error: function(ReturnData) {
+                    alert("<?php echo $Alert1; ?>"); } }); }); });
+        </script>
+      <?php } ?>
+        <hr style='width: 50%;' />
+        <p><strong>ضغط وتنزيل كافة الملفات</strong></p>
         <p>حدد اسم الملف <input type="text" id='userarchallfilename' name='userarchallfilename' value='HRConvert2_Files-<?php echo $Date; ?>'></p> 
         <select id='archallextension' name='archallextension'> 
           <option value="zip">حدد التنسيق</option>
@@ -47,7 +89,6 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
           <option value="7z">7z</option>
         </select>
         <input type="submit" id="archallSubmit" name="archallSubmit" class="info-button" value='ضغط وتنزيل' onclick="toggle_visibility('loadingCommandDiv');">
-      
         <script type="text/javascript">
         $(document).ready(function () {
           $('#archallSubmit').click(function() { 
@@ -73,14 +114,13 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
                     Token2:'<?php echo $Token2; ?>',
                     download:document.getElementById('userarchallfilename').value+'.'+extension },
                   success: function(returnFile) {
+                    toggle_visibility('loadingCommandDiv');
                     document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userarchallfilename').value+'.'+extension; 
-                    document.getElementById('downloadTarget').click(); }
-                  }); },
-                error: function(ReturnData) {
-                  alert("<?php echo $Alert; ?>"); }
-            }); }); });
+                    document.getElementById('downloadTarget').click(); } }); },
+                  error: function(ReturnData) {
+                    alert("<?php echo $Alert; ?>"); } }); }); });
         </script>
-
+        <hr style='width: 50%;' />
       </div>
     </div>
     <br />
@@ -96,21 +136,49 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
       ?>
 
       <div id="file<?php echo $ConvertGuiCounter1; ?>" name="<?php echo $ConvertGuiCounter1; ?>">
-        <p href=""><strong><?php echo $ConvertGuiCounter1; ?>.</strong> <u><?php echo $File; ?></u></p>
-        
+        <p href=""><strong><?php echo $ConvertGuiCounter1; ?>.</strong> <u><?php echo $File; ?></u></p>    
         <div id="buttonDiv<?php echo $ConvertGuiCounter1; ?>" name="buttonDiv<?php echo $ConvertGuiCounter1; ?>" style="height:25px;">
+          
+          <img id="downloadfilebutton<?php echo $ConvertGuiCounter1; ?>" name="downloadfilebutton<?php echo $ConvertGuiCounter1; ?>" src="Resources/download.png" style="float:right; display:block;" onclick="toggle_visibility('loadingCommandDiv');"/>
+          <script type="text/javascript">
+          $(document).ready(function () {
+            $('#downloadfilebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
+              $.ajax({
+              type: 'POST',
+              url: 'convertCore.php',
+              data: { 
+                Token1:'<?php echo $Token1; ?>',
+                Token2:'<?php echo $Token2; ?>',
+                download:'<?php echo $File; ?>' },
+              success: function(returnFile) {
+                toggle_visibility('loadingCommandDiv');
+                document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'.$File; ?>"; 
+                document.getElementById('downloadTarget').click(); },
+              error: function(ReturnData) {
+                alert("<?php echo $Alert; ?>"); } }); }); });
+          </script>
+          <?php if ($AllowUserVirusScan) { ?>
+          <a style="float:right;">&nbsp;|&nbsp;</a>
+          <img id="scanfilebutton<?php echo $ConvertGuiCounter1; ?>" name="scanfilebutton<?php echo $ConvertGuiCounter1; ?>" src="Resources/scan.png" style="float:right; display:block;" 
+           onclick="toggle_visibility('scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('scanfilebutton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('scanfileXbutton<?php echo $ConvertGuiCounter1; ?>');"/>
+          <img id="scanfileXbutton<?php echo $ConvertGuiCounter1; ?>" name="scanfileXbutton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:right; display:none;" 
+           onclick="toggle_visibility('scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('scanfilebutton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('scanfileXbutton<?php echo $ConvertGuiCounter1; ?>');"/>
+          
+          <?php } ?>
+          
+          <a style="float:right;">&nbsp;|&nbsp;</a>
           <img id="archfileButton<?php echo $ConvertGuiCounter1; ?>" name="archfileButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/archive.png" style="float:right; display:block;" 
            onclick="toggle_visibility('archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archfileButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archfileXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <img id="archfileXButton<?php echo $ConvertGuiCounter1; ?>" name="archfileXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:right; display:none;" 
-           onclick="toggle_visibility('archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archfileButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archfileXButton<?php echo $ConvertGuiCounter1; ?>');"/> 
-         
+           onclick="toggle_visibility('archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archfileButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archfileXButton<?php echo $ConvertGuiCounter1; ?>');"/>
+
           <?php if (in_array($extension, $PDFWorkArr)) { ?>          
           <a style="float:right;">&nbsp;|&nbsp;</a>
           
           <img id="docscanButton<?php echo $ConvertGuiCounter1; ?>" name="docscanButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/docscan.png" style="float:right; display:block;" 
            onclick="toggle_visibility('pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('docscanButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('docscanXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <img id="docscanXButton<?php echo $ConvertGuiCounter1; ?>" name="docscanXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:right; display:none;" 
-           onclick="toggle_visibility('pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('docscanButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('docscanXButton<?php echo $ConvertGuiCounter1; ?>');"/> 
+           onclick="toggle_visibility('pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('docscanButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('docscanXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php } 
 
           if (in_array($extension, $ArchiveArray)) { ?>
@@ -119,7 +187,7 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
           <img id="archiveButton<?php echo $ConvertGuiCounter1; ?>" name="archiveButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/convert.png" style="float:right; display:block;" 
            onclick="toggle_visibility('archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archiveButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archiveXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <img id="archiveXButton<?php echo $ConvertGuiCounter1; ?>" name="archiveXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:right; display:none;" 
-           onclick="toggle_visibility('archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archiveButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archiveXButton<?php echo $ConvertGuiCounter1; ?>');"/> 
+           onclick="toggle_visibility('archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archiveButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archiveXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php } 
 
           if (in_array($extension, $DocumentArray)) { ?>
@@ -128,7 +196,7 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
           <img id="documentButton<?php echo $ConvertGuiCounter1; ?>" name="documentButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/document.png" style="float:right; display:block;" 
            onclick="toggle_visibility('docOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <img id="documentXButton<?php echo $ConvertGuiCounter1; ?>" name="documentXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:right; display:none;" 
-           onclick="toggle_visibility('docOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentXButton<?php echo $ConvertGuiCounter1; ?>');"/> 
+           onclick="toggle_visibility('docOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php } 
 
           if (in_array($extension, $SpreadsheetArray)) { ?>
@@ -137,7 +205,7 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
           <img id="spreadsheetButton<?php echo $ConvertGuiCounter1; ?>" name="spreadsheetButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/spreadsheet.png" style="float:right; display:block;" 
            onclick="toggle_visibility('spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <img id="spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>" name="spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:right; display:none;" 
-           onclick="toggle_visibility('spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>');"/> 
+           onclick="toggle_visibility('spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php }
 
           if (in_array($extension, $ImageArray)) { ?>
@@ -146,7 +214,7 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
           <img id="imageButton<?php echo $ConvertGuiCounter1; ?>" name="imageButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/photo.png" style="float:right; display:block;" 
            onclick="toggle_visibility('imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('imageButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('imageXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <img id="imageXButton<?php echo $ConvertGuiCounter1; ?>" name="imageXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:right; display:none;" 
-           onclick="toggle_visibility('imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('imageButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('imageXButton<?php echo $ConvertGuiCounter1; ?>');"/> 
+           onclick="toggle_visibility('imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('imageButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('imageXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php }
 
           if (in_array($extension, $MediaArray)) { ?>
@@ -155,7 +223,7 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
           <img id="mediaButton<?php echo $ConvertGuiCounter1; ?>" name="mediaButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/stream.png" style="float:right; display:block;" 
            onclick="toggle_visibility('audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('mediaButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('mediaXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <img id="mediaXButton<?php echo $ConvertGuiCounter1; ?>" name="mediaXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:right; display:none;" 
-           onclick="toggle_visibility('audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('mediaButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('mediaXButton<?php echo $ConvertGuiCounter1; ?>');"/> 
+           onclick="toggle_visibility('audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('mediaButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('mediaXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php } 
 
           if (in_array($extension, $VideoArray)) { ?>
@@ -164,7 +232,7 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
           <img id="videoButton<?php echo $ConvertGuiCounter1; ?>" name="videoButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/stream.png" style="float:right; display:block;" 
            onclick="toggle_visibility('videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <img id="videoXButton<?php echo $ConvertGuiCounter1; ?>" name="videoXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:right; display:none;" 
-           onclick="toggle_visibility('videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoXButton<?php echo $ConvertGuiCounter1; ?>');"/> 
+           onclick="toggle_visibility('videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php } 
 
           if (in_array($extension, $DrawingArray)) { ?>
@@ -173,7 +241,7 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
           <img id="drawingButton<?php echo $ConvertGuiCounter1; ?>" name="drawingButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/convert.png" style="float:right; display:block;" 
            onclick="toggle_visibility('drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('drawingButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('drawingXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <img id="drawingXButton<?php echo $ConvertGuiCounter1; ?>" name="drawingXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:right; display:none;" 
-           onclick="toggle_visibility('drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('drawingButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('drawingXButton<?php echo $ConvertGuiCounter1; ?>');"/> 
+           onclick="toggle_visibility('drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('drawingButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('drawingXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php } 
 
           if (in_array($extension, $ModelArray)) { ?>
@@ -182,16 +250,13 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
           <img id="modelButton<?php echo $ConvertGuiCounter1; ?>" name="modelButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/convert.png" style="float:right; display:block;" 
            onclick="toggle_visibility('modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('modelButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('modelXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <img id="modelXButton<?php echo $ConvertGuiCounter1; ?>" name="modelXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:right; display:none;" 
-           onclick="toggle_visibility('modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('modelButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('modelXButton<?php echo $ConvertGuiCounter1; ?>');"/> 
+           onclick="toggle_visibility('modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('modelButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('modelXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php } ?>
-
-          <a style="float:right;">&nbsp;|&nbsp;</a>
-
         </div>
 
         <div id='archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p>أرشفة هذا الملف</p>
+          <p><strong>أرشفة هذا الملف</strong></p>
           <p>حدد اسم الملف <input type="text" id='userarchfilefilename<?php echo $ConvertGuiCounter1; ?>' name='userarchfilefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='archfileextension<?php echo $ConvertGuiCounter1; ?>' name='archfileextension<?php echo $ConvertGuiCounter1; ?>'> 
             <option value="zip">حدد التنسيق</option>
@@ -225,22 +290,98 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userarchfilefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archfileextension<?php echo $ConvertGuiCounter1; ?>').value; 
-                      document.getElementById('downloadTarget').click(); }
-                    }); },
-                  error: function(ReturnData) {
-                    alert("<?php echo $Alert; ?>"); }
-              });
-            });
-          });
+                      document.getElementById('downloadTarget').click(); } }); },
+                    error: function(ReturnData) {
+                    alert("<?php echo $Alert; ?>"); } }); }); });
           </script>
         </div>
-        <?php
+        <?php if ($AllowUserVirusScan) { ?>
+        <div id='scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+          <p style="max-width:1000px;"></p>
+          <p><strong>Scan This File For Viruses</strong></p>
+          <input type="submit" id="scancorebutton<?php echo $ConvertGuiCounter1; ?>" name="scancorebutton<?php echo $ConvertGuiCounter1; ?>" value='Scan File With ScanCore' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" name="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" value='Scan File With ClamAV' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="scanallbutton<?php echo $ConvertGuiCounter1; ?>" name="scanallbutton<?php echo $ConvertGuiCounter1; ?>" value='Scan File With ScanCore & ClamAV' onclick="toggle_visibility('loadingCommandDiv');">
+          <script type="text/javascript">
+          $(document).ready(function () {
+            $('#scancorebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
+              $.ajax({
+                type: "POST",
+                url: 'convertCore.php',
+                data: {
+                  Token1:'<?php echo $Token1; ?>',
+                  Token2:'<?php echo $Token2; ?>',
+                  scantype:'scancore',
+                  filesToScan:'<?php echo $File; ?>' },
+                  success: function(ReturnData) {
+                    $.ajax({
+                    type: 'POST',
+                    url: 'convertCore.php',
+                    data: { 
+                      Token1:'<?php echo $Token1; ?>',
+                      Token2:'<?php echo $Token2; ?>',
+                      download:'<?php echo $ConsolidatedLogFileName; ?>' },
+                    success: function(returnFile) {
+                      toggle_visibility('loadingCommandDiv');
+                      document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'.$ConsolidatedLogFileName; ?>"; 
+                      document.getElementById('downloadTarget').click() } }); },
+                    error: function(ReturnData) {
+                      alert("<?php echo $Alert1; ?>"); } }); });
+            $('#clamscanbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
+              $.ajax({
+                type: "POST",
+                url: 'convertCore.php',
+                data: {
+                  Token1:'<?php echo $Token1; ?>',
+                  Token2:'<?php echo $Token2; ?>',
+                  scantype:'all',
+                  filesToScan:'<?php echo $File; ?>' },
+                  success: function(ReturnData) {
+                    $.ajax({
+                    type: 'POST',
+                    url: 'convertCore.php',
+                    data: { 
+                      Token1:'<?php echo $Token1; ?>',
+                      Token2:'<?php echo $Token2; ?>',
+                      download:'<?php echo $ConsolidatedLogFileName; ?>' },
+                    success: function(returnFile) {
+                      toggle_visibility('loadingCommandDiv');
+                      document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'.$ConsolidatedLogFileName; ?>"; 
+                      document.getElementById('downloadTarget').click() } }); },
+                    error: function(ReturnData) {
+                      alert("<?php echo $Alert1; ?>"); } }); });
+            $('#scanallbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
+              $.ajax({
+                type: "POST",
+                url: 'convertCore.php',
+                data: {
+                  Token1:'<?php echo $Token1; ?>',
+                  Token2:'<?php echo $Token2; ?>',
+                  scantype:'all',
+                  filesToScan:'<?php echo $File; ?>' },
+                  success: function(ReturnData) {
+                    $.ajax({
+                    type: 'POST',
+                    url: 'convertCore.php',
+                    data: { 
+                      Token1:'<?php echo $Token1; ?>',
+                      Token2:'<?php echo $Token2; ?>',
+                      download:'<?php echo $ConsolidatedLogFileName; ?>' },
+                    success: function(returnFile) {
+                      toggle_visibility('loadingCommandDiv');
+                      document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'.$ConsolidatedLogFileName; ?>"; 
+                      document.getElementById('downloadTarget').click() } }); },
+                    error: function(ReturnData) {
+                      alert("<?php echo $Alert1; ?>"); } }); }); });
+          </script>
+        </div>
+        <?php }
 
         if (in_array($extension, $PDFWorkArr)) { 
         ?>
         <div id='pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p>قم بإجراء التعرف الضوئي على الأحرف في هذا الملف</p>
+          <p><strong>قم بإجراء التعرف الضوئي على الأحرف في هذا الملف</strong></p>
           <p>حدد اسم الملف <input type="text" id='userpdffilename<?php echo $ConvertGuiCounter1; ?>' name='userpdffilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='pdfmethod<?php echo $ConvertGuiCounter1; ?>' name='pdfmethod<?php echo $ConvertGuiCounter1; ?>'>   
             <option value="0">طريقة</option>  
@@ -281,13 +422,9 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userpdffilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('pdfextension<?php echo $ConvertGuiCounter1; ?>').value; 
-                      document.getElementById('downloadTarget').click(); }
-                    }); },
-                  error: function(ReturnData) {
-                    alert("<?php echo $Alert; ?>"); }
-              });
-            });
-          });
+                      document.getElementById('downloadTarget').click(); } }); },
+                    error: function(ReturnData) {
+                      alert("<?php echo $Alert; ?>"); } }); }); });
           </script>
         </div>
         <?php } 
@@ -296,7 +433,7 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
         ?>
         <div id='archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p>تحويل هذا الأرشيف</p>
+          <p><strong>تحويل هذا الأرشيف</strong></p>
           <p>حدد اسم الملف <input type="text" id='userarchivefilename<?php echo $ConvertGuiCounter1; ?>' name='userarchivefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='archiveextension<?php echo $ConvertGuiCounter1; ?>' name='archiveextension<?php echo $ConvertGuiCounter1; ?>'> 
             <option value="zip">حدد التنسيق</option>
@@ -329,13 +466,9 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userarchivefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archiveextension<?php echo $ConvertGuiCounter1; ?>').value; 
-                      document.getElementById('downloadTarget').click(); }
-                    }); },
-                  error: function(ReturnData) {
-                    alert("<?php echo $Alert; ?>"); }
-              });
-            });
-          });
+                      document.getElementById('downloadTarget').click(); } }); },
+                    error: function(ReturnData) {
+                      alert("<?php echo $Alert; ?>"); } }); }); });
           </script>
         </div>
         <?php } 
@@ -344,7 +477,7 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
         ?>
         <div id='docOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='docOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p>تحويل هذا المستند</p>
+          <p><strong>تحويل هذا المستند</strong></p>
           <p>حدد اسم الملف <input type="text" id='userdocfilename<?php echo $ConvertGuiCounter1; ?>' name='userdocfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='docextension<?php echo $ConvertGuiCounter1; ?>' name='docextension<?php echo $ConvertGuiCounter1; ?>'> 
             <option value="txt">حدد التنسيق</option>
@@ -379,14 +512,9 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userdocfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('docextension<?php echo $ConvertGuiCounter1; ?>').value; 
-                      document.getElementById('downloadTarget').click(); }
-
-                    }); },
-                  error: function(ReturnData) {
-                    alert("<?php echo $Alert; ?>"); }
-              });
-            });
-          });
+                      document.getElementById('downloadTarget').click(); } }); },
+                    error: function(ReturnData) {
+                      alert("<?php echo $Alert; ?>"); } }); }); });
           </script>
         </div>
         <?php }
@@ -395,7 +523,7 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
         ?>
         <div id='spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p>تحويل جدول البيانات هذا</p>
+          <p><strong>تحويل جدول البيانات هذا</strong></p>
           <p>حدد اسم الملف <input type="text" id='userspreadfilename<?php echo $ConvertGuiCounter1; ?>' name='userspreadfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='spreadextension<?php echo $ConvertGuiCounter1; ?>' name='spreadextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="ods">حدد التنسيق</option> 
@@ -430,11 +558,8 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userspreadfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('spreadextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); }
                     }); },
-                  error: function(ReturnData) {
-                    alert("<?php echo $Alert; ?>"); }
-              });
-            });
-          });
+                    error: function(ReturnData) {
+                      alert("<?php echo $Alert; ?>"); } }); }); });
           </script>
         </div>
         <?php }
@@ -443,7 +568,7 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
         ?>
         <div id='presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p>تحويل هذا العرض التقديمي</p>
+          <p><strong>تحويل هذا العرض التقديمي</strong></p>
           <p>حدد اسم الملف <input type="text" id='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' name='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='presentationextension<?php echo $ConvertGuiCounter1; ?>' name='presentationextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="odp">حدد التنسيق</option>
@@ -480,13 +605,9 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userspreadfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('presentationextension<?php echo $ConvertGuiCounter1; ?>').value; 
-                      document.getElementById('downloadTarget').click(); }
-                    }); },
-                  error: function(ReturnData) {
-                    alert("<?php echo $Alert; ?>"); }
-              });
-            });
-          });
+                      document.getElementById('downloadTarget').click(); } }); },
+                    error: function(ReturnData) {
+                      alert("<?php echo $Alert; ?>"); } }); }); });
           </script>
         </div>
         <?php } 
@@ -495,7 +616,7 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
         ?>
         <div id='audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p>تحويل هذا الصوت</p>
+          <p><strong>تحويل هذا الصوت</strong></p>
           <p>حدد اسم الملف <input type="text" id='useraudiofilename<?php echo $ConvertGuiCounter1; ?>' name='useraudiofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='audioextension<?php echo $ConvertGuiCounter1; ?>' name='audioextension<?php echo $ConvertGuiCounter1; ?>'> 
             <option value="mp3">حدد التنسيق</option>
@@ -526,17 +647,13 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
                     data: { 
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
-                      ownload:document.getElementById('useraudiofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('audioextension<?php echo $ConvertGuiCounter1; ?>').value },
+                      download:document.getElementById('useraudiofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('audioextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('useraudiofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('audioextension<?php echo $ConvertGuiCounter1; ?>').value; 
-                      document.getElementById('downloadTarget').click(); }
-                    }); },
-                  error: function(ReturnData) {
-                    alert("<?php echo $Alert; ?>"); }
-              });
-            });
-          });
+                      document.getElementById('downloadTarget').click(); } }); },
+                    error: function(ReturnData) {
+                      alert("<?php echo $Alert; ?>"); } }); }); });
           </script>
         </div>
         <?php } 
@@ -545,7 +662,7 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
         ?>
         <div id='videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p>تحويل هذا الفيديو</p>
+          <p><strong>تحويل هذا الفيديو</strong></p>
           <p>حدد اسم الملف <input type="text" id='uservideofilename<?php echo $ConvertGuiCounter1; ?>' name='uservideofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='videoextension<?php echo $ConvertGuiCounter1; ?>' name='videoextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="mp4">حدد التنسيق</option> 
@@ -582,13 +699,9 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('uservideofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('videoextension<?php echo $ConvertGuiCounter1; ?>').value; 
-                      document.getElementById('downloadTarget').click(); }
-                    }); },
-                  error: function(ReturnData) {
-                    alert("<?php echo $Alert; ?>"); }
-              });
-            });
-          });
+                      document.getElementById('downloadTarget').click(); } }); },
+                    error: function(ReturnData) {
+                      alert("<?php echo $Alert; ?>"); } }); }); });
           </script>
         </div>
         <?php } 
@@ -597,7 +710,7 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
         ?>
         <div id='modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p>تحويل هذا النموذج ثلاثي الأبعاد</p>
+          <p><strong>تحويل هذا النموذج ثلاثي الأبعاد</strong></p>
           <p>حدد اسم الملف <input type="text" id='usermodelfilename<?php echo $ConvertGuiCounter1; ?>' name='usermodelfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='modelextension<?php echo $ConvertGuiCounter1; ?>' name='modelextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="3ds">حدد التنسيق</option>
@@ -636,13 +749,9 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('usermodelfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('modelextension<?php echo $ConvertGuiCounter1; ?>').value; 
-                      document.getElementById('downloadTarget').click(); }
-                    }); },
-                  error: function(ReturnData) {
-                    alert("<?php echo $Alert; ?>"); }
-              });
-            });
-          });
+                      document.getElementById('downloadTarget').click(); } }); },
+                    error: function(ReturnData) {
+                      alert("<?php echo $Alert; ?>"); } }); }); });
           </script>
         </div>
         <?php } 
@@ -651,7 +760,7 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
         ?>
         <div id='drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p>قم بتحويل هذا الرسم الفني أو ملف المتجه</p>
+          <p><strong>قم بتحويل هذا الرسم الفني أو ملف المتجه</strong></p>
           <p>حدد اسم الملف <input type="text" id='userdrawingfilename<?php echo $ConvertGuiCounter1; ?>' name='userdrawingfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='drawingextension<?php echo $ConvertGuiCounter1; ?>' name='drawingextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="jpg">حدد التنسيق</option>
@@ -688,13 +797,9 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userdrawingfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('drawingextension<?php echo $ConvertGuiCounter1; ?>').value; 
-                      document.getElementById('downloadTarget').click(); }
-                    }); },
-                  error: function(ReturnData) {
-                    alert("<?php echo $Alert; ?>"); }
-              });
-            });
-          });
+                      document.getElementById('downloadTarget').click(); } }); },
+                    error: function(ReturnData) {
+                      alert("<?php echo $Alert; ?>"); } }); }); });
           </script>
         </div>
         <?php } 
@@ -703,7 +808,7 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
         ?>
         <div id='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p>تحويل هذه الصورة</p>
+          <p><strong>تحويل هذه الصورة</strong></p>
           <p>حدد اسم الملف <input type="text" id='userphotofilename<?php echo $ConvertGuiCounter1; ?>' name='userphotofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='photoextension<?php echo $ConvertGuiCounter1; ?>' name='photoextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="jpg">حدد التنسيق</option>
@@ -717,9 +822,9 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
             <option value="flif">Flif</option>
             <option value="avif">Avif</option>
           </select></p>
-          <p>العرض والارتفاع</p>
+          <p>Width & Height: </p>
           <p><input type="number" size="4" value="0" id='width<?php echo $ConvertGuiCounter1; ?>' name='width<?php echo $ConvertGuiCounter1; ?>' min="0" max="10000"> X <input type="number" size="4" value="0" id="height<?php echo $ConvertGuiCounter1; ?>" name="height<?php echo $ConvertGuiCounter1; ?>" min="0"  max="10000"></p> 
-          <p>استدارة<input type="number" size="3" id='rotate<?php echo $ConvertGuiCounter1; ?>' name='rotate<?php echo $ConvertGuiCounter1; ?>' value="0" min="0" max="359"></p>
+          <p>Rotate: <input type="number" size="3" id='rotate<?php echo $ConvertGuiCounter1; ?>' name='rotate<?php echo $ConvertGuiCounter1; ?>' value="0" min="0" max="359"></p>
           <input type="submit" id='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' name='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' value='تحويل الصورة' onclick="toggle_visibility('loadingCommandDiv');">
           <script type="text/javascript">
           $(document).ready(function () {
@@ -747,13 +852,9 @@ if ($fileCount >= 101) $fcPlural1 = 'لقد قمت بتحميل '.$fileCount.' �
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userphotofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('photoextension<?php echo $ConvertGuiCounter1; ?>').value; 
-                      document.getElementById('downloadTarget').click(); }
-                    }); },
-                  error: function(ReturnData) {
-                    alert("<?php echo $Alert; ?>"); }
-              });
-            });
-          });
+                      document.getElementById('downloadTarget').click(); } }); },
+                    error: function(ReturnData) {
+                      alert("<?php echo $Alert; ?>"); } }); }); });
           </script>
         <?php } ?>
       </div>

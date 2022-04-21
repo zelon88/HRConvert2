@@ -27,7 +27,7 @@ ADDITIONAL INFORMATION
 HRConvert2 logs information about it's operational activity to the Logs subdirectory where HRConvert2 is installed by default.
 The default logging directory can be adjusted by modifying the --Log Storage Directory-- section of the config.php file. 
 Log entries that represent normal, expected behavior begin with 'OP-Act:' to signify "Operational Activity".
-Log entries that represent abnormal behavior begin with ERROR!!!
+Log entries that represent abnormal behavior begin with 'ERROR'.
 If a log file does not exist; HRConvert2 will attempt to create one. 
 If an attempt to create a log file or write log entries fails for any reason; HRConvert2 will output errors directly to the page instead. 
 If a log file exists, was created on the current date, and is smaller than the "Maximum Log File Size" in config.php; HRConvert2 will append log entries to it. 
@@ -48,7 +48,8 @@ If "Enhanced Logging Verbosity" is disabled in config.php; only warnings and err
 ~~START OF EXAMPLE~~
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  The exact error response produced by the application. Text wrapped in angle brackets < > denote encoded information. 
+  The exact error response produced by the application. 
+  Text wrapped in angle brackets < > denote encoded information. 
   <TIMESTAMP> will be replaced with an abbreviated date. 
   <SESSION_IDENTIFIER> will be replaced with a short but unique number to identify related log events. 
   <APPLICATION_NAME> will be replaced with whatever the --Application Name-- is set to in config.php.
@@ -58,11 +59,13 @@ ERROR MESSAGE
   <FILE_TYPE> will be replaced with a human readable one word string describing the file such as 'Video' or 'Document'.  
 
 FILE
-  The file path pointing to the file which contains this error message. File is relative to the root HRConvert2 installation directory. 
+  The file path pointing to the file which contains this error message. 
+  File is relative to the root HRConvert2 installation directory. 
   <SELECTED_LANGUAGE> will be replaced with the ISO 639-1 code that represents the language that was used during the event.
 
 FATAL
-  Whether or not the occurance of this error will halt execution of the application. Will either be YES or NO.
+  Whether or not the occurance of this error will halt execution of the application.
+  Will either be YES or NO.
 
 LOGGED
   Whether or not the occurance of this error will be written to a log file in the --Log Storage Directory--  section of the config.php file.
@@ -91,7 +94,7 @@ LOGGED
 ERROR DESCRIPTION
   The config.php file located in the installation directory which is required for HRConvert2 to run is missing or unreachable.
   This may be the result of incorrect file permission levels on the installation directory or config.php file.
-  The www-data:www-data user:group needs to have read to the config.php file.
+  The www-data:www-data user:group needs to have read access to the config.php file.
   This may be the result of incorrect user or group associations for the www-data user or group.
   This could be because HRConvert2 is running on an unsupported operating system or PHP version.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -598,6 +601,28 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-23, <SESSION_IDENTIFIER>: User Virus Scan Failed!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
+  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  This may be the result of incorrect file permission levels on the directory where the application is installed.
+  This may be the result of incorrect user or group associations for the www-data user or group.
+  The device where data is stored has an insufficient amount of storage space available.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-500, <SESSION_IDENTIFIER>: There were potentially infected files detected at <FILE_PATH>!
 
 FILE
@@ -707,7 +732,130 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3000, Could not verify the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3000, Could not sanitize the input file!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The user submitted an invalid or dangerous file extension.
+  The user submitted a request for a file they should not have access to.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+  The user is trying to escape their designated data location.
+  A 3rd party application is imporperly attempting to submit data to the API.
+  The application is being fuzzed or scanned for vulnerabilities.
+  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  This error is not fatal but the file that causes it will be skipped.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3001, Could not verify the input file!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The user submitted a request for a file that does not exist.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+  A 3rd party application is imporperly attempting to submit data to the API.
+  The application is being fuzzed or scanned for vulnerabilities.
+  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  The user submitted an invalid or dangerous file extension.
+  The user submitted a request for a file they should not have access to.
+  The user is trying to escape their designated data location.
+  A 3rd party application is imporperly attempting to submit data to the API.
+  The application is being fuzzed or scanned for vulnerabilities.
+  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  The user has requested to convert a file that was deleted for exceededing the --File Deletion Age Theshold-- specified in config.php.
+  This error is not fatal but the file that causes it will be skipped.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3002, File <FILE_NAME> does not exist!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The user submitted a request for a file that does not exist.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  The user has requested to convert a file that was deleted for exceededing the --File Deletion Age Theshold-- specified in config.php.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3003, Could not verify the input file!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The user submitted a request for a file that does not exist.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  The user has requested to convert a file that was deleted for exceededing the --File Deletion Age Theshold-- specified in config.php.
+  This error is not fatal but the file that causes it will be skipped.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4000, Could not sanitize the input file!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The user submitted an invalid or dangerous file extension.
+  The user submitted a request for a file they should not have access to.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+  The user is trying to escape their designated data location.
+  A 3rd party application is imporperly attempting to submit data to the API.
+  The application is being fuzzed or scanned for vulnerabilities.
+  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  This error is not fatal but the file that causes it will be skipped.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4001, Could not verify the input file!
 
 FILE
   convertCore.php
@@ -736,78 +884,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3001, File <FILE_NAME> does not exist!
-
-FILE
-  convertCore.php
-
-FATAL
-  NO
-
-LOGGED
-  YES
-
-ERROR DESCRIPTION
-  The user submitted a request for a file that does not exist.
-  The user submitted a request that was incorrect, malformed, or corrupt.
-  One of the $_POST or $_GET variables submitted was empty after sanitization.
-  The user has requested to convert a file that was deleted for exceededing the --File Deletion Age Theshold-- specified in config.php.
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3002, Could not verify the input file!
-
-FILE
-  convertCore.php
-
-FATAL
-  NO
-
-LOGGED
-  YES
-
-ERROR DESCRIPTION
-  The user submitted a request for a file that does not exist.
-  The user submitted a request that was incorrect, malformed, or corrupt.
-  One of the $_POST or $_GET variables submitted was empty after sanitization.
-  The user has requested to convert a file that was deleted for exceededing the --File Deletion Age Theshold-- specified in config.php.
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4000, Could not verify the input file!
-
-FILE
-  convertCore.php
-
-FATAL
-  NO
-
-LOGGED
-  YES
-
-ERROR DESCRIPTION
-  The user submitted a request for a file that does not exist.
-  The user submitted a request that was incorrect, malformed, or corrupt.
-  A 3rd party application is imporperly attempting to submit data to the API.
-  The application is being fuzzed or scanned for vulnerabilities.
-  One of the $_POST or $_GET variables submitted was empty after sanitization.
-  The user submitted an invalid or dangerous file extension.
-  The user submitted a request for a file they should not have access to.
-  The user is trying to escape their designated data location.
-  A 3rd party application is imporperly attempting to submit data to the API.
-  The application is being fuzzed or scanned for vulnerabilities.
-  One of the $_POST or $_GET variables submitted was empty after sanitization.
-  The user has requested to convert a file that was deleted for exceededing the --File Deletion Age Theshold-- specified in config.php.
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4001, Could not perform a virus scan!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4002, Could not perform a virus scan!
 
 FILE
   convertCore.php
@@ -829,7 +906,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4002, Virus detected!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4003, Virus detected!
 
 FILE
   convertCore.php
@@ -851,7 +928,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4003, Could not archive <FILE_NAME> to <FILE_PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4004, Could not archive <FILE_NAME> to <FILE_PATH>!
 
 FILE
   convertCore.php
@@ -879,7 +956,32 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5000, Could not verify the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5000, Could not sanitize the input file!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The user submitted an invalid or dangerous file extension.
+  The user submitted a request for a file they should not have access to.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+  The user is trying to escape their designated data location.
+  A 3rd party application is imporperly attempting to submit data to the API.
+  The application is being fuzzed or scanned for vulnerabilities.
+  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  This error is not fatal but the file that causes it will be skipped.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5001, Could not verify the input file!
 
 FILE
   convertCore.php
@@ -903,12 +1005,13 @@ ERROR DESCRIPTION
   The application is being fuzzed or scanned for vulnerabilities.
   One of the $_POST or $_GET variables submitted was empty after sanitization.
   The user has requested to convert a file that was deleted for exceededing the --File Deletion Age Theshold-- specified in config.php.
+  This error is not fatal but the file that causes it will be skipped.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5001, Could not perform a virus scan!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5002, Could not perform a virus scan!
 
 FILE
   convertCore.php
@@ -930,7 +1033,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5002, Virus detected!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5003, Virus detected!
 
 FILE
   convertCore.php
@@ -952,7 +1055,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5003, Could not convert the selected <FILE_TYPE>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5004, Could not convert the selected <FILE_TYPE>!
 
 FILE
   convertCore.php
@@ -979,7 +1082,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5004, Could not archive <FILE_NAME> to <FILE_PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5005, Could not archive <FILE_NAME> to <FILE_PATH>!
 
 FILE
   convertCore.php
@@ -1007,7 +1110,32 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6000, Unsupported file format!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6000, Could not sanitize the input file!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The user submitted an invalid or dangerous file extension.
+  The user submitted a request for a file they should not have access to.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+  The user is trying to escape their designated data location.
+  A 3rd party application is imporperly attempting to submit data to the API.
+  The application is being fuzzed or scanned for vulnerabilities.
+  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  This error is not fatal but the file that causes it will be skipped.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6001, Unsupported file format!
 
 FILE
   convertCore.php
@@ -1026,7 +1154,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6001, Could not upload file <FILE_NAME> to <FILE_PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6002, Could not upload file <FILE_NAME> to <FILE_PATH>!
 
 FILE
   convertCore.php
@@ -1049,7 +1177,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6002, Could not perform a virus scan!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6003, Could not perform a virus scan!
 
 FILE
   convertCore.php
@@ -1071,7 +1199,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6003, Virus detected!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6004, Virus detected!
 
 FILE
   convertCore.php
@@ -1093,7 +1221,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6000, Could not verify the document conversion engine!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-7000, Could not verify the document conversion engine!
 
 FILE
   convertCore.php
@@ -1362,7 +1490,29 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14001, The file <FILE_NAME> failed second stage validation!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14001, Could not delete stale file <PATH_NAME>!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
+  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  This may be the result of incorrect file permission levels on the directory where the application is installed.
+  This may be the result of incorrect user or group associations for the www-data user or group.
+  The device where data is stored has an insufficient amount of storage space available.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14002, The file <FILE_NAME> failed second stage validation!
 
 FILE
   convertCore.php
@@ -1384,7 +1534,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14002, The file <FILE_NAME> failed third stage validation!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14003, The file <FILE_NAME> failed third stage validation!
 
 FILE
   convertCore.php
@@ -1408,7 +1558,54 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15000, Could not verify the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14004, Could not delete stale file <PATH_NAME>!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
+  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  This may be the result of incorrect file permission levels on the directory where the application is installed.
+  This may be the result of incorrect user or group associations for the www-data user or group.
+  The device where data is stored has an insufficient amount of storage space available.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15000, Could not sanitize the input file!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The user submitted an invalid or dangerous file extension.
+  The user submitted a request for a file they should not have access to.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+  The user is trying to escape their designated data location.
+  A 3rd party application is imporperly attempting to submit data to the API.
+  The application is being fuzzed or scanned for vulnerabilities.
+  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  This error is not fatal but the file that causes it will be skipped.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15001, Could not verify the input file!
 
 FILE
   convertCore.php
@@ -1432,12 +1629,13 @@ ERROR DESCRIPTION
   The application is being fuzzed or scanned for vulnerabilities.
   One of the $_POST or $_GET variables submitted was empty after sanitization.
   The user has requested to convert a file that was deleted for exceededing the --File Deletion Age Theshold-- specified in config.php.
+  This error is not fatal but the file that causes it will be skipped.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15001, Could not perform a virus scan!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15002, Could not perform a virus scan!
 
 FILE
   convertCore.php
@@ -1459,7 +1657,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15002, Virus detected!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15003, Virus detected!
 
 FILE
   convertCore.php
@@ -1481,7 +1679,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15003, Could not complete the conversion using method 0. Reattempting using method 1.
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15004, Could not complete the conversion using method 0. Reattempting using method 1.
 
 FILE
   convertCore.php
@@ -1503,14 +1701,14 @@ ERROR DESCRIPTION
   This may be the result of incorrect file permission levels on the directory where Data is stored.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
-  The request contained character types or encoded data that are not supported.YES
+  The request contained character types or encoded data that are not supported.
   One of the $_POST or $_GET variables submitted was empty after sanitization.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15004, Could not complete the conversion using method 1.
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15005, Could not complete the conversion using method 1.
 
 FILE
   convertCore.php
@@ -1589,7 +1787,28 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15007, Could not create an intermediate directory at <FILE_PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15008, Could not verify the document conversion engine!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Unoconv has stopped responding.
+  Unoconv is not listening.
+  The Unoconv process cannot be identified.
+  Unoconv cannot be started.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15009, Could not create an intermediate directory at <FILE_PATH>!
 
 FILE
   convertCore.php
@@ -1607,4 +1826,270 @@ ERROR DESCRIPTION
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
   The request contained character types or encoded data that are not supported.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16000 Could not delete stale file <FILE_PATH>!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
+  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  This may be the result of incorrect file permission levels on the directory where the application is installed.
+  This may be the result of incorrect user or group associations for the www-data user or group.
+  The device where data is stored has an insufficient amount of storage space available.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16001 Could create a file at <FILE_PATH>!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
+  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  This may be the result of incorrect file permission levels on the directory where the application is installed.
+  This may be the result of incorrect user or group associations for the www-data user or group.
+  The device where data is stored has an insufficient amount of storage space available.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16002 Could not delete stale file <FILE_PATH>!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
+  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  This may be the result of incorrect file permission levels on the directory where the application is installed.
+  This may be the result of incorrect user or group associations for the www-data user or group.
+  The device where data is stored has an insufficient amount of storage space available.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16003 Could create a file at <FILE_PATH>!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
+  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  This may be the result of incorrect file permission levels on the directory where the application is installed.
+  This may be the result of incorrect user or group associations for the www-data user or group.
+  The device where data is stored has an insufficient amount of storage space available.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-17000, Could not sanitize the input file!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The user submitted an invalid or dangerous file extension.
+  The user submitted a request for a file they should not have access to.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+  The user is trying to escape their designated data location.
+  A 3rd party application is imporperly attempting to submit data to the API.
+  The application is being fuzzed or scanned for vulnerabilities.
+  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  This error is not fatal but the file that causes it will be skipped.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-17001, Could not verify the input file!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The user submitted a request for a file that does not exist.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+  A 3rd party application is imporperly attempting to submit data to the API.
+  The application is being fuzzed or scanned for vulnerabilities.
+  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  The user submitted an invalid or dangerous file extension.
+  The user submitted a request for a file they should not have access to.
+  The user is trying to escape their designated data location.
+  A 3rd party application is imporperly attempting to submit data to the API.
+  The application is being fuzzed or scanned for vulnerabilities.
+  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  The user has requested to convert a file that was deleted for exceededing the --File Deletion Age Theshold-- specified in config.php.
+  This error is not fatal but the file that causes it will be skipped.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-18000, Could not verify ScanCore Virus Scanner!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The installation has become corrupt.
+  The ScanCore bundled dependency is missing.
+  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
+  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  This may be the result of incorrect file permission levels on the directory where the application is installed.
+  This may be the result of incorrect user or group associations for the www-data user or group.
+  The device where data is stored has an insufficient amount of storage space available.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-19000, Could not sanitize the input file!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The user submitted an invalid or dangerous file extension.
+  The user submitted a request for a file they should not have access to.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+  The user is trying to escape their designated data location.
+  A 3rd party application is imporperly attempting to submit data to the API.
+  The application is being fuzzed or scanned for vulnerabilities.
+  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  This error is not fatal but the file that causes it will be skipped.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-19001, Could not verify the input file!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The user submitted a request for a file that does not exist.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+  A 3rd party application is imporperly attempting to submit data to the API.
+  The application is being fuzzed or scanned for vulnerabilities.
+  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  The user submitted an invalid or dangerous file extension.
+  The user submitted a request for a file they should not have access to.
+  The user is trying to escape their designated data location.
+  A 3rd party application is imporperly attempting to submit data to the API.
+  The application is being fuzzed or scanned for vulnerabilities.
+  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  The user has requested to convert a file that was deleted for exceededing the --File Deletion Age Theshold-- specified in config.php.
+  This error is not fatal but the file that causes it will be skipped.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-20000 Could not delete stale file <FILE_PATH>!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
+  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  This may be the result of incorrect file permission levels on the directory where the application is installed.
+  This may be the result of incorrect user or group associations for the www-data user or group.
+  The device where data is stored has an insufficient amount of storage space available.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-20001 Could create a file at <FILE_PATH>!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
+  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  This may be the result of incorrect file permission levels on the directory where the application is installed.
+  This may be the result of incorrect user or group associations for the www-data user or group.
+  The device where data is stored has an insufficient amount of storage space available.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

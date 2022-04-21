@@ -1,17 +1,17 @@
 <?php
 $Alert = 'Não é possível converter este arquivo! Tente mudar o nome.';
 $Files = getFiles($ConvertDir);
-$fileCount = count($Files);
-$fcPlural1 = '';
-if (!is_numeric($fileCount)) $fileCount = 0;
+$FileCount = count($Files);
+$FCPlural1 = '';
+if (!is_numeric($FileCount)) $FileCount = 0;
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
 if (!isset($ApplicationTitle)) $ApplicationTitle = 'Converta Qualquer Coisa!'; 
 if (!isset($CoreLoaded)) die('ERRO!!! '.$ApplicationName.'-2, Este arquivo não pode processar sua solicitação! Por favor, envie seu arquivo para convertCore.php!');
 if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
-if ($fileCount === 0) $fcPlural1 = 'Você carregou 0 arquivos válidos para o '.$ApplicationName.'.';
-if ($fileCount === 1) $fcPlural1 = 'Você carregou 1 arquivo válido para '.$ApplicationName.'.'; 
-if ($fileCount === 2) $fcPlural1 = 'Você carregou 2 arquivos válidos para '.$ApplicationName.'.';
-if ($fileCount >= 3) $fcPlural1 = 'Você carregou '.$fileCount.' arquivos válidos para o '.$ApplicationName.'.';
+if ($FileCount === 0) $FCPlural1 = 'Você carregou 0 arquivos válidos para o '.$ApplicationName.'.';
+if ($FileCount === 1) $FCPlural1 = 'Você carregou 1 arquivo válido para '.$ApplicationName.'.'; 
+if ($FileCount === 2) $FCPlural1 = 'Você carregou 2 arquivos válidos para '.$ApplicationName.'.';
+if ($FileCount >= 3) $FCPlural1 = 'Você carregou '.$FileCount.' arquivos válidos para o '.$ApplicationName.'.';
 ?>
   <body>
     <script type="text/javascript" src="Resources/jquery-3.6.0.min.js"></script>
@@ -19,7 +19,7 @@ if ($fileCount >= 3) $fcPlural1 = 'Você carregou '.$fileCount.' arquivos válid
       <?php if (!isset($_GET['noGui'])) { ?><h1><?php echo $ApplicationName; ?></h1>
       <hr /><?php } ?>
       <h3>Opções de Conversão de Arquivo</h3>
-      <p><?php echo $fcPlural1; ?></p> 
+      <p><?php echo $FCPlural1; ?></p> 
       <p>Seus arquivos agora estão prontos para serem convertidos usando as opções abaixo.</p>
     </div>
 

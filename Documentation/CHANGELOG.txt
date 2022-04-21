@@ -1,3 +1,43 @@
+COMMIT 4/20/2022
+v2.8.7 - Added User Virus Scanning support, download button, loading spinner options & more.
+
+-v2.8.7.
+-Fixed an undefined variable warning in the virusScan() function.
+-Cleaned up memory deallocation routine in the virusScan() function.
+-Only enable file related operations if valid tokens have been supplied.
+-Improved sanitization integrity.
+-Combined the functionality of HRScan2 into HRConvert2.
+  -Now users can select to scan uploaded files for viruses on-demand using ClamAV or zelon88/ScanCore.
+  -The codebases for both are "sisters" so maintainence has always been a pain.
+  -Whenever one gets updated a lot of the code needed to be modified and merged into the other one.
+  -Considering the major refactor that just took place with HRConvert2 (which took almmost 38 caffene fueled hours) I figure we would merge functionality instead of refactoring another core.
+  -These features can be disabled via config.php.
+  -Some administrators won't want users uploading potentially malicious files, which makes sense.
+  -If $UserVirusScanning is enabled in config.php the HRScan2 features will be savailable.
+  -If $UserVirusScanning is not enabled in config.php the HRScan2 features will be unavailable.
+  -This behaviour change requires some changes to the way regular virus scanning is performed.
+  -If $UserVirusScanning is enabled we must disable regular virus scanning during the file upload phase.
+  -Note that all other regular virus scan operations are still enforced.
+  -Meaning that if a user uploads a file that is infected, they will still NOT be allowed to perform download, conversion, archive, or OCR operations on them.
+  -They WILL be allowed to scan the file using User Virus Scan options.
+  -Also if a normal virus scan detects a malicious file while $AllowUserVirusScan is enabled, the file WILL NOT be immediately deleted.
+  -It will be allowed to remain until regular cleanup activities remove it (after the $DeleteThreshold has passed).
+-Added color specific down arrow buttons to the GUI.
+-Added Download File button to convertGui2.php page.
+  -Now you can redownload any file in the HRConvert2 scratch space.
+-Added Scan File & Scan All buttons to convertGui2.php page.
+-Added config entry for adjusting the backround color of the GUI.
+-Added config entry for adjusting the loading spinner style.
+-Added 6 spinners for each color scheme (24 spinners total).
+-Can now specify your own spinner in config.php.
+-Refactored convertGui2.php file for English & Arabic so far.
+  -Need to continue doing the rest.
+  -Only English & Arabic language packs have support for the new API features related to User Virus Scans.
+-Updated ERROR_DESCIPTIONS.txt with the latest errors related to virus scanning.
+-Fixed dropdown boxes showing reversed in Arabic language pack.
+-Made dropdown arrow colors match the color scheme being used.
+
+--------------------
 COMMIT 4/19/2022
 v2.8.3 - Reordered some error numbers. Finished ERROR_DESCRIPTIONS.txt.
 
@@ -8,7 +48,6 @@ v2.8.3 - Reordered some error numbers. Finished ERROR_DESCRIPTIONS.txt.
 -Took some updated screenshots.
 -Saved pending changes to UI docs that should have been uploaded yesterday.
 -Updated Slack Team link in README.md.
-
 
 --------------------
 COMMIT - 4/17/2022

@@ -14,6 +14,10 @@ if (!isset($Font)) $Font = 'Arial'; ?>
       body {
         font-family: <?php echo $Font; ?>; }
         <?php if (isset($ButtonCode)) echo $ButtonCode; ?>
+        select { 
+          background-position: left;
+          text-align-last: right; }
+        option { direction: rtl; }
     </style>
     <title><?php echo $ApplicationName; ?> - <?php echo $ApplicationTitle; ?></title>
   </head>

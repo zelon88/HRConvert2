@@ -1,10 +1,10 @@
 <?php
 $Alert = 'Impossible de convertir ce fichier. Essayez de changer le nom.';
 $Files = getFiles($ConvertDir);
-$fileCount = count($Files);
-$fcPlural1 = 's';
-if (!is_numeric($fileCount)) $fileCount = 'un nombre inconnu de';
-if ($fileCount == 1) $fcPlural1 = '';
+$FileCount = count($Files);
+$FCPlural1 = 's';
+if (!is_numeric($FileCount)) $FileCount = 'un nombre inconnu de';
+if ($FileCount == 1) $FCPlural1 = '';
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
 if (!isset($ApplicationTitle)) $ApplicationTitle = 'Convertissez n\'importe quoi!'; 
 if (!isset($CoreLoaded)) die('ERREUR!!! '.$ApplicationName.'-2, Ce fichier ne peut pas traiter votre demande ! Veuillez soumettre votre fichier à convertCore.php à la place !');
@@ -17,7 +17,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
       <hr /><?php } ?>
       <h3>Options de Conversion de Fichiers</h3>
       
-      <p>Vous avez téléchargé <?php echo $fileCount; ?> fichier<?php echo $fcPlural1; ?> valide<?php echo $fcPlural1; ?> sur <?php echo $ApplicationName; ?>.</p> 
+      <p>Vous avez téléchargé <?php echo $FileCount; ?> fichier<?php echo $FCPlural1; ?> valide<?php echo $FCPlural1; ?> sur <?php echo $ApplicationName; ?>.</p> 
       <p>Vos fichiers sont maintenant prêts à être convertis en utilisant les options ci-dessous</p>
     </div>
 

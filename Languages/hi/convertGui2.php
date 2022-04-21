@@ -1,16 +1,16 @@
 <?php
 $Alert = 'इस फ़ाइल को परिवर्तित नहीं कर सकता! नाम बदलने का प्रयास करें।';
 $Files = getFiles($ConvertDir);
-$fileCount = count($Files);
-$fcPlural1 = '';
-if (!is_numeric($fileCount)) $fileCount = 0;
+$FileCount = count($Files);
+$FCPlural1 = '';
+if (!is_numeric($FileCount)) $FileCount = 0;
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
 if (!isset($ApplicationTitle)) $ApplicationTitle = 'कुछ भी कनवर्ट करें!'; 
 if (!isset($CoreLoaded)) die('त्रुटि!!! '.$ApplicationName.'-2, यह फ़ाइल आपके अनुरोध को संसाधित नहीं कर सकती है! इसके बजाय कृपया अपनी फ़ाइल ConvertCore.php पर सबमिट करें!');
 if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
-if ($fileCount === 0) $fcPlural1 = 'आपने 0 मान्य फ़ाइलें '.$ApplicationName.'-2 पर अपलोड की हैं।';
-if ($fileCount === 1) $fcPlural1 = 'आपने '.$ApplicationName.'-2 पर 1 वैध फ़ाइल अपलोड की है।'; 
-if ($fileCount > 1) $fcPlural1 = 'आपने '.$fileCount.' मान्य फ़ाइलें '.$ApplicationName.'-2 पर अपलोड की हैं।';
+if ($FileCount === 0) $FCPlural1 = 'आपने 0 मान्य फ़ाइलें '.$ApplicationName.'-2 पर अपलोड की हैं।';
+if ($FileCount === 1) $FCPlural1 = 'आपने '.$ApplicationName.'-2 पर 1 वैध फ़ाइल अपलोड की है।'; 
+if ($FileCount > 1) $FCPlural1 = 'आपने '.$FileCount.' मान्य फ़ाइलें '.$ApplicationName.'-2 पर अपलोड की हैं।';
 ?>
   <body>
     <script type="text/javascript" src="Resources/jquery-3.6.0.min.js"></script>
@@ -18,7 +18,7 @@ if ($fileCount > 1) $fcPlural1 = 'आपने '.$fileCount.' मान्य �
       <?php if (!isset($_GET['noGui'])) { ?><h1><?php echo $ApplicationName; ?></h1>
       <hr /><?php } ?>
       <h3>फ़ाइल रूपांतरण विकल्प</h3>
-      <p><?php echo $fcPlural1; ?></p> 
+      <p><?php echo $FCPlural1; ?></p> 
       <p>आपकी फ़ाइल अब नीचे दिए गए विकल्पों का उपयोग करके कनवर्ट करने के लिए तैयार है।</p>
     </div>
 

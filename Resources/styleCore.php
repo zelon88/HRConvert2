@@ -65,7 +65,11 @@ $defaultButtonCode = '.info-button {
   background-color:#eeeeee; }
 .info-button:active {
   position:relative;
-  top:1px; } ';
+  top:1px; }
+select {
+  background: url("Resources/darrowdefault.png") 96% / 15% no-repeat #eee; }
+body { 
+  background-color: #F8F8F8; }';
 
 $greenButtonCode = '.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #b9ccb3;
@@ -106,7 +110,11 @@ $greenButtonCode = '.info-button {
   background-color:#50c20e; }
 .info-button:active {
   position:relative;
-  top:1px; } ';
+  top:1px; } 
+select {
+  background: url("Resources/darrowgreen.png") 96% / 15% no-repeat #eee; }
+body { 
+  background-color: #E8FFE1; }';
 
 $blueButtonCode = '.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #cfe2f3;
@@ -147,7 +155,11 @@ $blueButtonCode = '.info-button {
   background-color:#2d60b2; }
 .info-button:active {
   position:relative;
-  top:1px; } ';
+  top:1px; }
+select {
+  background: url("Resources/darrowblue.png") 96% / 15% no-repeat #eee; }
+body { 
+  background-color: #E1F7FF; }';
 
 $redButtonCode = '.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #bcbcbc;
@@ -188,4 +200,8 @@ $redButtonCode = '.info-button {
   background-color:#c20e0e; }
 .info-button:active {
   position:relative;
-  top:1px; } ';
+  top:1px; }
+select {
+  background: url("Resources/darrowred.png") 96% / 15% no-repeat #eee; }
+body { 
+  background-color: #FFE9E1; }';

@@ -1,19 +1,19 @@
 <?php
 $Alert = 'Неможливо конвертувати цей файл! Спробуйте змінити назву.';
 $Files = getFiles($ConvertDir);
-$fileCount = count($Files);
-$fcPlural1 = '';
-if (!is_numeric($fileCount)) $fileCount = 0;
+$FileCount = count($Files);
+$FCPlural1 = '';
+if (!is_numeric($FileCount)) $FileCount = 0;
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
 if (!isset($ApplicationTitle)) $ApplicationTitle = 'Перетворюйте будь-що!'; 
 if (!isset($CoreLoaded)) die('ПОМИЛКА!!! '.$ApplicationName.'-2, цей файл не може обробити ваш запит! Натомість надішліть свій файл у convertCore.php!');
 if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
-if ($fileCount == 0) $fcPlural1 = 'Ви завантажили 0 дійсних файлів до '.$ApplicationName.'.';
-if ($fileCount == 1) $fcPlural1 = 'Ви завантажили 1 дійсний файл до '.$ApplicationName.'.'; 
-if ($fileCount == 2) $fcPlural1 = 'Ви завантажили 2 дійсні файли до '.$ApplicationName.'.';
-if ($fileCount == 3) $fcPlural1 = 'Ви завантажили 3 дійсні файли до '.$ApplicationName.'.';
-if ($fileCount == 4) $fcPlural1 = 'Ви завантажили 4 дійсні файли до '.$ApplicationName.'.';
-if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних файлів до '.$ApplicationName.'.';
+if ($FileCount == 0) $FCPlural1 = 'Ви завантажили 0 дійсних файлів до '.$ApplicationName.'.';
+if ($FileCount == 1) $FCPlural1 = 'Ви завантажили 1 дійсний файл до '.$ApplicationName.'.'; 
+if ($FileCount == 2) $FCPlural1 = 'Ви завантажили 2 дійсні файли до '.$ApplicationName.'.';
+if ($FileCount == 3) $FCPlural1 = 'Ви завантажили 3 дійсні файли до '.$ApplicationName.'.';
+if ($FileCount == 4) $FCPlural1 = 'Ви завантажили 4 дійсні файли до '.$ApplicationName.'.';
+if ($FileCount >= 5) $FCPlural1 = 'Ви завантажили 5 дійсних файлів до '.$ApplicationName.'.';
 ?>
   <body>
     <script type="text/javascript" src="Resources/jquery-3.6.0.min.js"></script>
@@ -21,7 +21,7 @@ if ($fileCount >= 5) $fcPlural1 = 'Ви завантажили 5 дійсних 
       <?php if (!isset($_GET['noGui'])) { ?><h1><?php echo $ApplicationName; ?></h1>
       <hr /><?php } ?>
       <h3>Параметри перетворення файлів</h3>
-      <p><?php echo $fcPlural1; ?></p> 
+      <p><?php echo $FCPlural1; ?></p> 
       <p>Тепер ваші файли готові до конвертації за допомогою наведених нижче параметрів.</p>
     </div>
 

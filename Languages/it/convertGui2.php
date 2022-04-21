@@ -1,16 +1,16 @@
 <?php
 $Alert = 'Impossibile convertire questo file! Prova a cambiare il nome.';
 $Files = getFiles($ConvertDir);
-$fileCount = count($Files);
-$fcPlural1 = '';
-if (!is_numeric($fileCount)) $fileCount = 0;
+$FileCount = count($Files);
+$FCPlural1 = '';
+if (!is_numeric($FileCount)) $FileCount = 0;
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
 if (!isset($ApplicationTitle)) $ApplicationTitle = 'Converti Qualsiasi Cosa!'; 
 if (!isset($CoreLoaded)) die('ERRORE!!! '.$ApplicationName.'-2, questo file non può elaborare la tua richiesta! Invia invece il tuo file a convertCore.php!');
 if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
-if ($fileCount === 0) $fcPlural1 = 'Hai caricato 0 file validi su '.$ApplicationName.'.';
-if ($fileCount === 1) $fcPlural1 = 'Hai caricato 1 file valido su '.$ApplicationName.'.'; 
-if ($fileCount >= 2) $fcPlural1 = 'Hai caricato '.$fileCount.' file validi su '.$ApplicationName.'.'; 
+if ($FileCount === 0) $FCPlural1 = 'Hai caricato 0 file validi su '.$ApplicationName.'.';
+if ($FileCount === 1) $FCPlural1 = 'Hai caricato 1 file valido su '.$ApplicationName.'.'; 
+if ($FileCount >= 2) $FCPlural1 = 'Hai caricato '.$FileCount.' file validi su '.$ApplicationName.'.'; 
 ?>
   <body>
     <script type="text/javascript" src="Resources/jquery-3.6.0.min.js"></script>
@@ -18,7 +18,7 @@ if ($fileCount >= 2) $fcPlural1 = 'Hai caricato '.$fileCount.' file validi su '.
       <?php if (!isset($_GET['noGui'])) { ?><h1><?php echo $ApplicationName; ?></h1>
       <hr /><?php } ?>
       <h3>Opzioni di Conversione dei File</h3>
-      <p><?php echo $fcPlural1; ?></p> 
+      <p><?php echo $FCPlural1; ?></p> 
       <p>I tuoi file sono ora pronti per essere convertiti utilizzando le opzioni seguenti.</p>
     </div>
 

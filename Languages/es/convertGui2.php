@@ -1,13 +1,13 @@
 <?php
 $Alert = '¡No se puede convertir este archivo! Prueba a cambiar el nombre.';
 $Files = getFiles($ConvertDir);
-$fileCount = count($Files);
-$fcPlural1 = 's';
-$fcPlural2 = 'n';
-if (!is_numeric($fileCount)) $fileCount = 'an unknown number of';
-if ($fileCount == 1) {
-  $fcPlural1 = '';
-  $fcPlural2 = ''; }
+$FileCount = count($Files);
+$FCPlural1 = 's';
+$FCPlural2 = 'n';
+if (!is_numeric($FileCount)) $FileCount = 'an unknown number of';
+if ($FileCount == 1) {
+  $FCPlural1 = '';
+  $FCPlural2 = ''; }
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
 if (!isset($ApplicationTitle)) $ApplicationTitle = '¡Convierte Cualquier Cosa!'; 
 if (!isset($CoreLoaded)) die('¡¡¡ERROR!!! '.$ApplicationName.'-2, ¡Este archivo no puede procesar su solicitud! ¡Envíe su archivo a convertCore.php en su lugar!');
@@ -19,8 +19,8 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
       <?php if (!isset($_GET['noGui'])) { ?><h1><?php echo $ApplicationName; ?></h1>
       <hr /><?php } ?>
       <h3>Opciones de Conversión de Archivos</h3>
-      <p>Has subido <?php echo $fileCount; ?> archivo<?php echo $fcPlural1; ?> válido<?php echo $fcPlural1; ?> a <?php echo $ApplicationName; ?>.</p> 
-      <p>Su<?php echo $fcPlural1; ?> archivo<?php echo $fcPlural1; ?> ahora está<?php echo $fcPlural2; ?> listo<?php echo $fcPlural1; ?> para convertir usando las opciones a continuación.</p>
+      <p>Has subido <?php echo $FileCount; ?> archivo<?php echo $FCPlural1; ?> válido<?php echo $FCPlural1; ?> a <?php echo $ApplicationName; ?>.</p> 
+      <p>Su<?php echo $FCPlural1; ?> archivo<?php echo $FCPlural1; ?> ahora está<?php echo $FCPlural2; ?> listo<?php echo $FCPlural1; ?> para convertir usando las opciones a continuación.</p>
     </div>
 
     <div id='utility' align="center">

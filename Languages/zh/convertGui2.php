@@ -1,11 +1,11 @@
 <?php
 $Alert = '无法转换此文件！ 尝试更改名称。';
 $Files = getFiles($ConvertDir);
-$fileCount = count($Files);
-$fcPlural1 = '';
-if (!is_numeric($fileCount)) $fileCount = 0;
-if ($fileCount === 0) $fcPlural1 = '您尚未将任何有效文件上传到 ';
-else $fcPlural1 = '您已将 '.$fileCount.' 个有效文件上传到 '; 
+$FileCount = count($Files);
+$FCPlural1 = '';
+if (!is_numeric($FileCount)) $FileCount = 0;
+if ($FileCount === 0) $FCPlural1 = '您尚未将任何有效文件上传到 ';
+else $FCPlural1 = '您已将 '.$FileCount.' 个有效文件上传到 '; 
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
 if (!isset($ApplicationTitle)) $ApplicationTitle = '转换任何东西！'; 
 if (!isset($CoreLoaded)) die('错误！！！ '.$ApplicationName.'-2, 此文件无法处理您的请求！ 请改为将您的文件提交到 convertCore.php！');
@@ -17,7 +17,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
       <?php if (!isset($_GET['noGui'])) { ?><h1><?php echo $ApplicationName; ?></h1>
       <hr /><?php } ?>
       <h3>文件转换选项</h3>
-      <p><?php echo $fcPlural1.$ApplicationName; ?>.</p> 
+      <p><?php echo $FCPlural1.$ApplicationName; ?>.</p> 
       <p>您的文件现在可以使用以下选项进行转换。</p>
     </div>
 

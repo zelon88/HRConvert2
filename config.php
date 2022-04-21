@@ -24,7 +24,7 @@
 // / DEPENDENCY REQUIREMENTS ... 
 // / This application requires Debian Linux (w/3rd Party audio license), 
 // / Apache 2.4, PHP 7+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip, 
-// / 7zipper, FFMPEG, PDFTOTEXT, Dia, PopplerUtils, MeshLab & ImageMagick.
+// / 7zipper, FFMPEG, PdfToText, Dia, PopplerUtils, MeshLab & ImageMagick.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -48,12 +48,56 @@ $Salts6 = 'somethingSoRanDoMThatNob2odyawryoglukfgy;/.5^&#&__Will_evar+guess+it'
 // /   Do not include a trailing slash.
 $URL = 'localhost';
 // /  --Virus Scanning--
-// /   Scan for viruses during directory scan.
+// /   Scan for viruses before performing file operations.
 // /   Requires ClamAV to be installed on the server.
-// /   Set to TRUE to enable virus scanning with ClamAV.
-// /   Set to FALSE to disable virus scanning. 
-// /   (ClamAV MUST be installed on the localhost!!!).
+// /   Set to TRUE to enable virus scanning with ClamAV during file operations.
+// /   Set to FALSE to disable virus scanning during file operations.
+// /   If an infected file is detected the user will not be allowed to download, archive, convert, or OCR the infected file.
+// /   The --User Virus Scanning-- config entry has a major impact on how regular virus scans are performed.
+// /   If set to TRUE & --User Virus Scanning-- is set to TRUE infected files detected during virus scans will remain until normal cleanup.
+// /   If set to TRUE & --User Virus Scanning-- is set to FALSE any infected file will immediately be deleted upon detection.
+// /   If set to TRUE & --User Virus Scanning-- is set to TRUE incoming file uploads will not be scanned for viruses.
+// /   If set to TRUE & --User Virus Scanning-- is set to FALSE incoming file uploads will be scanned for viruses.
+// /   Regardless of how --User Virus Scanning-- is set, infected files cananot be downloaded, archived, converted, or OCR'd.
 $VirusScan = FALSE;
+// /  --User Virus Scanning--
+// /   Give users the options to scan their uploaded files for viruses.
+// /   Requires ClamAV to be installed on the server.
+// /   Will disable virus scanning during uploads.
+// /   Will allow infected files detected during virus scanning operations to remain.
+// /   Set to TRUE to enable users to upload potentially infected files.
+// /   Set to FALSE to disable users uploading potentially infected files.
+// /   This config entry has a major impact on how regular virus scans are performed.
+// /   If set to TRUE & --Virus Scanning-- is set to TRUE infected files detected during virus scans will remain until normal cleanup.
+// /   If set to FALSE & --Virus Scanning-- is set to TRUE any infected file will immediately be deleted upon detection.
+// /   If set to TRUE & --Virus Scanning-- is set to TRUE incoming file uploads will not be scanned for viruses.
+// /   If set to FALSE & --Virus Scanning-- is set to TRUE incoming file uploads will be scanned for viruses.
+// /   Regardless of how --User Virus Scanning-- is set, infected files cananot be downloaded, archived, converted, or OCR'd.
+$AllowUserVirusScan = TRUE;
+// /  --User Virus Scanning ScanCore Memory Limit--
+// /   The number of bytes of memory ScanCore is allowed to allocate to large fules during User Virus Scans.
+// /   Files larger than this limit will be broken into chunks controlled by the --User Virus Scanning ScanCore Chunk Size-- config entry.
+$ScanCoreMemoryLimit = 268435456;
+// /  --User Virus Scanning ScanCore Chunk Size--
+// /   In order to scan files that are larger than the memory limit, large files will be broken into chunks.
+// /   The number of bytes to break large files into in order to fit them into memory.
+$ScanCoreChunkSize = 134217728;
+// /  --User Virus Scanning ScanCore Debug Mode--
+// /   Enable an absolutely insane amount of verbosity from ScanCore during file scan operations.
+// /   If set to TRUE these events will be included in the report that is submitted to the user.
+// /   If set to FALSE a normal amount of logging will be submitted to the user. Enough to get the job done.
+// /   If you scanned an entire 500GB hard drive with this set to TRUE ScanCore would generate 10's of GB worth of logs.
+// /   This setting will have an impact on ScanCore scanning performance.
+// /   Seriously, it's a lot of logs.
+$ScanCoreDebug = TRUE;
+// /  --User Virus Scanning ScanCore Enhanced Verbosity--
+// /   Enable an absolutely insane amount of console output from ScanCore during file scan operations.
+// /   If set to TRUE these events will be included in the log file that is stored on the server.
+// /   If set to FALSE a normal amount of logging will be stored on the server. Enough to get the job done.
+// /   If you scanned an entire 500GB hard drive with this set to TRUE ScanCore would generate 10's of GB worth of logs.
+// /   This setting will have an impact on ScanCore scanning performance.
+// /   Seriously, it's a lot of logs.
+$ScanCoreVerbose = TRUE;
 // / ------------------------------
 
 // / ------------------------------ 
@@ -74,7 +118,7 @@ $ServerRootDir = '/var/www/html';
 $ConvertLoc = '/home/justin/Documents/Projects/DATA/ConvertDATA';
 // /  --Log Storage Directory--
 // /   This is where permanent Log files are stored. 
-// /   (NO SLASH AFTER DIRECTORY!!!) ... 
+// /   Do not include a trailing slash.
 $LogDir = '/var/www/html/HRProprietary/HRConvert2/Logs';
 // / ------------------------------ 
 
@@ -104,8 +148,9 @@ $DefaultLanguage = 'en';
 // /  --Allow User Selectable Language--
 // /   Enable or disable dynamic language selection via the $_GET['language'] variable.
 // /   If set to TRUE a user will be able to select different languages via $_GET['language'].
-// /   If a user attempts a language that is not available $DefaultLanguage will be used instead.
 // /   If set to FALSE the $DefaultLanguage will always be used.
+// /   To submit a $_GET request append ?language=<CODE> to the URL & repalce <CODE> with a 2 digit ISO 639-1 language code.
+// /   If a user attempts a language that is not available --Default Language-- will be used instead.
 $AllowUserSelectableLanguage = TRUE;
 // /  --File Deletion Age Theshold--
 // /   Age in minutes of files to be deleted.
@@ -124,11 +169,20 @@ $MaxLogSize = 1048576;
 // /   Set the default font to use throughout HRConvert2 GUI elements.
 // /   Whatever font you choose must be installed on the client's machine.
 // /   If the font is not available the client default will be used.
-$Font = 'Arial';
+$Font = 'Verdana';
 // /  --Button Color--
 // /   Set the default color scheme to use for buttons.
-// /   Valid options are 'RED', 'GREEN', 'BLUE', or 'GREY'.
+// /   Valid options are 'RED', 'GREEN', 'BLUE' or 'GREY'.
 $ButtonStyle = 'BLUE';
+// /  --Spinner Style--
+// /   Set the default spinner to use as a loading indicator while operations are being processed.
+// /   Valid options are 0, 1, 2, 3, 4, 5 or 6.
+$SpinnerStyle = 6;
+// /  --Spinner Color--
+// /   Set the default color to use for the loading spinner.
+// /   If you would like the spinner to automatically match the rest of the color scheme, set this to '$ButtonStyle'.
+// /   Valid options are  'RED', 'GREEN', 'BLUE', 'GREY' or '$BurronStyle'.
+$SpinnerColor = $ButtonStyle;
 // /  --Show Full GUI--
 // /   Set whether or not to display a full GUI by default.
 // /   If this is set to TRUE a full GUI with text will be displayed.
@@ -136,14 +190,14 @@ $ButtonStyle = 'BLUE';
 $ShowGUI = TRUE;
 // /  --Show Fine Print--
 // /   Set whether or not to display the Terms of Service & Privacy Policy links.
-// /   If set to TRUE links to the $TOSURL and $PPURL will display at the bottom of the page.
+// /   If set to TRUE links to the --Terms of Service URL-- and --Privacy Policy URL-- will display at the bottom of the page.
 $ShowFinePrint = TRUE;
 // /  --Terms of Service URL--
 // /   The URL to use for the Terms of Service link at te bottom of the GUI.
-// /   Only takes effect if $ShowFinePrint is set to TRUE.
+// /   Only takes effect if --Show Fine Print-- is set to TRUE.
 $TOSURL = 'https://www.honestrepair.net/index.php/terms-of-service/';
 // /  --Privacy Policy URL--
 // /   The URL to use for the Privacy Policy link at te bottom of the GUI.
-// /   Only takes effect if $ShowFinePrint is set to TRUE.
+// /   Only takes effect if --Show Fine Print-- is set to TRUE.
 $PPURL = 'https://www.honestrepair.net/index.php/privacy-policy/';
 // / ------------------------------ 

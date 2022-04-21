@@ -89,7 +89,7 @@ $ScanCoreChunkSize = 134217728;
 // /   If you scanned an entire 500GB hard drive with this set to TRUE ScanCore would generate 10's of GB worth of logs.
 // /   This setting will have an impact on ScanCore scanning performance.
 // /   Seriously, it's a lot of logs.
-$ScanCoreDebug = TRUE;
+$ScanCoreDebug = FALSE;
 // /  --User Virus Scanning ScanCore Enhanced Verbosity--
 // /   Enable an absolutely insane amount of console output from ScanCore during file scan operations.
 // /   If set to TRUE these events will be included in the log file that is stored on the server.

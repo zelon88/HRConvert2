@@ -1,4 +1,14 @@
 COMMIT 4/20/2022
+v2.8.8 - Discovered bugs in ScanCore routine, improve User Virus Scanning.
+
+-v2.8.8.
+-Fixed the way User ScanCore Scans are called.
+-Reworked the way Scan Errors & Scan Complete is determined.
+-Revised logic to avoid errors during normal operation.
+-Both User Scan Methods successfully detected the Eicar test virus sample.
+
+--------------------
+COMMIT 4/20/2022
 v2.8.7 - Added User Virus Scanning support, download button, loading spinner options & more.
 
 -v2.8.7.

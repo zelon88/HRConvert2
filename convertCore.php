@@ -323,7 +323,7 @@ function verifyLanguage() {
 function verifyGlobals() {
   // / Set variables.
   global $URLEcho, $HRConvertVersion, $Date, $Time, $Current_URL, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $DangerousFiles1, $ArchiveArray, $DearchiveArray, $DocumentArray, $DocArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $DrawingArray, $ModelArray, $ConvertArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor;
-  $HRConvertVersion = 'v2.8.7';
+  $HRConvertVersion = 'v2.8.8';
   $CoreLoaded = $GlobalsAreVerified = TRUE;
   $SupportedConversionTypes = array('Document', 'Image', 'Model', 'Drawing', 'Video', 'Audio', 'Archive');
   $DirSep = DIRECTORY_SEPARATOR;
@@ -1046,7 +1046,7 @@ function downloadFiles($Download) {
       errorEntry('Could not verify the input file.', 3001, FALSE);
       continue; }
     // / Make sure that the file exists.
-    if (!file_exists($oldPathname)) {
+    if (!file_exists($oldPathname) && !$skip) {
       $DownloadErrors = TRUE;
       errorEntry('File '.$file.' does not exist!', 3002, FALSE);
       continue; }
@@ -1438,6 +1438,7 @@ function userClamScan($FilesToScan) {
       $OperationErrors = TRUE;
       errorEntry('Could not verify the input file.', 17001, FALSE);
       continue; }
+    $OperationSuccessful = TRUE;
     $txt = 'Scanning '.$file.'.';
     if ($Verbose) logEntry($txt);
     userVirusLogEntry($txt, 'clamav');
@@ -1448,14 +1449,14 @@ function userClamScan($FilesToScan) {
     // / Load the contents of the User Clam Log File for processing because it has been sanitized of unnecessary data & whitespace.
     $clamLogFileDATA = @file_get_contents($UserClamLogFile);
     // / Check the contents of the User Clam Log File for virus detections.
-    if (strpos($clamLogFileDATA, 'FOUND') !== TRUE) {
-      // / Write the results of the scan to both log files.
-      $txt = 'No infection detected in '.$file.'.';
+    if (strpos($clamLogFileDATA, 'FOUND') !== FALSE or strpos($clamLogFileDATA, 'FOUND') === TRUE) {
+      $UserVirusFound = TRUE;
+      $txt = 'WARNING!!! Potentially infected file detected at '.$file.'!';
       if ($Verbose) logEntry($txt);
       userVirusLogEntry($txt, 'clamav'); }
-    if (strpos($clamLogFileDATA, 'Virus Detected') !== FALSE or strpos($clamLogFileDATA, 'FOUND') !== FALSE) {
-      $UserVirusFound = TRUE;
-      $txt = 'WARNING!!! Portentially infected file detected at '.$file.'!';
+      // / Write the results of the scan to both log files.
+    else {
+      $txt = 'No infection detected in '.$file.'.';
       if ($Verbose) logEntry($txt);
       userVirusLogEntry($txt, 'clamav'); } }
   $txt = 'ClamAV Virus Scan Complete.';
@@ -1471,9 +1472,11 @@ function userClamScan($FilesToScan) {
 // / A fuction to prepare the execution environment for ScanCore.
 function startScanCore($pathname, $UserScanCoreLogFile) {
   // / Set variables.
-  global $InstLoc, $LogDir, $MaxLogSize, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $DirSep; 
-  $ReturnData = '';
+  global $InstLoc, $LogDir, $MaxLogSize, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $DirSep, $ScanCoreVerbose, $ScanCoreDebug; 
+  $ReturnData = $scVerbose = $scDebug = '';
   $ScanCoreFile = $InstLoc.$DirSep.'Resources'.$DirSep.'ScanCore'.$DirSep.'scanCore.php';
+  if ($ScanCoreVerbose) $scVerbose = ' -v';
+  if ($ScanCoreDebug) $scDebug = ' -d';
   // / Make sure that ScanCore is installed.
   if (!file_exists($ScanCoreFile)) errorEntry('Could not verify the ScanCore Virus Scanner!', 18000, TRUE);
   // / The filename for the ScanCore report file.
@@ -1481,11 +1484,10 @@ function startScanCore($pathname, $UserScanCoreLogFile) {
   // / The filename for the ScanCore log file.
   $LogFile = 'ScanCore_Latest-Log.txt';
   // / Run ScanCore with the information supplied.
-  logEntry('php '.$ScanCoreFile.' '.$pathname.' -m '.$ScanCoreMemoryLimit.' -c '.$ScanCoreChunkSize.' -lf '.$LogFile.' -rf '.$UserScanCoreLogFile.' -ml '.$MaxLogSize.' -r');
-  $ReturnData = shell_exec('php '.$ScanCoreFile.' '.$pathname.' -m '.$ScanCoreMemoryLimit.' -c '.$ScanCoreChunkSize.' -lf '.$LogFile.' -rf '.$UserScanCoreLogFile.' -ml '.$MaxLogSize.' -r');
+  $ReturnData = shell_exec('php '.$ScanCoreFile.' '.$pathname.' -m '.$ScanCoreMemoryLimit.' -c '.$ScanCoreChunkSize.' -lf '.$LogFile.' -rf '.$UserScanCoreLogFile.' -ml '.$MaxLogSize.' -r'.$scVerbose.$scDebug);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $pathname = NULL;
-  unset($pathname);
+  $pathname = $scVerbose = $scDebug = NULL;
+  unset($pathname, $scVerbose, $scDebug);
   return ($ReturnData); }
 // / -----------------------------------------------------------------------------------
 
@@ -1518,24 +1520,25 @@ function userScanCoreScan($FilesToScan) {
       $OperationErrors = TRUE;
       errorEntry('Could not verify the input file.', 19001, FALSE);
       continue; }
+    $OperationSuccessful = TRUE;
     $txt = 'Scanning '.$file.'.';
     if ($Verbose) logEntry($txt);
     userVirusLogEntry($txt, 'scancore');
     // / Scan the selected file with ScanCore.
-    $returnData = startScanCore($pathname, $UserScanCoreLogFile);
+    $returnData = startScanCore($ConvertDir.$file, $UserScanCoreLogFile);
     // / Write the full ScanCore output to the normal $LogFile.
     if ($Verbose) logEntry('ScanCore returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
     // / Load the contents of the User ScanCore Log File for processing because it has been sanitized of unnecessary data & whitespace.
     $scanCoreLogFileDATA = @file_get_contents($UserScanCoreLogFile);
     // / Check the contents of the User ScanCore Log File for virus detections.
-    if (strpos($scanCoreLogFileDATA, 'Infected') !== TRUE) {
-      // / Write the results of the scan to both log files.
-      $txt = 'No infection detected in '.$file.'.';
+    if (strpos($scanCoreLogFileDATA, 'Infected') !== FALSE or strpos($scanCoreLogFileDATA, 'Infected') === TRUE) {
+      $UserVirusFound = TRUE;
+      $txt = 'WARNING!!! Potentially infected file detected at '.$file.'!';
       if ($Verbose) logEntry($txt);
       userVirusLogEntry($txt, 'scancore'); }
-    if (strpos($scanCoreLogFileDATA, 'Infected') !== FALSE or strpos($scanCoreLogFileDATA, 'FOUND') !== FALSE) {
-      $UserVirusFound = TRUE;
-      $txt = 'WARNING!!! Portentially infected file detected at '.$file.'!';
+    // / Write the results of the scan to both log files.
+    else {
+      $txt = 'No infection detected in '.$file.'.';
       if ($Verbose) logEntry($txt);
       userVirusLogEntry($txt, 'scancore'); } }
   $txt = 'ScanCore Virus Scan Complete.';
@@ -1627,7 +1630,9 @@ function consolidateLogs($type, $UserClamLogFile, $UserScanCoreLogFile) {
     $userScanCoreLogData = file_get_contents($UserScanCoreLogFile);
     $logWrittenE = file_put_contents($ConsolidatedLogFile, $userScanCoreLogData.$Lol.$spacer.$Lol, $Append); }
   // / Check to be sure that the $ConsolidatedLogFile exists.
-  if (!$logWrittenA or !$logWrittenB or !$logWrittenC or !$logWrittenD or !$logWrittenE) $ConsolidatedLogErrors = TRUE;
+  if ($type === 'clamav' && !$logWrittenA) $ConsolidatedLogErrors = TRUE; 
+  if ($type === 'scancore' && !$logWrittenB) $ConsolidatedLogErrors = TRUE;
+  if ($type === 'all') if (!$logWrittenC or !$logWrittenD or !$logWrittenE) $ConsolidatedLogErrors = TRUE;
   if (file_exists($ConsolidatedLogFile)) $ConsolidatedLogsExist = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $type = $txt = $spacer = $logWrittenA = $logWrittenB = $logWrittenC = $logWrittenD = $logWrittenE = $userClamLogData = $userScanCoreLogData = NULL;
@@ -1664,8 +1669,8 @@ function userVirusScan($FilesToScan, $type) {
   // / Consolidate the log files created during the scan into the $ConvertTempDir so the user can access them.
   list ($ConsolidatedLogsExist, $ConsolidatedLogErrors) = consolidateLogs($type, $UserClamVirusLog, $UserScanCoreLogFile);
   // / Verify that all operations are complete.
-  if ($ScanErrors or $scan1Errors or $scan2Errors or $ConsolidatedLogErrors) $ScanErrors = TRUE;
-  if (!$ScanComplete or !$scan1Complete or !$scan2Complete or !$ConsolidatedLogsExist) $ScanComplete = FALSE;
+  if ($ScanErrors or $ConsolidatedLogErrors) $ScanErrors = TRUE;
+  if (!$ConsolidatedLogsExist) $ScanComplete = FALSE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $fileToScan = $returnData = $path = $type = $scan1Complete = $scan1Errors = $scan2Complete = $scan2Errors = NULL;
   unset($fileToScan, $returnData ,$path, $type, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors, $txt);

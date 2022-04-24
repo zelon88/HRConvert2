@@ -1,3 +1,27 @@
+COMMIT 4/23/2022
+v2.9 - Continue adding latest core features to language packs.
+
+-Added newest features to more language packs.
+  -Arabic has the latest features.
+  -Bengali has the latest features.
+  -German has the latest features.
+  -English has the latest features.
+  -Spanish has the latest features.
+  -French has the latest features.
+-Still need to add latest features to...
+  -Hindi,
+  -Italian,
+  -Korean,
+  -Portuguese,
+  -Russian,
+  -Ukranian,
+  -& Chinese.
+-Adjusted ScanCore-config.php so that the Reports directory is the Logs directory.
+  -It was creating empty directories that can be abused to view the servers document root depending on server config.
+-If your HRConvert2 installation directory contains a subdirectory called "Reports"; it should be manually deleted.
+-Added missing Presentation conversion buttons.
+
+--------------------
 COMMIT 4/21/2022
 v2.8.9 - Added Share File button, option to disable in config.php.
 

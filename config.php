@@ -179,7 +179,7 @@ $MaxLogSize = 1048576;
 // /   Set the default font to use throughout HRConvert2 GUI elements.
 // /   Whatever font you choose must be installed on the client's machine.
 // /   If the font is not available the client default will be used.
-$Font = 'Verdana';
+$Font = 'Arial';
 // /  --Button Color--
 // /   Set the default color scheme to use for buttons.
 // /   Valid options are 'RED', 'GREEN', 'BLUE' or 'GREY'.
@@ -190,8 +190,8 @@ $ButtonStyle = 'BLUE';
 $SpinnerStyle = 6;
 // /  --Spinner Color--
 // /   Set the default color to use for the loading spinner.
-// /   If you would like the spinner to automatically match the rest of the color scheme, set this to '$ButtonStyle'.
-// /   Valid options are  'RED', 'GREEN', 'BLUE', 'GREY' or '$BurronStyle'.
+// /   If you would like the spinner to automatically match the rest of the color scheme, set this to $ButtonStyle.
+// /   Valid options are  'RED', 'GREEN', 'BLUE', 'GREY' or '$ButtonStyle'.
 $SpinnerColor = $ButtonStyle;
 // /  --Show Full GUI--
 // /   Set whether or not to display a full GUI by default.

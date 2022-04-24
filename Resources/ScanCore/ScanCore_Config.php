@@ -26,7 +26,7 @@ $ScanLoc = '';
   // / The absolute path where log files are stored.
 $LogsDir = 'Logs';
   // / The absolute path where report files are stored.
-$ReportDir = 'Reports';
+$ReportDir = 'Logs';
   // / The filename for the ScanCore report file.
 $ReportFileName = 'ScanCore_Report.txt';
   // / The filename for the ScanCore log file.

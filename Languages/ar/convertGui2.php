@@ -1,8 +1,9 @@
 <?php
 $Alert = 'لا يمكن تحويل هذا الملف! حاول تغيير الاسم.';
-$Alert1 = 'Cannot perform a virus scan on this file!';
-$FCPlural1 = 's';
-$FCPlural2 = 's are';
+$Alert1 = 'لا يمكن إجراء فحص فيروسات على هذا الملف!';
+$Alert2 = 'تم نسخ ارتباط الملف إلى الحافظة!';
+$Alert3 = 'فشلت العملية!';
+$FCPlural1 = '';
 if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
 if (!is_numeric($FileCount)) $FileCount = 0;
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
@@ -157,6 +158,16 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
               error: function(ReturnData) {
                 alert("<?php echo $Alert; ?>"); } }); }); });
           </script>
+
+          <?php if ($AllowUserShare) { ?>
+          <a style="float:right;">&nbsp;|&nbsp;</a>
+          <img id="sharefilebutton<?php echo $ConvertGuiCounter1; ?>" name="sharefilebutton<?php echo $ConvertGuiCounter1; ?>" src="Resources/link.png" style="float:right; display:block;" 
+           onclick="toggle_visibility('sharefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('sharefilebutton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('shareXfilebutton<?php echo $ConvertGuiCounter1; ?>');"/>
+          <img id="shareXfilebutton<?php echo $ConvertGuiCounter1; ?>" name="shareXfilebutton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:right; display:none;" 
+           onclick="toggle_visibility('sharefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('sharefilebutton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('shareXfilebutton<?php echo $ConvertGuiCounter1; ?>');"/>
+          
+          <?php } ?>
+
           <?php if ($AllowUserVirusScan) { ?>
           <a style="float:right;">&nbsp;|&nbsp;</a>
           <img id="scanfilebutton<?php echo $ConvertGuiCounter1; ?>" name="scanfilebutton<?php echo $ConvertGuiCounter1; ?>" src="Resources/scan.png" style="float:right; display:block;" 
@@ -206,6 +217,15 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
            onclick="toggle_visibility('spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <img id="spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>" name="spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:right; display:none;" 
            onclick="toggle_visibility('spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>');"/>
+          <?php }
+
+          if (in_array($extension, $PresentationArray)) { ?>
+          <a style="float:right;">&nbsp;|&nbsp;</a>
+
+          <img id="presentationButton<?php echo $ConvertGuiCounter1; ?>" name="presentationButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/presentation.png" style="float:right; display:block;" 
+           onclick="toggle_visibility('presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('presentationButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('presentationXButton<?php echo $ConvertGuiCounter1; ?>');"/>
+          <img id="presentationXButton<?php echo $ConvertGuiCounter1; ?>" name="presentationXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:right; display:none;" 
+           onclick="toggle_visibility('presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('presentationButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('presentationXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php }
 
           if (in_array($extension, $ImageArray)) { ?>
@@ -295,13 +315,62 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
                     alert("<?php echo $Alert; ?>"); } }); }); });
           </script>
         </div>
-        <?php if ($AllowUserVirusScan) { ?>
+
+        <?php if ($AllowUserShare) { ?>
+        <div id='sharefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='sharefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+          <p style="max-width:1000px;"></p>
+          <p><strong>شارك هذا الملف</strong></p>
+          <p id='sharelinkStatus<?php echo $ConvertGuiCounter1; ?>' name='sharelinkStatus<?php echo $ConvertGuiCounter1; ?>'>حالة الارتباط: <i>غير مولود</i></p>
+          <p id='shareclipStatus<?php echo $ConvertGuiCounter1; ?>' name='shareclipStatus<?php echo $ConvertGuiCounter1; ?>'>حالة الحافظة: <i>غير منسوخ</i></p>
+          <p id='sharelinkURL<?php echo $ConvertGuiCounter1; ?>' name='sharelinkURL<?php echo $ConvertGuiCounter1; ?>'>رابط الملف: <i>غير مولود</i></p>
+
+          <input type="submit" id="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" name="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" value='إنشاء ارتباط والنسخ إلى الحافظة' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" name="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" value='إنشاء ارتباط' onclick="toggle_visibility('loadingCommandDiv');">
+
+          <script type="text/javascript">
+          $(document).ready(function () {
+            $('#sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
+              $.ajax({
+              type: 'POST',
+              url: 'convertCore.php',
+              data: { 
+                Token1:'<?php echo $Token1; ?>',
+                Token2:'<?php echo $Token2; ?>',
+                download:'<?php echo $File; ?>' },
+              success: function(returnFile) {
+                toggle_visibility('loadingCommandDiv');
+                document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = 'حالة الارتباط: <i>ولدت</i>';
+                document.getElementById('shareclipStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = 'حالة الحافظة: <i>نسخ</i>';
+                document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = 'رابط الملف: <i><?php echo $FullURL.'/DATA/'.$SesHash3.'/'.$File; ?></i>';
+                copy_share_link("<?php echo $FullURL.'/DATA/'.$SesHash3.'/'.$File; ?>");
+                alert("<?php echo $Alert2; ?>"); },
+              error: function(ReturnData) {
+                alert("<?php echo $Alert3; ?>"); } }); });
+            $('#sharecopybutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
+              $.ajax({
+              type: 'POST',
+              url: 'convertCore.php',
+              data: { 
+                Token1:'<?php echo $Token1; ?>',
+                Token2:'<?php echo $Token2; ?>',
+                download:'<?php echo $File; ?>' },
+              success: function(returnFile) {
+                toggle_visibility('loadingCommandDiv');
+                document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = 'حالة الارتباط: <i>ولدت</i>';
+                document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = 'رابط الملف: <i><?php echo $FullURL.'/DATA/'.$SesHash3.'/'.$File; ?></i>'; },
+              error: function(ReturnData) {
+                alert("<?php echo $Alert3; ?>"); } }); }); });
+          </script>
+        </div>
+        <?php }
+
+        if ($AllowUserVirusScan) { ?>
         <div id='scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p><strong>Scan This File For Viruses</strong></p>
-          <input type="submit" id="scancorebutton<?php echo $ConvertGuiCounter1; ?>" name="scancorebutton<?php echo $ConvertGuiCounter1; ?>" value='Scan File With ScanCore' onclick="toggle_visibility('loadingCommandDiv');">
-          <input type="submit" id="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" name="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" value='Scan File With ClamAV' onclick="toggle_visibility('loadingCommandDiv');">
-          <input type="submit" id="scanallbutton<?php echo $ConvertGuiCounter1; ?>" name="scanallbutton<?php echo $ConvertGuiCounter1; ?>" value='Scan File With ScanCore & ClamAV' onclick="toggle_visibility('loadingCommandDiv');">
+          <p><strong>افحص هذا الملف بحثًا عن الفيروسات</strong></p>
+          <input type="submit" id="scancorebutton<?php echo $ConvertGuiCounter1; ?>" name="scancorebutton<?php echo $ConvertGuiCounter1; ?>" value='مسح الملف باستخدام ScanCore' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" name="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" value='مسح الملف باستخدام ClamAV' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="scanallbutton<?php echo $ConvertGuiCounter1; ?>" name="scanallbutton<?php echo $ConvertGuiCounter1; ?>" value='مسح الملف باستخدام ScanCore و ClamAV' onclick="toggle_visibility('loadingCommandDiv');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#scancorebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -822,9 +891,9 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
             <option value="flif">Flif</option>
             <option value="avif">Avif</option>
           </select></p>
-          <p>Width & Height: </p>
+          <p>العرض والارتفاع: </p>
           <p><input type="number" size="4" value="0" id='width<?php echo $ConvertGuiCounter1; ?>' name='width<?php echo $ConvertGuiCounter1; ?>' min="0" max="10000"> X <input type="number" size="4" value="0" id="height<?php echo $ConvertGuiCounter1; ?>" name="height<?php echo $ConvertGuiCounter1; ?>" min="0"  max="10000"></p> 
-          <p>Rotate: <input type="number" size="3" id='rotate<?php echo $ConvertGuiCounter1; ?>' name='rotate<?php echo $ConvertGuiCounter1; ?>' value="0" min="0" max="359"></p>
+          <p>استدارة: <input type="number" size="3" id='rotate<?php echo $ConvertGuiCounter1; ?>' name='rotate<?php echo $ConvertGuiCounter1; ?>' value="0" min="0" max="359"></p>
           <input type="submit" id='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' name='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' value='تحويل الصورة' onclick="toggle_visibility('loadingCommandDiv');">
           <script type="text/javascript">
           $(document).ready(function () {

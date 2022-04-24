@@ -38,8 +38,8 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
         <?php if ($AllowUserVirusScan) { ?>
         <hr style='width: 50%;' />
         <p><strong>Scan All Files For Viruses</strong></p>
-        <p>Scan with ClamAV <input type="checkbox" id="clamscanall" value="clamscanall" name="clamScan" checked></p>
-        <p>Scan with ScanCore <input type="checkbox" id="scancoreall" value="scancoreall" name="phpavScan" checked></p>
+        <p>Scan with ClamAV: <input type="checkbox" id="clamscanall" value="clamscanall" name="clamScan" checked></p>
+        <p>Scan with ScanCore: <input type="checkbox" id="scancoreall" value="scancoreall" name="phpavScan" checked></p>
         <p><input type="submit" id="scanAllButton" name="scanAllButton" class="info-button" value='Scan All' onclick="toggle_visibility('loadingCommandDiv');"></p>
         <script type="text/javascript">
         $(document).ready(function () {
@@ -214,6 +214,15 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
            onclick="toggle_visibility('spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <img id="spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>" name="spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:left; display:none;" 
            onclick="toggle_visibility('spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>');"/>
+          <?php }
+
+          if (in_array($extension, $PresentationArray)) { ?>
+          <a style="float:left;">&nbsp;|&nbsp;</a>
+
+          <img id="presentationButton<?php echo $ConvertGuiCounter1; ?>" name="presentationButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/presentation.png" style="float:left; display:block;" 
+           onclick="toggle_visibility('presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('presentationButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('presentationXButton<?php echo $ConvertGuiCounter1; ?>');"/>
+          <img id="presentationXButton<?php echo $ConvertGuiCounter1; ?>" name="presentationXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:left; display:none;" 
+           onclick="toggle_visibility('presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('presentationButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('presentationXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php }
 
           if (in_array($extension, $ImageArray)) { ?>

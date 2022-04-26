@@ -323,7 +323,7 @@ function verifyLanguage() {
 function verifyGlobals() {
   // / Set variables.
   global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $DangerousFiles1, $ArchiveArray, $DearchiveArray, $DocumentArray, $DocArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $DrawingArray, $ModelArray, $ConvertArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir;
-  $HRConvertVersion = 'v2.8.9';
+  $HRConvertVersion = 'v2.9.1';
   $CoreLoaded = $GlobalsAreVerified = TRUE;
   $SupportedConversionTypes = array('Document', 'Image', 'Model', 'Drawing', 'Video', 'Audio', 'Archive');
   $DirSep = DIRECTORY_SEPARATOR;
@@ -1411,7 +1411,7 @@ function userVirusLogEntry($Entry, $type) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / The following code is performed when a user selects to scan the files they've uploaded with ClamAV.
+// / A function to scan a user supplied file on-demand with ClamAV.
 function userClamScan($FilesToScan) {
   // / Set variables.
   global $Verbose, $ConvertDir, $Lol, $Lolol, $UserClamLogFile;
@@ -1493,7 +1493,7 @@ function startScanCore($pathname, $UserScanCoreLogFile) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / The following code is performed when a user selects to scan the files they've uploaded with ScanCore.
+// / A function to scan a user supplied file on-demand with ScanCore.
 function userScanCoreScan($FilesToScan) {
   // / Set variables.
   global $Verbose, $ConvertDir, $Lol, $Lolol, $UserScanCoreLogFile;
@@ -1760,7 +1760,7 @@ else if ($Verbose) logEntry('Skipping display GUI procedure.');
 if ($TokensAreValid) {
   // / The following code is performed when a user initiates a file upload.
   if ($TokensAreValid && !empty($_FILES)) {
-    logEntry('Initiated Uploader.');
+    logEntry('Initiating Uploader.');
     list ($UploadComplete, $UploadErrors) = uploadFiles();
     if (!$UploadComplete) errorEntry('Upload Failed!', 18, TRUE);
     if ($UploadErrors) logEntry('Upload finished with errors.');
@@ -1768,7 +1768,7 @@ if ($TokensAreValid) {
 
   // / The following code is performed when a user downloads a selection of files.
   if (isset($_POST['download'])) {
-    logEntry('Initiated Downloader.');
+    logEntry('Initiating Downloader.');
     list ($DownloadComplete, $DownloadErrors) = downloadFiles($Download);
     if (!$DownloadComplete) errorEntry('Download Failed!', 19, TRUE);
     if ($DownloadErrors) logEntry('Download finished with errors.');
@@ -1776,7 +1776,7 @@ if ($TokensAreValid) {
 
   // / The following code is performed when a user archives a selection of files.
   if (isset($_POST['filesToArchive'])) { 
-    logEntry('Initiated Archiver.');
+    logEntry('Initiating Archiver.');
     list ($ArchiveComplete, $ArchiveErrors) = archiveFiles($FilesToArchive, $UserFilename, $UserExtension);
     if (!$ArchiveComplete) errorEntry('Archive Failed!', 20, TRUE);
     if ($ArchiveErrors) logEntry('Archive finished with errors.');
@@ -1784,7 +1784,7 @@ if ($TokensAreValid) {
 
   // / The following code is performed when a user converts a selection of files.
   if (isset($_POST['convertSelected'])) {
-    logEntry('Initiated Converter.');
+    logEntry('Initiating Converter.');
     list ($ConversionComplete, $ConversionErrors) = convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, $Width, $Rotate, $Bitrate);
     if (!$ConversionComplete) errorEntry('Conversion Failed!', 21, TRUE);
     if ($ConversionErrors) logEntry('Conversion finished with errors.');
@@ -1792,7 +1792,7 @@ if ($TokensAreValid) {
 
   // / The following code is performed when a user performs OCR on a selection of files.
   if (isset($_POST['pdfworkSelected'])) {
-    logEntry('Initiated Converter.');
+    logEntry('Initiating Converter.');
     list ($ConversionComplete, $ConversionErrors) = ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method);
     if (!$ConversionComplete) errorEntry('OCR Operation Failed!', 22, TRUE);
     if ($ConversionErrors) logEntry('OCR Operation finished with errors.');

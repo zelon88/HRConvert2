@@ -323,7 +323,7 @@ function verifyLanguage() {
 function verifyGlobals() {
   // / Set variables.
   global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $DangerousFiles1, $ArchiveArray, $DearchiveArray, $DocumentArray, $DocArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $DrawingArray, $ModelArray, $ConvertArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir;
-  $HRConvertVersion = 'v2.9.1';
+  $HRConvertVersion = 'v2.9.2';
   $CoreLoaded = $GlobalsAreVerified = TRUE;
   $SupportedConversionTypes = array('Document', 'Image', 'Model', 'Drawing', 'Video', 'Audio', 'Archive');
   $DirSep = DIRECTORY_SEPARATOR;
@@ -1555,7 +1555,6 @@ function userScanCoreScan($FilesToScan) {
 // / A function to process the results of a User Virus Scan & check for any failures or errors.
 // / Type can be either 'clamav', 'scancore', or 'all'.
 function checkUserVirusScanResults($type, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors) {
-  // / Set variables.
   // / Check that all the input check results are valid.
   if (!is_bool($scan1Complete)) $scan1Complete = FALSE;
   if (!is_bool($scan1Errors)) $scan1Errors = FALSE;

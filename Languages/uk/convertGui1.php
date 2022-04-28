@@ -16,17 +16,17 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
       <div id="overview" style="max-width:1000px; text-align:left; margin:25px;">
       	<p id="info" style="display:block;"><?php echo $ApplicationName; ?> заснований на веб-додатку <a href='https://github.com/zelon88/HRConvert2'>HRConvert2</a> з відкритим вихідним кодом від <a href='https://github.com/zelon88'>Zelon88</a>. Він був розроблений для перетворення файлів без відстеження користувачів в Інтернеті або порушення прав на вашу інтелектуальну власність.</p>
         <button id="more-info-button" class="info-button" onclick="toggle_visibility('more-info'); toggle_visibility('more-info-button'); toggle_visibility('supported-formats-show-button'); 
-          toggle_visibility('less-info-button');" style="text-align:center; display:block; margin-left:auto; margin-right:auto;"><i>Більше інформації ...</i></button>
+          toggle_visibility('less-info-button');" style="text-align:center; display:block; margin-left:auto; margin-right:auto;"><i>Більше інформації...</i></button>
         <button id="less-info-button" class="info-button" onclick="toggle_visibility('more-info'); toggle_visibility('more-info-button'); toggle_visibility('supported-formats-show-button'); 
-          toggle_visibility('less-info-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Менше інформації ...</i></button>
+          toggle_visibility('less-info-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Менше інформації...</i></button>
         <div id="more-info" style="display:none;">
           <hr />
           <p>Усі дані, надані користувачами, стираються автоматично, тому вам не потрібно турбуватися про втрату вашої особистої інформації чи майна під час використання наших послуг.</p>
           <p><?php echo $ApplicationName; ?> HRConvert2 підтримує 75 різних форматів файлів, включаючи документи, електронні таблиці, зображення, медіа, тривимірні моделі, файли малюнків, векторні файли, архіви, образи дисків тощо.</p> 
           <button id="supported-formats-show-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
-            toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Переглянути підтримувані формати ...</i></button>
+            toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Переглянути підтримувані формати...</i></button>
           <button id="supported-formats-hide-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
-            toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Приховати підтримувані формати ...</i></button>
+            toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Приховати підтримувані формати...</i></button>
           <br>
           <div id="supported-formats" class="supported-formats" style="margin-left:33%; display:none;">
             <h3>Підтримувані формати</h3>
@@ -206,7 +206,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
           <form action="convertCore.php?showFiles=1<?php if (isset($_GET['noGui'])) echo '&noGui=TRUE'; if (isset($_GET['language'])) echo '&language='.$_GET['language']; ?>" method="post">
             <input type="hidden" id="token1" name="Token1" value="<?php echo $Token1; ?>">
             <input type="hidden" id="token2" name="Token2" value="<?php echo $Token2; ?>">
-            <input type="submit" id="continue-button" class="info-button" value="Продовжуйте ...">
+            <input type="submit" id="continue-button" class="info-button" value="Продовжуйте...">
           </form>
           <br />
           <?php if (!isset($_GET['noGui'])) { ?>

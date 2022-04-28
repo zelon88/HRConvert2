@@ -28,6 +28,13 @@ Apache 2.4, PHP 7+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 
 --------------------
 COMMIT 4/28/2022
+v2.9.4 - Add CREATING_LANGUAGE_PACKS.txt to Documents directory.
+
+-v2.9.4.
+-Add CREATING_LANGUAGE_PACKS.txt to Documents directory.
+
+--------------------
+COMMIT 4/28/2022
 v2.9.3 - Update docs, ERRO_DESCRIPTIONS.txt, add application information header to important files.
 
 -v2.9.3.

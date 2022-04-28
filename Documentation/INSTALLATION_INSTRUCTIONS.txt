@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION
-This file contains an walkthrough guide for installing HRConvert2.
+This file contains a walkthrough guide for installing HRConvert2.
 
 HARDWARE REQUIREMENTS ... 
 This application requires at least a Raspberry Pi Model B+ or greater.

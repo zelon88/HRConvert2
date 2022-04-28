@@ -1,0 +1,196 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+APPLICATION INFORMATION ...
+HRConvert2, Copyright on 4/11/2022 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
+
+FILE INFORMATION
+This plain text file describes the process for creating, formatting, and installing additional language packs into HRConvert2.
+
+HARDWARE REQUIREMENTS ... 
+This application requires at least a Raspberry Pi Model B+ or greater. 
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ... 
+This application requires Debian Linux (w/3rd Party audio license), Apache 2.4, PHP 7+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip, 7zipper, 
+Ffmpeg, PdfToText, Dia, PopplerUtils, MeshLab & ImageMagick.
+
+ADDITIONAL INFORMATION
+HRConvert2 has one default language set in config.php and multiple languages that can be selected by the user at runtime.
+The default language used by HRConvrt2 can be selected by adjusting the --Default Language-- section of config.php.
+Administrators can prevent user language selection by adjusting the --Allow User Selectable Language-- section of config.php.
+If --Allow User Selectable Language-- is set to TRUE in config.php, users can adjust language output using a 'language' GET request.
+To send a GET request, append the following string to the end of the HRConvert2 URL (without quotes):  '?language=<LANGUAGE_CODE>'
+Substitute <LANGUAGE_CODE> in the string above for the 2 digit ISO 639-1 language code for the desired language.
+If a user submits an unsupported language the default will be used instead.
+It a supported language is missing required files a fatal error will occur.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Language Packs--
+
+The HRConvert2 GUI is modular and separate from the core logic of the application. 
+This design makes localization into a new language by creating 'language packs' easy.
+This document will teach an administrator how GUIs are handled and how to structure new language packs.
+In this document when we refer to a GUI, we refer to one complete set of files required to render HRConvert2.
+In this document when we refer to a language pack, we refer to one individual GUI that has been localized to a specific language.
+A 'Language Pack' is just a localized 'GUI'. Each language pack contains one complete GUI.
+
+
+An HRConvert2 GUI is made up of 5 components. Each component serves a specific function. The 5 components of a GUI are;
+
+  1. header.php
+  2. convertGui1.php
+  3. convertGui2.php
+  4. footer.php
+  5. index.html
+
+These components are stored in a folder named after the ISO 639-1 language code for the language.
+The ISO-639-1 named folder is then placed inside the 'Languages' subdirectory of the HRConvert2 installation location.
+The supported ISO 639-1 language code must also be added to the --Supported Languages-- section of config.php or it will be ignored.
+If --Allow User Selectable Language-- is enabled, users will be able to select this language pack by sendiing a GET request.
+Users do not access the GUI directly. All requests should be directed to convertCore.php which will construct the GUI on-demand.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About header.php--
+
+This file is the start of the GUI. This file is always rendered.
+Insert code here that should be inserted at the beginning of every page that HRConvert2 renders.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About convertGui1.php--
+
+This file contains the upload field as well as some information about the application.
+This file is displayed when no valid tokens have been supplied by the user.
+This file provides tokens to the user which must be included with any subsequent request by the user.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About convertGui2.php--
+
+This file contains the available options for each submitted file.
+This file is displayed when valid tokens were supplied by the user.
+This file dynamically selects which options to display for which files.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About footer.php--
+
+This file is the end of the GUI. This file is always rendered.
+Insert code here that should be inserted at the end of every page that HRConvert2 renders.
+This file also renders the Terms of Service & Privacy Policy links when enabled.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About index.html--
+
+This file serves to act as reliable and predictable document root protection for the server.
+If users are allowed to view the document root of the server they could navigate manually to other users hosted scratch space.
+This would allow users to see some temporary files of other users while they were in the process of working on them.
+This file simply redirects the user to the main HRConvert2 landing page with a message asking them to wait.
+The visual effect of the loading text is that a malicious actor knows they have hit some protection mechanism.
+If you want to modify the global index.html file, modify the one in the installation location and then cut/paste to all other subdirectories.
+HRConvert2 will automatically create new index.html files in folders it creates using the one from the installation location as a template.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Variable Scope--
+
+This GUI only has access to certain variables. Variables that are available to the GUI include;
+  $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint,
+  $ConvertArray, $PDFWorkArr, $ArchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoArray, $Audioarray, $MediaArray,
+  $PresentationArray, $ConvertGuiCounter1, $ButtonCode, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2,
+  $FCPlural3, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $FullURL, $ShowGUI, $LanguageToUse
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Colors--
+
+The GUI gets color specific styles from the $ButtonCode variable.
+The $ButtonCode variable contains the color specific CSS for the GUI.
+The $ButtonCode variable is set by Resources/styleCore.php.
+There are 4 supported colors, and the code for each color is contained in styleCore.php.
+The loading spinner will change color as well. There is one spinner .gif file for each style & supported color.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Loading Spinners--
+
+There are 6 loading spinners to chose from that can be set in config.php.
+Each spinner is available in 4 colors.
+The color of the spinner can be adjusted separately from the color of the rest of the GUI.
+The $PacmanLoc variable contains the relative path to use for the selected spinner.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Uploaded Files--
+
+The $Files variable contains an array of all valid uploaded filenames that exist in the users scratch space.
+The GUI must iterate through this array, determine what format it is, & display the correct options.
+When submitting a file as input, only submit it's name with extension. HRConver2 will determine the path.
+When redirecting the user to a download you must send them to the proper filename and hosted file path.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The API--
+
+HRConvert2 supports inputs through POST and GET requests. 
+The included GUIs makes extensive use of JQuery + Ajax to submit requests & process responses.
+All API requests should be sent to convertCore.php. 
+GUI files cannot handle API requests and will generate an error if they receive API requests.
+All API inputs are sanitized by the core for special characters to prevent malicious or unintentional code injection. 
+As a result of sanitization the filename may change after upload.
+
+The following is a list of supported GET inputs & their supported values;
+  noGui - 1
+  language - String
+
+The following is a list of supported POST inputs & their supported values;
+  Token1 - String
+  Token2 - String
+  height - Integer
+  width - Integer
+  rotate - Integer
+  bitrate - Integer
+  method - 0 or 1
+  archive - 1
+  extension - String
+  filesToArchive - String or Array of Strings
+  archExtension - String
+  userfilename - String
+  userconvertfilename - String
+  pdfworkSelected - String or Array of Strings
+  convertSelected - String or Array of Strings
+  pdfextension - String
+  userpdfconvertfilename - String
+  scanallbutton - 1
+  scantype - String (clamav or scancore or all)
+  clamscanbutton - 1
+  scancorebutton - 1
+  filestoscan - String or Array of Strings
+  clamScanButton - 1
+  scancorebutton - 1
+  scanallbutton - 1
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Open Source--
+
+This application is open-source under the terms of the GPLv3 license, meaning anybody can obtain a copy and put it to use for personal or business use.
+If you modify this application and use it to make money or offer it to your users as a product, you MUST make the source code with your changes available.
+The ideal way to do this would be to fork the official zelon88/HRConvert2 repository on Github and make changes there.
+Alternatively you can submit a pull request and have your changes added to the official repository (with credit due to you, of course).
+By reciprocating changes & improvements with one another we can all enjoy the best, most capable and bug free version HRConvert2.
+If you modify this codebase please consider making your changes public so everyone can benefit from them. 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION
-// / This file contains the dynamic stylesheets for HRConvert2.
+// / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
 // / Be careful to preserve all syntax & formatting.

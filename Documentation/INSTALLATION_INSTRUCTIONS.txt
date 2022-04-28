@@ -1,7 +1,30 @@
------MINIMUM REQUIREMENTS-----
-HRConvert2 requires at least a Raspberri Pi Model B+ or greater. 
-HRConvert2 should run on any x86 or x64 based PC.
-HRConvert2 requires a Debian Linux-based operating system w/3rd party audio license.
+-----------------------------------------------------------------------------------
+APPLICATION INFORMATION ...
+HRConvert2, Copyright on 4/11/2022 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats
+on a server for users of any web browser without authentication. 
+
+FILE INFORMATION
+This file contains an walkthrough guide for installing HRConvert2.
+
+HARDWARE REQUIREMENTS ... 
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ... 
+This application requires Debian Linux (w/3rd Party audio license), 
+Apache 2.4, PHP 7+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip, 
+7zipper, FFMPEG, PdfToText, Dia, PopplerUtils, MeshLab & ImageMagick.
+
+<3 Open-Source
+-----------------------------------------------------------------------------------
+
 
 -----PREFACE-----
 For this guide, it is assumed that the user is installing HRConvert2
@@ -23,21 +46,21 @@ In the abscence of required dependencies, HRConvert2 will make every attempt
 to complete a user-suppied operation while logging errors every step of the way. 
 Administrators are responsible for monitoring and maintaining the dependencies 
 of their servers.
---------------------------------------------------
+-----------------------------------------------------------------------------------
 
 -----STEP 0 - INSTALL WITH DOCKER-----
-The easiest way to install HRConvert2 is by using the Docker image created by
-Github user dwaaan. Thanks dwaaan!
+The easiest way to install HRConvert2 is by using the Docker image created by Github user dwaaan. 
+Thanks dwaaan!
 
-For more information about the docker image, visit...
+For more information visit...
 https://github.com/dwaaan/HRConvert2-Docker
---------------------------------------------------
+-----------------------------------------------------------------------------------
 
 -----STEP 1 - INSTALL APACHE 2.4-----
 -sudo apt-get update
 -sudo apt-get install apache2
 -sudo apt-get install curl
---------------------------------------------------
+-----------------------------------------------------------------------------------
 
 -----STEP 2 - INSTALL FEATHERPAD, LIBREOFFICE, PHP & PLUGINS-----
 -sudo apt-get install featherpad && sudo apt-get install libreoffice-common && sudo apt-get install libreoffice-java-common && sudo apt-get install php libapache2-mod-php php-mysql && sudo apt-get install php-all-dev
@@ -58,7 +81,7 @@ https://github.com/dwaaan/HRConvert2-Docker
     zlib.output_compression = On
 **SAVE THE MODIFIED "php.ini" FILE AND EXIT FEATHERPAD**
 -sudo service apache2 restart
---------------------------------------------------
+-----------------------------------------------------------------------------------
 
 -----STEP 3 - INSTALL BASIC FEATURE DEPENDENCIES-----
 -sudo apt-get install clamav && sudo apt-get install unoconv && sudo apt-get install default-jre && sudo apt-get install rar && sudo apt-get install unrar && sudo apt-get install p7zip-full && sudo apt-get install imagemagick && sudo apt-get install ffmpeg && sudo apt-get install tesseract-ocr && sudo apt-get install meshlab && sudo apt-get install dia && sudo apt-get install pandoc && sudo apt-get install poppler-utils && sudo apt-get install nodejs && sudo apt-get install gnuplot && sudo apt install libnode-dev && sudo apt install node-gyp && sudo apt install npm
@@ -79,7 +102,7 @@ https://github.com/dwaaan/HRConvert2-Docker
           **OR -unoconv -l**
           **OR create a daemon to run unoconv --listen**
 **OR adjust the shebang at the top of /usr/bin/unoconv to #!/usr/bin/env python3
---------------------------------------------------
+-----------------------------------------------------------------------------------
 
 -----STEP 4 - INSTALL HRConvert2-----
 **CREATE A DIRECTORY IN "/var/www/html" NAMED "HRProprietary"**
@@ -111,30 +134,29 @@ IMPORTANT NOTE: If you need to correct permissions later, perform the following 
                -sudo chmod -R 0755 /var/www/html
                -sudo chown -R www-data /var/www/html
                -sudo chgrp -R www-data /var/www/html
---------------------------------------------------
+-----------------------------------------------------------------------------------
 
 -----STEP 5 - VISIT YOUR CONVERTER!!!-----
-Go to http://localhost/HRProprietary/HRConvert2/convertCore.php to view your Converter! The computer you install HRConvert2 onto
+Go to "http://localhost/HRProprietary/HRConvert2/convertCore.php" to view your Converter! The computer you install HRConvert2 onto
 should be considered a staitionary server that you can safely point your "Static NAT" at and access from anywhere. To accomplish
 these things, follow the additional steps below. 
---------------------------------------------------
+-----------------------------------------------------------------------------------
 
 -----STEP 6 - ADD FIREWALL EXCEPTIONS AND SETUP STATIC NAT ON YOUR ROUTER-----
--According to the manual for the manufacturer of your broadband router, find the local IP address where you can make changes to it's
-  configuration. Try entering "192.168.1.1" into a browser. If you are greeted with a login screen, check the bottom of your router or your
-  system administrator for the required information. If you are not greeted with any tangible login screen other than an error message, 
-  seek the owners manual for the specific make and manual for your router.
+-According to the manual for the manufacturer of your broadband router, find the local IP address where you can make changes to it's configuration. 
+  -Try entering "192.168.1.1" into a browser. 
+  -If you are greeted with a login screen, check the bottom of your router or your system administrator for the required information. 
+  -If you are not greeted with any tangible login screen seek the owners manual for the specific make and manual for your router.
 -Once you have gained access to your router, seek the settings which control Firewall exceptions and Static NAT settings.
-  You should seek a way to enter the local IPv4 address of the machine running HRConvert2.
-  You should also seek a way to enter a "Static NAT" entry for the local IPv4 address of the machine running HRConvert2.
-  You should also forward port 80 to the internal IPv4 of the machine running HRConvert2.
-  To configure SSL encryption, add port 443 to your port forwarding rules and visit www.letsencrypt.com for instructions on obtaining and installing an SSL certificate.
--HRConvert2 will create and maintain complete segregation of user files during operation, and will not impose restrictions on user uploads
-  (however PHP will, so verify that your php.ini file is set correctly!!!).
--You and your users should now be able to access your server via any standard web browser by entering the IPv4 from your 
-  ISP into the address bar. Alternatively you can purchase a domain name and point it at the IPv4 instead to obtain a ".com" 
-  (or similar) address for your new installation.
---------------------------------------------------
+  -You should seek a way to enter the local IPv4 address of the machine running HRConvert2.
+  -You should also seek a way to enter a "Static NAT" entry for the local IPv4 address of the machine running HRConvert2.
+  -You should also forward port 80 to the internal IPv4 of the machine running HRConvert2.
+  -To configure HTTPS encryption visit letsencrypt.com for additional instructions.
+-HRConvert2 will create and maintain complete segregation of user files during operation & will not impose restrictions on user uploads.
+  -However PHP will restrict uploads, so verify that your php.ini file is set correctly.
+-You and your users should now be able to access your server via any standard web browser by entering the IPv4 from your ISP into the address bar. 
+  -Alternatively you can purchase a domain name & point the DNS A record to your IP address to obtain a domain name.
+-----------------------------------------------------------------------------------
 
 If you have any problems with HRConvert2 please create an issue on http://github.com/zelon88/HRConvert2
 

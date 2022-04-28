@@ -665,7 +665,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-1000, The specified Data Storage Directory does not exist at <FILE_PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-1000, <SESSION_IDENTIFIER>: The specified Data Storage Directory does not exist at <FILE_PATH>!
 
 FILE
   convertCore.php
@@ -687,7 +687,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-1001, Could not create a directory at <FILE_PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-1001, <SESSION_IDENTIFIER>: Could not create a directory at <FILE_PATH>!
 
 FILE
   convertCore.php
@@ -709,7 +709,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-2000, Could not verify the document conversion engine installation at /usr/bin/unoconv!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-2000, <SESSION_IDENTIFIER>: Could not verify the document conversion engine installation at /usr/bin/unoconv!
 
 FILE
   convertCore.php
@@ -732,7 +732,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3000, Could not sanitize the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3000, <SESSION_IDENTIFIER>: Could not sanitize the input file!
 
 FILE
   convertCore.php
@@ -757,7 +757,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3001, Could not verify the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3001, <SESSION_IDENTIFIER>: Could not verify the input file!
 
 FILE
   convertCore.php
@@ -787,7 +787,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3002, File <FILE_NAME> does not exist!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3002, <SESSION_IDENTIFIER>: File <FILE_NAME> does not exist!
 
 FILE
   convertCore.php
@@ -808,7 +808,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3003, Could not verify the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3003, <SESSION_IDENTIFIER>: Could not verify the input file!
 
 FILE
   convertCore.php
@@ -830,7 +830,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4000, Could not sanitize the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4000, <SESSION_IDENTIFIER>: Could not sanitize the input file!
 
 FILE
   convertCore.php
@@ -855,7 +855,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4001, Could not verify the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4001, <SESSION_IDENTIFIER>: Could not verify the input file!
 
 FILE
   convertCore.php
@@ -884,7 +884,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4002, Could not perform a virus scan!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4002, <SESSION_IDENTIFIER>: Could not perform a virus scan!
 
 FILE
   convertCore.php
@@ -906,7 +906,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4003, Virus detected!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4003, <SESSION_IDENTIFIER>: Virus detected!
 
 FILE
   convertCore.php
@@ -928,7 +928,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4004, Could not archive <FILE_NAME> to <FILE_PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4004, <SESSION_IDENTIFIER>: Could not archive <FILE_NAME> to <FILE_PATH>!
 
 FILE
   convertCore.php
@@ -956,7 +956,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5000, Could not sanitize the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5000, <SESSION_IDENTIFIER>: Could not sanitize the input file!
 
 FILE
   convertCore.php
@@ -981,7 +981,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5001, Could not verify the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5001, <SESSION_IDENTIFIER>: Could not verify the input file!
 
 FILE
   convertCore.php
@@ -1011,7 +1011,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5002, Could not perform a virus scan!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5002, <SESSION_IDENTIFIER>: Could not perform a virus scan!
 
 FILE
   convertCore.php
@@ -1033,7 +1033,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5003, Virus detected!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5003, <SESSION_IDENTIFIER>: Virus detected!
 
 FILE
   convertCore.php
@@ -1055,7 +1055,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5004, Could not convert the selected <FILE_TYPE>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5004, <SESSION_IDENTIFIER>: Could not convert the selected <FILE_TYPE>!
 
 FILE
   convertCore.php
@@ -1082,7 +1082,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5005, Could not archive <FILE_NAME> to <FILE_PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5005, <SESSION_IDENTIFIER>: Could not archive <FILE_NAME> to <FILE_PATH>!
 
 FILE
   convertCore.php
@@ -1110,7 +1110,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6000, Could not sanitize the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6000, <SESSION_IDENTIFIER>: Could not sanitize the input file!
 
 FILE
   convertCore.php
@@ -1135,7 +1135,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6001, Unsupported file format!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6001, <SESSION_IDENTIFIER>: Unsupported file format!
 
 FILE
   convertCore.php
@@ -1154,7 +1154,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6002, Could not upload file <FILE_NAME> to <FILE_PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6002, <SESSION_IDENTIFIER>: Could not upload file <FILE_NAME> to <FILE_PATH>!
 
 FILE
   convertCore.php
@@ -1177,7 +1177,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6003, Could not perform a virus scan!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6003, <SESSION_IDENTIFIER>: Could not perform a virus scan!
 
 FILE
   convertCore.php
@@ -1199,7 +1199,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6004, Virus detected!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6004, <SESSION_IDENTIFIER>: Virus detected!
 
 FILE
   convertCore.php
@@ -1221,7 +1221,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-7000, Could not verify the document conversion engine!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-7000, <SESSION_IDENTIFIER>: Could not verify the document conversion engine!
 
 FILE
   convertCore.php
@@ -1242,7 +1242,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-7001, The document converter timed out!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-7001, <SESSION_IDENTIFIER>: The document converter timed out!
 
 FILE
   convertCore.php
@@ -1274,7 +1274,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-8000, The image converter timed out!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-8000, <SESSION_IDENTIFIER>: The image converter timed out!
 
 FILE
   convertCore.php
@@ -1306,7 +1306,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9000, The model converter timed out!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9000, <SESSION_IDENTIFIER>: The model converter timed out!
 
 FILE
   convertCore.php
@@ -1338,7 +1338,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-10000, The drawing converter timed out!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-10000, <SESSION_IDENTIFIER>: The drawing converter timed out!
 
 FILE
   convertCore.php
@@ -1370,7 +1370,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-11000, The video converter timed out!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-11000, <SESSION_IDENTIFIER>: The video converter timed out!
 
 FILE
   convertCore.php
@@ -1402,7 +1402,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-12000, The audio converter timed out!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-12000, <SESSION_IDENTIFIER>: The audio converter timed out!
 
 FILE
   convertCore.php
@@ -1434,7 +1434,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13000, The archiver failed to produce an archive!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13000, <SESSION_IDENTIFIER>: The archiver failed to produce an archive!
 
 FILE
   convertCore.php
@@ -1466,7 +1466,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14000, The file <FILE_NAME> failed first stage validation!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14000, <SESSION_IDENTIFIER>: The file <FILE_NAME> failed first stage validation!
 
 FILE
   convertCore.php
@@ -1490,7 +1490,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14001, Could not delete stale file <PATH_NAME>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14001, <SESSION_IDENTIFIER>: Could not delete stale file <PATH_NAME>!
 
 FILE
   convertCore.php
@@ -1512,7 +1512,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14002, The file <FILE_NAME> failed second stage validation!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14002, <SESSION_IDENTIFIER>: The file <FILE_NAME> failed second stage validation!
 
 FILE
   convertCore.php
@@ -1534,7 +1534,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14003, The file <FILE_NAME> failed third stage validation!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14003, <SESSION_IDENTIFIER>: The file <FILE_NAME> failed third stage validation!
 
 FILE
   convertCore.php
@@ -1558,7 +1558,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14004, Could not delete stale file <PATH_NAME>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14004, <SESSION_IDENTIFIER>: Could not delete stale file <PATH_NAME>!
 
 FILE
   convertCore.php
@@ -1580,7 +1580,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15000, Could not sanitize the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15000, <SESSION_IDENTIFIER>: Could not sanitize the input file!
 
 FILE
   convertCore.php
@@ -1605,7 +1605,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15001, Could not verify the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15001, <SESSION_IDENTIFIER>: Could not verify the input file!
 
 FILE
   convertCore.php
@@ -1635,7 +1635,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15002, Could not perform a virus scan!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15002, <SESSION_IDENTIFIER>: Could not perform a virus scan!
 
 FILE
   convertCore.php
@@ -1657,7 +1657,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15003, Virus detected!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15003, <SESSION_IDENTIFIER>: Virus detected!
 
 FILE
   convertCore.php
@@ -1679,7 +1679,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15004, Could not complete the conversion using method 0. Reattempting using method 1.
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15004, <SESSION_IDENTIFIER>: Could not complete the conversion using method 0. Reattempting using method 1.
 
 FILE
   convertCore.php
@@ -1708,7 +1708,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15005, Could not complete the conversion using method 1.
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15005, <SESSION_IDENTIFIER>: Could not complete the conversion using method 1.
 
 FILE
   convertCore.php
@@ -1737,7 +1737,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15006, Could not OCR file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15006, <SESSION_IDENTIFIER>: Could not OCR file!
 
 FILE
   convertCore.php
@@ -1766,7 +1766,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15007, Could not verify the document conversion engine!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15007, <SESSION_IDENTIFIER>: Could not verify the document conversion engine!
 
 FILE
   convertCore.php
@@ -1787,7 +1787,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15008, Could not verify the document conversion engine!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15008, <SESSION_IDENTIFIER>: Could not verify the document conversion engine!
 
 FILE
   convertCore.php
@@ -1808,7 +1808,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15009, Could not create an intermediate directory at <FILE_PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15009, <SESSION_IDENTIFIER>: Could not create an intermediate directory at <FILE_PATH>!
 
 FILE
   convertCore.php
@@ -1831,7 +1831,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16000 Could not delete stale file <FILE_PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16000, <SESSION_IDENTIFIER>: Could not delete stale file <FILE_PATH>!
 
 FILE
   convertCore.php
@@ -1853,7 +1853,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16001 Could create a file at <FILE_PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16001, <SESSION_IDENTIFIER>: Could create a file at <FILE_PATH>!
 
 FILE
   convertCore.php
@@ -1875,7 +1875,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16002 Could not delete stale file <FILE_PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16002, <SESSION_IDENTIFIER>: Could not delete stale file <FILE_PATH>!
 
 FILE
   convertCore.php
@@ -1897,7 +1897,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16003 Could create a file at <FILE_PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16003, <SESSION_IDENTIFIER>: Could create a file at <FILE_PATH>!
 
 FILE
   convertCore.php
@@ -1919,7 +1919,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-17000, Could not sanitize the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-17000, <SESSION_IDENTIFIER>: Could not sanitize the input file!
 
 FILE
   convertCore.php
@@ -1944,7 +1944,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-17001, Could not verify the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-17001, <SESSION_IDENTIFIER>: Could not verify the input file!
 
 FILE
   convertCore.php
@@ -1974,7 +1974,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-18000, Could not verify ScanCore Virus Scanner!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-18000,, <SESSION_IDENTIFIER>: Could not verify ScanCore Virus Scanner!
 
 FILE
   convertCore.php
@@ -1998,7 +1998,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-19000, Could not sanitize the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-19000,, <SESSION_IDENTIFIER>: Could not sanitize the input file!
 
 FILE
   convertCore.php
@@ -2023,7 +2023,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-19001, Could not verify the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-19001,, <SESSION_IDENTIFIER>: Could not verify the input file!
 
 FILE
   convertCore.php
@@ -2053,7 +2053,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-20000 Could not delete stale file <FILE_PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-20000, <SESSION_IDENTIFIER>: Could not delete stale file <FILE_PATH>!
 
 FILE
   convertCore.php
@@ -2075,7 +2075,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-20001 Could create a file at <FILE_PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-20001, <SESSION_IDENTIFIER>: Could create a file at <FILE_PATH>!
 
 FILE
   convertCore.php

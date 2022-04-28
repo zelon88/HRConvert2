@@ -146,11 +146,11 @@ OCR Operations support the following output formats...
 ---
 # Supported Languages
 Languages can be forced via policy or dynamically selected by the user by appending `?language=en` to the server URL.
-No need install additional language pakcs to switch languages. Translations are built-in. 
-Developers can craft link or redirects to load the correct language for each user or set the language once & forget it.
+No need install additional language packs to switch languages. Translations are built-in. 
+Developers can craft links or redirects to load the correct language for each user or set the language once & forget it.
 - English (en)
 - French (fr)
-- Spanish (sp)
+- Spanish (es)
 - Chinese, Simplified (zh)
 - Hindi (hi)
 - Arabic (ar)

@@ -27,6 +27,14 @@ Apache 2.4, PHP 7+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 
 
 --------------------
+COMMIT 7/18/2022
+v2.9.5 - Fix bug in OCR where non-PDF conversions would fail.
+
+-v2.9.5.
+-There was a bug in convertCore.php that lead to issue found by Github user @dwaan.
+-https://github.com/dwaaan/HRConvert2-Docker/issues/6
+
+--------------------
 COMMIT 4/28/2022
 v2.9.4 - Add CREATING_LANGUAGE_PACKS.txt to Documents directory.
 

@@ -62,6 +62,14 @@ function verifyTime() {
 // / Filters a given string of | \ ~ # [ ] ( ) { } ; : $ ! # ^ & % @ > * < " / '
 // / This function will replace any of the above specified charcters with NOTHING. No character at all. An empty string.
 // / Set $strict to TRUE to also filter out backslash characters as well. Example:  /
+function sanitizeString($Variable, $strict) {
+  if ($strict) $Variable = htmlentities(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split('|\\~#[](){};:$!#^&%@>*<"\'/'), '', $Variable))))), ENT_QUOTES, 'UTF-8');
+  if (!$strict) $Variable = htmlentities(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split('|\\[](){};"\''), '', $Variable))))), ENT_QUOTES, 'UTF-8');
+  $strict = NULL;
+  unset($strict);
+  return $Variable;
+}
+
 function sanitize($Variable, $strict) {
   // / Set variables.
   $VariableIsSanitized = TRUE;
@@ -74,13 +82,14 @@ function sanitize($Variable, $strict) {
     // / Sanitize array inputs.
     if (is_array($Variable)) {
       // / Note that when $strict is TRUE this also filters out backslashes.
-      if ($strict) foreach ($Variable as $key => $var) $Variable[$key] = htmlentities(trim(str_replace('..', '', str_replace('//', '', str_replace(str_split('|\\~#[](){};:$!#^&%@>*<"\'/'), '', $var)))), ENT_QUOTES, 'UTF-8');
-      if (!$strict) foreach ($Variable as $key => $var) $Variable[$key] = htmlentities(trim(str_replace('..', '', str_replace('//', '', str_replace(str_split('|\\[](){};"\''), '', $var)))), ENT_QUOTES, 'UTF-8'); }
+      $Variable[$key] = sanitizeString($Variable[$key], $strict);
+    }
     // / Sanitize string & numeric inputs.
     if (is_string($Variable) or is_numeric($Variable)) {
       // / Note that when $strict is TRUE this also filters out backslashes.
-      if ($strict) $Variable = htmlentities(trim(str_replace('..', '', str_replace('//', '', str_replace(str_split('|\\~#[](){};:$!#^&%@>*<"\'/'), '', $Variable)))), ENT_QUOTES, 'UTF-8');
-      if (!$strict) $Variable = htmlentities(trim(str_replace('..', '', str_replace('//', '', str_replace(str_split('|\\[](){};"\''), '', $Variable)))), ENT_QUOTES, 'UTF-8'); } }
+      $Variable = sanitizeString($Variable, $strict);
+    }
+  }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $strict = $key = $var = NULL;
   unset($strict, $key, $var);

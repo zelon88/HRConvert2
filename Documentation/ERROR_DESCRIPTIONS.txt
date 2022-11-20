@@ -1079,6 +1079,23 @@ ERROR DESCRIPTION
   Other errors preceding this error will help narrow down the cause of this error.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5006, <SESSION_IDENTIFIER>: File extension <FILE_EXTENSION> is not supported!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The file submitted by the user has an extension that is not supported by HRConvert.
+  Other errors preceding this error will help narrow down the cause of this error.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE

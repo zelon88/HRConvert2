@@ -783,7 +783,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
 		
 		if (in_array($extension, $StreamArray)) {
         ?>
-        <div id='videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+        <div id='streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong>Convert This Stream</strong></p>
           <p>Specify Filename: <input type="text" id='userstreamfilename<?php echo $ConvertGuiCounter1; ?>' name='userstreamfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>

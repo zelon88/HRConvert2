@@ -56,6 +56,10 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Mov</li>
               <li>M4v</li>
             </ol>
+			<strong>Stream Formats</strong>
+            <ol>
+              <li>m3u8</li>
+            </ol>
             <strong>Document Formats</strong>
             <ol>
               <li>Doc</li>

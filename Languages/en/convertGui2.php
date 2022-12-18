@@ -741,7 +741,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
           <p>Specify Filename: <input type="text" id='uservideofilename<?php echo $ConvertGuiCounter1; ?>' name='uservideofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='videoextension<?php echo $ConvertGuiCounter1; ?>' name='videoextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="mp4">Format</option> 
-            <option value="3gp">3gp</option> 
+            <option value="m3u8">m3u8</option> 
             <option value="mkv">Mkv</option> 
             <option value="avi">Avi</option>
             <option value="mp4">Mp4</option>
@@ -790,7 +790,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
           <select id='streamextension<?php echo $ConvertGuiCounter1; ?>' name='streamextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="mp4">Format</option> 
 			<option value="m3u8">m3u8</option> 
-            <option value="3gp">3gp</option> 
+            <option value="m3u8">m3u8</option> 
             <option value="mkv">Mkv</option> 
             <option value="avi">Avi</option>
             <option value="mp4">Mp4</option>

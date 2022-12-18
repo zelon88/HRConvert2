@@ -46,7 +46,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             </ol>
             <strong>Video Formats</strong>
             <ol>
-              <li>m3u8</li>
+              <li>3gp</li>
               <li>Mkv</li>
               <li>Avi</li>
               <li>Mp4</li>

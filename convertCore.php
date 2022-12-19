@@ -780,7 +780,7 @@ function convertStreams($pathname, $newPathname) {
   if ($Verbose) logEntry('Converting stream.');
   // / This code will attempt the conversion up to 5 times.
   while (!file_exists($newPathname) && $stopper <= 5) {
-    $returnData = shell_exec('ffmpeg -i '.$pathname.' -c copy '.$newPathname);
+    $returnData = shell_exec('ffmpeg -protocol_whitelist file,http,https,tcp,tls,crypto -i '.$pathname.' -c copy '.$newPathname);
     $stopper++;
     if ($stopper === 5) {
       $ConversionErrors = TRUE;

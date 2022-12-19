@@ -789,7 +789,6 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
           <p>Specify Filename: <input type="text" id='userstreamfilename<?php echo $ConvertGuiCounter1; ?>' name='userstreamfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='streamextension<?php echo $ConvertGuiCounter1; ?>' name='streamextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="mp4">Format</option> 
-			<option value="m3u8">m3u8</option> 
             <option value="3gp">3gp</option> 
             <option value="mkv">Mkv</option> 
             <option value="avi">Avi</option>

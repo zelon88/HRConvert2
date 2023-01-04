@@ -22,7 +22,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         <div id="more-info" style="display:none;">
           <hr />
           <p>Todos los datos proporcionados por el usuario se borran automáticamente, por lo que no debe preocuparse por perder su información personal o propiedad mientras utiliza nuestros servicios.</p>
-          <p><?php echo $ApplicationName; ?> admite 75 formatos de archivo diferentes, incluidos documentos, hojas de cálculo, imágenes, medios, modelos 3D, dibujo asistido por computadora, archivos vectoriales, archivos, imágenes de disco y más.</p> 
+          <p><?php echo $ApplicationName; ?> admite 77 formatos de archivo diferentes, incluidos documentos, hojas de cálculo, imágenes, medios, modelos 3D, dibujo asistido por computadora, archivos vectoriales, archivos, imágenes de disco y más.</p> 
           <button id="supported-formats-show-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
             toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Ver Formatos Admitidos ...</i></button>
           <button id="supported-formats-hide-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
@@ -55,6 +55,10 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Wmv</li>
               <li>Mov</li>
               <li>M4v</li>
+            </ol>
+            <strong>Formatos de Transmisión</strong>
+            <ol>
+              <li>m3u8</li>
             </ol>
             <strong>Formatos de Documentos</strong>
             <ol>

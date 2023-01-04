@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 7/18/2022 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 1/3/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -61,6 +61,21 @@ function verifyTime() {
 // / A function to sanitize input strings with varying degrees of tolerance.
 // / Filters a given string of | \ ~ # [ ] ( ) { } ; : $ ! # ^ & % @ > * < " / '
 // / This function will replace any of the above specified charcters with NOTHING. No character at all. An empty string.
+// / This function will replace whitespace with the underscore character.
+// / Set $strict to TRUE to also filter out backslash characters as well. Example:  /
+function sanitizeString($Variable, $strict) {
+  if ($strict) $Variable = htmlentities(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split('|\\~#[](){};:$!#^&%@>*<"\'/'), '', $Variable))))), ENT_QUOTES, 'UTF-8');
+  if (!$strict) $Variable = htmlentities(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split('|\\[](){};"\''), '', $Variable))))), ENT_QUOTES, 'UTF-8');
+  $strict = NULL;
+  unset($strict);
+  return $Variable; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to sanitize input strings or arrays with varying degrees of tolerance.
+// / Filters a given string of | \ ~ # [ ] ( ) { } ; : $ ! # ^ & % @ > * < " / '
+// / This function will replace any of the above specified charcters with NOTHING. No character at all. An empty string.
+// / This function will replace whitespace with the underscore character.
 // / Set $strict to TRUE to also filter out backslash characters as well. Example:  /
 function sanitize($Variable, $strict) {
   // / Set variables.
@@ -72,15 +87,11 @@ function sanitize($Variable, $strict) {
   if (!is_string($Variable) && !is_numeric($Variable) && !is_array($Variable)) $VariableIsSanitized = FALSE;
   else {
     // / Sanitize array inputs.
-    if (is_array($Variable)) {
-      // / Note that when $strict is TRUE this also filters out backslashes.
-      if ($strict) foreach ($Variable as $key => $var) $Variable[$key] = htmlentities(trim(str_replace('..', '', str_replace('//', '', str_replace(str_split('|\\~#[](){};:$!#^&%@>*<"\'/'), '', $var)))), ENT_QUOTES, 'UTF-8');
-      if (!$strict) foreach ($Variable as $key => $var) $Variable[$key] = htmlentities(trim(str_replace('..', '', str_replace('//', '', str_replace(str_split('|\\[](){};"\''), '', $var)))), ENT_QUOTES, 'UTF-8'); }
+    // / Note that when $strict is TRUE this also filters out backslashes.
+    if (is_array($Variable)) $Variable[$key] = sanitizeString($Variable[$key], $strict);
     // / Sanitize string & numeric inputs.
-    if (is_string($Variable) or is_numeric($Variable)) {
-      // / Note that when $strict is TRUE this also filters out backslashes.
-      if ($strict) $Variable = htmlentities(trim(str_replace('..', '', str_replace('//', '', str_replace(str_split('|\\~#[](){};:$!#^&%@>*<"\'/'), '', $Variable)))), ENT_QUOTES, 'UTF-8');
-      if (!$strict) $Variable = htmlentities(trim(str_replace('..', '', str_replace('//', '', str_replace(str_split('|\\[](){};"\''), '', $Variable)))), ENT_QUOTES, 'UTF-8'); } }
+    // / Note that when $strict is TRUE this also filters out backslashes.
+    if (is_string($Variable) or is_numeric($Variable)) $Variable = sanitizeString($Variable, $strict); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $strict = $key = $var = NULL;
   unset($strict, $key, $var);
@@ -323,7 +334,7 @@ function verifyLanguage() {
 function verifyGlobals() {
   // / Set variables.
   global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $DangerousFiles1, $ArchiveArray, $DearchiveArray, $DocumentArray, $DocArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $DrawingArray, $ModelArray, $ConvertArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir;
-  $HRConvertVersion = 'v2.9.6';
+  $HRConvertVersion = 'v2.9.8';
   $CoreLoaded = $GlobalsAreVerified = TRUE;
   $SupportedConversionTypes = array('Document', 'Image', 'Model', 'Drawing', 'Video', 'Audio', 'Archive');
   $DirSep = DIRECTORY_SEPARATOR;
@@ -1125,12 +1136,12 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
   // / Set variables.
   global $Verbose, $VirusScan;
   $clean = $copy = TRUE;
-  $MainConversionSuccess = $MainConversionErrors = $virusFound = $variableIsSanitized = $variableIsSanitized = $skip = FALSE;
+  $MainConversionSuccess = $MainConversionErrors = $virusFound = $variableIsSanitized = $variableIsSanitized = $skip = $isExtensionSupported = FALSE;
   $docarray =  array('txt', 'doc', 'xls', 'xlsx', 'docx', 'rtf', 'ods', 'odt', 'dat', 'cfg', 'pages', 'pptx', 'ppt', 'xps', 'potx', 'pot', 'ppa', 'odp', 'odt', 'abw');
   $imgarray = array('jpg', 'jpeg', 'bmp', 'webp', 'png', 'avif', 'crw', 'ico', 'cin', 'xwd', 'dcr', 'dds', 'dib', 'flif', 'gplt', 'nef', 'orf', 'ora', 'sct', 'sfw', 'xcf', 'xwg', 'gif');
   $modelarray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'ptx', 'dxf', 'u3d', 'vrml');
   $drawingarray = array('xvg', 'dxf', 'vdx', 'fig');
-  $videoarray =  array('3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv');
+  $videoarray =  array('3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv', 'mov');
   $audioarray =  array('mp3', 'wma', 'wav', 'ogg', 'mp2', 'flac', 'aac');
   $pdfarray = array('pdf');
   $archarray = array('zip', '7z', 'rar', 'tar', 'tar.gz', 'tar.bz2', 'iso', 'vhd');
@@ -1177,6 +1188,7 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
     foreach ($arrayArray as $arrKey => $arrArray) {
       // / Code to convert & manipulate files.
       if (in_array(strtolower($oldExtension), $arrArray)) {
+        $isExtensionSupported = TRUE;
         list ($ConversionSuccess, $ConversionErrors) = convert($arrKey, $pathname, $newPathname, $UserExtension, $Height, $Width, $Rotate, $Bitrate);
         if (!$ConversionSuccess) {
           $MainConversionSuccess = FALSE;
@@ -1186,6 +1198,7 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
           logEntry($arrKey.' conversion finished with errors.'); }
         if ($Verbose) logEntry($arrKey.' Conversion Complete'); } }
     // / Error handler & logger for converting files.
+    if (!$isExtensionSupported) errorEntry('File extension '.$oldExtension.' is not supported!', 5006, FALSE); }
     if (!file_exists($newPathname)) {
       $MainConversionErrors = TRUE;
       $MainConversionSuccess = FALSE;
@@ -1194,8 +1207,8 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
       $MainConversionSuccess = TRUE;
       if ($Verbose) logEntry('Created a file at '.$newPathname.'.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $pathname = $oldPathname = $oldExtension= $newPathname = $docarray = $imgarray = $audioarray = $videoarray = $modelarray = $drawingarray = $pdfarray = $archarray = $array7z = $array7zo = $arrayzipo = $arraytaro = $arrayraro = $arrayArray = $fileIsVerified = $scanComplete = $virusFound = $variableIsSanitized = $arrKey = $clean = $copy = $skip = NULL;
-  unset ($file, $pathname, $oldPathname, $oldExtension, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $modelarray, $drawingarray, $pdfarray, $archarray, $array7z, $array7zo, $arrayzipo, $arraytaro, $arrayraro, $arrayArray, $fileIsVerified, $scanComplete, $virusFound, $variableIsSanitized, $arrKey, $clean, $copy, $skip);
+  $file = $pathname = $oldPathname = $oldExtension= $newPathname = $docarray = $imgarray = $audioarray = $videoarray = $modelarray = $drawingarray = $pdfarray = $archarray = $array7z = $array7zo = $arrayzipo = $arraytaro = $arrayraro = $arrayArray = $fileIsVerified = $scanComplete = $virusFound = $variableIsSanitized = $arrKey = $clean = $copy = $skip = $isExtensionSupported = NULL;
+  unset ($file, $pathname, $oldPathname, $oldExtension, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $modelarray, $drawingarray, $pdfarray, $archarray, $array7z, $array7zo, $arrayzipo, $arraytaro, $arrayraro, $arrayArray, $fileIsVerified, $scanComplete, $virusFound, $variableIsSanitized, $arrKey, $clean, $copy, $skip, $isExtensionSupported);
   return array($MainConversionSuccess, $MainConversionErrors); }
 // / -----------------------------------------------------------------------------------
 

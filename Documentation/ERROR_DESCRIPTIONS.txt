@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 4/11/2022 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 1/3/2023 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -1079,6 +1079,23 @@ ERROR DESCRIPTION
   Other errors preceding this error will help narrow down the cause of this error.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5006, <SESSION_IDENTIFIER>: File extension <FILE_EXTENSION> is not supported!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The file submitted by the user has an extension that is not supported by HRConvert.
+  Other errors preceding this error will help narrow down the cause of this error.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
@@ -1518,7 +1535,7 @@ FILE
   convertCore.php
 
 FATAL
-  NO
+  YES
 
 LOGGED
   YES
@@ -1540,7 +1557,7 @@ FILE
   convertCore.php
 
 FATAL
-  NO
+  YES
 
 LOGGED
   YES
@@ -1586,7 +1603,7 @@ FILE
   convertCore.php
 
 FATAL
-  NO
+  YES
 
 LOGGED
   YES

@@ -334,7 +334,7 @@ function verifyLanguage() {
 function verifyGlobals() {
   // / Set variables.
   global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $DangerousFiles1, $ArchiveArray, $DearchiveArray, $DocumentArray, $DocArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $StreamArray, $DrawingArray, $ModelArray, $ConvertArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir;
-  $HRConvertVersion = 'v2.9.8';
+  $HRConvertVersion = 'v2.9.9';
   $CoreLoaded = $GlobalsAreVerified = TRUE;
   $SupportedConversionTypes = array('Document', 'Image', 'Model', 'Drawing', 'Video', 'Stream', 'Audio', 'Archive');
   $DirSep = DIRECTORY_SEPARATOR;
@@ -795,7 +795,7 @@ function convertStreams($pathname, $newPathname) {
     $stopper++;
     if ($stopper === 5) {
       $ConversionErrors = TRUE;
-      errorEntry('The stream converter timed out!', 11000, FALSE); } }
+      errorEntry('The stream converter timed out!', 21000, FALSE); } }
   if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.

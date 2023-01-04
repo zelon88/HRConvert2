@@ -255,6 +255,15 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
            onclick="toggle_visibility('videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php } 
 
+          if (in_array($extension, $StreamArray)) { ?>
+          <a style="float:left;">&nbsp;|&nbsp;</a>
+
+          <img id="streamButton<?php echo $ConvertGuiCounter1; ?>" name="streamButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/stream.png" style="float:left; display:block;" 
+           onclick="toggle_visibility('streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('streamButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('streamXButton<?php echo $ConvertGuiCounter1; ?>');"/>
+          <img id="streamXButton<?php echo $ConvertGuiCounter1; ?>" name="streamXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:left; display:none;" 
+           onclick="toggle_visibility('streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('streamButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('streamXButton<?php echo $ConvertGuiCounter1; ?>');"/>
+          <?php } 
+
           if (in_array($extension, $DrawingArray)) { ?>
           <a style="float:right;">&nbsp;|&nbsp;</a>
 
@@ -768,6 +777,54 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('uservideofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('videoextension<?php echo $ConvertGuiCounter1; ?>').value; 
+                      document.getElementById('downloadTarget').click(); } }); },
+                    error: function(ReturnData) {
+                      alert("<?php echo $Alert; ?>"); } }); }); });
+          </script>
+        </div>
+        <?php } 
+
+        if (in_array($extension, $StreamArray)) {
+        ?>
+        <div id='streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+          <p style="max-width:1000px;"></p>
+          <p><strong>تحويل هذا التدفق</strong></p>
+          <p>حدد اسم الملف <input type="text" id='userstreamfilename<?php echo $ConvertGuiCounter1; ?>' name='userstreamfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <select id='streamextension<?php echo $ConvertGuiCounter1; ?>' name='streamextension<?php echo $ConvertGuiCounter1; ?>'>
+            <option value="mp4">Format</option> 
+            <option value="3gp">3gp</option> 
+            <option value="mkv">Mkv</option> 
+            <option value="avi">Avi</option>
+            <option value="mp4">Mp4</option>
+            <option value="flv">Flv</option>
+            <option value="mpeg">Mpeg</option>
+            <option value="wmv">Wmv</option>
+            <option value="mov">Mov</option>
+          </select></p>
+          <input type="submit" id="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='تحويل تيار' onclick="toggle_visibility('loadingCommandDiv');">
+          <script type="text/javascript">
+          $(document).ready(function () {
+            $('#streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
+              $.ajax({
+                type: "POST",
+                url: 'convertCore.php',
+                data: {
+                  Token1:'<?php echo $Token1; ?>',
+                  Token2:'<?php echo $Token2; ?>',
+                  convertSelected:'<?php echo $File; ?>',
+                  extension:document.getElementById('streamextension<?php echo $ConvertGuiCounter1; ?>').value,
+                  userconvertfilename:document.getElementById('userstreamfilename<?php echo $ConvertGuiCounter1; ?>').value },
+                  success: function(ReturnData) {
+                    $.ajax({
+                    type: 'POST',
+                    url: 'convertCore.php',
+                    data: { 
+                      Token1:'<?php echo $Token1; ?>',
+                      Token2:'<?php echo $Token2; ?>',
+                      download:document.getElementById('userstreamfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('streamextension<?php echo $ConvertGuiCounter1; ?>').value },
+                    success: function(returnFile) {
+                      toggle_visibility('loadingCommandDiv');
+                      document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userstreamfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('streamextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
                       alert("<?php echo $Alert; ?>"); } }); }); });

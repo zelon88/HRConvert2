@@ -6,13 +6,13 @@
 -----------------------------------------------
 # HRConvert2
 
-### A self-hosted drag-and-drop file conversion server & file sharing tool that supports 75 file formats with 4 color schemes & 13 end-user selctable languages. 
+### A self-hosted drag-and-drop file conversion server & file sharing tool that supports 76 file formats with 4 color schemes & 13 end-user selctable languages. 
 
 ![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/HRConvert2-1.png)
 
 ---
 ### Features
-- Converts 75 different file formats.
+- Converts 76 different file formats.
 - Self hosted. Installs on a home server!
 - All conversions are performed locally on your server.
 - Performs Optical Character Recognition (OCR) on PDFs & images.
@@ -51,6 +51,8 @@ Supports specific bitrate through the API.
 - Mpeg
 - Wmv
 - Mov
+#### Stream Formats
+- m3u8
 #### Document Formats
 - Doc
 - Docx

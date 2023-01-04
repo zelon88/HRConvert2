@@ -12,7 +12,7 @@
 
 ---
 ### Features
-- Converts 76 different file formats.
+- Converts 77 different file formats.
 - Self hosted. Installs on a home server!
 - All conversions are performed locally on your server.
 - Performs Optical Character Recognition (OCR) on PDFs & images.

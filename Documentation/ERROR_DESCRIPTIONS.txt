@@ -1518,7 +1518,7 @@ FILE
   convertCore.php
 
 FATAL
-  NO
+  YES
 
 LOGGED
   YES
@@ -1540,7 +1540,7 @@ FILE
   convertCore.php
 
 FATAL
-  NO
+  YES
 
 LOGGED
   YES
@@ -1586,7 +1586,7 @@ FILE
   convertCore.php
 
 FATAL
-  NO
+  YES
 
 LOGGED
   YES

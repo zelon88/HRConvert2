@@ -27,6 +27,13 @@ Apache 2.4, PHP 7+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 
 
 --------------------
+COMMIT 1/3/2023
+v2.9.6 - Fix error in documentation.
+
+-v2.9.6.
+-Fix error in documentation.
+
+--------------------
 COMMIT 7/18/2022
 v2.9.5 - Fix bug in OCR where non-PDF conversions would fail.
 

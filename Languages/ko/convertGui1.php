@@ -22,7 +22,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         <div id="more-info" style="display:none;">
           <hr />
           <p>사용자가 제공한 모든 데이터는 자동으로 삭제되므로 서비스를 사용하는 동안 개인 정보나 재산을 잃어버릴 염려가 없습니다.</p>
-          <p>현재 <?php echo $ApplicationName; ?>는 문서, 스프레드시트, 이미지, 미디어, 3D 모델, CAD 도면, 벡터 파일, 아카이브, 디스크 이미지 등을 포함한 75가지 다양한 파일 형식을 지원합니다.</p> 
+          <p>현재 <?php echo $ApplicationName; ?>는 문서, 스프레드시트, 이미지, 미디어, 3D 모델, CAD 도면, 벡터 파일, 아카이브, 디스크 이미지 등을 포함한 77가지 다양한 파일 형식을 지원합니다.</p> 
           <button id="supported-formats-show-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
             toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>지원되는 형식 보기 ...</i></button>
           <button id="supported-formats-hide-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
@@ -55,6 +55,10 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Wmv</li>
               <li>Mov</li>
               <li>M4v</li>
+            </ol>
+            <strong>스트림 형식</strong>
+            <ol>
+              <li>m3u8</li>
             </ol>
             <strong>문서 형식</strong>
             <ol>

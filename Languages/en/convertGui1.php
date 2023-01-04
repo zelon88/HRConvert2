@@ -22,7 +22,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         <div id="more-info" style="display:none;">
           <hr />
           <p>All user-supplied data is erased automatically, so you don't need to worry about forfeiting your personal information or property while using our services.</p>
-          <p>Currently <?php echo $ApplicationName; ?> supports 75x different file formats, including documents, spreadsheets, images, media, 3D models, CAD drawings, vector files, archives, disk images, & more.</p> 
+          <p>Currently <?php echo $ApplicationName; ?> supports 77 different file formats, including documents, spreadsheets, images, media, 3D models, CAD drawings, vector files, archives, disk images, & more.</p> 
           <button id="supported-formats-show-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
             toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>View Supported Formats ...</i></button>
           <button id="supported-formats-hide-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
@@ -56,7 +56,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Mov</li>
               <li>M4v</li>
             </ol>
-			<strong>Stream Formats</strong>
+            <strong>Stream Formats</strong>
             <ol>
               <li>m3u8</li>
             </ol>

@@ -76,7 +76,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
       <?php } ?>
         <hr style='width: 50%;' />
         <p><strong>Compresser et Télécharger Tous Les Fichiers</strong></p>
-        <p>Spécifiez le Nom du Fichier:<input type="text" id='userarchallfilename' name='userarchallfilename' value='HRConvert2_Files-<?php echo $Date; ?>'></p> 
+        <p>Spécifiez le Nom du Fichier: <input type="text" id='userarchallfilename' name='userarchallfilename' value='HRConvert2_Files-<?php echo $Date; ?>'></p> 
         <select id='archallextension' name='archallextension'> 
           <option value="zip">Format</option>
           <option value="zip">Zip</option>
@@ -250,6 +250,15 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
            onclick="toggle_visibility('videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php } 
 
+          if (in_array($extension, $StreamArray)) { ?>
+          <a style="float:left;">&nbsp;|&nbsp;</a>
+
+          <img id="streamButton<?php echo $ConvertGuiCounter1; ?>" name="streamButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/stream.png" style="float:left; display:block;" 
+           onclick="toggle_visibility('streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('streamButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('streamXButton<?php echo $ConvertGuiCounter1; ?>');"/>
+          <img id="streamXButton<?php echo $ConvertGuiCounter1; ?>" name="streamXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:left; display:none;" 
+           onclick="toggle_visibility('streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('streamButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('streamXButton<?php echo $ConvertGuiCounter1; ?>');"/>
+          <?php } 
+
           if (in_array($extension, $DrawingArray)) { ?>
           <a style="float:left;">&nbsp;|&nbsp;</a>
 
@@ -272,7 +281,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         <div id='archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong>Archiver ce Fichier</strong></p>
-          <p>Spécifiez le Nom du Fichier:<input type="text" id='userarchfilefilename<?php echo $ConvertGuiCounter1; ?>' name='userarchfilefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p>Spécifiez le Nom du Fichier: <input type="text" id='userarchfilefilename<?php echo $ConvertGuiCounter1; ?>' name='userarchfilefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='archfileextension<?php echo $ConvertGuiCounter1; ?>' name='archfileextension<?php echo $ConvertGuiCounter1; ?>'> 
             <option value="zip">Format</option>
             <option value="zip">Zip</option>
@@ -446,7 +455,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         <div id='pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong>Effectuer une Reconnaissance Optique de Caractères sur ce Fichier</strong></p>
-          <p>Spécifiez le Nom du Fichier:<input type="text" id='userpdffilename<?php echo $ConvertGuiCounter1; ?>' name='userpdffilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p>Spécifiez le Nom du Fichier: <input type="text" id='userpdffilename<?php echo $ConvertGuiCounter1; ?>' name='userpdffilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='pdfmethod<?php echo $ConvertGuiCounter1; ?>' name='pdfmethod<?php echo $ConvertGuiCounter1; ?>'>   
             <option value="0">Method</option>  
             <option value="1">Method 1 (Simple)</option>
@@ -498,7 +507,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         <div id='archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong>Convertir cette Archive</strong></p>
-          <p>Spécifiez le Nom du Fichier:<input type="text" id='userarchivefilename<?php echo $ConvertGuiCounter1; ?>' name='userarchivefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p>Spécifiez le Nom du Fichier: <input type="text" id='userarchivefilename<?php echo $ConvertGuiCounter1; ?>' name='userarchivefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='archiveextension<?php echo $ConvertGuiCounter1; ?>' name='archiveextension<?php echo $ConvertGuiCounter1; ?>'> 
             <option value="zip">Format</option>
             <option value="zip">Zip</option>
@@ -542,7 +551,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         <div id='docOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='docOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong>Convertir ce Documen</strong></p>
-          <p>Spécifiez le Nom du Fichier:<input type="text" id='userdocfilename<?php echo $ConvertGuiCounter1; ?>' name='userdocfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p>Spécifiez le Nom du Fichier: <input type="text" id='userdocfilename<?php echo $ConvertGuiCounter1; ?>' name='userdocfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='docextension<?php echo $ConvertGuiCounter1; ?>' name='docextension<?php echo $ConvertGuiCounter1; ?>'> 
             <option value="txt">Format</option>
             <option value="doc">Doc</option>
@@ -588,7 +597,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         <div id='spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong>Convertir cette Feuille de Calcul</strong></p>
-          <p>Spécifiez le Nom du Fichier:<input type="text" id='userspreadfilename<?php echo $ConvertGuiCounter1; ?>' name='userspreadfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p>Spécifiez le Nom du Fichier: <input type="text" id='userspreadfilename<?php echo $ConvertGuiCounter1; ?>' name='userspreadfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='spreadextension<?php echo $ConvertGuiCounter1; ?>' name='spreadextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="ods">Format</option> 
             <option value="xls">Xls</option>
@@ -633,7 +642,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         <div id='presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong>Convertir cette Présentation</strong></p>
-          <p>Spécifiez le Nom du Fichier:<input type="text" id='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' name='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p>Spécifiez le Nom du Fichier: <input type="text" id='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' name='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='presentationextension<?php echo $ConvertGuiCounter1; ?>' name='presentationextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="odp">Format</option>
             <option value="pages">Pages</option>
@@ -681,7 +690,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         <div id='audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong>Convertir cet Audio</strong></p>
-          <p>Spécifiez le Nom du Fichier:<input type="text" id='useraudiofilename<?php echo $ConvertGuiCounter1; ?>' name='useraudiofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p>Spécifiez le Nom du Fichier: <input type="text" id='useraudiofilename<?php echo $ConvertGuiCounter1; ?>' name='useraudiofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='audioextension<?php echo $ConvertGuiCounter1; ?>' name='audioextension<?php echo $ConvertGuiCounter1; ?>'> 
             <option value="mp3">Format</option>
             <option value="mp2">Mp2</option>  
@@ -727,7 +736,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         <div id='videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong>Convertir Cette Vidéo</strong></p>
-          <p>Spécifiez le Nom du Fichier:<input type="text" id='uservideofilename<?php echo $ConvertGuiCounter1; ?>' name='uservideofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p>Spécifiez le Nom du Fichier: <input type="text" id='uservideofilename<?php echo $ConvertGuiCounter1; ?>' name='uservideofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='videoextension<?php echo $ConvertGuiCounter1; ?>' name='videoextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="mp4">Format</option> 
             <option value="3gp">3gp</option> 
@@ -770,12 +779,60 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         </div>
         <?php } 
 
+        if (in_array($extension, $StreamArray)) {
+        ?>
+        <div id='streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+          <p style="max-width:1000px;"></p>
+          <p><strong>Convertir ce Flux</strong></p>
+          <p>Spécifiez le Nom du Fichier: <input type="text" id='userstreamfilename<?php echo $ConvertGuiCounter1; ?>' name='userstreamfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <select id='streamextension<?php echo $ConvertGuiCounter1; ?>' name='streamextension<?php echo $ConvertGuiCounter1; ?>'>
+            <option value="mp4">Format</option> 
+            <option value="3gp">3gp</option> 
+            <option value="mkv">Mkv</option> 
+            <option value="avi">Avi</option>
+            <option value="mp4">Mp4</option>
+            <option value="flv">Flv</option>
+            <option value="mpeg">Mpeg</option>
+            <option value="wmv">Wmv</option>
+            <option value="mov">Mov</option>
+          </select></p>
+          <input type="submit" id="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Convertir ce Flux' onclick="toggle_visibility('loadingCommandDiv');">
+          <script type="text/javascript">
+          $(document).ready(function () {
+            $('#streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
+              $.ajax({
+                type: "POST",
+                url: 'convertCore.php',
+                data: {
+                  Token1:'<?php echo $Token1; ?>',
+                  Token2:'<?php echo $Token2; ?>',
+                  convertSelected:'<?php echo $File; ?>',
+                  extension:document.getElementById('streamextension<?php echo $ConvertGuiCounter1; ?>').value,
+                  userconvertfilename:document.getElementById('userstreamfilename<?php echo $ConvertGuiCounter1; ?>').value },
+                  success: function(ReturnData) {
+                    $.ajax({
+                    type: 'POST',
+                    url: 'convertCore.php',
+                    data: { 
+                      Token1:'<?php echo $Token1; ?>',
+                      Token2:'<?php echo $Token2; ?>',
+                      download:document.getElementById('userstreamfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('streamextension<?php echo $ConvertGuiCounter1; ?>').value },
+                    success: function(returnFile) {
+                      toggle_visibility('loadingCommandDiv');
+                      document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userstreamfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('streamextension<?php echo $ConvertGuiCounter1; ?>').value; 
+                      document.getElementById('downloadTarget').click(); } }); },
+                    error: function(ReturnData) {
+                      alert("<?php echo $Alert; ?>"); } }); }); });
+          </script>
+        </div>
+        <?php } 
+
         if (in_array($extension, $ModelArray)) {
         ?>
         <div id='modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong>Convertir ce Modèle 3D</strong></p>
-          <p>Spécifiez le Nom du Fichier:<input type="text" id='usermodelfilename<?php echo $ConvertGuiCounter1; ?>' name='usermodelfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p>Spécifiez le Nom du Fichier: <input type="text" id='usermodelfilename<?php echo $ConvertGuiCounter1; ?>' name='usermodelfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='modelextension<?php echo $ConvertGuiCounter1; ?>' name='modelextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="3ds">Format</option>
             <option value="3ds">3ds</option>
@@ -825,7 +882,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         <div id='drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong>Convertissez ce Dessin Technique ou ce Fichier Vectoriel</strong></p>
-          <p>Spécifiez le Nom du Fichier:<input type="text" id='userdrawingfilename<?php echo $ConvertGuiCounter1; ?>' name='userdrawingfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p>Spécifiez le Nom du Fichier: <input type="text" id='userdrawingfilename<?php echo $ConvertGuiCounter1; ?>' name='userdrawingfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='drawingextension<?php echo $ConvertGuiCounter1; ?>' name='drawingextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="jpg">Format</option>
             <option value="svg">Svg</option>
@@ -873,7 +930,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         <div id='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong>Convertir Cette Image</strong></p>
-          <p>Spécifiez le Nom du Fichier:<input type="text" id='userphotofilename<?php echo $ConvertGuiCounter1; ?>' name='userphotofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p>Spécifiez le Nom du Fichier: <input type="text" id='userphotofilename<?php echo $ConvertGuiCounter1; ?>' name='userphotofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='photoextension<?php echo $ConvertGuiCounter1; ?>' name='photoextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="jpg">Format</option>
             <option value="jpg">Jpg</option>

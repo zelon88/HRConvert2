@@ -22,7 +22,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         <div id="more-info" style="display:none;">
           <hr />
           <p>Toutes les données fournies par l'utilisateur sont automatiquement effacées, vous n'avez donc pas à vous soucier de la perte de vos informations personnelles ou de vos biens lors de l'utilisation de nos services.</p>
-          <p><?php echo $ApplicationName; ?> prend en charge 75 formats de fichiers différents, y compris les documents, les feuilles de calcul, les images, les médias, les modèles 3D, les dessins CAO, les fichiers vectoriels, les archives, les images de disque, etc.</p> 
+          <p><?php echo $ApplicationName; ?> prend en charge 77 formats de fichiers différents, y compris les documents, les feuilles de calcul, les images, les médias, les modèles 3D, les dessins CAO, les fichiers vectoriels, les archives, les images de disque, etc.</p> 
           <button id="supported-formats-show-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
             toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Afficher les formats pris en charge...</i></button>
           <button id="supported-formats-hide-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
@@ -55,6 +55,10 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Wmv</li>
               <li>Mov</li>
               <li>M4v</li>
+            </ol>
+            <strong>Formats de Flux</strong>
+            <ol>
+              <li>m3u8</li>
             </ol>
             <strong>Formats de Documents</strong>
             <ol>

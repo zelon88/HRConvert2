@@ -1125,12 +1125,12 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
   // / Set variables.
   global $Verbose, $VirusScan;
   $clean = $copy = TRUE;
-  $MainConversionSuccess = $MainConversionErrors = $virusFound = $variableIsSanitized = $variableIsSanitized = $skip = $isExtensionSupported = FALSE;
+  $MainConversionSuccess = $MainConversionErrors = $virusFound = $variableIsSanitized = $variableIsSanitized = $skip = FALSE;
   $docarray =  array('txt', 'doc', 'xls', 'xlsx', 'docx', 'rtf', 'ods', 'odt', 'dat', 'cfg', 'pages', 'pptx', 'ppt', 'xps', 'potx', 'pot', 'ppa', 'odp', 'odt', 'abw');
   $imgarray = array('jpg', 'jpeg', 'bmp', 'webp', 'png', 'avif', 'crw', 'ico', 'cin', 'xwd', 'dcr', 'dds', 'dib', 'flif', 'gplt', 'nef', 'orf', 'ora', 'sct', 'sfw', 'xcf', 'xwg', 'gif');
   $modelarray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'ptx', 'dxf', 'u3d', 'vrml');
   $drawingarray = array('xvg', 'dxf', 'vdx', 'fig');
-  $videoarray =  array('3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv', 'mov');
+  $videoarray =  array('3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv');
   $audioarray =  array('mp3', 'wma', 'wav', 'ogg', 'mp2', 'flac', 'aac');
   $pdfarray = array('pdf');
   $archarray = array('zip', '7z', 'rar', 'tar', 'tar.gz', 'tar.bz2', 'iso', 'vhd');
@@ -1173,12 +1173,10 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
       if (!$scanComplete) errorEntry('Could not perform a virus scan!', 5002, TRUE);
       if ($virusFound) errorEntry('Virus detected!', 5003, TRUE);
       if ($Verbose) logEntry('Virus scan complete.'); }
-
     // / Iterate through the array of supported formats & call the appropriate code to perform the conversion.
     foreach ($arrayArray as $arrKey => $arrArray) {
       // / Code to convert & manipulate files.
       if (in_array(strtolower($oldExtension), $arrArray)) {
-        $isExtensionSupported = TRUE;
         list ($ConversionSuccess, $ConversionErrors) = convert($arrKey, $pathname, $newPathname, $UserExtension, $Height, $Width, $Rotate, $Bitrate);
         if (!$ConversionSuccess) {
           $MainConversionSuccess = FALSE;
@@ -1188,9 +1186,6 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
           logEntry($arrKey.' conversion finished with errors.'); }
         if ($Verbose) logEntry($arrKey.' Conversion Complete'); } }
     // / Error handler & logger for converting files.
-    if (!$isExtensionSupported) {
-      errorEntry('File extension '.$oldExtension.' is not supported!', 5006, FALSE); }
-    }
     if (!file_exists($newPathname)) {
       $MainConversionErrors = TRUE;
       $MainConversionSuccess = FALSE;

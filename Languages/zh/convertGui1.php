@@ -22,7 +22,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         <div id="more-info" style="display:none;">
           <hr />
           <p>所有用户提供的数据都会自动删除，因此您无需担心在使用我们的服务时会没收您的个人信息或财产。</p>
-          <p><?php echo $ApplicationName; ?> 支持 75 种不同的文件格式，包括文档、电子表格、图像、媒体、三维模型、矢量图、矢量文件、档案、磁盘图像等。</p> 
+          <p><?php echo $ApplicationName; ?> 支持 77 种不同的文件格式，包括文档、电子表格、图像、媒体、三维模型、矢量图、矢量文件、档案、磁盘图像等。</p> 
           <button id="supported-formats-show-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
             toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>查看支持的格式。。。</i></button>
           <button id="supported-formats-hide-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
@@ -55,6 +55,10 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Wmv</li>
               <li>Mov</li>
               <li>M4v</li>
+            </ol>
+            <strong>流格式</strong>
+            <ol>
+              <li>m3u8</li>
             </ol>
             <strong>文件格式</strong>
             <ol>

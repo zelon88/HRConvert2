@@ -120,7 +120,7 @@ $InstLoc = '/var/www/html/HRProprietary/HRConvert2';
 // /   This should be pointed at the root of your web server directory.
 // /   Do not include a trailing slash.
 // /   Default is /var/www/html.
-$ServerRootDir = '/var/www/html'
+$ServerRootDir = '/var/www/html';
 // /  --Data Storage Directory--
 // /   This is where temporary data files are stored.
 // /   Do not include a trailing slash.

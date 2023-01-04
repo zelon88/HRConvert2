@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 4/11/2022 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 1/3/2023 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -25,6 +25,27 @@ Apache 2.4, PHP 7+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+--------------------
+COMMIT 1/3/2023
+v2.9.8 - Merge pull request # 24.
+
+-v2.9.8.
+-Merge pull request # 24.
+-"Added .mov to videoArray and created error"
+-Pull request URL:  https://github.com/zelon88/HRConvert2/pull/24.
+-Commit URL:  https://github.com/zelon88/HRConvert2/commit/cd83790bcddfbf8f97cfcefef019fede9395efdb
+-Special thanks to author @HenriChabert.
+
+--------------------
+COMMIT 1/3/2023
+v2.9.7 - Merge pull request # 23.
+
+-v2.9.7.
+-Merge pull request # 23.
+-"Replace spaces with _ in filename"
+-Pull request URL:  https://github.com/zelon88/HRConvert2/pull/23.
+-Commit URL:  https://github.com/zelon88/HRConvert2/commit/24403d8518308f8c4d303af1e9acd7945f877bd5
+-Special thanks to author @HenriChabert.
 
 --------------------
 COMMIT 1/3/2023

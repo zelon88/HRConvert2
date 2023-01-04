@@ -323,7 +323,7 @@ function verifyLanguage() {
 function verifyGlobals() {
   // / Set variables.
   global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $DangerousFiles1, $ArchiveArray, $DearchiveArray, $DocumentArray, $DocArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $DrawingArray, $ModelArray, $ConvertArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir;
-  $HRConvertVersion = 'v2.9.5';
+  $HRConvertVersion = 'v2.9.6';
   $CoreLoaded = $GlobalsAreVerified = TRUE;
   $SupportedConversionTypes = array('Document', 'Image', 'Model', 'Drawing', 'Video', 'Audio', 'Archive');
   $DirSep = DIRECTORY_SEPARATOR;
@@ -901,7 +901,7 @@ function syncLocations() {
 function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) {
   global $DangerousFiles, $ConvertDir, $ConvertTempDir, $Allowed, $Verbose, $PathExt;
   $FileIsVerified = $Pathname = $OldPathname = $NewPathname = $UnlockFeatures = FALSE;
-  // / Make sure all iteration specific required variables are properly sanitized.
+  // / Check to make sure all iteration specific required variables are properly sanitized.
   list ($file, $sanitized) = sanitize($file, FALSE);
   list ($Pathname, $sanitized) = sanitize($ConvertTempDir.$file, FALSE);
   list ($OldPathname, $sanitized) = sanitize($ConvertDir.$file, FALSE);
@@ -913,7 +913,7 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
     if ($Verbose && file_exists($Pathname) && $clean) logEntry('Deleting stale file '.$Pathname.'.');
     // / Remove the temp file if one already exists.
     if (file_exists($Pathname) && $clean) @unlink($Pathname);
-    // / Make sure that the stale file was deleted if required or creating a new one will cause problems.
+    // / Check to make sure that the stale file was deleted if required or creating a new one will cause problems.
     if (file_exists($Pathname) && $clean) errorEntry('Could not delete stale file '.$Pathname.'!', 14001, TRUE);
     if ($Verbose && file_exists($OldPathname) && $copy) logEntry('Copying file '.$file.' to '.$Pathname.'.');
     // / Copy the file to the working directory.
@@ -930,7 +930,7 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
       if ($Verbose && file_exists($NewPathname) && $clean) logEntry('Deleting stale file '.$Pathname.'.');
       // / Remove the $NewPathname file if it already exists.
       if (file_exists($NewPathname) && $clean) @unlink($NewPathname);
-      // / Make sure that the stale file was deleted if required or creating a new one will cause problems.
+      // / Check to make sure that the stale file was deleted if required or creating a new one will cause problems.
       if (file_exists($NewPathname) && $clean) errorEntry('Could not delete stale file '.$NewPathname.'!', 14004, TRUE); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $file = $sanitized = NULL;

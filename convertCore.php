@@ -132,7 +132,7 @@ function verifySession() {
 function verifySesHash($IP, $HashedUserAgent) {
   // / Set variables.
   global $Date, $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6, $Token1;
-  if (is_string($Salts1) or is_string($Salts2) or is_string($Salts3) or is_string($Salts4) or is_string($Salts4) or is_string($Salts5) or is_string($Salts6)) {
+  if (is_string($Salts1) && is_string($Salts2) && is_string($Salts3) && is_string($Salts4) && is_string($Salts4) && is_string($Salts5) && is_string($Salts6)) {
     $SesHashIsVerified = TRUE;
     $SesHash = substr(hash('ripemd160', $Date.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6), -12);
     $SesHash2 = substr(hash('ripemd160', $SesHash.$Token1.$Date.$IP.$HashedUserAgent.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6), -12);
@@ -334,7 +334,7 @@ function verifyLanguage() {
 function verifyGlobals() {
   // / Set variables.
   global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $DangerousFiles1, $ArchiveArray, $DearchiveArray, $DocumentArray, $DocArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $StreamArray, $DrawingArray, $ModelArray, $ConvertArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir;
-  $HRConvertVersion = 'v2.9.9';
+  $HRConvertVersion = 'v3.0';
   $CoreLoaded = $GlobalsAreVerified = TRUE;
   $SupportedConversionTypes = array('Document', 'Image', 'Model', 'Drawing', 'Video', 'Stream', 'Audio', 'Archive');
   $DirSep = DIRECTORY_SEPARATOR;
@@ -1225,7 +1225,7 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
           logEntry($arrKey.' conversion finished with errors.'); }
         if ($Verbose) logEntry($arrKey.' Conversion Complete'); } }
     // / Error handler & logger for converting files.
-    if (!$isExtensionSupported) errorEntry('File extension '.$oldExtension.' is not supported!', 5006, FALSE); }
+    if (!$isExtensionSupported) errorEntry('File extension '.$oldExtension.' is not supported!', 5006, FALSE);
     if (!file_exists($newPathname)) {
       $MainConversionErrors = TRUE;
       $MainConversionSuccess = FALSE;

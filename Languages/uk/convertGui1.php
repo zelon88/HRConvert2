@@ -22,7 +22,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         <div id="more-info" style="display:none;">
           <hr />
           <p>Усі дані, надані користувачами, стираються автоматично, тому вам не потрібно турбуватися про втрату вашої особистої інформації чи майна під час використання наших послуг.</p>
-          <p><?php echo $ApplicationName; ?> HRConvert2 підтримує 75 різних форматів файлів, включаючи документи, електронні таблиці, зображення, медіа, тривимірні моделі, файли малюнків, векторні файли, архіви, образи дисків тощо.</p> 
+          <p><?php echo $ApplicationName; ?> HRConvert2 підтримує 77 різних форматів файлів, включаючи документи, електронні таблиці, зображення, медіа, тривимірні моделі, файли малюнків, векторні файли, архіви, образи дисків тощо.</p> 
           <button id="supported-formats-show-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
             toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Переглянути підтримувані формати...</i></button>
           <button id="supported-formats-hide-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
@@ -55,6 +55,10 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Wmv</li>
               <li>Mov</li>
               <li>M4v</li>
+            </ol>
+            <strong>Формати потоку</strong>
+            <ol>
+              <li>m3u8</li>
             </ol>
             <strong>Формати документів</strong>
             <ol>

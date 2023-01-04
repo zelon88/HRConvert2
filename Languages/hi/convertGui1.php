@@ -22,7 +22,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         <div id="more-info" style="display:none;">
           <hr />
           <p>सभी उपयोगकर्ता द्वारा प्रदत्त डेटा स्वचालित रूप से मिटा दिया जाता है, इसलिए आपको हमारी सेवाओं का उपयोग करते समय अपनी व्यक्तिगत जानकारी या संपत्ति को जब्त करने के बारे में चिंता करने की आवश्यकता नहीं है।</p>
-          <p><?php echo $ApplicationName; ?> 75 विभिन्न फ़ाइल स्वरूपों का समर्थन करता है, जिसमें दस्तावेज़, स्प्रेडशीट, चित्र, मीडिया, तीन आयामी मॉडल, ड्राइंग फ़ाइलें, वेक्टर फ़ाइलें, संग्रह, डिस्क चित्र, और बहुत कुछ शामिल हैं।</p> 
+          <p><?php echo $ApplicationName; ?> 77 विभिन्न फ़ाइल स्वरूपों का समर्थन करता है, जिसमें दस्तावेज़, स्प्रेडशीट, चित्र, मीडिया, तीन आयामी मॉडल, ड्राइंग फ़ाइलें, वेक्टर फ़ाइलें, संग्रह, डिस्क चित्र, और बहुत कुछ शामिल हैं।</p> 
           <button id="supported-formats-show-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
             toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>समर्थित प्रारूप देखें ...</i></button>
           <button id="supported-formats-hide-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
@@ -55,6 +55,10 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Wmv</li>
               <li>Mov</li>
               <li>M4v</li>
+            </ol>
+            <strong>स्ट्रीम प्रारूप</strong>
+            <ol>
+              <li>m3u8</li>
             </ol>
             <strong>दस्तावेज़ प्रारूप</strong>
             <ol>

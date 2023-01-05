@@ -30,7 +30,7 @@ $ReportDir = 'Logs';
   // / The filename for the ScanCore report file.
 $ReportFileName = 'ScanCore_Report.txt';
   // / The filename for the ScanCore log file.
-$logfilename = 'ScanCore_Latest-Log.txt';
+$ScanCoreLogfilename = 'ScanCore_Latest-Log.txt';
   // / The filename for the ScanCore virus definition file.
 $DefsFileName = 'ScanCore_Virus.def';
   // / The filename for the ScanCore virus definition file.

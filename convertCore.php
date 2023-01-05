@@ -66,6 +66,7 @@ function verifyTime() {
 function sanitizeString($Variable, $strict) {
   if ($strict) $Variable = htmlentities(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split('|\\~#[](){};:$!#^&%@>*<"\'/'), '', $Variable))))), ENT_QUOTES, 'UTF-8');
   if (!$strict) $Variable = htmlentities(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split('|\\[](){};"\''), '', $Variable))))), ENT_QUOTES, 'UTF-8');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $strict = NULL;
   unset($strict);
   return $Variable; }
@@ -102,7 +103,7 @@ function sanitize($Variable, $strict) {
 // / A function to load required HRConvert2 files.
 function verifyInstallation() {
   // / Set variables.
-  global $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6, $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $defaultButtonCode, $greenButtonCode, $blueButtonCode, $redButtonCode, $SpinnerStyle, $SpinnerColor, $URL, $AllowUserShare;
+  global $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6, $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $defaultButtonCode, $greenButtonCode, $blueButtonCode, $redButtonCode, $SpinnerStyle, $SpinnerColor, $URL, $AllowUserShare, $AllowStreams;
   $InstallationIsVerified = TRUE;
   $ConfigFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'config.php');
   $StyleCoreFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'styleCore.php');
@@ -333,10 +334,11 @@ function verifyLanguage() {
 // / A function to set the global variables for the session.
 function verifyGlobals() {
   // / Set variables.
-  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $DangerousFiles1, $ArchiveArray, $DearchiveArray, $DocumentArray, $DocArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $StreamArray, $DrawingArray, $ModelArray, $ConvertArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir;
+  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $DangerousFiles1, $ArchiveArray, $DearchiveArray, $DocumentArray, $DocArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $StreamArray, $DrawingArray, $ModelArray, $ConvertArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $AllowStreams;
   $HRConvertVersion = 'v3.0';
   $CoreLoaded = $GlobalsAreVerified = TRUE;
-  $SupportedConversionTypes = array('Document', 'Image', 'Model', 'Drawing', 'Video', 'Stream', 'Audio', 'Archive');
+  $SupportedConversionTypes = array('Document', 'Image', 'Model', 'Drawing', 'Video', 'Audio', 'Archive');
+  if ($AllowStreams) array_push($SupportedConversionTypes, 'Stream');
   $DirSep = DIRECTORY_SEPARATOR;
   $Lol = PHP_EOL;
   $Lolol = $Lolol;
@@ -1513,7 +1515,7 @@ function userClamScan($FilesToScan) {
 // / A fuction to prepare the execution environment for ScanCore.
 function startScanCore($pathname, $UserScanCoreLogFile) {
   // / Set variables.
-  global $InstLoc, $LogDir, $MaxLogSize, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $DirSep, $ScanCoreVerbose, $ScanCoreDebug, $Date, $SesHash, $SesHash2; 
+  global $InstLoc, $ConvertDir, $MaxLogSize, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $DirSep, $ScanCoreVerbose, $ScanCoreDebug, $Date, $SesHash, $SesHash2; 
   $ReturnData = $scVerbose = $scDebug = '';
   $ScanCoreFile = $InstLoc.$DirSep.'Resources'.$DirSep.'ScanCore'.$DirSep.'scanCore.php';
   $scInc = 0;
@@ -1522,8 +1524,8 @@ function startScanCore($pathname, $UserScanCoreLogFile) {
   // / Make sure that ScanCore is installed.
   if (!file_exists($ScanCoreFile)) errorEntry('Could not verify the ScanCore Virus Scanner!', 18000, TRUE);
   // / The filename for the ScanCore log file.
-  $scLogFile = $LogDir.$DirSep.'ScanCore_'.$SesHash.'_'.$SesHash2.'_'.$Date.'_'.$scInc.'_Log.txt';
-  while (file_exists($scLogFile)) $scLogFile = $LogDir.$DirSep.'ScanCore_'.$SesHash.'_'.$SesHash2.'_'.$Date.'_'.$scInc++.'_Log.txt';
+  $scLogFile = $ConvertDir.$DirSep.'ScanCore_'.$SesHash.'_'.$SesHash2.'_'.$Date.'_'.$scInc.'_Log.txt';
+  while (file_exists($scLogFile)) $scLogFile = $ConvertDir.$DirSep.'ScanCore_'.$SesHash.'_'.$SesHash2.'_'.$Date.'_'.$scInc++.'_Log.txt';
   // / Run ScanCore with the information supplied.
   $ReturnData = shell_exec('php '.$ScanCoreFile.' '.$pathname.' -m '.$ScanCoreMemoryLimit.' -c '.$ScanCoreChunkSize.' -lf '.$scLogFile.' -rf '.$UserScanCoreLogFile.' -ml '.$MaxLogSize.' -r'.$scVerbose.$scDebug);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.

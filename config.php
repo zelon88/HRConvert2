@@ -178,6 +178,12 @@ $AllowUserSelectableLanguage = TRUE;
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
 $AllowUserShare = TRUE;
+// /  --Allow Stream Formats as Input--
+// /   If set to TRUE, stream formats will be supported as input, which contain URLs to external sources.
+// /   If set to FALSE, stream formats will not be supported as input.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$AllowStreams = TRUE;
 // /  --File Deletion Age Theshold--
 // /   Age in minutes of files to be deleted.
 // /   Set to 0 to keep files indefinately.

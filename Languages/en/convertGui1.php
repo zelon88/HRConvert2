@@ -1,4 +1,30 @@
 <?php 
+// / -----------------------------------------------------------------------------------
+// / APPLICATION INFORMATION ...
+// / HRConvert2, Copyright on 1/10/2023 by Justin Grimes, www.github.com/zelon88
+// /
+// / LICENSE INFORMATION ...
+// / This project is protected by the GNU GPLv3 Open-Source license.
+// / https://www.gnu.org/licenses/gpl-3.0.html
+// /
+// / APPLICATION INFORMATION ...
+// / This application is designed to provide a web-interface for converting file formats
+// / on a server for users of any web browser without authentication.
+// /
+// / FILE INFORMATION
+// / This file contains language specific GUI elements for accepting file uploads.
+// /
+// / HARDWARE REQUIREMENTS ...
+// / This application requires at least a Raspberry Pi Model B+ or greater.
+// / This application will run on just about any x86 or x64 computer.
+// /
+// / DEPENDENCY REQUIREMENTS ...
+// / This application requires Debian Linux (w/3rd Party audio license),
+// / Apache 2.4, PHP 7+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
+// / 7zipper, FFMPEG, PDFTOTEXT, Dia, PopplerUtils, MeshLab, mkisofs & ImageMagick.
+// /
+// / <3 Open-Source
+// / -----------------------------------------------------------------------------------
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
 if (!isset($ApplicationTitle)) $ApplicationTitle = 'Convert Anything!'; 
 if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
@@ -22,7 +48,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         <div id="more-info" style="display:none;">
           <hr />
           <p>All user-supplied data is erased automatically, so you don't need to worry about forfeiting your personal information or property while using our services.</p>
-          <p>Currently <?php echo $ApplicationName; ?> supports 77 different file formats, including documents, spreadsheets, images, media, 3D models, CAD drawings, vector files, archives, disk images, & more.</p> 
+          <p>Currently <?php echo $ApplicationName; ?> supports 79 different file formats, including documents, spreadsheets, images, media, 3D models, CAD drawings, vector files, archives, disk images, & more.</p> 
           <button id="supported-formats-show-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
             toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>View Supported Formats ...</i></button>
           <button id="supported-formats-hide-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
@@ -32,7 +58,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             <h3>Supported Formats</h3>
             <hr />
             <strong>Audio Formats</strong>
-            <p><i>Supports specific bitrate through the API.</i></p>
+            <p><i>Supports specific bitrate.</i></p>
             <ol>
               <li>Mp2</li>
               <li>Mp3</li>
@@ -89,62 +115,35 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Odp</li>
             </ol>
             <strong>Archive Formats</strong>
-              <p><i>Can create, convert, and dearchive any of the following...</i></p>
+            <p><i>Can convert between archive formats & disk image formats.</i></p>
             <ol>
               <li>Zip</li>
               <li>Rar</li>
               <li>Tar</li>
-              <li>Tar.Bz2</li>
               <li>7z</li>
-            </ol>
-            <strong>Disk Image Formats</strong>
-            <p><i>Can extract any of the following or convert to supported archive formats...</i></p>
-            <ol>
               <li>Iso</li>
-              <li>Vhd</li>
-              <li>Vdi</li>
             </ol>
             <strong>Image Formats</strong>
-            <p><i>Supports resize & rotate through the GUI and API.</i></p>
-            <p><i>Supports disable maintain aspect ratio through API.</i></p>
-            <p><i>Image Conversion Operations support the following input formats...</i></p>
+            <p><i>Can convert pictures of documents to document formats.</i></p>
+            <p><i>Supports resize & rotate.</i></p>
             <ol>
               <li>Jpg</li>
               <li>Jpeg</li>
               <li>Png</li>
               <li>Bmp</li>
-              <li>Webp</li>
+              <li>Pdf</li>
               <li>Gif</li>
-              <li>Cin</li>
-              <li>Dds</li>
-              <li>Dib</li>
-              <li>Flif</li>
-              <li>Avif</li>
-              <li>Crw</li>
-              <li>Dcr</li>
-              <li>Gplt</li>
-              <li>Nef</li>
-              <li>Orf</li>
-              <li>Ora</li>
-              <li>Sct</li>
-              <li>Sfw</li>
-              <li>Xcf</li>
-              <li>Xwd</li>
-              <li>Avif</li>
-              <li>Ico</li>
-            </ol>   
-            <p><i>Image Conversion Operations support the following output formats...</i></p>
-            <ol>
-              <li>Jpg</li>
-              <li>Jpeg</li>
-              <li>Png</li>
-              <li>Bmp</li>
               <li>Webp</li>
               <li>Cin</li>
               <li>Dds</li>
               <li>Dib</li>
               <li>Flif</li>
               <li>Avif</li>
+              <li>Gplt</li>
+              <li>Sct</li>
+              <li>Xcf</li>
+              <li>Heic</li>
+              <li>Ico</li>
             </ol>
             <strong>3D Model Formats</strong>
             <ol>
@@ -160,8 +159,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Vrml</li>
             </ol>
             <strong>Drawing Formats</strong>
-            <p><i>Can output drawing files to image formats.</i></p>
-            <p><i>Can convert between any of the following...</i></p>
+            <p><i>Can convert drawing files to image formats.</i></p>
             <ol>
               <li>Svg</li>
               <li>Dxf</li>
@@ -194,7 +192,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
       <?php } ?>
       <div align="center">
         <div id="call-to-action1" style="max-width:1000px; text-align:center;">
-          <p>Select files by clicking, tapping, or dropping files into the box below.</p>
+          <p>Select files by clicking, tapping, or dropping them into the box below.</p>
         </div>
       </div>
       <div align="center">

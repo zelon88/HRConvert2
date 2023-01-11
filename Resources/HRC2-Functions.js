@@ -20,7 +20,7 @@
 // / DEPENDENCY REQUIREMENTS ...
 // / This application requires Debian Linux (w/3rd Party audio license),
 // / Apache 2.4, PHP 7+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
-// / 7zipper, FFMPEG, PDFTOTEXT, Dia, PopplerUtils, MeshLab & ImageMagick.
+// / 7zipper, FFMPEG, PDFTOTEXT, Dia, PopplerUtils, MeshLab, mkisofs & ImageMagick.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------

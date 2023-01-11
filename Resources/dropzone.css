@@ -343,19 +343,19 @@
   display: block;
 }
 .dropzone .dz-preview.dz-success .dz-success-mark {
-  -webkit-animation: passing-through 3s cubic-bezier(0.77, 0, 0.175, 1);
-  -moz-animation: passing-through 3s cubic-bezier(0.77, 0, 0.175, 1);
-  -ms-animation: passing-through 3s cubic-bezier(0.77, 0, 0.175, 1);
-  -o-animation: passing-through 3s cubic-bezier(0.77, 0, 0.175, 1);
-  animation: passing-through 3s cubic-bezier(0.77, 0, 0.175, 1);
+  -webkit-animation: passing-through 3s cubic-bezier(0.79, 0, 0.175, 1);
+  -moz-animation: passing-through 3s cubic-bezier(0.79, 0, 0.175, 1);
+  -ms-animation: passing-through 3s cubic-bezier(0.79, 0, 0.175, 1);
+  -o-animation: passing-through 3s cubic-bezier(0.79, 0, 0.175, 1);
+  animation: passing-through 3s cubic-bezier(0.79, 0, 0.175, 1);
 }
 .dropzone .dz-preview.dz-error .dz-error-mark {
   opacity: 1;
-  -webkit-animation: slide-in 3s cubic-bezier(0.77, 0, 0.175, 1);
-  -moz-animation: slide-in 3s cubic-bezier(0.77, 0, 0.175, 1);
-  -ms-animation: slide-in 3s cubic-bezier(0.77, 0, 0.175, 1);
-  -o-animation: slide-in 3s cubic-bezier(0.77, 0, 0.175, 1);
-  animation: slide-in 3s cubic-bezier(0.77, 0, 0.175, 1);
+  -webkit-animation: slide-in 3s cubic-bezier(0.79, 0, 0.175, 1);
+  -moz-animation: slide-in 3s cubic-bezier(0.79, 0, 0.175, 1);
+  -ms-animation: slide-in 3s cubic-bezier(0.79, 0, 0.175, 1);
+  -o-animation: slide-in 3s cubic-bezier(0.79, 0, 0.175, 1);
+  animation: slide-in 3s cubic-bezier(0.79, 0, 0.175, 1);
 }
 .dropzone .dz-preview .dz-success-mark, .dropzone .dz-preview .dz-error-mark {
   pointer-events: none;

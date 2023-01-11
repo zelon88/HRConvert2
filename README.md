@@ -6,13 +6,13 @@
 -----------------------------------------------
 # HRConvert2
 
-### A self-hosted drag-and-drop file conversion server & file sharing tool that supports 77 file formats with 4 color schemes & 13 end-user selctable languages. 
+### A self-hosted drag-and-drop file conversion server & file sharing tool that supports 79 file formats with 4 color schemes & 13 end-user selctable languages. 
 
 ![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/HRConvert2-1.png)
 
 ---
 ### Features
-- Converts 77 different file formats.
+- Converts 79 different file formats.
 - Self hosted. Installs on a home server!
 - All conversions are performed locally on your server.
 - Performs Optical Character Recognition (OCR) on PDFs & images.
@@ -76,39 +76,31 @@ Supports specific bitrate through the API.
 - Pptx
 - Odp
 #### Archive Formats
-Can create, convert, and dearchive any of the following...
+Can convert between archive formats & disk image formats.
 - Zip
 - Rar
 - Tar
 - 7z
-#### Disk Image Formats
-Can extract any of the following or convert to supported archive formats...
 - Iso
-- Vhd
-- Vdi
 #### Image Formats
-Supports resize & rotate through the GUI and API.
-Supports disable maintain aspect ratio through API.
+Can convert pictures of documents to document formats.
+Supports resize & rotate.
 - Jpg
 - Jpeg
 - Png
 - Bmp
 - Pdf
 - Gif
-- Crw
+- Webp
 - Cin
-- Dcr
 - Dds
 - Dib
 - Flif
+- Avif
 - Gplt
-- Nef
-- Orf
-- Ora
 - Sct
-- Sfw
 - Xcf
-- Xwd
+- Heic
 - Avif
 - Ico
 #### 3D Model Formats
@@ -123,8 +115,7 @@ Supports disable maintain aspect ratio through API.
 - U3d
 - Vrml
 #### Drawing Files
-Can output drawing files to image formats.
-Can convert between any of the following...
+Can convert drawing files to image formats.
 - Svg
 - Dxf
 - Fig

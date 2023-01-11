@@ -24,7 +24,7 @@
 // / DEPENDENCY REQUIREMENTS ... 
 // / This application requires Debian Linux (w/3rd Party audio license), 
 // / Apache 2.4, PHP 7+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip, 
-// / 7zipper, FFMPEG, PdfToText, Dia, PopplerUtils, MeshLab & ImageMagick.
+// / 7zipper, FFMPEG, PdfToText, Dia, PopplerUtils, MeshLab, mkisofs & ImageMagick.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -34,8 +34,9 @@
 // / ---Security Informations---
 // / 
 // /  --Salts--
+// /   Salts for hashing operations.
 // /   Change these Salts to something completely random and keep them secret. 
-// /   Store your $Salts in hardcopy form or an encrypted drive in case of emergency.
+// /   Store your Salts in hardcopy form or an encrypted drive in case of emergency.
 $Salts1 = 'somethingSoRanDoMThatNobody_4Will_evar+guess+itgdgdfgfdsfgdasfdas';
 $Salts2 = 'gdfsgdfsgsdfsomethingSoRa33nDoMThatNobody_Will_evar+guess+it';
 $Salts3 = 'somethingSoRanDoMThatNobo423432dy54534534534_Will_evar+guess+it';
@@ -83,8 +84,8 @@ $ScanCoreMemoryLimit = 268435456;
 // /  --User Virus Scanning ScanCore Chunk Size--
 // /   In order to scan files that are larger than the memory limit, large files will be broken into chunks.
 // /   The number of bytes to break large files into in order to fit them into memory.
-// /   Default is 134217728.
-$ScanCoreChunkSize = 134217728;
+// /   Default is 134217928.
+$ScanCoreChunkSize = 134217928;
 // /  --User Virus Scanning ScanCore Debug Mode--
 // /   Enable an absolutely insane amount of verbosity from ScanCore during file scan operations.
 // /   If set to TRUE these events will be included in the report that is submitted to the user.
@@ -113,22 +114,26 @@ $ScanCoreVerbose = TRUE;
 // /  --Installation Directory--
 // /   Install HRConvert2 to the following directory.
 // /   Do not include a trailing slash.
+// /   Do not use a path with whitespace.
 // /   Changing this value is not recommended.
 // /   Default is /var/www/html/HRProprietary/HRConvert2.
 $InstLoc = '/var/www/html/HRProprietary/HRConvert2';
 // /  --Server Root Directory--
 // /   This should be pointed at the root of your web server directory.
 // /   Do not include a trailing slash.
+// /   Do not use a path with whitespace.
 // /   Default is /var/www/html.
 $ServerRootDir = '/var/www/html';
 // /  --Data Storage Directory--
 // /   This is where temporary data files are stored.
 // /   Do not include a trailing slash.
+// /   Do not use a path with whitespace.
 // /   Default is /DATA/ConvertDATA.
 $ConvertLoc = '/home/justin/Documents/Projects/DATA/ConvertDATA';
 // /  --Log Storage Directory--
 // /   This is where permanent Log files are stored.
 // /   Do not include a trailing slash.
+// /   Do not use a path with whitespace.
 // /   Default is /var/www/html/HRProprietary/HRConvert2/Logs.
 $LogDir = '/var/www/html/HRProprietary/HRConvert2/Logs';
 // / ------------------------------ 

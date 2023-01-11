@@ -20,10 +20,30 @@ This application will run on just about any x86 or x64 computer.
 DEPENDENCY REQUIREMENTS ... 
 This application requires Debian Linux (w/3rd Party audio license), 
 Apache 2.4, PHP 7+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip, 
-7zipper, FFMPEG, PdfToText, Dia, PopplerUtils, MeshLab & ImageMagick.
+7zipper, FFMPEG, PdfToText, Dia, PopplerUtils, MeshLab, mkisofs & ImageMagick.
 
 <3 Open-Source
 -----------------------------------------------------------------------------------
+
+--------------------
+COMMIT 1/10/2023
+v3.1.1 - Improve image support. $AllowStreams config entry, bump JQuery, add some icons.
+
+-v3.1.1.
+-Add code to prevent stream related UI elements from displaying when the $AllowStreams config entry is set to FALSE.
+-Update JQuery from v3.6.0.min to v3.6.3.min.
+-Checked for Dropzone.js updates, already at latest version.
+-Minor comment changes in config.php.
+-Translate index files of language packs into the language of the pack.
+-Add comments section containing file & application information to GUI-related files.
+-Clean up array declarations, improve readibility, scalability, debugging.
+-Vastly improve image support for both input and output operations.
+-Added support for Heic files.
+-Added support for several misc image files.
+-Bumped format support count to 79 file formats.
+-Adjust icons for media, videos to be unique from streams.
+-Add mkisofs as a dependency, fix iso creation.
+-Revise verbiage of UI elements.
 
 --------------------
 COMMIT 1/4/2023

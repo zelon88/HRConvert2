@@ -113,6 +113,7 @@ Supports resize & rotate.
 - Ptx
 - Dxf
 - U3d
+- X3d
 - Vrml
 #### Drawing Files
 Can convert drawing files to image formats.
@@ -120,6 +121,8 @@ Can convert drawing files to image formats.
 - Dxf
 - Fig
 - Vdx
+- Dia
+- Wpg
 #### OCR Support
 OCR Operations support the following input formats...
 - Jpg

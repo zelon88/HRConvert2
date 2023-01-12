@@ -21,8 +21,8 @@
 // /
 // / DEPENDENCY REQUIREMENTS ...
 // / This application requires Debian Linux (w/3rd Party audio license),
-// / Apache 2.4, PHP 7+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
-// / 7zipper, FFMPEG, PDFTOTEXT, Dia, PopplerUtils, MeshLab, mkisofs & ImageMagick.
+// / Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
+// / 7zipper, FFMPEG, PDFTOTEXT, Dia, PopplerUtils, MeshLab, Mkisofs & ImageMagick.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -330,17 +330,9 @@ function verifyLanguage() {
   return array($LanguageIsSet, $LanguageToUse); }
 // / -----------------------------------------------------------------------------------
 
-function securePath($PathToSecure, $DangerArr) {
-  // / Set variables.
-  global $DirSep;
-  foreach ($DangerArr as $dArr) $PathToSecure = str_replace($dArr, '', $PathToSecure);
-  str_replace($DirSep.$DirSep, $DirSep, str_replace($DirSep.$DirSep, $DirSep, str_replace('..', '', str_replace('..', '', $PathToSecure))));
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $dArr = NULL;
-  unset($dArr);
-  return $PathToSecure; }
-
-function secureURL($PathToSecure, $DangerArr, $isURL) {
+// / -----------------------------------------------------------------------------------
+// / A function to reliably sanitize a path or URL of dangerous strings.
+function securePath($PathToSecure, $DangerArr, $isURL) {
   // / Set variables.
   global $DirSep;
   // / Loop through each dangerous file & remove it from the supplied path.
@@ -355,14 +347,15 @@ function secureURL($PathToSecure, $DangerArr, $isURL) {
   $dArr = $isURL = NULL;
   unset($dArr, $isURL);
   return $PathToSecure; }
+// / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to set the global variables for the session.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $DocArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $StreamArray, $DrawingArray, $ModelArray, $ConvertArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $AllowStreams;
+  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $StreamArray, $DrawingArray, $ModelArray, $ConvertArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $AllowStreams;
   // / Application related variables.
-  $HRConvertVersion = 'v3.1.1';
+  $HRConvertVersion = 'v3.1.2';
   $CoreLoaded = $GlobalsAreVerified = TRUE;
   $SupportedConversionTypes = array('Document', 'Image', 'Model', 'Drawing', 'Video', 'Audio', 'Archive');
   if ($AllowStreams) array_push($SupportedConversionTypes, 'Stream');
@@ -386,15 +379,15 @@ function verifyGlobals() {
   $DefaultApps = array('.', '..');
   $DangerousFiles = array('js', 'php', '.html', 'css', 'phar', '.', '..', 'index.php', 'index.html');
   // / URL related variables.
-  $subDir = str_replace($DirSep.$DirSep, '', str_replace($ServerRootDir.$DirSep, '', $InstLoc));
-  $partURL = str_replace($DirSep, '/', $URL.'/'.$subDir);
+  $subDir = securePath(str_replace($ServerRootDir.$DirSep, '', $InstLoc), $DangerousFiles, TRUE);
+  $partURL = securePath($URL.'/'.$subDir, $DangerousFiles, TRUE);
   $FullURL = 'http'.$URLEcho.'://'.$partURL;
   // / Directory related variables.
-  $convertDir0 = securePath($ConvertLoc.$DirSep.$SesHash, $DangerousFiles, $DangerousFiles);
-  $ConvertDir = securePath($convertDir0.$DirSep.$SesHash2.$DirSep, $DangerousFiles);
-  $ConvertTemp = securePath($InstLoc.'/DATA', $DangerousFiles);
-  $convertTempDir0 = securePath($ConvertTemp.$DirSep.$SesHash, $DangerousFiles);
-  $ConvertTempDir = securePath($convertTempDir0.$DirSep.$SesHash2.$DirSep, $DangerousFiles);
+  $convertDir0 = securePath($ConvertLoc.$DirSep.$SesHash, $DangerousFiles, $DangerousFiles, FALSE);
+  $ConvertDir = securePath($convertDir0.$DirSep.$SesHash2.$DirSep, $DangerousFiles, FALSE);
+  $ConvertTemp = securePath($InstLoc.'/DATA', $DangerousFiles, FALSE);
+  $convertTempDir0 = securePath($ConvertTemp.$DirSep.$SesHash, $DangerousFiles, FALSE);
+  $ConvertTempDir = securePath($convertTempDir0.$DirSep.$SesHash2.$DirSep, $DangerousFiles, FALSE);
   $RequiredDirs = array($convertDir0, $ConvertDir, $ConvertTemp, $convertTempDir0, $ConvertTempDir);
   $RequiredIndexes = array($ConvertTemp, $convertTempDir0, $ConvertTempDir);
   // / A/V related variables.
@@ -408,17 +401,16 @@ function verifyGlobals() {
   $ArchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi', 'tar.bz2', 'tar.gz');
   $DearchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi', 'tar.bz2', 'tar.gz');
   $DocumentArray = array('txt', 'doc', 'docx', 'rtf', 'xls', 'xlsx', 'odt', 'ods', 'pptx', 'ppt', 'xps', 'potx', 'potm', 'pot', 'ppa', 'odp');
-  $DocArray = array('txt', 'doc', 'docx', 'rtf', 'odt', 'abw');
   $SpreadsheetArray = array('csv', 'xls', 'xlsx', 'ods');
   $PresentationArray = array('pages', 'pptx', 'ppt', 'xps', 'potx', 'potm', 'pot', 'ppa', 'odp');
   $ImageArray = array('jpeg', 'jpg', 'png', 'bmp', 'pdf', 'gif', 'webp', 'cin', 'dds', 'dib', 'flif', 'avif', 'gplt', 'sct', 'xcf', 'heic', 'ico');
   $MediaArray = array('mp3', 'aac', 'oog', 'wma', 'mp2', 'flac', 'm4a', 'm4p');
   $VideoArray = array('3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv', 'mov', 'm4v');
   $StreamArray = array('m3u8');
-  $DrawingArray = array('svg', 'dxf', 'vdx', 'fig');
-  $ModelArray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'ptx', 'dxf', 'u3d', 'vrml');
+  $DrawingArray = array('svg', 'dxf', 'vdx', 'fig', 'dia', 'wpg');
+  $ModelArray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'gts', 'dxf', 'u3d', 'vrml', 'x3d');
   $PDFWorkArr = array('pdf', 'jpg', 'jpeg', 'png', 'bmp', 'webp', 'gif');
-  $Allowed = array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge($ArchiveArray, $DearchiveArray), $DocumentArray), $DocArray), $SpreadsheetArray), $PresentationArray), $ImageArray), $MediaArray), $VideoArray), $StreamArray), $DrawingArray), $ModelArray), $PDFWorkArr);
+  $Allowed = array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge($ArchiveArray, $DearchiveArray), $DocumentArray), $SpreadsheetArray), $PresentationArray), $ImageArray), $MediaArray), $VideoArray), $StreamArray), $DrawingArray), $ModelArray), $PDFWorkArr);
   $ConvertArray = $Allowed;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $convertDir0 = $convertTempDir0 = $subDir = $partURL = NULL;
@@ -1148,7 +1140,8 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
   $returnData = $file = '';
   $rararr = array('rar');
   $ziparr = array('zip');
-  $tararr = array('7z', 'tar', 'tar.gz', 'tar.bz2', 'iso', 'vhd');
+  $tararr = array('7z', 'tar', 'tar.gz', 'tar.bz2');
+  $isoarr = array('iso');
   // / Make sure the input files are formatted into an array.
   if (!is_array($FilesToArchive)) $FilesToArchive = array($FilesToArchive);
   // / Iterate through the array of input files.
@@ -1183,6 +1176,8 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
     if (in_array($UserExtension, $ziparr)) $returnData = shell_exec('zip -j '.$newPathname.' '.$pathname);
     // / Handle archiving of 7zipper compatible files.
     if (in_array($UserExtension, $tararr)) $returnData = shell_exec('7z a '.$newPathname.' '.$pathname);
+    // / Handle archiving of mkisofs compatible files.
+    if (in_array($UserExtension, $isoarr)) $returnData = shell_exec('mkisofs -o '.$newPathname.' '.$pathname);
     if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  ');
     if (!file_exists($newPathname)) {
       $ArchiveError = TRUE;
@@ -1191,8 +1186,8 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
       $ArchiveComplete = TRUE;
       if ($Verbose) logEntry('Archived file '.$pathname.' to '.$ConvertTempDir.$file.'.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $rararr = $ziparr = $tararr = $pathname = $userFileName = $oldPathname = $newPathname = $scanComplete = $virusFound = $returnData = $sanitized = $fileIsVerified = $oldExtension = $clean = $copy = $skip = $variableIsSanitized = NULL;
-  unset ($file, $rararr, $ziparr, $tararr, $pathname, $userFileName, $oldPathname, $newPathname, $scanComplete, $virusFound, $returnData, $sanitized, $fileIsVerified, $oldExtension, $clean, $copy, $skip, $variableIsSanitized); 
+  $file = $rararr = $ziparr = $tararr = $isoarr = $pathname = $userFileName = $oldPathname = $newPathname = $scanComplete = $virusFound = $returnData = $sanitized = $fileIsVerified = $oldExtension = $clean = $copy = $skip = $variableIsSanitized = NULL;
+  unset ($file, $rararr, $ziparr, $tararr, $isoarr, $pathname, $userFileName, $oldPathname, $newPathname, $scanComplete, $virusFound, $returnData, $sanitized, $fileIsVerified, $oldExtension, $clean, $copy, $skip, $variableIsSanitized); 
   return array($ArchiveComplete, $ArchiveErrors); }
 // / -----------------------------------------------------------------------------------
 

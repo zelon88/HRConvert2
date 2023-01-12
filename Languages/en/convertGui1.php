@@ -20,8 +20,8 @@
 // /
 // / DEPENDENCY REQUIREMENTS ...
 // / This application requires Debian Linux (w/3rd Party audio license),
-// / Apache 2.4, PHP 7+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
-// / 7zipper, FFMPEG, PDFTOTEXT, Dia, PopplerUtils, MeshLab, mkisofs & ImageMagick.
+// / Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
+// / 7zipper, FFMPEG, PDFTOTEXT, Dia, PopplerUtils, MeshLab, Mkisofs & ImageMagick.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -84,7 +84,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             </ol>
             <strong>Stream Formats</strong>
             <ol>
-              <li>m3u8</li>
+              <li>M3u8</li>
             </ol>
             <strong>Document Formats</strong>
             <ol>
@@ -153,9 +153,10 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Off</li>
               <li>Ply</li>
               <li>Stl</li>
-              <li>Ptx</li>
+              <li>Gts</li>
               <li>Dxf</li>
               <li>U3d</li>
+              <li>X3d</li>
               <li>Vrml</li>
             </ol>
             <strong>Drawing Formats</strong>
@@ -165,6 +166,8 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Dxf</li>
               <li>Fig</li>
               <li>Vdx</li>
+              <li>Dia</li>
+              <li>Wpg</li>
             </ol>
             <strong>OCR Support</strong>
             <p><i>OCR Operations support the following input formats...</i></p>

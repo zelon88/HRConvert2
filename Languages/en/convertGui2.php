@@ -20,8 +20,8 @@
 // /
 // / DEPENDENCY REQUIREMENTS ...
 // / This application requires Debian Linux (w/3rd Party audio license),
-// / Apache 2.4, PHP 7+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
-// / 7zipper, FFMPEG, PDFTOTEXT, Dia, PopplerUtils, MeshLab, mkisofs & ImageMagick.
+// / Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
+// / 7zipper, FFMPEG, PDFTOTEXT, Dia, PopplerUtils, MeshLab, Mkisofs & ImageMagick.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -871,9 +871,10 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
             <option value="off">Off</option>
             <option value="ply">Ply</option>
             <option value="stl">Stl</option>
-            <option value="ptx">Ptx</option>
+            <option value="gts">Gts</option>
             <option value="dxf">Dxf</option>
             <option value="u3d">U3d</option>
+            <option value="x3d">X3d</option>
             <option value="vrml">Vrml</option>
           </select></p>
           <input type="submit" id="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Convert Model' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
@@ -919,10 +920,9 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
             <option value="dxf">Dxf</option>
             <option value="vdx">Vdx</option>
             <option value="fig">Fig</option>
-            <option value="jpg">Jpg</option>
             <option value="png">Png</option>
-            <option value="bmp">Bmp</option>
-            <option value="pdf">Pdf</option>
+            <option value="dia">Dia</option>
+            <option value="wpg">Wpg</option>
           </select></p>
           <input type="submit" id="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Convert Drawing' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">     
           <script type="text/javascript">

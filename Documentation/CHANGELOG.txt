@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 1/3/2023 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 1/10/2023 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -19,11 +19,22 @@ This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ... 
 This application requires Debian Linux (w/3rd Party audio license), 
-Apache 2.4, PHP 7+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip, 
-7zipper, FFMPEG, PdfToText, Dia, PopplerUtils, MeshLab, mkisofs & ImageMagick.
+Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip, 
+7zipper, FFMPEG, PdfToText, Dia, PopplerUtils, MeshLab, Mkisofs & ImageMagick.
 
 <3 Open-Source
 -----------------------------------------------------------------------------------
+
+--------------------
+COMMIT 1/11/2023
+v3.1.2 - Improve image support. $AllowStreams config entry, bump JQuery, add some icons.
+
+-v3.1.2.
+-Improve Installation_Instructions.txt.
+-Revise 3D Model support, Vector file support, Image support, Iso support.
+-Improve securePath function comments, add URL support.
+-Trying to automate the translation into other languages.
+-Add rc-local.service template file for systems where it is missing and needs to be installed.
 
 --------------------
 COMMIT 1/10/2023
@@ -44,6 +55,7 @@ v3.1.1 - Improve image support. $AllowStreams config entry, bump JQuery, add som
 -Adjust icons for media, videos to be unique from streams.
 -Add mkisofs as a dependency, fix iso creation.
 -Revise verbiage of UI elements.
+-Added element specific loading spinners that are under the cursor, so less disruptive.
 
 --------------------
 COMMIT 1/4/2023

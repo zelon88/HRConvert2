@@ -80,8 +80,8 @@ In this step we will install the Featherpad text editor to make configuring the 
 Then we will install and configure PHP and required plugins.
 
 1. Run  'sudo apt-get install featherpad'
-2. Run  'sudo apt-get install php8.0-zip && sudo apt-get install php8.0-gd'
-3. Run  'sudo apt-get install php libapache2-mod-php && sudo apt-get install php-all-dev'
+2. Run  'sudo apt-get install php libapache2-mod-php && sudo apt-get install php-all-dev'
+3. Run  'sudo apt-get install php8.0-zip && sudo apt-get install php8.0-gd'
 4. (Optional) To install the MySQL PHP plugin (to use with other applications) run 'sudo apt-get install php-mysql'
 5. Adjust the directory in the following command to reflect your version of PHP, then run  'sudo featherpad /etc/php/8.0/apache2/php.ini'
 6. Use Leafpad to search for the following lines in the  'php.ini'  file and adjust the values to match the ones displayed below.

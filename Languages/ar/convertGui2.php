@@ -1,4 +1,30 @@
 <?php
+// / -----------------------------------------------------------------------------------
+// / APPLICATION INFORMATION ...
+// / HRConvert2, Copyright on 1/10/2023 by Justin Grimes, www.github.com/zelon88
+// /
+// / LICENSE INFORMATION ...
+// / This project is protected by the GNU GPLv3 Open-Source license.
+// / https://www.gnu.org/licenses/gpl-3.0.html
+// /
+// / APPLICATION INFORMATION ...
+// / This application is designed to provide a web-interface for converting file formats
+// / on a server for users of any web browser without authentication.
+// /
+// / FILE INFORMATION
+// / This file contains language specific GUI elements for performing file conversions.
+// /
+// / HARDWARE REQUIREMENTS ...
+// / This application requires at least a Raspberry Pi Model B+ or greater.
+// / This application will run on just about any x86 or x64 computer.
+// /
+// / DEPENDENCY REQUIREMENTS ...
+// / This application requires Debian Linux (w/3rd Party audio license),
+// / Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
+// / 7zipper, FFMPEG, PDFTOTEXT, Dia, PopplerUtils, MeshLab, Mkisofs & ImageMagick.
+// /
+// / <3 Open-Source
+// / -----------------------------------------------------------------------------------
 $Alert = 'لا يمكن تحويل هذا الملف! حاول تغيير الاسم.';
 $Alert1 = 'لا يمكن إجراء فحص فيروسات على هذا الملف!';
 $Alert2 = 'تم نسخ ارتباط الملف إلى الحافظة!';
@@ -18,7 +44,7 @@ if ($FileCount === 100) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' 
 if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' ملفًا صالحًا إلى '.$ApplicationName.'.';
 ?>
   <body>
-    <script type="text/javascript" src="Resources/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="Resources/jquery-3.6.3.min.js"></script>
     <div id="header-text" style="max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;">
       <?php if (!isset($_GET['noGui'])) { ?><h1><?php echo $ApplicationName; ?></h1>
       <hr /><?php } ?>
@@ -56,7 +82,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
             if($("input#clamscanall").is(":checked") && $("input#scancoreall").is(":checked")) {
               var scanType = 'all'; }
             $.ajax({
-              type: "POST",
+              type: 'POST',
               url: 'convertCore.php',
               data: {
                 Token1:'<?php echo $Token1; ?>',
@@ -97,7 +123,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
             if (extension === "") { 
               extension = 'zip'; } 
             $.ajax({
-              type: "POST",
+              type: 'POST',
               url: 'convertCore.php',
               data: {
                 Token1:'<?php echo $Token1; ?>',
@@ -255,7 +281,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
            onclick="toggle_visibility('videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php } 
 
-          if (in_array($extension, $StreamArray)) { ?>
+          if (in_array($extension, $StreamArray) && $AllowStreams) { ?>
           <a style="float:left;">&nbsp;|&nbsp;</a>
 
           <img id="streamButton<?php echo $ConvertGuiCounter1; ?>" name="streamButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/stream.png" style="float:left; display:block;" 
@@ -299,7 +325,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
           $(document).ready(function () {
             $('#archfileSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -384,7 +410,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
           $(document).ready(function () {
             $('#scancorebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -407,7 +433,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
                       alert("<?php echo $Alert1; ?>"); } }); });
             $('#clamscanbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -430,7 +456,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
                       alert("<?php echo $Alert1; ?>"); } }); });
             $('#scanallbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -480,7 +506,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
           $(document).ready(function () {
             $('#pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -525,7 +551,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
           $(document).ready(function () {
             $('#archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -571,7 +597,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
           $(document).ready(function () {
             $('#docconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -615,7 +641,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
           $(document).ready(function () {
             $('#spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -664,7 +690,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
           $(document).ready(function () {
             $('#presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -710,7 +736,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
           $(document).ready(function () {
             $('#audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -758,7 +784,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
           $(document).ready(function () {
             $('#videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -784,7 +810,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
         </div>
         <?php } 
 
-        if (in_array($extension, $StreamArray)) {
+        if (in_array($extension, $StreamArray) && $AllowStreams) {
         ?>
         <div id='streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
@@ -806,7 +832,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
           $(document).ready(function () {
             $('#streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -856,7 +882,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
           $(document).ready(function () {
             $('#modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -904,7 +930,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
           $(document).ready(function () {
             $('#drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -956,7 +982,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
           $(document).ready(function () {
             $('#convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',

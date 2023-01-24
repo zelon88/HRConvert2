@@ -1,4 +1,30 @@
 <?php 
+// / -----------------------------------------------------------------------------------
+// / APPLICATION INFORMATION ...
+// / HRConvert2, Copyright on 1/10/2023 by Justin Grimes, www.github.com/zelon88
+// /
+// / LICENSE INFORMATION ...
+// / This project is protected by the GNU GPLv3 Open-Source license.
+// / https://www.gnu.org/licenses/gpl-3.0.html
+// /
+// / APPLICATION INFORMATION ...
+// / This application is designed to provide a web-interface for converting file formats
+// / on a server for users of any web browser without authentication.
+// /
+// / FILE INFORMATION
+// / This file contains language specific GUI elements for accepting file uploads.
+// /
+// / HARDWARE REQUIREMENTS ...
+// / This application requires at least a Raspberry Pi Model B+ or greater.
+// / This application will run on just about any x86 or x64 computer.
+// /
+// / DEPENDENCY REQUIREMENTS ...
+// / This application requires Debian Linux (w/3rd Party audio license),
+// / Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
+// / 7zipper, FFMPEG, PDFTOTEXT, Dia, PopplerUtils, MeshLab, Mkisofs & ImageMagick.
+// /
+// / <3 Open-Source
+// / -----------------------------------------------------------------------------------
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
 if (!isset($ApplicationTitle)) $ApplicationTitle = 'تحويل أي شيء!'; 
 if (!isset($CoreLoaded)) die('خطأ!!! '.$ApplicationName.'-2، لا يمكن لهذا الملف معالجة طلبك! يرجى إرسال ملفك إلى convertCore.php بدلاً من ذلك!');
@@ -22,7 +48,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         <div id="more-info" style="display:none;">
           <hr />
           <p>يتم مسح جميع البيانات التي يوفرها المستخدم تلقائيًا ، لذلك لا داعي للقلق بشأن مصادرة معلوماتك الشخصية أو ممتلكاتك أثناء استخدام خدماتنا.</p>
-          <p>يدعم <?php echo $ApplicationName; ?> حاليًا 77 تنسيقًا مختلفًا للملفات ، بما في ذلك المستندات وجداول البيانات والصور والوسائط والنماذج ثلاثية الأبعاد وملفات الرسم وملفات المتجهات والمحفوظات وصور القرص والمزيد.</p> 
+          <p>يدعم <?php echo $ApplicationName; ?> حاليًا 79 تنسيقًا مختلفًا للملفات ، بما في ذلك المستندات وجداول البيانات والصور والوسائط والنماذج ثلاثية الأبعاد وملفات الرسم وملفات المتجهات والمحفوظات وصور القرص والمزيد.</p> 
           <button id="supported-formats-show-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
             toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>عرض التنسيقات المدعومة...</i></button>
           <button id="supported-formats-hide-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
@@ -32,7 +58,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             <h3>التنسيقات المدعومة</h3>
             <hr />
             <strong>تنسيقات الصوت</strong>
-            <p><i>يدعم معدل بت محدد من خلال واجهة برمجة التطبيق.</i></p>
+            <p><i>يدعم معدل بت معين.</i></p>
             <ol>
               <li>Mp2</li>
               <li>Mp3</li>
@@ -58,7 +84,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             </ol>
             <strong>تنسيقات الدفق</strong>
             <ol>
-              <li>m3u8</li>
+              <li>M3u8</li>
             </ol>
             <strong>تنسيقات المستندات</strong>
             <ol>
@@ -89,62 +115,35 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Odp</li>
             </ol>
             <strong>تنسيقات الأرشيف</strong>
-              <p><i>يمكن إنشاء وتحويل والبحث في أي مما يلي...</i></p>
+              <p><i>يمكن التحويل بين تنسيقات الأرشيف وتنسيقات صور القرص.</i></p>
             <ol>
               <li>Zip</li>
               <li>Rar</li>
               <li>Tar</li>
-              <li>Tar.Bz2</li>
               <li>7z</li>
-            </ol>
-            <strong>تنسيقات صورة القرص</strong>
-            <p><i>يمكن استخراج أي مما يلي أو التحويل إلى تنسيقات أرشيف مدعومة...</i></p>
-            <ol>
               <li>Iso</li>
-              <li>Vhd</li>
-              <li>Vdi</li>
             </ol>
             <strong>تنسيقات الصور</strong>
-            <p><i>يدعم تغيير الحجم والتدوير عبر واجهة المستخدم الرسومية وواجهة برمجة التطبيقات.</i></p>
-            <p><i>يدعم تعطيل الحفاظ على نسبة العرض إلى الارتفاع عبر واجهة برمجة التطبيق.</i></p>
-            <p><i>تدعم عمليات تحويل الصور تنسيقات الإدخال التالية...</i></p>
+            <p><i>يمكن تحويل صور المستندات إلى تنسيقات المستندات.</i></p>
+            <p><i>يدعم تغيير الحجم والتدوير.</i></p>
             <ol>
               <li>Jpg</li>
               <li>Jpeg</li>
               <li>Png</li>
               <li>Bmp</li>
-              <li>Webp</li>
+              <li>Pdf</li>
               <li>Gif</li>
-              <li>Cin</li>
-              <li>Dds</li>
-              <li>Dib</li>
-              <li>Flif</li>
-              <li>Avif</li>
-              <li>Crw</li>
-              <li>Dcr</li>
-              <li>Gplt</li>
-              <li>Nef</li>
-              <li>Orf</li>
-              <li>Ora</li>
-              <li>Sct</li>
-              <li>Sfw</li>
-              <li>Xcf</li>
-              <li>Xwd</li>
-              <li>Avif</li>
-              <li>Ico</li>
-            </ol>   
-            <p><i>تدعم عمليات تحويل الصور تنسيقات الإخراج التالية...</i></p>
-            <ol>
-              <li>Jpg</li>
-              <li>Jpeg</li>
-              <li>Png</li>
-              <li>Bmp</li>
               <li>Webp</li>
               <li>Cin</li>
               <li>Dds</li>
               <li>Dib</li>
               <li>Flif</li>
               <li>Avif</li>
+              <li>Gplt</li>
+              <li>Sct</li>
+              <li>Xcf</li>
+              <li>Heic</li>
+              <li>Ico</li>
             </ol>
             <strong>تنسيقات النماذج ثلاثية الأبعاد</strong>
             <ol>
@@ -154,22 +153,24 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Off</li>
               <li>Ply</li>
               <li>Stl</li>
-              <li>Ptx</li>
+              <li>Gts</li>
               <li>Dxf</li>
               <li>U3d</li>
+              <li>X3d</li>
               <li>Vrml</li>
             </ol>
             <strong>Drawing Formats</strong>
-            <p><i>يمكن إخراج ملفات الرسم إلى تنسيقات الصور.</i></p>
-            <p><i>يمكن التحويل بين أي مما يلي...</i></p>
+            <p><i>يمكن تحويل ملفات الرسم إلى صيغ الصور.</i></p>
             <ol>
               <li>Svg</li>
               <li>Dxf</li>
               <li>Fig</li>
               <li>Vdx</li>
+              <li>Dia</li>
+              <li>Wpg</li>
             </ol>
             <strong>دعم التعرف البصري على الأحرف</strong>
-            <p><i>تدعم عمليات التعرف الضوئي على الحروف تنسيقات الإدخال التالية...</i></p>
+            <p><i>تدعم عمليات OCR تنسيقات الإدخال التالية ...</i></p>
             <ol>
               <li>Jpg</li>
               <li>Jpeg</li>
@@ -178,7 +179,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Pdf</li>
               <li>Gif</li>
               </ol>
-            <p><i>يدعم التعرّف البصري على الأحرف تنسيقات الإخراج التالية...</i></p>
+            <p><i>تدعم عمليات OCR تنسيقات الإخراج التالية ...</i></p>
             <ol>
               <li>Doc</li>
               <li>Docx</li>

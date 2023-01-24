@@ -12,6 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION
+// / v3.1.3
 // / This file contains language specific GUI elements for accepting file uploads.
 // /
 // / HARDWARE REQUIREMENTS ...

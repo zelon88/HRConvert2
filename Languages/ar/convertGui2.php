@@ -12,6 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION
+// / v3.1.3
 // / This file contains language specific GUI elements for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -53,7 +54,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
       <p>ملفاتك جاهزة الآن للتحويل باستخدام الخيارات أدناه.</p>
     </div>
 
-    <div id='utility' align="center">
+    <div id='utilityupper' align="center">
       <p><img id='loadingCommandDiv' name='loadingCommandDiv' src='<?php echo $PacmanLoc; ?>' style="max-width:64px; max-height:64px; display:none;"/></p>
       <a id='downloadTarget' href='about:blank' style="display: none;" download></a>
     </div>
@@ -112,6 +113,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
           <option value="zip">حدد التنسيق</option>
           <option value="zip">Zip</option>
           <option value="rar">Rar</option>
+          <option value="iso">Iso</option>
           <option value="tar">Tar</option>
           <option value="7z">7z</option>
         </select>
@@ -317,10 +319,11 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
             <option value="zip">حدد التنسيق</option>
             <option value="zip">Zip</option>
             <option value="rar">Rar</option>
+            <option value="iso">Iso</option>
             <option value="tar">Tar</option>
             <option value="7z">7z</option>
           </select></p>
-          <input type="submit" id="archfileSubmit<?php echo $ConvertGuiCounter1; ?>" name="archfileSubmit<?php echo $ConvertGuiCounter1; ?>" value='ملف الأرشيف' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="archfileSubmit<?php echo $ConvertGuiCounter1; ?>" name="archfileSubmit<?php echo $ConvertGuiCounter1; ?>" value='ملف الأرشيف' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#archfileSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -343,7 +346,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('userarchfilefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archfileextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userarchfilefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archfileextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
@@ -359,8 +362,8 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
           <p id='shareclipStatus<?php echo $ConvertGuiCounter1; ?>' name='shareclipStatus<?php echo $ConvertGuiCounter1; ?>'>حالة الحافظة: <i>غير منسوخ</i></p>
           <p id='sharelinkURL<?php echo $ConvertGuiCounter1; ?>' name='sharelinkURL<?php echo $ConvertGuiCounter1; ?>'>رابط الملف: <i>غير مولود</i></p>
 
-          <input type="submit" id="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" name="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" value='إنشاء ارتباط والنسخ إلى الحافظة' onclick="toggle_visibility('loadingCommandDiv');">
-          <input type="submit" id="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" name="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" value='إنشاء ارتباط' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" name="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" value='إنشاء ارتباط والنسخ إلى الحافظة' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" name="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" value='إنشاء ارتباط' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
 
           <script type="text/javascript">
           $(document).ready(function () {
@@ -373,7 +376,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
                 Token2:'<?php echo $Token2; ?>',
                 download:'<?php echo $File; ?>' },
               success: function(returnFile) {
-                toggle_visibility('loadingCommandDiv');
+                toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                 document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = 'حالة الارتباط: <i>ولدت</i>';
                 document.getElementById('shareclipStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = 'حالة الحافظة: <i>نسخ</i>';
                 document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = 'رابط الملف: <i><?php echo $FullURL.'/DATA/'.$SesHash3.'/'.$File; ?></i>';
@@ -390,7 +393,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
                 Token2:'<?php echo $Token2; ?>',
                 download:'<?php echo $File; ?>' },
               success: function(returnFile) {
-                toggle_visibility('loadingCommandDiv');
+                toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                 document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = 'حالة الارتباط: <i>ولدت</i>';
                 document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = 'رابط الملف: <i><?php echo $FullURL.'/DATA/'.$SesHash3.'/'.$File; ?></i>'; },
               error: function(ReturnData) {
@@ -426,7 +429,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
                       Token2:'<?php echo $Token2; ?>',
                       download:'<?php echo $ConsolidatedLogFileName; ?>' },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'.$ConsolidatedLogFileName; ?>"; 
                       document.getElementById('downloadTarget').click() } }); },
                     error: function(ReturnData) {
@@ -449,7 +452,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
                       Token2:'<?php echo $Token2; ?>',
                       download:'<?php echo $ConsolidatedLogFileName; ?>' },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'.$ConsolidatedLogFileName; ?>"; 
                       document.getElementById('downloadTarget').click() } }); },
                     error: function(ReturnData) {
@@ -472,7 +475,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
                       Token2:'<?php echo $Token2; ?>',
                       download:'<?php echo $ConsolidatedLogFileName; ?>' },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'.$ConsolidatedLogFileName; ?>"; 
                       document.getElementById('downloadTarget').click() } }); },
                     error: function(ReturnData) {
@@ -501,7 +504,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
             <option value="txt">Txt</option>
             <option value="odt">Odt</option>
           </select></p>
-          <p><input type="submit" id='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' name='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' value='تحويل إلى مستند' onclick="toggle_visibility('loadingCommandDiv');"></p>
+          <p><input type="submit" id='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' name='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' value='تحويل إلى مستند' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');"></p>
           <script type="text/javascript">
           $(document).ready(function () {
             $('#pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -524,7 +527,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('userpdffilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('pdfextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userpdffilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('pdfextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
@@ -544,9 +547,10 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
             <option value="zip">Zip</option>
             <option value="rar">Rar</option>
             <option value="tar">Tar</option>
+            <option value="iso">Iso</option>
             <option value="7z">7z</option>
           </select></p>
-          <input type="submit" id="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='أرشفة الملفات' onclick="toggle_visibility('loadingCommandDiv'); display:none;">
+          <input type="submit" id="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='أرشفة الملفات' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>'); display:none;">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -568,7 +572,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('userarchivefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archiveextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userarchivefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archiveextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
@@ -592,7 +596,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
             <option value="odt">Odt</option>
             <option value="pdf">Pdf</option>
           </select></p>
-          <input type="submit" id="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='تحويل المستند' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='تحويل المستند' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#docconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -614,7 +618,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('userdocfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('docextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userdocfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('docextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
@@ -636,7 +640,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
             <option value="ods">Ods</option>
             <option value="pdf">Pdf</option>
           </select></p>
-          <input type="submit" id="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='تحويل جدول البيانات' onclick="toggle_visibility('loadingCommandDiv');">        
+          <input type="submit" id="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='تحويل جدول البيانات' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">        
           <script type="text/javascript">
           $(document).ready(function () {
             $('#spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -658,7 +662,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('userspreadfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('spreadextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userspreadfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('spreadextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); }
                     }); },
@@ -676,6 +680,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
           <p>حدد اسم الملف <input type="text" id='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' name='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='presentationextension<?php echo $ConvertGuiCounter1; ?>' name='presentationextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="odp">حدد التنسيق</option>
+            <option value="odp">Format</option>
             <option value="pages">Pages</option>
             <option value="pptx">Pptx</option>
             <option value="ppt">Ppt</option>
@@ -685,7 +690,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
             <option value="ppa">Ppa</option>
             <option value="odp">Odp</option>
           </select></p>
-          <input type="submit" id="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='تحويل العرض التقديمي' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='تحويل العرض التقديمي' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -707,7 +712,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('userpresentationfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('presentationextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userspreadfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('presentationextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
@@ -731,7 +736,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
             <option value="flac">Flac</option>
             <option value="ogg">Ogg</option>
           </select></p>
-          <input type="submit" id="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='تحويل الصوت' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='تحويل الصوت' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -753,7 +758,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('useraudiofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('audioextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('useraudiofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('audioextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
@@ -779,7 +784,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
             <option value="wmv">Wmv</option>
             <option value="mov">Mov</option>
           </select></p>
-          <input type="submit" id="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='تحويل الفيديو' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='تحويل الفيديو' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -801,7 +806,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('uservideofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('videoextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('uservideofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('videoextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
@@ -827,7 +832,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
             <option value="wmv">Wmv</option>
             <option value="mov">Mov</option>
           </select></p>
-          <input type="submit" id="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='تحويل تيار' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='تحويل تيار' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -849,7 +854,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('userstreamfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('streamextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userstreamfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('streamextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
@@ -872,12 +877,13 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
             <option value="off">Off</option>
             <option value="ply">Ply</option>
             <option value="stl">Stl</option>
-            <option value="ptx">Ptx</option>
+            <option value="gts">Gts</option>
             <option value="dxf">Dxf</option>
             <option value="u3d">U3d</option>
+            <option value="x3d">X3d</option>
             <option value="vrml">Vrml</option>
           </select></p>
-          <input type="submit" id="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='تحويل النموذج' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='تحويل النموذج' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -899,7 +905,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('usermodelfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('modelextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('usermodelfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('modelextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
@@ -920,12 +926,11 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
             <option value="dxf">Dxf</option>
             <option value="vdx">Vdx</option>
             <option value="fig">Fig</option>
-            <option value="jpg">Jpg</option>
             <option value="png">Png</option>
-            <option value="bmp">Bmp</option>
-            <option value="pdf">Pdf</option>
+            <option value="dia">Dia</option>
+            <option value="wpg">Wpg</option>
           </select></p>
-          <input type="submit" id="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='تحويل الرسم' onclick="toggle_visibility('loadingCommandDiv');">     
+          <input type="submit" id="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='تحويل الرسم' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">     
           <script type="text/javascript">
           $(document).ready(function () {
             $('#drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -947,7 +952,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('drawingfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('drawingextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userdrawingfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('drawingextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
@@ -966,6 +971,8 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
             <option value="jpg">حدد التنسيق</option>
             <option value="jpg">Jpg</option>
             <option value="bmp">Bmp</option>
+            <option value="pdf">Pdf</option>
+            <option value="gif">Gif</option>
             <option value="webp">Webp</option>
             <option value="png">Png</option>
             <option value="cin">Cin</option>
@@ -973,11 +980,16 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
             <option value="dib">Dib</option>
             <option value="flif">Flif</option>
             <option value="avif">Avif</option>
+            <option value="gplt">Gplt</option>
+            <option value="sct">Sct</option>
+            <option value="xcf">Xcf</option>
+            <option value="ico">Ico</option>
+            <option value="heic">Heic</option>
           </select></p>
           <p>العرض والارتفاع: </p>
           <p><input type="number" size="4" value="0" id='width<?php echo $ConvertGuiCounter1; ?>' name='width<?php echo $ConvertGuiCounter1; ?>' min="0" max="10000"> X <input type="number" size="4" value="0" id="height<?php echo $ConvertGuiCounter1; ?>" name="height<?php echo $ConvertGuiCounter1; ?>" min="0"  max="10000"></p> 
           <p>استدارة: <input type="number" size="3" id='rotate<?php echo $ConvertGuiCounter1; ?>' name='rotate<?php echo $ConvertGuiCounter1; ?>' value="0" min="0" max="359"></p>
-          <input type="submit" id='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' name='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' value='تحويل الصورة' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' name='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' value='تحويل الصورة' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -1002,13 +1014,16 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('userphotofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('photoextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userphotofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('photoextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
                       alert("<?php echo $Alert; ?>"); } }); }); });
           </script>
         <?php } ?>
+      </div>
+      <div id='utilitylower'>
+        <p><img id='loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>' name='loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $PacmanLoc; ?>' style="max-width:24px; max-height:24px; display:none;"/></p>
       </div>
       <hr />
       <?php } ?>

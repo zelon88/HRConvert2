@@ -12,6 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION
+// / v3.1.3.
 // / This file contains language specific GUI elements for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -50,7 +51,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
       <p>Your file<?php echo $FCPlural2; ?> now ready to convert using the options below.</p>
     </div>
 
-    <div id='utility' align="center">
+    <div id='utilityupper' align="center">
       <p><img id='loadingCommandDiv' name='loadingCommandDiv' src='<?php echo $PacmanLoc; ?>' style="max-width:64px; max-height:64px; display:none;"/></p>
       <a id='downloadTarget' href='about:blank' style="display: none;" download></a>
     </div>
@@ -109,7 +110,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
           <option value="zip">Format</option>
           <option value="zip">Zip</option>
           <option value="rar">Rar</option>
-            <option value="iso">Iso</option>
+          <option value="iso">Iso</option>
           <option value="tar">Tar</option>
           <option value="7z">7z</option>
         </select>
@@ -1016,9 +1017,8 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
           </script>
         <?php } ?>
       </div>
-      <div id='utility'>
+      <div id='utilitylower'>
         <p><img id='loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>' name='loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $PacmanLoc; ?>' style="max-width:24px; max-height:24px; display:none;"/></p>
-        <a id='downloadTarget' href='about:blank' style="display: none;" download></a>
       </div>
       <hr />
       <?php } ?>

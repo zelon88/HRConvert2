@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 1/3/2023 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 1/10/2023 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -10,6 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION
+v3.1.3.
 This plain text file contains descriptions of all the native error messages contained in or produced by the HRConvert2 Diablo engine. 
 These descriptions should give administrators a starting point for debugging problems with HRConvert2 installations. 
 Each section in this file contains information about a different error message. The first one is an example to demonstrate the structure of this file.
@@ -2022,7 +2023,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-18000,, <SESSION_IDENTIFIER>: Could not verify ScanCore Virus Scanner!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-18000, <SESSION_IDENTIFIER>: Could not verify ScanCore Virus Scanner!
 
 FILE
   convertCore.php
@@ -2046,7 +2047,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-19000,, <SESSION_IDENTIFIER>: Could not sanitize the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-19000, <SESSION_IDENTIFIER>: Could not sanitize the input file!
 
 FILE
   convertCore.php
@@ -2071,7 +2072,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-19001,, <SESSION_IDENTIFIER>: Could not verify the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-19001, <SESSION_IDENTIFIER>: Could not verify the input file!
 
 FILE
   convertCore.php

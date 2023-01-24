@@ -11,6 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION
+v3.1.3.
 This file contains a walkthrough guide for installing HRConvert2.
 
 HARDWARE REQUIREMENTS ... 
@@ -80,11 +81,11 @@ In this step we will install the Featherpad text editor to make configuring the 
 Then we will install and configure PHP and required plugins.
 
 1. Run  'sudo apt-get install featherpad'
-2. Adjust the PHP version in the following command to reflect your PHP version, then run  'sudo apt-get install php8.0-zip && sudo apt-get install php8.0-gd'
-3. Run  'sudo apt-get install php libapache2-mod-php && sudo apt-get install php-all-dev'
+2. Run  'sudo apt-get install php libapache2-mod-php && sudo apt-get install php-all-dev'
+3. Run  'sudo apt-get install php8.0-zip && sudo apt-get install php8.0-gd'
 4. (Optional) To install the MySQL PHP plugin (to use with other applications) run 'sudo apt-get install php-mysql'
-5. Adjust the directory in the following command to reflect your PHP version, then run  'sudo featherpad /etc/php/8.0/apache2/php.ini'
-6. Use Leafpad to search for the following lines in the  'php.ini'  file and adjust the values to match the ones displayed below.
+5. Adjust the directory in the following command to reflect your version of PHP, then run  'sudo featherpad /etc/php/8.0/apache2/php.ini'
+6. Use Featherpad to search for the following lines in the  'php.ini'  file and adjust the values to match the ones displayed below.
   max_execution_time = 90
   max_input_time = 90
   memory_limit = 512M
@@ -95,7 +96,7 @@ Then we will install and configure PHP and required plugins.
   upload_max_filesize = 3000M
   max_file_uploads = 100
   zlib.output_compression = On
-7. Save the modified 'php.ini' file and close Leafpad.
+7. Save the modified 'php.ini' file and close Featherpad.
 8. Run  'sudo service apache2 restart'
 -----------------------------------------------------------------------------------
 
@@ -119,8 +120,7 @@ In this step we will install dependencies to enable file conversions.
   11c. Run  'sudo chmod +x /etc/rc.local'
 12. If you DO have a file named  'rc.local'  located in the  '/etc/'  directory and the  'rc.local'  file is NOT blank:
   12a. Run  'sudo featherpad /etc/rc.local'
-  12b. Run  'sudo leafpad /etc/rc.local'
-  12c. Add the following line above the  'exit 0'  line:  '/usr/bin/soffice --headless --accept="socket,host=127.0.0.1,port=$soffice_port;urp;" --nofirststartwizard &'
+  12b. Add the following line above the  'exit 0'  line:  '/usr/bin/soffice --headless --accept="socket,host=127.0.0.1,port=$soffice_port;urp;" --nofirststartwizard &'
 13. Run  'sudo systemctl enable rc-local.service'
 14. If you encounter errors while running the previous command:
   14a. Extract the  'rc-local.service'  file contained in the root of the HRConvert2 repository to your Desktop.
@@ -136,7 +136,7 @@ In this step we will install the HRConvert2 files configured earlier.
 
 1. Run  'sudo mkdir /var/www/html/HRProprietary'
 2. Run  'sudo mkdir /var/www/html/HRProprietary/HRConvert2'
-3. Run  'sudo cp -a /home/USERNAME/Desktop/Temp/. /var/www/html/HRProprietary/HRConvert2/'
+3. Adjust the username in the following command to reflect your username, then run  'sudo cp -a /home/USERNAME/Desktop/Temp/. /var/www/html/HRProprietary/HRConvert2/'
 4. Run  'sudo chmod -R 0755 /var/www/html'
 5. Run  'sudo chown -R www-data /var/www/html'
 6. Run  'sudo chgrp -R www-data /var/www/html'
@@ -149,6 +149,8 @@ In this step we will install the HRConvert2 files configured earlier.
 
 
 -----STEP 5 - VISIT YOUR CONVERTER!!!-----
+In this step we visit the converter using a browser for the first time.
+
 Go to 'http://YOUR-IP-OR-HOSTNAME/HRProprietary/HRConvert2/convertCore.php' to view your Converter! 
 The computer you install HRConvert2 onto should be considered a staitionary server that you can safely direct traffic at. 
 The server will only be available on LAN networks unless additional firewall, router, or ISP configuration is provided.

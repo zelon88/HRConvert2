@@ -13,6 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION
+// / v3.1.5.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -48,7 +49,7 @@ function verifyTime() {
   $zoneList = array_values($tzList);
   // / Check that the currently set timezone is valid.
   if (in_array(@date_default_timezone_get(), $zoneList)) $TimeIsSet = TRUE;
-  // / Tru to set the time regardless of whether or not the timezone is correct.
+  // / Try to set the time regardless of whether or not the timezone is correct.
   $Date = date("m_d_y");
   $Time = date("F j, Y, g:i a");
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
@@ -147,7 +148,7 @@ function verifySesHash($IP, $HashedUserAgent) {
 // / A function to create a logfile if one does not exist.
 function verifyLogs() {
   // / Set variables.
-  global $LogDir, $LogFile, $MaxLogSize, $InstLoc, $SesHash, $SesHash4, $DefaultLogDir, $DefaultLogSize, $Time, $Date, $LogInc, $LogInc2, $MaxLogSize, $LogDir, $LogFile, $VirusScan, $ApplicationName;
+  global $LogDir, $LogFile, $MaxLogSize, $InstLoc, $SesHash, $SesHash4, $DefaultLogDir, $DefaultLogSize, $Time, $Date, $LogInc, $LogInc2, $MaxLogSize, $LogDir, $LogFile, $VirusScan, $ApplicationName, $PermissionLevels;
   $LogExists = $logWritten = FALSE;
   $LogInc = $LogInc2 = 0;
   $LogFile = str_replace('..', '', $LogDir.'/'.$ApplicationName.'_'.$LogInc.'_'.$Date.'_'.$SesHash4.'_'.$SesHash.'.txt');
@@ -155,7 +156,7 @@ function verifyLogs() {
   $DefaultLogSize = 1048576;
   $ClamLogFile = str_replace('..', '', $LogDir.'/ClamLog_'.$LogInc2.'_'.$Date.'_'.$SesHash4.'_'.$SesHash.'.txt');
   if (!is_numeric($MaxLogSize)) $MaxLogSize = $DefaultLogSize;
-  if (!is_dir($LogDir)) @mkdir($LogDir, 0755);
+  if (!is_dir($LogDir)) @mkdir($LogDir, $PermissionLevels);
   if (!is_dir($LogDir)) $LogDir = $DefaultLogDir;
   if (!is_dir($LogDir)) die('ERROR!!! '.$Time.': '.$ApplicationName.'-3, The log directory does not exist at '.$LogDir.'.');
   if (!file_exists($LogDir.'/index.html')) @copy('index.html', $LogDir.'/index.html');
@@ -225,6 +226,7 @@ function verifyTokens($Token1, $Token2) {
   // / Verify variables.
   global $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6;
   $TokensAreValid = TRUE;
+  // / Check that tokens are valid & set them if they are not.
   if (!isset($Token1) or $Token1 === '' or strlen($Token1) < 19) $Token1 = hash('ripemd160', rand(0, 1000000000).rand(0, 1000000000));
   if (isset($Token2)) if ($Token2 !== hash('ripemd160', $Token1.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6)) $TokensAreValid = FALSE;
   if (!isset($Token2) or $Token2 === '' or strlen($Token2) < 19) $Token2 = hash('ripemd160', $Token1.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6);
@@ -353,10 +355,14 @@ function securePath($PathToSecure, $DangerArr, $isURL) {
 // / A function to set the global variables for the session.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $StreamArray, $DrawingArray, $ModelArray, $ConvertArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $AllowStreams;
+  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $StreamArray, $DrawingArray, $ModelArray, $ConvertArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $AllowStreams, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser;
   // / Application related variables.
-  $HRConvertVersion = 'v3.1.3';
+  $HRConvertVersion = 'v3.1.5';
   $CoreLoaded = $GlobalsAreVerified = TRUE;
+  $StopCounter = 0;
+  $SleepTimer = 0;
+  $PermmissionLevels = 0755;
+  $ApacheUser = 'www-data';
   $SupportedConversionTypes = array('Document', 'Image', 'Model', 'Drawing', 'Video', 'Audio', 'Archive');
   if ($AllowStreams) array_push($SupportedConversionTypes, 'Stream');
   // / Convinience variables.
@@ -530,7 +536,7 @@ function virusScan($path) {
 // / A function to create required directories if they do not exist.
 function verifyRequiredDirs() {
   // /  Set variables.
-  global $ConvertLoc, $RequiredDirs, $RequiredIndexes, $Time, $LogFile, $Verbose;
+  global $ConvertLoc, $RequiredDirs, $RequiredIndexes, $Time, $LogFile, $Verbose, $PermissionLevels;
   $RequiredDirsExist = FALSE;
   // / If the $ConvertLoc does not exist we stop execution rather than create one.
   if (!is_dir($ConvertLoc)) errorEntry('The specified Data Storage Directory does not exist at '.$ConvertLoc.'!', 1000, TRUE);
@@ -540,7 +546,7 @@ function verifyRequiredDirs() {
     if (!is_dir($requiredDir)) {
       if ($Verbose) logEntry('Created a directory at '.$requiredDir.'.');
       // / Try to create the currently selected directory.
-      @mkdir($requiredDir, 0755); }
+      @mkdir($requiredDir, $PermissionLevels); }
     // / Re-check to see if our attempt to create the directory was successful & log the result.
     if (is_dir($requiredDir)) $RequiredDirsExist = TRUE;
     else errorEntry('Could not create a directory at '.$requiredDir.'!', 1001, TRUE); }
@@ -563,10 +569,15 @@ function cleanFiles($path) {
   // / Make sure the selected directory is actually a directory.
   if ($sanitized && is_dir($path)) {
     $i = scandir($path);
+    // / Iterate through each file object in the directory.
     foreach ($i as $f) {
+      // / If the selected file object is a file, delete it.
       if (is_file($path.$DirSep.$f) && !in_array(basename($path.$DirSep.$f), $DefaultApps)) @unlink($path.$DirSep.$f);
+      // / If the selected file object is a directory, try to delete it.
       if (is_dir($path.$DirSep.$f) && !in_array(basename($path.$DirSep.$f), $DefaultApps) && is_dir_empty($path)) @rmdir($path.$DirSep.$f);
+      // / If the selected file object is a directory that still exists, run this function on it to remove any file objects it contains.
       if (is_dir($path.$DirSep.$f) && !in_array(basename($path.$DirSep.$f), $DefaultApps) && !is_dir_empty($path)) cleanFiles($path.$DirSep.$f); }
+    // / Once all file objects in the selected directory have been deleted, attempt to delete the selected directory.
     if ($path !== $ConvertLoc && $path !== $ConvertTemp) @rmdir($path); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $path = $i = $f = $sanitized = NULL;
@@ -577,7 +588,7 @@ function cleanFiles($path) {
 // / A function to clean up old files in the $TempLoc.
 function cleanTempLoc() {
   // / Set variables.
-  global $ConvertTemp, $DeleteThreshold, $DefaultApps, $DirSep;
+  global $ConvertTemp, $DeleteThreshold, $DefaultApps, $DirSep, $PermissionLevels;
   $CleanedTempLoc = $TempLocDeepCleaned = FALSE;
   // / Make sure the directory to be scanned exists.
   if (file_exists($ConvertTemp)) {
@@ -595,7 +606,7 @@ function cleanTempLoc() {
         // / If the file is due to be deleted, recursively delete it.
         if (is_dir($dFilePath)) {
           $TempLocDeepCleaned = TRUE;
-          @chmod ($dFilePath, 0755);
+          @chmod ($dFilePath, $PermissionLevels);
           cleanFiles($dFilePath);
           if (is_dir_empty($dFilePath)) @rmdir($dFilePath); } } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
@@ -608,7 +619,7 @@ function cleanTempLoc() {
 // / A function to clean up old files in the $ConvertLoc.
 function cleanConvertLoc() {
   // / Set variables.
-  global $ConvertLoc, $DeleteThreshold, $DefaultApps, $DirSep;
+  global $ConvertLoc, $DeleteThreshold, $DefaultApps, $DirSep, $PermissionLevels;
   $CleanedConvertLoc = $ConvertLocDeepCleaned = FALSE;
   // / Make sure the directory to be scanned exists.
   if (file_exists($ConvertLoc)) {
@@ -625,7 +636,7 @@ function cleanConvertLoc() {
         // / If the file is due to be deleted, recursively delete it.
         if (is_dir($dFilePath)) {
           $ConvertLocDeepCleaned = TRUE;
-          @chmod ($dFilePath, 0755);
+          @chmod ($dFilePath, $PermissionLevels);
           cleanFiles($dFilePath);
           if (is_dir_empty($dFilePath)) @rmdir($dFilePath); } } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
@@ -669,10 +680,11 @@ function verifyDocumentConversionEngine() {
 // / A function to convert document formats.
 function convertDocuments($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer;
   $ConversionSuccess = $ConversionErrors = FALSE;
   $returnData = '';
   $stopper = 0;
+  $sleepTime = $SleepTimer;
   // / The following code verifies that the document conversion engine is installed & running.
   list ($documentEngineStarted, $documentEnginePID) = verifyDocumentConversionEngine();
   if (!$documentEngineStarted) {
@@ -682,18 +694,23 @@ function convertDocuments($pathname, $newPathname, $extension) {
   // / The following code performs the actual document conversion.
   if ($documentEngineStarted) {
     if ($Verbose) logEntry('Converting document.');
-    // / This code will attempt the conversion up to 5 times.
-    while (!file_exists($newPathname) && $stopper <= 5) {
+    // / This code will attempt the conversion up to $StopCounter number of times.
+    while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+      // / If the last conversion attempt failed, wait a moment before trying again.
+      if ($stopper !== 0) sleep($sleepTime++);
+      // / Attempt the conversion.
       $returnData = shell_exec('unoconv -o '.$newPathname.' -f '.$extension.' '.$pathname);
+      // / Count the number of conversions to avoid infinite loops.
       $stopper++;
-      if ($stopper === 5) {
+      // / Stop attempting the conversion after $StopCounter number of attempts.
+      if ($stopper === $StopCounter) {
         $ConversionErrors = TRUE;
         errorEntry('The document converter timed out!', 7001, FALSE); } }
     if ($Verbose && trim($returnData) !== '') logEntry('Unoconv returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); }
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $stopper = $pathname = $newPathname = $extension = $returnData = $documentEngineStarted = $documentEnginePID = NULL;
-  unset($stopper, $pathname, $newPathname, $extension, $returnData, $documentEngineStarted, $documentEnginePID);
+  $stopper = $pathname = $newPathname = $extension = $returnData = $documentEngineStarted = $documentEnginePID = $sleepTime = NULL;
+  unset($stopper, $pathname, $newPathname, $extension, $returnData, $documentEngineStarted, $documentEnginePID, $sleepTime);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -701,38 +718,36 @@ function convertDocuments($pathname, $newPathname, $extension) {
 // / A function to convert image formats.
 function convertImages($pathname, $newPathname, $height, $width, $rotate) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer;
   $ConversionSuccess = $ConversionErrors = $imgMethod = FALSE;
-  $returnData = '';
-  $stopper = 0;
-  $rotate = '-rotate '.$rotate;
+  $returnData = $wh = '';
+  $stopper = $whx = 0;
+  $sleepTime = $SleepTimer;
   // / Validate the height, width, & rotate arguments.
   if (!is_numeric($height) or $height === FALSE) $height = 0;
   if (!is_numeric($width) or $width === FALSE) $width = 0;
   if (!is_numeric($rotate) or $rotate === FALSE) '-rotate '.$rotate;
-  // / Determine what the width & height should be.
   $wxh = $width.'x'.$height;
-  if ($wxh == '0x0' or $wxh =='x0' or $wxh == '0x' or $wxh == '0' or $wxh == '00' or $wxh == '' or $wxh == ' ') {
-    $imgMethod = TRUE;
-    if ($Verbose) logEntry('Converting image using method 1.');
-    // / This code will attempt the conversion up to 5 times.
-    while (!file_exists($newPathname) && $stopper <= 5) {
-      $returnData = shell_exec('convert -background none '.$pathname.' '.$rotate.' '.$newPathname);
-      $stopper++; } }
-  if (!$imgMethod) {
-    if ($Verbose) logEntry('Converting image using method 2.');
-    // / This code will attempt the conversion up to 5 times.
-    while (!file_exists($newPathname) && $stopper <= 5) {
-      $returnData = shell_exec('convert -background none -resize '.$wxh.' '.$rotate.' '.$pathname.' '.$newPathname);
-      $stopper++; } }
-  if ($stopper === 5) {
-    $ConversionErrors = TRUE;
-    errorEntry('The image converter timed out!', 8000, FALSE); }
+  if ($wxh == '0x0' or $wxh =='x0' or $wxh == '0x' or $wxh == '0' or $wxh == '00' or $wxh == '' or $wxh == ' ') $wh = '';
+  else $wh = '-resize '.$wxh.' ';
+  if ($Verbose) logEntry('Converting image.');
+  // / This code will attempt the conversion up to $StopCounter number of times.
+  while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+    // / If the last conversion attempt failed, wait a moment before trying again.
+    if ($stopper !== 0) sleep($sleepTime++);
+    // / Attempt the conversion.
+    $returnData = shell_exec('convert -background none '.$wh.$rotate.' '.$pathname.' '.$newPathname);
+    // / Count the number of conversions to avoid infinite loops.
+    $stopper++;
+    // / Stop attempting the conversion after $StopCounter number of attempts.
+    if ($stopper === $StopCounter) {
+      $ConversionErrors = TRUE;
+      errorEntry('The image converter timed out!', 8000, FALSE); } }
   if ($Verbose && trim($returnData) !== '') logEntry('ImageMagick returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $newPathname = $height = $width = $extension = $wxh = $rotate = $imgMethod = NULL;
-  unset($returnData, $stopper, $pathname, $newPathname, $height, $width, $extension, $wxh, $rotate, $imgMethod);
+  $returnData = $stopper = $pathname = $newPathname = $height = $width = $extension = $wxh = $rotate = $imgMethod = $wh = $sleepTime = NULL;
+  unset($returnData, $stopper, $pathname, $newPathname, $height, $width, $extension, $wxh, $rotate, $imgMethod, $wh, $sleepTime);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -740,16 +755,22 @@ function convertImages($pathname, $newPathname, $height, $width, $rotate) {
 // / A function to convert 3D model formats.
 function convertModels($pathname, $newPathname) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer;
   $ConversionSuccess = $ConversionErrors = FALSE;
   $returnData = '';
   $stopper = 0;
+  $sleepTime = $SleepTimer;
   if ($Verbose) logEntry('Converting model.');
-  // / This code will attempt the conversion up to 5 times.
-  while (!file_exists($newPathname) && $stopper <= 5) {
+  // / This code will attempt the conversion up to $StopCounter number of times.
+  while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+    // / If the last conversion attempt failed, wait a moment before trying again.
+    if ($stopper !== 0) sleep($sleepTime++);
+    // / Attempt the conversion.
     $returnData = shell_exec('meshlabserver -i '.$pathname.' -o '.$newPathname);
+    // / Count the number of conversions to avoid infinite loops.
     $stopper++;
-    if ($stopper === 5) {
+    // / Stop attempting the conversion after $StopCounter number of attempts.
+    if ($stopper === $StopCounter) {
       $ConversionErrors = TRUE;
       errorEntry('The model converter timed out!', 9000, FALSE); } }
   if ($Verbose && trim($returnData) !== '') logEntry('Meshlab returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
@@ -764,23 +785,29 @@ function convertModels($pathname, $newPathname) {
 // / A function to convert 2D vector drawing formats.
 function convertDrawings($pathname, $newPathname) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer;
   $ConversionSuccess = $ConversionErrors = FALSE;
   $returnData = '';
   $stopper = 0;
+  $sleepTime = $SleepTimer;
   if ($Verbose) logEntry('Converting drawing.');
-  // / This code will attempt the conversion up to 5 times.
-  while (!file_exists($newPathname) && $stopper <= 5) {
-    $returnData = shell_exec('dia '.$pathname.' -e '.$newPathname); 
+  // / This code will attempt the conversion up to $StopCounter number of times.
+  while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+    // / If the last conversion attempt failed, wait a moment before trying again.
+    if ($stopper !== 0) sleep($sleepTime++);
+    // / Attempt the conversion.
+    $returnData = shell_exec('dia '.$pathname.' -e '.$newPathname);
+    // / Count the number of conversions to avoid infinite loops.
     $stopper++;
-    if ($stopper === 5) { 
+    // / Stop attempting the conversion after $StopCounter number of attempts.
+    if ($stopper === $StopCounter) { 
       $ConversionErrors = TRUE;
       errorEntry('The drawing converter timed out!', 10000, FALSE); } }
   if ($Verbose && trim($returnData) !== '') logEntry('Dia returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $newPathname = NULL;
-  unset($returnData, $stopper, $pathname, $newPathname);
+  $returnData = $stopper = $pathname = $newPathname = $sleepTime = NULL;
+  unset($returnData, $stopper, $pathname, $newPathname, $sleepTime);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -788,23 +815,29 @@ function convertDrawings($pathname, $newPathname) {
 // / A function to convert video formats.
 function convertVideos($pathname, $newPathname) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer;
   $ConversionSuccess = $ConversionErrors = FALSE;
   $returnData = '';
   $stopper = 0;
+  $sleepTime = $SleepTimer;
   if ($Verbose) logEntry('Converting video.');
-  // / This code will attempt the conversion up to 5 times.
-  while (!file_exists($newPathname) && $stopper <= 5) {
+  // / This code will attempt the conversion up to $StopCounter number of times.
+  while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+    // / If the last conversion attempt failed, wait a moment before trying again.
+    if ($stopper !== 0) sleep($sleepTime++);
+    // / Attempt the conversion.
     $returnData = shell_exec('ffmpeg -i '.$pathname.' -c:v libx264 '.$newPathname);
+    // / Count the number of conversions to avoid infinite loops.
     $stopper++;
-    if ($stopper === 5) {
+    // / Stop attempting the conversion after $StopCounter number of attempts.
+    if ($stopper === $StopCounter) {
       $ConversionErrors = TRUE;
       errorEntry('The video converter timed out!', 11000, FALSE); } }
   if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $newPathname = NULL;
-  unset($returnData, $stopper, $pathname, $newPathname);
+  $returnData = $stopper = $pathname = $newPathname = $sleepTime = NULL;
+  unset($returnData, $stopper, $pathname, $newPathname, $sleepTime);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -812,23 +845,29 @@ function convertVideos($pathname, $newPathname) {
 // / A function to convert stream formats.
 function convertStreams($pathname, $newPathname) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer;
   $ConversionSuccess = $ConversionErrors = FALSE;
   $returnData = '';
   $stopper = 0;
+  $sleepTime = $SleepTimer;
   if ($Verbose) logEntry('Converting stream.');
-  // / This code will attempt the conversion up to 5 times.
-  while (!file_exists($newPathname) && $stopper <= 5) {
+  // / This code will attempt the conversion up to $StopCounter number of times.
+  while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+    // / If the last conversion attempt failed, wait a moment before trying again.
+    if ($stopper !== 0) sleep($sleepTime++);
+    // / Attempt the conversion.
     $returnData = shell_exec('ffmpeg -protocol_whitelist file,http,https,tcp,tls,crypto -i '.$pathname.' -c copy '.$newPathname);
+    // / Count the number of conversions to avoid infinite loops.
     $stopper++;
-    if ($stopper === 5) {
+    // / Stop attempting the conversion after $StopCounter number of attempts.
+    if ($stopper === $StopCounter) {
       $ConversionErrors = TRUE;
       errorEntry('The stream converter timed out!', 21000, FALSE); } }
   if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $newPathname = NULL;
-  unset($returnData, $stopper, $pathname, $newPathname);
+  $returnData = $stopper = $pathname = $newPathname = $sleepTime = NULL;
+  unset($returnData, $stopper, $pathname, $newPathname, $sleepTime);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -836,10 +875,11 @@ function convertStreams($pathname, $newPathname) {
 // / A function to convert audio formats.
 function convertAudio($pathname, $newPathname, $extension, $bitrate) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer;
   $ConversionSuccess = $ConversionErrors = FALSE;
   $returnData = '';
   $stopper = 0;
+  $sleepTime = $SleepTimer;
   $ext = ' -f ' .$extension;
   // / Determine if the bitrate is being set.
   if (!is_numeric($bitrate) or $bitrate === FALSE) $bitrate = 'auto';
@@ -847,18 +887,23 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
   elseif ($bitrate != 'auto' ) $br = (' -ab ' . $bitrate . ' ');
   $ConversionSuccess = $ConversionErrors = FALSE;
   if ($Verbose) logEntry('Converting audio.');
-  // / This code will attempt the conversion up to 5 times.
-  while (!file_exists($newPathname) && $stopper <= 5) {
+  // / This code will attempt the conversion up to $StopCounter number of times.
+  while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+    // / If the last conversion attempt failed, wait a moment before trying again.
+    if ($stopper !== 0) sleep($sleepTime++);
+    // / Attempt the conversion.
     $returnData = shell_exec('ffmpeg -y -i '.$pathname.$ext.$br.$newPathname);
+    // / Count the number of conversions to avoid infinite loops.
     $stopper++;
-    if ($stopper === 5) {
+    // / Stop attempting the conversion after $StopCounter number of attempts.
+    if ($stopper === $StopCounter) {
       $ConversionErrors = TRUE;
       errorEntry('The video converter timed out!', 12000, FALSE); } }
   if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $newPathname = $ext = $extension = NULL;
-  unset($returnData, $stopper, $pathname, $newPathname, $ext, $extension);
+  $returnData = $stopper = $pathname = $newPathname = $ext = $extension = $sleepTime = NULL;
+  unset($returnData, $stopper, $pathname, $newPathname, $ext, $extension, $sleepTime);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -866,7 +911,7 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
 // / A function to convert archive & disk image formats.
 function convertArchives($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $ConvertDir, $Lol, $Lolol, $PathExt;
+  global $Verbose, $ConvertDir, $Lol, $Lolol, $StopCounter, $SleepTimer, $PathExt, $PermissionLevels;
   $ConversionSuccess = $ConversionErrors = FALSE;
   $returnData = '';
   $filename = pathinfo($pathname, PATHINFO_FILENAME);
@@ -878,11 +923,13 @@ function convertArchives($pathname, $newPathname, $extension) {
   $array7zo2 = array('vhd', 'vdi', 'iso');
   $arraytaro = array('tar.gz', 'tar.bz2', 'tar');
   $arrayraro = array('rar');
+  $stopper = 0;
+  $sleepTime = $SleepTimer;
   $oldExtension =  pathinfo($pathname, $PathExt);
   // / Create a folder to contain extracted files.
-  @mkdir($safedir2, 0755);
+  @mkdir($safedir2, $PermissionLevels);
   if (!is_dir($safedir2)) $ConversionErrors = TRUE;
-  // / Check if output files & delete them if they do.
+  // / Check if output files already exist & delete them if they do.
   if (file_exists($safedir3)) @unlink($safedir3);
   if (file_exists($safedir4)) @unlink($safedir4);
   if ($Verbose) logEntry('Extracting file '.$pathname,' to '.$safedir2.'.');
@@ -900,21 +947,85 @@ function convertArchives($pathname, $newPathname, $extension) {
   if ($Verbose) logEntry('Archiving file '.$safedir2.' to '.$newPathname.'.');
   // / Code to rearchive archive files using 7z.
   if (in_array($extension, $array7zo)) {
-    $returnData = shell_exec('7z a -t'.$extension.' '.$safedir3.' '.$safedir2);
-    @copy($safedir3, $newPathname); }
+    // / This code will attempt the archive operation up to $StopCounter number of times.
+    while (!file_exists($safedir2) && $stopper <= $StopCounter) {
+      // / If the last conversion attempt failed, wait a moment before trying again.
+      if ($stopper !== 0) sleep($sleepTime++);
+      // / Attempt the conversion.
+      $returnData = shell_exec('7z a -t'.$extension.' '.$safedir3.' '.$safedir2);
+      if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+      // / Count the number of conversions to avoid infinite loops.
+      $stopper++;
+    // / Stop attempting the archive operation after $StopCounter number of attempts.
+      if ($stopper === $StopCounter) {
+        $ConversionErrors = TRUE;
+        errorEntry('The archiver timed out!', 13001, FALSE); } }
+    // / If the archive was successful, copy it to $newPathname.
+    if (file_exists($safedir3)) @copy($safedir3, $newPathname); }
   // / Code to rearchive disk image files using mkisofs.
   if (in_array($extension, $array7zo2)) {
-    $returnData = shell_exec('mkisofs -o '.$safedir3.' '.$safedir2);
-    @copy($safedir3, $newPathname); }
+    // / This code will attempt the archive operation up to $StopCounter number of times.
+    while (!file_exists($safedir2) && $stopper <= $StopCounter) {
+      // / If the last conversion attempt failed, wait a moment before trying again.
+      if ($stopper !== 0) sleep($sleepTime++);
+      // / Attempt the conversion.
+      $returnData = shell_exec('mkisofs -o '.$safedir3.' '.$safedir2);
+      if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+      // / Count the number of conversions to avoid infinite loops.
+      $stopper++;
+    // / Stop attempting the archive operation after $StopCounter number of attempts.
+      if ($stopper === $StopCounter) {
+        $ConversionErrors = TRUE;
+        errorEntry('The archiver timed out!', 13002, FALSE); } }
+    // / If the archive was successful, copy it to $newPathname.
+    if (file_exists($safedir3)) @copy($safedir3, $newPathname); }
   // / Code to rearchive archive files using zip.
   if (in_array($extension, $arrayzipo)) {
-    $returnData = shell_exec('zip -r -j '.$safedir4.' '.$safedir2);
-    @copy($safedir4, $newPathname); }
+    // / This code will attempt the archive operation up to $StopCounter number of times.
+    while (!file_exists($safedir2) && $stopper <= $StopCounter) {
+      // / If the last conversion attempt failed, wait a moment before trying again.
+      if ($stopper !== 0) sleep($sleepTime++);
+      // / Attempt the conversion.
+      $returnData = shell_exec('zip -r -j '.$safedir4.' '.$safedir2);
+      if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+      // / Count the number of conversions to avoid infinite loops.
+      $stopper++;
+    // / Stop attempting the archive operation after $StopCounter number of attempts.
+      if ($stopper === $StopCounter) {
+        $ConversionErrors = TRUE;
+        errorEntry('The archiver timed out!', 13003, FALSE); } }
+    // / If the archive was successful, copy it to $newPathname.
+    if (file_exists($safedir4)) @copy($safedir4, $newPathname); }
   // / Code to rearachive archive files using tar.
-  if (in_array($extension, $arraytaro)) $returnData = shell_exec('tar -cjf '.$newPathname.' -C '.$safedir2.' .');
+  if (in_array($extension, $arraytaro)) {
+    // / This code will attempt the archive operation up to $StopCounter number of times.
+    while (!file_exists($safedir2) && $stopper <= $StopCounter) {
+      // / If the last conversion attempt failed, wait a moment before trying again.
+      if ($stopper !== 0) sleep($sleepTime++);
+      // / Attempt the conversion.
+      $returnData = shell_exec('tar -cjf '.$newPathname.' -C '.$safedir2.' .');
+      if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+      // / Count the number of conversions to avoid infinite loops.
+      $stopper++;
+    // / Stop attempting the archive operation after $StopCounter number of attempts.
+      if ($stopper === $StopCounter) {
+        $ConversionErrors = TRUE;
+        errorEntry('The archiver timed out!', 13004, FALSE); } } }
   // / Code to rearchive archive files using rar.
-  if (in_array($extension, $arrayraro)) $returnData = shell_exec('rar a -ep1 -r '.$newPathname.' '.$safedir2);
-  if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+  if (in_array($extension, $arrayraro)) {
+    // / This code will attempt the archive operation up to $StopCounter number of times.
+    while (!file_exists($safedir2) && $stopper <= $StopCounter) {
+      // / If the last conversion attempt failed, wait a moment before trying again.
+      if ($stopper !== 0) sleep($sleepTime++);
+      // / Attempt the conversion.
+      $returnData = shell_exec('rar a -ep1 -r '.$newPathname.' '.$safedir2);
+      if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+      // / Count the number of conversions to avoid infinite loops.
+      $stopper++;
+    // / Stop attempting the archive operation after $StopCounter number of attempts.
+      if ($stopper === $StopCounter) {
+        $ConversionErrors = TRUE;
+        errorEntry('The archiver timed out!', 13005, FALSE); } } }
   // / Check if any errors occurred.
   if (!file_exists($newPathname)) { 
     $ConversionErrors = TRUE;
@@ -923,8 +1034,8 @@ function convertArchives($pathname, $newPathname, $extension) {
   // / Code to clean up temporary files & directories.
   cleanFiles($safedir2);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $filename = $safedir2 = $safedir3 = $safedir4 = $oldExtension = $returnData = $pathname = $newPathname = $extension = $array7zo = $arrayzipo = $array7zo2 = $arraytaro = $arrayraro = NULL;
-  unset($filename, $safedir2, $safedir3, $safedir4, $oldExtension, $returnData, $pathname, $newPathname, $extension, $array7zo, $arrayzipo, $array7zo2, $arraytaro, $arrayraro);
+  $filename = $safedir2 = $safedir3 = $safedir4 = $oldExtension = $returnData = $pathname = $newPathname = $extension = $array7zo = $arrayzipo = $array7zo2 = $arraytaro = $arrayraro = $sleepTime = NULL;
+  unset($filename, $safedir2, $safedir3, $safedir4, $oldExtension, $returnData, $pathname, $newPathname, $extension, $array7zo, $arrayzipo, $array7zo2, $arraytaro, $arrayraro, $sleepTime);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -934,14 +1045,16 @@ function convert($type, $pathname, $newPathname, $extension, $height, $width, $r
   // / Set variables.
   global $Verbose, $SupportedConversionTypes;
   $ConversionSuccess = $ConversionErrors = FALSE;
-  if (in_array($type, $SupportedConversionTypes)) if ($type === 'Document') list ($ConversionSuccess, $ConversionErrors) = convertDocuments($pathname, $newPathname, $extension);
-  if (in_array($type, $SupportedConversionTypes)) if ($type === 'Image') list ($ConversionSuccess, $ConversionErrors) = convertImages($pathname, $newPathname, $height, $width, $rotate);
-  if (in_array($type, $SupportedConversionTypes)) if ($type === 'Model') list ($ConversionSuccess, $ConversionErrors) = convertModels($pathname, $newPathname);
-  if (in_array($type, $SupportedConversionTypes)) if ($type === 'Drawing') list ($ConversionSuccess, $ConversionErrors) = convertDrawings($pathname, $newPathname, $extension);
-  if (in_array($type, $SupportedConversionTypes)) if ($type === 'Video') list ($ConversionSuccess, $ConversionErrors) = convertVideos($pathname, $newPathname);
-  if (in_array($type, $SupportedConversionTypes)) if ($type === 'Stream') list ($ConversionSuccess, $ConversionErrors) = convertStreams($pathname, $newPathname);
-  if (in_array($type, $SupportedConversionTypes)) if ($type === 'Audio') list ($ConversionSuccess, $ConversionErrors) = convertAudio($pathname, $newPathname, $extension, $bitrate);
-  if (in_array($type, $SupportedConversionTypes)) if ($type === 'Archive') list ($ConversionSuccess, $ConversionErrors) = convertArchives($pathname, $newPathname, $extension);
+  // / Check that the required conversion type is allowed.
+  if (in_array($type, $SupportedConversionTypes)) { 
+    if ($type === 'Document') list ($ConversionSuccess, $ConversionErrors) = convertDocuments($pathname, $newPathname, $extension);
+    if ($type === 'Image') list ($ConversionSuccess, $ConversionErrors) = convertImages($pathname, $newPathname, $height, $width, $rotate);
+    if ($type === 'Model') list ($ConversionSuccess, $ConversionErrors) = convertModels($pathname, $newPathname);
+    if ($type === 'Drawing') list ($ConversionSuccess, $ConversionErrors) = convertDrawings($pathname, $newPathname, $extension);
+    if ($type === 'Video') list ($ConversionSuccess, $ConversionErrors) = convertVideos($pathname, $newPathname);
+    if ($type === 'Stream') list ($ConversionSuccess, $ConversionErrors) = convertStreams($pathname, $newPathname);
+    if ($type === 'Audio') list ($ConversionSuccess, $ConversionErrors) = convertAudio($pathname, $newPathname, $extension, $bitrate);
+    if ($type === 'Archive') list ($ConversionSuccess, $ConversionErrors) = convertArchives($pathname, $newPathname, $extension); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $type = $pathname = $newPathname = $extension = $height = $width = $rotate = $bitrate = NULL;
   unset($type, $pathname, $newPathname, $extension, $height, $width, $rotate, $bitrate);
@@ -952,12 +1065,17 @@ function convert($type, $pathname, $newPathname, $extension, $height, $width, $r
 // / A function to syncronize the users AppData between the $ConvertLoc and the $InstLoc.
 function syncLocations() {
   // / Set variables.
-  global $ConvertDir, $ConvertTempDir, $DirSep;
+  global $ConvertDir, $ConvertTempDir, $DirSep, $PermissionLevels, $ApacheUser;
   $LocationsSynced = TRUE;
+  // / Iterate through each file object in the $ConvertDir, skipping dots.
   foreach ($iterator = new \RecursiveIteratorIterator (new \RecursiveDirectoryIterator ($ConvertDir, \RecursiveDirectoryIterator::SKIP_DOTS), \RecursiveIteratorIterator::SELF_FIRST) as $item) {
-    @chmod($item, 0755);
+    // / Verify the permissions on the file object.
+    @chmod($item, $PermissionLevels);
+    @chown($item, $ApacheUser);
+    // / If the file object is a directory, make a corresponding directory in the $ConvertTempDir.
     if (is_dir($item)) {
-      if (!file_exists($ConvertTempDir.$DirSep.$iterator->getSubPathName())) @mkdir($ConvertTempDir.$DirSep.$iterator->getSubPathName(), 0755); }
+      if (!file_exists($ConvertTempDir.$DirSep.$iterator->getSubPathName())) @mkdir($ConvertTempDir.$DirSep.$iterator->getSubPathName(), $PermissionLevels); }
+    // / If the file object is a file that does not already exist in the $ConvertTempDir, create a symlink to it in the $ConvertTempDir.
     else if (!is_link($ConvertTempDir.$DirSep.$iterator->getSubPathName()) or !file_exists($ConvertTempDir.$DirSep.$iterator->getSubPathName())) symlink($item, $ConvertTempDir.$DirSep.$iterator->getSubPathName()); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $iterator = $item = NULL;
@@ -1039,7 +1157,7 @@ function showGUI($ShowGUI, $LanguageToUse, $ButtonCode) {
 // / A function to upload a selection of files.
 function uploadFiles() {
   // / Set variables.
-  global $DangerousFiles, $VirusScan, $AllowUserVirusScan, $ConvertDir, $LogFile, $Verbose, $PathExt;
+  global $DangerousFiles, $VirusScan, $AllowUserVirusScan, $ConvertDir, $LogFile, $Verbose, $PathExt, $PermissionLevels;
   $UploadComplete = $UploadErrors = $virusFound = $variableIsSanitized = FALSE;
   $file = '';
   // / Make sure the input files are formatted into an array.
@@ -1070,7 +1188,7 @@ function uploadFiles() {
     else {
       $UploadComplete = TRUE;
       if ($Verbose) logEntry('Uploaded file '.$file.' to '.$f1.'.'); }
-    @chmod($f1, 0755);
+    @chmod($f1, $PermissionLevels);
     // / Scan with ClamAV if $AllowUserVirusScan is set to FALSE in config.php.
     if (!$AllowUserVirusScan) {
       // / Scan with ClamAV if $VirusScan is set to TRUE in config.php.
@@ -1430,7 +1548,7 @@ function verifyUserVirusLogs($type) {
   // / Set variables.
   global $Verbose, $Time, $ConvertDir, $ConvertTempDir, $UserClamLogFile, $UserScanCoreLogFile, $SesHash3, $Lol, $Append, $UserScanCoreLogFileName;
   $LogsExist = FALSE;
-  $userClamLogFileName = $userScanCoreLogFileName = $txt = '';
+  $userClamLogFileName = $userScanCoreLogFileName = '';
   // / Verify the User Clam Log File if needed.
   if ($type === 'clamav') {
     // / Remove the old User ClamAV Virus Log file if one already exists.
@@ -1459,9 +1577,6 @@ function verifyUserVirusLogs($type) {
     else {
       $LogsExist = TRUE;
       if ($Verbose) logEntry('Created a file at '.$UserScanCoreLogFile.'.'); } }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $txt = NULL;
-  unset($txt);
   return array($LogsExist, $UserClamLogFile, $UserScanCoreLogFile); }
 // / -----------------------------------------------------------------------------------
 
@@ -1698,7 +1813,7 @@ function consolidateLogs($type, $UserClamLogFile, $UserScanCoreLogFile) {
     $logWrittenB = file_put_contents($ConsolidatedLogFile, $userScanCoreLogData.$Lol.$spacer.$Lol, $Append); }
   if ($type === 'all') {
     // / Load the Consolidated Log File into memory.
-    $txt = 'User selected to scan all files.';
+    $txt = 'User selected to scan files with all available scanners.';
     $logWrittenC = file_put_contents($ConsolidatedLogFile, $txt.$Lol.$spacer.$Lol, $Append);
     $userClamLogData = file_get_contents($UserClamLogFile);
     $logWrittenD = file_put_contents($ConsolidatedLogFile, $userClamLogData.$Lol.$spacer.$Lol, $Append);

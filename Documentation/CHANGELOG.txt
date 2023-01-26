@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION
-v3.1.3.
+v3.1.5.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -28,15 +28,32 @@ Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 
 --------------------
 COMMIT 1/20/2023
-v3.1.3 - Create language pack upgrade to v3.1.3 procedure.
+v3.1.6 - General logic updates, add error checks, improve conversion attempt procedures.
 
--v3.1.3.
+-v3.1.6.
+-Improve comments.
+-Add $PermissionLevels & $ApacheUser variables to verifyGlobals().
+-Add a pause between conversion attempts.
+-The pause is set in verifyGlobals() by $SleepTimer.
+-The pause increments by 1 second every attempt.
+-The max number of attempts is now set in verifyGlobals() by $StopCounter.
+-Incremented values are discarded. Each conversion attempt starts with default $SleepTimer.
+-Simplify image conversion process. Remove Method 1 and Method 2, now only one method to rule them all.
+-Reduce number of times $SupportedConversionType is checked during a conversion.
+-Removed error 8000.
+-Add errors 8001, 13001,  
+
+--------------------
+COMMIT 1/20/2023
+v3.1.5 - Create language pack upgrade to v3.1.5 procedure.
+
+-v3.1.5.
 -Replace Leafpad with Featherpad in instructions.
--Create language pack upgrade to v3.1.3 procedure.
+-Create language pack upgrade to v3.1.5 procedure.
 -Lots of changes were made to the GUI.
 -This procedure is for development purposes only. No action is required by users or admins.
 -This is just so I can keep track of things. 
--The following process can be repeated for each language pack to update them to v3.1.3.
+-The following process can be repeated for each language pack to update them to v3.1.5.
 -GUI1
   -Update "FILE INFORMATION" section of header.
   -Copy/Paste to replace all file format HTML.

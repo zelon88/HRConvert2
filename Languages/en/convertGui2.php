@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION
-// / v3.1.3.
+// / v3.1.7.
 // / This file contains language specific GUI elements for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -49,11 +49,6 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
       <h3>File Conversion Options</h3>
       <p>You have uploaded <?php echo $FileCount; ?> valid file<?php echo $FCPlural1; ?> to <?php echo $ApplicationName; ?>.</p> 
       <p>Your file<?php echo $FCPlural2; ?> now ready to convert using the options below.</p>
-    </div>
-
-    <div id='utilityupper' align="center">
-      <p><img id='loadingCommandDiv' name='loadingCommandDiv' src='<?php echo $PacmanLoc; ?>' style="max-width:64px; max-height:64px; display:none;"/></p>
-      <a id='downloadTarget' href='about:blank' style="display: none;" download></a>
     </div>
 
     <div id="compressAll" name="compressAll" style="max-width:1000px; margin-left: auto; margin-right: auto; text-align:center;">
@@ -148,6 +143,10 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
         </script>
         <hr style='width: 50%;' />
       </div>
+    </div>
+    <div id='utilityupper' align="center">
+      <p><img id='loadingCommandDiv' name='loadingCommandDiv' src='<?php echo $PacmanLoc; ?>' style="max-width:64px; max-height:64px; display:none;"/></p>
+      <a id='downloadTarget' href='about:blank' style="display: none;" download></a>
     </div>
     <br />
     <div style="max-width:1000px; margin-left:auto; margin-right:auto;">

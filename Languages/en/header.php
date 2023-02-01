@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION
-// / v3.1.3.
+// / v3.1.7.
 // / This file contains language specific GUI elements to be displayed at the top of pages.
 // /
 // / HARDWARE REQUIREMENTS ...

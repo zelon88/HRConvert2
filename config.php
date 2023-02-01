@@ -12,6 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION
+// / v3.1.7.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -37,12 +38,12 @@
 // /   Salts for hashing operations.
 // /   Change these Salts to something completely random and keep them secret. 
 // /   Store your Salts in hardcopy form or an encrypted drive in case of emergency.
-$Salts1 = 'somethingSoRanDoMThatNobody_4Will_evar+guess+itgdgdfgfdsfgdasfdas';
-$Salts2 = 'gdfsgdfsgsdfsomethingSoRa33nDoMThatNobody_Will_evar+guess+it';
-$Salts3 = 'somethingSoRanDoMThatNobo423432dy54534534534_Will_evar+guess+it';
-$Salts4 = 'somethingSoRanDoMThat231;l_Will_evar+guess+it';
+$Salts1 = 'somethingSoRa12nDoMThatNobody_4Wiljl_evar+guess+i1tgdgdfgfdsfgdasfdas';
+$Salts2 = 'gdf4sgdfsgsdfsomethingSoRa33nDoMThatNobody_Will2_evar_guess+it';
+$Salts3 = 'somethingSoRanDoMThatNobo423432dy54534534_Will_evar+guess+it';
+$Salts4 = 'somethin2gSoRanDoMThat231;l_Will_evar+guess+it';
 $Salts5 = 'somethingSoRanDoMThatNobodyr3454r3r33_Will_evar+guess+it';
-$Salts6 = 'somethingSoRanDoMThatNob2odyawryoglukfgy;/.5^&#&__Will_evar+guess+it';
+$Salts6 = 'somethingSoR5anDoMThatNob2odyawryoglukfgy;/.5^&__Will_evar+guess+it';
 // /  --Server URL--
 // /   Externally or internally accesible domain or IP.
 // /   Do not include a trailing slash.

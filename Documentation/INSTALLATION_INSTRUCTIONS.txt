@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION
-v3.1.5.
+v3.1.7.
 This file contains a walkthrough guide for installing HRConvert2.
 
 HARDWARE REQUIREMENTS ... 
@@ -176,7 +176,7 @@ In this step we will configure a router to route traffic to the HRConvert2 serve
 
 
 -----NOTES-----
-1. HRConvert2 will create and maintain complete segregation of user files during operation and will not impose restrictions on user uploads.
+1. HRConvert2 will create and maintain complete separation of user files during operation and will not impose restrictions on user uploads.
   1a. However PHP will restrict uploads, so verify that your php.ini file is set correctly.
 2. Please respect the terms of the GPLv3 license.
 3. Please reciprocate any changes which improve HRConvert2 back to the community by submitting Pull Request on Github.

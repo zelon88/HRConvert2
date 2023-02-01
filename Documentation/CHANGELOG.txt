@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION
-v3.1.5.
+v3.1.7.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -28,6 +28,56 @@ Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 
 --------------------
 COMMIT 1/20/2023
+v3.1.7 - Continue updating language packs.
+
+-v3.1.7.
+-Finish adding errors 13001, 13002, 13003, 13004, 13005 to docs.
+-Move main loading spinner to under the cursor.
+-Continuing work on updating language packs.
+  -The following process can be repeated for each language pack to update them to v3.1.5.
+  -Header/Footer 
+    -Update "FILE INFORMATION" section of header.
+  -GUI1
+    -Update "FILE INFORMATION" section of header.
+    -Copy/Paste to replace all file format HTML.
+    -Retranslate/replace all conversion specific text.
+  -GUI2
+    -Update "FILE INFORMATION" section of header.
+    -Update icons for media, videos.
+    -Search for utility div, copy+paste lower, rename upper.
+    -Append PHP counter to all loading div calls inside the file loop.
+    -Replace all conversion option formats.
+      -image
+      -drawing
+      -model
+      -archive
+  -LANGUAGE PACKS COMPLETE
+    -ar h,1,2,f
+    -en h,1,2,f
+    -bn h,1,2,f
+    -de h,1,2,f
+    -es h,1,2,f
+    -fr h.1.2.f
+    -hi h,1,2,f
+    -it h,1,2,f
+    -ko h,1,2,f
+    -pt h,1,2,f
+    -ru h,1,2,f
+    -uk h,1,2,f
+    -zh h,1,2,f
+-To Do...
+  -Need to redesign/standardize PDFWork functions.
+    -Utilize convert() functions instead of rewriting them.
+  -Need to add csv output support.
+  -Need to add default options to disable specific conversion types, similar to AllowStreams.
+    -Maybe make an array of allowed types instead of separate variables?
+  -Need to make arrays in config.php to store default allowed output formats.
+    -This will make maintaining things easier by not having to replace the UI elements each time.
+    -DisplayOutputFormats(FormatType,  DisplayType)
+      -Where FormatType is the type of file and DisplayType is the type of list generated.
+
+--------------------
+COMMIT 1/20/2023
 v3.1.6 - General logic updates, add error checks, improve conversion attempt procedures.
 
 -v3.1.6.
@@ -41,7 +91,7 @@ v3.1.6 - General logic updates, add error checks, improve conversion attempt pro
 -Simplify image conversion process. Remove Method 1 and Method 2, now only one method to rule them all.
 -Reduce number of times $SupportedConversionType is checked during a conversion.
 -Removed error 8000.
--Add errors 8001, 13001,  
+-Add errors 8001, 13001,
 
 --------------------
 COMMIT 1/20/2023

@@ -1,4 +1,31 @@
 <?php 
+// / -----------------------------------------------------------------------------------
+// / APPLICATION INFORMATION ...
+// / HRConvert2, Copyright on 1/10/2023 by Justin Grimes, www.github.com/zelon88
+// /
+// / LICENSE INFORMATION ...
+// / This project is protected by the GNU GPLv3 Open-Source license.
+// / https://www.gnu.org/licenses/gpl-3.0.html
+// /
+// / APPLICATION INFORMATION ...
+// / This application is designed to provide a web-interface for converting file formats
+// / on a server for users of any web browser without authentication.
+// /
+// / FILE INFORMATION
+// / v3.1.7.
+// / This file contains language specific GUI elements for accepting file uploads.
+// /
+// / HARDWARE REQUIREMENTS ...
+// / This application requires at least a Raspberry Pi Model B+ or greater.
+// / This application will run on just about any x86 or x64 computer.
+// /
+// / DEPENDENCY REQUIREMENTS ...
+// / This application requires Debian Linux (w/3rd Party audio license),
+// / Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
+// / 7zipper, FFMPEG, PDFTOTEXT, Dia, PopplerUtils, MeshLab, Mkisofs & ImageMagick.
+// /
+// / <3 Open-Source
+// / -----------------------------------------------------------------------------------
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
 if (!isset($ApplicationTitle)) $ApplicationTitle = 'Converta Qualquer Coisa!'; 
 if (!isset($CoreLoaded)) die('ERRO!!! '.$ApplicationName.'-2, Este arquivo não pode processar sua solicitação! Por favor, envie seu arquivo para convertCore.php!');
@@ -22,7 +49,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         <div id="more-info" style="display:none;">
           <hr />
           <p>Todos os dados fornecidos pelo usuário são apagados automaticamente, para que você não precise se preocupar em perder suas informações pessoais ou propriedades ao usar nossos serviços.</p>
-          <p>Atualmente <?php echo $ApplicationName; ?> suporta 77 formatos de arquivo diferentes, incluindo documentos, planilhas, imagens, mídia, modelos tridimensionais, desenhos técnicos, arquivos vetoriais, arquivos, imagens de disco e muito mais.</p> 
+          <p>Atualmente <?php echo $ApplicationName; ?> suporta 79 formatos de arquivo diferentes, incluindo documentos, planilhas, imagens, mídia, modelos tridimensionais, desenhos técnicos, arquivos vetoriais, arquivos, imagens de disco e muito mais.</p> 
           <button id="supported-formats-show-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
             toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Ver Formatos Suportados...</i></button>
           <button id="supported-formats-hide-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
@@ -32,7 +59,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             <h3>Formatos Suportados</h3>
             <hr />
             <strong>Formatos de Áudio</strong>
-            <p><i>Suporta taxa de bits específica por meio da interface de programação do aplicativo.</i></p>
+            <p><i>Suporta taxa de bits específica.</i></p>
             <ol>
               <li>Mp2</li>
               <li>Mp3</li>
@@ -58,7 +85,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             </ol>
             <strong>Formatos de Transmissão</strong>
             <ol>
-              <li>m3u8</li>
+              <li>M3u8</li>
             </ol>
             <strong>Formatos de Documentos</strong>
             <ol>
@@ -89,62 +116,35 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Odp</li>
             </ol>
             <strong>Formatos de Arquivo</strong>
-              <p><i>Pode criar, converter e desarquivar qualquer um dos itens a seguir...</i></p>
+            <p><i>Pode converter entre formatos de arquivo e formatos de imagem de disco.</i></p>
             <ol>
               <li>Zip</li>
               <li>Rar</li>
               <li>Tar</li>
-              <li>Tar.Bz2</li>
               <li>7z</li>
-            </ol>
-            <strong>Formatos de Imagem de Disco</strong>
-            <p><i>Pode extrair qualquer um dos seguintes ou converter para formatos de arquivo suportados...</i></p>
-            <ol>
               <li>Iso</li>
-              <li>Vhd</li>
-              <li>Vdi</li>
             </ol>
             <strong>Formatos de Imagem</strong>
-            <p><i>Suporta redimensionamento e rotação através da interface gráfica do usuário e da interface de programação de aplicativos.</i></p>
-            <p><i>Suporta desabilitar a manutenção da proporção por meio da interface de programação de aplicativos.</i></p>
-            <p><i>As operações de conversão de imagem são compatíveis com os seguintes formatos de entrada...</i></p>
+            <p><i>Pode converter fotos de documentos em formatos de documento.</i></p>
+            <p><i>Suporta redimensionar e girar.</i></p>
             <ol>
               <li>Jpg</li>
               <li>Jpeg</li>
               <li>Png</li>
               <li>Bmp</li>
-              <li>Webp</li>
+              <li>Pdf</li>
               <li>Gif</li>
-              <li>Cin</li>
-              <li>Dds</li>
-              <li>Dib</li>
-              <li>Flif</li>
-              <li>Avif</li>
-              <li>Crw</li>
-              <li>Dcr</li>
-              <li>Gplt</li>
-              <li>Nef</li>
-              <li>Orf</li>
-              <li>Ora</li>
-              <li>Sct</li>
-              <li>Sfw</li>
-              <li>Xcf</li>
-              <li>Xwd</li>
-              <li>Avif</li>
-              <li>Ico</li>
-            </ol>   
-            <p><i>As operações de conversão de imagem são compatíveis com os seguintes formatos de saída...</i></p>
-            <ol>
-              <li>Jpg</li>
-              <li>Jpeg</li>
-              <li>Png</li>
-              <li>Bmp</li>
               <li>Webp</li>
               <li>Cin</li>
               <li>Dds</li>
               <li>Dib</li>
               <li>Flif</li>
               <li>Avif</li>
+              <li>Gplt</li>
+              <li>Sct</li>
+              <li>Xcf</li>
+              <li>Heic</li>
+              <li>Ico</li>
             </ol>
             <strong>Formatos de Modelos Tridimensionais</strong>
             <ol>
@@ -154,22 +154,24 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Off</li>
               <li>Ply</li>
               <li>Stl</li>
-              <li>Ptx</li>
+              <li>Gts</li>
               <li>Dxf</li>
               <li>U3d</li>
+              <li>X3d</li>
               <li>Vrml</li>
             </ol>
             <strong>Formatos de Desenho</strong>
-            <p><i>Pode produzir arquivos de desenho para formatos de imagem.</i></p>
-            <p><i>Pode converter entre qualquer um dos seguintes...</i></p>
+            <p><i>Pode converter arquivos de desenho em formatos de imagem.</i></p>
             <ol>
               <li>Svg</li>
               <li>Dxf</li>
               <li>Fig</li>
               <li>Vdx</li>
+              <li>Dia</li>
+              <li>Wpg</li>
             </ol>
             <strong>Suporte ao Reconhecimento Óptico de Caracteres</strong>
-            <p><i>As operações de reconhecimento óptico de caracteres suportam os seguintes formatos de entrada...</i></p>
+            <p><i>Optical Character Recognition Operations support the following input formats...</i></p>
             <ol>
               <li>Jpg</li>
               <li>Jpeg</li>

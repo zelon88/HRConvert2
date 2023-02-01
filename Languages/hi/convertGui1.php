@@ -1,4 +1,31 @@
 <?php 
+// / -----------------------------------------------------------------------------------
+// / APPLICATION INFORMATION ...
+// / HRConvert2, Copyright on 1/10/2023 by Justin Grimes, www.github.com/zelon88
+// /
+// / LICENSE INFORMATION ...
+// / This project is protected by the GNU GPLv3 Open-Source license.
+// / https://www.gnu.org/licenses/gpl-3.0.html
+// /
+// / APPLICATION INFORMATION ...
+// / This application is designed to provide a web-interface for converting file formats
+// / on a server for users of any web browser without authentication.
+// /
+// / FILE INFORMATION
+// / v3.1.7.
+// / This file contains language specific GUI elements for accepting file uploads.
+// /
+// / HARDWARE REQUIREMENTS ...
+// / This application requires at least a Raspberry Pi Model B+ or greater.
+// / This application will run on just about any x86 or x64 computer.
+// /
+// / DEPENDENCY REQUIREMENTS ...
+// / This application requires Debian Linux (w/3rd Party audio license),
+// / Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
+// / 7zipper, FFMPEG, PDFTOTEXT, Dia, PopplerUtils, MeshLab, Mkisofs & ImageMagick.
+// /
+// / <3 Open-Source
+// / -----------------------------------------------------------------------------------
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
 if (!isset($ApplicationTitle)) $ApplicationTitle = 'कुछ भी कनवर्ट करें!'; 
 if (!isset($CoreLoaded)) die('त्रुटि!!! '.$ApplicationName.'-2, यह फ़ाइल आपके अनुरोध को संसाधित नहीं कर सकती है! इसके बजाय कृपया अपनी फ़ाइल ConvertCore.php पर सबमिट करें!');
@@ -22,7 +49,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         <div id="more-info" style="display:none;">
           <hr />
           <p>सभी उपयोगकर्ता द्वारा प्रदत्त डेटा स्वचालित रूप से मिटा दिया जाता है, इसलिए आपको हमारी सेवाओं का उपयोग करते समय अपनी व्यक्तिगत जानकारी या संपत्ति को जब्त करने के बारे में चिंता करने की आवश्यकता नहीं है।</p>
-          <p><?php echo $ApplicationName; ?> 77 विभिन्न फ़ाइल स्वरूपों का समर्थन करता है, जिसमें दस्तावेज़, स्प्रेडशीट, चित्र, मीडिया, तीन आयामी मॉडल, ड्राइंग फ़ाइलें, वेक्टर फ़ाइलें, संग्रह, डिस्क चित्र, और बहुत कुछ शामिल हैं।</p> 
+          <p><?php echo $ApplicationName; ?> 79 विभिन्न फ़ाइल स्वरूपों का समर्थन करता है, जिसमें दस्तावेज़, स्प्रेडशीट, चित्र, मीडिया, तीन आयामी मॉडल, ड्राइंग फ़ाइलें, वेक्टर फ़ाइलें, संग्रह, डिस्क चित्र, और बहुत कुछ शामिल हैं।</p> 
           <button id="supported-formats-show-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
             toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>समर्थित प्रारूप देखें ...</i></button>
           <button id="supported-formats-hide-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
@@ -32,7 +59,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             <h3>समर्थित प्रारूप</h3>
             <hr />
             <strong>ऑडियो प्रारूप</strong>
-            <p><i>एपीआई के माध्यम से विशिष्ट बिटरेट का समर्थन करता है।</i></p>
+            <p><i>विशिष्ट बिटरेट का समर्थन करता है।</i></p>
             <ol>
               <li>Mp2</li>
               <li>Mp3</li>
@@ -58,7 +85,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             </ol>
             <strong>स्ट्रीम प्रारूप</strong>
             <ol>
-              <li>m3u8</li>
+              <li>M3u8</li>
             </ol>
             <strong>दस्तावेज़ प्रारूप</strong>
             <ol>
@@ -89,62 +116,35 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Odp</li>
             </ol>
             <strong>पुरालेख प्रारूप</strong>
-              <p><i>निम्न में से कोई भी बना, रूपांतरित और अचयनित कर सकता है...</i></p>
+            <p><i>संग्रह प्रारूपों और डिस्क छवि प्रारूपों के बीच परिवर्तित कर सकते हैं।</i></p>
             <ol>
               <li>Zip</li>
               <li>Rar</li>
               <li>Tar</li>
-              <li>Tar.Bz2</li>
               <li>7z</li>
-            </ol>
-            <strong>डिस्क छवि प्रारूप</strong>
-            <p><i>निम्न में से किसी को भी निकाल सकते हैं या समर्थित संग्रह प्रारूपों में परिवर्तित कर सकते हैं...</i></p>
-            <ol>
               <li>Iso</li>
-              <li>Vhd</li>
-              <li>Vdi</li>
             </ol>
             <strong>छवि प्रारूप</strong>
-            <p><i>जीयूआई और एपीआई के माध्यम से आकार बदलने और घुमाने का समर्थन करता है।</i></p>
-            <p><i>एपीआई के माध्यम से पहलू अनुपात को बनाए रखने में अक्षम का समर्थन करता है।</i></p>
-            <p><i>छवि रूपांतरण संचालन निम्नलिखित इनपुट स्वरूपों का समर्थन करता है...</i></p>
+            <p><i>दस्तावेज़ों की तस्वीरों को दस्तावेज़ स्वरूपों में परिवर्तित कर सकते हैं।</i></p>
+            <p><i>आकार बदलने और घुमाने का समर्थन करता है।</i></p>
             <ol>
               <li>Jpg</li>
               <li>Jpeg</li>
               <li>Png</li>
               <li>Bmp</li>
-              <li>Webp</li>
+              <li>Pdf</li>
               <li>Gif</li>
-              <li>Cin</li>
-              <li>Dds</li>
-              <li>Dib</li>
-              <li>Flif</li>
-              <li>Avif</li>
-              <li>Crw</li>
-              <li>Dcr</li>
-              <li>Gplt</li>
-              <li>Nef</li>
-              <li>Orf</li>
-              <li>Ora</li>
-              <li>Sct</li>
-              <li>Sfw</li>
-              <li>Xcf</li>
-              <li>Xwd</li>
-              <li>Avif</li>
-              <li>Ico</li>
-            </ol>   
-            <p><i>छवि रूपांतरण संचालन निम्नलिखित आउटपुट स्वरूपों का समर्थन करता है...</i></p>
-            <ol>
-              <li>Jpg</li>
-              <li>Jpeg</li>
-              <li>Png</li>
-              <li>Bmp</li>
               <li>Webp</li>
               <li>Cin</li>
               <li>Dds</li>
               <li>Dib</li>
               <li>Flif</li>
               <li>Avif</li>
+              <li>Gplt</li>
+              <li>Sct</li>
+              <li>Xcf</li>
+              <li>Heic</li>
+              <li>Ico</li>
             </ol>
             <strong>तीन आयामी मॉडल प्रारूप</strong>
             <ol>
@@ -154,22 +154,24 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Off</li>
               <li>Ply</li>
               <li>Stl</li>
-              <li>Ptx</li>
+              <li>Gts</li>
               <li>Dxf</li>
               <li>U3d</li>
+              <li>X3d</li>
               <li>Vrml</li>
             </ol>
             <strong>ड्राइंग प्रारूप</strong>
-            <p><i>छवि प्रारूपों में ड्राइंग फ़ाइलों को आउटपुट कर सकते हैं।</i></p>
-            <p><i>निम्नलिखित में से किसी के बीच कनवर्ट कर सकते हैं...</i></p>
+            <p><i>ड्राइंग फ़ाइलों को छवि प्रारूपों में परिवर्तित कर सकते हैं।</i></p>
             <ol>
               <li>Svg</li>
               <li>Dxf</li>
               <li>Fig</li>
               <li>Vdx</li>
+              <li>Dia</li>
+              <li>Wpg</li>
             </ol>
             <strong>ऑप्टिकल कैरेक्टर रिकग्निशन सपोर्ट</strong>
-            <p><i>ऑप्टिकल कैरेक्टर रिकग्निशन ऑपरेशंस निम्नलिखित इनपुट स्वरूपों का समर्थन करते हैं:...</i></p>
+            <p><i>ऑप्टिकल कैरेक्टर रिकग्निशन ऑपरेशंस निम्नलिखित इनपुट प्रारूपों का समर्थन करते हैं ...</i></p>
             <ol>
               <li>Jpg</li>
               <li>Jpeg</li>
@@ -178,7 +180,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Pdf</li>
               <li>Gif</li>
               </ol>
-            <p><i>ऑप्टिकल कैरेक्टर रिकग्निशन ऑपरेशंस निम्नलिखित आउटपुट स्वरूपों का समर्थन करते हैं:...</i></p>
+            <p><i>ऑप्टिकल कैरेक्टर रिकग्निशन ऑपरेशंस निम्न आउटपुट स्वरूपों का समर्थन करते हैं ...</i></p>
             <ol>
               <li>Doc</li>
               <li>Docx</li>

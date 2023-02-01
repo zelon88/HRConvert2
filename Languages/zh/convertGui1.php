@@ -1,4 +1,31 @@
 <?php 
+// / -----------------------------------------------------------------------------------
+// / APPLICATION INFORMATION ...
+// / HRConvert2, Copyright on 1/10/2023 by Justin Grimes, www.github.com/zelon88
+// /
+// / LICENSE INFORMATION ...
+// / This project is protected by the GNU GPLv3 Open-Source license.
+// / https://www.gnu.org/licenses/gpl-3.0.html
+// /
+// / APPLICATION INFORMATION ...
+// / This application is designed to provide a web-interface for converting file formats
+// / on a server for users of any web browser without authentication.
+// /
+// / FILE INFORMATION
+// / v3.1.7.
+// / This file contains language specific GUI elements for accepting file uploads.
+// /
+// / HARDWARE REQUIREMENTS ...
+// / This application requires at least a Raspberry Pi Model B+ or greater.
+// / This application will run on just about any x86 or x64 computer.
+// /
+// / DEPENDENCY REQUIREMENTS ...
+// / This application requires Debian Linux (w/3rd Party audio license),
+// / Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
+// / 7zipper, FFMPEG, PDFTOTEXT, Dia, PopplerUtils, MeshLab, Mkisofs & ImageMagick.
+// /
+// / <3 Open-Source
+// / -----------------------------------------------------------------------------------
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
 if (!isset($ApplicationTitle)) $ApplicationTitle = '转换任何东西！'; 
 if (!isset($CoreLoaded)) die('错误！！！ '.$ApplicationName.'-2, 此文件无法处理您的请求！ 请改为将您的文件提交到 convertCore.php！');
@@ -22,7 +49,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         <div id="more-info" style="display:none;">
           <hr />
           <p>所有用户提供的数据都会自动删除，因此您无需担心在使用我们的服务时会没收您的个人信息或财产。</p>
-          <p><?php echo $ApplicationName; ?> 支持 77 种不同的文件格式，包括文档、电子表格、图像、媒体、三维模型、矢量图、矢量文件、档案、磁盘图像等。</p> 
+          <p><?php echo $ApplicationName; ?> 支持 79 种不同的文件格式，包括文档、电子表格、图像、媒体、三维模型、矢量图、矢量文件、档案、磁盘图像等。</p> 
           <button id="supported-formats-show-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
             toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>查看支持的格式。。。</i></button>
           <button id="supported-formats-hide-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
@@ -32,7 +59,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             <h3>支持的格式</h3>
             <hr />
             <strong>音频格式</strong>
-            <p><i>通过应用程序接口支持特定比特率。</i></p>
+            <p><i>支持特定比特率。</i></p>
             <ol>
               <li>Mp2</li>
               <li>Mp3</li>
@@ -58,7 +85,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             </ol>
             <strong>流格式</strong>
             <ol>
-              <li>m3u8</li>
+              <li>M3u8</li>
             </ol>
             <strong>文件格式</strong>
             <ol>
@@ -89,62 +116,35 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Odp</li>
             </ol>
             <strong>存档格式</strong>
-              <p><i>可以创建、转换和取消归档以下任何内容。。。</i></p>
+            <p><i>可以在存档格式和磁盘映像格式之间转换。</i></p>
             <ol>
               <li>Zip</li>
               <li>Rar</li>
               <li>Tar</li>
-              <li>Tar.Bz2</li>
               <li>7z</li>
-            </ol>
-            <strong>磁盘映像格式</strong>
-            <p><i>可以提取以下任何内容或转换为支持的存档格式。。。</i></p>
-            <ol>
               <li>Iso</li>
-              <li>Vhd</li>
-              <li>Vdi</li>
             </ol>
-            <strong>图像格式</strong>
-            <p><i>支持通过图形用户界面和应用程序界面调整大小和旋转。</i></p>
-            <p><i>支持通过应用程序接口禁用保持纵横比。</i></p>
-            <p><i>图像转换操作支持以下输入格式。。。</i></p>
+            <strong>Image Formats</strong>
+            <p><i>可以将文档图片转换成文档格式。</i></p>
+            <p><i>支持调整大小和旋转。</i></p>
             <ol>
               <li>Jpg</li>
               <li>Jpeg</li>
               <li>Png</li>
               <li>Bmp</li>
-              <li>Webp</li>
+              <li>Pdf</li>
               <li>Gif</li>
-              <li>Cin</li>
-              <li>Dds</li>
-              <li>Dib</li>
-              <li>Flif</li>
-              <li>Avif</li>
-              <li>Crw</li>
-              <li>Dcr</li>
-              <li>Gplt</li>
-              <li>Nef</li>
-              <li>Orf</li>
-              <li>Ora</li>
-              <li>Sct</li>
-              <li>Sfw</li>
-              <li>Xcf</li>
-              <li>Xwd</li>
-              <li>Avif</li>
-              <li>Ico</li>
-            </ol>   
-            <p><i>图像转换操作支持以下输出格式。。。</i></p>
-            <ol>
-              <li>Jpg</li>
-              <li>Jpeg</li>
-              <li>Png</li>
-              <li>Bmp</li>
               <li>Webp</li>
               <li>Cin</li>
               <li>Dds</li>
               <li>Dib</li>
               <li>Flif</li>
               <li>Avif</li>
+              <li>Gplt</li>
+              <li>Sct</li>
+              <li>Xcf</li>
+              <li>Heic</li>
+              <li>Ico</li>
             </ol>
             <strong>三维模型格式</strong>
             <ol>
@@ -154,22 +154,24 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Off</li>
               <li>Ply</li>
               <li>Stl</li>
-              <li>Ptx</li>
+              <li>Gts</li>
               <li>Dxf</li>
               <li>U3d</li>
+              <li>X3d</li>
               <li>Vrml</li>
             </ol>
             <strong>绘图格式</strong>
-            <p><i>可以将绘图文件输出为图像格式。</i></p>
-            <p><i>可以在以下任何一种之间转换。。。</i></p>
+            <p><i>可以将绘图文件转换为图像格式。</i></p>
             <ol>
               <li>Svg</li>
               <li>Dxf</li>
               <li>Fig</li>
               <li>Vdx</li>
+              <li>Dia</li>
+              <li>Wpg</li>
             </ol>
             <strong>光学字符识别支持</strong>
-            <p><i>光学字符识别操作支持以下输入格式。。。</i></p>
+            <p><i>光学字符识别操作支持以下输入格式...</i></p>
             <ol>
               <li>Jpg</li>
               <li>Jpeg</li>
@@ -178,7 +180,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Pdf</li>
               <li>Gif</li>
               </ol>
-            <p><i>光学字符识别操作支持以下输出格式。。。</i></p>
+            <p><i>光学字符识别操作支持以下输出格式...</i></p>
             <ol>
               <li>Doc</li>
               <li>Docx</li>

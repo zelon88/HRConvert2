@@ -1,4 +1,31 @@
 <?php 
+// / -----------------------------------------------------------------------------------
+// / APPLICATION INFORMATION ...
+// / HRConvert2, Copyright on 1/10/2023 by Justin Grimes, www.github.com/zelon88
+// /
+// / LICENSE INFORMATION ...
+// / This project is protected by the GNU GPLv3 Open-Source license.
+// / https://www.gnu.org/licenses/gpl-3.0.html
+// /
+// / APPLICATION INFORMATION ...
+// / This application is designed to provide a web-interface for converting file formats
+// / on a server for users of any web browser without authentication.
+// /
+// / FILE INFORMATION
+// / v3.1.7.
+// / This file contains language specific GUI elements for accepting file uploads.
+// /
+// / HARDWARE REQUIREMENTS ...
+// / This application requires at least a Raspberry Pi Model B+ or greater.
+// / This application will run on just about any x86 or x64 computer.
+// /
+// / DEPENDENCY REQUIREMENTS ...
+// / This application requires Debian Linux (w/3rd Party audio license),
+// / Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
+// / 7zipper, FFMPEG, PDFTOTEXT, Dia, PopplerUtils, MeshLab, Mkisofs & ImageMagick.
+// /
+// / <3 Open-Source
+// / -----------------------------------------------------------------------------------
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
 if (!isset($ApplicationTitle)) $ApplicationTitle = 'কিছু রূপান্তর!'; 
 if (!isset($CoreLoaded)) die('ত্রুটি!!! '.$ApplicationName.'-2, এই ফাইলটি আপনার অনুরোধ প্রক্রিয়া করতে পারে না! পরিবর্তে convertCore.php এ আপনার ফাইল জমা দিন!');
@@ -22,7 +49,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         <div id="more-info" style="display:none;">
           <hr />
           <p>সমস্ত ব্যবহারকারীর সরবরাহকৃত ডেটা স্বয়ংক্রিয়ভাবে মুছে ফেলা হয়, তাই আমাদের পরিষেবাগুলি ব্যবহার করার সময় আপনার ব্যক্তিগত তথ্য বা সম্পত্তি বাজেয়াপ্ত করার বিষয়ে আপনাকে চিন্তা করতে হবে না।</p>
-          <p>বর্তমানে <?php echo $ApplicationName; ?> নথি, স্প্রেডশীট, ছবি, মিডিয়া, ত্রিমাত্রিক মডেল, অঙ্কন ফাইল, ভেক্টর ফাইল, সংরক্ষণাগার, ডিস্ক চিত্র এবং আরও অনেক কিছু সহ 77টি ভিন্ন ফাইল ফর্ম্যাট সমর্থন করে।</p> 
+          <p>বর্তমানে <?php echo $ApplicationName; ?> নথি, স্প্রেডশীট, ছবি, মিডিয়া, ত্রিমাত্রিক মডেল, অঙ্কন ফাইল, ভেক্টর ফাইল, সংরক্ষণাগার, ডিস্ক চিত্র এবং আরও অনেক কিছু সহ 79টি ভিন্ন ফাইল ফর্ম্যাট সমর্থন করে।</p> 
           <button id="supported-formats-show-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
             toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>সমর্থিত ফরম্যাট দেখুন ...</i></button>
           <button id="supported-formats-hide-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
@@ -32,7 +59,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             <h3>সমর্থিত ফরম্যাট</h3>
             <hr />
             <strong>অডিও ফরম্যাট</strong>
-            <p><i>অ্যাপ্লিকেশন প্রোগ্রামিং ইন্টারফেসের মাধ্যমে নির্দিষ্ট বিটরেট সমর্থন করে।</i></p>
+            <p><i>নির্দিষ্ট বিটরেট সমর্থন করে।</i></p>
             <ol>
               <li>Mp2</li>
               <li>Mp3</li>
@@ -58,7 +85,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             </ol>
             <strong>স্ট্রিম বিন্যাস</strong>
             <ol>
-              <li>m3u8</li>
+              <li>M3u8</li>
             </ol>
             <strong>নথি বিন্যাস</strong>
             <ol>
@@ -89,64 +116,37 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Odp</li>
             </ol>
             <strong>সংরক্ষণাগার বিন্যাস</strong>
-              <p><i>নিম্নলিখিত যেকোনও তৈরি, রূপান্তর এবং ডিআর্কাইভ করতে পারে...</i></p>
+            <p><i>সংরক্ষণাগার বিন্যাস এবং ডিস্ক চিত্র বিন্যাস মধ্যে রূপান্তর করতে পারেন.</i></p>
             <ol>
               <li>Zip</li>
               <li>Rar</li>
               <li>Tar</li>
-              <li>Tar.Bz2</li>
               <li>7z</li>
-            </ol>
-            <strong>ডিস্ক ইমেজ ফরম্যাটs</strong>
-            <p><i>নিম্নলিখিত যেকোনও এক্সট্র্যাক্ট করতে পারে বা সমর্থিত আর্কাইভ ফরম্যাটে রূপান্তর করতে পারে...</i></p>
-            <ol>
               <li>Iso</li>
-              <li>Vhd</li>
-              <li>Vdi</li>
             </ol>
-            <strong>Image Formats</strong>
-            <p><i>গ্রাফিকাল ইউজার ইন্টারফেস এবং অ্যাপ্লিকেশন প্রোগ্রামিং ইন্টারফেসের মাধ্যমে আকার পরিবর্তন এবং ঘোরানো সমর্থন করে।</i></p>
-            <p><i>অ্যাপ্লিকেশন প্রোগ্রামিং ইন্টারফেসের মাধ্যমে দৃষ্টিভঙ্গি অনুপাত বজায় রাখা নিষ্ক্রিয় সমর্থন করে।</i></p>
-            <p><i>চিত্র রূপান্তর অপারেশন নিম্নলিখিত ইনপুট বিন্যাস সমর্থন করে...</i></p>
+            <strong>ইমেজ ফরম্যাট</strong>
+            <p><i>নথির ছবি নথি বিন্যাসে রূপান্তর করতে পারেন.</i></p>
+            <p><i>আকার পরিবর্তন এবং ঘোরানো সমর্থন করে।</i></p>
             <ol>
               <li>Jpg</li>
               <li>Jpeg</li>
               <li>Png</li>
               <li>Bmp</li>
-              <li>Webp</li>
+              <li>Pdf</li>
               <li>Gif</li>
-              <li>Cin</li>
-              <li>Dds</li>
-              <li>Dib</li>
-              <li>Flif</li>
-              <li>Avif</li>
-              <li>Crw</li>
-              <li>Dcr</li>
-              <li>Gplt</li>
-              <li>Nef</li>
-              <li>Orf</li>
-              <li>Ora</li>
-              <li>Sct</li>
-              <li>Sfw</li>
-              <li>Xcf</li>
-              <li>Xwd</li>
-              <li>Avif</li>
-              <li>Ico</li>
-            </ol>   
-            <p><i>চিত্র রূপান্তর অপারেশন নিম্নলিখিত আউটপুট বিন্যাস সমর্থন করে...</i></p>
-            <ol>
-              <li>Jpg</li>
-              <li>Jpeg</li>
-              <li>Png</li>
-              <li>Bmp</li>
               <li>Webp</li>
               <li>Cin</li>
               <li>Dds</li>
               <li>Dib</li>
               <li>Flif</li>
               <li>Avif</li>
+              <li>Gplt</li>
+              <li>Sct</li>
+              <li>Xcf</li>
+              <li>Heic</li>
+              <li>Ico</li>
             </ol>
-            <strong>থ্রি ডাইমেনশনাল মডেল ফরম্যাট</strong>
+            <strong>মডেল ফরম্যাট</strong>
             <ol>
               <li>3ds</li>
               <li>Obj</li>
@@ -154,22 +154,24 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Off</li>
               <li>Ply</li>
               <li>Stl</li>
-              <li>Ptx</li>
+              <li>Gts</li>
               <li>Dxf</li>
               <li>U3d</li>
+              <li>X3d</li>
               <li>Vrml</li>
             </ol>
             <strong>অঙ্কন বিন্যাস</strong>
-            <p><i>ছবি বিন্যাসে অঙ্কন ফাইল আউটপুট করতে পারেন.</i></p>
-            <p><i>নিচের যে কোনোটির মধ্যে কনভার্ট করতে পারেন...</i></p>
+            <p><i>অঙ্কন ফাইলগুলিকে ইমেজ ফরম্যাটে রূপান্তর করতে পারে।</i></p>
             <ol>
               <li>Svg</li>
               <li>Dxf</li>
               <li>Fig</li>
               <li>Vdx</li>
+              <li>Dia</li>
+              <li>Wpg</li>
             </ol>
-            <strong>ওসিআর সমর্থন</strong>
-            <p><i>অপটিক্যাল ক্যারেক্টার রিকগনিশন অপারেশন নিম্নলিখিত ইনপুট ফরম্যাট সমর্থন করে...</i></p>
+            <strong>অপটিক্যাল ক্যারেক্টার রিকগনিশন সাপোর্ট</strong>
+            <p><i>অপটিক্যাল ক্যারেক্টার রিকগনিশন অপারেশন নিম্নলিখিত ইনপুট ফর্ম্যাটগুলিকে সমর্থন করে...</i></p>
             <ol>
               <li>Jpg</li>
               <li>Jpeg</li>
@@ -178,7 +180,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Pdf</li>
               <li>Gif</li>
               </ol>
-            <p><i>অপটিক্যাল ক্যারেক্টার রিকগনিশন অপারেশন নিম্নলিখিত আউটপুট ফরম্যাট সমর্থন করে...</i></p>
+            <p><i>অপটিক্যাল ক্যারেক্টার রিকগনিশন অপারেশন নিম্নলিখিত আউটপুট ফর্ম্যাটগুলিকে সমর্থন করে...</i></p>
             <ol>
               <li>Doc</li>
               <li>Docx</li>

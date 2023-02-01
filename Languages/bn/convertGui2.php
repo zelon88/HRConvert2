@@ -1,4 +1,31 @@
 <?php
+// / -----------------------------------------------------------------------------------
+// / APPLICATION INFORMATION ...
+// / HRConvert2, Copyright on 1/10/2023 by Justin Grimes, www.github.com/zelon88
+// /
+// / LICENSE INFORMATION ...
+// / This project is protected by the GNU GPLv3 Open-Source license.
+// / https://www.gnu.org/licenses/gpl-3.0.html
+// /
+// / APPLICATION INFORMATION ...
+// / This application is designed to provide a web-interface for converting file formats
+// / on a server for users of any web browser without authentication.
+// /
+// / FILE INFORMATION
+// / v3.1.7.
+// / This file contains language specific GUI elements for performing file conversions.
+// /
+// / HARDWARE REQUIREMENTS ...
+// / This application requires at least a Raspberry Pi Model B+ or greater.
+// / This application will run on just about any x86 or x64 computer.
+// /
+// / DEPENDENCY REQUIREMENTS ...
+// / This application requires Debian Linux (w/3rd Party audio license),
+// / Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
+// / 7zipper, FFMPEG, PDFTOTEXT, Dia, PopplerUtils, MeshLab, Mkisofs & ImageMagick.
+// /
+// / <3 Open-Source
+// / -----------------------------------------------------------------------------------
 $Alert = 'এই ফাইলটি রূপান্তর করা যাবে না! নাম পরিবর্তন করার চেষ্টা করুন।';
 $Alert1 = 'এই ফাইলে ভাইরাস স্ক্যান করা যাবে না!';
 $Alert2 = 'ফাইল লিঙ্ক ক্লিপবোর্ডে অনুলিপি করা হয়েছে!';
@@ -15,18 +42,13 @@ if ($FileCount === 2) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ 2ট
 if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$FileCount.'টি বৈধ ফাইল আপলোড করেছেন।';
 ?>
   <body>
-    <script type="text/javascript" src="Resources/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="Resources/jquery-3.6.3.min.js"></script>
     <div id="header-text" style="max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;">
       <?php if (!isset($_GET['noGui'])) { ?><h1><?php echo $ApplicationName; ?></h1>
       <hr /><?php } ?>
       <h3>ফাইল রূপান্তর বিকল্প</h3>
       <p><?php echo $FCPlural1; ?></p> 
       <p>আপনার ফাইলগুলি এখন নীচের বিকল্পগুলি ব্যবহার করে রূপান্তর করার জন্য প্রস্তুত৷</p>
-    </div>
-
-    <div id='utility' align="center">
-      <p><img id='loadingCommandDiv' name='loadingCommandDiv' src='<?php echo $PacmanLoc; ?>' style="max-width:64px; max-height:64px; display:none;"/></p>
-      <a id='downloadTarget' href='about:blank' style="display: none;" download></a>
     </div>
 
     <div id="compressAll" name="compressAll" style="max-width:1000px; margin-left: auto; margin-right: auto; text-align:center;">
@@ -53,7 +75,7 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
             if($("input#clamscanall").is(":checked") && $("input#scancoreall").is(":checked")) {
               var scanType = 'all'; }
             $.ajax({
-              type: "POST",
+              type: 'POST',
               url: 'convertCore.php',
               data: {
                 Token1:'<?php echo $Token1; ?>',
@@ -83,6 +105,7 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
           <option value="zip">বিন্যাস</option>
           <option value="zip">Zip</option>
           <option value="rar">Rar</option>
+          <option value="iso">Iso</option>
           <option value="tar">Tar</option>
           <option value="7z">7z</option>
         </select>
@@ -94,7 +117,7 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
             if (extension === "") { 
               extension = 'zip'; } 
             $.ajax({
-              type: "POST",
+              type: 'POST',
               url: 'convertCore.php',
               data: {
                 Token1:'<?php echo $Token1; ?>',
@@ -121,6 +144,10 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
         <hr style='width: 50%;' />
       </div>
     </div>
+    <div id='utilityupper' align="center">
+      <p><img id='loadingCommandDiv' name='loadingCommandDiv' src='<?php echo $PacmanLoc; ?>' style="max-width:64px; max-height:64px; display:none;"/></p>
+      <a id='downloadTarget' href='about:blank' style="display: none;" download></a>
+    </div>
     <br />
     <div style="max-width:1000px; margin-left:auto; margin-right:auto;">
       <hr />
@@ -137,7 +164,7 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
         <p href=""><strong><?php echo $ConvertGuiCounter1; ?>.</strong> <u><?php echo $File; ?></u></p>    
         <div id="buttonDiv<?php echo $ConvertGuiCounter1; ?>" name="buttonDiv<?php echo $ConvertGuiCounter1; ?>" style="height:25px;">
           
-          <img id="downloadfilebutton<?php echo $ConvertGuiCounter1; ?>" name="downloadfilebutton<?php echo $ConvertGuiCounter1; ?>" src="Resources/download.png" style="float:left; display:block;" onclick="toggle_visibility('loadingCommandDiv');"/>
+          <img id="downloadfilebutton<?php echo $ConvertGuiCounter1; ?>" name="downloadfilebutton<?php echo $ConvertGuiCounter1; ?>" src="Resources/download.png" style="float:left; display:block;" onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');"/>
           <script type="text/javascript">
           $(document).ready(function () {
             $('#downloadfilebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -149,7 +176,7 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
                 Token2:'<?php echo $Token2; ?>',
                 download:'<?php echo $File; ?>' },
               success: function(returnFile) {
-                toggle_visibility('loadingCommandDiv');
+                toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                 document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'.$File; ?>"; 
                 document.getElementById('downloadTarget').click(); },
               error: function(ReturnData) {
@@ -237,7 +264,7 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
           if (in_array($extension, $MediaArray)) { ?>
           <a style="float:left;">&nbsp;|&nbsp;</a>
 
-          <img id="mediaButton<?php echo $ConvertGuiCounter1; ?>" name="mediaButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/stream.png" style="float:left; display:block;" 
+          <img id="mediaButton<?php echo $ConvertGuiCounter1; ?>" name="mediaButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/media.png" style="float:left; display:block;" 
            onclick="toggle_visibility('audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('mediaButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('mediaXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <img id="mediaXButton<?php echo $ConvertGuiCounter1; ?>" name="mediaXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:left; display:none;" 
            onclick="toggle_visibility('audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('mediaButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('mediaXButton<?php echo $ConvertGuiCounter1; ?>');"/>
@@ -246,13 +273,13 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
           if (in_array($extension, $VideoArray)) { ?>
           <a style="float:left;">&nbsp;|&nbsp;</a>
 
-          <img id="videoButton<?php echo $ConvertGuiCounter1; ?>" name="videoButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/stream.png" style="float:left; display:block;" 
+          <img id="videoButton<?php echo $ConvertGuiCounter1; ?>" name="videoButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/video.png" style="float:left; display:block;" 
            onclick="toggle_visibility('videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <img id="videoXButton<?php echo $ConvertGuiCounter1; ?>" name="videoXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:left; display:none;" 
            onclick="toggle_visibility('videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php } 
 
-          if (in_array($extension, $StreamArray)) { ?>
+          if (in_array($extension, $StreamArray) && $AllowStreams) { ?>
           <a style="float:left;">&nbsp;|&nbsp;</a>
 
           <img id="streamButton<?php echo $ConvertGuiCounter1; ?>" name="streamButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/stream.png" style="float:left; display:block;" 
@@ -288,15 +315,16 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
             <option value="zip">বিন্যাস</option>
             <option value="zip">Zip</option>
             <option value="rar">Rar</option>
+            <option value="iso">Iso</option>
             <option value="tar">Tar</option>
             <option value="7z">7z</option>
           </select></p>
-          <input type="submit" id="archfileSubmit<?php echo $ConvertGuiCounter1; ?>" name="archfileSubmit<?php echo $ConvertGuiCounter1; ?>" value='সংরক্ষণাগার ফাইল' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="archfileSubmit<?php echo $ConvertGuiCounter1; ?>" name="archfileSubmit<?php echo $ConvertGuiCounter1; ?>" value='সংরক্ষণাগার ফাইল' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#archfileSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -314,7 +342,7 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('userarchfilefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archfileextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userarchfilefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archfileextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
@@ -330,8 +358,8 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
           <p id='shareclipStatus<?php echo $ConvertGuiCounter1; ?>' name='shareclipStatus<?php echo $ConvertGuiCounter1; ?>'>ক্লিপবোর্ড স্থিতি: <i>কপি করা হয়নি</i></p>
           <p id='sharelinkURL<?php echo $ConvertGuiCounter1; ?>' name='sharelinkURL<?php echo $ConvertGuiCounter1; ?>'>ফাইল লিঙ্ক: <i>তৈরি হয়নি</i></p>
 
-          <input type="submit" id="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" name="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" value='লিঙ্ক তৈরি করুন এবং ক্লিপবোর্ডে অনুলিপি করুন' onclick="toggle_visibility('loadingCommandDiv');">
-          <input type="submit" id="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" name="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" value='লিংক তৈরি করুন' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" name="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" value='লিঙ্ক তৈরি করুন এবং ক্লিপবোর্ডে অনুলিপি করুন' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" name="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" value='লিংক তৈরি করুন' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
 
           <script type="text/javascript">
           $(document).ready(function () {
@@ -344,7 +372,7 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
                 Token2:'<?php echo $Token2; ?>',
                 download:'<?php echo $File; ?>' },
               success: function(returnFile) {
-                toggle_visibility('loadingCommandDiv');
+                toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                 document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = 'লিঙ্ক স্থিতি: <i>উৎপন্ন</i>';
                 document.getElementById('shareclipStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = 'ক্লিপবোর্ড স্থিতি: <i>কপি করা হয়েছে</i>';
                 document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = 'ফাইল লিঙ্ক: <i><?php echo $FullURL.'/DATA/'.$SesHash3.'/'.$File; ?></i>';
@@ -361,7 +389,7 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
                 Token2:'<?php echo $Token2; ?>',
                 download:'<?php echo $File; ?>' },
               success: function(returnFile) {
-                toggle_visibility('loadingCommandDiv');
+                toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                 document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = 'লিঙ্ক স্থিতি: <i>উৎপন্ন</i>';
                 document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = 'ফাইল লিঙ্ক: <i><?php echo $FullURL.'/DATA/'.$SesHash3.'/'.$File; ?></i>'; },
               error: function(ReturnData) {
@@ -374,14 +402,14 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
         <div id='scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong>ভাইরাসের জন্য এই ফাইলটি স্ক্যান করুন</strong></p>
-          <input type="submit" id="scancorebutton<?php echo $ConvertGuiCounter1; ?>" name="scancorebutton<?php echo $ConvertGuiCounter1; ?>" value='ScanCore দিয়ে ফাইল স্ক্যান করুন' onclick="toggle_visibility('loadingCommandDiv');">
-          <input type="submit" id="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" name="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" value='ClamAV দিয়ে ফাইল স্ক্যান করুন' onclick="toggle_visibility('loadingCommandDiv');">
-          <input type="submit" id="scanallbutton<?php echo $ConvertGuiCounter1; ?>" name="scanallbutton<?php echo $ConvertGuiCounter1; ?>" value='ScanCore এবং ClamAV দিয়ে ফাইল স্ক্যান করুন' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="scancorebutton<?php echo $ConvertGuiCounter1; ?>" name="scancorebutton<?php echo $ConvertGuiCounter1; ?>" value='ScanCore দিয়ে ফাইল স্ক্যান করুন' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" name="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" value='ClamAV দিয়ে ফাইল স্ক্যান করুন' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="scanallbutton<?php echo $ConvertGuiCounter1; ?>" name="scanallbutton<?php echo $ConvertGuiCounter1; ?>" value='ScanCore এবং ClamAV দিয়ে ফাইল স্ক্যান করুন' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#scancorebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -397,14 +425,14 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
                       Token2:'<?php echo $Token2; ?>',
                       download:'<?php echo $ConsolidatedLogFileName; ?>' },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'.$ConsolidatedLogFileName; ?>"; 
                       document.getElementById('downloadTarget').click(); } }); },
                   error: function(ReturnData) {
                     alert("<?php echo $Alert1; ?>"); } }); });
             $('#clamscanbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -420,14 +448,14 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
                       Token2:'<?php echo $Token2; ?>',
                       download:'<?php echo $ConsolidatedLogFileName; ?>' },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'.$ConsolidatedLogFileName; ?>"; 
                       document.getElementById('downloadTarget').click(); } }); },
                   error: function(ReturnData) {
                     alert("<?php echo $Alert1; ?>"); } }); });
             $('#scanallbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -443,7 +471,7 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
                       Token2:'<?php echo $Token2; ?>',
                       download:'<?php echo $ConsolidatedLogFileName; ?>' },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'.$ConsolidatedLogFileName; ?>"; 
                       document.getElementById('downloadTarget').click(); } }); },
                   error: function(ReturnData) {
@@ -472,12 +500,12 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
             <option value="txt">Txt</option>
             <option value="odt">Odt</option>
           </select></p>
-          <p><input type="submit" id='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' name='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' value='নথিতে রূপান্তর করুন' onclick="toggle_visibility('loadingCommandDiv');"></p>
+          <p><input type="submit" id='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' name='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' value='নথিতে রূপান্তর করুন' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');"></p>
           <script type="text/javascript">
           $(document).ready(function () {
             $('#pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -495,7 +523,7 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('userpdffilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('pdfextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userpdffilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('pdfextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
@@ -515,14 +543,15 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
             <option value="zip">Zip</option>
             <option value="rar">Rar</option>
             <option value="tar">Tar</option>
+            <option value="iso">Iso</option>
             <option value="7z">7z</option>
           </select></p>
-          <input type="submit" id="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='সংরক্ষণাগার ফাইল' onclick="toggle_visibility('loadingCommandDiv'); display:none;">
+          <input type="submit" id="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='সংরক্ষণাগার ফাইল' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>'); display:none;">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -539,7 +568,7 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('userarchivefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archiveextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userarchivefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archiveextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
@@ -563,12 +592,12 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
             <option value="odt">Odt</option>
             <option value="pdf">Pdf</option>
           </select></p>
-          <input type="submit" id="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='এই নথিটি রূপান্তর করুন' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='এই নথিটি রূপান্তর করুন' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#docconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -585,7 +614,7 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('userdocfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('docextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userdocfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('docextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
@@ -607,12 +636,12 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
             <option value="ods">Ods</option>
             <option value="pdf">Pdf</option>
           </select></p>
-          <input type="submit" id="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='স্প্রেডশীট রূপান্তর করুন' onclick="toggle_visibility('loadingCommandDiv');">        
+          <input type="submit" id="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='স্প্রেডশীট রূপান্তর করুন' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">        
           <script type="text/javascript">
           $(document).ready(function () {
             $('#spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -629,7 +658,7 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('userspreadfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('spreadextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userspreadfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('spreadextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); }
                     }); },
@@ -656,12 +685,12 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
             <option value="ppa">Ppa</option>
             <option value="odp">Odp</option>
           </select></p>
-          <input type="submit" id="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='উপস্থাপনা রূপান্তর' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='উপস্থাপনা রূপান্তর' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -678,7 +707,7 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('userpresentationfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('presentationextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userspreadfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('presentationextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
@@ -702,12 +731,12 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
             <option value="flac">Flac</option>
             <option value="ogg">Ogg</option>
           </select></p>
-          <input type="submit" id="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='অডিও রূপান্তর করুন' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='অডিও রূপান্তর করুন' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -724,7 +753,7 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('useraudiofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('audioextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('useraudiofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('audioextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
@@ -750,12 +779,12 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
             <option value="wmv">Wmv</option>
             <option value="mov">Mov</option>
           </select></p>
-          <input type="submit" id="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='ভিডিও রূপান্তর' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='ভিডিও রূপান্তর' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -772,7 +801,7 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('uservideofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('videoextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('uservideofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('videoextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
@@ -781,7 +810,7 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
         </div>
         <?php } 
 
-        if (in_array($extension, $StreamArray)) {
+        if (in_array($extension, $StreamArray) && $AllowStreams) {
         ?>
         <div id='streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
@@ -798,12 +827,12 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
             <option value="wmv">Wmv</option>
             <option value="mov">Mov</option>
           </select></p>
-          <input type="submit" id="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='স্ট্রিম রূপান্তর করুন' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='স্ট্রিম রূপান্তর করুন' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -820,7 +849,7 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('userstreamfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('streamextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userstreamfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('streamextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
@@ -843,17 +872,18 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
             <option value="off">Off</option>
             <option value="ply">Ply</option>
             <option value="stl">Stl</option>
-            <option value="ptx">Ptx</option>
+            <option value="gts">Gts</option>
             <option value="dxf">Dxf</option>
             <option value="u3d">U3d</option>
+            <option value="x3d">X3d</option>
             <option value="vrml">Vrml</option>
           </select></p>
-          <input type="submit" id="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='রূপান্তর মডেল' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='রূপান্তর মডেল' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -870,7 +900,7 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('usermodelfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('modelextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('usermodelfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('modelextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
@@ -891,17 +921,16 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
             <option value="dxf">Dxf</option>
             <option value="vdx">Vdx</option>
             <option value="fig">Fig</option>
-            <option value="jpg">Jpg</option>
             <option value="png">Png</option>
-            <option value="bmp">Bmp</option>
-            <option value="pdf">Pdf</option>
+            <option value="dia">Dia</option>
+            <option value="wpg">Wpg</option>
           </select></p>
-          <input type="submit" id="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='অঙ্কন রূপান্তর' onclick="toggle_visibility('loadingCommandDiv');">     
+          <input type="submit" id="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='অঙ্কন রূপান্তর' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">     
           <script type="text/javascript">
           $(document).ready(function () {
             $('#drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -918,7 +947,7 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('drawingfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('drawingextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userdrawingfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('drawingextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
@@ -937,6 +966,8 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
             <option value="jpg">বিন্যাস</option>
             <option value="jpg">Jpg</option>
             <option value="bmp">Bmp</option>
+            <option value="pdf">Pdf</option>
+            <option value="gif">Gif</option>
             <option value="webp">Webp</option>
             <option value="png">Png</option>
             <option value="cin">Cin</option>
@@ -944,16 +975,21 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
             <option value="dib">Dib</option>
             <option value="flif">Flif</option>
             <option value="avif">Avif</option>
+            <option value="gplt">Gplt</option>
+            <option value="sct">Sct</option>
+            <option value="xcf">Xcf</option>
+            <option value="ico">Ico</option>
+            <option value="heic">Heic</option>
           </select></p>
           <p>প্রস্থ এবং উচ্চতা: </p>
           <p><input type="number" size="4" value="0" id='width<?php echo $ConvertGuiCounter1; ?>' name='width<?php echo $ConvertGuiCounter1; ?>' min="0" max="10000"> X <input type="number" size="4" value="0" id="height<?php echo $ConvertGuiCounter1; ?>" name="height<?php echo $ConvertGuiCounter1; ?>" min="0"  max="10000"></p> 
           <p>আবর্তিত: <input type="number" size="3" id='rotate<?php echo $ConvertGuiCounter1; ?>' name='rotate<?php echo $ConvertGuiCounter1; ?>' value="0" min="0" max="359"></p>
-          <input type="submit" id='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' name='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' value='ছবি রূপান্তর করুন' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' name='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' value='ছবি রূপান্তর করুন' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -973,13 +1009,16 @@ if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.'-2 এ '.$Fi
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('userphotofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('photoextension<?php echo $ConvertGuiCounter1; ?>').value },
                     success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userphotofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('photoextension<?php echo $ConvertGuiCounter1; ?>').value; 
                       document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
                       alert("<?php echo $Alert; ?>"); } }); }); });
           </script>
         <?php } ?>
+      </div>
+      <div id='utilitylower'>
+        <p><img id='loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>' name='loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $PacmanLoc; ?>' style="max-width:24px; max-height:24px; display:none;"/></p>
       </div>
       <hr />
       <?php } ?>

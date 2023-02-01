@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION
-// / v3.1.3
+// / v3.1.7
 // / This file contains language specific GUI elements for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -52,11 +52,6 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
       <h3>خيارات تحويل الملف</h3>
       <p><?php echo $FCPlural1; ?></p> 
       <p>ملفاتك جاهزة الآن للتحويل باستخدام الخيارات أدناه.</p>
-    </div>
-
-    <div id='utilityupper' align="center">
-      <p><img id='loadingCommandDiv' name='loadingCommandDiv' src='<?php echo $PacmanLoc; ?>' style="max-width:64px; max-height:64px; display:none;"/></p>
-      <a id='downloadTarget' href='about:blank' style="display: none;" download></a>
     </div>
 
     <div id="compressAll" name="compressAll" style="max-width:1000px; margin-left: auto; margin-right: auto; text-align:center;">
@@ -152,6 +147,10 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
         <hr style='width: 50%;' />
       </div>
     </div>
+    <div id='utilityupper' align="center">
+      <p><img id='loadingCommandDiv' name='loadingCommandDiv' src='<?php echo $PacmanLoc; ?>' style="max-width:64px; max-height:64px; display:none;"/></p>
+      <a id='downloadTarget' href='about:blank' style="display: none;" download></a>
+    </div>
     <br />
     <div style="max-width:1000px; margin-left:auto; margin-right:auto;">
       <hr />
@@ -168,7 +167,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
         <p href=""><strong><?php echo $ConvertGuiCounter1; ?>.</strong> <u><?php echo $File; ?></u></p>    
         <div id="buttonDiv<?php echo $ConvertGuiCounter1; ?>" name="buttonDiv<?php echo $ConvertGuiCounter1; ?>" style="height:25px;">
           
-          <img id="downloadfilebutton<?php echo $ConvertGuiCounter1; ?>" name="downloadfilebutton<?php echo $ConvertGuiCounter1; ?>" src="Resources/download.png" style="float:right; display:block;" onclick="toggle_visibility('loadingCommandDiv');"/>
+          <img id="downloadfilebutton<?php echo $ConvertGuiCounter1; ?>" name="downloadfilebutton<?php echo $ConvertGuiCounter1; ?>" src="Resources/download.png" style="float:right; display:block;" onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');"/>
           <script type="text/javascript">
           $(document).ready(function () {
             $('#downloadfilebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -180,7 +179,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
                 Token2:'<?php echo $Token2; ?>',
                 download:'<?php echo $File; ?>' },
               success: function(returnFile) {
-                toggle_visibility('loadingCommandDiv');
+                toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                 document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'.$File; ?>"; 
                 document.getElementById('downloadTarget').click(); },
               error: function(ReturnData) {
@@ -268,7 +267,7 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
           if (in_array($extension, $MediaArray)) { ?>
           <a style="float:right;">&nbsp;|&nbsp;</a>
 
-          <img id="mediaButton<?php echo $ConvertGuiCounter1; ?>" name="mediaButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/stream.png" style="float:right; display:block;" 
+          <img id="mediaButton<?php echo $ConvertGuiCounter1; ?>" name="mediaButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/video.png" style="float:right; display:block;" 
            onclick="toggle_visibility('audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('mediaButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('mediaXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <img id="mediaXButton<?php echo $ConvertGuiCounter1; ?>" name="mediaXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:right; display:none;" 
            onclick="toggle_visibility('audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('mediaButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('mediaXButton<?php echo $ConvertGuiCounter1; ?>');"/>
@@ -406,9 +405,9 @@ if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' �
         <div id='scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong>افحص هذا الملف بحثًا عن الفيروسات</strong></p>
-          <input type="submit" id="scancorebutton<?php echo $ConvertGuiCounter1; ?>" name="scancorebutton<?php echo $ConvertGuiCounter1; ?>" value='مسح الملف باستخدام ScanCore' onclick="toggle_visibility('loadingCommandDiv');">
-          <input type="submit" id="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" name="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" value='مسح الملف باستخدام ClamAV' onclick="toggle_visibility('loadingCommandDiv');">
-          <input type="submit" id="scanallbutton<?php echo $ConvertGuiCounter1; ?>" name="scanallbutton<?php echo $ConvertGuiCounter1; ?>" value='مسح الملف باستخدام ScanCore و ClamAV' onclick="toggle_visibility('loadingCommandDiv');">
+          <input type="submit" id="scancorebutton<?php echo $ConvertGuiCounter1; ?>" name="scancorebutton<?php echo $ConvertGuiCounter1; ?>" value='مسح الملف باستخدام ScanCore' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" name="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" value='مسح الملف باستخدام ClamAV' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="scanallbutton<?php echo $ConvertGuiCounter1; ?>" name="scanallbutton<?php echo $ConvertGuiCounter1; ?>" value='مسح الملف باستخدام ScanCore و ClamAV' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#scancorebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {

@@ -1,4 +1,31 @@
 <?php
+// / -----------------------------------------------------------------------------------
+// / APPLICATION INFORMATION ...
+// / HRConvert2, Copyright on 1/10/2023 by Justin Grimes, www.github.com/zelon88
+// /
+// / LICENSE INFORMATION ...
+// / This project is protected by the GNU GPLv3 Open-Source license.
+// / https://www.gnu.org/licenses/gpl-3.0.html
+// /
+// / APPLICATION INFORMATION ...
+// / This application is designed to provide a web-interface for converting file formats
+// / on a server for users of any web browser without authentication.
+// /
+// / FILE INFORMATION
+// / v3.1.7.
+// / This file contains language specific GUI elements for performing file conversions.
+// /
+// / HARDWARE REQUIREMENTS ...
+// / This application requires at least a Raspberry Pi Model B+ or greater.
+// / This application will run on just about any x86 or x64 computer.
+// /
+// / DEPENDENCY REQUIREMENTS ...
+// / This application requires Debian Linux (w/3rd Party audio license),
+// / Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
+// / 7zipper, FFMPEG, PDFTOTEXT, Dia, PopplerUtils, MeshLab, Mkisofs & ImageMagick.
+// /
+// / <3 Open-Source
+// / -----------------------------------------------------------------------------------
 $Alert = '¡No se puede convertir este archivo! Prueba a cambiar el nombre.';
 $Alert1 = '¡No se puede realizar un análisis de virus en este archivo!';
 $Alert2 = '¡Enlace de archivo copiado al portapapeles!';
@@ -15,18 +42,13 @@ if (!isset($CoreLoaded)) die('¡¡¡ERROR!!! '.$ApplicationName.'-2, ¡Este arch
 if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
 ?>
   <body>
-    <script type="text/javascript" src="Resources/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="Resources/jquery-3.6.3.min.js"></script>
     <div id="header-text" style="max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;">
       <?php if (!isset($_GET['noGui'])) { ?><h1><?php echo $ApplicationName; ?></h1>
       <hr /><?php } ?>
       <h3>Opciones de Conversión de Archivos</h3>
       <p>Has subido <?php echo $FileCount; ?> archivo<?php echo $FCPlural1; ?> válido<?php echo $FCPlural1; ?> a <?php echo $ApplicationName; ?>.</p> 
       <p>Su<?php echo $FCPlural1; ?> archivo<?php echo $FCPlural1; ?> ahora está<?php echo $FCPlural2; ?> listo<?php echo $FCPlural1; ?> para convertir usando las opciones a continuación.</p>
-    </div>
-
-    <div id='utility' align="center">
-      <p><img id='loadingCommandDiv' name='loadingCommandDiv' src='<?php echo $PacmanLoc; ?>' style="max-width:64px; max-height:64px; display:none;"/></p>
-      <a id='downloadTarget' href='about:blank' style="display: none;" download></a>
     </div>
 
     <div id="compressAll" name="compressAll" style="max-width:1000px; margin-left: auto; margin-right: auto; text-align:center;">
@@ -53,7 +75,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             if($("input#clamscanall").is(":checked") && $("input#scancoreall").is(":checked")) {
               var scanType = 'all'; }
             $.ajax({
-              type: "POST",
+              type: 'POST',
               url: 'convertCore.php',
               data: {
                 Token1:'<?php echo $Token1; ?>',
@@ -84,6 +106,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
           <option value="zip">Zip</option>
           <option value="rar">Rar</option>
           <option value="tar">Tar</option>
+          <option value="iso">Iso</option>
           <option value="7z">7z</option>
         </select>
         <input type="submit" id="archallSubmit" name="archallSubmit" class="info-button" value='Comprimir y Descargar' onclick="toggle_visibility('loadingCommandDiv');">
@@ -94,7 +117,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             if (extension === "") { 
               extension = 'zip'; } 
             $.ajax({
-              type: "POST",
+              type: 'POST',
               url: 'convertCore.php',
               data: {
                 Token1:'<?php echo $Token1; ?>',
@@ -120,6 +143,10 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         </script>
         <hr style='width: 50%;' />
       </div>
+    </div>
+    <div id='utilityupper' align="center">
+      <p><img id='loadingCommandDiv' name='loadingCommandDiv' src='<?php echo $PacmanLoc; ?>' style="max-width:64px; max-height:64px; display:none;"/></p>
+      <a id='downloadTarget' href='about:blank' style="display: none;" download></a>
     </div>
     <br />
     <div style="max-width:1000px; margin-left:auto; margin-right:auto;">
@@ -237,7 +264,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
           if (in_array($extension, $MediaArray)) { ?>
           <a style="float:left;">&nbsp;|&nbsp;</a>
 
-          <img id="mediaButton<?php echo $ConvertGuiCounter1; ?>" name="mediaButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/stream.png" style="float:left; display:block;" 
+          <img id="mediaButton<?php echo $ConvertGuiCounter1; ?>" name="mediaButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/media.png" style="float:left; display:block;" 
            onclick="toggle_visibility('audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('mediaButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('mediaXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <img id="mediaXButton<?php echo $ConvertGuiCounter1; ?>" name="mediaXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:left; display:none;" 
            onclick="toggle_visibility('audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('mediaButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('mediaXButton<?php echo $ConvertGuiCounter1; ?>');"/>
@@ -246,13 +273,13 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
           if (in_array($extension, $VideoArray)) { ?>
           <a style="float:left;">&nbsp;|&nbsp;</a>
 
-          <img id="videoButton<?php echo $ConvertGuiCounter1; ?>" name="videoButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/stream.png" style="float:left; display:block;" 
+          <img id="videoButton<?php echo $ConvertGuiCounter1; ?>" name="videoButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/video.png" style="float:left; display:block;" 
            onclick="toggle_visibility('videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <img id="videoXButton<?php echo $ConvertGuiCounter1; ?>" name="videoXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:left; display:none;" 
            onclick="toggle_visibility('videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php } 
 
-          if (in_array($extension, $StreamArray)) { ?>
+          if (in_array($extension, $StreamArray) && $AllowStreams) { ?>
           <a style="float:left;">&nbsp;|&nbsp;</a>
 
           <img id="streamButton<?php echo $ConvertGuiCounter1; ?>" name="streamButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/stream.png" style="float:left; display:block;" 
@@ -289,6 +316,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             <option value="zip">Zip</option>
             <option value="rar">Rar</option>
             <option value="tar">Tar</option>
+            <option value="iso">Iso</option>
             <option value="7z">7z</option>
           </select></p>
           <input type="submit" id="archfileSubmit<?php echo $ConvertGuiCounter1; ?>" name="archfileSubmit<?php echo $ConvertGuiCounter1; ?>" value='Archivo De Archivo' onclick="toggle_visibility('loadingCommandDiv');">
@@ -296,7 +324,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
           $(document).ready(function () {
             $('#archfileSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -381,7 +409,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
           $(document).ready(function () {
             $('#scancorebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -404,7 +432,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
                     alert("<?php echo $Alert1; ?>"); } }); });
             $('#clamscanbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -427,7 +455,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
                     alert("<?php echo $Alert1; ?>"); } }); });
             $('#scanallbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -477,7 +505,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
           $(document).ready(function () {
             $('#pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -515,6 +543,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             <option value="zip">Zip</option>
             <option value="rar">Rar</option>
             <option value="tar">Tar</option>
+            <option value="iso">Iso</option>
             <option value="7z">7z</option>
           </select></p>
           <input type="submit" id="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Convertir Archivo' onclick="toggle_visibility('loadingCommandDiv'); display:none;">
@@ -522,7 +551,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
           $(document).ready(function () {
             $('#archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -568,7 +597,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
           $(document).ready(function () {
             $('#docconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -612,7 +641,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
           $(document).ready(function () {
             $('#spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -661,7 +690,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
           $(document).ready(function () {
             $('#presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -707,7 +736,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
           $(document).ready(function () {
             $('#audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({ir
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -755,7 +784,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
           $(document).ready(function () {
             $('#videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -781,7 +810,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         </div>
         <?php } 
 
-        if (in_array($extension, $StreamArray)) {
+        if (in_array($extension, $StreamArray) && $AllowStreams) {
         ?>
         <div id='streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
@@ -803,7 +832,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
           $(document).ready(function () {
             $('#streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -843,9 +872,10 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             <option value="off">Off</option>
             <option value="ply">Ply</option>
             <option value="stl">Stl</option>
-            <option value="ptx">Ptx</option>
+            <option value="gts">Gts</option>
             <option value="dxf">Dxf</option>
             <option value="u3d">U3d</option>
+            <option value="x3d">X3d</option>
             <option value="vrml">Vrml</option>
           </select></p>
           <input type="submit" id="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Convertir Modelo' onclick="toggle_visibility('loadingCommandDiv');">
@@ -853,7 +883,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
           $(document).ready(function () {
             $('#modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -891,17 +921,16 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             <option value="dxf">Dxf</option>
             <option value="vdx">Vdx</option>
             <option value="fig">Fig</option>
-            <option value="jpg">Jpg</option>
             <option value="png">Png</option>
-            <option value="bmp">Bmp</option>
-            <option value="pdf">Pdf</option>
+            <option value="dia">Dia</option>
+            <option value="wpg">Wpg</option>
           </select></p>
           <input type="submit" id="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Convertir Dibujo' onclick="toggle_visibility('loadingCommandDiv');">     
           <script type="text/javascript">
           $(document).ready(function () {
             $('#drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -937,6 +966,8 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             <option value="jpg">Formato</option>
             <option value="jpg">Jpg</option>
             <option value="bmp">Bmp</option>
+            <option value="pdf">Pdf</option>
+            <option value="gif">Gif</option>
             <option value="webp">Webp</option>
             <option value="png">Png</option>
             <option value="cin">Cin</option>
@@ -944,6 +975,11 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             <option value="dib">Dib</option>
             <option value="flif">Flif</option>
             <option value="avif">Avif</option>
+            <option value="gplt">Gplt</option>
+            <option value="sct">Sct</option>
+            <option value="xcf">Xcf</option>
+            <option value="ico">Ico</option>
+            <option value="heic">Heic</option>
           </select></p>
           <p>Ancho y Alto:</p>
           <p><input type="number" size="4" value="0" id='width<?php echo $ConvertGuiCounter1; ?>' name='width<?php echo $ConvertGuiCounter1; ?>' min="0" max="10000"> X <input type="number" size="4" value="0" id="height<?php echo $ConvertGuiCounter1; ?>" name="height<?php echo $ConvertGuiCounter1; ?>" min="0"  max="10000"></p> 
@@ -953,7 +989,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
           $(document).ready(function () {
             $('#convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-                type: "POST",
+                type: 'POST',
                 url: 'convertCore.php',
                 data: {
                   Token1:'<?php echo $Token1; ?>',
@@ -980,6 +1016,9 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
                       alert("<?php echo $Alert; ?>"); } }); }); });
           </script>
         <?php } ?>
+      </div>
+      <div id='utilitylower'>
+        <p><img id='loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>' name='loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $PacmanLoc; ?>' style="max-width:24px; max-height:24px; display:none;"/></p>
       </div>
       <hr />
       <?php } ?>

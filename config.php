@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION
-// / v3.1.7.
+// / v3.1.8.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -184,12 +184,12 @@ $AllowUserSelectableLanguage = TRUE;
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
 $AllowUserShare = TRUE;
-// /  --Allow Stream Formats as Input--
-// /   If set to TRUE, stream formats will be supported as input, which contain URLs to external sources.
-// /   If set to FALSE, stream formats will not be supported as input.
-// /   Valid options are TRUE or FALSE.
-// /   Default is TRUE.
-$AllowStreams = TRUE;
+// /  --Allowed Conversion Types--
+// /   The list of supported conversion types.
+// /   Only conversion types contained in this list will be processed.
+// /   If a conversion type is disabled, options for processing that conversion will not be displayed by the UI.
+// /   Default is 'Document', 'Image', 'Model', 'Drawing', 'Video', 'Audio', 'Archive', 'Stream', 'OCR'.
+$SupportedConversionTypes = array('Document', 'Image', 'Model', 'Drawing', 'Video', 'Audio', 'Archive', 'Stream', 'OCR');
 // /  --File Deletion Age Theshold--
 // /   Age in minutes of files to be deleted.
 // /   Set to 0 to keep files indefinately.

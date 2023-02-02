@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION
-// / v3.1.7.
+// / v3.1.8.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -104,7 +104,7 @@ function sanitize($Variable, $strict) {
 // / A function to load required HRConvert2 files.
 function verifyInstallation() {
   // / Set variables.
-  global $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6, $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $defaultButtonCode, $greenButtonCode, $blueButtonCode, $redButtonCode, $SpinnerStyle, $SpinnerColor, $URL, $AllowUserShare, $AllowStreams;
+  global $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6, $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $defaultButtonCode, $greenButtonCode, $blueButtonCode, $redButtonCode, $SpinnerStyle, $SpinnerColor, $URL, $AllowUserShare, $SupportedConversionTypes;
   $InstallationIsVerified = TRUE;
   $ConfigFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'config.php');
   $StyleCoreFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'styleCore.php');
@@ -355,16 +355,14 @@ function securePath($PathToSecure, $DangerArr, $isURL) {
 // / A function to set the global variables for the session.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $StreamArray, $DrawingArray, $ModelArray, $ConvertArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $AllowStreams, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser;
+  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $StreamArray, $DrawingArray, $ModelArray, $ConvertArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser;
   // / Application related variables.
-  $HRConvertVersion = 'v3.1.7';
+  $HRConvertVersion = 'v3.1.8';
   $CoreLoaded = $GlobalsAreVerified = TRUE;
   $StopCounter = 0;
   $SleepTimer = 0;
   $PermissionLevels = 0755;
   $ApacheUser = 'www-data';
-  $SupportedConversionTypes = array('Document', 'Image', 'Model', 'Drawing', 'Video', 'Audio', 'Archive');
-  if ($AllowStreams) array_push($SupportedConversionTypes, 'Stream');
   // / Convinience variables.
   $DirSep = DIRECTORY_SEPARATOR;
   $Lol = PHP_EOL;
@@ -918,7 +916,7 @@ function convertArchives($pathname, $newPathname, $extension) {
   $safedir2 = $ConvertDir.$filename;
   $safedir3 = $safedir2.'.7z';
   $safedir4 = $safedir2.'.zip';
-  $array7zo = array('7z', 'zip');
+  $array7zo = array('7z');
   $arrayzipo = array('zip');
   $array7zo2 = array('vhd', 'vdi', 'iso');
   $arraytaro = array('tar.gz', 'tar.bz2', 'tar');
@@ -948,58 +946,52 @@ function convertArchives($pathname, $newPathname, $extension) {
   // / Code to rearchive archive files using 7z.
   if (in_array($extension, $array7zo)) {
     // / This code will attempt the archive operation up to $StopCounter number of times.
-    while (!file_exists($safedir2) && $stopper <= $StopCounter) {
+    while ($stopper <= $StopCounter) {
       // / If the last conversion attempt failed, wait a moment before trying again.
       if ($stopper !== 0) sleep($sleepTime++);
       // / Attempt the conversion.
-      $returnData = shell_exec('7z a -t'.$extension.' '.$safedir3.' '.$safedir2);
+      $returnData = shell_exec('7z a -t'.$extension.' '.$newPathname.' '.$safedir2);
       if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
       // / Count the number of conversions to avoid infinite loops.
       $stopper++;
     // / Stop attempting the archive operation after $StopCounter number of attempts.
       if ($stopper === $StopCounter) {
         $ConversionErrors = TRUE;
-        errorEntry('The archiver timed out!', 13001, FALSE); } }
-    // / If the archive was successful, copy it to $newPathname.
-    if (file_exists($safedir3)) @copy($safedir3, $newPathname); }
+        errorEntry('The archiver timed out!', 13001, FALSE); } } }
   // / Code to rearchive disk image files using mkisofs.
   if (in_array($extension, $array7zo2)) {
     // / This code will attempt the archive operation up to $StopCounter number of times.
-    while (!file_exists($safedir2) && $stopper <= $StopCounter) {
+    while ($stopper <= $StopCounter) {
       // / If the last conversion attempt failed, wait a moment before trying again.
       if ($stopper !== 0) sleep($sleepTime++);
       // / Attempt the conversion.
-      $returnData = shell_exec('mkisofs -o '.$safedir3.' '.$safedir2);
+      $returnData = shell_exec('mkisofs -o '.$newPathname.' '.$safedir2);
       if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
       // / Count the number of conversions to avoid infinite loops.
       $stopper++;
     // / Stop attempting the archive operation after $StopCounter number of attempts.
       if ($stopper === $StopCounter) {
         $ConversionErrors = TRUE;
-        errorEntry('The archiver timed out!', 13002, FALSE); } }
-    // / If the archive was successful, copy it to $newPathname.
-    if (file_exists($safedir3)) @copy($safedir3, $newPathname); }
+        errorEntry('The archiver timed out!', 13002, FALSE); } } }
   // / Code to rearchive archive files using zip.
   if (in_array($extension, $arrayzipo)) {
     // / This code will attempt the archive operation up to $StopCounter number of times.
-    while (!file_exists($safedir2) && $stopper <= $StopCounter) {
+    while ($stopper <= $StopCounter) {
       // / If the last conversion attempt failed, wait a moment before trying again.
       if ($stopper !== 0) sleep($sleepTime++);
       // / Attempt the conversion.
-      $returnData = shell_exec('zip -r -j '.$safedir4.' '.$safedir2);
+      $returnData = shell_exec('zip -r -j '.$newPathname.' '.$safedir2);
       if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
       // / Count the number of conversions to avoid infinite loops.
       $stopper++;
     // / Stop attempting the archive operation after $StopCounter number of attempts.
       if ($stopper === $StopCounter) {
         $ConversionErrors = TRUE;
-        errorEntry('The archiver timed out!', 13003, FALSE); } }
-    // / If the archive was successful, copy it to $newPathname.
-    if (file_exists($safedir4)) @copy($safedir4, $newPathname); }
+        errorEntry('The archiver timed out!', 13003, FALSE); } } }
   // / Code to rearachive archive files using tar.
   if (in_array($extension, $arraytaro)) {
     // / This code will attempt the archive operation up to $StopCounter number of times.
-    while (!file_exists($safedir2) && $stopper <= $StopCounter) {
+    while ($stopper <= $StopCounter) {
       // / If the last conversion attempt failed, wait a moment before trying again.
       if ($stopper !== 0) sleep($sleepTime++);
       // / Attempt the conversion.
@@ -1014,7 +1006,7 @@ function convertArchives($pathname, $newPathname, $extension) {
   // / Code to rearchive archive files using rar.
   if (in_array($extension, $arrayraro)) {
     // / This code will attempt the archive operation up to $StopCounter number of times.
-    while (!file_exists($safedir2) && $stopper <= $StopCounter) {
+    while ($stopper <= $StopCounter) {
       // / If the last conversion attempt failed, wait a moment before trying again.
       if ($stopper !== 0) sleep($sleepTime++);
       // / Attempt the conversion.
@@ -1129,7 +1121,7 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
 // / A function to prepare & load the GUI.
 function showGUI($ShowGUI, $LanguageToUse, $ButtonCode) {
   // / Set variables.
-  global $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $ConvertArray, $PDFWorkArr, $ArchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoArray, $StreamArray, $MediaArray, $PresentationArray, $ConvertGuiCounter1, $ButtonCode, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $AllowStreams, $FullURL;
+  global $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $ConvertArray, $PDFWorkArr, $ArchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoArray, $StreamArray, $MediaArray, $PresentationArray, $ConvertGuiCounter1, $ButtonCode, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL;
   $GUIDisplayed = FALSE;
   $Files = getFiles($ConvertDir);
   $FileCount = count($Files);
@@ -1484,8 +1476,8 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
                 $pathnameTEMPTesseract = str_replace('..', '', str_replace('.txt', '', $pathnameTEMP));
                 if ($Verbose) logEntry('Performing OCR final using method 0.');
                 $returnData = shell_exec('tesseract '.$pathnameTEMP1.' '.$pathnameTEMPTesseract);
-                if ($Verbose && trim($returnData) !== '') logEntry('The converter returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); } } }
-          // / Code to convert a document to a PDF.
+                if ($Verbose && trim($returnData) !== '') logEntry('The converter returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); } } } }
+        // / Code to convert a document to a PDF.
         if (in_array(strtolower($oldExtension), $doc1array)) {
           if (in_array($UserExtension, $pdf1array)) {
             // / The following code verifies that the document conversion engine is installed & running.
@@ -1496,7 +1488,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
             // / Perform the conversion using Unoconv.
             $returnData = shell_execs('/usr/bin/unoconv -o '.$newPathname.' -f pdf '.$pathname);
             if ($Verbose && trim($returnData) !== '') logEntry('The converter returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); } }
-          // / Code to convert an image to a PDF.
+        // / Code to convert an image to a PDF.
         if (in_array(strtolower($oldExtension), $img1array)) {
           $pathnameTEMPTesseract = str_replace('..', '', str_replace('.'.$oldExtension, '', $pathname));
           if ($Verbose) logEntry('Performing OCR operation using method 0.');
@@ -1534,7 +1526,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
       // / Error handler for if the output file does not exist.
       if (file_exists($newPathname)) {
         $OperationSuccessful = TRUE;
-        if ($Verbose) logEntry('Created a file at '.$newPathname.'.'); } } } }
+        if ($Verbose) logEntry('Created a file at '.$newPathname.'.'); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $file = $file1 = $file2 = $pathname = $oldPathname = $filename = $oldExtension = $newPathname = $doc1array = $img1array = $pdf1array = $pathnameTEMP = $pathnameTEMP1 = $pagedFilesArrRAW = $pagedFile = $cleanFilname = $pageNumber = $readPageData = $writePageData = $multiple = $pathnameTEMPTesseract = $pathnameTEMP3 = $clean = $copy = $skip =$allowedOCR = $variableIsSanitized = NULL;
   unset ($file, $file1, $file2, $pathname, $oldPathname , $filename, $oldExtension, $newPathname, $doc1array, $img1array, $pdf1array, $pathnameTEMP, $pathnameTEMP1, $pagedFilesArrRAW, $pagedFile, $cleanFilname, $pageNumber, $readPageData, $writePageData, $multiple, $pathnameTEMPTesseract, $pathnameTEMP3, $clean, $copy, $skip, $allowedOCR, $variableIsSanitized); 

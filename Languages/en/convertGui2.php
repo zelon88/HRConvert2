@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION
-// / v3.1.7.
+// / v3.1.8.
 // / This file contains language specific GUI elements for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -278,7 +278,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
            onclick="toggle_visibility('videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php } 
 
-          if (in_array($extension, $StreamArray) && $AllowStreams && $AllowStreams) { ?>
+          if (in_array($extension, $StreamArray) && in_array('Stream', $SupportedConversionTypes)) { ?>
           <a style="float:left;">&nbsp;|&nbsp;</a>
 
           <img id="streamButton<?php echo $ConvertGuiCounter1; ?>" name="streamButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/stream.png" style="float:left; display:block;" 
@@ -479,7 +479,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
         </div>
         <?php }
 
-        if (in_array($extension, $PDFWorkArr)) { 
+        if (in_array($extension, $PDFWorkArr) && in_array('OCR', $SupportedConversionTypes)) { 
         ?>
         <div id='pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
@@ -531,7 +531,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
         </div>
         <?php } 
 
-        if (in_array($extension, $ArchiveArray)) {
+        if (in_array($extension, $ArchiveArray) && in_array('Archive', $SupportedConversionTypes)) {
         ?>
         <div id='archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
@@ -545,7 +545,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
             <option value="iso">Iso</option>
             <option value="7z">7z</option>
           </select></p>
-          <input type="submit" id="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Archive Files' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>'); display:none;">
+          <input type="submit" id="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Archive Files' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -576,7 +576,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
         </div>
         <?php } 
 
-        if (in_array($extension, $DocumentArray)) {
+        if (in_array($extension, $DocumentArray) && in_array('Document', $SupportedConversionTypes)) {
         ?>
         <div id='docOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='docOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
@@ -622,7 +622,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
         </div>
         <?php }
 
-        if (in_array($extension, $SpreadsheetArray)) {
+        if (in_array($extension, $SpreadsheetArray) && in_array('Document', $SupportedConversionTypes)) {
         ?>
         <div id='spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
@@ -633,6 +633,8 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
             <option value="xls">Xls</option>
             <option value="xlsx">Xlsx</option>
             <option value="ods">Ods</option>
+            <option value="csv">Csv</option>
+            <option value="tsv">Tsv</option>
             <option value="pdf">Pdf</option>
           </select></p>
           <input type="submit" id="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Convert Spreadsheet' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">        
@@ -667,7 +669,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
         </div>
         <?php }
 
-        if (in_array($extension, $PresentationArray)) {
+        if (in_array($extension, $PresentationArray) && in_array('Document', $SupportedConversionTypes)) {
         ?>
         <div id='presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
@@ -715,7 +717,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
         </div>
         <?php } 
 
-        if (in_array($extension, $MediaArray)) {
+        if (in_array($extension, $MediaArray) && in_array('Audio', $SupportedConversionTypes)) {
         ?>
         <div id='audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
@@ -761,7 +763,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
         </div>
         <?php } 
 
-        if (in_array($extension, $VideoArray)) {
+        if (in_array($extension, $VideoArray) && in_array('Video', $SupportedConversionTypes)) {
         ?>
         <div id='videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
@@ -809,7 +811,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
         </div>
         <?php } 
 
-        if (in_array($extension, $StreamArray) && $AllowStreams) {
+        if (in_array($extension, $StreamArray) && in_array('Stream', $SupportedConversionTypes)) {
         ?>
         <div id='streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
@@ -857,7 +859,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
         </div>
         <?php } 
 
-        if (in_array($extension, $ModelArray)) {
+        if (in_array($extension, $ModelArray) && in_array('Model', $SupportedConversionTypes)) {
         ?>
         <div id='modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
@@ -908,7 +910,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
         </div>
         <?php } 
 
-        if (in_array($extension, $DrawingArray)) {
+        if (in_array($extension, $DrawingArray) && in_array('Drawing', $SupportedConversionTypes)) {
         ?>
         <div id='drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
@@ -955,7 +957,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
         </div>
         <?php } 
 
-        if (in_array($extension, $ImageArray)) {
+        if (in_array($extension, $ImageArray) && in_array('Image', $SupportedConversionTypes)) {
         ?>
         <div id='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>

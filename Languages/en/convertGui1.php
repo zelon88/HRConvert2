@@ -101,6 +101,8 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Xls</li>
               <li>Xlsx</li>
               <li>Ods</li>
+              <li>Csv</li>
+              <li>Pdf</li>
             </ol>
             <strong>Presentation Formats</strong>
             <ol>

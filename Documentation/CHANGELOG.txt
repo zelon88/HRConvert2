@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION
-v3.1.7.
+v3.1.8.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -25,6 +25,29 @@ Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 
 <3 Open-Source
 -----------------------------------------------------------------------------------
+
+--------------------
+COMMIT 1/31/2023
+v3.1.8 - Add supported conversion type array to config, fix csv support, make static UI elements dynamic.
+
+-v3.1.8.
+-Remove $AllowStreams variable.
+-Exposed the $SupportedConversionTypes variable in config.php.
+-Fix HTML error in gui2 of each language pack.
+-Fix archive conversions.
+-Fix OCR operations.
+-Add Csv Support.
+-Create v3.1.8 UI Update Procedure.
+  -Header
+    -No change.
+  -UI1
+    -No change.
+  -UI2
+    -No user action required, list for tracking purposes only.
+    -Update FILE INFORMATION section of header comment text.
+    -Copy & paste && $SupportedConvertionTypes condition to each button code.
+  -Footer
+    -No change.
 
 --------------------
 COMMIT 1/20/2023

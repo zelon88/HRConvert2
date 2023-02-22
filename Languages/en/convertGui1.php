@@ -27,8 +27,8 @@
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
-if (!isset($ApplicationTitle)) $ApplicationTitle = 'تحويل أي شيء!'; 
-if (!isset($CoreLoaded)) die('خطأ!!! '.$ApplicationName.'-2، لا يمكن لهذا الملف معالجة طلبك! يرجى إرسال ملفك إلى convertCore.php بدلاً من ذلك!');
+if (!isset($ApplicationTitle)) $ApplicationTitle = 'Convert Anything!'; 
+if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
 if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
 ?>
   <body>
@@ -36,30 +36,30 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
     if (!isset($_GET['noGui'])) { ?>
     <div id="header-text" style="max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;">
       <h1><?php echo $ApplicationName; ?></h1>
-      <h3>محول الملفات على الإنترنت ، النازع ، الضاغط</h3>
+      <h3>Online File Converter, Extractor, Compressor</h3>
       <hr />
     </div>
     <div id="main" align="center">
-      <div id="overview" style="max-width:1000px; text-align:right; margin:25px;">
-      	<p id="info" style="display:block;">يعتمد <?php echo $ApplicationName; ?> على تطبيق الويب مفتوح المصدر <a href='https://github.com/zelon88/HRConvert2'>HRConvert2</a> بواسطة <a href='https://github.com/zelon88'>Zelon88</a>. تم تصميمه لتحويل الملفات دون تتبع المستخدمين عبر الإنترنت أو التعدي على حقوق الملكية الفكرية الخاصة بك.</p>
+      <div id="overview" style="max-width:1000px; text-align:left; margin:25px;">
+      	<p id="info" style="display:block;"><?php echo $ApplicationName; ?> is based off the open-source web-app <a href='https://github.com/zelon88/HRConvert2'>HRConvert2</a> by <a href='https://github.com/zelon88'>Zelon88</a> that converts files without tracking users across the net or infringing on your intellectual property.</p>
         <button id="more-info-button" class="info-button" onclick="toggle_visibility('more-info'); toggle_visibility('more-info-button'); toggle_visibility('supported-formats-show-button'); 
-          toggle_visibility('less-info-button');" style="text-align:center; display:block; margin-left:auto; margin-right:auto;"><i>مزيد من المعلومات...</i></button>
+          toggle_visibility('less-info-button');" style="text-align:center; display:block; margin-left:auto; margin-right:auto;"><i>More Info ...</i></button>
         <button id="less-info-button" class="info-button" onclick="toggle_visibility('more-info'); toggle_visibility('more-info-button'); toggle_visibility('supported-formats-show-button'); 
-          toggle_visibility('less-info-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>أقل معلومات...</i></button>
+          toggle_visibility('less-info-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Less Info ...</i></button>
         <div id="more-info" style="display:none;">
           <hr />
-          <p>يتم مسح جميع البيانات التي يوفرها المستخدم تلقائيًا ، لذلك لا داعي للقلق بشأن مصادرة معلوماتك الشخصية أو ممتلكاتك أثناء استخدام خدماتنا.</p>
-          <p>يدعم <?php echo $ApplicationName; ?> حاليًا 79 تنسيقًا مختلفًا للملفات ، بما في ذلك المستندات وجداول البيانات والصور والوسائط والنماذج ثلاثية الأبعاد وملفات الرسم وملفات المتجهات والمحفوظات وصور القرص والمزيد.</p> 
+          <p>All user-supplied data is erased automatically, so you don't need to worry about forfeiting your personal information or property while using our services.</p>
+          <p>Currently <?php echo $ApplicationName; ?> supports 79 different file formats, including documents, spreadsheets, images, media, 3D models, CAD drawings, vector files, archives, disk images, & more.</p> 
           <button id="supported-formats-show-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
-            toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>عرض التنسيقات المدعومة...</i></button>
+            toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>View Supported Formats ...</i></button>
           <button id="supported-formats-hide-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
-            toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>إخفاء التنسيقات المدعومة...</i></button>
+            toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Hide Supported Formats ...</i></button>
           <br>
           <div id="supported-formats" class="supported-formats" style="margin-left:33%; display:none;">
-            <h3>التنسيقات المدعومة</h3>
+            <h3>Supported Formats</h3>
             <hr />
-            <strong>تنسيقات الصوت</strong>
-            <p><i>يدعم معدل بت معين.</i></p>
+            <strong>Audio Formats</strong>
+            <p><i>Supports specific bitrate.</i></p>
             <ol>
               <li>Mp2</li>
               <li>Mp3</li>
@@ -71,7 +71,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>M4a</li>
               <li>M4p</li>
             </ol>
-            <strong>تنسيقات الفيديو</strong>
+            <strong>Video Formats</strong>
             <ol>
               <li>3gp</li>
               <li>Mkv</li>
@@ -83,11 +83,11 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Mov</li>
               <li>M4v</li>
             </ol>
-            <strong>تنسيقات الدفق</strong>
+            <strong>Stream Formats</strong>
             <ol>
               <li>M3u8</li>
             </ol>
-            <strong>تنسيقات المستندات</strong>
+            <strong>Document Formats</strong>
             <ol>
               <li>Doc</li>
               <li>Docx</li>
@@ -96,7 +96,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Odt</li>
               <li>Pdf</li>
             </ol>
-            <strong>تنسيقات جداول البيانات</strong>
+            <strong>Spreadsheet Formats</strong>
             <ol>
               <li>Xls</li>
               <li>Xlsx</li>
@@ -104,7 +104,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Csv</li>
               <li>Pdf</li>
             </ol>
-            <strong>تنسيقات العرض</strong>
+            <strong>Presentation Formats</strong>
             <ol>
               <li>Pages</li>
               <li>Pptx</li>
@@ -117,8 +117,8 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Pptx</li>
               <li>Odp</li>
             </ol>
-            <strong>تنسيقات الأرشيف</strong>
-              <p><i>يمكن التحويل بين تنسيقات الأرشيف وتنسيقات صور القرص.</i></p>
+            <strong>Archive Formats</strong>
+            <p><i>Can convert between archive formats & disk image formats.</i></p>
             <ol>
               <li>Zip</li>
               <li>Rar</li>
@@ -126,9 +126,9 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>7z</li>
               <li>Iso</li>
             </ol>
-            <strong>تنسيقات الصور</strong>
-            <p><i>يمكن تحويل صور المستندات إلى تنسيقات المستندات.</i></p>
-            <p><i>يدعم تغيير الحجم والتدوير.</i></p>
+            <strong>Image Formats</strong>
+            <p><i>Can convert pictures of documents to document formats.</i></p>
+            <p><i>Supports resize & rotate.</i></p>
             <ol>
               <li>Jpg</li>
               <li>Jpeg</li>
@@ -148,7 +148,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Heic</li>
               <li>Ico</li>
             </ol>
-            <strong>تنسيقات النماذج ثلاثية الأبعاد</strong>
+            <strong>3D Model Formats</strong>
             <ol>
               <li>3ds</li>
               <li>Obj</li>
@@ -163,7 +163,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Vrml</li>
             </ol>
             <strong>Drawing Formats</strong>
-            <p><i>يمكن تحويل ملفات الرسم إلى صيغ الصور.</i></p>
+            <p><i>Can convert drawing files to image formats.</i></p>
             <ol>
               <li>Svg</li>
               <li>Dxf</li>
@@ -172,8 +172,8 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Dia</li>
               <li>Wpg</li>
             </ol>
-            <strong>دعم التعرف البصري على الأحرف</strong>
-            <p><i>تدعم عمليات OCR تنسيقات الإدخال التالية ...</i></p>
+            <strong>OCR Support</strong>
+            <p><i>OCR Operations support the following input formats...</i></p>
             <ol>
               <li>Jpg</li>
               <li>Jpeg</li>
@@ -182,7 +182,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
               <li>Pdf</li>
               <li>Gif</li>
               </ol>
-            <p><i>تدعم عمليات OCR تنسيقات الإخراج التالية ...</i></p>
+            <p><i>OCR Operations support the following output formats...</i></p>
             <ol>
               <li>Doc</li>
               <li>Docx</li>
@@ -198,7 +198,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
       <?php } ?>
       <div align="center">
         <div id="call-to-action1" style="max-width:1000px; text-align:center;">
-          <p>حدد الملفات عن طريق النقر فوق الملفات أو الضغط عليها أو إسقاطها في المربع أدناه.</p>
+          <p>Select files by clicking, tapping, or dropping them into the box below.</p>
         </div>
       </div>
       <div align="center">
@@ -214,7 +214,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
           <form action="convertCore.php?showFiles=1<?php if (isset($_GET['noGui'])) echo '&noGui=TRUE'; if (isset($_GET['language'])) echo '&language='.$_GET['language']; ?>" method="post">
             <input type="hidden" id="token1" name="Token1" value="<?php echo $Token1; ?>">
             <input type="hidden" id="token2" name="Token2" value="<?php echo $Token2; ?>">
-            <input type="submit" id="continue-button" class="info-button" value="يكمل...">
+            <input type="submit" id="continue-button" class="info-button" value="Continue ...">
           </form>
           <br />
           <?php if (!isset($_GET['noGui'])) { ?>

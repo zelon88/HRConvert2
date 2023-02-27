@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 1/10/2023 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 2/21/2023 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -9,8 +9,8 @@ https://www.gnu.org/licenses/gpl-3.0.html
 APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
-FILE INFORMATION
-v3.1.7.
+FILE INFORMATION ...
+v3.1.9.1.
 This plain text file contains descriptions of all the native error messages contained in or produced by the HRConvert2 Diablo engine. 
 These descriptions should give administrators a starting point for debugging problems with HRConvert2 installations. 
 Each section in this file contains information about a different error message. The first one is an example to demonstrate the structure of this file.
@@ -1420,6 +1420,37 @@ ERROR DESCRIPTION
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-21000, <SESSION_IDENTIFIER>: The stream converter timed out!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Ffmpeg is not responding.
+  The conversion operation was attempted 5 times but no output file could be created.
+  The user submitted a request to convert a file that does not exist.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+  The user has requested to convert a file that was deleted for exceededing the --File Deletion Age Theshold-- specified in config.php.
+  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
+  The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
+  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs to have read & write access to the Data directory.
+  This may be the result of incorrect file permission levels on the directory where the application is installed.
+  This may be the result of incorrect file permission levels on the directory where Data is stored.
+  This may be the result of incorrect user or group associations for the www-data user or group.
+  The device where data is stored has an insufficient amount of storage space available.
+  The request contained character types or encoded data that are not supported.
+  One of the $_POST or $_GET variables submitted was empty after sanitization.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-22000, <SESSION_IDENTIFIER>: The subtitle converter timed out!
 
 FILE
   convertCore.php

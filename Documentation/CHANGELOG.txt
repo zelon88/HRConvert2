@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 2/21/2023 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 2/26/2023 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -10,8 +10,8 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats
 on a server for users of any web browser without authentication. 
 
-FILE INFORMATION
-v3.1.9.
+FILE INFORMATION ...
+v3.1.9.1.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -28,6 +28,26 @@ Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 
 --------------------
 COMMIT 2/21/2023
+v3.1.9.1 - Continue updating language packs.
+
+-v3.1.9.1.
+-Work on bn, de, en, ar, es, fr language packs.
+-Update language pack update procedure.
+-Update File Information section header text missing dots.
+-Evaluate subtitle conversion options.
+  -https://ffmpeg.org/ffmpeg-all.html#Subtitle-Formats
+  -https://superuser.com/questions/1090989/changing-subtitle-format-with-ffmpeg
+  -WebVTT X X X X
+  -SSA/ASS X X X X
+  -SRT  X X X X
+  -DVB X X X X
+-Add core support for subtitle conversions for testing purposes.
+-Added & documented ERROR 22000 for subtitle conversion errors.
+-Need to update the UI when this is ready.
+-Inspired by Issue # 32 (https://github.com/zelon88/HRConvert2/issues/32). 
+
+--------------------
+COMMIT 2/21/2023
 v3.1.9 - Finish updating language packs.
 
 -v3.1.9.
@@ -38,10 +58,10 @@ v3.1.9 - Finish updating language packs.
 -LANGUAGE PACKS COMPLETE
   -ar h,1,2,f
   -en h,1,2,f
-  -bn h,,,f
-  -de h,,,f
-  -es h,,,f
-  -fr h...f
+  -bn h,1,2,f
+  -de h,1,2,f
+  -es h,1,,f
+  -fr h.1..f
   -hi h,,,f
   -it h,,,f
   -ko h,,,f
@@ -64,7 +84,7 @@ v3.1.8 - Add supported conversion type array to config, fix csv support, make st
 -Create v3.1.8 UI Update Procedure.
   -No user action required, list for tracking purposes only.
   -Header
-    -No change.
+    -Update header, add dots, update date.
   -UI1
     -Update FILE INFORMATION section of header comment text.
     -Add Csv line to supported spreadsheets.
@@ -76,8 +96,10 @@ v3.1.8 - Add supported conversion type array to config, fix csv support, make st
     -Adjust loading spinner/$File CSS.
     -Adjust all tags & spacing.
     -Add csv to each spreadsheet conversion dropdown.
+    -Fix javascript error on archiveconvertsubmit around line 555.
+    -Check for ending /div tag.
   -Footer
-    -No change.
+    -Update header, add dots, update date.
 
 --------------------
 COMMIT 1/20/2023

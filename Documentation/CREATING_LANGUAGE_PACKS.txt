@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 1/10/2023 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 2/21/2023 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -9,8 +9,8 @@ https://www.gnu.org/licenses/gpl-3.0.html
 APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
-FILE INFORMATION
-v3.1.5.
+FILE INFORMATION ...
+v3.1.9.1.
 This plain text file describes the process for creating, formatting, and installing additional language packs into HRConvert2.
 
 HARDWARE REQUIREMENTS ... 

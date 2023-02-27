@@ -11,8 +11,8 @@
 // / This application is designed to provide a web-interface for converting file formats
 // / on a server for users of any web browser without authentication.
 // /
-// / FILE INFORMATION
-// / v3.1.9
+// / FILE INFORMATION ...
+// / v3.1.9.1.
 // / This file contains language specific GUI elements for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...

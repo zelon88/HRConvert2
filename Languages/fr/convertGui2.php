@@ -277,7 +277,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
            onclick="toggle_visibility('videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php } 
 
-          if (in_array($extension, $StreamArray) && $AllowStreams) { ?>
+          if (in_array($extension, $StreamArray) && in_array('Stream', $SupportedConversionType)) { ?>
           <a style="float:left;">&nbsp;|&nbsp;</a>
 
           <img id="streamButton<?php echo $ConvertGuiCounter1; ?>" name="streamButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/stream.png" style="float:left; display:block;" 
@@ -544,7 +544,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             <option value="iso">Iso</option>
             <option value="7z">7z</option>
           </select></p>
-          <input type="submit" id="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Fichiers d&#39;Archives' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>'); display:none;">
+          <input type="submit" id="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Fichiers d&#39;Archives' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -632,6 +632,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
             <option value="xls">Xls</option>
             <option value="xlsx">Xlsx</option>
             <option value="ods">Ods</option>
+            <option value="csv">Csv</option>
             <option value="pdf">Pdf</option>
           </select></p>
           <input type="submit" id="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Convertir une Feuille de Calcul' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">        
@@ -808,7 +809,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
         </div>
         <?php } 
 
-        if (in_array($extension, $StreamArray) && $AllowStreams) {
+        if (in_array($extension, $StreamArray) && in_array('Stream', $SupportedConversionType)) {
         ?>
         <div id='streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>

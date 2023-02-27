@@ -12,8 +12,8 @@
 // / This application is designed to provide a web-interface for converting file formats
 // / on a server for users of any web browser without authentication.
 // /
-// / FILE INFORMATION
-// / v3.1.9.
+// / FILE INFORMATION ...
+// / v3.1.9.1.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -193,7 +193,7 @@ function logEntry($entry) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to format a log entry & write it to the logfile.
+// / A function to format an error entry & write it to the logfile.
 function errorEntry($entry, $errorNumber, $die) {
   // / Set variables.
   global $Time, $LogFile, $SesHash3, $ApplicationName;
@@ -310,7 +310,7 @@ function verifyLanguage() {
   $LanguageIsSet = TRUE;
   $LanguageToUse = 'en';
   $defaultLanguages = array('en', 'fr', 'es', 'zh', 'hi', 'ar', 'ru', 'uk', 'bn', 'de', 'ko', 'it', 'pt');
-  // / Make sure $SupportedLanguages is valic.
+  // / Make sure $SupportedLanguages is valid.
   if (!isset($SupportedLanguages)) $SupportedLanguages = $defaultLanguages;
   // / Make sure $_GET['language'] is properly sanitized.
   if (isset($_GET['language'])) list ($_GET['language'], $sanitized) = sanitize(strtolower($_GET['language']), TRUE);
@@ -355,9 +355,9 @@ function securePath($PathToSecure, $DangerArr, $isURL) {
 // / A function to set the global variables for the session.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $StreamArray, $DrawingArray, $ModelArray, $ConvertArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser;
+  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $SubtitleArray, $StreamArray, $DrawingArray, $ModelArray, $ConvertArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser;
   // / Application related variables.
-  $HRConvertVersion = 'v3.1.9';
+  $HRConvertVersion = 'v3.1.9.1';
   $CoreLoaded = $GlobalsAreVerified = TRUE;
   $StopCounter = 0;
   $SleepTimer = 0;
@@ -410,11 +410,12 @@ function verifyGlobals() {
   $ImageArray = array('jpeg', 'jpg', 'png', 'bmp', 'pdf', 'gif', 'webp', 'cin', 'dds', 'dib', 'flif', 'avif', 'gplt', 'sct', 'xcf', 'heic', 'ico');
   $MediaArray = array('mp3', 'aac', 'oog', 'wma', 'mp2', 'flac', 'm4a', 'm4p');
   $VideoArray = array('3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv', 'mov', 'm4v');
+  $SubtitleArray = array('vtt', 'ssa', 'ass', 'srt', 'dvb');
   $StreamArray = array('m3u8');
   $DrawingArray = array('svg', 'dxf', 'vdx', 'fig', 'dia', 'wpg');
   $ModelArray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'gts', 'dxf', 'u3d', 'vrml', 'x3d');
   $PDFWorkArr = array('pdf', 'jpg', 'jpeg', 'png', 'bmp', 'webp', 'gif');
-  $Allowed = array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge($ArchiveArray, $DearchiveArray), $DocumentArray), $SpreadsheetArray), $PresentationArray), $ImageArray), $MediaArray), $VideoArray), $StreamArray), $DrawingArray), $ModelArray), $PDFWorkArr);
+  $Allowed = array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge($ArchiveArray, $DearchiveArray), $DocumentArray), $SpreadsheetArray), $PresentationArray), $ImageArray), $MediaArray), $VideoArray), $SubtitleArray), $StreamArray), $DrawingArray), $ModelArray), $PDFWorkArr);
   $ConvertArray = $Allowed;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $convertDir0 = $convertTempDir0 = $subDir = $partURL = NULL;
@@ -840,6 +841,36 @@ function convertVideos($pathname, $newPathname) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to convert subtitle formats.
+function convertSubtitles($pathname, $newPathname) {
+  // / Set variables.
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer;
+  $ConversionSuccess = $ConversionErrors = FALSE;
+  $returnData = '';
+  $stopper = 0;
+  $sleepTime = $SleepTimer;
+  if ($Verbose) logEntry('Converting subtitle.');
+  // / This code will attempt the conversion up to $StopCounter number of times.
+  while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+    // / If the last conversion attempt failed, wait a moment before trying again.
+    if ($stopper !== 0) sleep($sleepTime++);
+    // / Attempt the conversion.
+    $returnData = shell_exec('ffmpeg -i '.$pathname.' '.$newPathname);
+    // / Count the number of conversions to avoid infinite loops.
+    $stopper++;
+    // / Stop attempting the conversion after $StopCounter number of attempts.
+    if ($stopper === $StopCounter) {
+      $ConversionErrors = TRUE;
+      errorEntry('The subtitle converter timed out!', 22000, FALSE); } }
+  if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+  if (file_exists($newPathname)) $ConversionSuccess = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $returnData = $stopper = $pathname = $newPathname = $sleepTime = NULL;
+  unset($returnData, $stopper, $pathname, $newPathname, $sleepTime);
+  return array($ConversionSuccess, $ConversionErrors); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to convert stream formats.
 function convertStreams($pathname, $newPathname) {
   // / Set variables.
@@ -1044,6 +1075,7 @@ function convert($type, $pathname, $newPathname, $extension, $height, $width, $r
     if ($type === 'Model') list ($ConversionSuccess, $ConversionErrors) = convertModels($pathname, $newPathname);
     if ($type === 'Drawing') list ($ConversionSuccess, $ConversionErrors) = convertDrawings($pathname, $newPathname, $extension);
     if ($type === 'Video') list ($ConversionSuccess, $ConversionErrors) = convertVideos($pathname, $newPathname);
+    if ($type === 'Subtitle') list ($ConversionSuccess, $ConversionErrors) = convertSubtitles($pathname, $newPathname);
     if ($type === 'Stream') list ($ConversionSuccess, $ConversionErrors) = convertStreams($pathname, $newPathname);
     if ($type === 'Audio') list ($ConversionSuccess, $ConversionErrors) = convertAudio($pathname, $newPathname, $extension, $bitrate);
     if ($type === 'Archive') list ($ConversionSuccess, $ConversionErrors) = convertArchives($pathname, $newPathname, $extension); }
@@ -1121,7 +1153,7 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
 // / A function to prepare & load the GUI.
 function showGUI($ShowGUI, $LanguageToUse, $ButtonCode) {
   // / Set variables.
-  global $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $ConvertArray, $PDFWorkArr, $ArchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoArray, $StreamArray, $MediaArray, $PresentationArray, $ConvertGuiCounter1, $ButtonCode, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL;
+  global $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $ConvertArray, $PDFWorkArr, $ArchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoArray, $SubtitleArray, $StreamArray, $MediaArray, $PresentationArray, $ConvertGuiCounter1, $ButtonCode, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL;
   $GUIDisplayed = FALSE;
   $Files = getFiles($ConvertDir);
   $FileCount = count($Files);
@@ -1305,7 +1337,7 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
 // / A function to convert a selection of files.
 function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, $Width, $Rotate, $Bitrate) {
   // / Set variables.
-  global $Verbose, $VirusScan, $DocumentArray, $ImageArray, $ModelArray, $DrawingArray, $VideoArray, $StreamArray, $MediaArray, $ArchiveArray;
+  global $Verbose, $VirusScan, $DocumentArray, $ImageArray, $ModelArray, $DrawingArray, $VideoArray, $SubtitleArray, $StreamArray, $MediaArray, $ArchiveArray;
   $clean = $copy = TRUE;
   $MainConversionSuccess = $MainConversionErrors = $virusFound = $variableIsSanitized = $variableIsSanitized = $skip = $isExtensionSupported = FALSE;
   $docarray =  $DocumentArray;
@@ -1313,6 +1345,7 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
   $modelarray = $ModelArray;
   $drawingarray = $DrawingArray;
   $videoarray =  $VideoArray;
+  $subtitleArray = $SubtitleArray;
   $streamarray = $StreamArray;
   $audioarray =  $MediaArray;
   $archarray = $ArchiveArray; 
@@ -1323,7 +1356,7 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
   $array7zo2 = array('vhd', 'iso');
   $arraytaro = array('tar.gz', 'tar.bz2', 'tar');
   $arrayraro = array('rar');
-  $arrayArray = array('Document' => $docarray, 'Image' => $imgarray, 'Model' => $modelarray, 'Drawing' => $drawingarray, 'Video' => $videoarray, 'Stream' => $streamarray, 'Audio' => $audioarray, 'Archive' => $archarray);
+  $arrayArray = array('Document' => $docarray, 'Image' => $imgarray, 'Model' => $modelarray, 'Drawing' => $drawingarray, 'Video' => $videoarray, 'Subtitle' => $subtitleArray, 'Stream' => $streamarray, 'Audio' => $audioarray, 'Archive' => $archarray);
   $arrKey = 0;
   $file = '';
   // / Make sure the input files are formatted into an array.
@@ -1379,8 +1412,8 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
       $MainConversionSuccess = TRUE;
       if ($Verbose) logEntry('Created a file at '.$newPathname.'.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $pathname = $oldPathname = $oldExtension= $newPathname = $docarray = $imgarray = $audioarray = $videoarray = $streamarray = $modelarray = $drawingarray = $pdfarray = $archarray = $array7z = $array7zo = $arrayzipo = $arraytaro = $arrayraro = $arrayArray = $fileIsVerified = $scanComplete = $virusFound = $variableIsSanitized = $arrKey = $clean = $copy = $skip = $isExtensionSupported = NULL;
-  unset ($file, $pathname, $oldPathname, $oldExtension, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $streamarray, $modelarray, $drawingarray, $pdfarray, $archarray, $array7z, $array7zo, $arrayzipo, $arraytaro, $arrayraro, $arrayArray, $fileIsVerified, $scanComplete, $virusFound, $variableIsSanitized, $arrKey, $clean, $copy, $skip, $isExtensionSupported);
+  $file = $pathname = $oldPathname = $oldExtension= $newPathname = $docarray = $imgarray = $audioarray = $videoarray = $subtitleArray = $streamarray = $modelarray = $drawingarray = $pdfarray = $archarray = $array7z = $array7zo = $arrayzipo = $arraytaro = $arrayraro = $arrayArray = $fileIsVerified = $scanComplete = $virusFound = $variableIsSanitized = $arrKey = $clean = $copy = $skip = $isExtensionSupported = NULL;
+  unset ($file, $pathname, $oldPathname, $oldExtension, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $subtitleArray, $streamarray, $modelarray, $drawingarray, $pdfarray, $archarray, $array7z, $array7zo, $arrayzipo, $arraytaro, $arrayraro, $arrayArray, $fileIsVerified, $scanComplete, $virusFound, $variableIsSanitized, $arrKey, $clean, $copy, $skip, $isExtensionSupported);
   return array($MainConversionSuccess, $MainConversionErrors); }
 // / -----------------------------------------------------------------------------------
 

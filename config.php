@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 1/3/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 2/21/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,8 +11,8 @@
 // / This application is designed to provide a web-interface for converting file formats
 // / on a server for users of any web browser without authentication. 
 // /
-// / FILE INFORMATION
-// / v3.1.8.
+// / FILE INFORMATION ...
+// / v3.1.9.1.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -38,12 +38,12 @@
 // /   Salts for hashing operations.
 // /   Change these Salts to something completely random and keep them secret. 
 // /   Store your Salts in hardcopy form or an encrypted drive in case of emergency.
-$Salts1 = 'somethingSoRa12nDoMThatNobody_4Wiljl_evar+guess+i1tgdgdfgfdsfgdasfdas';
-$Salts2 = 'gdf4sgdfsgsdfsomethingSoRa33nDoMThatNobody_Will2_evar_guess+it';
+$Salts1 = 'something1SoRa21nDoMThatNobody_4Wiljl_evar+guess+i1tgdgdfgfdsfgdasfdas';
+$Salts2 = 'gdf4sgdfsg1sdfsomethingSoRa33nDoMThatNobody_Will2_evar_guess+it';
 $Salts3 = 'somethingSoRanDoMThatNobo423432dy54534534_Will_evar+guess+it';
-$Salts4 = 'somethin2gSoRanDoMThat231;l_Will_evar+guess+it';
+$Salts4 = 'somethin1gSoRanDoMThat123:l_will_evar-guess+it';
 $Salts5 = 'somethingSoRanDoMThatNobodyr3454r3r33_Will_evar+guess+it';
-$Salts6 = 'somethingSoR5anDoMThatNob2odyawryoglukfgy;/.5^&__Will_evar+guess+it';
+$Salts6 = 'somethingSoR5anDoMThatNob2odyawryoglukfgy;/,6^&__Will_evar+guess+it';
 // /  --Server URL--
 // /   Externally or internally accesible domain or IP.
 // /   Do not include a trailing slash.
@@ -189,7 +189,7 @@ $AllowUserShare = TRUE;
 // /   Only conversion types contained in this list will be processed.
 // /   If a conversion type is disabled, options for processing that conversion will not be displayed by the UI.
 // /   Default is 'Document', 'Image', 'Model', 'Drawing', 'Video', 'Audio', 'Archive', 'Stream', 'OCR'.
-$SupportedConversionTypes = array('Document', 'Image', 'Model', 'Drawing', 'Video', 'Audio', 'Archive', 'Stream', 'OCR');
+$SupportedConversionTypes = array('Document', 'Image', 'Model', 'Drawing', 'Video', 'Subtitle', 'Audio', 'Archive', 'Stream', 'OCR');
 // /  --File Deletion Age Theshold--
 // /   Age in minutes of files to be deleted.
 // /   Set to 0 to keep files indefinately.

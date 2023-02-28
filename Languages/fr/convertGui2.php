@@ -159,8 +159,13 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
       ?>
 
       <div id="file<?php echo $ConvertGuiCounter1; ?>" name="<?php echo $ConvertGuiCounter1; ?>">
-        <p href=""><strong><?php echo $ConvertGuiCounter1; ?>.</strong> <u><?php echo $File; ?></u></p>    
+
+        <a style="float:left;"><strong><?php echo $ConvertGuiCounter1; ?>.</strong> <u><?php echo $File; ?></u>&nbsp;&nbsp;</a>
+          <img id='loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>' name='loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $PacmanLoc; ?>' style="float:left; max-width:24px; max-height:24px; display:none;"/>
+        <br><br>
+
         <div id="buttonDiv<?php echo $ConvertGuiCounter1; ?>" name="buttonDiv<?php echo $ConvertGuiCounter1; ?>" style="height:25px;">
+          <a style="float:left;">&nbsp;&nbsp;&nbsp;&nbsp;</a>
           
           <img id="downloadfilebutton<?php echo $ConvertGuiCounter1; ?>" name="downloadfilebutton<?php echo $ConvertGuiCounter1; ?>" src="Resources/download.png" style="float:left; display:block;" onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');"/>
           <script type="text/javascript">
@@ -205,7 +210,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
           <img id="archfileXButton<?php echo $ConvertGuiCounter1; ?>" name="archfileXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:left; display:none;" 
            onclick="toggle_visibility('archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archfileButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archfileXButton<?php echo $ConvertGuiCounter1; ?>');"/>
 
-          <?php if (in_array($extension, $PDFWorkArr)) { ?>          
+          <?php if (in_array($extension, $PDFWorkArr) && in_array('OCR', $SupportedConversionTypes)) { ?>          
           <a style="float:left;">&nbsp;|&nbsp;</a>
           
           <img id="docscanButton<?php echo $ConvertGuiCounter1; ?>" name="docscanButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/docscan.png" style="float:left; display:block;" 
@@ -214,7 +219,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
            onclick="toggle_visibility('pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('docscanButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('docscanXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php } 
 
-          if (in_array($extension, $ArchiveArray)) { ?>
+          if (in_array($extension, $ArchiveArray) && in_array('Archive', $SupportedConversionTypes)) { ?>
           <a style="float:left;">&nbsp;|&nbsp;</a>
 
           <img id="archiveButton<?php echo $ConvertGuiCounter1; ?>" name="archiveButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/convert.png" style="float:left; display:block;" 
@@ -223,7 +228,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
            onclick="toggle_visibility('archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archiveButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archiveXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php } 
 
-          if (in_array($extension, $DocumentArray)) { ?>
+          if (in_array($extension, $DocumentArray) && in_array('Document', $SupportedConversionTypes)) { ?>
           <a style="float:left;">&nbsp;|&nbsp;</a>
 
           <img id="documentButton<?php echo $ConvertGuiCounter1; ?>" name="documentButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/document.png" style="float:left; display:block;" 
@@ -232,7 +237,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
            onclick="toggle_visibility('docOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php } 
 
-          if (in_array($extension, $SpreadsheetArray)) { ?>
+          if (in_array($extension, $SpreadsheetArray) && in_array('Document', $SupportedConversionTypes)) { ?>
           <a style="float:left;">&nbsp;|&nbsp;</a>
 
           <img id="spreadsheetButton<?php echo $ConvertGuiCounter1; ?>" name="spreadsheetButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/spreadsheet.png" style="float:left; display:block;" 
@@ -241,7 +246,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
            onclick="toggle_visibility('spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php }
 
-          if (in_array($extension, $PresentationArray)) { ?>
+          if (in_array($extension, $PresentationArray) && in_array('Document', $SupportedConversionTypes)) { ?>
           <a style="float:left;">&nbsp;|&nbsp;</a>
 
           <img id="presentationButton<?php echo $ConvertGuiCounter1; ?>" name="presentationButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/presentation.png" style="float:left; display:block;" 
@@ -250,7 +255,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
            onclick="toggle_visibility('presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('presentationButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('presentationXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php }
 
-          if (in_array($extension, $ImageArray)) { ?>
+          if (in_array($extension, $ImageArray) && in_array('Image', $SupportedConversionTypes)) { ?>
           <a style="float:left;">&nbsp;|&nbsp;</a>
 
           <img id="imageButton<?php echo $ConvertGuiCounter1; ?>" name="imageButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/photo.png" style="float:left; display:block;" 
@@ -259,7 +264,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
            onclick="toggle_visibility('imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('imageButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('imageXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php }
 
-          if (in_array($extension, $MediaArray)) { ?>
+          if (in_array($extension, $MediaArray) && in_array('Audio', $SupportedConversionTypes)) { ?>
           <a style="float:left;">&nbsp;|&nbsp;</a>
 
           <img id="mediaButton<?php echo $ConvertGuiCounter1; ?>" name="mediaButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/media.png" style="float:left; display:block;" 
@@ -268,7 +273,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
            onclick="toggle_visibility('audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('mediaButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('mediaXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php } 
 
-          if (in_array($extension, $VideoArray)) { ?>
+          if (in_array($extension, $VideoArray) && in_array('Video', $SupportedConversionTypes)) { ?>
           <a style="float:left;">&nbsp;|&nbsp;</a>
 
           <img id="videoButton<?php echo $ConvertGuiCounter1; ?>" name="videoButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/video.png" style="float:left; display:block;" 
@@ -286,7 +291,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
            onclick="toggle_visibility('streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('streamButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('streamXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php } 
 
-          if (in_array($extension, $DrawingArray)) { ?>
+          if (in_array($extension, $DrawingArray) && in_array('Drawing', $SupportedConversionTypes)) { ?>
           <a style="float:left;">&nbsp;|&nbsp;</a>
 
           <img id="drawingButton<?php echo $ConvertGuiCounter1; ?>" name="drawingButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/convert.png" style="float:left; display:block;" 
@@ -295,7 +300,7 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
            onclick="toggle_visibility('drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('drawingButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('drawingXButton<?php echo $ConvertGuiCounter1; ?>');"/>
           <?php } 
 
-          if (in_array($extension, $ModelArray)) { ?>
+          if (in_array($extension, $ModelArray) && in_array('Model', $SupportedConversionTypes)) { ?>
           <a style="float:left;">&nbsp;|&nbsp;</a>
 
           <img id="modelButton<?php echo $ConvertGuiCounter1; ?>" name="modelButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/convert.png" style="float:left; display:block;" 
@@ -1015,9 +1020,6 @@ if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
                       alert("<?php echo $Alert; ?>"); } }); }); });
           </script>
         <?php } ?>
-      </div>
-      <div id='utilitylower'>
-        <p><img id='loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>' name='loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $PacmanLoc; ?>' style="max-width:24px; max-height:24px; display:none;"/></p>
       </div>
       <hr />
       <?php } ?>

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 2/27/2023 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 3/2/2023 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.1.9.2.
+v3.1.9.3.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -26,7 +26,18 @@ Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
-COMMIT 2/21/2023
+COMMIT 3/2/2023
+v3.1.9.3 - Continue updating language packs.
+
+-v3.1.9.3.
+-Work on it, ko, pt, ru, uk, zh language packs.
+-Keep numbering language packs to v3.1.9.1.
+-Finally finished v3.1.9.1 language packs!!!
+-Remove PDF from imagearray.
+-Update "CREATING_LANGUAGE_PACKS.txt" to remove duplicate API inputs.
+
+--------------------
+COMMIT 2/27/2023
 v3.1.9.2 - Continue updating language packs.
 
 -v3.1.9.2.
@@ -77,9 +88,9 @@ v3.1.9 - Finish updating language packs.
   -es h,1,2,f
   -fr h,1,2,f
   -hi h,1,2,f
-  -it h,,,f
-  -ko h,,,f
-  -pt h,,,f
+  -it h,1,2,f
+  -ko h,1,2,f
+  -pt h,1,2,f
   -ru h,,,f
   -uk h,,,f
   -zh h,,,f

@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 2/21/2023 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 3/6/2023 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.1.9.1.
+v3.1.9.4.
 This plain text file contains descriptions of all the native error messages contained in or produced by the HRConvert2 Diablo engine. 
 These descriptions should give administrators a starting point for debugging problems with HRConvert2 installations. 
 Each section in this file contains information about a different error message. The first one is an example to demonstrate the structure of this file.
@@ -438,6 +438,7 @@ LOGGED
 ERROR DESCRIPTION
   The path to the Languages subdirectory of the installation directory does not exist or cannot be accessed.
   The requested Language Pack has become corrupt.
+  The requested language pack is missing one or more of the following files; languageStrings.php, header.php, footer.php, convertGui1.php, convertGui2.php.
   The requested Language Pack is incomplete, malformed, or missing critical components.
   This may be the result of incorrect file permission levels on the Languages subdirectory.
   This may be the result of incorrect user or group associations for the www-data user or group.

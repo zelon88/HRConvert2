@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 3/2/2023 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 3/7/2023 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.1.9.3.
+v3.1.9.5.
 This plain text file describes the process for creating, formatting, and installing additional language packs into HRConvert2.
 
 HARDWARE REQUIREMENTS ... 
@@ -46,51 +46,108 @@ In this document when we refer to a GUI, we refer to one complete set of files r
 In this document when we refer to a language pack, we refer to one individual GUI that has been localized to a specific language.
 A 'Language Pack' is just a localized 'GUI'. Each language pack contains one complete GUI.
 
-
-An HRConvert2 GUI is made up of 5 components. Each component serves a specific function. The 5 components of a GUI are;
+An HRConvert2 GUI is made up of 6 components. Each component serves a specific function. The 6 components of a GUI are;
 
   1. header.php
   2. convertGui1.php
   3. convertGui2.php
   4. footer.php
-  5. index.html
+  5. languageStrings.php
+  6. index.html
 
 These components are stored in a folder named after the ISO 639-1 language code for the language.
 The ISO-639-1 named folder is then placed inside the 'Languages' subdirectory of the HRConvert2 installation location.
 The supported ISO 639-1 language code must also be added to the --Supported Languages-- section of config.php or it will be ignored.
 If --Allow User Selectable Language-- is enabled, users will be able to select this language pack by sendiing a GET request.
 Users do not access the GUI directly. All requests should be directed to convertCore.php which will construct the GUI on-demand.
+
+During operation, HRConvert2 initializes the language using the following process;
+
+  1. Initialize the language to english.
+  2. Build an array of languages that are included with HRConvert2.
+  3. Check if the $SupportedLanguages variable from config.php is set properly.
+    3a. If not, use the included array of default languages instead.
+  4. If a language was specified via GET input, sanitize it.
+  5. Check if the $DefaultLanguage variable from config.php is set & supported.
+    5a. If not, use english instead.
+  6. Check if the $AllowUserSelectableLanguage variable from config.php is set.
+    6a. If not, use $DefaultLanguage instead.
+  7. Check if a language was specified via GET input.
+    7a. If not, use $DefaultLanguage instead.
+  8. Check if the specified language is supported.
+    8a. If not, use $DefaultLanguage instead.
+  9. If all checks have passed and the specified language is supported, set the language to use to the one specified via GET request.
+  10. Reset the language GET variable to the currently specified language so future requests will continue using the same language.
+  11. Define all required language related files & folders.
+  12. Check for the existence of all required language related files & folders.
+    12a. If not, terminate the application.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Development Tips--
+
+The modular design of HRConvert2 is designed to make modifications easily translatable to other languages.
+If you are maintaining a branch of HRConvert2 and are focusing on a single language pack you can build your logic directly into the GUI pages themselves.
+Any files that are not needed can be left blank after the opening PHP tag.
+Alternatively, remove unneeded files from the verifyLanguage() & showGui() functions of convertCore.php to exclude them completely.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Maintaining Language Packs--
+
+With the exception of the 'languageStrings.php' file & the reading order all stock language pack files are identical.
+The 'languageStrings.php' file should be used to contain any localization specific code.
+By placing localization specific code into 'languageStrings.php', GUI updates can be easily applied from one language pack to another.
+When updating text strings or translations, update the 'languageStrings.php' file of the desired language pack.
+When updating the UI for multiple language packs, change the specific GUI file, then copy & paste the file to other applicable language packs. 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About header.php--
 
-This file is the start of the GUI. This file is always rendered.
-Insert code here that should be inserted at the beginning of every page that HRConvert2 renders.
+This file contains the start of the GUI including the stylesheets, html, & head tags. 
+This file is always displayed.
+Localized text for this file is contained in the languageStrings.php file of the language pack.
+Insert code here that should run at the beginning of every page that HRConvert2 renders.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About convertGui1.php--
 
 This file contains the upload field as well as some information about the application.
-This file is displayed when no valid tokens have been supplied by the user.
 This file provides tokens to the user which must be included with any subsequent request by the user.
+This file is displayed when no valid tokens have been supplied by the user.
+Localized text for this file is contained in the languageStrings.php file of the language pack.
+Insert code here that should run before the user has uploaded any files.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About convertGui2.php--
 
 This file contains the available options for each submitted file.
-This file is displayed when valid tokens were supplied by the user.
 This file dynamically selects which options to display for which files.
+This file is displayed when valid tokens were supplied by the user.
+Localized text for this file is contained in the languageStrings.php file of the language pack.
+Insert code here that should run after the user has uploaded files.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About footer.php--
 
-This file is the end of the GUI. This file is always rendered.
-Insert code here that should be inserted at the end of every page that HRConvert2 renders.
-This file also renders the Terms of Service & Privacy Policy links when enabled.
+This file contains the end of the GUI including the Terms of Service & Privacy Policy links, when enabled.
+This file is always displayed.
+Localized text for this file is contained in the languageStrings.php file of the language pack.
+Insert code here that should run at the end of every page that HRConvert2 renders.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About languageStrings.php--
+
+This file contains the major language-specific text elements & logic.
+This file is loaded whenever a GUI is displayed.
+This file exists to make the other GUI files more universal.
+All translated text or text elements should be placed in this file & called by variable reference.
+Using this file to contain localized text elements improves the maintainability of multiple language packs.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -128,7 +185,7 @@ The loading spinner will change color as well. There is one spinner .gif file fo
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About Loading Spinners--
 
-There are 6 loading spinners to chose from that can be set in config.php.
+There are 6 loading spinners to choose from that can be set in config.php.
 Each spinner is available in 4 colors.
 The color of the spinner can be adjusted separately from the color of the rest of the GUI.
 The $PacmanLoc variable contains the relative path to use for the selected spinner.

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 3/2/2023 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 3/7/2023 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.1.9.3.
+v3.1.9.5.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -26,6 +26,48 @@ Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+COMMIT 3/7/2023
+v3.1.9.5 - Continue working on languageStrings concept.
+
+-v3.1.9.5.
+-Added an official Development branch to the official repo.
+  -The reason for this is because I'd like to stage updates on the Development branch until they are ready.
+  -Then the master branch will get updated only to stable versions.
+  -This is required because it has been taking me several commits to fully implement several features/fixes/improvements.
+  -I always try to have an error free program at commit time, but still; new users should not be exposed to an incomplete versions.
+-Shortened verifyGlobals() in convertCore.php by assigning multiple variables of the same value at the same time.
+-Add alt and title text to english language pack, download button.
+  -Will continue adding the rest.
+-Updated CREATING_LANGUAGE_PACKS.txt file.
+  -Expanded on --About Language Packs-- section.
+  -Added --Maintaining Language Packs-- section, in case anyone else out there gets super ambitious ;)
+  -Added --Development Tips-- section.
+  -Added info about languageStrings.php file.
+  -Revised the wording for the rest of the files.
+-Add array check in verifyLanguage() function to $SupportedLanguages array.
+-Fix bug in verifyLanguage.php caused by misplaced bracket (with matching bad indentation). 
+  -Would have caused problems during reverting to default language if $AllowUserSelectableLanguage was set to FALSE.
+
+--------------------
+COMMIT 3/6/2023
+v3.1.9.4 - Work on languageStrings concept - separate language specific UI & logic from base UI elements.
+
+-v3.1.9.4.
+-The goal of moving the language specific text and logic from the base UI elements is that it becomes easier to maintain language packs.
+  -Currently every time I release an update that modifies a language pack, I must duplicate that update 14 times and change relevant language related text.
+  -By separating this and itemizing it in variables contained in a new languageStrings.php file, maintaining things and adding features becomes easier.
+  -Also, the base files header, convertGui1, convertGui2, and footer become universal. Meaning that changes to them can be easily duplicated.
+  -We could simply get rid of these from the language packs and simplify a language pack down to just the languageStrings file.
+  -We can explore that later.
+-Update english language pack, working on formatting new style for all language packs.
+  -Move all language related logic to new languageStrings.php file.
+-Improve ERROR 16 description in ERROR_DESCRIPTIONS.txt.
+-Make verifyLanguage function more robust.
+  -Add detection for if the root Language folder exists.
+  -Utilize global variables for required directory detection.
+-Add global variables to contain language pack file paths.
+
+--------------------
 COMMIT 3/2/2023
 v3.1.9.3 - Continue updating language packs.
 

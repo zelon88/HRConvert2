@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 2/27/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 3/7/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.1.9.3.
+// / v3.1.9.5.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -306,12 +306,12 @@ function verifyColors($ButtonStyle) {
 // / A function to set the language to use for the session.
 function verifyLanguage() {
   // / Set variables.
-  global $DefaultLanguage, $SupportedLanguages, $AllowUserSelectableLanguage;
+  global $DefaultLanguage, $SupportedLanguages, $AllowUserSelectableLanguage, $LanguageDir, $LanguageStringsFile, $LanguageHeaderFile, $LanguageFooterFile, $LanguageUI1File, $LanguageUI2File;
   $LanguageIsSet = TRUE;
   $LanguageToUse = 'en';
   $defaultLanguages = array('en', 'fr', 'es', 'zh', 'hi', 'ar', 'ru', 'uk', 'bn', 'de', 'ko', 'it', 'pt');
   // / Make sure $SupportedLanguages is valid.
-  if (!isset($SupportedLanguages)) $SupportedLanguages = $defaultLanguages;
+  if (!isset($SupportedLanguages) or !is_array($SupportedLanguages)) $SupportedLanguages = $defaultLanguages;
   // / Make sure $_GET['language'] is properly sanitized.
   if (isset($_GET['language'])) list ($_GET['language'], $sanitized) = sanitize(strtolower($_GET['language']), TRUE);
   // / Make sure the Default Language is valid.
@@ -319,16 +319,25 @@ function verifyLanguage() {
   // / If allowed and if specified, detect the users specified language and set that as the language to use.
   if (isset($AllowUserSelectableLanguage)) {
     if ($AllowUserSelectableLanguage) if (isset($_GET['language'])) if (in_array($_GET['language'], $SupportedLanguages)) {
-      $LanguageToUse = $_GET['language'];
-      if (!$AllowUserSelectableLanguage) $LanguageToUse = $DefaultLanguage; } }
+      $LanguageToUse = $_GET['language']; }
+    if (!$AllowUserSelectableLanguage) $LanguageToUse = $DefaultLanguage; }
   // / Set the $_GET['language'] variable to whatever the current language is so the next page will use the same one.
   $_GET['language'] = $LanguageToUse;
+  // / Set the variables to required UI files.
+  $LanguageDir = 'Languages/'.$LanguageToUse.'/';
+  $LanguageHeaderFile = $LanguageDir.'header.php';
+  $LanguageFooterFile = $LanguageDir.'footer.php';
+  $LanguageUI1File = $LanguageDir.'convertGui1.php';
+  $LanguageUI2File = $LanguageDir.'convertGui2.php';
+  $LanguageStringsFile = $LanguageDir.'languageStrings.php';
+  $languageFiles = array($LanguageStringsFile, $LanguageHeaderFile, $LanguageFooterFile, $LanguageUI1File, $LanguageUI2File);
+  // / Verify that the required langauge folder exists.
+  if (!is_dir($LanguageDir)) $LanguageIsSet = FALSE;
   // / Verify that required UI files exist.
-  $requiredUIFiles = array('Languages/'.$LanguageToUse.'/footer.php', 'Languages/'.$LanguageToUse.'/header.php', 'Languages/'.$LanguageToUse.'/convertGui1.php', 'Languages/'.$LanguageToUse.'/convertGui2.php');
-  foreach ($requiredUIFiles as $reqFile) if (!file_exists($reqFile)) $LanguageIsSet = FALSE;
+  foreach ($languageFiles as $reqFile) if (!file_exists($reqFile)) $LanguageIsSet = FALSE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $defaultLanguages = $requiredUIFiles = $reqFile = $sanitized = NULL;
-  unset($defaultLanguages, $requiredFiles, $reqFile, $sanitized);
+  $defaultLanguages = $reqFile = $sanitized = $languageFiles = NULL;
+  unset($defaultLanguages, $reqFile, $sanitized, $languageFiles);
   return array($LanguageIsSet, $LanguageToUse); }
 // / -----------------------------------------------------------------------------------
 
@@ -355,12 +364,11 @@ function securePath($PathToSecure, $DangerArr, $isURL) {
 // / A function to set the global variables for the session.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $SubtitleArray, $StreamArray, $DrawingArray, $ModelArray, $ConvertArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser;
+  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $SubtitleArray, $StreamArray, $DrawingArray, $ModelArray, $ConvertArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File;
   // / Application related variables.
-  $HRConvertVersion = 'v3.1.9.3';
+  $HRConvertVersion = 'v3.1.9.5';
   $CoreLoaded = $GlobalsAreVerified = TRUE;
-  $StopCounter = 0;
-  $SleepTimer = 0;
+  $StopCounter = $SleepTimer = 0;
   $PermissionLevels = 0755;
   $ApacheUser = 'www-data';
   // / Convinience variables.
@@ -375,10 +383,7 @@ function verifyGlobals() {
   $Alert1 = 'Cannot perform a virus scan on this file!';
   $Alert2 = 'File Link Copied to Clipboard!';
   $Alert3 = 'Operation Failed!';
-  $FCPlural = '';
-  $FCPlural1 = '';
-  $FCPlural2 = '';
-  $FCPlural3 = '';
+  $File = $FCPlural = $FCPlural1 = $FCPlural2 = $FCPlural3 = '';
   // / Security related variables.
   $DefaultApps = array('.', '..');
   $DangerousFiles = array('js', 'php', '.html', 'css', 'phar', '.', '..', 'index.php', 'index.html');
@@ -1153,7 +1158,7 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
 // / A function to prepare & load the GUI.
 function showGUI($ShowGUI, $LanguageToUse, $ButtonCode) {
   // / Set variables.
-  global $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $ConvertArray, $PDFWorkArr, $ArchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoArray, $SubtitleArray, $StreamArray, $MediaArray, $PresentationArray, $ConvertGuiCounter1, $ButtonCode, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL;
+  global $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $ConvertArray, $PDFWorkArr, $ArchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoArray, $SubtitleArray, $StreamArray, $MediaArray, $PresentationArray, $ConvertGuiCounter1, $ButtonCode, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageHeaderFile, $LanguageDir, $LanguageFooterFile, $LanguageUI1File, $LanguageUI2File, $LanguageStringsFile, $File;
   $GUIDisplayed = FALSE;
   $Files = getFiles($ConvertDir);
   $FileCount = count($Files);
@@ -1164,16 +1169,17 @@ function showGUI($ShowGUI, $LanguageToUse, $ButtonCode) {
   if (isset($ShowGUI)) if (!$ShowGUI) $_GET['noGui'] = TRUE;
   // / Call the GUI from the selected language pack after files have been uploaded.
   if (isset($_GET['showFiles'])) {
-    $GUIDisplayed = TRUE;
-    require_once('Languages/'.$LanguageToUse.'/header.php');
-    require_once('Languages/'.$LanguageToUse.'/convertGui2.php');
-    require_once('Languages/'.$LanguageToUse.'/footer.php'); }
+    require_once($LanguageStringsFile);
+    require_once($LanguageHeaderFile);
+    require_once($LanguageUI2File);
+    require_once($LanguageFooterFile); }
   // / Call the GUI from the selected language pack before files have been uploaded.
   if (!isset($_GET['showFiles'])) {
-    $GUIDisplayed = TRUE;
-    require_once('Languages/'.$LanguageToUse.'/header.php');
-    require_once('Languages/'.$LanguageToUse.'/convertGui1.php');
-    require_once('Languages/'.$LanguageToUse.'/footer.php'); }
+    require_once($LanguageStringsFile);
+    require_once($LanguageHeaderFile);
+    require_once($LanguageUI1File);
+    require_once($LanguageFooterFile); }
+  $GUIDisplayed = TRUE;
   return $GUIDisplayed; }
 // / -----------------------------------------------------------------------------------
 

@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 2/21/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 3/6/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.1.9.1.
+// / v3.1.9.4.
 // / This file contains language specific GUI elements for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -26,43 +26,29 @@
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
-$Alert = 'Cannot convert this file! Try changing the name.';
-$Alert1 = 'Cannot perform a virus scan on this file!';
-$Alert2 = 'File Link Copied to Clipboard!';
-$Alert3 = 'Operation Failed!';
-$FCPlural1 = 's';
-$FCPlural2 = 's are';
-if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
-if (!is_numeric($FileCount)) $FileCount = 'an unknown number of';
-if ($FileCount == 1) {
-  $FCPlural1 = '';
-  $FCPlural2 = ' is'; }
-if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
-if (!isset($ApplicationTitle)) $ApplicationTitle = 'Convert Anything!';
-if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
+
+// / -----------------------------------------------------------------------------------
+// / Check if the core is loaded.
+if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
+// / -----------------------------------------------------------------------------------
 ?>
   <body>
     <script type="text/javascript" src="Resources/jquery-3.6.3.min.js"></script>
     <div id="header-text" style="max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;">
       <?php if (!isset($_GET['noGui'])) { ?><h1><?php echo $ApplicationName; ?></h1>
       <hr /><?php } ?>
-      <h3>File Conversion Options</h3>
-      <p>You have uploaded <?php echo $FileCount; ?> valid file<?php echo $FCPlural1; ?> to <?php echo $ApplicationName; ?>.</p> 
-      <p>Your file<?php echo $FCPlural2; ?> now ready to convert using the options below.</p>
+      <?php echo $Gui2Text1; ?>
     </div>
 
     <div id="compressAll" name="compressAll" style="max-width:1000px; margin-left: auto; margin-right: auto; text-align:center;">
       <button id="backButton" name="backButton" style="width:50px;" class="info-button" onclick="window.history.back();">&#x2190;</button>
       <button id="refreshButton" name="refreshButton" style="width:50px;" class="info-button" onclick="javascript:location.reload(true);">&#x21BB;</button>
       <br /> <br />
-      <button id="scandocMoreOptionsButton" name="scandocMoreOptionsButton" class="info-button" onclick="toggle_visibility('compressAllOptions');">Bulk File Options</button> 
+      <?php echo $Gui2Text2; ?>
       <div id="compressAllOptions" name="compressAllOptions" align="center" style="display:none;">
         <?php if ($AllowUserVirusScan) { ?>
         <hr style='width: 50%;' />
-        <p><strong>Scan All Files For Viruses</strong></p>
-        <p>Scan with ClamAV: <input type="checkbox" id="clamscanall" value="clamscanall" name="clamScan" checked></p>
-        <p>Scan with ScanCore: <input type="checkbox" id="scancoreall" value="scancoreall" name="phpavScan" checked></p>
-        <p><input type="submit" id="scanAllButton" name="scanAllButton" class="info-button" value='Scan All' onclick="toggle_visibility('loadingCommandDiv');"></p>
+        <?php echo $Gui2Text3; ?>
         <script type="text/javascript">
         $(document).ready(function () {
           $('#scanAllButton').click(function() {
@@ -99,17 +85,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
         </script>
       <?php } ?>
         <hr style='width: 50%;' />
-        <p><strong>Compress & Download All Files</strong></p>
-        <p>Specify Filename: <input type="text" id='userarchallfilename' name='userarchallfilename' value='HRConvert2_Files-<?php echo $Date; ?>'></p> 
-        <select id='archallextension' name='archallextension'> 
-          <option value="zip">Format</option>
-          <option value="zip">Zip</option>
-          <option value="rar">Rar</option>
-          <option value="iso">Iso</option>
-          <option value="tar">Tar</option>
-          <option value="7z">7z</option>
-        </select>
-        <input type="submit" id="archallSubmit" name="archallSubmit" class="info-button" value='Compress & Download' onclick="toggle_visibility('loadingCommandDiv');">
+        <?php echo $Gui2Text4; ?>
         <script type="text/javascript">
         $(document).ready(function () {
           $('#archallSubmit').click(function() { 
@@ -169,12 +145,12 @@ if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot 
         <div id="buttonDiv<?php echo $ConvertGuiCounter1; ?>" name="buttonDiv<?php echo $ConvertGuiCounter1; ?>" style="height:25px;">
           <a style="float:left;">&nbsp;&nbsp;&nbsp;&nbsp;</a>
 
-          <img id="downloadfilebutton<?php echo $ConvertGuiCounter1; ?>" name="downloadfilebutton<?php echo $ConvertGuiCounter1; ?>" src="Resources/download.png" style="float:left; display:block;" onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');"/>
+          <img id="downloadfilebutton<?php echo $ConvertGuiCounter1; ?>" name="downloadfilebutton<?php echo $ConvertGuiCounter1; ?>" src="Resources/download.png" style="float:left; display:block;" onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text5.' '.$File; ?>' alt='<?php echo $Gui2Text5.' '.$File; ?>'/>
+
           <script type="text/javascript">
           $(document).ready(function () {
             $('#downloadfilebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
               $.ajax({
-              type: 'POST',
               url: 'convertCore.php',
               data: { 
                 Token1:'<?php echo $Token1; ?>',

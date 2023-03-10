@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 3/7/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 3/9/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.1.9.5.
+// / v3.1.9.6.
 // / This file contains language specific GUI related text for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -62,16 +62,35 @@ $Gui2Text3 = '
         <p>Scan with ClamAV: <input type=\'checkbox\' id=\'clamscanall\' value=\'clamscanall\' name=\'clamScan\' checked></p>
         <p>Scan with ScanCore: <input type=\'checkbox\' id=\'scancoreall\' value=\'scancoreall\' name=\'phpavScan\' checked></p>
         <p><input type=\'submit\' id=\'scanAllButton\' name=\'scanAllButton\' class=\'info-button\' value=\'Scan All\' onclick="toggle_visibility(\'loadingCommandDiv\');"></p>';
-$Gui2Text4 = '
-        <p><strong>Compress & Download All Files</strong></p>
-        <p>Specify Filename: <input type=\'text\' id=\'userarchallfilename\' name=\'userarchallfilename\' value=\'HRConvert2_Files-'.$Date.'\'></p> 
-        <select id=\'archallextension\' name=\'archallextension\'> 
-          <option value=\'zip\'>Format</option>
-          <option value=\'zip\'>Zip</option>
-          <option value=\'rar\'>Rar</option>
-          <option value=\'iso\'>Iso</option>
-          <option value=\'tar\'>Tar</option>
-          <option value=\'7z\'>7z</option>
-        </select>
-        <input type=\'submit\' id=\'archallSubmit\' name=\'archallSubmit\' class=\'info-button\' value=\'Compress & Download\' onclick="toggle_visibility(\'loadingCommandDiv\');">';
+$Gui2Text4 = 'Compress & Download All Files';
 $Gui2Text5 = 'Download';
+$Gui2Text6 = 'Share';
+$Gui2Text7 = 'Close Share Options';
+$Gui2Text8 = 'Virus Scan';
+$Gui2Text9 = 'Close Virus Scan Options';
+$Gui2Text10 = 'Archive';
+$Gui2Text11 = 'Close Archive Options';
+$Gui2Text12 = 'OCR';
+$Gui2Text13 = 'Close OCR Options';
+$Gui2Text14 = 'Convert';
+$Gui2Text15 = 'Close Convert Options';
+$Gui2Text16 = 'Archive This File';
+$Gui2Text17 = 'Specify Filename: ';
+$Gui2Text18 = 'Format';
+$Gui2Text19 = 'Compress & Download';
+$Gui2Text20 = '';
+$Gui2Text21 = 'Close OCR Options';
+$Gui2Text22 = '';
+$Gui2Text23 = 'Close OCR Options';
+$Gui2Text24 = '';
+$Gui2Text25 = 'Close OCR Options';
+$Gui2Text26 = '';
+$Gui2Text27 = 'Close OCR Options';
+$Gui2Text28 = '';
+$Gui2Text29 = 'Close OCR Options';
+$Gui2Text30 = '';
+$Gui2Text31 = 'Close OCR Options';
+$Gui2Text32 = '';
+$Gui2Text33 = 'Close OCR Options';
+$Gui2Text34 = '';
+$Gui2Text35 = 'Close OCR Options';

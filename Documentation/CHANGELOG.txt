@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 3/7/2023 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 3/9/2023 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.1.9.5.
+v3.1.9.6.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -26,6 +26,24 @@ Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+
+COMMIT 3/9/2023
+v3.1.9.6 - Continue working on languageStrings concept.
+
+-v3.1.9.6.
+-Development Version.
+  -Language packs other than English will not work.
+  -English language pack is unreliable.
+  -OCR operations need attention.
+-I screwed up and posted the last batch of commits (v3.1.9.5) to to the wrong branch! 
+  -Then got frustrated and deleted the development branch.
+  -Now that I'm not as frustrated I will try again.
+-Reduce the amount of HTML tags that goes into languageStrings.php.
+  -This is needed because of variable scope. 
+  -The file loop in convertGui2.php doesn't update variables contained in languageStrings.php due to where it is called in.
+-Start converting the UI HTML to single quotes wherever possible.
+
+--------------------
 COMMIT 3/7/2023
 v3.1.9.5 - Continue working on languageStrings concept.
 

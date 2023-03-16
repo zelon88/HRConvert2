@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 3/9/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 3/15/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.1.9.6.
+// / v3.1.9.7.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -366,7 +366,7 @@ function verifyGlobals() {
   // / Set global variables to be used through the entire application.
   global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $SubtitleArray, $StreamArray, $DrawingArray, $ModelArray, $ConvertArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File;
   // / Application related variables.
-  $HRConvertVersion = 'v3.1.9.6';
+  $HRConvertVersion = 'v3.1.9.7';
   $CoreLoaded = $GlobalsAreVerified = TRUE;
   $StopCounter = $SleepTimer = 0;
   $PermissionLevels = 0755;
@@ -1155,31 +1155,52 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to prepare & load the GUI.
-function showGUI($ShowGUI, $LanguageToUse, $ButtonCode) {
+// / A function to build the GUI.
+function buildGUI($guiType, $ButtonCode) {
   // / Set variables.
-  global $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $ConvertArray, $PDFWorkArr, $ArchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoArray, $SubtitleArray, $StreamArray, $MediaArray, $PresentationArray, $ConvertGuiCounter1, $ButtonCode, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageHeaderFile, $LanguageDir, $LanguageFooterFile, $LanguageUI1File, $LanguageUI2File, $LanguageStringsFile, $File;
-  $GUIDisplayed = FALSE;
-  $Files = getFiles($ConvertDir);
-  $FileCount = count($Files);
+  global $LanguageStringsFile, $LanguageHeaderFile, $LanguageFooterFile, $LanguageUI1File, $LanguageUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $ConvertArray, $PDFWorkArr, $ArchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoArray, $SubtitleArray, $StreamArray, $MediaArray, $PresentationArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageHeaderFile, $LanguageDir, $LanguageFooterFile, $LanguageUI1File, $LanguageUI2File, $LanguageStringsFile, $File;
+  $GUIDisplayed = $languageStringsTest = $headerTest = $guiTest = $footerTest = FALSE;
+  // / Make sure the $guiType is valid.
+  if (!is_numeric($guiType)) if ($guiType >= 0) $guiType = 1; 
   // / Determine which loading indicator to use.
   $PacmanLoc = 'Resources/pacman'.$SpinnerStyle.strtolower($SpinnerColor).'.gif';
   if (!file_exists($PacmanLoc)) $PacmanLoc = 'Resources/pacman1grey.gif';
+  // / Define the different GUI types that are available.
+  if ($guiType === 1) $languageUIFile = $LanguageUI1File;
+  if ($guiType === 2) {
+    // / Gather a list of files.
+    $Files = getFiles($ConvertDir);
+    $FileCount = count($Files);
+    $languageUIFile = $LanguageUI2File; }
+  // / Build the specified GUI.
+  require_once($LanguageStringsFile);
+  require_once($LanguageHeaderFile);
+  require_once($languageUIFile);
+  require_once($LanguageFooterFile);
+  // / Check that the GUI was actually displayed.
+  if (isset($HeaderDisplayed)) if ($HeaderDisplayed) $headerTest = TRUE;
+  if (isset($UIDisplayed)) if ($UIDisplayed) $guiTest = TRUE;
+  if (isset($FooterDisplayed)) if ($FooterDisplayed) $footerTest = TRUE;
+  if (isset($LanguageStringsLoaded)) if ($LanguageStringsLoaded) $languageStringsTest = TRUE;
+  if ($HeaderDisplayed && $UIDisplayed && $FooterDisplayed && $LanguageStringsLoaded) $GUIDisplayed = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $guiType = $languageUIFile = $languageStringsTest = $headerTest = $guiTest = $footerTest = NULL; 
+  unset($guiType, $languageUIFile, $languageStringsTest, $headerTest, $guiTest, $footerTest); 
+  return $GUIDisplayed; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to display the GUI.
+function showGUI($ShowGUI, $LanguageToUse, $ButtonCode) {
+  // / Set variables.
+  global $ButtonCode;
+  $GUIDisplayed = FALSE;
   // / Determine whether to show a full or minimal GUI.
   if (isset($ShowGUI)) if (!$ShowGUI) $_GET['noGui'] = TRUE;
   // / Call the GUI from the selected language pack after files have been uploaded.
-  if (isset($_GET['showFiles'])) {
-    require_once($LanguageStringsFile);
-    require_once($LanguageHeaderFile);
-    require_once($LanguageUI2File);
-    require_once($LanguageFooterFile); }
+  if (isset($_GET['showFiles'])) $GUIDisplayed = buildGui(2, $ButtonCode);
   // / Call the GUI from the selected language pack before files have been uploaded.
-  if (!isset($_GET['showFiles'])) {
-    require_once($LanguageStringsFile);
-    require_once($LanguageHeaderFile);
-    require_once($LanguageUI1File);
-    require_once($LanguageFooterFile); }
-  $GUIDisplayed = TRUE;
+  if (!isset($_GET['showFiles'])) $GUIDisplayed = buildGui(1, $ButtonCode);
   return $GUIDisplayed; }
 // / -----------------------------------------------------------------------------------
 
@@ -1934,7 +1955,7 @@ list ($EncryptionVerified, $URLEcho) = verifyEncryption();
 if (!$EncryptionVerified) errorEntry('Could not verify connection!', 10, TRUE);
 else if ($Verbose) logEntry('Verified inbound connection.');
 
-// / The following code verifies & sanitized global variables for the session.
+// / The following code verifies & sanitizes global variables for the session.
 list ($GlobalsAreVerified, $CoreLoaded) = verifyGlobals();
 if (!$GlobalsAreVerified) errorEntry('Could not verify globals!', 11, TRUE);
 else if ($Verbose) logEntry('Verified globals.');

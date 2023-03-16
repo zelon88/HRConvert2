@@ -1,7 +1,7 @@
 <?php 
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 2/21/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 3/15/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.1.9.1.
+// / v3.1.9.7.
 // / This file contains language specific GUI elements to be displayed at the top of pages.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -26,6 +26,7 @@
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
+$HeaderDisplayed = TRUE;
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
 if (!isset($ApplicationTitle)) $ApplicationTitle = 'Convert Anything!'; 
 if (!isset($Font)) $Font = 'Arial'; ?>

@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 3/9/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 3/15/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.1.9.6.
+// / v3.1.9.7.
 // / This file contains language specific GUI elements for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -28,6 +28,7 @@
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+$UIDisplayed = TRUE;
 // / Check if the core is loaded.
 if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
 // / -----------------------------------------------------------------------------------
@@ -37,18 +38,23 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
     <div id='header-text' style='max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;'>
       <?php if (!isset($_GET['noGui'])) { ?><h1><?php echo $ApplicationName; ?></h1>
       <hr /><?php } ?>
-      <?php echo $Gui2Text1; ?>
+      <h3><?php echo $Gui2Text1; ?></h3>
+      <p><?php echo $Gui2Text30; ?></p>
+      <p><?php echo $Gui2Text31; ?></p>
     </div>
 
-    <div id='ompressAll' name='compressAll' style='max-width:1000px; margin-left: auto; margin-right: auto; text-align:center;'>
+    <div id='compressAll' name='compressAll' style='max-width:1000px; margin-left: auto; margin-right: auto; text-align:center;'>
       <button id='backButton' name='backButton' style='width:50px;' class='info-button' onclick='window.history.back();'>&#x2190;</button>
       <button id='refreshButton' name='refreshButton' style='width:50px;' class='info-button' onclick='javascript:location.reload(true);'>&#x21BB;</button>
       <br /> <br />
-      <?php echo $Gui2Text2; ?>
+      <button id='scandocMoreOptionsButton' name='scandocMoreOptionsButton' class='info-button' onclick="toggle_visibility('compressAllOptions');"><?php echo $Gui2Text2; ?></button>
       <div id='compressAllOptions' name='compressAllOptions' align='center' style='display:none;'>
         <?php if ($AllowUserVirusScan) { ?>
         <hr style='width: 50%;'/>
-        <?php echo $Gui2Text3; ?>
+        <p><strong><?php echo $Gui2Text3; ?></strong></p>
+        <p><?php echo $Gui2Text20; ?><input type='checkbox' id='clamscanall' value='clamscanall' name='clamScan' checked></p>
+        <p><?php echo $Gui2Text21; ?><input type='checkbox' id='scancoreall' value='scancoreall' name='phpavScan' checked></p>
+        <p><input type='submit' id='scanAllButton' name='scanAllButton' class='info-button' value='<?php echo $Gui2Text22; ?>' onclick="toggle_visibility('loadingCommandDiv');"></p>
         <script type='text/javascript'>
         $(document).ready(function () {
           $('#scanAllButton').click(function() {
@@ -311,7 +317,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
             <option value='iso'>Iso</option>
             <option value='7z'>7z</option>'
           </select></p>
-          <input type="submit" id="archfileSubmit<?php echo $ConvertGuiCounter1; ?>" name="archfileSubmit<?php echo $ConvertGuiCounter1; ?>" value='Archive File' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="archfileSubmit<?php echo $ConvertGuiCounter1; ?>" name="archfileSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text51; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#archfileSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -345,13 +351,13 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
         <?php if ($AllowUserShare) { ?>
         <div id='sharefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='sharefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p><strong>Share This File</strong></p>
-          <p id='sharelinkStatus<?php echo $ConvertGuiCounter1; ?>' name='sharelinkStatus<?php echo $ConvertGuiCounter1; ?>'>Link Status: <i>Not Generated</i></p>
+          <p><strong><?php echo $Gui2Text23; ?></strong></p>
+          <p id='sharelinkStatus<?php echo $ConvertGuiCounter1; ?>' name='sharelinkStatus<?php echo $ConvertGuiCounter1; ?>'><?php echo $Gui2Text24; ?><i><?php echo $Gui2Text25; ?></i></p>
           <p id='shareclipStatus<?php echo $ConvertGuiCounter1; ?>' name='shareclipStatus<?php echo $ConvertGuiCounter1; ?>'>Clipboard Status: <i>Not Copied</i></p>
           <p id='sharelinkURL<?php echo $ConvertGuiCounter1; ?>' name='sharelinkURL<?php echo $ConvertGuiCounter1; ?>'>File Link: <i>Not Generated</i></p>
 
-          <input type="submit" id="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" name="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" value='Generate Link & Copy to Clipboard' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <input type="submit" id="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" name="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" value='Generate Link' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" name="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text32; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" name="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text33; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
 
           <script type="text/javascript">
           $(document).ready(function () {
@@ -365,9 +371,9 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
                 download:'<?php echo $File; ?>' },
               success: function(returnFile) {
                 toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = 'Link Status: <i>Generated</i>';
-                document.getElementById('shareclipStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = 'Clipboard Status: <i>Copied</i>';
-                document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = 'File Link: <i><?php echo $FullURL.'/DATA/'.$SesHash3.'/'.$File; ?></i>';
+                document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text24; ?><i><?php echo $Gui2Text26; ?></i>';
+                document.getElementById('shareclipStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text27; ?><i><?php echo $Gui2Text28; ?></i>';
+                document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text29; ?><i><?php echo $FullURL.'/DATA/'.$SesHash3.'/'.$File; ?></i>';
                 copy_share_link("<?php echo $FullURL.'/DATA/'.$SesHash3.'/'.$File; ?>");
                 alert("<?php echo $Alert2; ?>"); },
               error: function(ReturnData) {
@@ -382,8 +388,8 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
                 download:'<?php echo $File; ?>' },
               success: function(returnFile) {
                 toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = 'Link Status: <i>Generated</i>';
-                document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = 'File Link: <i><?php echo $FullURL.'/DATA/'.$SesHash3.'/'.$File; ?></i>'; },
+                document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text24; ?><i><?php echo $Gui2Text26; ?></i>';
+                document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text29; ?><i><?php echo $FullURL.'/DATA/'.$SesHash3.'/'.$File; ?></i>'; },
               error: function(ReturnData) {
                 alert("<?php echo $Alert3; ?>"); } }); }); });
           </script>
@@ -393,10 +399,10 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
         if ($AllowUserVirusScan) { ?>
         <div id='scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p><strong>Scan This File For Viruses</strong></p>
-          <input type="submit" id="scancorebutton<?php echo $ConvertGuiCounter1; ?>" name="scancorebutton<?php echo $ConvertGuiCounter1; ?>" value='Scan File With ScanCore' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <input type="submit" id="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" name="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" value='Scan File With ClamAV' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <input type="submit" id="scanallbutton<?php echo $ConvertGuiCounter1; ?>" name="scanallbutton<?php echo $ConvertGuiCounter1; ?>" value='Scan File With ScanCore & ClamAV' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <p><strong><?php echo $Gui2Text34; ?></strong></p>
+          <input type="submit" id="scancorebutton<?php echo $ConvertGuiCounter1; ?>" name="scancorebutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text35; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" name="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text36; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="scanallbutton<?php echo $ConvertGuiCounter1; ?>" name="scanallbutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text37; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#scancorebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -476,15 +482,15 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
         ?>
         <div id='pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p><strong>Perform Optical Character Recognition On This File</strong></p>
-          <p>Specify Filename: <input type="text" id='userpdffilename<?php echo $ConvertGuiCounter1; ?>' name='userpdffilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><strong><?php echo $Gui2Text38; ?></strong></p>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='userpdffilename<?php echo $ConvertGuiCounter1; ?>' name='userpdffilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='pdfmethod<?php echo $ConvertGuiCounter1; ?>' name='pdfmethod<?php echo $ConvertGuiCounter1; ?>'>   
-            <option value="0">Method</option>  
-            <option value="1">Method 1 (Simple)</option>
-            <option value="2">Method 2 (Advanced)</option>
+            <option value="0"><?php echo $Gui2Text39; ?></option>  
+            <option value="1"><?php echo $Gui2Text39; ?> 1 (<?php echo $Gui2Text40; ?>)</option>
+            <option value="2"><?php echo $Gui2Text39; ?> 2 (<?php echo $Gui2Text41; ?>)</option>
           </select>
           <select id='pdfextension<?php echo $ConvertGuiCounter1; ?>' name='pdfextension<?php echo $ConvertGuiCounter1; ?>'>   
-            <option value="pdf">Format</option> 
+            <option value="pdf"><?php echo $Gui2Text18; ?></option> 
             <option value="pdf">Pdf</option>   
             <option value="doc">Doc</option>
             <option value="docx">Docx</option>
@@ -492,7 +498,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
             <option value="txt">Txt</option>
             <option value="odt">Odt</option>
           </select></p>
-          <p><input type="submit" id='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' name='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' value='Convert Into Document' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');"></p>
+          <p><input type="submit" id='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' name='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo $Gui2Text52; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');"></p>
           <script type="text/javascript">
           $(document).ready(function () {
             $('#pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -528,17 +534,17 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
         ?>
         <div id='archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p><strong>Convert This Archive</strong></p>
-          <p>Specify Filename: <input type="text" id='userarchivefilename<?php echo $ConvertGuiCounter1; ?>' name='userarchivefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><strong><?php echo $Gui2Text42; ?></strong></p>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='userarchivefilename<?php echo $ConvertGuiCounter1; ?>' name='userarchivefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='archiveextension<?php echo $ConvertGuiCounter1; ?>' name='archiveextension<?php echo $ConvertGuiCounter1; ?>'> 
-            <option value="zip">Format</option>
+            <option value="zip"><?php echo $Gui2Text18; ?></option>
             <option value="zip">Zip</option>
             <option value="rar">Rar</option>
             <option value="tar">Tar</option>
             <option value="iso">Iso</option>
             <option value="7z">7z</option>
           </select></p>
-          <input type="submit" id="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Archive Files' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text53; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -573,10 +579,10 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
         ?>
         <div id='docOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='docOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p><strong>Convert This Document</strong></p>
-          <p>Specify Filename: <input type="text" id='userdocfilename<?php echo $ConvertGuiCounter1; ?>' name='userdocfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><strong><?php echo $Gui2Text43; ?></strong></p>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='userdocfilename<?php echo $ConvertGuiCounter1; ?>' name='userdocfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='docextension<?php echo $ConvertGuiCounter1; ?>' name='docextension<?php echo $ConvertGuiCounter1; ?>'> 
-            <option value="txt">Format</option>
+            <option value="txt"><?php echo $Gui2Text18; ?></option>
             <option value="doc">Doc</option>
             <option value="docx">Docx</option>
             <option value="rtf">Rtf</option>
@@ -584,7 +590,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
             <option value="odt">Odt</option>
             <option value="pdf">Pdf</option>
           </select></p>
-          <input type="submit" id="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Convert Document' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text54; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#docconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -619,10 +625,10 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
         ?>
         <div id='spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p><strong>Convert This Spreadsheet</strong></p>
-          <p>Specify Filename: <input type="text" id='userspreadfilename<?php echo $ConvertGuiCounter1; ?>' name='userspreadfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><strong><?php echo $Gui2Text44; ?></strong></p>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='userspreadfilename<?php echo $ConvertGuiCounter1; ?>' name='userspreadfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='spreadextension<?php echo $ConvertGuiCounter1; ?>' name='spreadextension<?php echo $ConvertGuiCounter1; ?>'>
-            <option value="ods">Format</option> 
+            <option value="ods"><?php echo $Gui2Text18; ?></option> 
             <option value="xls">Xls</option>
             <option value="xlsx">Xlsx</option>
             <option value="ods">Ods</option>
@@ -630,7 +636,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
             <option value="tsv">Tsv</option>
             <option value="pdf">Pdf</option>
           </select></p>
-          <input type="submit" id="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Convert Spreadsheet' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">        
+          <input type="submit" id="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text55; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">        
           <script type="text/javascript">
           $(document).ready(function () {
             $('#spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -667,9 +673,9 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
         <div id='presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong>Convert This Presentation</strong></p>
-          <p>Specify Filename: <input type="text" id='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' name='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' name='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='presentationextension<?php echo $ConvertGuiCounter1; ?>' name='presentationextension<?php echo $ConvertGuiCounter1; ?>'>
-            <option value="odp">Format</option>
+            <option value="odp"><?php echo $Gui2Text18; ?></option>
             <option value="pages">Pages</option>
             <option value="pptx">Pptx</option>
             <option value="ppt">Ppt</option>
@@ -679,7 +685,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
             <option value="ppa">Ppa</option>
             <option value="odp">Odp</option>
           </select></p>
-          <input type="submit" id="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Convert Presentation' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text56; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -714,10 +720,10 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
         ?>
         <div id='audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p><strong>Convert This Audio</strong></p>
-          <p>Specify Filename: <input type="text" id='useraudiofilename<?php echo $ConvertGuiCounter1; ?>' name='useraudiofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><strong><?php echo $Gui2Text45; ?></strong></p>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='useraudiofilename<?php echo $ConvertGuiCounter1; ?>' name='useraudiofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='audioextension<?php echo $ConvertGuiCounter1; ?>' name='audioextension<?php echo $ConvertGuiCounter1; ?>'> 
-            <option value="mp3">Format</option>
+            <option value="mp3"><?php echo $Gui2Text18; ?></option>
             <option value="mp2">Mp2</option>  
             <option value="mp3">Mp3</option>
             <option value="wav">Wav</option>
@@ -725,7 +731,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
             <option value="flac">Flac</option>
             <option value="ogg">Ogg</option>
           </select></p>
-          <input type="submit" id="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Convert Audio' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text57; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -760,10 +766,10 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
         ?>
         <div id='videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p><strong>Convert This Video</strong></p>
-          <p>Specify Filename: <input type="text" id='uservideofilename<?php echo $ConvertGuiCounter1; ?>' name='uservideofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><strong><?php echo $Gui2Text46; ?></strong></p>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='uservideofilename<?php echo $ConvertGuiCounter1; ?>' name='uservideofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='videoextension<?php echo $ConvertGuiCounter1; ?>' name='videoextension<?php echo $ConvertGuiCounter1; ?>'>
-            <option value="mp4">Format</option> 
+            <option value="mp4"><?php echo $Gui2Text18; ?></option> 
             <option value="3gp">3gp</option> 
             <option value="mkv">Mkv</option> 
             <option value="avi">Avi</option>
@@ -773,7 +779,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
             <option value="wmv">Wmv</option>
             <option value="mov">Mov</option>
           </select></p>
-          <input type="submit" id="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Convert Video' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text58; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -808,10 +814,10 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
         ?>
         <div id='streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p><strong>Convert This Stream</strong></p>
-          <p>Specify Filename: <input type="text" id='userstreamfilename<?php echo $ConvertGuiCounter1; ?>' name='userstreamfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><strong><?php echo $Gui2Text47; ?></strong></p>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='userstreamfilename<?php echo $ConvertGuiCounter1; ?>' name='userstreamfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='streamextension<?php echo $ConvertGuiCounter1; ?>' name='streamextension<?php echo $ConvertGuiCounter1; ?>'>
-            <option value="mp4">Format</option>
+            <option value="mp4"><?php echo $Gui2Text18; ?></option>
             <option value="3gp">3gp</option> 
             <option value="mkv">Mkv</option> 
             <option value="avi">Avi</option>
@@ -821,7 +827,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
             <option value="wmv">Wmv</option>
             <option value="mov">Mov</option>
           </select></p>
-          <input type="submit" id="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Convert Stream' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text59; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -856,10 +862,10 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
         ?>
         <div id='modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p><strong>Convert This 3D Model</strong></p>
-          <p>Specify Filename: <input type="text" id='usermodelfilename<?php echo $ConvertGuiCounter1; ?>' name='usermodelfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><strong><?php echo $Gui2Text48; ?></strong></p>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='usermodelfilename<?php echo $ConvertGuiCounter1; ?>' name='usermodelfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='modelextension<?php echo $ConvertGuiCounter1; ?>' name='modelextension<?php echo $ConvertGuiCounter1; ?>'>
-            <option value="3ds">Format</option>
+            <option value="3ds"><?php echo $Gui2Text18; ?></option>
             <option value="3ds">3ds</option>
             <option value="collada">Collada</option>
             <option value="obj">Obj</option>
@@ -872,7 +878,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
             <option value="x3d">X3d</option>
             <option value="vrml">Vrml</option>
           </select></p>
-          <input type="submit" id="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Convert Model' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text60; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -907,10 +913,10 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
         ?>
         <div id='drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p><strong>Convert This Technical Drawing Or Vector File</strong></p>
-          <p>Specify Filename: <input type="text" id='userdrawingfilename<?php echo $ConvertGuiCounter1; ?>' name='userdrawingfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><strong><?php echo $Gui2Text49; ?></strong></p>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='userdrawingfilename<?php echo $ConvertGuiCounter1; ?>' name='userdrawingfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='drawingextension<?php echo $ConvertGuiCounter1; ?>' name='drawingextension<?php echo $ConvertGuiCounter1; ?>'>
-            <option value="jpg">Format</option>
+            <option value="jpg"><?php echo $Gui2Text18; ?></option>
             <option value="svg">Svg</option>
             <option value="dxf">Dxf</option>
             <option value="vdx">Vdx</option>
@@ -919,7 +925,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
             <option value="dia">Dia</option>
             <option value="wpg">Wpg</option>
           </select></p>
-          <input type="submit" id="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='Convert Drawing' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">     
+          <input type="submit" id="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text61; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">     
           <script type="text/javascript">
           $(document).ready(function () {
             $('#drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -954,10 +960,10 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
         ?>
         <div id='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p><strong>Convert This Image</strong></p>
-          <p>Specify Filename: <input type="text" id='userphotofilename<?php echo $ConvertGuiCounter1; ?>' name='userphotofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><strong><?php echo $Gui2Text50; ?></strong></p>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='userphotofilename<?php echo $ConvertGuiCounter1; ?>' name='userphotofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='photoextension<?php echo $ConvertGuiCounter1; ?>' name='photoextension<?php echo $ConvertGuiCounter1; ?>'>
-            <option value="jpg">Format</option>
+            <option value="jpg"><?php echo $Gui2Text18; ?></option>
             <option value="jpg">Jpg</option>
             <option value="bmp">Bmp</option>
             <option value="pdf">Pdf</option>
@@ -975,10 +981,10 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
             <option value="ico">Ico</option>
             <option value="heic">Heic</option>
           </select></p>
-          <p>Width & Height: </p>
+          <p><?php echo $Gui2Text64; ?></p>
           <p><input type="number" size="4" value="0" id='width<?php echo $ConvertGuiCounter1; ?>' name='width<?php echo $ConvertGuiCounter1; ?>' min="0" max="10000"> X <input type="number" size="4" value="0" id="height<?php echo $ConvertGuiCounter1; ?>" name="height<?php echo $ConvertGuiCounter1; ?>" min="0"  max="10000"></p> 
-          <p>Rotate: <input type="number" size="3" id='rotate<?php echo $ConvertGuiCounter1; ?>' name='rotate<?php echo $ConvertGuiCounter1; ?>' value="0" min="0" max="359"></p>
-          <input type="submit" id='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' name='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' value='Convert Image' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <p><?php echo $Gui2Text65; ?><input type="number" size="3" id='rotate<?php echo $ConvertGuiCounter1; ?>' name='rotate<?php echo $ConvertGuiCounter1; ?>' value="0" min="0" max="359"></p>
+          <input type="submit" id='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' name='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo $Gui2Text64; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
           $(document).ready(function () {
             $('#convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {

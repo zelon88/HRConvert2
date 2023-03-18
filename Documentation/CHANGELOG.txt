@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 3/15/2023 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 3/17/2023 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.1.9.7.
+v3.1.9.8.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -26,6 +26,22 @@ Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+--------------------
+COMMIT 3/9/2023
+v3.1.9.8 - Clean up core variable assignments. Start working on delete functionality.
+
+-v3.1.9.8.
+-Taking a break from languageStrings to work on the core a bit.
+  -Need a change of pace.
+-Added deleteFiles() function for removing files manually (before they are deleted automatically).
+-Preparing for the next round of UI feature updates.
+  -Subtitle conversions.
+  -Delete files manually.
+-Added errors 23000, 23001, 23002.
+-Reordered errors so they are sequential in the ERROR_DESCRIPTIONS.txt file.
+  -Before they went in logical order as they are written in convertCore.php, which is confusing unless you know the code.
+
+--------------------
 COMMIT 3/9/2023
 v3.1.9.7 - Continue working on languageStrings concept.
 

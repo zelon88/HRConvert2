@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 3/15/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 3/17/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.1.9.7.
+// / v3.1.9.8.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -237,8 +237,9 @@ function verifyTokens($Token1, $Token2) {
 // / A function to verify that all required POST & GET inputs are properly sanitized.
 function verifyInputs() {
   // / Set variables.
+  $var = FALSE;
   $InputsAreVerified = TRUE;
-  $Language = $Token1 = $Token2 = $Height = $Width = $Rotate = $Bitrate = $Method = $Download = $UserFilename = $UserExtension = $Archive = $UserScanType = $ScanAll = $UserClamScan = $UserScanCoreScan = '';
+  $Language = $Token1 = $Token2 = $Height = $Width = $Rotate = $Bitrate = $Method = $Download = $UserFilename = $UserExtension = $Archive = $UserScanType = $ScanAll = $UserClamScan = $UserScanCoreScan = $var = '';
   $variableIsSanitized = $ConvertSelected = $PDFWorkSelected = $FilesToArchive = $FilesToScan = array();
   $key = 0;
   $ScanType = 'all';
@@ -307,13 +308,14 @@ function verifyColors($ButtonStyle) {
 function verifyLanguage() {
   // / Set variables.
   global $DefaultLanguage, $SupportedLanguages, $AllowUserSelectableLanguage, $LanguageDir, $LanguageStringsFile, $LanguageHeaderFile, $LanguageFooterFile, $LanguageUI1File, $LanguageUI2File;
+  $defaultLanguages = $reqFile = $variableIsSanitized = $languageFiles = FALSE;
   $LanguageIsSet = TRUE;
   $LanguageToUse = 'en';
   $defaultLanguages = array('en', 'fr', 'es', 'zh', 'hi', 'ar', 'ru', 'uk', 'bn', 'de', 'ko', 'it', 'pt');
   // / Make sure $SupportedLanguages is valid.
   if (!isset($SupportedLanguages) or !is_array($SupportedLanguages)) $SupportedLanguages = $defaultLanguages;
   // / Make sure $_GET['language'] is properly sanitized.
-  if (isset($_GET['language'])) list ($_GET['language'], $sanitized) = sanitize(strtolower($_GET['language']), TRUE);
+  if (isset($_GET['language'])) list ($_GET['language'], $variableIsSanitized) = sanitize(strtolower($_GET['language']), TRUE);
   // / Make sure the Default Language is valid.
   if (isset($DefaultLanguage)) if (in_array($DefaultLanguage, $SupportedLanguages)) $LanguageToUse = $DefaultLanguage;
   // / If allowed and if specified, detect the users specified language and set that as the language to use.
@@ -336,8 +338,8 @@ function verifyLanguage() {
   // / Verify that required UI files exist.
   foreach ($languageFiles as $reqFile) if (!file_exists($reqFile)) $LanguageIsSet = FALSE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $defaultLanguages = $reqFile = $sanitized = $languageFiles = NULL;
-  unset($defaultLanguages, $reqFile, $sanitized, $languageFiles);
+  $defaultLanguages = $reqFile = $variableIsSanitized = $languageFiles = NULL;
+  unset($defaultLanguages, $reqFile, $variableIsSanitized, $languageFiles);
   return array($LanguageIsSet, $LanguageToUse); }
 // / -----------------------------------------------------------------------------------
 
@@ -569,9 +571,10 @@ function verifyRequiredDirs() {
 function cleanFiles($path) {
   // / Set variables.
   global $ConvertLoc, $ConvertTemp, $DefaultApps, $DirSep;
-  list ($path, $sanitized) = sanitize($path, FALSE);
+  $variableIsSanitized = $i = $f = $path = FALSE;
+  list ($path, $variableIsSanitized) = sanitize($path, FALSE);
   // / Make sure the selected directory is actually a directory.
-  if ($sanitized && is_dir($path)) {
+  if ($variableIsSanitized && is_dir($path)) {
     $i = scandir($path);
     // / Iterate through each file object in the directory.
     foreach ($i as $f) {
@@ -584,8 +587,8 @@ function cleanFiles($path) {
     // / Once all file objects in the selected directory have been deleted, attempt to delete the selected directory.
     if ($path !== $ConvertLoc && $path !== $ConvertTemp) @rmdir($path); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $path = $i = $f = $sanitized = NULL;
-  unset($path, $i, $f, $sanitized); }
+  $path = $i = $f = $variableIsSanitized = NULL;
+  unset($path, $i, $f, $variableIsSanitized); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1116,11 +1119,11 @@ function syncLocations() {
 // / A function to verify files before performing operations on them.
 function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) {
   global $DangerousFiles, $ConvertDir, $ConvertTempDir, $Allowed, $Verbose, $PathExt;
-  $FileIsVerified = $Pathname = $OldPathname = $NewPathname = $UnlockFeatures = FALSE;
+  $FileIsVerified = $Pathname = $OldPathname = $NewPathname = $variableIsSanitized = FALSE;
   // / Check to make sure all iteration specific required variables are properly sanitized.
-  list ($file, $sanitized) = sanitize($file, FALSE);
-  list ($Pathname, $sanitized) = sanitize($ConvertTempDir.$file, FALSE);
-  list ($OldPathname, $sanitized) = sanitize($ConvertDir.$file, FALSE);
+  list ($file, $variableIsSanitized) = sanitize($file, FALSE);
+  list ($Pathname, $variableIsSanitized) = sanitize($ConvertTempDir.$file, FALSE);
+  list ($OldPathname, $variableIsSanitized) = sanitize($ConvertDir.$file, FALSE);
   $OldExtension = pathinfo($Pathname, $PathExt);
   // / Check if the selected file is safe to handle.
   if (in_array(strtolower($OldExtension), $Allowed) && !in_array(strtolower($OldExtension), $DangerousFiles) && $file !== '.' && $file !== '..' && $file !== 'index.html') $FileIsVerified = TRUE;
@@ -1140,7 +1143,7 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
     // / If the $UserFilename & $UserExtension variables are valid we can prepare for a $NewPathfile.
     if ($UserFilename && $UserExtension) {
       // / Define the $NewPathname if required.
-      list ($NewPathname, $sanitized) = sanitize($ConvertDir.$UserFilename.'.'.$UserExtension, FALSE);
+      list ($NewPathname, $variableIsSanitized) = sanitize($ConvertDir.$UserFilename.'.'.$UserExtension, FALSE);
       // / Make sure the $NewPathname is not a dangerous file.
       if (in_array(strtolower($UserExtension), $DangerousFiles)) errorEntry('The file '.$file.' failed third stage validation!', 14003, TRUE);
       if ($Verbose && file_exists($NewPathname) && $clean) logEntry('Deleting stale file '.$Pathname.'.');
@@ -1149,8 +1152,8 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
       // / Check to make sure that the stale file was deleted if required or creating a new one will cause problems.
       if (file_exists($NewPathname) && $clean) errorEntry('Could not delete stale file '.$NewPathname.'!', 14004, TRUE); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $sanitized = NULL;
-  unset($file, $sanitized);
+  $file = $variableIsSanitized = NULL;
+  unset($file, $variableIsSanitized);
   return array($FileIsVerified, $Pathname, $OldPathname, $OldExtension, $NewPathname); }
 // / -----------------------------------------------------------------------------------
 
@@ -1191,7 +1194,7 @@ function buildGUI($guiType, $ButtonCode) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to display the GUI.
-function showGUI($ShowGUI, $LanguageToUse, $ButtonCode) {
+function showGUI($ShowGUI, $ButtonCode) {
   // / Set variables.
   global $ButtonCode;
   $GUIDisplayed = FALSE;
@@ -1210,7 +1213,7 @@ function uploadFiles() {
   // / Set variables.
   global $DangerousFiles, $VirusScan, $AllowUserVirusScan, $ConvertDir, $LogFile, $Verbose, $PathExt, $PermissionLevels;
   $UploadComplete = $UploadErrors = $virusFound = $variableIsSanitized = FALSE;
-  $file = '';
+  $file = $f0 = $f1 = '';
   // / Make sure the input files are formatted into an array.
   if (!is_array($_FILES['file']['name'])) $_FILES['file']['name'] = array($_FILES['file']['name']);
   // / Iterate through the array of input files.
@@ -1250,9 +1253,9 @@ function uploadFiles() {
         if ($virusFound) errorEntry('Virus detected!', 6004, TRUE);
         if ($Verbose) logEntry('Virus scan complete.'); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $f0 = $f1 = $dangerousFile = $scanComplete = $virusFound = $variableIsSanitized = NULL;
-  unset ($file, $f0, $f1, $dangerousFile, $variableIsSanitized);
-  return array($UploadComplete, $UploadErrors, $scanComplete, $virusFound); }
+  $file = $f0 = $f1 = $variableIsSanitized = $scanComplete = $virusFound = NULL;
+  unset ($file, $f0, $f1, $variableIsSanitized, $scanComplete, $virusFound);
+  return array($UploadComplete, $UploadErrors); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1260,9 +1263,9 @@ function uploadFiles() {
 function downloadFiles($Download) {
   // / Set variables.
   global $Verbose, $Download, $ConvertDir, $ConsolidatedLogFileName;
-  $DownloadComplete = $DownloadErrors = $variableIsSanitized = $clean = $copy = $skip = FALSE;
+  $DownloadComplete = $DownloadErrors = $clean = $copy = $skip = $variableIsSanitized = FALSE;
   $file = '';
-  list ($Download, $sanitized) = sanitize($Download, FALSE);
+  list ($Download, $variableIsSanitized) = sanitize($Download, FALSE);
   // / Make sure the input files are formatted into an array.
   if (!is_array($Download)) $Download = array($Download);
   // / Iterate through the array of input files.
@@ -1294,9 +1297,54 @@ function downloadFiles($Download) {
       if (!$DownloadErrors) $DownloadComplete = TRUE;
       if ($Verbose) logEntry('Verified file'.$newPathname.'.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $iterator = $item = $clean = $copy = $skip = $sanitized = $variableIsSanitized = NULL;
-  unset ($file, $iterator, $item, $clean, $copy, $skip, $sanitized, $variableIsSanitized); 
+  $file = $clean = $copy = $skip = $variableIsSanitized = NULL;
+  unset ($file, $clean, $copy, $skip, $variableIsSanitized); 
   return array($DownloadComplete, $DownloadErrors); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to delete a selection of files.
+function deleteFiles($FilesToDelete) {
+  // / Set variables.
+  global $DangerousFiles, $Verbose, $FilesToDelete, $ConvertDir, $ConvertTempDir;
+  $DeleteComplete = $DeleteErrors = $variableIsSanitized = FALSE;
+  $file = $f0 = $f1 = '';
+  list ($FilesToDelete, $variableIsSanitized) = sanitize($FilesToDelete, FALSE);
+  // / Make sure the input files are formatted into an array.
+  if (!is_array($FilesToDelete)) $FilesToDelete = array($FilesToDelete);
+  // / Iterate through the array of input files.
+  foreach ($FilesToDelete as $file) {
+    $DeleteComplete = FALSE;
+    // / Make sure the file is sanitized before processing it.
+    list ($file, $variableIsSanitized) = sanitize($file, TRUE);
+    if (!$variableIsSanitized or !is_string($file) or $file === '') {
+      $OperationErrors = TRUE;
+      errorEntry('Could not sanitize the input file!', 23000, FALSE); 
+      continue; }
+    if ($Verbose) logEntry('User selected to Delete file '.$file.'.');
+    if ($file === '.' or $file === '..' or $file === 'index.html' or $file === '') continue; 
+    $f0 = pathinfo($file, $PathExt);
+    // / Make sure the file is not in the list of dangerous formats.
+    if (in_array(strtolower($f0), $DangerousFiles)) {
+      errorEntry('Unsupported file format, '.$f0.'!', 23001, FALSE);
+      continue; }
+    list ($f0, $variableIsSanitized) = sanitize($ConvertTempDir.pathinfo($file, PATHINFO_BASENAME), FALSE);
+    // / Code to remove the selected file from the $ConvertTempDir.
+    if (file_exists($f0)) @unlink($f1);
+    list ($f1, $variableIsSanitized) = sanitize($ConvertDir.pathinfo($file, PATHINFO_BASENAME), FALSE);
+    // / Code to remove the selected file from the $ConvertDir.
+    if (file_exists($f1)) @unlink($f1);
+    // / Check that the selected files were deleted.
+    if (!file_exists($f0) && !file_exists($f1)) {
+     if ($Verbose) logEntry('Delete file '.$file.'.');
+     $DeleteComplete = TRUE; }
+    else {
+      $DeleteErrors = TRUE;
+      if($Verbose) errorEntry('Deleted file '.$file.'.', 23002, FALSE); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $file = $f0 = $f1 = NULL;
+  unset($file, $f0, $f1);
+  return array($DeleteComplete, $DeleteErrors); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1304,7 +1352,7 @@ function downloadFiles($Download) {
 function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
   // / Set variables.
   global $Verbose, $VirusScan, $ConvertTempDir, $Lol, $Lolol;
-  $ArchiveComplete = $ArchiveErrors = $virusFound = $variableIsSanitized = $skip = FALSE;
+  $ArchiveComplete = $ArchiveErrors = $virusFound = $skip = $variableIsSanitized = FALSE;
   $clean = $copy = TRUE;
   $returnData = $file = '';
   $rararr = array('rar');
@@ -1355,8 +1403,8 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
       $ArchiveComplete = TRUE;
       if ($Verbose) logEntry('Archived file '.$pathname.' to '.$ConvertTempDir.$file.'.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $rararr = $ziparr = $tararr = $isoarr = $pathname = $userFileName = $oldPathname = $newPathname = $scanComplete = $virusFound = $returnData = $sanitized = $fileIsVerified = $oldExtension = $clean = $copy = $skip = $variableIsSanitized = NULL;
-  unset ($file, $rararr, $ziparr, $tararr, $isoarr, $pathname, $userFileName, $oldPathname, $newPathname, $scanComplete, $virusFound, $returnData, $sanitized, $fileIsVerified, $oldExtension, $clean, $copy, $skip, $variableIsSanitized); 
+  $file = $rararr = $ziparr = $tararr = $isoarr = $pathname = $userFileName = $oldPathname = $newPathname = $scanComplete = $virusFound = $returnData = $variableIsSanitized = $fileIsVerified = $oldExtension = $clean = $copy = $skip = $variableIsSanitized = NULL;
+  unset ($file, $rararr, $ziparr, $tararr, $isoarr, $pathname, $userFileName, $oldPathname, $newPathname, $scanComplete, $virusFound, $returnData, $variableIsSanitized, $fileIsVerified, $oldExtension, $clean, $copy, $skip, $variableIsSanitized); 
   return array($ArchiveComplete, $ArchiveErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -1365,8 +1413,8 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
 function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, $Width, $Rotate, $Bitrate) {
   // / Set variables.
   global $Verbose, $VirusScan, $DocumentArray, $ImageArray, $ModelArray, $DrawingArray, $VideoArray, $SubtitleArray, $StreamArray, $MediaArray, $ArchiveArray;
+  $MainConversionSuccess = $MainConversionErrors = $virusFound = $skip = $isExtensionSupported = $fileIsVerified = $variableIsSanitized = FALSE;
   $clean = $copy = TRUE;
-  $MainConversionSuccess = $MainConversionErrors = $virusFound = $variableIsSanitized = $variableIsSanitized = $skip = $isExtensionSupported = FALSE;
   $docarray =  $DocumentArray;
   $imgarray = $ImageArray;
   $modelarray = $ModelArray;
@@ -1449,7 +1497,7 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
 function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   // / Set variables.
   global $Verbose, $VirusScan, $ConvertTempDir, $ConvertDir, $Lol, $Lolol, $Append;
-  $OperationSuccessful = $OperationErrors = $multiple = $virusFound = $variableIsSanitized = $skip = FALSE;
+  $OperationSuccessful = $OperationErrors = $multiple = $virusFound = $skip = $variableIsSanitized = FALSE;
   $clean = $copy = TRUE;
   $returnData = $file = '';
   $doc1array =  array('txt', 'pages', 'doc', 'xls', 'xlsx', 'docx', 'rtf', 'odt', 'ods');
@@ -1657,7 +1705,7 @@ function userVirusLogEntry($Entry, $type) {
 function userClamScan($FilesToScan) {
   // / Set variables.
   global $Verbose, $ConvertDir, $Lol, $Lolol, $UserClamLogFile;
-  $OperationSuccessful = $OperationErrors = $UserVirusFound = $variableIsSanitized = $userFilename = $userExtension = $clean = $copy = $userFilename = $userExtension = FALSE;
+  $OperationSuccessful = $OperationErrors = $UserVirusFound = $userFilename = $userExtension = $clean = $copy = $userFilename = $userExtension = $variableIsSanitized = FALSE;
   $skip = TRUE;
   $returnData = $txt = $file = $clamLogFileDATA = '';
   $txt = 'Initiating User Virus Scan with ClamAV.';
@@ -1706,8 +1754,8 @@ function userClamScan($FilesToScan) {
   if ($Verbose) logEntry($txt);
   userVirusLogEntry($txt, 'clamav');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $variableIsSanitized = $clean = $copy = $skip = $returnData = $txt = $userFilename = $userExtension = $clamLogFileDATA = $userFilename = $userExtension = NULL;
-  unset($variableIsSanitized, $clean, $copy, $skip, $returnData, $txt, $userFilename, $userExtension, $clamLogFileDATA, $userFilename, $userExtension);
+  $variableIsSanitized = $clean = $copy = $skip = $returnData = $txt = $userFilename = $userExtension = $clamLogFileDATA  = NULL;
+  unset($variableIsSanitized, $clean, $copy, $skip, $returnData, $txt, $userFilename, $userExtension, $clamLogFileDATA);
   return array($OperationSuccessful, $OperationErrors, $UserVirusFound); }
 // / -----------------------------------------------------------------------------------
 
@@ -1739,7 +1787,7 @@ function startScanCore($pathname, $UserScanCoreLogFile) {
 function userScanCoreScan($FilesToScan) {
   // / Set variables.
   global $Verbose, $ConvertDir, $Lol, $Lolol, $UserScanCoreLogFile;
-  $OperationSuccessful = $OperationErrors = $UserVirusFound = $variableIsSanitized = $userFilename = $userExtension = $clean = $copy = FALSE;
+  $OperationSuccessful = $OperationErrors = $UserVirusFound = $userFilename = $userExtension = $clean = $copy = $variableIsSanitized = FALSE;
   $skip = TRUE;
   $returnData = $txt = $file = $scanCoreLogFileDATA = '';
   $txt = 'Initiating User Virus Scan with ScanCore.';
@@ -1992,7 +2040,7 @@ else if ($Verbose) logEntry('Verified language.');
 
 // / The following code displays the appropriate GUI for the session.
 if (!isset($_POST['filesToArchive']) && !isset($_POST['convertSelected']) && !isset($_POST['pdfworkSelected']) && !isset($_POST['download']) && !isset($_POST['upload']) && !isset($_POST['filesToScan'])) {
-  $GUIDisplayed = showGUI($ShowGUI, $LanguageToUse, $ButtonCode);
+  $GUIDisplayed = showGUI($ShowGUI, $ButtonCode);
   if (!$GUIDisplayed) errorEntry('Could not display GUI!', 17, TRUE);
   else if ($Verbose)  logEntry('Displaying the GUI.'); }
 else if ($Verbose) logEntry('Skipping display GUI procedure.');

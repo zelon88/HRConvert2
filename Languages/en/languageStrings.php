@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 3/15/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 3/18/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.1.9.7.
+// / v3.1.9.9.
 // / This file contains language specific GUI related text for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -28,13 +28,15 @@
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / Check if the core is loaded.
+// / Set a flag to tell that the UI has been displayed.
 $LanguageStringsLoaded = TRUE;
+// / Check if the core is loaded.
 if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / Check for required core variables.
+if (!isset($Font)) $Font = 'Arial';
 if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
 if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
 if (!isset($ApplicationTitle)) $ApplicationTitle = 'Convert Anything!';
@@ -42,7 +44,6 @@ if (!isset($ApplicationTitle)) $ApplicationTitle = 'Convert Anything!';
 
 // / -----------------------------------------------------------------------------------
 // / Set error related variables variables.
-
 // / 'Cannot convert this file! Try changing the name.'
 $Alert = 'Cannot convert this file! Try changing the name.';
 // / 'Cannot perform a virus scan on this file!'
@@ -54,7 +55,7 @@ $Alert3 = 'Operation Failed!';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / Set variables related to singular/plural files.
+// / Set GUI Related Logic.
 $FCPlural1 = 's';
 $FCPlural2 = 's are';
 if (!is_numeric($FileCount)) $FileCount = 'an unknown number of';
@@ -65,7 +66,22 @@ if ($FileCount == 1) {
 
 // / -----------------------------------------------------------------------------------
 // / Set GUI - 1 Related Variables.
-
+// / Online File Converter, Extractor, Compressor'
+$Gui1Text1 = 'Online File Converter, Extractor, Compressor';
+// / $ApplicationName.' is based off the open-source web-app <a href=\'https://github.com/zelon88/HRConvert2\'>HRConvert2</a> by <a href=\'https://github.com/zelon88\'>Zelon88</a> that converts files without tracking users across the net or infringing on your intellectual property.'
+$Gui1Text2 = $ApplicationName.' is based off the open-source web-app <a href=\'https://github.com/zelon88/HRConvert2\'>HRConvert2</a> by <a href=\'https://github.com/zelon88\'>Zelon88</a> that converts files without tracking users across the net or infringing on your intellectual property.';
+// / 'More Info ...'
+$Gui1Text3 = 'More Info ...';
+// / 'Less Info ...'
+$Gui1Text4 = 'Less Info ...';
+// / 'All user-supplied data is erased automatically, so you don\'t need to worry about forfeiting your personal information or property while using our services.'
+$Gui1Text5 = 'All user-supplied data is erased automatically, so you don\'t need to worry about forfeiting your personal information or property while using our services.';
+// / 'Currently '.$ApplicationName.' supports 79 different file formats, including documents, spreadsheets, images, media, 3D models, CAD drawings, vector files, archives, disk images, & more.'
+$Gui1Text6 = 'Currently '.$ApplicationName.' supports 79 different file formats, including documents, spreadsheets, images, media, 3D models, CAD drawings, vector files, archives, disk images, & more.';
+// / 'View Supported Formats ...'
+$Gui1Text7 = 'View Supported Formats ...';
+// / 'Hide Supported Formats ...'
+$Gui1Text8 = 'Hide Supported Formats ...';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

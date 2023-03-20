@@ -1,7 +1,7 @@
 <?php 
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 2/21/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 3/18/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.1.9.1.
+// / v3.1.9.9.
 // / This file contains language specific GUI elements for accepting file uploads.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -26,35 +26,37 @@
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set a flag to tell that the UI has been displayed.
 $UIDisplayed = TRUE;
-if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
-if (!isset($ApplicationTitle)) $ApplicationTitle = 'Convert Anything!'; 
-if (!isset($CoreLoaded)) die('ERROR!!! '.$ApplicationName.'-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
-if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
+// / Check if the core is loaded.
+if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
+// / -----------------------------------------------------------------------------------
 ?>
   <body>
     <?php 
     if (!isset($_GET['noGui'])) { ?>
     <div id="header-text" style="max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;">
       <h1><?php echo $ApplicationName; ?></h1>
-      <h3>Online File Converter, Extractor, Compressor</h3>
+      <h3><?php echo $Gui1Text1; ?></h3>
       <hr />
     </div>
     <div id="main" align="center">
-      <div id="overview" style="max-width:1000px; text-align:left; margin:25px;">
-      	<p id="info" style="display:block;"><?php echo $ApplicationName; ?> is based off the open-source web-app <a href='https://github.com/zelon88/HRConvert2'>HRConvert2</a> by <a href='https://github.com/zelon88'>Zelon88</a> that converts files without tracking users across the net or infringing on your intellectual property.</p>
+      <div id="overview" style="max-width:1000px; text-align:left; margin:25px;"><?php echo $Gui1Text2; ?>
+      	<p id="info" style="display:block;"></p>
         <button id="more-info-button" class="info-button" onclick="toggle_visibility('more-info'); toggle_visibility('more-info-button'); toggle_visibility('supported-formats-show-button'); 
-          toggle_visibility('less-info-button');" style="text-align:center; display:block; margin-left:auto; margin-right:auto;"><i>More Info ...</i></button>
+          toggle_visibility('less-info-button');" style="text-align:center; display:block; margin-left:auto; margin-right:auto;"><i><?php echo $Gui1Text3; ?></i></button>
         <button id="less-info-button" class="info-button" onclick="toggle_visibility('more-info'); toggle_visibility('more-info-button'); toggle_visibility('supported-formats-show-button'); 
-          toggle_visibility('less-info-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Less Info ...</i></button>
+          toggle_visibility('less-info-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i><?php echo $Gui1Text4; ?></i></button>
         <div id="more-info" style="display:none;">
           <hr />
-          <p>All user-supplied data is erased automatically, so you don't need to worry about forfeiting your personal information or property while using our services.</p>
-          <p>Currently <?php echo $ApplicationName; ?> supports 79 different file formats, including documents, spreadsheets, images, media, 3D models, CAD drawings, vector files, archives, disk images, & more.</p> 
+          <p><?php echo $Gui1Text5; ?></p>
+          <p><?php echo $Gui1Text6; ?></p> 
           <button id="supported-formats-show-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
-            toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>View Supported Formats ...</i></button>
+            toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i><?php echo $Gui1Text7; ?></i></button>
           <button id="supported-formats-hide-button" class="info-button" onclick="toggle_visibility('supported-formats'); toggle_visibility('supported-formats-show-button'); 
-            toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i>Hide Supported Formats ...</i></button>
+            toggle_visibility('supported-formats-hide-button');" style="text-align:center; display:none; margin-left:auto; margin-right:auto;"><i><?php echo $Gui1Text8; ?></i></button>
           <br>
           <div id="supported-formats" class="supported-formats" style="margin-left:33%; display:none;">
             <h3>Supported Formats</h3>

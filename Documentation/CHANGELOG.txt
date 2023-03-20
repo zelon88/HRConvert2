@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 3/17/2023 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 3/20/2023 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.1.9.8.
+v3.1.9.9.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -25,6 +25,23 @@ Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 
 <3 Open-Source
 -----------------------------------------------------------------------------------
+
+--------------------
+COMMIT 3/20/2023
+v3.1.9.9 - Continue working on languageStrings concept.
+
+-v3.1.9.9.
+-Standardize logic format across all UI elements.
+  -Header. UI1, UI2, Footer.
+  -They all declare that they are loaded and error when the core is not loaded.
+  -The rest of the error logic is contained within languageStrings.php.
+  -Per language pack, the logic is only contained within the code once. Instead of once for each UI file.
+-Start moving UI1 text to languageStrings.php.
+-Adjust the format of languageStrings.php.
+-Add icon for future delete functionality.
+  -https://www.iconarchive.com/show/koloria-icons-by-graphicrating.1.html
+-Update subtitle icon.
+  -https://www.iconarchive.com/show/koloria-icons-by-graphicrating.1.html
 
 --------------------
 COMMIT 3/9/2023

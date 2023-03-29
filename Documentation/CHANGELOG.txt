@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 3/20/2023 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 3/28/2023 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.1.9.9.
+v3.2.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -25,6 +25,53 @@ Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 
 <3 Open-Source
 -----------------------------------------------------------------------------------
+
+--------------------
+COMMIT 3/28/2023
+v3.2 - Continue working on languageStrings concept.
+
+-v3.2.
+-Implement dynamic supported format list in UI1 (english language pack only).
+  -The UI will now only display supported formats that are backed by logic.
+  -The lists of supported formats contained within the UI no longer need to be updated.
+  -The lists of supported formats are now entirely derived by logic.
+  -Still need to add OCR related formats when that refactor takes place.
+  -Need to keep going on UI2.
+-Added version verification to convertCore.php.
+  -The logic is split between verifyInstallation() and verifyGlobals(). 
+  -verifyInstallation() verifies versionInfo.php and loads it.
+  -verifyGlobals() performs the actual version check.
+  -Modified ERROR_DESCRIPTIONS.txt to match these changes.
+  -Added ERROR 24000 when unable to load the versionInfo.php file.
+-Updated ERROR 11.
+  -Added information about the new version check.
+-Continue changing double quotes in HTML to single quotes.
+  -Header is done.
+  -UI1 is done.
+  -Footer is done.
+-Move paths for scripts, stylesheets, javascript & favicon to verifyGlobals().
+-The name of the archive when a user selects to compress all files now reflects $ApplicationName variable.
+  -This was previously hard-coded to "HRConvert2_Files-<DATE>".
+-Added mysteriously missing bitrate UI features.
+-Adjust the list of supported formats to be more reliable, predictible, maintainable.
+-Only set FormatArray variables for the SupportedConversionTypes enabled in config.php.
+  -Now the arrays aren't even populated unless the conversion type is enabled.
+-Move "The user selected..." text to the beginning of the upload and download functions.
+-Prevent the upload of unsupported file formats.
+-Prevent the download of unsupported file formats.
+  -Add ERROR 3004 "Unsupported File Format" to ERROR_DESCRIPTIONS.txt.
+  -Copy ERROR 6001.
+-Add extra line of detail to error 6001: "The file that causes this error will be skipped."
+-OCR operations now require that both OCR and Document conversion types are allowed in config.php.
+-Stream conversion operations now require that both Stream and Audio conversion types are allowed in config.php.
+-Add a $GUIDirection variable to languageStrings.php that determines the reading order of the UI.
+  -Can either be "ltr" for "left to right" or "rtl" for "right to left".
+  -A default is defined in verifyGlobals() but this is overridden later by languageStrings.php.
+  -This should make migrating old language packs easier.
+-Add delete functionality to core logic section & UI.
+  -Add ERROR 24, Delete Failed.
+-Disable loading spinner on error return in UI2.
+  -Before the spinner would remain on error.
 
 --------------------
 COMMIT 3/20/2023

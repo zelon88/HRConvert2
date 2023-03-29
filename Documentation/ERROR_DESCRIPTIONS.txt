@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 3/17/2023 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 3/28/2023 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.1.9.8.
+v3.2.
 This plain text file contains descriptions of all the native error messages contained in or produced by the HRConvert2 Diablo engine. 
 These descriptions should give administrators a starting point for debugging problems with HRConvert2 installations. 
 Each section in this file contains information about a different error message. The first one is an example to demonstrate the structure of this file.
@@ -94,10 +94,13 @@ LOGGED
 
 ERROR DESCRIPTION
   The config.php file located in the installation directory which is required for HRConvert2 to run is missing or unreachable.
-  This may be the result of incorrect file permission levels on the installation directory or config.php file.
+  This may be the result of incorrect file permission levels on the installation directory or the config.php file.
   The www-data:www-data user:group needs to have read access to the config.php file.
   This may be the result of incorrect user or group associations for the www-data user or group.
   This could be because HRConvert2 is running on an unsupported operating system or PHP version.
+  Because this error takes place before the logging environment is initialized; this error will not be logged.
+  Because this error takes place before the time environment is initialized; this error will not contain a timestamp.
+  Because this error takes place before the configuration file has been initialized; the Application Name configuration entry will not be used.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -116,10 +119,13 @@ LOGGED
 
 ERROR DESCRIPTION
   The styleCore.php file located in the Resources subdirectory of the installation directory which is required for the application to run is missing or unreachable.
-  This may be the result of incorrect file permission levels on the installation directory or Resources/styleCore.php file.
+  This may be the result of incorrect file permission levels on the installation directory or the Resources/styleCore.php file.
   The www-data:www-data user:group needs to have read access to the Resources/styleCore.php file.
   This may be the result of incorrect user or group associations for the www-data user or group.
   This could be because the application is running on an unsupported operating system or PHP version.
+  Because this error takes place before the logging environment is initialized; this error will not be logged.
+  Because this error takes place before the time environment is initialized; this error will not contain a timestamp.
+  Because this error takes place before the configuration file has been initialized; the Application Name configuration entry will not be used.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -144,6 +150,7 @@ ERROR DESCRIPTION
   The application is being fuzzed or scanned for vulnerabilities.
   This is the only core error message that is translated to the language used during the request.
   Because this error takes place before the logging environment is initialized; this error will not be logged.
+  Because this error takes place before the time environment is initialized; this error will not contain a timestamp.
   Because this error takes place before the configuration file has been initialized; the Application Name configuration entry will not be used.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -334,6 +341,7 @@ ERROR DESCRIPTION
   The PHP configuration is setup using an invalid timezone option.
   The PHP installation on the server is damaged or corrupt.
   The application has become corrupt.
+  The version information contained in the versionInfo.php file does not match the version information contained in the convertCore.php file.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -625,6 +633,28 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-24, <SESSION_IDENTIFIER>: Delete Failed!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
+  This may be the result of incorrect file permission levels on the directory where Data is stored.
+  This may be the result of incorrect user or group associations for the www-data user or group.
+  The www-data:www-data user:group needs to have read & write access to the Data directory.
+  The request contained character types or encoded data that are not supported.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-500, <SESSION_IDENTIFIER>: There were potentially infected files detected at <FILE_PATH>!
 
 FILE
@@ -827,6 +857,26 @@ ERROR DESCRIPTION
   One of the $_POST or $_GET variables submitted was empty after sanitization.
   The user has requested to convert a file that was deleted for exceededing the --File Deletion Age Theshold-- specified in config.php.
   This error is not fatal but the file that causes it will be skipped.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3004, <SESSION_IDENTIFIER>: Unsupported file format!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The user is attempting to download a file format that is explicitly disallowed due to the threat it poses to the server.
+  This error is non-fatal because it contained within a loop that still has to continue processing the rest of the files uploaded by the user.
+  The file that causes this error will be skipped.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -1168,6 +1218,7 @@ LOGGED
 ERROR DESCRIPTION
   The user is attempting to upload a file format that is explicitly disallowed due to the threat it poses to the server.
   This error is non-fatal because it contained within a loop that still has to continue processing the rest of the files uploaded by the user.
+  The file that causes this error will be skipped.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -2406,4 +2457,29 @@ ERROR DESCRIPTION
   This may be the result of incorrect file permission levels on the directory where the specified file or directory is stored.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! HRConvert2-24000: Could not process the HRConvert2 Version Information file (versionInfo.php)!
+
+FILE
+  /convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  NO
+
+ERROR DESCRIPTION
+  The versionInfo.php file located in the installation directory which is required for the application to run is missing or unreachable.
+  This may be the result of incorrect file permission levels on the installation directory or the versionInfo.php file.
+  The www-data:www-data user:group needs to have read access to the versionInfo.php file.
+  This may be the result of incorrect user or group associations for the www-data user or group.
+  This could be because the application is running on an unsupported operating system or PHP version.
+  Because this error takes place before the logging environment is initialized; this error will not be logged.
+  Because this error takes place before the time environment is initialized; this error will not contain a timestamp.
+  Because this error takes place before the configuration file has been initialized; the Application Name configuration entry will not be used.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

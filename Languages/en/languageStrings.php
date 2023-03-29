@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 3/18/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 3/28/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.1.9.9.
+// / v3.2.
 // / This file contains language specific GUI related text for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -30,6 +30,8 @@
 // / -----------------------------------------------------------------------------------
 // / Set a flag to tell that the UI has been displayed.
 $LanguageStringsLoaded = TRUE;
+// / Set the reading direction for text on the page.
+$GUIDirection = 'ltr';
 // / Check if the core is loaded.
 if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
 // / -----------------------------------------------------------------------------------
@@ -43,18 +45,6 @@ if (!isset($ApplicationTitle)) $ApplicationTitle = 'Convert Anything!';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / Set error related variables variables.
-// / 'Cannot convert this file! Try changing the name.'
-$Alert = 'Cannot convert this file! Try changing the name.';
-// / 'Cannot perform a virus scan on this file!'
-$Alert1 = 'Cannot perform a virus scan on this file!';
-// / 'File Link Copied to Clipboard!'
-$Alert2 = 'File Link Copied to Clipboard!';
-// / 'Operation Failed!'
-$Alert3 = 'Operation Failed!';
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
 // / Set GUI Related Logic.
 $FCPlural1 = 's';
 $FCPlural2 = 's are';
@@ -62,6 +52,12 @@ if (!is_numeric($FileCount)) $FileCount = 'an unknown number of';
 if ($FileCount == 1) {
   $FCPlural1 = '';
   $FCPlural2 = ' is'; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - Header Related Variables.
+// / 'Click, Tap, or Drop files here to upload.'
+$GuiHeaderText1 = 'Click, Tap, or Drop files here to upload.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -82,6 +78,50 @@ $Gui1Text6 = 'Currently '.$ApplicationName.' supports 79 different file formats,
 $Gui1Text7 = 'View Supported Formats ...';
 // / 'Hide Supported Formats ...'
 $Gui1Text8 = 'Hide Supported Formats ...';
+// / 'Supported Formats'
+$Gui1Text9 = 'Supported Formats';
+// / 'Audio Formats'
+$Gui1Text10 = 'Audio Formats';
+// / 'Supports specific bitrate.'
+$Gui1Text11 = 'Supports specific bitrate.';
+// / 'Video Formats'
+$Gui1Text12 = 'Video Formats';
+// / 'Stream Formats'
+$Gui1Text13 = 'Stream Formats';
+// / 'Document Formats'
+$Gui1Text14 = 'Document Formats';
+// / 'Spreadsheet Formats'
+$Gui1Text15 = 'Spreadsheet Formats';
+// / 'Presentation Formats'
+$Gui1Text16 = 'Presentation Formats';
+// / 'Archive Formats'
+$Gui1Text17 = 'Archive Formats';
+// / 'Can convert between archive formats & disk image formats.'
+$Gui1Text18 = 'Can convert between select archive formats & disk image formats.';
+// / 'Image Formats'
+$Gui1Text19 = 'Image Formats';
+// / 'Can convert pictures of documents to document formats.'
+$Gui1Text20 = 'Can convert pictures of documents to document formats.';
+// / 'Supports resize & rotate.'
+$Gui1Text21 = 'Supports resize & rotate.';
+// / '3D Model Formats'
+$Gui1Text22 = '3D Model Formats';
+// / 'Drawing Formats'
+$Gui1Text23 = 'Drawing Formats';
+// / 'Can convert drawing files to image formats.'
+$Gui1Text24 = 'Can convert drawing formats to image formats.';
+// / 'OCR Support'
+$Gui1Text25 = 'OCR Support';
+// / 'OCR Operations support the following input formats...'
+$Gui1Text26 = 'OCR Operations support the following input formats...';
+// / 'OCR Operations support the following output formats...'
+$Gui1Text27 = 'OCR Operations support the following output formats...';
+// / 'Select files by clicking, tapping, or dropping them into the box below.'
+$Gui1Text28 = 'Select files by clicking, tapping, or dropping them into the box below.';
+// / 'Continue ...'
+$Gui1Text29 = 'Continue ...';
+// / 'Can convert stream formats to video formats.'
+$Gui1Text30 = 'Can convert stream formats to video formats.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -214,3 +254,28 @@ $Gui2Text62 = 'Convert Image';
 $Gui2Text64 = 'Width & Height: ';
 // / 'Rotate: '
 $Gui2Text65 = 'Rotate: ';
+// / 'Bitrate: '
+$Gui2Text66 = 'Bitrate:  ';
+// / 'Delete'
+$Gui2Text67 = 'Delete';
+// / 'Close Delete Options'
+$Gui2Text68 = 'Close Delete Options';
+// / 'Delete This File'
+$Gui2Text69 = 'Delete This File';
+// / 'Confirm Delete'
+$Gui2Text70 = 'Confirm Delete';
+// / 'Cannot convert this file! Try changing the name.'
+$Gui2Text71 = 'Cannot convert this file! Try changing the name.';
+// / 'Cannot perform a virus scan on this file!'
+$Gui2Text72 = 'Cannot perform a virus scan on this file!';
+// / 'File Link Copied to Clipboard!'
+$Gui2Text73 = 'File Link Copied to Clipboard!';
+// / 'Operation Failed!'
+$Gui2Text74 = 'Operation Failed!';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - Footer Related Variables.
+// / 'Check out our <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Terms of Service</a> and <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Privacy Policy'
+$GuiFooterText1 = 'Check out our <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Terms of Service</a> and <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Privacy Policy';
+// / -----------------------------------------------------------------------------------

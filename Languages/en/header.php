@@ -1,7 +1,7 @@
-<?php 
+<?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 3/18/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 3/28/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.1.9.9.
+// / v3.2.
 // / This file contains language specific GUI elements to be displayed at the top of pages.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -34,15 +34,15 @@ $HeaderDisplayed = TRUE;
 if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
 // / -----------------------------------------------------------------------------------
 ?>
-<html>
+<html dir='<?php echo $GUIDirection; ?>'>
   <head>
     <meta charset="UTF-8">
-    <link rel="shortcut icon" href="Resources/favicon.ico"/>
-    <link rel="stylesheet" href="Resources/dropzone.css"/>
-    <link rel="stylesheet" href="Resources/HRConvert2.css"/>
-    <script type="text/javascript" src="Resources/HRC2-Functions.js"></script>
-    <script type="text/javascript">var dropzoneText = 'Click, Tap, or Drop files here to upload.';</script>
-    <script type="text/javascript" src="Resources/dropzone.js"></script>
+    <link rel='shortcut icon' href='<?php echo $FaviconPath; ?>'/>
+    <link rel='stylesheet' href='<?php echo $DropzoneStylesheetPath; ?>'/>
+    <link rel='stylesheet' href='<?php echo $StylesheetPath; ?>'/>
+    <script type='text/javascript' src='<?php echo $JsLibraryPath; ?>'></script>
+    <script type='text/javascript' src='<?php echo $DropzonePath; ?>'></script>
+    <script type='text/javascript'>var dropzoneText = '<?php echo $GuiHeaderText1; ?>';</script>
     <style>
       body {
         font-family: <?php echo $Font; ?>; }
@@ -50,4 +50,3 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
     </style>
     <title><?php echo $ApplicationName; ?> - <?php echo $ApplicationTitle; ?></title>
   </head>
-  

@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 3/18/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 3/28/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.1.9.9.
+// / v3.2.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -104,15 +104,18 @@ function sanitize($Variable, $strict) {
 // / A function to load required HRConvert2 files.
 function verifyInstallation() {
   // / Set variables.
-  global $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6, $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $defaultButtonCode, $greenButtonCode, $blueButtonCode, $redButtonCode, $SpinnerStyle, $SpinnerColor, $URL, $AllowUserShare, $SupportedConversionTypes;
+  global $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6, $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $defaultButtonCode, $greenButtonCode, $blueButtonCode, $redButtonCode, $SpinnerStyle, $SpinnerColor, $URL, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version;
   $InstallationIsVerified = TRUE;
   $ConfigFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'config.php');
+  $VersionInfoFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'versionInfo.php');
   $StyleCoreFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'styleCore.php');
-  if (!file_exists($ConfigFile)) die ('ERROR!!! HRConvert-0: Could not process the HRConvert2 Configuration file (config.php)!'.PHP_EOL.'<br />');
+  if (!file_exists($ConfigFile)) die ('ERROR!!! HRConvert2-0: Could not process the HRConvert2 Configuration file (config.php)!'.PHP_EOL.'<br />');
   else require_once ($ConfigFile);
-  if (!file_exists($StyleCoreFile)) die ('ERROR!!! HRConvert-1: Could not process the HRConvert2 Style Core file (Resources/styleCore.php)!'.PHP_EOL.'<br />');
+  if (!file_exists($VersionInfoFile)) die ('ERROR!!! HRConvert2-24000: Could not process the HRConvert2 Version Information file (versionInfo.php)!'.PHP_EOL.'<br />');
+  else require_once ($VersionInfoFile);
+  if (!file_exists($StyleCoreFile)) die ('ERROR!!! HRConvert2-1: Could not process the HRConvert2 Style Core file (Resources/styleCore.php)!'.PHP_EOL.'<br />');
   else require_once ($StyleCoreFile);
-  return array($InstallationIsVerified, $ConfigFile, $StyleCoreFile, ); }
+  return array($InstallationIsVerified, $ConfigFile, $StyleCoreFile, $Version); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -240,11 +243,12 @@ function verifyInputs() {
   $var = FALSE;
   $InputsAreVerified = TRUE;
   $Language = $Token1 = $Token2 = $Height = $Width = $Rotate = $Bitrate = $Method = $Download = $UserFilename = $UserExtension = $Archive = $UserScanType = $ScanAll = $UserClamScan = $UserScanCoreScan = $var = '';
-  $variableIsSanitized = $ConvertSelected = $PDFWorkSelected = $FilesToArchive = $FilesToScan = array();
+  $variableIsSanitized = $ConvertSelected = $PDFWorkSelected = $FilesToArchive = $FilesToScan = $FilesToDelete = array();
   $key = 0;
   $ScanType = 'all';
   // / Sanitize each variable as needed & build a list of error check results.
   if (isset($_POST['noGui'])) $_GET['noGui'] = TRUE;
+  if (isset($_POST['filesToDelete'])) list ($FilesToDelete, $variableIsSanitized[$key++]) = sanitize($_POST['filesToDelete'], TRUE);
   if (isset($_POST['language'])) list ($Language, $variableIsSanitized[$key++]) = sanitize($_POST['language'], TRUE);
   if (isset($_POST['Token1'])) list ($Token1, $variableIsSanitized[$key++]) = sanitize($_POST['Token1'], TRUE);
   if (isset($_POST['Token2'])) list ($Token2, $variableIsSanitized[$key++]) = sanitize($_POST['Token2'], TRUE);
@@ -278,7 +282,7 @@ function verifyInputs() {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $variableIsSanitized = $key = $var = NULL;
   unset($variableIsSanitized, $key, $var);
-  return array($InputsAreVerified, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $UserScanType); }
+  return array($InputsAreVerified, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -366,10 +370,11 @@ function securePath($PathToSecure, $DangerArr, $isURL) {
 // / A function to set the global variables for the session.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $SubtitleArray, $StreamArray, $DrawingArray, $ModelArray, $ConvertArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed;
+  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $SubtitleArray, $StreamArray, $DrawingArray, $ModelArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection;
   // / Application related variables.
-  $HRConvertVersion = 'v3.1.9.9';
-  $CoreLoaded = $GlobalsAreVerified = TRUE;
+  $HRConvertVersion = 'v3.2';
+  $GlobalsAreVerified = FALSE;
+  $CoreLoaded = TRUE;
   $StopCounter = $SleepTimer = 0;
   $PermissionLevels = 0755;
   $ApacheUser = 'www-data';
@@ -381,12 +386,19 @@ function verifyGlobals() {
   $PathExt = PATHINFO_EXTENSION;
   // / UI Related variables.
   $ConvertGuiCounter1 = 0;
+  $File = $FCPlural = $FCPlural1 = $FCPlural2 = $FCPlural3 = '';
+  $HeaderDisplayed = $UIDisplayed = $FooterDisplayed =$LanguageStringsLoaded = $GUIDisplayed = FALSE;
+  $GUIDirection = 'rtl';
   $Alert = 'Cannot convert this file! Try changing the name.';
   $Alert1 = 'Cannot perform a virus scan on this file!';
   $Alert2 = 'File Link Copied to Clipboard!';
   $Alert3 = 'Operation Failed!';
-  $File = $FCPlural = $FCPlural1 = $FCPlural2 = $FCPlural3 = '';
-  $HeaderDisplayed = $UIDisplayed = $FooterDisplayed =$LanguageStringsLoaded = $GUIDisplayed = FALSE;
+  $FaviconPath = 'Resources/favicon.ico';
+  $DropzonePath = 'Resources/dropzone.js';
+  $DropzoneStylesheetPath = 'Resources/dropzone.css';
+  $StylesheetPath = 'Resources/HRConvert2.css';
+  $JsLibraryPath = 'Resources/HRC2-Functions.js';
+  $JqueryPath = 'Resources/jquery-3.6.3.min.js';
   // / Security related variables.
   $DefaultApps = array('.', '..');
   $DangerousFiles = array('js', 'php', '.html', 'css', 'phar', '.', '..', 'index.php', 'index.html');
@@ -410,21 +422,23 @@ function verifyGlobals() {
   $ConsolidatedLogFileName = 'User_Consolidated_Virus_Scan_Report.txt';
   $ConsolidatedLogFile = $ConvertTempDir.$ConsolidatedLogFileName;
   // / Format related variables.
-  $ArchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi', 'tar.bz2', 'tar.gz');
-  $DearchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi', 'tar.bz2', 'tar.gz');
-  $DocumentArray = array('txt', 'doc', 'docx', 'rtf', 'xls', 'xlsx', 'odt', 'ods', 'pptx', 'ppt', 'xps', 'potx', 'potm', 'pot', 'ppa', 'odp');
-  $SpreadsheetArray = array('csv', 'xls', 'xlsx', 'ods');
-  $PresentationArray = array('pages', 'pptx', 'ppt', 'xps', 'potx', 'potm', 'pot', 'ppa', 'odp');
-  $ImageArray = array('jpeg', 'jpg', 'png', 'bmp', 'gif', 'webp', 'cin', 'dds', 'dib', 'flif', 'avif', 'gplt', 'sct', 'xcf', 'heic', 'ico');
-  $MediaArray = array('mp3', 'aac', 'oog', 'wma', 'mp2', 'flac', 'm4a', 'm4p');
-  $VideoArray = array('3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv', 'mov', 'm4v');
-  $SubtitleArray = array('vtt', 'ssa', 'ass', 'srt', 'dvb');
-  $StreamArray = array('m3u8');
-  $DrawingArray = array('svg', 'dxf', 'vdx', 'fig', 'dia', 'wpg');
-  $ModelArray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'gts', 'dxf', 'u3d', 'vrml', 'x3d');
-  $PDFWorkArr = array('pdf', 'jpg', 'jpeg', 'png', 'bmp', 'webp', 'gif');
+  $ArchiveArray = $DearchiveArray = $DocumentArray = $SpreadsheetArray = $PresentationArray = $ImageArray = $MediaArray = $VideoArray = $SubtitleArray = $StreamArray = $DrawingArray = $ModelArray = $PDFWorkArr =array();
+  if (in_array('Archive', $SupportedConversionTypes)) $ArchiveArray = array('zip', 'rar', 'tar', '7z', 'iso');
+  if (in_array('Archive', $SupportedConversionTypes)) $DearchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi', 'tar.bz2', 'tar.gz');
+  if (in_array('Document', $SupportedConversionTypes)) $DocumentArray = array('txt', 'doc', 'docx', 'rtf', 'odt', 'pdf');
+  if (in_array('Document', $SupportedConversionTypes)) $SpreadsheetArray = array('csv', 'xls', 'xlsx', 'ods');
+  if (in_array('Document', $SupportedConversionTypes)) $PresentationArray = array('pages', 'pptx', 'ppt', 'xps', 'potx', 'potm', 'pot', 'ppa', 'odp');
+  if (in_array('Image', $SupportedConversionTypes)) $ImageArray = array('jpeg', 'jpg', 'png', 'bmp', 'gif', 'webp', 'cin', 'dds', 'dib', 'flif', 'avif', 'gplt', 'sct', 'xcf', 'heic', 'ico');
+  if (in_array('Audio', $SupportedConversionTypes)) $MediaArray = array('mp3', 'aac', 'oog', 'wma', 'mp2', 'flac', 'm4a', 'm4p');
+  if (in_array('Video', $SupportedConversionTypes)) $VideoArray = array('3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv', 'mov', 'm4v');
+  if (in_array('Subtitle', $SupportedConversionTypes)) $SubtitleArray = array('vtt', 'ssa', 'ass', 'srt', 'dvb');
+  if (in_array('Stream', $SupportedConversionTypes) && in_array('Audio', $SupportedConversionTypes)) $StreamArray = array('m3u8');
+  if (in_array('Drawing', $SupportedConversionTypes)) $DrawingArray = array('svg', 'dxf', 'vdx', 'fig', 'dia', 'wpg');
+  if (in_array('Model', $SupportedConversionTypes)) $ModelArray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'gts', 'dxf', 'u3d', 'vrml', 'x3d');
+  if (in_array('OCR', $SupportedConversionTypes) && in_array('Document', $SupportedConversionTypes)) $PDFWorkArr = array('pdf', 'jpg', 'jpeg', 'png', 'bmp', 'webp', 'gif');
   $Allowed = array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge($ArchiveArray, $DearchiveArray), $DocumentArray), $SpreadsheetArray), $PresentationArray), $ImageArray), $MediaArray), $VideoArray), $SubtitleArray), $StreamArray), $DrawingArray), $ModelArray), $PDFWorkArr);
-  $ConvertArray = $Allowed;
+  // / Perform a version integrity check.
+  if ($HRConvertVersion === $Version) $GlobalsAreVerified = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $convertDir0 = $convertTempDir0 = $subDir = $partURL = NULL;
   unset($convertDir0, $convertTempDir0, $subDir, $partURL);
@@ -1162,7 +1176,7 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
 // / A function to build the GUI.
 function buildGUI($guiType, $ButtonCode) {
   // / Set variables.
-  global $LanguageStringsFile, $LanguageHeaderFile, $LanguageFooterFile, $LanguageUI1File, $LanguageUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $ConvertArray, $PDFWorkArr, $ArchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoArray, $SubtitleArray, $StreamArray, $MediaArray, $PresentationArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageHeaderFile, $LanguageDir, $LanguageFooterFile, $LanguageUI1File, $LanguageUI2File, $LanguageStringsFile, $File;
+  global $LanguageStringsFile, $LanguageHeaderFile, $LanguageFooterFile, $LanguageUI1File, $LanguageUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoArray, $SubtitleArray, $StreamArray, $MediaArray, $PresentationArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageHeaderFile, $LanguageDir, $LanguageFooterFile, $LanguageUI1File, $LanguageUI2File, $LanguageStringsFile, $File, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection;
   $GUIDisplayed = $languageStringsTest = $headerTest = $guiTest = $footerTest = FALSE;
   // / Make sure the $guiType is valid.
   if (!is_numeric($guiType)) if ($guiType >= 0) $guiType = 1; 
@@ -1212,7 +1226,7 @@ function showGUI($ShowGUI, $ButtonCode) {
 // / A function to upload a selection of files.
 function uploadFiles() {
   // / Set variables.
-  global $DangerousFiles, $VirusScan, $AllowUserVirusScan, $ConvertDir, $LogFile, $Verbose, $PathExt, $PermissionLevels;
+  global $DangerousFiles, $VirusScan, $AllowUserVirusScan, $ConvertDir, $LogFile, $Verbose, $PathExt, $PermissionLevels, $Allowed;
   $UploadComplete = $UploadErrors = $virusFound = $variableIsSanitized = FALSE;
   $file = $f0 = $f1 = '';
   // / Make sure the input files are formatted into an array.
@@ -1220,17 +1234,17 @@ function uploadFiles() {
   // / Iterate through the array of input files.
   foreach ($_FILES['file']['name'] as $file) {
     $UploadComplete = FALSE;
+    if ($Verbose) logEntry('User selected to Upload file '.$file.'.');
     // / Make sure the file is sanitized before processing it.
     list ($file, $variableIsSanitized) = sanitize($file, TRUE);
     if (!$variableIsSanitized or !is_string($file) or $file === '') {
       $OperationErrors = TRUE;
       errorEntry('Could not sanitize the input file!', 6000, FALSE); 
       continue; }
-    if ($Verbose) logEntry('User selected to Upload file '.$file.'.');
     if ($file === '.' or $file === '..' or $file === 'index.html' or $file === '') continue; 
     $f0 = pathinfo($file, $PathExt);
     // / Make sure the file is not in the list of dangerous formats.
-    if (in_array(strtolower($f0), $DangerousFiles)) {
+    if (in_array(strtolower($f0), $DangerousFiles) or !in_array(strtolower($f0), $Allowed)) {
       errorEntry('Unsupported file format, '.$f0.'!', 6001, FALSE);
       continue; }
     list ($f1, $variableIsSanitized) = sanitize($ConvertDir.pathinfo($file, PATHINFO_BASENAME), FALSE);
@@ -1263,15 +1277,16 @@ function uploadFiles() {
 // / A function to upload a selection of files.
 function downloadFiles($Download) {
   // / Set variables.
-  global $Verbose, $Download, $ConvertDir, $ConsolidatedLogFileName;
+  global $DangerousFiles, $Verbose, $PathExt, $Download, $ConvertDir, $ConsolidatedLogFileName, $Allowed;
   $DownloadComplete = $DownloadErrors = $clean = $copy = $skip = $variableIsSanitized = FALSE;
-  $file = '';
+  $file = $f0 = '';
   list ($Download, $variableIsSanitized) = sanitize($Download, FALSE);
   // / Make sure the input files are formatted into an array.
   if (!is_array($Download)) $Download = array($Download);
   // / Iterate through the array of input files.
   foreach ($Download as $file) {
     $DownloadComplete = FALSE;
+    if ($Verbose) logEntry('User selected to Download file '.$file.'.');
     if ($file === $ConsolidatedLogFileName) $skip = TRUE;
     else $clean = $copy = TRUE;
     // / Make sure the file is sanitized before processing it.
@@ -1280,8 +1295,12 @@ function downloadFiles($Download) {
       $OperationErrors = TRUE;
       errorEntry('Could not sanitize the input file!', 3000, FALSE); 
       continue; }
-    if ($Verbose) logEntry('User selected to Download file '.$file.'.');
     if ($file === '.' or $file === '..' or $file === 'index.html' or $file === '') continue;
+    $f0 = pathinfo($file, $PathExt);
+    // / Make sure the file is not in the list of dangerous formats.
+    if (in_array(strtolower($f0), $DangerousFiles) or !in_array(strtolower($f0), $Allowed)) {
+      errorEntry('Unsupported file format, '.$f0.'!', 3004, FALSE);
+      continue; }
     // / Make sure all iteration specific required variables are properly sanitized.
     list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname) = verifyFile($file, FALSE, FALSE, $clean, $copy, $skip);
     if (!$fileIsVerified) {
@@ -1298,8 +1317,8 @@ function downloadFiles($Download) {
       if (!$DownloadErrors) $DownloadComplete = TRUE;
       if ($Verbose) logEntry('Verified file'.$newPathname.'.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $clean = $copy = $skip = $variableIsSanitized = NULL;
-  unset ($file, $clean, $copy, $skip, $variableIsSanitized); 
+  $file = $f0 = $clean = $copy = $skip = $variableIsSanitized = NULL;
+  unset ($file, $f0, $clean, $copy, $skip, $variableIsSanitized); 
   return array($DownloadComplete, $DownloadErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -1980,11 +1999,11 @@ list ($TimeIsSet, $Date, $Time) = verifyTime();
 if (!$TimeIsSet or !$Date or !$Time) die('ERROR!!! HRConvert2-4: Could not verify timezone!');
 
 // / The following code verifies that the installation is valid.
-list ($InstallationIsVerified, $ConfigFile, $StyleCoreFile) = verifyInstallation();
+list ($InstallationIsVerified, $ConfigFile, $StyleCoreFile, $Version) = verifyInstallation();
 if (!$InstallationIsVerified) die('ERROR!!! '.$Time.', HRConvert2-5: Could not verify installation!');
 
 // / The following code verifies that string inputs to the core are properly sanitized.
-list ($InputsAreVerified, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $UserScanType) = verifyInputs();
+list ($InputsAreVerified, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType) = verifyInputs();
 if (!$InputsAreVerified) die('ERROR!!! '.$Time.', '.$ApplicationName.'-6: Could not verify inputs!');
 
 // / The following code verifies enough user information to generate a unique session identifier.
@@ -2063,6 +2082,14 @@ if ($TokensAreValid) {
     if (!$DownloadComplete) errorEntry('Download Failed!', 19, TRUE);
     if ($DownloadErrors) logEntry('Download finished with errors.');
     if ($Verbose) logEntry('Download Complete.'); }
+
+  // / The following code is performed when a user deletes a selection of files.
+  if (isset($_POST['filesToDelete'])) {
+    logEntry('Initiating Deletor.');
+    list ($DeleteComplete, $DeleteErrors) = deleteFiles($FilesToDelete);
+    if (!$DeleteComplete) errorEntry('Delete Failed!', 24, TRUE);
+    if ($DeleteErrors) logEntry('Delete finished with errors.');
+    if ($Verbose) logEntry('Delete Complete.'); }
 
   // / The following code is performed when a user archives a selection of files.
   if (isset($_POST['filesToArchive'])) { 

@@ -47,14 +47,14 @@ $gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui
     <div id='main' align='center'>
       <div id='overview' style='max-width:1000px; text-align:<?php echo $GUIAlignment; ?>; margin:25px;'><?php echo $Gui1Text2; ?>
         <p id='info' style='display:block;'></p>
-        <button id='more-info-button' class='info-button' onclick='toggle_visibility("more-info"); toggle_visibility("more-info-button"); toggle_visibility("supported-formats-show-button"); toggle_visibility("less-info-button");' style='text-align:center; display:block; margin-left:auto; margin-right:auto;'><i><?php echo $Gui1Text3; ?></i></button>
-        <button id='less-info-button' class='info-button' onclick='toggle_visibility("more-info"); toggle_visibility("more-info-button"); toggle_visibility("supported-formats-show-button"); toggle_visibility("less-info-button");' style='text-align:center; display:none; margin-left:auto; margin-right:auto;'><i><?php echo $Gui1Text4; ?></i></button>
+        <button id='more-info-button' class='info-button' onclick='toggle_visibility("more-info"); toggle_visibility("more-info-button"); toggle_visibility("supported-formats-show-button"); toggle_visibility("less-info-button");' style='text-align:center; display:block; margin-left:auto; margin-right:auto;'><?php echo $Gui1Text3; ?></button>
+        <button id='less-info-button' class='info-button' onclick='toggle_visibility("more-info"); toggle_visibility("more-info-button"); toggle_visibility("supported-formats-show-button"); toggle_visibility("less-info-button");' style='text-align:center; display:none; margin-left:auto; margin-right:auto;'><?php echo $Gui1Text4; ?></button>
         <div id='more-info' style='display:none;'>
           <hr />
           <p><?php echo $Gui1Text5; ?></p>
           <p><?php echo $Gui1Text6; ?></p>
-          <button id='supported-formats-show-button' class='info-button' onclick='toggle_visibility("supported-formats"); toggle_visibility("supported-formats-show-button"); toggle_visibility("supported-formats-hide-button");' style='text-align:center; display:none; margin-left:auto; margin-right:auto;'><i><?php echo $Gui1Text7; ?></i></button>
-          <button id='supported-formats-hide-button' class='info-button' onclick='toggle_visibility("supported-formats"); toggle_visibility("supported-formats-show-button"); toggle_visibility("supported-formats-hide-button");' style='text-align:center; display:none; margin-left:auto; margin-right:auto;'><i><?php echo $Gui1Text8; ?></i></button>
+          <button id='supported-formats-show-button' class='info-button' onclick='toggle_visibility("supported-formats"); toggle_visibility("supported-formats-show-button"); toggle_visibility("supported-formats-hide-button");' style='text-align:center; display:none; margin-left:auto; margin-right:auto;'><?php echo $Gui1Text7; ?></button>
+          <button id='supported-formats-hide-button' class='info-button' onclick='toggle_visibility("supported-formats"); toggle_visibility("supported-formats-show-button"); toggle_visibility("supported-formats-hide-button");' style='text-align:center; display:none; margin-left:auto; margin-right:auto;'><?php echo $Gui1Text8; ?></button>
           <br>
           <div id='supported-formats' class='supported-formats' style='margin-left:33%; display:none;'>
             <h3><?php echo $Gui1Text9; ?></h3>

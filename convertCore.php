@@ -388,8 +388,8 @@ function verifyGlobals() {
   $ConvertGuiCounter1 = 0;
   $File = $FCPlural = $FCPlural1 = $FCPlural2 = $FCPlural3 = '';
   $HeaderDisplayed = $UIDisplayed = $FooterDisplayed =$LanguageStringsLoaded = $GUIDisplayed = FALSE;
-  $GUIDirection = 'rtl';
-  $GUIAlignment = 'right';
+  $GUIDirection = 'ltr';
+  $GUIAlignment = 'left';
   $Alert = 'Cannot convert this file! Try changing the name.';
   $Alert1 = 'Cannot perform a virus scan on this file!';
   $Alert2 = 'File Link Copied to Clipboard!';

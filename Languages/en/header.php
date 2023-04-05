@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 3/28/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 4/4//2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.2.
+// / v3.2.1.
 // / This file contains language specific GUI elements to be displayed at the top of pages.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -40,9 +40,9 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
     <link rel='shortcut icon' href='<?php echo $FaviconPath; ?>'/>
     <link rel='stylesheet' href='<?php echo $DropzoneStylesheetPath; ?>'/>
     <link rel='stylesheet' href='<?php echo $StylesheetPath; ?>'/>
+    <script type='text/javascript'>var dropzoneText = '<?php echo $GuiHeaderText1; ?>';</script>
     <script type='text/javascript' src='<?php echo $JsLibraryPath; ?>'></script>
     <script type='text/javascript' src='<?php echo $DropzonePath; ?>'></script>
-    <script type='text/javascript'>var dropzoneText = '<?php echo $GuiHeaderText1; ?>';</script>
     <style>
       body {
         font-family: <?php echo $Font; ?>; }

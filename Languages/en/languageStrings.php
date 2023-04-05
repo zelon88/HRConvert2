@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 3/28/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 4/4/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.2.
+// / v3.2.1.
 // / This file contains language specific GUI related text for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -32,6 +32,8 @@
 $LanguageStringsLoaded = TRUE;
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
+// / Set the side of the page to float elements to.
+$GUIAlignment = 'left';
 // / Check if the core is loaded.
 if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
 // / -----------------------------------------------------------------------------------
@@ -72,8 +74,8 @@ $Gui1Text3 = 'More Info ...';
 $Gui1Text4 = 'Less Info ...';
 // / 'All user-supplied data is erased automatically, so you don\'t need to worry about forfeiting your personal information or property while using our services.'
 $Gui1Text5 = 'All user-supplied data is erased automatically, so you don\'t need to worry about forfeiting your personal information or property while using our services.';
-// / 'Currently '.$ApplicationName.' supports 79 different file formats, including documents, spreadsheets, images, media, 3D models, CAD drawings, vector files, archives, disk images, & more.'
-$Gui1Text6 = 'Currently '.$ApplicationName.' supports 79 different file formats, including documents, spreadsheets, images, media, 3D models, CAD drawings, vector files, archives, disk images, & more.';
+// / 'Currently '.$ApplicationName.' supports '.$SupportedFormatCount.' different file formats, including documents, spreadsheets, images, media, 3D models, CAD drawings, vector files, archives, disk images, & more.'
+$Gui1Text6 = 'Currently '.$ApplicationName.' supports '.$SupportedFormatCount.' different file formats, including documents, spreadsheets, images, media, 3D models, CAD drawings, vector files, archives, disk images, & more.';
 // / 'View Supported Formats ...'
 $Gui1Text7 = 'View Supported Formats ...';
 // / 'Hide Supported Formats ...'

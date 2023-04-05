@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 3/28/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 4/4//2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.2.
+// / v3.2.1.
 // / This file contains language specific GUI elements for accepting file uploads.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -45,7 +45,7 @@ $gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui
       <hr />
     </div>
     <div id='main' align='center'>
-      <div id='overview' style='max-width:1000px; text-align:left; margin:25px;'><?php echo $Gui1Text2; ?>
+      <div id='overview' style='max-width:1000px; text-align:<?php echo $GUIAlignment; ?> margin:25px;'><?php echo $Gui1Text2; ?>
       	<p id='info' style='display:block;'></p>
         <button id='more-info-button' class='info-button' onclick='toggle_visibility("more-info"); toggle_visibility("more-info-button"); toggle_visibility("supported-formats-show-button"); toggle_visibility("less-info-button");' style='text-align:center; display:block; margin-left:auto; margin-right:auto;'><i><?php echo $Gui1Text3; ?></i></button>
         <button id='less-info-button' class='info-button' onclick='toggle_visibility("more-info"); toggle_visibility("more-info-button"); toggle_visibility("supported-formats-show-button"); toggle_visibility("less-info-button");' style='text-align:center; display:none; margin-left:auto; margin-right:auto;'><i><?php echo $Gui1Text4; ?></i></button>

@@ -45,8 +45,8 @@ $gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui
       <hr />
     </div>
     <div id='main' align='center'>
-      <div id='overview' style='max-width:1000px; text-align:<?php echo $GUIAlignment; ?> margin:25px;'><?php echo $Gui1Text2; ?>
-      	<p id='info' style='display:block;'></p>
+      <div id='overview' style='max-width:1000px; text-align:<?php echo $GUIAlignment; ?>; margin:25px;'><?php echo $Gui1Text2; ?>
+        <p id='info' style='display:block;'></p>
         <button id='more-info-button' class='info-button' onclick='toggle_visibility("more-info"); toggle_visibility("more-info-button"); toggle_visibility("supported-formats-show-button"); toggle_visibility("less-info-button");' style='text-align:center; display:block; margin-left:auto; margin-right:auto;'><i><?php echo $Gui1Text3; ?></i></button>
         <button id='less-info-button' class='info-button' onclick='toggle_visibility("more-info"); toggle_visibility("more-info-button"); toggle_visibility("supported-formats-show-button"); toggle_visibility("less-info-button");' style='text-align:center; display:none; margin-left:auto; margin-right:auto;'><i><?php echo $Gui1Text4; ?></i></button>
         <div id='more-info' style='display:none;'>

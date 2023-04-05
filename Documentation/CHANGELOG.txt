@@ -27,6 +27,21 @@ Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 -----------------------------------------------------------------------------------
 
 --------------------
+COMMIT 4/4/2023
+v3.2.1 - Continue working on languageStrings concept.
+
+-v3.2.1.
+-Work on Arabic language pack.
+-Add $GUIAlignment variable to control the float of UI elements.
+  -This is needed to make lists presentable in right-to-left languages.
+-Add dynamic supported format counting instead of hard-coding the number of formats for each UI.
+  -Previously we would count and adjust the number of unique conversions that are supported, then hard code this value into each UI.
+  -Now the core counts the number of supported formats and uses this value when building the UI.
+  -This is more maintainable, and more accurate.
+  -Now each converter will reflect the number of formats that are actually supproted.
+  -So if an administrator disables all conversions except for model conversions, there will be a very small number of supported conversions reflected in the UI.
+
+--------------------
 COMMIT 3/28/2023
 v3.2 - Continue working on languageStrings concept.
 

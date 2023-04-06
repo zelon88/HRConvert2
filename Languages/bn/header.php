@@ -1,7 +1,7 @@
-<?php 
+<?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 2/21/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 4/5//2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.1.9.1.
+// / v3.2.2.
 // / This file contains language specific GUI elements to be displayed at the top of pages.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -26,18 +26,23 @@
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
-if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
-if (!isset($ApplicationTitle)) $ApplicationTitle = 'কিছু রূপান্তর!'; 
-if (!isset($Font)) $Font = 'Arial'; ?>
-<html>
+
+// / -----------------------------------------------------------------------------------
+// / Set a flag to tell that the UI has been displayed.
+$HeaderDisplayed = TRUE;
+// / Check if the core is loaded.
+if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
+// / -----------------------------------------------------------------------------------
+?>
+<html dir='<?php echo $GUIDirection; ?>'>
   <head>
     <meta charset="UTF-8">
-    <link rel="shortcut icon" href="Resources/favicon.ico"/>
-    <link rel="stylesheet" href="Resources/dropzone.css"/>
-    <link rel="stylesheet" href="Resources/HRConvert2.css"/>
-    <script type="text/javascript" src="Resources/HRC2-Functions.js"></script>
-    <script type="text/javascript">var dropzoneText = 'আপলোড করতে এখানে ফাইলগুলিকে ক্লিক করুন, ট্যাপ করুন বা ড্রপ করুন৷';</script>
-    <script type="text/javascript" src="Resources/dropzone.js"></script>
+    <link rel='shortcut icon' href='<?php echo $FaviconPath; ?>'/>
+    <link rel='stylesheet' href='<?php echo $DropzoneStylesheetPath; ?>'/>
+    <link rel='stylesheet' href='<?php echo $StylesheetPath; ?>'/>
+    <script type='text/javascript'>var dropzoneText = '<?php echo $GuiHeaderText1; ?>';</script>
+    <script type='text/javascript' src='<?php echo $JsLibraryPath; ?>'></script>
+    <script type='text/javascript' src='<?php echo $DropzonePath; ?>'></script>
     <style>
       body {
         font-family: <?php echo $Font; ?>; }
@@ -45,4 +50,3 @@ if (!isset($Font)) $Font = 'Arial'; ?>
     </style>
     <title><?php echo $ApplicationName; ?> - <?php echo $ApplicationTitle; ?></title>
   </head>
-  

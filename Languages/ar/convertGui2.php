@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 4/4/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 4/5/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.2.1.
+// / v3.2.2.
 // / This file contains language specific GUI elements for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -424,19 +424,6 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                 success: function(returnFile) {
                   toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                   location.reload(); },
-                error: function(ReturnData) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  alert("<?php echo $Gui2Text74; ?>"); } }); });
-              $('#deletefilebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                type: 'POST',
-                url: 'convertCore.php',
-                data: { 
-                  Token1:'<?php echo $Token1; ?>',
-                  Token2:'<?php echo $Token2; ?>',
-                  filesToDelete:'<?php echo $File; ?>' },
-                success: function(returnFile) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>'); },
                 error: function(ReturnData) {
                   toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                   alert("<?php echo $Gui2Text74; ?>"); } }); }); });

@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 4/4/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 4/5/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.2.1.
+// / v3.2.2.
 // / This file contains language specific GUI related text for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -35,7 +35,7 @@ $GUIDirection = 'rtl';
 // / Set the side of the page to float elements to.
 $GUIAlignment = 'right';
 // / Check if the core is loaded.
-if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
+if (!isset($CoreLoaded)) die('خطأ!!! HRConvert2-2 ، لا يمكن لهذا الملف معالجة طلبك! يرجى إرسال ملفك إلى convertCore.php بدلاً من ذلك!');
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -48,6 +48,8 @@ if (!isset($ApplicationTitle)) $ApplicationTitle = 'تحويل أي شيء!';
 
 // / -----------------------------------------------------------------------------------
 // / Set GUI Related Logic.
+$FCPlural1 = '';
+if (!is_numeric($FileCount)) $FileCount = 'عدد غير معروف من';
 if ($FileCount === 0) $FCPlural1 = 'لقد قمت بتحميل 0 ملفات صالحة إلى '.$ApplicationName.'.';
 if ($FileCount === 1) $FCPlural1 = 'لقد قمت بتحميل ملف واحد صالح إلى '.$ApplicationName.'.'; 
 if ($FileCount === 2) $FCPlural1 = 'لقد قمت بتحميل ملفين صالحين إلى '.$ApplicationName.'.';
@@ -114,11 +116,11 @@ $Gui1Text23 = 'تنسيقات الرسم';
 // / 'Can convert drawing files to image formats.'
 $Gui1Text24 = 'يمكن تحويل صيغ الرسم إلى صيغ الصور.';
 // / 'OCR Support'
-$Gui1Text25 = 'دعم التعرف الضوئي على الحروف';
+$Gui1Text25 = 'دعم التعرف البصري على الأحرف';
 // / 'OCR Operations support the following input formats...'
-$Gui1Text26 = 'تدعم عمليات OCR تنسيقات الإدخال التالية ...';
+$Gui1Text26 = 'تدعم عمليات التعرف الضوئي على الحروف تنسيقات الإدخال التالية ...';
 // / 'OCR Operations support the following output formats...'
-$Gui1Text27 = 'تدعم عمليات OCR تنسيقات الإخراج التالية ...';
+$Gui1Text27 = 'تدعم عمليات التعرف الضوئي على الأحرف تنسيقات الإخراج التالية ...';
 // / 'Select files by clicking, tapping, or dropping them into the box below.'
 $Gui1Text28 = 'حدد الملفات بالنقر فوقها أو الضغط عليها أو إسقاطها في المربع أدناه.';
 // / 'Continue ...'
@@ -245,7 +247,7 @@ $Gui2Text56 = 'تحويل العرض التقديمي';
 $Gui2Text57 = 'تحويل الصوت';
 // / 'Convert Video'
 $Gui2Text58 = 'تحويل الفيديو';
-// / 'Convert Video'
+// / 'Convert Stream'
 $Gui2Text59 = 'تحويل تيار';
 // / 'Convert Model'
 $Gui2Text60 = 'تحويل النموذج';

@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 4/4/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 4/5/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.2.1.
+// / v3.2.2.
 // / This file contains language specific GUI related text for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -48,9 +48,9 @@ if (!isset($ApplicationTitle)) $ApplicationTitle = 'Convert Anything!';
 
 // / -----------------------------------------------------------------------------------
 // / Set GUI Related Logic.
+if (!is_numeric($FileCount)) $FileCount = 'an unknown number of';
 $FCPlural1 = 's';
 $FCPlural2 = 's are';
-if (!is_numeric($FileCount)) $FileCount = 'an unknown number of';
 if ($FileCount == 1) {
   $FCPlural1 = '';
   $FCPlural2 = ' is'; }
@@ -244,7 +244,7 @@ $Gui2Text56 = 'Convert Presentation';
 $Gui2Text57 = 'Convert Audio';
 // / 'Convert Video'
 $Gui2Text58 = 'Convert Video';
-// / 'Convert Video'
+// / 'Convert Stream'
 $Gui2Text59 = 'Convert Stream';
 // / 'Convert Model'
 $Gui2Text60 = 'Convert Model';
@@ -257,7 +257,7 @@ $Gui2Text64 = 'Width & Height: ';
 // / 'Rotate: '
 $Gui2Text65 = 'Rotate: ';
 // / 'Bitrate: '
-$Gui2Text66 = 'Bitrate:  ';
+$Gui2Text66 = 'Bitrate: ';
 // / 'Delete'
 $Gui2Text67 = 'Delete';
 // / 'Close Delete Options'

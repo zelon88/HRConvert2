@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 4/4/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 4/5/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -30,5 +30,5 @@
 
 // / -----------------------------------------------------------------------------------
 // / The version of this HRConvert2 installation.
-$Version = 'v3.2.1';
+$Version = 'v3.2.2';
 // / -----------------------------------------------------------------------------------

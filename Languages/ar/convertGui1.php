@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 4/5/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 4/13/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.2.2.
+// / v3.2.3.
 // / This file contains language specific GUI elements for accepting file uploads.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -31,9 +31,9 @@
 // / Set a flag to tell that the UI has been displayed.
 $UIDisplayed = TRUE;
 // / Check if the core is loaded.
-if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
+if (!isset($CoreLoaded)) die('خطأ!!! HRConvert2-2 ، لا يمكن لهذا الملف معالجة طلبك! يرجى إرسال ملفك إلى convertCore.php بدلاً من ذلك!');
 // / Assign temporary variables.
-$gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui1PresArr = $gui1ArchArr = $gui1ImaArr = $gui1ModArr = $gui1DraArr = '';
+$gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = array();
 // / -----------------------------------------------------------------------------------
 ?>
   <body>
@@ -46,7 +46,7 @@ $gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui
     </div>
     <div id='main' align='center'>
       <div id='overview' style='max-width:1000px; text-align:<?php echo $GUIAlignment; ?>; margin:25px;'><?php echo $Gui1Text2; ?>
-      	<p id='info' style='display:block;'></p>
+        <p id='info' style='display:block;'></p>
         <button id='more-info-button' class='info-button' onclick='toggle_visibility("more-info"); toggle_visibility("more-info-button"); toggle_visibility("supported-formats-show-button"); toggle_visibility("less-info-button");' style='text-align:center; display:block; margin-left:auto; margin-right:auto;'><?php echo $Gui1Text3; ?></button>
         <button id='less-info-button' class='info-button' onclick='toggle_visibility("more-info"); toggle_visibility("more-info-button"); toggle_visibility("supported-formats-show-button"); toggle_visibility("less-info-button");' style='text-align:center; display:none; margin-left:auto; margin-right:auto;'><?php echo $Gui1Text4; ?></button>
         <div id='more-info' style='display:none;'>
@@ -126,6 +126,13 @@ $gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui
               <li><?php echo $gui1ModArr; ?></li>
               <?php } ?>
             </ol>
+            <?php } if (in_array('Subtitle', $SupportedConversionTypes)) { ?>
+            <strong><?php echo $Gui1Text31; ?></strong>
+            <ol>
+              <?php foreach ($SubtitleArray as $gui1SubArr) { ?>
+              <li><?php echo $gui1SubArr; ?></li>
+              <?php } ?>
+            </ol>
             <?php } if (in_array('Drawing', $SupportedConversionTypes)) { ?>
             <strong><?php echo $Gui1Text23; ?></strong>
             <p><i><?php echo $Gui1Text24; ?></i></p>
@@ -193,5 +200,5 @@ $gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui
     </div>
     <?php }
     // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-    $gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui1PresArr = $gui1ArchArr = $gui1ImaArr = $gui1ModArr = $gui1DraArr = NULL;
-    unset($gui1AudArr, $gui1VidArr, $gui1StreamArr, $gui1DocArr, $gui1SpreadArr, $gui1PresArr, $gui1ArchArr, $gui1ImaArr, $gui1ModArr, $gui1DraArr);
+    $gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui1PresArr = $gui1ArchArr = $gui1ImaArr = $gui1ModArr = $gui2SubArr = $gui1DraArr = NULL;
+    unset($gui1AudArr, $gui1VidArr, $gui1StreamArr, $gui1DocArr, $gui1SpreadArr, $gui1PresArr, $gui1ArchArr, $gui1ImaArr, $gui1ModArr, $gui2SubArr, $gui1DraArr);

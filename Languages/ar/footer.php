@@ -1,7 +1,7 @@
     <?php
     // / -----------------------------------------------------------------------------------
     // / APPLICATION INFORMATION ...
-    // / HRConvert2, Copyright on 4/5/2023 by Justin Grimes, www.github.com/zelon88
+    // / HRConvert2, Copyright on 4/13/2023 by Justin Grimes, www.github.com/zelon88
     // /
     // / LICENSE INFORMATION ...
     // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
     // / on a server for users of any web browser without authentication.
     // /
     // / FILE INFORMATION ...
-    // / v3.2.2.
+    // / v3.2.3.
     // / This file contains language specific GUI elements to be displayed at the bottom of pages.
     // /
     // / HARDWARE REQUIREMENTS ...
@@ -31,7 +31,7 @@
     // / Set a flag to tell that the UI has been displayed.
     $FooterDisplayed = TRUE;
     // / Check if the core is loaded.
-    if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
+    if (!isset($CoreLoaded)) die('خطأ!!! HRConvert2-2 ، لا يمكن لهذا الملف معالجة طلبك! يرجى إرسال ملفك إلى convertCore.php بدلاً من ذلك!');
     // / -----------------------------------------------------------------------------------
 
     if ($ShowFinePrint) { ?>

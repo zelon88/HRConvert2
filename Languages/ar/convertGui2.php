@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 4/5/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 4/13/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.2.2.
+// / v3.2.3.
 // / This file contains language specific GUI elements for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -31,9 +31,9 @@
 // / Set a flag to tell that the UI has been displayed.
 $UIDisplayed = TRUE;
 // / Check if the core is loaded.
-if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
+if (!isset($CoreLoaded)) die('خطأ!!! HRConvert2-2 ، لا يمكن لهذا الملف معالجة طلبك! يرجى إرسال ملفك إلى convertCore.php بدلاً من ذلك!');
 // / Assign temporary variables.
-$gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2DraArr = $gui2OcrArr = '';
+$gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = array();
 // / -----------------------------------------------------------------------------------
 ?>
   <body>
@@ -309,6 +309,15 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
            onclick="toggle_visibility('modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('modelButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('modelXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
           <img id="modelXButton<?php echo $ConvertGuiCounter1; ?>" name="modelXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:<?php echo $GUIAlignment; ?>; display:none;" 
            onclick="toggle_visibility('modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('modelButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('modelXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+          <?php } 
+
+          if (in_array($extension, $SubtitleArray) && in_array('Subtitle', $SupportedConversionTypes)) { ?>
+          <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
+
+          <img id="subtitleButton<?php echo $ConvertGuiCounter1; ?>" name="subtitleButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/subtitle.png" style="float:<?php echo $GUIAlignment; ?>; display:block;" 
+           onclick="toggle_visibility('subtitleOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('subtitleButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('subtitleXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+          <img id="subtitleXButton<?php echo $ConvertGuiCounter1; ?>" name="subtitleXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:<?php echo $GUIAlignment; ?>; display:none;" 
+           onclick="toggle_visibility('subtitleOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('subtitleButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('subtitleXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
           <?php } ?>
 
         </div>
@@ -919,6 +928,50 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
         </div>
         <?php } 
 
+        if (in_array($extension, $SubtitleArray) && in_array('Subtitle', $SupportedConversionTypes)) {
+        ?>
+        <div id='subtitleOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='subtitleOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+          <p style="max-width:1000px;"></p>
+          <p><strong><?php echo $Gui2Text48; ?></strong></p>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='usersubtitlefilename<?php echo $ConvertGuiCounter1; ?>' name='usersubtitlefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <select id='subtitleextension<?php echo $ConvertGuiCounter1; ?>' name='subtitleextension<?php echo $ConvertGuiCounter1; ?>'>
+            <option value=""><?php echo $Gui2Text18; ?></option>
+            <?php foreach ($SubtitleArray as $gui2SubArr) { ?>
+            <option value="<?php echo $gui2SubArr; ?>"><?php echo $gui2SubArr; ?></option>
+            <?php } ?>
+          </select></p>
+          <input type="submit" id="subtitleconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="subtitleconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text60; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <script type="text/javascript">
+            $(document).ready(function () {
+              $('#subtitleconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
+                $.ajax({
+                  type: 'POST',
+                  url: 'convertCore.php',
+                  data: {
+                    Token1:'<?php echo $Token1; ?>',
+                    Token2:'<?php echo $Token2; ?>',
+                    convertSelected:'<?php echo $File; ?>',
+                    extension:document.getElementById('subtitleextension<?php echo $ConvertGuiCounter1; ?>').value,
+                    userconvertfilename:document.getElementById('usersubtitlefilename<?php echo $ConvertGuiCounter1; ?>').value },
+                    success: function(ReturnData) {
+                      $.ajax({
+                      type: 'POST',
+                      url: 'convertCore.php',
+                      data: { 
+                        Token1:'<?php echo $Token1; ?>',
+                        Token2:'<?php echo $Token2; ?>',
+                        download:document.getElementById('usersubtitlefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('subtitleextension<?php echo $ConvertGuiCounter1; ?>').value },
+                      success: function(returnFile) {
+                        toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('usersubtitlefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('subtitleextension<?php echo $ConvertGuiCounter1; ?>').value; 
+                        document.getElementById('downloadTarget').click(); } }); },
+                      error: function(ReturnData) {
+                        toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        alert("<?php echo $Gui2Text71; ?>"); } }); }); });
+          </script>
+        </div>
+        <?php } 
+
         if (in_array($extension, $DrawingArray) && in_array('Drawing', $SupportedConversionTypes)) {
         ?>
         <div id='drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
@@ -1017,5 +1070,5 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
     </div>
     <?php
     // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-    $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2DraArr = $gui2OcrArr = NULL;
-    unset($gui2AudArr, $gui2VidArr, $gui2StreamArr, $gui2DocArr, $gui2SpreadArr, $gui2PresArr, $gui2ArchArr, $gui2ImaArr, $gui2ModArr, $gui2DraArr, $gui2OcrArr);
+    $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = NULL;
+    unset($gui2AudArr, $gui2VidArr, $gui2StreamArr, $gui2DocArr, $gui2SpreadArr, $gui2PresArr, $gui2ArchArr, $gui2ImaArr, $gui2ModArr, $gui2SubArr, $gui2DraArr, $gui2OcrArr);

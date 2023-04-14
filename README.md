@@ -6,13 +6,13 @@
 -----------------------------------------------
 # HRConvert2
 
-### A self-hosted drag-and-drop file conversion server & file sharing tool that supports 79 file formats with 4 color schemes & 13 end-user selctable languages. 
+### A self-hosted drag-and-drop file conversion server & file sharing tool that supports 86 file formats with 4 color schemes & 13 end-user selctable languages. 
 
 ![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/HRConvert2-1.png)
 
 ---
 ### Features
-- Converts 79 different file formats.
+- Converts 86 different file formats.
 - Self hosted. Installs on a home server!
 - All conversions are performed locally on your server.
 - Performs Optical Character Recognition (OCR) on PDFs & images.
@@ -37,11 +37,14 @@
 Supports specific bitrate through the API.
 - Mp2
 - Mp3
+- Aac
 - Avi
 - Flac
 - Ogg
 - Wav
 - Wma
+- M4a
+- M4p
 #### Video Formats
 - 3gp
 - Mkv
@@ -51,8 +54,9 @@ Supports specific bitrate through the API.
 - Mpeg
 - Wmv
 - Mov
+- M4v
 #### Stream Formats
-- m3u8
+- M3u8
 #### Document Formats
 - Doc
 - Docx
@@ -61,6 +65,7 @@ Supports specific bitrate through the API.
 - Odt
 - Pdf
 #### Spreadsheet Formats
+- Csv
 - Xls
 - Xlsx
 - Ods
@@ -71,6 +76,7 @@ Supports specific bitrate through the API.
 - Xps
 - Pot
 - Potx
+- Potm
 - Ppa
 - Ppt
 - Pptx
@@ -80,8 +86,15 @@ Can convert between archive formats & disk image formats.
 - Zip
 - Rar
 - Tar
+- Bz
+- Gz
+- Bz2
 - 7z
 - Iso
+- Vhd
+- Vdi
+- Tar.bz2
+- Tar.gz
 #### Image Formats
 Can convert pictures of documents to document formats.
 Supports resize & rotate.
@@ -101,7 +114,6 @@ Supports resize & rotate.
 - Sct
 - Xcf
 - Heic
-- Avif
 - Ico
 #### 3D Model Formats
 - 3ds
@@ -110,11 +122,18 @@ Supports resize & rotate.
 - Off
 - Ply
 - Stl
+- Gts
 - Ptx
 - Dxf
 - U3d
 - X3d
 - Vrml
+#### Subtitle Formats
+- Vtt
+- Ssa
+- Ass
+- Srt
+- Dvb
 #### Drawing Files
 Can convert drawing files to image formats.
 - Svg

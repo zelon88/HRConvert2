@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 4/5/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 4/13/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.2.2.
+// / v3.2.3.
 // / This file contains language specific GUI related text for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -124,6 +124,8 @@ $Gui1Text28 = 'Select files by clicking, tapping, or dropping them into the box 
 $Gui1Text29 = 'Continue ...';
 // / 'Can convert stream formats to video formats.'
 $Gui1Text30 = 'Can convert stream formats to video formats.';
+// / 'Subtitle Formats'
+$Gui1Text31 = 'Subtitle Formats';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

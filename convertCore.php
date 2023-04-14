@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 4/5/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 4/13/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.2.2.
+// / v3.2.3.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -370,9 +370,9 @@ function securePath($PathToSecure, $DangerArr, $isURL) {
 // / A function to set the global variables for the session.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $SubtitleArray, $StreamArray, $DrawingArray, $ModelArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment;
+  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment;
   // / Application related variables.
-  $HRConvertVersion = 'v3.2.2';
+  $HRConvertVersion = 'v3.2.3';
   $GlobalsAreVerified = FALSE;
   $CoreLoaded = TRUE;
   $StopCounter = $SleepTimer = 0;
@@ -423,7 +423,7 @@ function verifyGlobals() {
   $ConsolidatedLogFileName = 'User_Consolidated_Virus_Scan_Report.txt';
   $ConsolidatedLogFile = $ConvertTempDir.$ConsolidatedLogFileName;
   // / Format related variables.
-  $ArchiveArray = $DearchiveArray = $DocumentArray = $SpreadsheetArray = $PresentationArray = $ImageArray = $MediaArray = $VideoArray = $SubtitleArray = $StreamArray = $DrawingArray = $ModelArray = $PDFWorkArr =array();
+  $ArchiveArray = $DearchiveArray = $DocumentArray = $SpreadsheetArray = $PresentationArray = $ImageArray = $MediaArray = $VideoArray = $StreamArray = $DrawingArray = $ModelArray = $SubtitleArray = $PDFWorkArr =array();
   if (in_array('Archive', $SupportedConversionTypes)) $ArchiveArray = array('zip', 'rar', 'tar', '7z', 'iso');
   if (in_array('Archive', $SupportedConversionTypes)) $DearchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi', 'tar.bz2', 'tar.gz');
   if (in_array('Document', $SupportedConversionTypes)) $DocumentArray = array('txt', 'doc', 'docx', 'rtf', 'odt', 'pdf');
@@ -432,12 +432,12 @@ function verifyGlobals() {
   if (in_array('Image', $SupportedConversionTypes)) $ImageArray = array('jpeg', 'jpg', 'png', 'bmp', 'gif', 'webp', 'cin', 'dds', 'dib', 'flif', 'avif', 'gplt', 'sct', 'xcf', 'heic', 'ico');
   if (in_array('Audio', $SupportedConversionTypes)) $MediaArray = array('mp3', 'aac', 'oog', 'wma', 'mp2', 'flac', 'm4a', 'm4p');
   if (in_array('Video', $SupportedConversionTypes)) $VideoArray = array('3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv', 'mov', 'm4v');
-  if (in_array('Subtitle', $SupportedConversionTypes)) $SubtitleArray = array('vtt', 'ssa', 'ass', 'srt', 'dvb');
   if (in_array('Stream', $SupportedConversionTypes) && in_array('Audio', $SupportedConversionTypes)) $StreamArray = array('m3u8');
   if (in_array('Drawing', $SupportedConversionTypes)) $DrawingArray = array('svg', 'dxf', 'vdx', 'fig', 'dia', 'wpg');
   if (in_array('Model', $SupportedConversionTypes)) $ModelArray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'gts', 'dxf', 'u3d', 'vrml', 'x3d');
+  if (in_array('Subtitle', $SupportedConversionTypes)) $SubtitleArray = array('vtt', 'ssa', 'ass', 'srt', 'dvb');
   if (in_array('OCR', $SupportedConversionTypes) && in_array('Document', $SupportedConversionTypes)) $PDFWorkArr = array('pdf', 'jpg', 'jpeg', 'png', 'bmp', 'webp', 'gif');
-  $Allowed = array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge($ArchiveArray, $DearchiveArray), $DocumentArray), $SpreadsheetArray), $PresentationArray), $ImageArray), $MediaArray), $VideoArray), $SubtitleArray), $StreamArray), $DrawingArray), $ModelArray), $PDFWorkArr);
+  $Allowed = array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge($ArchiveArray, $DearchiveArray), $DocumentArray), $SpreadsheetArray), $PresentationArray), $ImageArray), $MediaArray), $VideoArray), $StreamArray), $DrawingArray), $ModelArray), $SubtitleArray), $PDFWorkArr);
   $SupportedFormatCount = count(array_unique($Allowed));
   // / Perform a version integrity check.
   if ($HRConvertVersion === $Version) $GlobalsAreVerified = TRUE;

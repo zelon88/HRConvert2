@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 4/13/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 4/14/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.2.3.
+// / v3.2.4.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -286,7 +286,7 @@ function verifyInputs() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to set the styles to use for for the session.
+// / A function to set the styles to use for the session.
 function verifyColors($ButtonStyle) {
   // / Set variables.
   global $greenButtonCode, $blueButtonCode, $redButtonCode, $defaultButtonCode;
@@ -423,13 +423,13 @@ function verifyGlobals() {
   $ConsolidatedLogFileName = 'User_Consolidated_Virus_Scan_Report.txt';
   $ConsolidatedLogFile = $ConvertTempDir.$ConsolidatedLogFileName;
   // / Format related variables.
-  $ArchiveArray = $DearchiveArray = $DocumentArray = $SpreadsheetArray = $PresentationArray = $ImageArray = $MediaArray = $VideoArray = $StreamArray = $DrawingArray = $ModelArray = $SubtitleArray = $PDFWorkArr =array();
+  $ArchiveArray = $DearchiveArray = $DocumentArray = $SpreadsheetArray = $PresentationArray = $ImageArray = $MediaArray = $VideoArray = $StreamArray = $DrawingArray = $ModelArray = $SubtitleArray = $PDFWorkArr = array();
   if (in_array('Archive', $SupportedConversionTypes)) $ArchiveArray = array('zip', 'rar', 'tar', '7z', 'iso');
   if (in_array('Archive', $SupportedConversionTypes)) $DearchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi', 'tar.bz2', 'tar.gz');
   if (in_array('Document', $SupportedConversionTypes)) $DocumentArray = array('txt', 'doc', 'docx', 'rtf', 'odt', 'pdf');
   if (in_array('Document', $SupportedConversionTypes)) $SpreadsheetArray = array('csv', 'xls', 'xlsx', 'ods');
   if (in_array('Document', $SupportedConversionTypes)) $PresentationArray = array('pages', 'pptx', 'ppt', 'xps', 'potx', 'potm', 'pot', 'ppa', 'odp');
-  if (in_array('Image', $SupportedConversionTypes)) $ImageArray = array('jpeg', 'jpg', 'png', 'bmp', 'gif', 'webp', 'cin', 'dds', 'dib', 'flif', 'avif', 'gplt', 'sct', 'xcf', 'heic', 'ico');
+  if (in_array('Image', $SupportedConversionTypes)) $ImageArray = array('jpeg', 'jpg', 'jpe', 'png', 'bmp', 'gif', 'webp', 'cin', 'dds', 'dib', 'flif', 'avif', 'gplt', 'sct', 'xcf', 'heic', 'ico');
   if (in_array('Audio', $SupportedConversionTypes)) $MediaArray = array('mp3', 'aac', 'oog', 'wma', 'mp2', 'flac', 'm4a', 'm4p');
   if (in_array('Video', $SupportedConversionTypes)) $VideoArray = array('3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv', 'mov', 'm4v');
   if (in_array('Stream', $SupportedConversionTypes) && in_array('Audio', $SupportedConversionTypes)) $StreamArray = array('m3u8');
@@ -437,8 +437,8 @@ function verifyGlobals() {
   if (in_array('Model', $SupportedConversionTypes)) $ModelArray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'gts', 'dxf', 'u3d', 'vrml', 'x3d');
   if (in_array('Subtitle', $SupportedConversionTypes)) $SubtitleArray = array('vtt', 'ssa', 'ass', 'srt', 'dvb');
   if (in_array('OCR', $SupportedConversionTypes) && in_array('Document', $SupportedConversionTypes)) $PDFWorkArr = array('pdf', 'jpg', 'jpeg', 'png', 'bmp', 'webp', 'gif');
-  $Allowed = array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge($ArchiveArray, $DearchiveArray), $DocumentArray), $SpreadsheetArray), $PresentationArray), $ImageArray), $MediaArray), $VideoArray), $StreamArray), $DrawingArray), $ModelArray), $SubtitleArray), $PDFWorkArr);
-  $SupportedFormatCount = count(array_unique($Allowed));
+  $Allowed = array_unique(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge($ArchiveArray, $DearchiveArray), $DocumentArray), $SpreadsheetArray), $PresentationArray), $ImageArray), $MediaArray), $VideoArray), $StreamArray), $DrawingArray), $ModelArray), $SubtitleArray), $PDFWorkArr));
+  $SupportedFormatCount = count($Allowed);
   // / Perform a version integrity check.
   if ($HRConvertVersion === $Version) $GlobalsAreVerified = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
@@ -1236,14 +1236,13 @@ function uploadFiles() {
   // / Iterate through the array of input files.
   foreach ($_FILES['file']['name'] as $file) {
     $UploadComplete = FALSE;
-    if ($Verbose) logEntry('User selected to Upload file '.$file.'.');
     // / Make sure the file is sanitized before processing it.
     list ($file, $variableIsSanitized) = sanitize($file, TRUE);
-    if (!$variableIsSanitized or !is_string($file) or $file === '') {
+    if (!$variableIsSanitized or !is_string($file) or $file === '' or $file === '.' or $file === '..' or $file === 'index.html') {
       $OperationErrors = TRUE;
       errorEntry('Could not sanitize the input file!', 6000, FALSE); 
       continue; }
-    if ($file === '.' or $file === '..' or $file === 'index.html' or $file === '') continue; 
+    if ($Verbose) logEntry('User selected to Upload file '.$file.'.');
     $f0 = pathinfo($file, $PathExt);
     // / Make sure the file is not in the list of dangerous formats.
     if (in_array(strtolower($f0), $DangerousFiles) or !in_array(strtolower($f0), $Allowed)) {
@@ -1288,16 +1287,15 @@ function downloadFiles($Download) {
   // / Iterate through the array of input files.
   foreach ($Download as $file) {
     $DownloadComplete = FALSE;
-    if ($Verbose) logEntry('User selected to Download file '.$file.'.');
-    if ($file === $ConsolidatedLogFileName) $skip = TRUE;
-    else $clean = $copy = TRUE;
     // / Make sure the file is sanitized before processing it.
     list ($file, $variableIsSanitized) = sanitize($file, TRUE);
-    if (!$variableIsSanitized or !is_string($file) or $file === '') {
+    if (!$variableIsSanitized or !is_string($file) or $file === '' or $file === '.' or $file === '..' or $file === 'index.html') {
       $OperationErrors = TRUE;
       errorEntry('Could not sanitize the input file!', 3000, FALSE); 
       continue; }
-    if ($file === '.' or $file === '..' or $file === 'index.html' or $file === '') continue;
+    if ($Verbose) logEntry('User selected to Download file '.$file.'.');
+    if ($file === $ConsolidatedLogFileName) $skip = TRUE;
+    else $clean = $copy = TRUE;
     $f0 = pathinfo($file, $PathExt);
     // / Make sure the file is not in the list of dangerous formats.
     if (in_array(strtolower($f0), $DangerousFiles) or !in_array(strtolower($f0), $Allowed)) {
@@ -1339,12 +1337,11 @@ function deleteFiles($FilesToDelete) {
     $DeleteComplete = FALSE;
     // / Make sure the file is sanitized before processing it.
     list ($file, $variableIsSanitized) = sanitize($file, TRUE);
-    if (!$variableIsSanitized or !is_string($file) or $file === '') {
+    if (!$variableIsSanitized or !is_string($file) or $file === '' or $file === '.' or $file === '..' or $file === 'index.html') {
       $OperationErrors = TRUE;
       errorEntry('Could not sanitize the input file!', 23000, FALSE); 
       continue; }
     if ($Verbose) logEntry('User selected to Delete file '.$file.'.');
-    if ($file === '.' or $file === '..' or $file === 'index.html' or $file === '') continue; 
     $f0 = pathinfo($file, $PathExt);
     // / Make sure the file is not in the list of dangerous formats.
     if (in_array(strtolower($f0), $DangerousFiles)) {
@@ -1388,7 +1385,7 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
     $ArchiveComplete = FALSE;
     // / Make sure the file is sanitized before processing it.
     list ($file, $variableIsSanitized) = sanitize($file, TRUE);
-    if (!$variableIsSanitized or !is_string($file) or $file === '') {
+    if (!$variableIsSanitized or !is_string($file) or $file === '' or $file === '.' or $file === '..' or $file === 'index.html') {
       $OperationErrors = TRUE;
       errorEntry('Could not sanitize the input file!', 4000, FALSE); 
       continue; }
@@ -1463,7 +1460,7 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
     $MainConversionSuccess = FALSE;
     // / Make sure the file is sanitized before processing it.
     list ($file, $variableIsSanitized) = sanitize($file, TRUE);
-    if (!$variableIsSanitized or !is_string($file) or $file === '') {
+    if (!$variableIsSanitized or !is_string($file) or $file === '' or $file === '.' or $file === '..' or $file === 'index.html') {
       $OperationErrors = TRUE;
       errorEntry('Could not sanitize the input file!', 5000, FALSE); 
       continue; }
@@ -1533,7 +1530,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
     $OperationSuccessful = FALSE;
     // / Make sure the file is sanitized before processing it.
     list ($file, $variableIsSanitized) = sanitize($file, TRUE);
-    if (!$variableIsSanitized or !is_string($file) or $file === '') {
+    if (!$variableIsSanitized or !is_string($file) or $file === '' or $file === '.' or $file === '..' or $file === 'index.html') {
       $OperationErrors = TRUE;
       errorEntry('Could not sanitize the input file!', 15000, FALSE); 
       continue; }
@@ -1740,7 +1737,7 @@ function userClamScan($FilesToScan) {
     $UserVirusFound = FALSE;
     // / Make sure the file is sanitized before processing it.
     list ($file, $variableIsSanitized) = sanitize($file, TRUE);
-    if (!$variableIsSanitized or !is_string($file) or $file === '') {
+    if (!$variableIsSanitized or !is_string($file) or $file === '' or $file === '.' or $file === '..' or $file === 'index.html') {
       $OperationErrors = TRUE;
       errorEntry('Could not sanitize the input file!', 17000, FALSE);
       continue; }
@@ -1822,7 +1819,7 @@ function userScanCoreScan($FilesToScan) {
     $UserVirusFound = FALSE;
     // / Make sure the file is sanitized before processing it.
     list ($file, $variableIsSanitized) = sanitize($file, TRUE);
-    if (!$variableIsSanitized or !is_string($file) or $file === '') {
+    if (!$variableIsSanitized or !is_string($file) or $file === '' or $file === '.' or $file === '..' or $file === 'index.html') {
       $OperationErrors = TRUE;
       errorEntry('Could not sanitize the input file!', 19000, FALSE);
       continue; }
@@ -2047,7 +2044,7 @@ else if ($Verbose) logEntry('Cleaned convert location.');
 
 // / The following code verifies the tokens supplied by the user, if any.
 list ($TokensAreValid, $Token1, $Token2) = verifyTokens($Token1, $Token2);
-if (!$TokensAreValid) logEntry('Could not verify tokens!');
+if (!$TokensAreValid && $Verbose) logEntry('Could not verify tokens!');
 else if ($Verbose) logEntry('Verified tokens.');
 
 // / The following code sets the color scheme for the session.

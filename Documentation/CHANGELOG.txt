@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 4/13/2023 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 4/14/2023 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.2.3.
+v3.2.4.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -25,6 +25,20 @@ Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 
 <3 Open-Source
 -----------------------------------------------------------------------------------
+
+--------------------
+COMMIT 4/14/2023
+v3.2.4 - Continue working on languageStrings concept, enable subtitle conversions.
+
+-v3.2.4.
+-Merge security related checks in file operations inside the error check code.
+  -Try to make them all consistent. Move some log code to after the sanitization process in upload/download/delete.
+-The log message 'Could not verify tokens!' will now only appear in logs if $Verbose is set in config.php.
+-Fix missing translations in subtitles, subtitles labeled as models.
+  -Was leftover copy-pasta.
+-Add jpe to supported formats.
+-I really want to rework PDFs soon. 
+  -Want to add the ability to convert between any supported format using existing functions.
 
 --------------------
 COMMIT 4/13/2023

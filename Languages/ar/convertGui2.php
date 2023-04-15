@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 4/13/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 4/14/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.2.3.
+// / v3.2.4.
 // / This file contains language specific GUI elements for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -932,7 +932,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
         ?>
         <div id='subtitleOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='subtitleOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p><strong><?php echo $Gui2Text48; ?></strong></p>
+          <p><strong><?php echo $Gui2Text75; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type="text" id='usersubtitlefilename<?php echo $ConvertGuiCounter1; ?>' name='usersubtitlefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='subtitleextension<?php echo $ConvertGuiCounter1; ?>' name='subtitleextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value=""><?php echo $Gui2Text18; ?></option>
@@ -940,7 +940,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
             <option value="<?php echo $gui2SubArr; ?>"><?php echo $gui2SubArr; ?></option>
             <?php } ?>
           </select></p>
-          <input type="submit" id="subtitleconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="subtitleconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text60; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="subtitleconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="subtitleconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text76; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
             $(document).ready(function () {
               $('#subtitleconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {

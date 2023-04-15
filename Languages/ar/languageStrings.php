@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 4/13/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 4/14/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.2.3.
+// / v3.2.4.
 // / This file contains language specific GUI related text for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -279,6 +279,10 @@ $Gui2Text72 = 'لا يمكن إجراء فحص فيروسات على هذا ال
 $Gui2Text73 = 'تم نسخ ارتباط الملف إلى الحافظة!';
 // / 'Operation Failed!'
 $Gui2Text74 = 'فشلت العملية!';
+// / Convert These Subtitles'
+$Gui2Text75 = 'تحويل هذه الترجمات';
+// / Convert Subtitles'
+$Gui2Text76 = 'تحويل الترجمة';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

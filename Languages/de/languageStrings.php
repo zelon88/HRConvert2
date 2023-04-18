@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 4/14/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 4/17/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.2.4.
+// / v3.2.5.
 // / This file contains language specific GUI related text for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -67,17 +67,17 @@ $Gui1Text1 = 'Online-Dateikonverter, Extraktor, Kompressor';
 // / $ApplicationName.' is based off the open-source web-app <a href=\'https://github.com/zelon88/HRConvert2\'>HRConvert2</a> by <a href=\'https://github.com/zelon88\'>Zelon88</a> that converts files without tracking users across the net or infringing on your intellectual property.'
 $Gui1Text2 = $ApplicationName.' basiert auf der Open-Source-Web-App HRConvert2 von <a href=\'https://github.com/zelon88\'>Zelon88</a>, die Dateien konvertiert, ohne Benutzer über das Internet zu verfolgen oder Ihr geistiges Eigentum zu verletzen.';
 // / 'More Info ...'
-$Gui1Text3 = 'Mehr Info ...';
+$Gui1Text3 = 'Mehr Info...';
 // / 'Less Info ...'
-$Gui1Text4 = 'Weniger Informationen ...';
+$Gui1Text4 = 'Weniger Informationen...';
 // / 'All user-supplied data is erased automatically, so you don\'t need to worry about forfeiting your personal information or property while using our services.'
 $Gui1Text5 = 'Alle vom Benutzer bereitgestellten Daten werden automatisch gelöscht, sodass Sie sich keine Sorgen über den Verlust Ihrer persönlichen Daten oder Ihres Eigentums machen müssen, wenn Sie unsere Dienste nutzen.';
 // / 'Currently '.$ApplicationName.' supports '.$SupportedFormatCount.' different file formats, including documents, spreadsheets, images, media, 3D models, CAD drawings, vector files, archives, disk images, & more.'
 $Gui1Text6 = 'Derzeit '.$ApplicationName.' unterstützt '.$SupportedFormatCount.' verschiedene Dateiformate, einschließlich Dokumente, Tabellenkalkulationen, Bilder, Medien, 3D-Modelle, CAD-Zeichnungen, Vektordateien, Archive, Disk-Images und mehr.';
 // / 'View Supported Formats ...'
-$Gui1Text7 = 'Unterstützte Formate Anzeigen ...';
+$Gui1Text7 = 'Unterstützte Formate Anzeigen...';
 // / 'Hide Supported Formats ...'
-$Gui1Text8 = 'Unterstützte Formate Ausblenden ...';
+$Gui1Text8 = 'Unterstützte Formate Ausblenden...';
 // / 'Supported Formats'
 $Gui1Text9 = 'Unterstützte Formate';
 // / 'Audio Formats'
@@ -119,7 +119,7 @@ $Gui1Text27 = 'Operationen unterstützen die folgenden Ausgabeformate...';
 // / 'Select files by clicking, tapping, or dropping them into the box below.'
 $Gui1Text28 = 'Wählen Sie Dateien aus, indem Sie sie anklicken, antippen oder in das unten stehende Feld ziehen.';
 // / 'Continue ...'
-$Gui1Text29 = 'Weitermachen ...';
+$Gui1Text29 = 'Weitermachen...';
 // / 'Can convert stream formats to video formats.'
 $Gui1Text30 = 'Kann Stream-Formate in Videoformate konvertieren.';
 // / 'Subtitle Formats'
@@ -212,7 +212,7 @@ $Gui2Text40 = 'Einfach';
 $Gui2Text41 = 'Fortschrittlich';
 // / 'Convert This Archive'
 $Gui2Text42 = 'Konvertieren Sie Dieses Archiv';
-// / 'Convert This Spreadsheet'
+// / 'Convert This Document'
 $Gui2Text43 = 'Dieses Dokument Konvertieren';
 // / 'Convert This Spreadsheet'
 $Gui2Text44 = 'Diese Tabelle Konvertieren';

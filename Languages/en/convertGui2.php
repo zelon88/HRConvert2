@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 4/14/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 4/17/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.2.4.
+// / v3.2.5.
 // / This file contains language specific GUI elements for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...

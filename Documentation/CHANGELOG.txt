@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 4/14/2023 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 4/15/2023 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.2.4.
+v3.2.5.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -27,8 +27,52 @@ Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 -----------------------------------------------------------------------------------
 
 --------------------
+COMMIT 4/17/2023
+v3.2.5 - Add Spanish, French languageString.php file.
+
+-v3.2.5.
+-CONCEPT EXPLORATION: I Want to make UI's all exactly the same.
+  -The quest for modularity / scalability / maintainability continues!
+    -Making the UI and language packs separate, we enable the development of UIs to be language-agnostic.
+      -Add an errorStrings.php to each language pack.
+        -Define log language + error language in config, use errorStrings to translate core errors also.
+      -Add error translations to the ERROR_DESCRIPTIONS.txt file in a
+      -If we develop a a UI, it will apply to every language pack.
+      -If we develop a language pack, it will apply to every UI.
+      -UI developers can add/require their own supplemental languageStrings files, or bake this text into the UI.
+      -UI developers can chose to completely ignore the stock languageStrings file if they want.
+  -Create new root folder called UI.
+  -Move h,1,2,f files into UI folder.
+    -Create a subfolder for existing UI called Default.
+    -Move styleCore and stylesheets.css into UI/Default folder.
+    -Future ideas for UIs include "dark" "light" and various holiday themes.
+      -Maybe an automatic holiday selection mechanism based on timezone?
+  -Move errors from h,1,2,f to languageStrings.php.
+  -Make core check for existence of h,1,2,f files in the language pack folder.
+    -If style is specified & user style selection is allowed, use specified style.
+    -If h,1,2,f files exist and no style specified, use UI/Default.
+    -If h,1,2,f files don't exist and no style specified, use UI/Default. 
+-Tweak German language pack.
+  -Remove extra whitespace in UI1 buttons to save room.
+-Add languageStrings.php to Spanish, French language packs.
+-Language packs complete:
+  -Ar l,h,1,2,f
+  -Bn l,h,1,2,f
+  -De l,h,1,2,f
+  -En l,h,1,2,f
+  -Es l,h,1,2,f
+  -Fr l,h,1,2,f
+  -Hi
+  -It
+  -Ko
+  -Pt
+  -Ru
+  -Uk
+  -Zh
+
+--------------------
 COMMIT 4/14/2023
-v3.2.4 - Continue working on languageStrings concept, enable subtitle conversions.
+v3.2.4 - Misc cleanup.
 
 -v3.2.4.
 -Merge security related checks in file operations inside the error check code.

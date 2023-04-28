@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 4/17/2023 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 4/26/2023 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.2.5.
+v3.2.7.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -25,6 +25,57 @@ Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 
 <3 Open-Source
 -----------------------------------------------------------------------------------
+
+--------------------
+COMMIT 4/26/2023
+v3.2.7 - Implement separation of UI from language packs.
+
+-v3.2.7.
+-Clean up error procedures and error descriptions in delete function.
+  -Cleaned up spacing, documentation inconsistencies, incomplete error messages.
+-Updated CREATING_LANGUAGE_PACKS.txt to be more informational.
+-Add verifyGui() function.
+  -Mostly copy verifyLanguage() function.
+  -Add ERROR 25, "Could not verify GUI!".
+  -Add ERROR 25 to ERROR_DESCRIPTIONS.txt.
+-Move UI files to UI folder in root of installation location.
+  -Now the loading spinner, colors, language, and UI theme will be adjustable.
+  -Language and UI theme will be user selectable.
+  -Need to add config entries, other supporting logic.
+  -Need to update language pack docs.
+  -Need to update api information.
+  -Need to update config.php
+-Add languageStrings.php to Hindi language pack.
+  -Language packs complete:
+    -Ar l,h,1,2,f
+    -Bn l,h,1,2,f
+    -De l,h,1,2,f
+    -En l,h,1,2,f
+    -Es l,h,1,2,f
+    -Fr l,h,1,2,f
+    -Hi l,h,1,2,f
+    -It
+    -Ko
+    -Pt
+    -Ru
+    -Uk
+    -Zh
+
+--------------------
+COMMIT 4/18/2023
+v3.2.6 - Add Spanish, French languageString.php file.
+
+-v3.2.6.
+-Remove duplicate global variables from buildGui() function in convertCore.php.
+-Create UI folder in root HRConvert2 directory.
+-Move UI pages to UI folder.
+-Update languageStrings.php files to have $CoreError variable.
+  -ar
+  -bn
+  -de
+  -en
+  -es
+  -fr
 
 --------------------
 COMMIT 4/17/2023

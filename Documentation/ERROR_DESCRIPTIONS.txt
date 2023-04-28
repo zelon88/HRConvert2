@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 3/28/2023 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 4/26/2023 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.2.
+v3.2.7.
 This plain text file contains descriptions of all the native error messages contained in or produced by the HRConvert2 Diablo engine. 
 These descriptions should give administrators a starting point for debugging problems with HRConvert2 installations. 
 Each section in this file contains information about a different error message. The first one is an example to demonstrate the structure of this file.
@@ -49,15 +49,16 @@ If "Enhanced Logging Verbosity" is disabled in config.php; only warnings and err
 ~~START OF EXAMPLE~~
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  The exact error response produced by the application. 
-  Text wrapped in angle brackets < > denote encoded information. 
-  <TIMESTAMP> will be replaced with an abbreviated date. 
-  <SESSION_IDENTIFIER> will be replaced with a short but unique number to identify related log events. 
+  The exact error response produced by the application.
+  Text wrapped in angle brackets < > denote encoded information.
+  <TIMESTAMP> will be replaced with an abbreviated date.
+  <SESSION_IDENTIFIER> will be replaced with a short but unique number to identify related log events.
   <APPLICATION_NAME> will be replaced with whatever the --Application Name-- is set to in config.php.
   <FILE_PATH> will be replaced with an absolute file path.
   <FILE_NAME> will be replaced with a file name.
   <ADDITIONAL_DATA> will be replaced with the result of a system call or standard output from a called dependency.
-  <FILE_TYPE> will be replaced with a human readable one word string describing the file such as 'Video' or 'Document'.  
+  <FILE_TYPE> will be replaced with a human readable one word string describing the file such as 'Video' or 'Document'.
+  <FILE_EXTENSION> will be replaced with a file extension.
 
 FILE
   The file path pointing to the file which contains this error message. 
@@ -446,7 +447,7 @@ LOGGED
 ERROR DESCRIPTION
   The path to the Languages subdirectory of the installation directory does not exist or cannot be accessed.
   The requested Language Pack has become corrupt.
-  The requested language pack is missing one or more of the following files; languageStrings.php, header.php, footer.php, convertGui1.php, convertGui2.php.
+  The requested Language Pack is missing one or more of the following files; languageStrings.php.
   The requested Language Pack is incomplete, malformed, or missing critical components.
   This may be the result of incorrect file permission levels on the Languages subdirectory.
   This may be the result of incorrect user or group associations for the www-data user or group.
@@ -2083,7 +2084,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16001, <SESSION_IDENTIFIER>: Could create a file at <FILE_PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16001, <SESSION_IDENTIFIER>: Could not create a file at <FILE_PATH>!
 
 FILE
   convertCore.php
@@ -2127,7 +2128,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16003, <SESSION_IDENTIFIER>: Could create a file at <FILE_PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16003, <SESSION_IDENTIFIER>: Could not create a file at <FILE_PATH>!
 
 FILE
   convertCore.php
@@ -2416,7 +2417,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-23001, <SESSION_IDENTIFIER>: Could not delete file <FILE_NAME> to <FILE_PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-23001, <SESSION_IDENTIFIER>: Unsupported file format, <FILE_EXTENSION>!
 
 FILE
   convertCore.php
@@ -2439,7 +2440,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-23002, <SESSION_IDENTIFIER>: Could not delete file <FILE_NAME> to <FILE_PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-23002, <SESSION_IDENTIFIER>: Could not delete file <FILE_NAME>!
 
 FILE
   convertCore.php
@@ -2482,4 +2483,27 @@ ERROR DESCRIPTION
   Because this error takes place before the logging environment is initialized; this error will not be logged.
   Because this error takes place before the time environment is initialized; this error will not contain a timestamp.
   Because this error takes place before the configuration file has been initialized; the Application Name configuration entry will not be used.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-25, <SESSION_IDENTIFIER>: Could not verify GUI!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The path to the UI subdirectory of the installation directory does not exist or cannot be accessed.
+  The requested GUI has become corrupt.
+  The requested GUI is missing one or more of the following files; header.php, footer.php, convertGui1.php, convertGui2.php.
+  The requested GUI is incomplete, malformed, or missing critical components.
+  This may be the result of incorrect file permission levels on the UI subdirectory.
+  This may be the result of incorrect user or group associations for the www-data user or group.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 4/14/2023 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 4/26/2023 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.2.4.
+v3.2.7.
 This plain text file describes the process for creating, formatting, and installing additional language packs into HRConvert2.
 
 HARDWARE REQUIREMENTS ... 
@@ -41,9 +41,9 @@ It a supported language is missing required files a fatal error will occur.
 
 The HRConvert2 GUI is modular and separate from the core logic of the application. 
 This design makes localization into a new language by creating 'language packs' easy.
-This document will teach an administrator how GUIs are handled and how to structure new language packs.
-In this document when we refer to a GUI, we refer to one complete set of files required to render HRConvert2.
-In this document when we refer to a language pack, we refer to one individual GUI that has been localized to a specific language.
+This document will teach administrator and developers how GUIs are handled and how to language packs are structured.
+In this document when we refer to a GUI, we refer to a set of files required to render HRConvert2.
+In this document when we refer to a language pack, we refer to a GUI that has been localized to a specific language.
 A 'Language Pack' is just a localized 'GUI'. Each language pack contains one complete GUI.
 
 An HRConvert2 GUI is made up of 6 components. Each component serves a specific function. The 6 components of a GUI are;
@@ -56,10 +56,10 @@ An HRConvert2 GUI is made up of 6 components. Each component serves a specific f
   6. index.html
 
 These components are stored in a folder named after the ISO 639-1 language code for the language.
-The ISO-639-1 named folder is then placed inside the 'Languages' subdirectory of the HRConvert2 installation location.
+The ISO-639-1 named folder is then placed inside the 'Languages' subdirectory of the installation location.
 The supported ISO 639-1 language code must also be added to the --Supported Languages-- section of config.php or it will be ignored.
 If --Allow User Selectable Language-- is enabled, users will be able to select this language pack by sendiing a GET request.
-Users do not access the GUI directly. All requests should be directed to convertCore.php which will construct the GUI on-demand.
+Users should not access the GUI directly. All requests should be directed to convertCore.php which will construct the GUI on-demand.
 
 During operation, HRConvert2 initializes the language using the following process;
 
@@ -84,22 +84,35 @@ During operation, HRConvert2 initializes the language using the following proces
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Administration Tips--
+
+Server administrators can; 
+  Enable or disable language packs by modifying the --Supported Languages-- section of the config.php file.
+  Add or remove language packs by creating a folder in the 'Languages' subdirectory of the installation location.
+  Allow or prevent language selection via GET request by modifying the --Allow User Selectable Languages-- section of the config.php file.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Development Tips--
 
 The modular design of HRConvert2 is designed to make modifications easily translatable to other languages.
 If you are maintaining a branch of HRConvert2 and are focusing on a single language pack you can build your logic directly into the GUI pages themselves.
-Any files that are not needed can be left blank after the opening PHP tag.
+Any language pack files that are not needed can be left blank after the opening PHP tag.
 Alternatively, remove unneeded files from the verifyLanguage() & showGui() functions of convertCore.php to exclude them completely.
+To translate HRConvert2 into a new language, copy an existing language pack and translate the 'languageStrings.php' file into the desired language.
+To install a new language pack, place a folder named after a 2 digit ISO 639-1 language code into the 'Languages' subdirectory of the installation location.
+To enable or disable a language pack, update the --Supported Languages-- section of the config.php file.
+To prevent users from adjusting the 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
---Maintaining Language Packs--
+--Maintenance Tips--
 
-With the exception of the 'languageStrings.php' file & the reading order all stock language pack files are identical.
-The 'languageStrings.php' file should be used to contain any localization specific code.
+The following files are identical between all stock language packs; header.php, convertGui1.php, convertGui2.php, footer.php, index.html.
+The 'languageStrings.php' file should be used to contain all localization specific code.
 By placing localization specific code into 'languageStrings.php', GUI updates can be easily applied from one language pack to another.
 When updating text strings or translations, update the 'languageStrings.php' file of the desired language pack.
-When updating the UI for multiple language packs, change the specific GUI file, then copy & paste the file to other applicable language packs. 
+When updating the UI for multiple language packs, change the specific GUI file, then copy & paste the file to other similar language packs. 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -158,7 +171,7 @@ If users are allowed to view the document root of the server they could navigate
 This would allow users to see some temporary files of other users while they were in the process of working on them.
 This file simply redirects the user to the main HRConvert2 landing page with a message asking them to wait.
 The visual effect of the loading text is that a malicious actor knows they have hit some protection mechanism.
-If you want to modify the global index.html file, modify the one in the installation location and then cut/paste to all other subdirectories.
+If you want to modify the global index.html file, modify the one in the installation location and then copy & paste to all other subdirectories.
 HRConvert2 will automatically create new index.html files in folders it creates using the one from the installation location as a template.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -206,12 +219,20 @@ When redirecting the user to a download you must send them to the proper filenam
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About The API--
 
-HRConvert2 supports inputs through POST and GET requests. 
+HRConvert2 supports inputs through POST and GET requests.
+All requests should be submitted to convertCore.php.
+If Token1 and Token2 are not submitted via POST input, then convertGui1.php will be displayed prompting for file uploads.
+If Token1 and Token2 are both submitted via POST input, then convertGui2.php will be displayed providing conversion options.
 The included GUIs makes extensive use of JQuery + Ajax to submit requests & process responses.
-All API requests should be sent to convertCore.php. 
+All API requests should be sent to convertCore.php.
 GUI files cannot handle API requests and will generate an error if they receive API requests.
-All API inputs are sanitized by the core for special characters to prevent malicious or unintentional code injection. 
+All API inputs are sanitized by the core for special characters to prevent malicious or unintentional code injection.
 As a result of sanitization the filename may change after upload.
+
+To use HRConvert2 via POST & GET requests only;
+  1. Submit a blank GET request to convertCore.php to retrieve the value of Token1 and Token2.
+  2. Submit a file upload along with Token1 and Token2 to convertCore.php via POST input.
+  3. Submit an uploaded filename, a new filename, a file extension, Token1, Token2, and a valid set of file conversion options to convertCore.php via POST input.
 
 The following is a list of supported GET inputs & their supported values;
   noGui - 1

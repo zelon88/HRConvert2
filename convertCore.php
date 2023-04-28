@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 4/17/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 4/26/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.2.5.
+// / v3.2.7.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -308,13 +308,54 @@ function verifyColors($ButtonStyle) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to set the GUI to use for the session.
+function verifyGui() {
+  // / Set variables.
+  global $DefaultGui, $SupportedGuis, $AllowUserSelectableGui, $GuiFiles, $GuiDir, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File;
+  $defaultGui = $reqFile =  $variableIsSanitized = FALSE;
+  $GuiIsSet = TRUE;
+  $GuiToUse = 'Default';
+  $GuiFiles = $guiFiles = array();
+  $defaultGuis = array('Default');
+  // / Make sure $SupportedGuis is valid.
+  if (!isset($SupportedGuis) or !is_array($SupportedGuis)) $SupportedGuis = $defaultGuis;
+  // / Make sure $_GET['gui'] is properly sanitized.
+  if (isset($_GET['gui'])) list ($_GET['gui'], $variableIsSanitized) = sanitize(strtolower($_GET['gui']), TRUE);
+  // / Make sure the Default GUI is valid.
+  if (isset($DefaultGui)) if (in_array($DefaultGui, $SupportedGuis)) $GuiToUse = $DefaultGui;
+  // / If allowed and if specified, detect the users specified GUI and set that as the GUI to use.
+  if (isset($AllowUserSelectableGui)) {
+    if ($AllowUserSelectableGui) if (isset($_GET['gui'])) if (in_array($_GET['gui'], $SupportedGuis)) {
+      $GuiToUse = $_GET['gui']; }
+    if (!$AllowUserSelectableGui) $GuiToUse = $DefaultGui; }
+  // / Set the $_GET['gui'] variable to whatever the current GUI is so the next page will use the same one.
+  $_GET['gui'] = $GuiToUse;
+  // / Set the variables to required UI files.
+  $GuiDir = 'UI/'.$GuiToUse.'/';
+  $GuiHeaderFile = $GuiDir.'header.php';
+  $GuiFooterFile = $GuiDir.'footer.php';
+  $GuiUI1File = $GuiDir.'convertGui1.php';
+  $GuiUI2File = $GuiDir.'convertGui2.php';
+  $guiFiles = array($GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File);
+  // / Verify that the required GUI folder exists.
+  if (is_dir($GuiDir)) $GuiIsSet = TRUE;
+  // / Verify that required GUI files exist.
+  foreach ($guiFiles as $reqFile) if (file_exists($reqFile)) array_push($GuiFiles, $reqFile);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $defaultGuis = $reqFile = $guiFiles = NULL;
+  unset($defaultGuis, $reqFile, $guiFiles);
+  return array($GuiIsSet, $GuiToUse, $GuiDir, $GuiFiles); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to set the language to use for the session.
 function verifyLanguage() {
   // / Set variables.
-  global $DefaultLanguage, $SupportedLanguages, $AllowUserSelectableLanguage, $LanguageDir, $LanguageStringsFile, $LanguageHeaderFile, $LanguageFooterFile, $LanguageUI1File, $LanguageUI2File;
-  $defaultLanguages = $reqFile = $variableIsSanitized = $languageFiles = FALSE;
+  global $DefaultLanguage, $SupportedLanguages, $AllowUserSelectableLanguage, $LanguageFiles, $UIDir, $LanguageDir, $LanguageStringsFile;
+  $defaultLanguages = $reqFile = $variableIsSanitized = FALSE;
   $LanguageIsSet = TRUE;
   $LanguageToUse = 'en';
+  $LanguageFiles = $languageFiles = array();
   $defaultLanguages = array('en', 'fr', 'es', 'zh', 'hi', 'ar', 'ru', 'uk', 'bn', 'de', 'ko', 'it', 'pt');
   // / Make sure $SupportedLanguages is valid.
   if (!isset($SupportedLanguages) or !is_array($SupportedLanguages)) $SupportedLanguages = $defaultLanguages;
@@ -331,20 +372,17 @@ function verifyLanguage() {
   $_GET['language'] = $LanguageToUse;
   // / Set the variables to required UI files.
   $LanguageDir = 'Languages/'.$LanguageToUse.'/';
-  $LanguageHeaderFile = $LanguageDir.'header.php';
-  $LanguageFooterFile = $LanguageDir.'footer.php';
-  $LanguageUI1File = $LanguageDir.'convertGui1.php';
-  $LanguageUI2File = $LanguageDir.'convertGui2.php';
   $LanguageStringsFile = $LanguageDir.'languageStrings.php';
-  $languageFiles = array($LanguageStringsFile, $LanguageHeaderFile, $LanguageFooterFile, $LanguageUI1File, $LanguageUI2File);
+  $languageFiles = array($LanguageStringsFile);
   // / Verify that the required langauge folder exists.
   if (!is_dir($LanguageDir)) $LanguageIsSet = FALSE;
-  // / Verify that required UI files exist.
-  foreach ($languageFiles as $reqFile) if (!file_exists($reqFile)) $LanguageIsSet = FALSE;
+  // / Verify that required language files exist.
+  if (file_exists($LanguageStringsFile)) $LanguageIsSet = TRUE;
+  foreach ($languageFiles as $reqFile) if (file_exists($reqFile)) array_push($LanguageFiles, $reqFile);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $defaultLanguages = $reqFile = $variableIsSanitized = $languageFiles = NULL;
   unset($defaultLanguages, $reqFile, $variableIsSanitized, $languageFiles);
-  return array($LanguageIsSet, $LanguageToUse); }
+  return array($LanguageIsSet, $LanguageToUse, $LanguageDir, $LanguageFiles); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -372,7 +410,7 @@ function verifyGlobals() {
   // / Set global variables to be used through the entire application.
   global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment;
   // / Application related variables.
-  $HRConvertVersion = 'v3.2.5';
+  $HRConvertVersion = 'v3.2.7';
   $GlobalsAreVerified = FALSE;
   $CoreLoaded = TRUE;
   $StopCounter = $SleepTimer = 0;
@@ -1178,34 +1216,35 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
 // / A function to build the GUI.
 function buildGUI($guiType, $ButtonCode) {
   // / Set variables.
-  global $LanguageStringsFile, $LanguageHeaderFile, $LanguageFooterFile, $LanguageUI1File, $LanguageUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoArray, $SubtitleArray, $StreamArray, $MediaArray, $PresentationArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageHeaderFile, $LanguageDir, $LanguageFooterFile, $LanguageUI1File, $LanguageUI2File, $LanguageStringsFile, $File, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment;
-  $GUIDisplayed = $languageStringsTest = $headerTest = $guiTest = $footerTest = FALSE;
+  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoArray, $SubtitleArray, $StreamArray, $MediaArray, $PresentationArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed;
+  $guiUIFile = $GuiUI1File;
   // / Make sure the $guiType is valid.
-  if (!is_numeric($guiType)) if ($guiType >= 0) $guiType = 1; 
+  if (!is_numeric($guiType)) {
+    if ($guiType < 0) $guiType = 0;
+    if ($guiType > 0) $guiType = 1; }
   // / Determine which loading indicator to use.
   $PacmanLoc = 'Resources/pacman'.$SpinnerStyle.strtolower($SpinnerColor).'.gif';
   if (!file_exists($PacmanLoc)) $PacmanLoc = 'Resources/pacman1grey.gif';
-  // / Define the different GUI types that are available.
-  if ($guiType === 1) $languageUIFile = $LanguageUI1File;
+  // / Load language specific GUI elements, if there are any.
+  if (in_array($LanguageStringsFile, $LanguageFiles)) require_once($LanguageStringsFile);
+  // / Load the header.
+  if (in_array($GuiHeaderFile, $GuiFiles)) require_once($GuiHeaderFile);
+  // / Build and define the different GUI types that are available.
+  if ($guiType === 1) $guiUIFile = $GuiUI1File;
   if ($guiType === 2) {
     // / Gather a list of files.
     $Files = getFiles($ConvertDir);
     $FileCount = count($Files);
-    $languageUIFile = $LanguageUI2File; }
+    $guiUIFile = $GuiUI2File; }
   // / Build the specified GUI.
-  require_once($LanguageStringsFile);
-  require_once($LanguageHeaderFile);
-  require_once($languageUIFile);
-  require_once($LanguageFooterFile);
-  // / Check that the GUI was actually displayed.
-  if (isset($HeaderDisplayed)) if ($HeaderDisplayed) $headerTest = TRUE;
-  if (isset($UIDisplayed)) if ($UIDisplayed) $guiTest = TRUE;
-  if (isset($FooterDisplayed)) if ($FooterDisplayed) $footerTest = TRUE;
-  if (isset($LanguageStringsLoaded)) if ($LanguageStringsLoaded) $languageStringsTest = TRUE;
+  if (in_array($guiUIFile, $GuiFiles)) require_once($guiUIFile);
+  // / Load the footer.
+  if (in_array($GuiFooterFile, $GuiFiles)) require_once($GuiFooterFile);
+  // / Check if the required GUI elements were loaded.
   if ($HeaderDisplayed && $UIDisplayed && $FooterDisplayed && $LanguageStringsLoaded) $GUIDisplayed = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $guiType = $languageUIFile = $languageStringsTest = $headerTest = $guiTest = $footerTest = NULL; 
-  unset($guiType, $languageUIFile, $languageStringsTest, $headerTest, $guiTest, $footerTest); 
+  $guiType = $languageUIFile = NULL; 
+  unset($guiType, $languageUIFile); 
   return $GUIDisplayed; }
 // / -----------------------------------------------------------------------------------
 
@@ -1355,11 +1394,11 @@ function deleteFiles($FilesToDelete) {
     if (file_exists($f1)) @unlink($f1);
     // / Check that the selected files were deleted.
     if (!file_exists($f0) && !file_exists($f1)) {
-     if ($Verbose) logEntry('Delete file '.$file.'.');
+     if ($Verbose) logEntry('Deleted file '.$file.'.');
      $DeleteComplete = TRUE; }
     else {
       $DeleteErrors = TRUE;
-      if($Verbose) errorEntry('Deleted file '.$file.'.', 23002, FALSE); } }
+      if ($Verbose) logEntry('Could not delete file '.$file.'!', 23002, FALSE); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $file = $f0 = $f1 = NULL;
   unset($file, $f0, $f1);
@@ -2044,8 +2083,8 @@ else if ($Verbose) logEntry('Cleaned convert location.');
 
 // / The following code verifies the tokens supplied by the user, if any.
 list ($TokensAreValid, $Token1, $Token2) = verifyTokens($Token1, $Token2);
-if (!$TokensAreValid && $Verbose) logEntry('Could not verify tokens!');
-else if ($Verbose) logEntry('Verified tokens.');
+if (!$TokensAreValid) if ($Verbose) logEntry('Could not verify tokens.');
+if ($TokensAreValid) if ($Verbose) logEntry('Verified tokens.');
 
 // / The following code sets the color scheme for the session.
 list ($ColorsAreSet, $ButtonCode) = verifyColors($ButtonStyle);
@@ -2053,7 +2092,12 @@ if (!$ColorsAreSet) errorEntry('Could not verify color scheme!', 15, TRUE);
 else if ($Verbose) logEntry('Verified color scheme.');
 
 // / The following code sets the language for the session.
-list ($LanguageIsSet, $LanguageToUse) = verifyLanguage();
+list ($GuiIsSet, $GuiToUse, $GuiDir, $GuiFiles) = verifyGui();
+if (!$GuiIsSet) errorEntry('Could not verify GUI!', 25, TRUE);
+else if ($Verbose) logEntry('Verified GUI.');
+
+// / The following code sets the language for the session.
+list ($LanguageIsSet, $LanguageToUse, $LanguageDir, $LanguageFiles) = verifyLanguage();
 if (!$LanguageIsSet) errorEntry('Could not verify language!', 16, TRUE);
 else if ($Verbose) logEntry('Verified language.');
 

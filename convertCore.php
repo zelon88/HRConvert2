@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 4/26/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 5/3/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.2.7.
+// / v3.2.8.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -104,18 +104,16 @@ function sanitize($Variable, $strict) {
 // / A function to load required HRConvert2 files.
 function verifyInstallation() {
   // / Set variables.
-  global $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6, $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $defaultButtonCode, $greenButtonCode, $blueButtonCode, $redButtonCode, $SpinnerStyle, $SpinnerColor, $URL, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version;
+  global $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6, $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $URL, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version;
   $InstallationIsVerified = TRUE;
   $ConfigFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'config.php');
   $VersionInfoFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'versionInfo.php');
-  $StyleCoreFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'styleCore.php');
   if (!file_exists($ConfigFile)) die ('ERROR!!! HRConvert2-0: Could not process the HRConvert2 Configuration file (config.php)!'.PHP_EOL.'<br />');
   else require_once ($ConfigFile);
   if (!file_exists($VersionInfoFile)) die ('ERROR!!! HRConvert2-24000: Could not process the HRConvert2 Version Information file (versionInfo.php)!'.PHP_EOL.'<br />');
   else require_once ($VersionInfoFile);
-  if (!file_exists($StyleCoreFile)) die ('ERROR!!! HRConvert2-1: Could not process the HRConvert2 Style Core file (Resources/styleCore.php)!'.PHP_EOL.'<br />');
-  else require_once ($StyleCoreFile);
-  return array($InstallationIsVerified, $ConfigFile, $StyleCoreFile, $Version); }
+
+  return array($InstallationIsVerified, $ConfigFile, $Version); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -289,21 +287,21 @@ function verifyInputs() {
 // / A function to set the styles to use for the session.
 function verifyColors($ButtonStyle) {
   // / Set variables.
-  global $greenButtonCode, $blueButtonCode, $redButtonCode, $defaultButtonCode;
+  global $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode;
   $ColorsAreSet = FALSE;
   $ButtonStyle = strtolower($ButtonStyle);
-  $ButtonCode = $defaultButtonCode;
+  $ButtonCode = $DefaultButtonCode;
   $validColors = array('green', 'blue', 'red', 'grey');
   // / Validate the desired color and set it as the color to use if possible.
   if (in_array($ButtonStyle, $validColors)) {
     $ColorsAreSet = TRUE;
-    if ($ButtonStyle === 'green') $ButtonCode = $greenButtonCode;
-    if ($ButtonStyle === 'blue') $ButtonCode = $blueButtonCode;
-    if ($ButtonStyle === 'red') $ButtonCode = $redButtonCode;
-    if ($ButtonStyle === 'grey') $ButtonCode = $defaultButtonCode; }
+    if ($ButtonStyle === 'green') $ButtonCode = $GreenButtonCode;
+    if ($ButtonStyle === 'blue') $ButtonCode = $BlueButtonCode;
+    if ($ButtonStyle === 'red') $ButtonCode = $RedButtonCode;
+    if ($ButtonStyle === 'grey') $ButtonCode = $DefaultButtonCode; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $validColors = $greenButtonCode = $blueButtonCode = $redButtonCode = $defaultButtonCode = NULL;
-  unset($validColors, $greenButtonCode, $blueButtonCode, $redButtonCode, $defaultButtonCode);
+  $validColors = NULL;
+  unset($validColors);
   return array($ColorsAreSet, $ButtonCode); }
 // / -----------------------------------------------------------------------------------
 
@@ -311,7 +309,7 @@ function verifyColors($ButtonStyle) {
 // / A function to set the GUI to use for the session.
 function verifyGui() {
   // / Set variables.
-  global $DefaultGui, $SupportedGuis, $AllowUserSelectableGui, $GuiFiles, $GuiDir, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File;
+  global $DefaultGui, $SupportedGuis, $AllowUserSelectableGui, $GuiFiles, $GuiDir, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode;
   $defaultGui = $reqFile =  $variableIsSanitized = FALSE;
   $GuiIsSet = TRUE;
   $GuiToUse = 'Default';
@@ -332,18 +330,28 @@ function verifyGui() {
   $_GET['gui'] = $GuiToUse;
   // / Set the variables to required UI files.
   $GuiDir = 'UI/'.$GuiToUse.'/';
+  $StyleCoreFile = $GuiDir.'styleCore.php';
   $GuiHeaderFile = $GuiDir.'header.php';
   $GuiFooterFile = $GuiDir.'footer.php';
   $GuiUI1File = $GuiDir.'convertGui1.php';
   $GuiUI2File = $GuiDir.'convertGui2.php';
-  $guiFiles = array($GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File);
+  $guiFiles = array($GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $StyleCoreFile);
   // / Verify that the required GUI folder exists.
   if (is_dir($GuiDir)) $GuiIsSet = TRUE;
   // / Verify that required GUI files exist.
   foreach ($guiFiles as $reqFile) if (file_exists($reqFile)) array_push($GuiFiles, $reqFile);
+  // / Determine if the styleCore.php file is part of the desired GUI, and load it if required.
+  if (in_array($StyleCoreFile, $GuiFiles)) { 
+    // / Load the styleCore.php file.
+    require_once($StyleCoreFile);
+    // / Set the variables for required color data.
+    $GreenButtonCode = $greenButtonCode; 
+    $BlueButtonCode = $blueButtonCode;
+    $RedButtonCode = $redButtonCode; 
+    $DefaultButtonCode = $defaultButtonCode; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $defaultGuis = $reqFile = $guiFiles = NULL;
-  unset($defaultGuis, $reqFile, $guiFiles);
+  $defaultGuis = $reqFile = $guiFiles = $greenButtonCode = $blueButtonCode = $redButtonCode = $defaultButtonCode = NULL;
+  unset($defaultGuis, $reqFile, $guiFiles, $greenButtonCode, $blueButtonCode, $redButtonCode, $defaultButtonCode);
   return array($GuiIsSet, $GuiToUse, $GuiDir, $GuiFiles); }
 // / -----------------------------------------------------------------------------------
 
@@ -351,7 +359,7 @@ function verifyGui() {
 // / A function to set the language to use for the session.
 function verifyLanguage() {
   // / Set variables.
-  global $DefaultLanguage, $SupportedLanguages, $AllowUserSelectableLanguage, $LanguageFiles, $UIDir, $LanguageDir, $LanguageStringsFile;
+  global $DefaultLanguage, $SupportedLanguages, $AllowUserSelectableLanguage, $LanguageFiles, $GuiDir, $LanguageDir, $LanguageStringsFile;
   $defaultLanguages = $reqFile = $variableIsSanitized = FALSE;
   $LanguageIsSet = TRUE;
   $LanguageToUse = 'en';
@@ -371,7 +379,7 @@ function verifyLanguage() {
   // / Set the $_GET['language'] variable to whatever the current language is so the next page will use the same one.
   $_GET['language'] = $LanguageToUse;
   // / Set the variables to required UI files.
-  $LanguageDir = 'Languages/'.$LanguageToUse.'/';
+  $LanguageDir = $GuiDir.'Languages/'.$LanguageToUse.'/';
   $LanguageStringsFile = $LanguageDir.'languageStrings.php';
   $languageFiles = array($LanguageStringsFile);
   // / Verify that the required langauge folder exists.
@@ -408,9 +416,9 @@ function securePath($PathToSecure, $DangerArr, $isURL) {
 // / A function to set the global variables for the session.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment;
+  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode;
   // / Application related variables.
-  $HRConvertVersion = 'v3.2.7';
+  $HRConvertVersion = 'v3.2.8';
   $GlobalsAreVerified = FALSE;
   $CoreLoaded = TRUE;
   $StopCounter = $SleepTimer = 0;
@@ -424,7 +432,7 @@ function verifyGlobals() {
   $PathExt = PATHINFO_EXTENSION;
   // / UI Related variables.
   $ConvertGuiCounter1 = 0;
-  $File = $FCPlural = $FCPlural1 = $FCPlural2 = $FCPlural3 = '';
+  $File = $FCPlural = $FCPlural1 = $FCPlural2 = $FCPlural3 = $GreenButtonCode = $BlueButtonCode = $RedButtonCode = $DefaultButtonCode = '';
   $HeaderDisplayed = $UIDisplayed = $FooterDisplayed =$LanguageStringsLoaded = $GUIDisplayed = FALSE;
   $GUIDirection = 'ltr';
   $GUIAlignment = 'left';
@@ -2037,7 +2045,7 @@ list ($TimeIsSet, $Date, $Time) = verifyTime();
 if (!$TimeIsSet or !$Date or !$Time) die('ERROR!!! HRConvert2-4: Could not verify timezone!');
 
 // / The following code verifies that the installation is valid.
-list ($InstallationIsVerified, $ConfigFile, $StyleCoreFile, $Version) = verifyInstallation();
+list ($InstallationIsVerified, $ConfigFile, $Version) = verifyInstallation();
 if (!$InstallationIsVerified) die('ERROR!!! '.$Time.', HRConvert2-5: Could not verify installation!');
 
 // / The following code verifies that string inputs to the core are properly sanitized.
@@ -2086,15 +2094,15 @@ list ($TokensAreValid, $Token1, $Token2) = verifyTokens($Token1, $Token2);
 if (!$TokensAreValid) if ($Verbose) logEntry('Could not verify tokens.');
 if ($TokensAreValid) if ($Verbose) logEntry('Verified tokens.');
 
-// / The following code sets the color scheme for the session.
-list ($ColorsAreSet, $ButtonCode) = verifyColors($ButtonStyle);
-if (!$ColorsAreSet) errorEntry('Could not verify color scheme!', 15, TRUE);
-else if ($Verbose) logEntry('Verified color scheme.');
-
 // / The following code sets the language for the session.
 list ($GuiIsSet, $GuiToUse, $GuiDir, $GuiFiles) = verifyGui();
 if (!$GuiIsSet) errorEntry('Could not verify GUI!', 25, TRUE);
 else if ($Verbose) logEntry('Verified GUI.');
+
+// / The following code sets the color scheme for the session.
+list ($ColorsAreSet, $ButtonCode) = verifyColors($ButtonStyle);
+if (!$ColorsAreSet) errorEntry('Could not verify color scheme!', 15, TRUE);
+else if ($Verbose) logEntry('Verified color scheme.');
 
 // / The following code sets the language for the session.
 list ($LanguageIsSet, $LanguageToUse, $LanguageDir, $LanguageFiles) = verifyLanguage();

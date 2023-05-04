@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 2/21/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 5/3/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.1.9.1.
+// / v3.2.8.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -152,6 +152,29 @@ $ApplicationName = 'HRConvert2';
 // /   You can change this to make it fit with other services your organization provides.
 // /   Default is Convert Anything!
 $ApplicationTitle = 'Convert Anything!';
+// /  --Supported Guis--
+// /   The list of GUIs that are supported by this application.
+// /   Before adding a supported GUI be sure to add the matching folder full of GUI files to /UI.
+// /   Errors will occur if you add an element to this array without also adding a matching GUI folder.
+// /   Default is 'Default'.
+$SupportedGuis = array('Default');
+// /  --Default GUI--
+// /   The default GUI to use.
+// /   See README.md for the latest GUI support information.
+// /   If the specified GUI is not available 'en' will be used instead.
+// /   ISO 639-1 reference is available here at https://www.andiamo.co.uk/resources/iso-GUI-codes/
+// /   Valid options are text strings that correspond GUI codes found in the list of --Supported GUIs--.
+// /   Default is Default.
+$DefaultGui = 'Default';
+// /  --Allow User Selectable GUI--
+// /   Enable or disable dynamic GUI selection via the $_GET['gui'] variable.
+// /   If set to TRUE a user will be able to select different languages via $_GET['gui'].
+// /   If set to FALSE the $DefaultGui will always be used.
+// /   To submit a $_GET request append ?gui=<CODE> to the URL & repalce <CODE> with name of the desired GUI.
+// /   If a user attempts a GUI that is not available --Default GUI-- will be used instead.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$AllowUserSelectableGui = TRUE;
 // /  --Supported Languages--
 // /   The list of languages that are supported by this application.
 // /   Before adding a supported language be sure to add the matching folder full of GUI files to /Languages.
@@ -159,7 +182,7 @@ $ApplicationTitle = 'Convert Anything!';
 // /   Default is 'en', 'fr', 'es', 'zh', 'hi', 'ar', 'ru', 'uk', 'bn', 'de', 'ko', 'it', 'pt'.
 $SupportedLanguages = array('en', 'fr', 'es', 'zh', 'hi', 'ar', 'ru', 'uk', 'bn', 'de', 'ko', 'it', 'pt');
 // /  --Default Language--
-// /   The default language for GUI elements.
+// /   The default language to use for GUI elements.
 // /   See README.md for the latest language support information.
 // /   If the specified language is not available 'en' will be used instead.
 // /   ISO 639-1 reference is available here at https://www.andiamo.co.uk/resources/iso-language-codes/

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 2/21/2023 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 10/30/2023 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.1.9.1.
+v3.2.9.
 This file contains a walkthrough guide for installing HRConvert2.
 
 HARDWARE REQUIREMENTS ... 
@@ -125,7 +125,7 @@ In this step we will install dependencies to enable file conversions.
 14. If you encounter errors while running the previous command:
   14a. Extract the  'rc-local.service'  file contained in the root of the HRConvert2 repository to your Desktop.
   14b. Adjust the directory in the following command to reflect your username, then run  'sudo cp /home/USERNAME/Desktop/rc-local.service /etc/rc.local /etc/systemd/system/rc-local.service'
-  14c. Run  'sudo chmod +x /etc/rc.local'
+  14c. Run  'sudo chmod +x /etc/rc.local.service'
   14d. Run  'sudo systemctl enable rc-local.service'
 15. Completely reboot the computer.
 -----------------------------------------------------------------------------------

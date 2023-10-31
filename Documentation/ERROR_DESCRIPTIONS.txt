@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 4/26/2023 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 10/30/2023 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.2.7.
+v3.2.9.
 This plain text file contains descriptions of all the native error messages contained in or produced by the HRConvert2 Diablo engine. 
 These descriptions should give administrators a starting point for debugging problems with HRConvert2 installations. 
 Each section in this file contains information about a different error message. The first one is an example to demonstrate the structure of this file.
@@ -64,6 +64,7 @@ FILE
   The file path pointing to the file which contains this error message. 
   File is relative to the root HRConvert2 installation directory. 
   <SELECTED_LANGUAGE> will be replaced with the ISO 639-1 code that represents the language that was used during the event.
+  <SELECTED_GUI> will be replaced with a text string that represents the GUI that was used during the event.
 
 FATAL
   Whether or not the occurance of this error will halt execution of the application.

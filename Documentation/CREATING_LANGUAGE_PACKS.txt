@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 5/3/2023 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 5/5/2023 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.2.8.
+v3.2.9.
 This plain text file describes the process for creating, formatting, and installing additional language packs into HRConvert2.
 
 HARDWARE REQUIREMENTS ... 
@@ -40,9 +40,9 @@ It a supported language is missing required files a fatal error will occur.
 --About Language Packs--
  
 HRConvert2 is designed to make localization into a new language by creating 'language packs' easy.
-This document will teach administrator and developers how languages are handled and how language packs are structured.
-In this document when we refer to a 'GUI' we refer to a set of files required to render HRConvert2, including at least one language pack.
-In this document when we refer to a 'language pack' we refer to a set of files containing localized text that the GUI can display.
+This document will teach administrator and developers how languages are handled and structured.
+In this document when we refer to a GUI, we refer to a set of files required to render HRConvert2.
+In this document when we refer to a language pack, we refer to the files required to localize a GUI into a specific language.
 
 An HRConvert2 Language Pack is made up of 2 components. Each component serves a specific function. The 2 components of a Language Pack are;
 
@@ -80,9 +80,12 @@ During operation, HRConvert2 initializes the language using the following proces
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Administration Tips--
 
+Language Packs are contained within GUIs. GUIs typically contain multiple language packs.
+Errors will occur if an installed GUI does not support every language listed in the --Supported Languages-- section of the config.php file.
+Errors will occur if an installed GUI does not support the following colors: Red, Green, Blue, Grey.
 Server administrators can; 
   Enable or disable language packs by modifying the --Supported Languages-- section of the config.php file.
-  Add or remove language packs by creating a folder in the 'Languages' subdirectory of the installation location.
+  Add or remove language packs to a GUI by creating a folder in the 'Languages' subdirectory of each enabled GUI folder.
   Allow or prevent language selection via GET request by modifying the --Allow User Selectable Languages-- section of the config.php file.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -95,6 +98,11 @@ Any language pack files that are not needed can be left blank after the opening 
 To translate HRConvert2 into a new language, copy an existing language pack and translate the 'Languages\<LANGUAGE_CODE>\languageStrings.php' file into the desired language.
 To install a new language pack, place a folder named after a 2 digit ISO 639-1 language code into the 'Languages' subdirectory of the installation location.
 To enable or disable a language pack, update the --Supported Languages-- section of the config.php file.
+GUIs can utilize the icons and scripts in the default Resources directory or include their own.
+If any non-stock directories are added to HRConvert2, a copy of index.html must be pasted into the directory.
+Do not create any files named index.html. This filename is reserved by the application for document root protection mechanisms.
+Upper Case variables are Global in scope. Lower case variables are severely limited in scope. 
+Limited scope variables should be manually nulled & unset after they are no longer required.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -124,6 +132,15 @@ This file simply redirects the user to the main HRConvert2 landing page with a m
 The visual effect of the loading text is that a malicious actor knows they have hit some protection mechanism.
 If you want to modify the global index.html file, modify the one in the installation location and then copy & paste to all other subdirectories.
 HRConvert2 will automatically create new index.html files in folders it creates using the one from the installation location as a template.
+This file must be manually copied & pasted into any folders that are manually created by administrators or developers of HRConvert2.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About 'Languages' Folder--
+
+This folder must exist in each language pack.
+This folder contains the major language-specific files.
+Each subdirectory of this folder represents a different language pack.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

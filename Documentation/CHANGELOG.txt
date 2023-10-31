@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 5/3/2023 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 10/30/2023 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.2.8.
+v3.2.9.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -27,7 +27,30 @@ Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 -----------------------------------------------------------------------------------
 
 --------------------
-COMMIT 4/26/2023
+COMMIT 10/30/2023
+v3.2.9 - Improve docs, improve quality, update KO language pack
+
+-v3.2.9.
+-Happy Halloween!
+  -I started this commit a couple months ago and just got around to finishing it.
+  -The next commit will hopefully be a small quality commit / release v3.3.
+-Fix missed translation in Arabic language pack (languageStrings.php) for Default GUI.
+  -'Archive Formats'
+-Fix spelling, consistency errors in comments of config.php.
+  -No logical changes, just comments.
+  -'fules' instead of 'files'.
+  -Standardize some comments around the verbiage 'Provide users with the option to'. 
+-Fix bug in verifyDocumentConversionEngine() function.
+  -This bug would have prevented the verifyDocumentConversionEngine() function from starting anything.
+  -This would cause document conversion errors in cases where the rc.local steps of the installation instructions were not implemented.
+-Update it, ko, pt, ru, uk, zh language packs.
+-Fix bug with displaying number of files that were uploaded.
+  -Move logic that calculates this to before the languageStrings.php call.
+-Fix bug in convertGui2.php where the download button would produce a 404 unless the share link had been generated already.
+  -Missing ajax request type: post.
+
+--------------------
+COMMIT 5/3/2023
 v3.2.8 - Continue implementing separation of UI from language packs.
 
 -v3.2.8.

@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 5/3/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 10/30/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.2.8.
+// / v3.2.9.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -64,7 +64,7 @@ $URL = 'localhost';
 // /   Defalt is FALSE.
 $VirusScan = FALSE;
 // /  --User Virus Scanning--
-// /   Give users the options to scan their uploaded files for viruses.
+// /   Provide users with options to scan their uploaded files for viruses.
 // /   Requires ClamAV to be installed on the server.
 // /   Set to TRUE to enable users to upload potentially infected files.
 // /   Set to FALSE to disable users uploading potentially infected files.
@@ -78,7 +78,7 @@ $VirusScan = FALSE;
 // /   Default is TRUE.
 $AllowUserVirusScan = TRUE;
 // /  --User Virus Scanning ScanCore Memory Limit--
-// /   The number of bytes of memory ScanCore is allowed to allocate to large fules during User Virus Scans.
+// /   The number of bytes of memory ScanCore is allowed to allocate to large files during User Virus Scans.
 // /   Files larger than this limit will be broken into chunks controlled by the --User Virus Scanning ScanCore Chunk Size-- config entry.
 // /   Default is 268435456.
 $ScanCoreMemoryLimit = 268435456;
@@ -167,6 +167,7 @@ $SupportedGuis = array('Default');
 // /   Default is Default.
 $DefaultGui = 'Default';
 // /  --Allow User Selectable GUI--
+// /   Provide users with the option to adjust which GUI is displayed via appending a parameter to the URL.
 // /   Enable or disable dynamic GUI selection via the $_GET['gui'] variable.
 // /   If set to TRUE a user will be able to select different languages via $_GET['gui'].
 // /   If set to FALSE the $DefaultGui will always be used.
@@ -190,6 +191,7 @@ $SupportedLanguages = array('en', 'fr', 'es', 'zh', 'hi', 'ar', 'ru', 'uk', 'bn'
 // /   Default is en.
 $DefaultLanguage = 'en';
 // /  --Allow User Selectable Language--
+// /   Provide users with the option to adjust which language is displayed via appending a parameter to the URL.
 // /   Enable or disable dynamic language selection via the $_GET['language'] variable.
 // /   If set to TRUE a user will be able to select different languages via $_GET['language'].
 // /   If set to FALSE the $DefaultLanguage will always be used.
@@ -199,7 +201,7 @@ $DefaultLanguage = 'en';
 // /   Default is TRUE.
 $AllowUserSelectableLanguage = TRUE;
 // /  --User Shareable File Links--
-// /   Allow users to generate shareable URLs for the files they upload or convert.
+// /   Provide users with the option to generate shareable URLs for the files they upload or convert.
 // /   If set to TRUE the user will be provided with buttons to create URLs to files that can be copied & pasted elsewhere.
 // /   If set to FALSE the user will not be provided with the buttons to create URLs to files.
 // /   Files with active links will be removed after the --File Deletion Age Threshold-- is met.
@@ -215,7 +217,7 @@ $AllowUserShare = TRUE;
 $SupportedConversionTypes = array('Document', 'Image', 'Model', 'Drawing', 'Video', 'Subtitle', 'Audio', 'Archive', 'Stream', 'OCR');
 // /  --File Deletion Age Theshold--
 // /   Age in minutes of files to be deleted.
-// /   Set to 0 to keep files indefinately.
+// /   Set to 0 to keep files forever.
 // /   Default is 30.
 $DeleteThreshold = 30;
 // /  --Enhanced Logging Verbosity--

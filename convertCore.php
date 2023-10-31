@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 5/3/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 10/30/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.2.8.
+// / v3.2.9.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -112,12 +112,11 @@ function verifyInstallation() {
   else require_once ($ConfigFile);
   if (!file_exists($VersionInfoFile)) die ('ERROR!!! HRConvert2-24000: Could not process the HRConvert2 Version Information file (versionInfo.php)!'.PHP_EOL.'<br />');
   else require_once ($VersionInfoFile);
-
   return array($InstallationIsVerified, $ConfigFile, $Version); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to attempt to detect the users IP so it can be used as a unique identifier for the session.
+// / A function to attempt to detect the users IP so it can be used as an identifier for the session.
 function verifySession() {
   // / Set variables.
   $IP = '';
@@ -222,7 +221,7 @@ function verifyEncryption() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to set or validates a Token so it can be used as a unique identifier for the session.
+// / A function to set or validate a Token so it can be used as a unique identifier for the session.
 function verifyTokens($Token1, $Token2) {
   // / Verify variables.
   global $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6;
@@ -418,7 +417,7 @@ function verifyGlobals() {
   // / Set global variables to be used through the entire application.
   global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode;
   // / Application related variables.
-  $HRConvertVersion = 'v3.2.8';
+  $HRConvertVersion = 'v3.2.9';
   $GlobalsAreVerified = FALSE;
   $CoreLoaded = TRUE;
   $StopCounter = $SleepTimer = 0;
@@ -494,7 +493,7 @@ function verifyGlobals() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to sanitize & verifies an array of files.
+// / A function to sanitize & verifie an array of files.
 function getFiles($pathToFiles) {
   // / Set variables.
   global $DangerousFiles, $DirSep, $PathExt;
@@ -730,7 +729,7 @@ function verifyDocumentConversionEngine() {
     $DocEnginePID = shell_exec('pgrep soffice.bin');
     if ($Verbose) logEntry('The document conversion engine PID is: '.str_replace($Lol, '', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($DocEnginePID)))));
     // / Determine if the document conversion engine is already running.
-    if ($DocEnginePID === 0 && $DocEnginePID === '' && $DocEnginePID === NULL && !$DocEnginePID) {
+    if ($DocEnginePID === 0 or $DocEnginePID === '' or $DocEnginePID === NULL or !$DocEnginePID) {
       // / Try to start the document conversion engine.
       if ($Verbose)logEntry('Starting the document conversion engine.');
       $returnData = shell_exec('/usr/bin/unoconv -l &');
@@ -1226,6 +1225,8 @@ function buildGUI($guiType, $ButtonCode) {
   // / Set variables.
   global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoArray, $SubtitleArray, $StreamArray, $MediaArray, $PresentationArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed;
   $guiUIFile = $GuiUI1File;
+  $Files = array();
+  $FileCount = 0;
   // / Make sure the $guiType is valid.
   if (!is_numeric($guiType)) {
     if ($guiType < 0) $guiType = 0;
@@ -1233,17 +1234,17 @@ function buildGUI($guiType, $ButtonCode) {
   // / Determine which loading indicator to use.
   $PacmanLoc = 'Resources/pacman'.$SpinnerStyle.strtolower($SpinnerColor).'.gif';
   if (!file_exists($PacmanLoc)) $PacmanLoc = 'Resources/pacman1grey.gif';
+  // / Gather a list of files.
+  if ($guiType === 2) {
+    $Files = getFiles($ConvertDir);
+    $FileCount = count($Files); }
   // / Load language specific GUI elements, if there are any.
   if (in_array($LanguageStringsFile, $LanguageFiles)) require_once($LanguageStringsFile);
   // / Load the header.
   if (in_array($GuiHeaderFile, $GuiFiles)) require_once($GuiHeaderFile);
   // / Build and define the different GUI types that are available.
   if ($guiType === 1) $guiUIFile = $GuiUI1File;
-  if ($guiType === 2) {
-    // / Gather a list of files.
-    $Files = getFiles($ConvertDir);
-    $FileCount = count($Files);
-    $guiUIFile = $GuiUI2File; }
+  if ($guiType === 2) $guiUIFile = $GuiUI2File;
   // / Build the specified GUI.
   if (in_array($guiUIFile, $GuiFiles)) require_once($guiUIFile);
   // / Load the footer.
@@ -2029,7 +2030,7 @@ function userVirusScan($FilesToScan, $type) {
   if (!$ConsolidatedLogsExist) $ScanComplete = FALSE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $fileToScan = $returnData = $path = $type = $scan1Complete = $scan1Errors = $scan2Complete = $scan2Errors = NULL;
-  unset($fileToScan, $returnData ,$path, $type, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors, $txt);
+  unset($fileToScan, $returnData ,$path, $type, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors);
   return array($ScanComplete, $ScanErrors, $UserVirusFound); }
 // / -----------------------------------------------------------------------------------
 
@@ -2074,7 +2075,7 @@ list ($GlobalsAreVerified, $CoreLoaded) = verifyGlobals();
 if (!$GlobalsAreVerified) errorEntry('Could not verify globals!', 11, TRUE);
 else if ($Verbose) logEntry('Verified globals.');
 
-// / The following code creates & verifies that required directories exist.
+// / The following code verifies that required directories exist & creates them where needed.
 list ($RequiredDirsExist, $RequiredDirs) = verifyRequiredDirs();
 if (!$RequiredDirsExist) errorEntry('Could not verify required directories!', 12, TRUE);
 else if ($Verbose) logEntry('Verified required directories.');

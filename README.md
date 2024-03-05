@@ -1,8 +1,5 @@
-[Join the HonestRepair Slack Team!](https://join.slack.com/t/honestrepair/shared_invite/zt-17sa3aydc-Eig9NOOXgjtUjj0l7g87Uw) 
 -----------------------------------------------
 **[Installation Instructions](https://github.com/zelon88/HRConvert2/blob/master/Documentation/INSTALLATION_INSTRUCTIONS.txt)**
------------------------------------------------
-**[Docker Image by dwaaan](https://github.com/dwaaan/HRConvert2-Docker)**
 -----------------------------------------------
 # HRConvert2
 

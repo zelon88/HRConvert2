@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 10/30/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 3/5/2024 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.2.9.
+// / v3.3.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -218,8 +218,8 @@ $SupportedConversionTypes = array('Document', 'Image', 'Model', 'Drawing', 'Vide
 // /  --File Deletion Age Theshold--
 // /   Age in minutes of files to be deleted.
 // /   Set to 0 to keep files forever.
-// /   Default is 30.
-$DeleteThreshold = 30;
+// /   Default is 60.
+$DeleteThreshold = 60;
 // /  --Enhanced Logging Verbosity--
 // /   Enable verbose logging.
 // /   If set to TRUE all core events will be logged.

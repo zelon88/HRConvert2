@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 10/30/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 3/5/2024 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.2.9.
+// / v3.3.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -478,7 +478,7 @@ function verifyGlobals() {
   if (in_array('Audio', $SupportedConversionTypes)) $MediaArray = array('mp3', 'aac', 'oog', 'wma', 'mp2', 'flac', 'm4a', 'm4p');
   if (in_array('Video', $SupportedConversionTypes)) $VideoArray = array('3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv', 'mov', 'm4v');
   if (in_array('Stream', $SupportedConversionTypes) && in_array('Audio', $SupportedConversionTypes)) $StreamArray = array('m3u8');
-  if (in_array('Drawing', $SupportedConversionTypes)) $DrawingArray = array('svg', 'dxf', 'vdx', 'fig', 'dia', 'wpg');
+  if (in_array('Drawing', $SupportedConversionTypes)) $DrawingArray = array('svg', 'dxf', 'vdx', 'fig', 'dia', 'wpg', 'png');
   if (in_array('Model', $SupportedConversionTypes)) $ModelArray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'gts', 'dxf', 'u3d', 'vrml', 'x3d');
   if (in_array('Subtitle', $SupportedConversionTypes)) $SubtitleArray = array('vtt', 'ssa', 'ass', 'srt', 'dvb');
   if (in_array('OCR', $SupportedConversionTypes) && in_array('Document', $SupportedConversionTypes)) $PDFWorkArr = array('pdf', 'jpg', 'jpeg', 'png', 'bmp', 'webp', 'gif');
@@ -633,7 +633,7 @@ function verifyRequiredDirs() {
 function cleanFiles($path) {
   // / Set variables.
   global $ConvertLoc, $ConvertTemp, $DefaultApps, $DirSep;
-  $variableIsSanitized = $i = $f = $path = FALSE;
+  $variableIsSanitized = $i = $f = FALSE;
   list ($path, $variableIsSanitized) = sanitize($path, FALSE);
   // / Make sure the selected directory is actually a directory.
   if ($variableIsSanitized && is_dir($path)) {
@@ -1120,7 +1120,7 @@ function convertArchives($pathname, $newPathname, $extension) {
         $ConversionErrors = TRUE;
         errorEntry('The archiver timed out!', 13005, FALSE); } } }
   // / Check if any errors occurred.
-  if (!file_exists($newPathname)) { 
+  if (!file_exists($newPathname)) {
     $ConversionErrors = TRUE;
     errorEntry('The archiver failed to produce an archive!', 13000, FALSE); }
   else $ConversionSuccess = TRUE;
@@ -1143,7 +1143,7 @@ function convert($type, $pathname, $newPathname, $extension, $height, $width, $r
     if ($type === 'Document') list ($ConversionSuccess, $ConversionErrors) = convertDocuments($pathname, $newPathname, $extension);
     if ($type === 'Image') list ($ConversionSuccess, $ConversionErrors) = convertImages($pathname, $newPathname, $height, $width, $rotate);
     if ($type === 'Model') list ($ConversionSuccess, $ConversionErrors) = convertModels($pathname, $newPathname);
-    if ($type === 'Drawing') list ($ConversionSuccess, $ConversionErrors) = convertDrawings($pathname, $newPathname, $extension);
+    if ($type === 'Drawing') list ($ConversionSuccess, $ConversionErrors) = convertDrawings($pathname, $newPathname);
     if ($type === 'Video') list ($ConversionSuccess, $ConversionErrors) = convertVideos($pathname, $newPathname);
     if ($type === 'Subtitle') list ($ConversionSuccess, $ConversionErrors) = convertSubtitles($pathname, $newPathname);
     if ($type === 'Stream') list ($ConversionSuccess, $ConversionErrors) = convertStreams($pathname, $newPathname);

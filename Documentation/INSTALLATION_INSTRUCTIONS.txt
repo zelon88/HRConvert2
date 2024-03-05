@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 10/30/2023 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 3/5/2024 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.2.9.
+v3.3.
 This file contains a walkthrough guide for installing HRConvert2.
 
 HARDWARE REQUIREMENTS ... 
@@ -40,15 +40,13 @@ For a walkthrough of installing a Ubuntu distro, visit:
 In this step we will obtain a copy of HRConvert2. There are several options available.
 Please take a moment to read through the documentation to familiarize yourself with the application.
 
-  Option 1. Download the Docker image created by Github user dwaaan. Thanks dwaaan!
-    1a. This version is updated less frequently.
-    1b. For more information visit  'https://github.com/dwaaan/HRConvert2-Docker'
-    1c. The procedure contained in this document DOES NOT apply to this installation option.
+  Option 1. Download the Docker image.
+    a. For more information visit  'https://github.com/zelon88/HRConvert2-Docker'
+    b. The procedure contained in this document DOES NOT apply to this installation option.
 
   Option 2. Download HRConvert2 directly from the official Github repository.
-    2a. This version is updated more frequently.
-    2b. For more information visit  'https://github.com/zelon88/HRConvert2'
-    2c. The procedure contained in this document ONLY applies to this installation option.
+    a. For more information visit  'https://github.com/zelon88/HRConvert2'
+    b. The procedure contained in this document ONLY applies to this installation option.
 
 1. Grab a cup of coffee.
 2. Download the desired HRConvert2 version from the official Github repository.

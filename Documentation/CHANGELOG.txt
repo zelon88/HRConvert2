@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 10/30/2023 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 3/5/2024 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.2.9.
+v3.3.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -28,7 +28,26 @@ Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 
 --------------------
 COMMIT 10/30/2023
-v3.2.9 - Improve docs, improve quality, update KO language pack
+v3.3 - Update Readme, fix cleanup bug, flip button CSS.
+
+-v3.3.
+-Update README.md.
+  -Remove mention of Docker repo, as it is not maintained.
+  -I appreciate all of the community feedback at https://github.com/zelon88/HRConvert2/issues/46.
+  -I will come up with an official Docker solution.
+-Fix bug in cleanFiles() function that was causing problems with archive conversions & preventing cleanup.
+-Flip button CSS, so buttons don't appear quite so... upside-down... all the time.
+-Remove un-needed (redundant) button related CSS from HRConvert2.css.
+-Increase default DeleteThreshold in config.php from 30 to 60 minutes.
+-Remove un-needed extension being passed to the convertDrawings() function.
+-Fix drawings not returning a valid filename.
+  -Conversions would complete, but not download.
+-Tested ImageMagick support for SVG, could not get it to work.
+-Tested Dia support for converting things into PNG, BMP, and JPG. Got PNG to work, so added support.
+
+--------------------
+COMMIT 10/30/2023
+v3.2.9 - Improve docs, improve quality, update KO language pack.
 
 -v3.2.9.
 -Happy Halloween!

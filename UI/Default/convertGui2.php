@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 10/30/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 3/5/2024 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.2.9.
+// / v3.3.1.
 // / This file contains language specific GUI elements for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -164,7 +164,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
         <div id='buttonDiv<?php echo $ConvertGuiCounter1; ?>' name='buttonDiv<?php echo $ConvertGuiCounter1; ?>' style='height:25px;'>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;&nbsp;&nbsp;&nbsp;</a>
 
-          <img id='downloadfilebutton<?php echo $ConvertGuiCounter1; ?>' name='downloadfilebutton<?php echo $ConvertGuiCounter1; ?>' src='Resources/download.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' onclick='toggle_visibility("loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text5.' '.$File; ?>' alt='<?php echo $Gui2Text5.' '.$File; ?>'/>
+          <img id='downloadfilebutton<?php echo $ConvertGuiCounter1; ?>' name='downloadfilebutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>download.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' onclick='toggle_visibility("loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text5.' '.$File; ?>' alt='<?php echo $Gui2Text5.' '.$File; ?>'/>
 
           <script type='text/javascript'>
             $(document).ready(function () {
@@ -186,145 +186,145 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
           </script>
 
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
-          <img id='deletefilebutton<?php echo $ConvertGuiCounter1; ?>' name='deletefilebutton<?php echo $ConvertGuiCounter1; ?>' src='Resources/delete.png' style='float:<?php echo $GUIAlignment; ?>; display:block;'
+          <img id='deletefilebutton<?php echo $ConvertGuiCounter1; ?>' name='deletefilebutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>delete.png' style='float:<?php echo $GUIAlignment; ?>; display:block;'
            onclick='toggle_visibility("deletefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("deletefilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("deleteXfilebutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text67.' '.$File; ?>' alt='<?php echo $Gui2Text67.' '.$File; ?>'/>
-          <img id='deleteXfilebutton<?php echo $ConvertGuiCounter1; ?>' name='deleteXfilebutton<?php echo $ConvertGuiCounter1; ?>' src='Resources/x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
+          <img id='deleteXfilebutton<?php echo $ConvertGuiCounter1; ?>' name='deleteXfilebutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
            onclick='toggle_visibility("deletefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("deletefilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("deleteXfilebutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text68; ?>' alt='<?php echo $Gui2Text68; ?>'/>
 
           <?php if ($AllowUserShare) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
-          <img id='sharefilebutton<?php echo $ConvertGuiCounter1; ?>' name='sharefilebutton<?php echo $ConvertGuiCounter1; ?>' src='Resources/link.png' style='float:<?php echo $GUIAlignment; ?>; display:block;'
+          <img id='sharefilebutton<?php echo $ConvertGuiCounter1; ?>' name='sharefilebutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>link.png' style='float:<?php echo $GUIAlignment; ?>; display:block;'
            onclick='toggle_visibility("sharefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("sharefilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("shareXfilebutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text6.' '.$File; ?>' alt='<?php echo $Gui2Text6.' '.$File; ?>'/>
-          <img id='shareXfilebutton<?php echo $ConvertGuiCounter1; ?>' name='shareXfilebutton<?php echo $ConvertGuiCounter1; ?>' src='Resources/x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
+          <img id='shareXfilebutton<?php echo $ConvertGuiCounter1; ?>' name='shareXfilebutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
            onclick='toggle_visibility("sharefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("sharefilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("shareXfilebutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text7; ?>' alt='<?php echo $Gui2Text7; ?>'/>
 
           <?php } if ($AllowUserVirusScan) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
-          <img id='scanfilebutton<?php echo $ConvertGuiCounter1; ?>' name='scanfilebutton<?php echo $ConvertGuiCounter1; ?>'src='Resources/scan.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
+          <img id='scanfilebutton<?php echo $ConvertGuiCounter1; ?>' name='scanfilebutton<?php echo $ConvertGuiCounter1; ?>'src='<?php echo $GuiImageDir; ?>scan.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
            onclick='toggle_visibility("scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scanfilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scanfileXbutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text8.' '.$File; ?>' alt='<?php echo $Gui2Text8.' '.$File; ?>'/>
-          <img id='scanfileXbutton<?php echo $ConvertGuiCounter1; ?>' name='scanfileXbutton<?php echo $ConvertGuiCounter1; ?>' src='Resources/x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
+          <img id='scanfileXbutton<?php echo $ConvertGuiCounter1; ?>' name='scanfileXbutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
            onclick='toggle_visibility("scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scanfilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scanfileXbutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text9; ?>' alt='<?php echo $Gui2Text9; ?>'/>
 
           <?php } ?>
           
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
-          <img id="archfileButton<?php echo $ConvertGuiCounter1; ?>" name="archfileButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/archive.png" style="float:<?php echo $GUIAlignment; ?>; display:block;" 
-           onclick="toggle_visibility('archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archfileButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archfileXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text10.' '.$File; ?>' alt='<?php echo $Gui2Text10.' '.$File; ?>'/>
-          <img id="archfileXButton<?php echo $ConvertGuiCounter1; ?>" name="archfileXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:<?php echo $GUIAlignment; ?>; display:none;" 
-           onclick="toggle_visibility('archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archfileButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archfileXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text11; ?>' alt='<?php echo $Gui2Text11; ?>'/>
+          <img id='archfileButton<?php echo $ConvertGuiCounter1; ?>' name='archfileButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>archive.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
+           onclick='toggle_visibility("archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archfileButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archfileXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text10.' '.$File; ?>' alt='<?php echo $Gui2Text10.' '.$File; ?>'/>
+          <img id='archfileXButton<?php echo $ConvertGuiCounter1; ?>' name='archfileXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
+           onclick='toggle_visibility("archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archfileButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archfileXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text11; ?>' alt='<?php echo $Gui2Text11; ?>'/>
 
           <?php if (in_array($extension, $PDFWorkArr) && in_array('OCR', $SupportedConversionTypes)) { ?>          
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
           
-          <img id="docscanButton<?php echo $ConvertGuiCounter1; ?>" name="docscanButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/docscan.png" style="float:<?php echo $GUIAlignment; ?>; display:block;" 
-           onclick="toggle_visibility('pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('docscanButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('docscanXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text12.' '.$File; ?>' alt='<?php echo $Gui2Text12.' '.$File; ?>'/>
-          <img id="docscanXButton<?php echo $ConvertGuiCounter1; ?>" name="docscanXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:<?php echo $GUIAlignment; ?>; display:none;" 
+          <img id='docscanButton<?php echo $ConvertGuiCounter1; ?>' name='docscanButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>docscan.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
+           onclick='toggle_visibility("pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("docscanButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("docscanXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text12.' '.$File; ?>' alt='<?php echo $Gui2Text12.' '.$File; ?>'/>
+          <img id="docscanXButton<?php echo $ConvertGuiCounter1; ?>" name="docscanXButton<?php echo $ConvertGuiCounter1; ?>" src='<?php echo $GuiImageDir; ?>x.png' style="float:<?php echo $GUIAlignment; ?>; display:none;" 
            onclick="toggle_visibility('pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('docscanButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('docscanXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text13; ?>' alt='<?php echo $Gui2Text13; ?>'/>
           <?php } 
 
           if (in_array($extension, $ArchiveArray) && in_array('Archive', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
-          <img id="archiveButton<?php echo $ConvertGuiCounter1; ?>" name="archiveButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/convert.png" style="float:<?php echo $GUIAlignment; ?>; display:block;" 
-           onclick="toggle_visibility('archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archiveButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archiveXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
-          <img id="archiveXButton<?php echo $ConvertGuiCounter1; ?>" name="archiveXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:<?php echo $GUIAlignment; ?>; display:none;" 
+          <img id='archiveButton<?php echo $ConvertGuiCounter1; ?>' name='archiveButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>convert.png' style='float:<?php echo $GUIAlignment; ?>; display:block;'
+           onclick='toggle_visibility("archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archiveButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archiveXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+          <img id="archiveXButton<?php echo $ConvertGuiCounter1; ?>" name="archiveXButton<?php echo $ConvertGuiCounter1; ?>" src='<?php echo $GuiImageDir; ?>x.png' style="float:<?php echo $GUIAlignment; ?>; display:none;" 
            onclick="toggle_visibility('archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archiveButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archiveXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
           <?php } 
 
           if (in_array($extension, $DocumentArray) && in_array('Document', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
-          <img id="documentButton<?php echo $ConvertGuiCounter1; ?>" name="documentButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/document.png" style="float:<?php echo $GUIAlignment; ?>; display:block;" 
-           onclick="toggle_visibility('docOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
-          <img id="documentXButton<?php echo $ConvertGuiCounter1; ?>" name="documentXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:<?php echo $GUIAlignment; ?>; display:none;" 
+          <img id='documentButton<?php echo $ConvertGuiCounter1; ?>' name='documentButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>document.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
+           onclick='toggle_visibility("docOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("documentButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("documentXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+          <img id="documentXButton<?php echo $ConvertGuiCounter1; ?>" name="documentXButton<?php echo $ConvertGuiCounter1; ?>" src='<?php echo $GuiImageDir; ?>x.png' style="float:<?php echo $GUIAlignment; ?>; display:none;" 
            onclick="toggle_visibility('docOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
           <?php } 
 
           if (in_array($extension, $SpreadsheetArray) && in_array('Document', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
-          <img id="spreadsheetButton<?php echo $ConvertGuiCounter1; ?>" name="spreadsheetButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/spreadsheet.png" style="float:<?php echo $GUIAlignment; ?>; display:block;" 
-           onclick="toggle_visibility('spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
-          <img id="spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>" name="spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:<?php echo $GUIAlignment; ?>; display:none;" 
+          <img id='spreadsheetButton<?php echo $ConvertGuiCounter1; ?>' name='spreadsheetButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>spreadsheet.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
+           onclick='toggle_visibility("spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("spreadsheetButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+          <img id="spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>" name="spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>" src='<?php echo $GuiImageDir; ?>x.png' style="float:<?php echo $GUIAlignment; ?>; display:none;" 
            onclick="toggle_visibility('spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
           <?php }
 
           if (in_array($extension, $PresentationArray) && in_array('Document', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
-          <img id="presentationButton<?php echo $ConvertGuiCounter1; ?>" name="presentationButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/presentation.png" style="float:<?php echo $GUIAlignment; ?>; display:block;" 
-           onclick="toggle_visibility('presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('presentationButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('presentationXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
-          <img id="presentationXButton<?php echo $ConvertGuiCounter1; ?>" name="presentationXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:<?php echo $GUIAlignment; ?>; display:none;" 
-           onclick="toggle_visibility('presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('presentationButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('presentationXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+          <img id='presentationButton<?php echo $ConvertGuiCounter1; ?>' name='presentationButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>presentation.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
+           onclick='toggle_visibility("presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("presentationButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("presentationXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+          <img id='presentationXButton<?php echo $ConvertGuiCounter1; ?>' name='presentationXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;'
+           onclick='toggle_visibility("presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("presentationButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("presentationXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
           <?php }
 
           if (in_array($extension, $ImageArray) && in_array('Image', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
-          <img id="imageButton<?php echo $ConvertGuiCounter1; ?>" name="imageButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/photo.png" style="float:<?php echo $GUIAlignment; ?>; display:block;" 
-           onclick="toggle_visibility('imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('imageButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('imageXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
-          <img id="imageXButton<?php echo $ConvertGuiCounter1; ?>" name="imageXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:<?php echo $GUIAlignment; ?>; display:none;" 
-           onclick="toggle_visibility('imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('imageButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('imageXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+          <img id='imageButton<?php echo $ConvertGuiCounter1; ?>' name='imageButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>photo.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
+           onclick='toggle_visibility("imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("imageButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("imageXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+          <img id="imageXButton<?php echo $ConvertGuiCounter1; ?>" name="imageXButton<?php echo $ConvertGuiCounter1; ?>" src='<?php echo $GuiImageDir; ?>x.png' style="float:<?php echo $GUIAlignment; ?>; display:none;" 
+           onclick='toggle_visibility("imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("imageButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("imageXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
           <?php }
 
           if (in_array($extension, $MediaArray) && in_array('Audio', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
-          <img id="mediaButton<?php echo $ConvertGuiCounter1; ?>" name="mediaButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/media.png" style="float:<?php echo $GUIAlignment; ?>; display:block;" 
-           onclick="toggle_visibility('audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('mediaButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('mediaXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
-          <img id="mediaXButton<?php echo $ConvertGuiCounter1; ?>" name="mediaXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:<?php echo $GUIAlignment; ?>; display:none;" 
-           onclick="toggle_visibility('audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('mediaButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('mediaXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+          <img id='mediaButton<?php echo $ConvertGuiCounter1; ?>' name='mediaButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>media.png' style='float:<?php echo $GUIAlignment; ?>; display:block;'
+           onclick='toggle_visibility("audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("mediaButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("mediaXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+          <img id='mediaXButton<?php echo $ConvertGuiCounter1; ?>' name='mediaXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;'
+           onclick='toggle_visibility("audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("mediaButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("mediaXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
           <?php } 
 
           if (in_array($extension, $VideoArray) && in_array('Video', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
-          <img id="videoButton<?php echo $ConvertGuiCounter1; ?>" name="videoButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/video.png" style="float:<?php echo $GUIAlignment; ?>; display:block;" 
-           onclick="toggle_visibility('videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
-          <img id="videoXButton<?php echo $ConvertGuiCounter1; ?>" name="videoXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:<?php echo $GUIAlignment; ?>; display:none;" 
-           onclick="toggle_visibility('videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('videoXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+          <img id='videoButton<?php echo $ConvertGuiCounter1; ?>' name='videoButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>video.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
+           onclick='toggle_visibility("videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("videoButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("videoXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+          <img id='videoXButton<?php echo $ConvertGuiCounter1; ?>' name='videoXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;'
+           onclick='toggle_visibility("videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("videoButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("videoXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
           <?php } 
 
           if (in_array($extension, $StreamArray) && in_array('Stream', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
-          <img id="streamButton<?php echo $ConvertGuiCounter1; ?>" name="streamButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/stream.png" style="float:<?php echo $GUIAlignment; ?>; display:block;" 
-           onclick="toggle_visibility('streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('streamButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('streamXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
-          <img id="streamXButton<?php echo $ConvertGuiCounter1; ?>" name="streamXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:<?php echo $GUIAlignment; ?>; display:none;" 
-           onclick="toggle_visibility('streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('streamButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('streamXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+          <img id='streamButton<?php echo $ConvertGuiCounter1; ?>' name='streamButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>stream.png' style='float:<?php echo $GUIAlignment; ?>; display:block;'
+           onclick='toggle_visibility("streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("streamButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("streamXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+          <img id='streamXButton<?php echo $ConvertGuiCounter1; ?>' name='streamXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
+           onclick='toggle_visibility("streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("streamButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("streamXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
           <?php } 
 
           if (in_array($extension, $DrawingArray) && in_array('Drawing', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
-          <img id="drawingButton<?php echo $ConvertGuiCounter1; ?>" name="drawingButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/convert.png" style="float:<?php echo $GUIAlignment; ?>; display:block;" 
-           onclick="toggle_visibility('drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('drawingButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('drawingXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
-          <img id="drawingXButton<?php echo $ConvertGuiCounter1; ?>" name="drawingXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:<?php echo $GUIAlignment; ?>; display:none;" 
-           onclick="toggle_visibility('drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('drawingButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('drawingXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+          <img id='drawingButton<?php echo $ConvertGuiCounter1; ?>' name='drawingButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>convert.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
+           onclick='toggle_visibility("drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("drawingButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("drawingXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+          <img id='drawingXButton<?php echo $ConvertGuiCounter1; ?>' name='drawingXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
+           onclick='toggle_visibility("drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("drawingButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("drawingXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
           <?php } 
 
           if (in_array($extension, $ModelArray) && in_array('Model', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
-          <img id="modelButton<?php echo $ConvertGuiCounter1; ?>" name="modelButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/convert.png" style="float:<?php echo $GUIAlignment; ?>; display:block;" 
-           onclick="toggle_visibility('modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('modelButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('modelXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
-          <img id="modelXButton<?php echo $ConvertGuiCounter1; ?>" name="modelXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:<?php echo $GUIAlignment; ?>; display:none;" 
-           onclick="toggle_visibility('modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('modelButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('modelXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+          <img id='modelButton<?php echo $ConvertGuiCounter1; ?>' name='modelButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>convert.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
+           onclick='toggle_visibility("modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("modelButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("modelXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+          <img id='modelXButton<?php echo $ConvertGuiCounter1; ?>' name='modelXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;'
+           onclick='toggle_visibility("modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("modelButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("modelXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
           <?php } 
 
           if (in_array($extension, $SubtitleArray) && in_array('Subtitle', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
-          <img id="subtitleButton<?php echo $ConvertGuiCounter1; ?>" name="subtitleButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/subtitle.png" style="float:<?php echo $GUIAlignment; ?>; display:block;" 
-           onclick="toggle_visibility('subtitleOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('subtitleButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('subtitleXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
-          <img id="subtitleXButton<?php echo $ConvertGuiCounter1; ?>" name="subtitleXButton<?php echo $ConvertGuiCounter1; ?>" src="Resources/x.png" style="float:<?php echo $GUIAlignment; ?>; display:none;" 
-           onclick="toggle_visibility('subtitleOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('subtitleButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('subtitleXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+          <img id='subtitleButton<?php echo $ConvertGuiCounter1; ?>' name='subtitleButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>subtitle.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
+           onclick='toggle_visibility("subtitleOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("subtitleButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("subtitleXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+          <img id='subtitleXButton<?php echo $ConvertGuiCounter1; ?>' name='subtitleXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
+           onclick='toggle_visibility("subtitleOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("subtitleButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("subtitleXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
           <?php } ?>
 
         </div>
 
-        <div id='archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"></p>
+        <div id='archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style='max-width:750px; display:none;'>
+          <p style='max-width:1000px;'></p>
           <p><strong><?php echo $Gui2Text16; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type='text' id='userarchfilefilename<?php echo $ConvertGuiCounter1; ?>' name='userarchfilefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='archfileextension<?php echo $ConvertGuiCounter1; ?>' name='archfileextension<?php echo $ConvertGuiCounter1; ?>'> 
@@ -333,8 +333,8 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
             <option value='<?php echo $gui2ArchArr; ?>'><?php echo $gui2ArchArr; ?></option>
             <?php } ?>
           </select></p>
-          <input type="submit" id="archfileSubmit<?php echo $ConvertGuiCounter1; ?>" name="archfileSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text51; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
+          <input type='submit' id='archfileSubmit<?php echo $ConvertGuiCounter1; ?>' name='archfileSubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo $Gui2Text51; ?>' onclick='toggle_visibility(loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>);'>
+          <script type='text/javascript'>
             $(document).ready(function () {
               $('#archfileSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
                 $.ajax({
@@ -480,7 +480,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                   data: {
                     Token1:'<?php echo $Token1; ?>',
                     Token2:'<?php echo $Token2; ?>',
-                    scantype:'all',
+                    scantype:'clamav',
                     filesToScan:'<?php echo $File; ?>' },
                     success: function(ReturnData) {
                       $.ajax({

@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 4/17/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 3/5/2024 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.2.5.
+// / v3.3.1.
 // / This file contains language specific GUI elements to be displayed at the top of pages.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -32,6 +32,13 @@
 $HeaderDisplayed = TRUE;
 // / Check if the core is loaded.
 if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
+// / Set required resource file related variables.
+$FaviconPath = $GuiImageDir.'favicon.ico';
+$JqueryPath = $GuiJSDir.'jquery-3.6.3.min.js';
+$JsLibraryPath = $GuiJSDir.'HRC2-Functions.js';
+$DropzonePath = $GuiJSDir.'dropzone.js';
+$StylesheetPath = $GuiCSSDir.'HRConvert2.css';
+$DropzoneStylesheetPath = $GuiCSSDir.'dropzone.css';
 // / -----------------------------------------------------------------------------------
 ?>
 <html dir='<?php echo $GUIDirection; ?>'>

@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 5/3/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 3/5/2024 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.2.8.
+// / v3.3.1.
 // / This file contains the dynamic stylesheets for HRConvert2.
 // /
 // / HARDWARE REQUIREMENTS ... 
@@ -27,6 +27,10 @@
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
 
+// / -----------------------------------------------------------------------------------
+// / Set dynamic CSS related variables.
+
+// / Grey color scheme (default).
 $defaultButtonCode = '.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #f3f6f4;
   -webkit-box-shadow: 3px 4px 0px 0px #f3f6f4;
@@ -46,7 +50,7 @@ $defaultButtonCode = '.info-button {
   display:inline-block;
   cursor:pointer;
   color:#ffffff;
-  font-family:Arial;
+  font-family:'.$Font.';
   font-size:17px;
   font-weight:bold;
   padding:12px 44px;
@@ -68,10 +72,11 @@ $defaultButtonCode = '.info-button {
   position:relative;
   top:1px; }
 select {
-  background: url("Resources/darrowdefault.png") 96% / 15% no-repeat #eee; }
+  background: url("'.$GuiImageDir.'darrowdefault.png") 96% / 15% no-repeat #eee; }
 body { 
   background-color: #F8F8F8; }';
 
+// / Green color scheme.
 $greenButtonCode = '.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #b9ccb3;
   -webkit-box-shadow: 3px 4px 0px 0px #b9ccb3;
@@ -91,7 +96,7 @@ $greenButtonCode = '.info-button {
   display:inline-block;
   cursor:pointer;
   color:#ffffff;
-  font-family:Arial;
+  font-family:'.$Font.';
   font-size:17px;
   font-weight:bold;
   padding:12px 44px;
@@ -113,10 +118,11 @@ $greenButtonCode = '.info-button {
   position:relative;
   top:1px; } 
 select {
-  background: url("Resources/darrowgreen.png") 96% / 15% no-repeat #eee; }
+  background: url("'.$GuiImageDir.'darrowgreen.png") 96% / 15% no-repeat #eee; }
 body { 
   background-color: #E8FFE1; }';
 
+// / Blue color scheme.
 $blueButtonCode = '.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #cfe2f3;
   -webkit-box-shadow: 3px 4px 0px 0px #cfe2f3;
@@ -136,7 +142,7 @@ $blueButtonCode = '.info-button {
   display:inline-block;
   cursor:pointer;
   color:#ffffff;
-  font-family:Arial;
+  font-family:'.$Font.';
   font-size:17px;
   font-weight:bold;
   padding:12px 44px;
@@ -158,10 +164,11 @@ $blueButtonCode = '.info-button {
   position:relative;
   top:1px; }
 select {
-  background: url("Resources/darrowblue.png") 96% / 15% no-repeat #eee; }
+  background: url("'.$GuiImageDir.'darrowblue.png") 96% / 15% no-repeat #eee; }
 body { 
   background-color: #E1F7FF; }';
 
+// / Red color scheme.
 $redButtonCode = '.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #bcbcbc;
   -webkit-box-shadow: 3px 4px 0px 0px #bcbcbc;
@@ -181,7 +188,7 @@ $redButtonCode = '.info-button {
   display:inline-block;
   cursor:pointer;
   color:#ffffff;
-  font-family:Arial;
+  font-family:'.$Font.';
   font-size:17px;
   font-weight:bold;
   padding:12px 44px;
@@ -203,6 +210,7 @@ $redButtonCode = '.info-button {
   position:relative;
   top:1px; }
 select {
-  background: url("Resources/darrowred.png") 96% / 15% no-repeat #eee; }
+  background: url("'.$GuiImageDir.'darrowred.png") 96% / 15% no-repeat #eee; }
 body { 
   background-color: #FFE9E1; }';
+// / -----------------------------------------------------------------------------------

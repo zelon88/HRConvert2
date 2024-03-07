@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.3.
+// / v3.3.1.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -104,14 +104,38 @@ function sanitize($Variable, $strict) {
 // / A function to load required HRConvert2 files.
 function verifyInstallation() {
   // / Set variables.
-  global $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6, $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $URL, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version;
-  $InstallationIsVerified = TRUE;
-  $ConfigFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'config.php');
-  $VersionInfoFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'versionInfo.php');
+  global $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6, $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $URL, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationArray, $UserImageArray, $UserMediaArray, $UserVideoArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleArray, $UserPDFWorkArr;
+  // / Define absolute paths for files that we only have relative paths for.
+  $InstallationIsVerified = $buildDirDeleted = $dockerFileDeleted = $readmeDeleted = $changelogFileDeleted = $buildEnvDeleted = $devDocsDeleted = $checkOne = $checkTwo = FALSE;
+  $ConfigFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'config.php');
+  $VersionInfoFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'versionInfo.php');
+  $dockerFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Dockerfile');
+  $changelogFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'CHANGELOG.txt');
+  $readmeFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'README.md');
+  $buildDir = realpath(dirname(__DIR__).DIRECTORY_SEPARATOR.'Build');
+  // / Check for required files & stop execution if they are missing.
   if (!file_exists($ConfigFile)) die ('ERROR!!! HRConvert2-0: Could not process the HRConvert2 Configuration file (config.php)!'.PHP_EOL.'<br />');
   else require_once ($ConfigFile);
   if (!file_exists($VersionInfoFile)) die ('ERROR!!! HRConvert2-24000: Could not process the HRConvert2 Version Information file (versionInfo.php)!'.PHP_EOL.'<br />');
   else require_once ($VersionInfoFile);
+  // / Delete the build environment if specified by config.php.
+  if ($DeleteBuildEnvironment) {
+    if (is_dir($buildDir)) $buildDirDeleted = cleanFiles($buildDir);
+    if (file_exists($dockerFile)) $dockerFileDeleted = unlink($dockerFile);
+    if ($buildDirDeleted && $dockerFileDeleted) $buildEnvDeleted = TRUE; }
+  // / Delete the development environment if specified by config.php.
+  if ($DeleteDevelopmentDocumentation) {
+    if (file_exists($changelogFile)) $changelogFileDeleted = unlink($changelogFile);
+    if (file_exists($readmeFile)) $readmeDeleted = unlink($readmeFile);
+    if ($changelogFileDeleted && $readmeDeleted) $devDocsDeleted = TRUE; }
+  // / Perform a check to see if any required operations failed. 
+  if ($DeleteBuildEnvironment) if (!$buildEnvDeleted) $checkOne = TRUE;
+  if ($DeleteDevelopmentDocumentation) if (!$devDocsDeleted) $checkTwo = TRUE;
+  // / Installation is considered verified when check one & check two are both false.
+  if (!$checkOne && !$checkTwo) $InstallationIsVerified = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $buildDir = $buildDirDeleted = $dockerFile = $dockerFileDeleted = $readmeFile = $readmeDeleted = $changelogFile = $changelogFileDeleted = $buildEnvDeleted = $devDocsDeleted = $checkOne = $checkTwo = NULL;
+  unset($buildDir, $buildDirDeleted, $dockerFile, $dockerFileDeleted, $readmeFile, $readmeDeleted, $changelogFile, $changelogFileDeleted, $buildEnvDeleted, $devDocsDeleted, $checkOne, $checkTwo);
   return array($InstallationIsVerified, $ConfigFile, $Version); }
 // / -----------------------------------------------------------------------------------
 
@@ -308,7 +332,7 @@ function verifyColors($ButtonStyle) {
 // / A function to set the GUI to use for the session.
 function verifyGui() {
   // / Set variables.
-  global $DefaultGui, $SupportedGuis, $AllowUserSelectableGui, $GuiFiles, $GuiDir, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode;
+  global $DefaultGui, $SupportedGuis, $AllowUserSelectableGui, $GuiFiles, $GuiDir, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $Font;
   $defaultGui = $reqFile =  $variableIsSanitized = FALSE;
   $GuiIsSet = TRUE;
   $GuiToUse = 'Default';
@@ -327,13 +351,17 @@ function verifyGui() {
     if (!$AllowUserSelectableGui) $GuiToUse = $DefaultGui; }
   // / Set the $_GET['gui'] variable to whatever the current GUI is so the next page will use the same one.
   $_GET['gui'] = $GuiToUse;
-  // / Set the variables to required UI files.
+  // / Set the variables to a URL safe relative path to required UI files.
   $GuiDir = 'UI/'.$GuiToUse.'/';
   $StyleCoreFile = $GuiDir.'styleCore.php';
   $GuiHeaderFile = $GuiDir.'header.php';
   $GuiFooterFile = $GuiDir.'footer.php';
   $GuiUI1File = $GuiDir.'convertGui1.php';
   $GuiUI2File = $GuiDir.'convertGui2.php';
+  $GuiResourcesDir = $GuiDir.'Resources/';
+  $GuiImageDir = $GuiResourcesDir.'Image/';
+  $GuiCSSDir = $GuiResourcesDir.'CSS/';
+  $GuiJSDir = $GuiResourcesDir.'JS/';
   $guiFiles = array($GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $StyleCoreFile);
   // / Verify that the required GUI folder exists.
   if (is_dir($GuiDir)) $GuiIsSet = TRUE;
@@ -415,7 +443,7 @@ function securePath($PathToSecure, $DangerArr, $isURL) {
 // / A function to set the global variables for the session.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode;
+  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationArray, $UserImageArray, $UserMediaArray, $UserVideoArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleArray, $UserPDFWorkArr;
   // / Application related variables.
   $HRConvertVersion = 'v3.3';
   $GlobalsAreVerified = FALSE;
@@ -439,12 +467,6 @@ function verifyGlobals() {
   $Alert1 = 'Cannot perform a virus scan on this file!';
   $Alert2 = 'File Link Copied to Clipboard!';
   $Alert3 = 'Operation Failed!';
-  $FaviconPath = 'Resources/favicon.ico';
-  $DropzonePath = 'Resources/dropzone.js';
-  $DropzoneStylesheetPath = 'Resources/dropzone.css';
-  $StylesheetPath = 'Resources/HRConvert2.css';
-  $JsLibraryPath = 'Resources/HRC2-Functions.js';
-  $JqueryPath = 'Resources/jquery-3.6.3.min.js';
   // / Security related variables.
   $DefaultApps = array('.', '..');
   $DangerousFiles = array('js', 'php', '.html', 'css', 'phar', '.', '..', 'index.php', 'index.html');
@@ -469,19 +491,19 @@ function verifyGlobals() {
   $ConsolidatedLogFile = $ConvertTempDir.$ConsolidatedLogFileName;
   // / Format related variables.
   $ArchiveArray = $DearchiveArray = $DocumentArray = $SpreadsheetArray = $PresentationArray = $ImageArray = $MediaArray = $VideoArray = $StreamArray = $DrawingArray = $ModelArray = $SubtitleArray = $PDFWorkArr = array();
-  if (in_array('Archive', $SupportedConversionTypes)) $ArchiveArray = array('zip', 'rar', 'tar', '7z', 'iso');
-  if (in_array('Archive', $SupportedConversionTypes)) $DearchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi', 'tar.bz2', 'tar.gz');
-  if (in_array('Document', $SupportedConversionTypes)) $DocumentArray = array('txt', 'doc', 'docx', 'rtf', 'odt', 'pdf');
-  if (in_array('Document', $SupportedConversionTypes)) $SpreadsheetArray = array('csv', 'xls', 'xlsx', 'ods');
-  if (in_array('Document', $SupportedConversionTypes)) $PresentationArray = array('pages', 'pptx', 'ppt', 'xps', 'potx', 'potm', 'pot', 'ppa', 'odp');
-  if (in_array('Image', $SupportedConversionTypes)) $ImageArray = array('jpeg', 'jpg', 'jpe', 'png', 'bmp', 'gif', 'webp', 'cin', 'dds', 'dib', 'flif', 'avif', 'gplt', 'sct', 'xcf', 'heic', 'ico');
-  if (in_array('Audio', $SupportedConversionTypes)) $MediaArray = array('mp3', 'aac', 'oog', 'wma', 'mp2', 'flac', 'm4a', 'm4p');
-  if (in_array('Video', $SupportedConversionTypes)) $VideoArray = array('3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv', 'mov', 'm4v');
-  if (in_array('Stream', $SupportedConversionTypes) && in_array('Audio', $SupportedConversionTypes)) $StreamArray = array('m3u8');
-  if (in_array('Drawing', $SupportedConversionTypes)) $DrawingArray = array('svg', 'dxf', 'vdx', 'fig', 'dia', 'wpg', 'png');
-  if (in_array('Model', $SupportedConversionTypes)) $ModelArray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'gts', 'dxf', 'u3d', 'vrml', 'x3d');
-  if (in_array('Subtitle', $SupportedConversionTypes)) $SubtitleArray = array('vtt', 'ssa', 'ass', 'srt', 'dvb');
-  if (in_array('OCR', $SupportedConversionTypes) && in_array('Document', $SupportedConversionTypes)) $PDFWorkArr = array('pdf', 'jpg', 'jpeg', 'png', 'bmp', 'webp', 'gif');
+  if (in_array('Archive', $SupportedConversionTypes)) $ArchiveArray = $UserArchiveArray;
+  if (in_array('Archive', $SupportedConversionTypes)) $DearchiveArray = $UserArchiveArray;
+  if (in_array('Document', $SupportedConversionTypes)) $DocumentArray = $UserDocumentArray;
+  if (in_array('Document', $SupportedConversionTypes)) $SpreadsheetArray = $UserSpreadsheetArray;
+  if (in_array('Document', $SupportedConversionTypes)) $PresentationArray = $UserPresentationArray;
+  if (in_array('Image', $SupportedConversionTypes)) $ImageArray = $UserImageArray;
+  if (in_array('Audio', $SupportedConversionTypes)) $MediaArray = $UserMediaArray;
+  if (in_array('Video', $SupportedConversionTypes)) $VideoArray = $UserVideoArray;
+  if (in_array('Stream', $SupportedConversionTypes) && in_array('Audio', $SupportedConversionTypes)) $StreamArray = $UserStreamArray;
+  if (in_array('Drawing', $SupportedConversionTypes)) $DrawingArray = $UserDrawingArray;
+  if (in_array('Model', $SupportedConversionTypes)) $ModelArray = $UserModelArray;
+  if (in_array('Subtitle', $SupportedConversionTypes)) $SubtitleArray = $UserSubtitleArray;
+  if (in_array('OCR', $SupportedConversionTypes) && in_array('Document', $SupportedConversionTypes)) $PDFWorkArr = $UserPDFWorkArr;
   $Allowed = array_unique(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge($ArchiveArray, $DearchiveArray), $DocumentArray), $SpreadsheetArray), $PresentationArray), $ImageArray), $MediaArray), $VideoArray), $StreamArray), $DrawingArray), $ModelArray), $SubtitleArray), $PDFWorkArr));
   $SupportedFormatCount = count($Allowed);
   // / Perform a version integrity check.
@@ -633,11 +655,11 @@ function verifyRequiredDirs() {
 function cleanFiles($path) {
   // / Set variables.
   global $ConvertLoc, $ConvertTemp, $DefaultApps, $DirSep;
-  $variableIsSanitized = $i = $f = FALSE;
+  $variableIsSanitized = $i = $f = $CleanSuccess = $pathCheck = $loopCheck = FALSE;
   list ($path, $variableIsSanitized) = sanitize($path, FALSE);
   // / Make sure the selected directory is actually a directory.
   if ($variableIsSanitized && is_dir($path)) {
-    $i = scandir($path);
+    $i = array_diff(scandir($path), array('..', '.'));
     // / Iterate through each file object in the directory.
     foreach ($i as $f) {
       // / If the selected file object is a file, delete it.
@@ -645,12 +667,17 @@ function cleanFiles($path) {
       // / If the selected file object is a directory, try to delete it.
       if (is_dir($path.$DirSep.$f) && !in_array(basename($path.$DirSep.$f), $DefaultApps) && is_dir_empty($path)) @rmdir($path.$DirSep.$f);
       // / If the selected file object is a directory that still exists, run this function on it to remove any file objects it contains.
-      if (is_dir($path.$DirSep.$f) && !in_array(basename($path.$DirSep.$f), $DefaultApps) && !is_dir_empty($path)) cleanFiles($path.$DirSep.$f); }
+      if (is_dir($path.$DirSep.$f) && !in_array(basename($path.$DirSep.$f), $DefaultApps) && !is_dir_empty($path)) $loopCheck = cleanFiles($path.$DirSep.$f); }
     // / Once all file objects in the selected directory have been deleted, attempt to delete the selected directory.
     if ($path !== $ConvertLoc && $path !== $ConvertTemp) @rmdir($path); }
+  // / Check if the function was successful. Note that $ConvertLoc and $ConvertTemp locations are not deleted..
+  $pathCheck = is_dir($path);
+  if ($pathCheck) if (is_dir_empty($path)) $CleanSuccess = TRUE;
+  if (!$pathCheck) $CleanSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $path = $i = $f = $variableIsSanitized = NULL;
-  unset($path, $i, $f, $variableIsSanitized); }
+  $path = $i = $f = $variableIsSanitized = $pathCheck = $loopCheck = NULL;
+  unset($path, $i, $f, $variableIsSanitized, $pathCheck, $loopCheck); 
+  return $CleanSuccess; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -658,10 +685,10 @@ function cleanFiles($path) {
 function cleanTempLoc() {
   // / Set variables.
   global $ConvertTemp, $DeleteThreshold, $DefaultApps, $DirSep, $PermissionLevels;
-  $CleanedTempLoc = $TempLocDeepCleaned = FALSE;
+  $TempLocDeepCleaned = FALSE;
+  $CleanedTempLoc = $loopCheck = TRUE;
   // / Make sure the directory to be scanned exists.
   if (file_exists($ConvertTemp)) {
-    $CleanedTempLoc = TRUE;
     $dFiles = array_diff(scandir($ConvertTemp), array('..', '.'));
     $now = time();
     // / Iterate through each subfolder in the directory.
@@ -672,15 +699,17 @@ function cleanTempLoc() {
       if ($dFilePath == $ConvertTemp.'/index.html') continue;
       // / See if the folder is due for deletion.
       if ($now - fileTime($dFilePath) > ($DeleteThreshold * 60)) {
-        // / If the file is due to be deleted, recursively delete it.
+        // / If the folder is due to be deleted, recursively delete it.
         if (is_dir($dFilePath)) {
           $TempLocDeepCleaned = TRUE;
           @chmod ($dFilePath, $PermissionLevels);
-          cleanFiles($dFilePath);
-          if (is_dir_empty($dFilePath)) @rmdir($dFilePath); } } } }
+          $loopCheck = cleanFiles($dFilePath);
+          if (is_dir_empty($dFilePath)) @rmdir($dFilePath); } }
+      // / Check if the most recent iteration of the loop was successful.
+      if (!$loopCheck) $CleanedTempLoc = FALSE; $loopCheck = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $dFiles = $dFile = $dFilePath = $now = NULL;
-  unset($dFiles, $dFile, $dFilePath, $now);
+  $dFiles = $dFile = $dFilePath = $now = $loopCheck = NULL;
+  unset($dFiles, $dFile, $dFilePath, $now, $loopCheck);
   return array($CleanedTempLoc, $TempLocDeepCleaned); }
 // / -----------------------------------------------------------------------------------
 
@@ -689,10 +718,10 @@ function cleanTempLoc() {
 function cleanConvertLoc() {
   // / Set variables.
   global $ConvertLoc, $DeleteThreshold, $DefaultApps, $DirSep, $PermissionLevels;
-  $CleanedConvertLoc = $ConvertLocDeepCleaned = FALSE;
+  $ConvertLocDeepCleaned = FALSE;
+  $CleanedConvertLoc = $loopCheck = TRUE;
   // / Make sure the directory to be scanned exists.
   if (file_exists($ConvertLoc)) {
-    $CleanedConvertLoc = TRUE;
     $dFiles = array_diff(scandir($ConvertLoc), array('..', '.'));
     $now = time();
     // / Iterate through each subfolder in the directory.
@@ -702,15 +731,17 @@ function cleanConvertLoc() {
       $dFilePath = $ConvertLoc.$DirSep.$dFile;
       // / See if the folder is due for deletion.
       if ($now - fileTime($dFilePath) > ($DeleteThreshold * 60)) {
-        // / If the file is due to be deleted, recursively delete it.
+        // / If the folder is due to be deleted, recursively delete it.
         if (is_dir($dFilePath)) {
           $ConvertLocDeepCleaned = TRUE;
           @chmod ($dFilePath, $PermissionLevels);
-          cleanFiles($dFilePath);
-          if (is_dir_empty($dFilePath)) @rmdir($dFilePath); } } } }
+          $loopCheck = cleanFiles($dFilePath);
+          if (is_dir_empty($dFilePath)) @rmdir($dFilePath); } }
+      // / Check if the most recent iteration of the loop was successful.
+      if (!$loopCheck) $CleanedConvertLoc = FALSE; $loopCheck = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $dFiles = $dFile = $dFilePath = $now = NULL;
-  unset($dFiles, $dFile, $dFilePath, $now);
+  $dFiles = $dFile = $dFilePath = $now = $loopCheck = NULL;
+  unset($dFiles, $dFile, $dFilePath, $now, $loopCheck);
   return array($CleanedConvertLoc, $ConvertLocDeepCleaned); }
 // / -----------------------------------------------------------------------------------
 
@@ -1223,7 +1254,7 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
 // / A function to build the GUI.
 function buildGUI($guiType, $ButtonCode) {
   // / Set variables.
-  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoArray, $SubtitleArray, $StreamArray, $MediaArray, $PresentationArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed;
+  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoArray, $SubtitleArray, $StreamArray, $MediaArray, $PresentationArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir;
   $guiUIFile = $GuiUI1File;
   $Files = array();
   $FileCount = 0;
@@ -1232,8 +1263,8 @@ function buildGUI($guiType, $ButtonCode) {
     if ($guiType < 0) $guiType = 0;
     if ($guiType > 0) $guiType = 1; }
   // / Determine which loading indicator to use.
-  $PacmanLoc = 'Resources/pacman'.$SpinnerStyle.strtolower($SpinnerColor).'.gif';
-  if (!file_exists($PacmanLoc)) $PacmanLoc = 'Resources/pacman1grey.gif';
+  $PacmanLoc = $GuiImageDir.'pacman'.$SpinnerStyle.strtolower($SpinnerColor).'.gif';
+  if (!file_exists($PacmanLoc)) $PacmanLoc = $GuiImageDir.'pacman1grey.gif';
   // / Gather a list of files.
   if ($guiType === 2) {
     $Files = getFiles($ConvertDir);
@@ -1912,6 +1943,8 @@ function userScanCoreScan($FilesToScan) {
 // / A function to process the results of a User Virus Scan & check for any failures or errors.
 // / Type can be either 'clamav', 'scancore', or 'all'.
 function checkUserVirusScanResults($type, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors) {
+  // / Set variables.
+  $ScanErrors = FALSE;
   // / Check that all the input check results are valid.
   if (!is_bool($scan1Complete)) $scan1Complete = FALSE;
   if (!is_bool($scan1Errors)) $scan1Errors = FALSE;
@@ -2006,7 +2039,7 @@ function userVirusScan($FilesToScan, $type) {
   $ScanComplete = $ScanErrors = $UserVirusFound = $scan1Complete = $scan1Errors = $scan2Complete = $scan2Errors = $ConsolidatedLogsExist = $ConsolidatedLogErrors = FALSE;
   $returnData = $fileToScan = '';
   // / Check that the $type input variable is valid.
-  if (!is_string($type)) if ($type !== 'all' && $type !== 'clamav' && $type !== 'scancore') $type = 'all';
+  if ($type !== 'all' && $type !== 'clamav' && $type !== 'scancore') $type = 'all';
   // / Make sure the input files are formatted into an array.
   if (!is_array($FilesToScan)) $FilesToScan = array($FilesToScan);
   list ($LogsExist, $UserClamLogFile, $UserScanCoreLogFile) = verifyUserVirusLogs($type);
@@ -2024,7 +2057,7 @@ function userVirusScan($FilesToScan, $type) {
   // / Check the results of the virus scan for failures or errors.
   list ($ScanComplete, $ScanErrors) = checkUserVirusScanResults($type, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors);
   // / Consolidate the log files created during the scan into the $ConvertTempDir so the user can access them.
-  list ($ConsolidatedLogsExist, $ConsolidatedLogErrors) = consolidateLogs($type, $UserClamVirusLog, $UserScanCoreLogFile);
+  list ($ConsolidatedLogsExist, $ConsolidatedLogErrors) = consolidateLogs($type, $UserClamLogFile, $UserScanCoreLogFile);
   // / Verify that all operations are complete.
   if ($ScanErrors or $ConsolidatedLogErrors) $ScanErrors = TRUE;
   if (!$ConsolidatedLogsExist) $ScanComplete = FALSE;

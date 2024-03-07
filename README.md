@@ -191,3 +191,7 @@ Developers can craft links or redirects to load the correct language for each us
 ![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/HRConvert2-16.png)
 
 ![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/HRConvert2-17.png)
+
+---
+# License
+This project is licensed under the [GNU General Public License v3.0 License](https://github.com/zelon88/HRConvert2/blob/master/Documentation/LICENSE). See the [Official Documentation](https://github.com/zelon88/HRConvert2/tree/master/Documentation) for more information.

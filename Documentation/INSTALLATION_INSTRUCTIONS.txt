@@ -109,7 +109,7 @@ In this step we will install dependencies to enable file conversions.
 5. Run  'sudo apt-get install imagemagick && sudo apt-get install ffmpeg && sudo apt-get install tesseract-ocr'
 6. Run  'sudo apt-get install meshlab && sudo apt-get install dia && sudo apt-get install pandoc'
 7. Run  'sudo apt-get install poppler-utils && sudo apt-get install nodejs && sudo apt-get install gnuplot'
-8. Run  'sudo apt install libnode-dev && sudo apt install node-gyp && sudo apt install npm'
+8. Run  'sudo apt-get install libnode-dev && sudo apt-get install node-gyp && sudo apt-get install npm'
 9. Run  'sudo chown -R www-data:www-data /var/www'
 10. Open a file explorer and navigate to  '/etc/'
 11. If you DO NOT have a file named  'rc.local'  located in the  '/etc/'  directory, or the  'rc.local'  file is blank:
@@ -136,13 +136,11 @@ In this step we will install the HRConvert2 files configured earlier.
 2. Run  'sudo mkdir /var/www/html/HRProprietary/HRConvert2'
 3. Adjust the username in the following command to reflect your username, then run  'sudo cp -a /home/USERNAME/Desktop/Temp/. /var/www/html/HRProprietary/HRConvert2/'
 4. Run  'sudo chmod -R 0755 /var/www/html'
-5. Run  'sudo chown -R www-data /var/www/html'
-6. Run  'sudo chgrp -R www-data /var/www/html'
+5. Run  'sudo chown -R www-data:www-data /var/www/html'
 7. (Optional) Adjust the username in the following command to reflect your username, then run  'sudo useradd -g www-data USERNAME'
 8. To correct permissions later (after manual file or permission modifications):
   8a. Run  'sudo chmod -R 0755 /var/www/html'
-  8b. Run  'sudo chown -R www-data /var/www/html'
-  8c. Run  'sudo chgrp -R www-data /var/www/html'
+  8b. Run  'sudo chown -R www-data:www-data /var/www/html'
 -----------------------------------------------------------------------------------
 
 

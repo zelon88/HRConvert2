@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.3.
+v3.3.1
 This plain text file contains descriptions of all the native error messages contained in or produced by the HRConvert2 Diablo engine. 
 These descriptions should give administrators a starting point for debugging problems with HRConvert2 installations. 
 Each section in this file contains information about a different error message. The first one is an example to demonstrate the structure of this file.
@@ -100,31 +100,6 @@ ERROR DESCRIPTION
   The www-data:www-data user:group needs to have read access to the config.php file.
   This may be the result of incorrect user or group associations for the www-data user or group.
   This could be because HRConvert2 is running on an unsupported operating system or PHP version.
-  Because this error takes place before the logging environment is initialized; this error will not be logged.
-  Because this error takes place before the time environment is initialized; this error will not contain a timestamp.
-  Because this error takes place before the configuration file has been initialized; the Application Name configuration entry will not be used.
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-ERROR MESSAGE
-  ERROR!!! HRConvert2-1: Could not process the HRConvert2 Style Core file (Resources/styleCore.php)!
-
-FILE
-  /convertCore.php
-
-FATAL
-  YES
-
-LOGGED
-  NO
-
-ERROR DESCRIPTION
-  The styleCore.php file located in the Resources subdirectory of the installation directory which is required for the application to run is missing or unreachable.
-  This may be the result of incorrect file permission levels on the installation directory or the Resources/styleCore.php file.
-  The www-data:www-data user:group needs to have read access to the Resources/styleCore.php file.
-  This may be the result of incorrect user or group associations for the www-data user or group.
-  This could be because the application is running on an unsupported operating system or PHP version.
   Because this error takes place before the logging environment is initialized; this error will not be logged.
   Because this error takes place before the time environment is initialized; this error will not contain a timestamp.
   Because this error takes place before the configuration file has been initialized; the Application Name configuration entry will not be used.
@@ -428,7 +403,7 @@ LOGGED
 ERROR DESCRIPTION
   The --Button Colors-- section of the config.php file contains a value that is not valid.
   The --Button Colors-- section of the config.php file contains a color that is not supported.
-  The Resources/styleCore.php file has become corrupt.
+  The styleCore.php file has become corrupt.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 

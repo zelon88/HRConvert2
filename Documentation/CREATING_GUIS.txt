@@ -195,7 +195,7 @@ This GUI only has access to certain variables. Variables that are available to t
 
 The GUI gets color specific styles from the $ButtonCode variable.
 The $ButtonCode variable contains the color specific CSS for the GUI.
-The $ButtonCode variable is set by Resources/styleCore.php.
+The $ButtonCode variable is set by the UI/<SELECTED_GUI>/styleCore.php file.
 There are 4 supported colors, and the code for each color is contained in styleCore.php.
 The loading spinner will change color as well. There is one spinner .gif file for each style & supported color.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

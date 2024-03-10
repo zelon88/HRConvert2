@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 3/5/2024 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 3/7/2024 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.3.1.
+// / v3.3.2.
 // / This file contains language specific GUI elements for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -87,10 +87,14 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                       download:'<?php echo $ConsolidatedLogFileName; ?>' },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('victoryCommandDiv');
+                      setTimeout(function() {
+                        toggle_visibility('victoryCommandDiv'); }, 5000);
                       document.getElementById('downloadTarget').href = '<?php echo 'DATA/'.$SesHash3.'/'.$ConsolidatedLogFileName; ?>';
                       document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                      toggle_visibility('loadingCommandDiv');
+
                       alert('<?php echo $Gui2Text72; ?>'); } }); }); });
         </script>
       <?php } ?>
@@ -130,17 +134,29 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                       download:document.getElementById('userarchallfilename').value+'.'+extension },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('victoryCommandDiv');
+                      setTimeout(function() {
+                        toggle_visibility('victoryCommandDiv'); }, 5000);
                       document.getElementById('downloadTarget').href = '<?php echo 'DATA/'.$SesHash3.'/'; ?>'+document.getElementById('userarchallfilename').value+'.'+extension;
                       document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('failureCommandDiv');
+                      setTimeout(function() {
+                        toggle_visibility('failureCommandDiv'); }, 5000);
                       alert('<?php echo $Gui2Text71; ?>'); } }); }); });
         </script>
         <hr style='width: 50%;'/>
       </div>
     </div>
     <div id='utilityupper' align='center'>
-      <p><img id='loadingCommandDiv' name='loadingCommandDiv' src='<?php echo $PacmanLoc; ?>' style='max-width:64px; max-height:64px; display:none;'/></p>
+
+      <p><img id='loadingCommandDiv' name='loadingCommandDiv' src='<?php echo $PacmanLoc; ?>' style='max-width:24px; max-height:24px; display:none;'/>
+      
+      <img id='victoryCommandDiv' name='victoryCommandDiv' src='<?php echo $GuiImageDir; ?>checkmark.png' style='max-width:24px; max-height:24px; display:none;'/>
+
+      <img id='failureCommandDiv' name='failureCommandDiv' src='<?php echo $GuiImageDir; ?>xcircle.png' style='max-width:24px; max-height:24px; display:none;'/></p>
+
       <a id='downloadTarget' href='about:blank' style='display: none;' download></a>
     </div>
     <br />
@@ -158,7 +174,13 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
       <div id='file<?php echo $ConvertGuiCounter1; ?>' name='<?php echo $ConvertGuiCounter1; ?>'>
 
         <a style='float:<?php echo $GUIAlignment; ?>;'><strong><?php echo $ConvertGuiCounter1; ?>.</strong> <u><?php echo $File; ?></u>&nbsp;&nbsp;</a>
+
           <img id='loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>' name='loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $PacmanLoc; ?>' style='float:<?php echo $GUIAlignment; ?>; max-width:24px; max-height:24px; display:none;'/>
+
+          <img id='victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>' name='victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>checkmark.png' style='float:<?php echo $GUIAlignment; ?>; max-width:24px; max-height:24px; display:none;'/>
+
+          <img id='failureCommandDiv<?php echo $ConvertGuiCounter1; ?>' name='failureCommandDiv<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>xcircle.png' style='float:<?php echo $GUIAlignment; ?>; max-width:24px; max-height:24px; display:none;'/>
+
         <br><br>
 
         <div id='buttonDiv<?php echo $ConvertGuiCounter1; ?>' name='buttonDiv<?php echo $ConvertGuiCounter1; ?>' style='height:25px;'>
@@ -178,10 +200,16 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                   download:'<?php echo $File; ?>' },
                 success: function(returnFile) {
                   toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                  setTimeout(function() {
+                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                   document.getElementById('downloadTarget').href = '<?php echo 'DATA/'.$SesHash3.'/'.$File; ?>';
                   document.getElementById('downloadTarget').click(); },
                 error: function(ReturnData) {
                   toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                  setTimeout(function() {
+                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                   alert("<?php echo $Gui2Text71; ?>"); } }); }); });
           </script>
 
@@ -200,7 +228,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
 
           <?php } if ($AllowUserVirusScan) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
-          <img id='scanfilebutton<?php echo $ConvertGuiCounter1; ?>' name='scanfilebutton<?php echo $ConvertGuiCounter1; ?>'src='<?php echo $GuiImageDir; ?>scan.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
+          <img id='scanfilebutton<?php echo $ConvertGuiCounter1; ?>' name='scanfilebutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>scan.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
            onclick='toggle_visibility("scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scanfilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scanfileXbutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text8.' '.$File; ?>' alt='<?php echo $Gui2Text8.' '.$File; ?>'/>
           <img id='scanfileXbutton<?php echo $ConvertGuiCounter1; ?>' name='scanfileXbutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
            onclick='toggle_visibility("scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scanfilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scanfileXbutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text9; ?>' alt='<?php echo $Gui2Text9; ?>'/>
@@ -333,7 +361,9 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
             <option value='<?php echo $gui2ArchArr; ?>'><?php echo $gui2ArchArr; ?></option>
             <?php } ?>
           </select></p>
-          <input type='submit' id='archfileSubmit<?php echo $ConvertGuiCounter1; ?>' name='archfileSubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo $Gui2Text51; ?>' onclick='toggle_visibility(loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>);'>
+          
+          <input type='submit' id='archfileSubmit<?php echo $ConvertGuiCounter1; ?>' name='archfileSubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo $Gui2Text51; ?>' onclick='toggle_visibility("loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>");'>
+          
           <script type='text/javascript'>
             $(document).ready(function () {
               $('#archfileSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -358,9 +388,15 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                       success: function(returnFile) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userarchfilefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archfileextension<?php echo $ConvertGuiCounter1; ?>').value; 
+                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         document.getElementById('downloadTarget').click(); } }); },
                       error: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         alert("<?php echo $Gui2Text71; ?>"); } }); }); });
           </script>
         </div>
@@ -372,10 +408,8 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
           <p id='sharelinkStatus<?php echo $ConvertGuiCounter1; ?>' name='sharelinkStatus<?php echo $ConvertGuiCounter1; ?>'><?php echo $Gui2Text24; ?><i><?php echo $Gui2Text25; ?></i></p>
           <p id='shareclipStatus<?php echo $ConvertGuiCounter1; ?>' name='shareclipStatus<?php echo $ConvertGuiCounter1; ?>'>Clipboard Status: <i>Not Copied</i></p>
           <p id='sharelinkURL<?php echo $ConvertGuiCounter1; ?>' name='sharelinkURL<?php echo $ConvertGuiCounter1; ?>'>File Link: <i>Not Generated</i></p>
-
           <input type="submit" id="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" name="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text32; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <input type="submit" id="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" name="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text33; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-
           <script type="text/javascript">
             $(document).ready(function () {
               $('#sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -392,9 +426,15 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                   document.getElementById('shareclipStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text27; ?><i><?php echo $Gui2Text28; ?></i>';
                   document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text29; ?><i><?php echo $FullURL.'/DATA/'.$SesHash3.'/'.$File; ?></i>';
                   copy_share_link("<?php echo $FullURL.'/DATA/'.$SesHash3.'/'.$File; ?>");
-                  alert("<?php echo $Gui2Text73; ?>"); },
+                  alert("<?php echo $Gui2Text73; ?>");
+                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                  setTimeout(function() {
+                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); },
                 error: function(ReturnData) {
                   toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                  setTimeout(function() {
+                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); 
                   alert("<?php echo $Gui2Text74; ?>"); } }); });
               $('#sharecopybutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
                 $.ajax({
@@ -406,11 +446,17 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                   download:'<?php echo $File; ?>' },
                 success: function(returnFile) {
                   toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                  setTimeout(function() {
+                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); 
                   document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text24; ?><i><?php echo $Gui2Text26; ?></i>';
                   document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text29; ?><i><?php echo $FullURL.'/DATA/'.$SesHash3.'/'.$File; ?></i>'; },
                 error: function(ReturnData) {
                   toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  alert("<?php echo $Gui2Text74; ?>"); } }); }); });
+                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                  setTimeout(function() {
+                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); 
+                  alert("<?php echo $Gui2Text74; ?>");} }); }); });
           </script>
         </div>
         <?php } ?>
@@ -418,9 +464,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
         <div id='deletefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='deletefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong><?php echo $Gui2Text69; ?></strong></p>
-
           <input type='submit' id='confirmdeletefilebutton<?php echo $ConvertGuiCounter1; ?>' name='confirmdeletefilebutton<?php echo $ConvertGuiCounter1; ?>' value='<?php echo $Gui2Text70; ?>' onclick='toggle_visibility("loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>");'>
-
           <script type="text/javascript">
             $(document).ready(function () {
               $('#confirmdeletefilebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -468,10 +512,16 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                         download:'<?php echo $ConsolidatedLogFileName; ?>' },
                       success: function(returnFile) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'.$ConsolidatedLogFileName; ?>"; 
                         document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
                       toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                      toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                      setTimeout(function() {
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                       alert("<?php echo $Gui2Text72; ?>"); } }); });
               $('#clamscanbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
                 $.ajax({
@@ -492,10 +542,16 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                         download:'<?php echo $ConsolidatedLogFileName; ?>' },
                       success: function(returnFile) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'.$ConsolidatedLogFileName; ?>"; 
                         document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
                       toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                      toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                      setTimeout(function() {
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                       alert("<?php echo $Gui2Text72; ?>"); } }); });
               $('#scanallbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
                 $.ajax({
@@ -516,10 +572,16 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                         download:'<?php echo $ConsolidatedLogFileName; ?>' },
                       success: function(returnFile) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'.$ConsolidatedLogFileName; ?>"; 
                         document.getElementById('downloadTarget').click(); } }); },
                     error: function(ReturnData) {
                       toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                      toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                      setTimeout(function() {
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                       alert("<?php echo $Gui2Text72; ?>"); } }); }); });
           </script>
         </div>
@@ -566,10 +628,16 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                         download:document.getElementById('userpdffilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('pdfextension<?php echo $ConvertGuiCounter1; ?>').value },
                       success: function(returnFile) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userpdffilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('pdfextension<?php echo $ConvertGuiCounter1; ?>').value; 
                         document.getElementById('downloadTarget').click(); } }); },
                       error: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         alert("<?php echo $Gui2Text71; ?>"); } }); }); });
           </script>
         </div>
@@ -610,10 +678,16 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                         download:document.getElementById('userarchivefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archiveextension<?php echo $ConvertGuiCounter1; ?>').value },
                       success: function(returnFile) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userarchivefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archiveextension<?php echo $ConvertGuiCounter1; ?>').value; 
                         document.getElementById('downloadTarget').click(); } }); },
                       error: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         alert("<?php echo $Gui2Text71; ?>"); } }); }); });
           </script>
         </div>
@@ -654,10 +728,16 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                         download:document.getElementById('userdocfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('docextension<?php echo $ConvertGuiCounter1; ?>').value },
                       success: function(returnFile) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userdocfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('docextension<?php echo $ConvertGuiCounter1; ?>').value; 
                         document.getElementById('downloadTarget').click(); } }); },
                       error: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         alert("<?php echo $Gui2Text71; ?>"); } }); }); });
           </script>
         </div>
@@ -698,10 +778,16 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                         download:document.getElementById('userspreadfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('spreadextension<?php echo $ConvertGuiCounter1; ?>').value },
                       success: function(returnFile) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userspreadfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('spreadextension<?php echo $ConvertGuiCounter1; ?>').value; 
                         document.getElementById('downloadTarget').click(); } }); },
                       error: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         alert("<?php echo $Gui2Text71; ?>"); } }); }); });
           </script>
         </div>
@@ -742,10 +828,16 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                         download:document.getElementById('userpresentationfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('presentationextension<?php echo $ConvertGuiCounter1; ?>').value },
                       success: function(returnFile) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userspreadfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('presentationextension<?php echo $ConvertGuiCounter1; ?>').value; 
                         document.getElementById('downloadTarget').click(); } }); },
                       error: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         alert("<?php echo $Gui2Text71; ?>"); } }); }); });
           </script>
         </div>
@@ -788,10 +880,16 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                         download:document.getElementById('useraudiofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('audioextension<?php echo $ConvertGuiCounter1; ?>').value },
                       success: function(returnFile) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('useraudiofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('audioextension<?php echo $ConvertGuiCounter1; ?>').value; 
                         document.getElementById('downloadTarget').click(); } }); },
                       error: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         alert("<?php echo $Gui2Text71; ?>"); } }); }); });
           </script>
         </div>
@@ -832,10 +930,16 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                         download:document.getElementById('uservideofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('videoextension<?php echo $ConvertGuiCounter1; ?>').value },
                       success: function(returnFile) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('uservideofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('videoextension<?php echo $ConvertGuiCounter1; ?>').value; 
                         document.getElementById('downloadTarget').click(); } }); },
                       error: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         alert("<?php echo $Gui2Text71; ?>"); } }); }); });
           </script>
         </div>
@@ -876,10 +980,16 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                         download:document.getElementById('userstreamfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('streamextension<?php echo $ConvertGuiCounter1; ?>').value },
                       success: function(returnFile) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userstreamfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('streamextension<?php echo $ConvertGuiCounter1; ?>').value; 
                         document.getElementById('downloadTarget').click(); } }); },
                       error: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         alert("<?php echo $Gui2Text71; ?>"); } }); }); });
           </script>
         </div>
@@ -920,11 +1030,18 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                         download:document.getElementById('usermodelfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('modelextension<?php echo $ConvertGuiCounter1; ?>').value },
                       success: function(returnFile) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('usermodelfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('modelextension<?php echo $ConvertGuiCounter1; ?>').value; 
                         document.getElementById('downloadTarget').click(); } }); },
                       error: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         alert("<?php echo $Gui2Text71; ?>"); } }); }); });
+
           </script>
         </div>
         <?php } 
@@ -964,10 +1081,16 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                         download:document.getElementById('usersubtitlefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('subtitleextension<?php echo $ConvertGuiCounter1; ?>').value },
                       success: function(returnFile) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('usersubtitlefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('subtitleextension<?php echo $ConvertGuiCounter1; ?>').value; 
                         document.getElementById('downloadTarget').click(); } }); },
                       error: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         alert("<?php echo $Gui2Text71; ?>"); } }); }); });
           </script>
         </div>
@@ -1008,10 +1131,16 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                         download:document.getElementById('userdrawingfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('drawingextension<?php echo $ConvertGuiCounter1; ?>').value },
                       success: function(returnFile) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userdrawingfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('drawingextension<?php echo $ConvertGuiCounter1; ?>').value; 
                         document.getElementById('downloadTarget').click(); } }); },
                       error: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         alert("<?php echo $Gui2Text71; ?>"); } }); }); });
           </script>
         </div>
@@ -1058,10 +1187,16 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                         download:document.getElementById('userphotofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('photoextension<?php echo $ConvertGuiCounter1; ?>').value },
                       success: function(returnFile) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userphotofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('photoextension<?php echo $ConvertGuiCounter1; ?>').value; 
                         document.getElementById('downloadTarget').click(); } }); },
                       error: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                         alert("<?php echo $Gui2Text71; ?>"); } }); }); });
           </script>
         <?php } ?>

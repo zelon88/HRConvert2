@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 5/3/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 3/7/2024 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.2.8.
+// / v3.3.2.
 // / This file contains language specific GUI elements for accepting file uploads.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -184,7 +184,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
       </div>
       <div align='center'>
         <div id='continue' style='max-width:1000px; text-align:center;'>
-          <form action='convertCore.php?showFiles=1<?php if (isset($_GET['noGui'])) echo '&noGui=TRUE'; if (isset($_GET['language'])) echo '&gui='.$_GET['gui']; if (isset($_GET['language'])) echo '&language='.$_GET['language']; ?>' method='post'>
+          <form action='convertCore.php?showFiles=1<?php if (isset($_GET['noGui'])) echo '&noGui=TRUE'; if (isset($_GET['language'])) echo '&gui='.$_GET['gui']; if (isset($_GET['language'])) echo '&language='.$_GET['language']; if (isset($_GET['color'])) echo '&color='.$_GET['color']; ?>' method='post'>
             <input type='hidden' id='token1' name='Token1' value='<?php echo $Token1; ?>'>
             <input type='hidden' id='token2' name='Token2' value='<?php echo $Token2; ?>'>
             <input type='submit' id='continue-button' class='info-button' value='<?php echo $Gui1Text29; ?>'>

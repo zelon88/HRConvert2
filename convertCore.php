@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 3/5/2024 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 3/7/2024 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.3.1.
+// / v3.3.2.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -104,7 +104,7 @@ function sanitize($Variable, $strict) {
 // / A function to load required HRConvert2 files.
 function verifyInstallation() {
   // / Set variables.
-  global $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6, $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $URL, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationArray, $UserImageArray, $UserMediaArray, $UserVideoArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleArray, $UserPDFWorkArr;
+  global $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6, $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $DefaultColor, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $URL, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationArray, $UserImageArray, $UserMediaArray, $UserVideoArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleArray, $UserPDFWorkArr;
   // / Define absolute paths for files that we only have relative paths for.
   $InstallationIsVerified = $buildDirDeleted = $dockerFileDeleted = $readmeDeleted = $changelogFileDeleted = $buildEnvDeleted = $devDocsDeleted = $checkOne = $checkTwo = FALSE;
   $ConfigFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'config.php');
@@ -263,7 +263,7 @@ function verifyInputs() {
   // / Set variables.
   $var = FALSE;
   $InputsAreVerified = TRUE;
-  $Language = $Token1 = $Token2 = $Height = $Width = $Rotate = $Bitrate = $Method = $Download = $UserFilename = $UserExtension = $Archive = $UserScanType = $ScanAll = $UserClamScan = $UserScanCoreScan = $var = '';
+  $GUI = $Color = $Language = $Token1 = $Token2 = $Height = $Width = $Rotate = $Bitrate = $Method = $Download = $UserFilename = $UserExtension = $Archive = $UserScanType = $ScanAll = $UserClamScan = $UserScanCoreScan = $var = '';
   $variableIsSanitized = $ConvertSelected = $PDFWorkSelected = $FilesToArchive = $FilesToScan = $FilesToDelete = array();
   $key = 0;
   $ScanType = 'all';
@@ -271,6 +271,11 @@ function verifyInputs() {
   if (isset($_POST['noGui'])) $_GET['noGui'] = TRUE;
   if (isset($_POST['filesToDelete'])) list ($FilesToDelete, $variableIsSanitized[$key++]) = sanitize($_POST['filesToDelete'], TRUE);
   if (isset($_POST['language'])) list ($Language, $variableIsSanitized[$key++]) = sanitize($_POST['language'], TRUE);
+  if (isset($_GET['language'])) list ($Language, $variableIsSanitized[$key++]) = sanitize($_GET['language'], TRUE);
+  if (isset($_POST['color'])) list ($Color, $variableIsSanitized[$key++]) = sanitize($_POST['color'], TRUE);
+  if (isset($_GET['color'])) list ($Color, $variableIsSanitized[$key++]) = sanitize($_GET['color'], TRUE);
+  if (isset($_POST['gui'])) list ($GUI, $variableIsSanitized[$key++]) = sanitize($_POST['gui'], TRUE);
+  if (isset($_GET['gui'])) list ($GUI, $variableIsSanitized[$key++]) = sanitize($_GET['gui'], TRUE);
   if (isset($_POST['Token1'])) list ($Token1, $variableIsSanitized[$key++]) = sanitize($_POST['Token1'], TRUE);
   if (isset($_POST['Token2'])) list ($Token2, $variableIsSanitized[$key++]) = sanitize($_POST['Token2'], TRUE);
   if (isset($_POST['height'])) list ($Height, $variableIsSanitized[$key++]) = sanitize($_POST['height'], TRUE);
@@ -303,25 +308,37 @@ function verifyInputs() {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $variableIsSanitized = $key = $var = NULL;
   unset($variableIsSanitized, $key, $var);
-  return array($InputsAreVerified, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType); }
+  return array($InputsAreVerified, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to set the styles to use for the session.
 function verifyColors($ButtonStyle) {
   // / Set variables.
-  global $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode;
+  global $ButtonStyle, $Color, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode;
   $ColorsAreSet = FALSE;
+  $ColorToUse = 'blue';
   $ButtonStyle = strtolower($ButtonStyle);
   $ButtonCode = $DefaultButtonCode;
   $validColors = array('green', 'blue', 'red', 'grey');
+  // / Make sure $SupportedColors is valid.
+  if (!isset($SupportedColors) or !is_array($SupportedColors)) $SupportedColors = $validColors;
+  // / Make sure the Default Color is valid.
+  if (isset($ButtonStyle)) if (in_array($ButtonStyle, $SupportedColors)) $ColorToUse = $ButtonStyle;
+  // / If allowed and if specified, detect the users specified color and set that as the color to use.
+  if (isset($AllowUserSelectableColor)) {
+    if ($AllowUserSelectableColor) if (isset($Color)) if (in_array($Color, $SupportedColors)) {
+      $ColorToUse = $Color; }
+    if (!$AllowUserSelectableColor) $ButtonStyle = $DefaultColor; }
+  // / Set the $Color variable to whatever the current color is so the next page will use the same one.
+  $_GET['color'] = $ColorToUse;
   // / Validate the desired color and set it as the color to use if possible.
-  if (in_array($ButtonStyle, $validColors)) {
+  if (in_array($ColorToUse, $validColors)) {
     $ColorsAreSet = TRUE;
-    if ($ButtonStyle === 'green') $ButtonCode = $GreenButtonCode;
-    if ($ButtonStyle === 'blue') $ButtonCode = $BlueButtonCode;
-    if ($ButtonStyle === 'red') $ButtonCode = $RedButtonCode;
-    if ($ButtonStyle === 'grey') $ButtonCode = $DefaultButtonCode; }
+    if ($ColorToUse === 'green') $ButtonCode = $GreenButtonCode;
+    if ($ColorToUse === 'blue') $ButtonCode = $BlueButtonCode;
+    if ($ColorToUse === 'red') $ButtonCode = $RedButtonCode;
+    if ($ColorToUse === 'grey') $ButtonCode = $DefaultButtonCode; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $validColors = NULL;
   unset($validColors);
@@ -332,7 +349,7 @@ function verifyColors($ButtonStyle) {
 // / A function to set the GUI to use for the session.
 function verifyGui() {
   // / Set variables.
-  global $DefaultGui, $SupportedGuis, $AllowUserSelectableGui, $GuiFiles, $GuiDir, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $Font;
+  global $GUI, $DefaultGui, $SupportedGuis, $AllowUserSelectableGui, $GuiFiles, $GuiDir, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $Font;
   $defaultGui = $reqFile =  $variableIsSanitized = FALSE;
   $GuiIsSet = TRUE;
   $GuiToUse = 'Default';
@@ -340,16 +357,14 @@ function verifyGui() {
   $defaultGuis = array('Default');
   // / Make sure $SupportedGuis is valid.
   if (!isset($SupportedGuis) or !is_array($SupportedGuis)) $SupportedGuis = $defaultGuis;
-  // / Make sure $_GET['gui'] is properly sanitized.
-  if (isset($_GET['gui'])) list ($_GET['gui'], $variableIsSanitized) = sanitize(strtolower($_GET['gui']), TRUE);
   // / Make sure the Default GUI is valid.
   if (isset($DefaultGui)) if (in_array($DefaultGui, $SupportedGuis)) $GuiToUse = $DefaultGui;
   // / If allowed and if specified, detect the users specified GUI and set that as the GUI to use.
   if (isset($AllowUserSelectableGui)) {
-    if ($AllowUserSelectableGui) if (isset($_GET['gui'])) if (in_array($_GET['gui'], $SupportedGuis)) {
-      $GuiToUse = $_GET['gui']; }
+    if ($AllowUserSelectableGui) if (isset($GUI)) if (in_array($GUI, $SupportedGuis)) {
+      $GuiToUse = $GUI; }
     if (!$AllowUserSelectableGui) $GuiToUse = $DefaultGui; }
-  // / Set the $_GET['gui'] variable to whatever the current GUI is so the next page will use the same one.
+  // / Set the $GUI variable to whatever the current GUI is so the next page will use the same one.
   $_GET['gui'] = $GuiToUse;
   // / Set the variables to a URL safe relative path to required UI files.
   $GuiDir = 'UI/'.$GuiToUse.'/';
@@ -386,7 +401,7 @@ function verifyGui() {
 // / A function to set the language to use for the session.
 function verifyLanguage() {
   // / Set variables.
-  global $DefaultLanguage, $SupportedLanguages, $AllowUserSelectableLanguage, $LanguageFiles, $GuiDir, $LanguageDir, $LanguageStringsFile;
+  global $Language, $DefaultLanguage, $SupportedLanguages, $AllowUserSelectableLanguage, $LanguageFiles, $GuiDir, $LanguageDir, $LanguageStringsFile, $Language;
   $defaultLanguages = $reqFile = $variableIsSanitized = FALSE;
   $LanguageIsSet = TRUE;
   $LanguageToUse = 'en';
@@ -394,16 +409,14 @@ function verifyLanguage() {
   $defaultLanguages = array('en', 'fr', 'es', 'zh', 'hi', 'ar', 'ru', 'uk', 'bn', 'de', 'ko', 'it', 'pt');
   // / Make sure $SupportedLanguages is valid.
   if (!isset($SupportedLanguages) or !is_array($SupportedLanguages)) $SupportedLanguages = $defaultLanguages;
-  // / Make sure $_GET['language'] is properly sanitized.
-  if (isset($_GET['language'])) list ($_GET['language'], $variableIsSanitized) = sanitize(strtolower($_GET['language']), TRUE);
   // / Make sure the Default Language is valid.
   if (isset($DefaultLanguage)) if (in_array($DefaultLanguage, $SupportedLanguages)) $LanguageToUse = $DefaultLanguage;
   // / If allowed and if specified, detect the users specified language and set that as the language to use.
   if (isset($AllowUserSelectableLanguage)) {
-    if ($AllowUserSelectableLanguage) if (isset($_GET['language'])) if (in_array($_GET['language'], $SupportedLanguages)) {
-      $LanguageToUse = $_GET['language']; }
+    if ($AllowUserSelectableLanguage) if (isset($Language)) if (in_array($Language, $SupportedLanguages)) {
+      $LanguageToUse = $Language; }
     if (!$AllowUserSelectableLanguage) $LanguageToUse = $DefaultLanguage; }
-  // / Set the $_GET['language'] variable to whatever the current language is so the next page will use the same one.
+  // / Set the $Language variable to whatever the current language is so the next page will use the same one.
   $_GET['language'] = $LanguageToUse;
   // / Set the variables to required UI files.
   $LanguageDir = $GuiDir.'Languages/'.$LanguageToUse.'/';
@@ -445,7 +458,7 @@ function verifyGlobals() {
   // / Set global variables to be used through the entire application.
   global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationArray, $UserImageArray, $UserMediaArray, $UserVideoArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleArray, $UserPDFWorkArr;
   // / Application related variables.
-  $HRConvertVersion = 'v3.3';
+  $HRConvertVersion = 'v3.3.2';
   $GlobalsAreVerified = FALSE;
   $CoreLoaded = TRUE;
   $StopCounter = $SleepTimer = 0;
@@ -2083,7 +2096,7 @@ list ($InstallationIsVerified, $ConfigFile, $Version) = verifyInstallation();
 if (!$InstallationIsVerified) die('ERROR!!! '.$Time.', HRConvert2-5: Could not verify installation!');
 
 // / The following code verifies that string inputs to the core are properly sanitized.
-list ($InputsAreVerified, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType) = verifyInputs();
+list ($InputsAreVerified, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType) = verifyInputs();
 if (!$InputsAreVerified) die('ERROR!!! '.$Time.', '.$ApplicationName.'-6: Could not verify inputs!');
 
 // / The following code verifies enough user information to generate a unique session identifier.

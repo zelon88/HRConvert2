@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 3/5/2024 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 3/7/2024 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.3.
+// / v3.3.2.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -182,7 +182,7 @@ $ApplicationTitle = 'Convert Anything!';
 // /   Before adding a supported GUI be sure to add the matching folder full of GUI files to /UI.
 // /   Errors will occur if you add an element to this array without also adding a matching GUI folder.
 // /   Default is 'Default'.
-$SupportedGuis = array('Default');
+$SupportedGuis = array('Default', 'Wide');
 // /  --Default GUI--
 // /   The default GUI to use.
 // /   See README.md for the latest GUI support information.
@@ -194,7 +194,7 @@ $DefaultGui = 'Default';
 // /  --Allow User Selectable GUI--
 // /   Provide users with the option to adjust which GUI is displayed via appending a parameter to the URL.
 // /   Enable or disable dynamic GUI selection via the $_GET['gui'] variable.
-// /   If set to TRUE a user will be able to select different languages via $_GET['gui'].
+// /   If set to TRUE a user will be able to select different GUIs via $_GET['gui'].
 // /   If set to FALSE the $DefaultGui will always be used.
 // /   To submit a $_GET request append ?gui=<CODE> to the URL & repalce <CODE> with name of the desired GUI.
 // /   If a user attempts a GUI that is not available --Default GUI-- will be used instead.
@@ -262,6 +262,22 @@ $MaxLogSize = 1048576;
 // /   If the font is not available the client default will be used.
 // /   Default is Arial.
 $Font = 'Arial';
+// /  --Allow User Selectable Colors--
+// /   Provide users with the option to adjust which colors are displayed via appending a parameter to the URL.
+// /   Enable or disable dynamic GUI selection via the $_GET['color'] variable.
+// /   If set to TRUE a user will be able to select different colors via $_GET['gui'].
+// /   If set to FALSE the $DefaultGui will always be used.
+// /   To submit a $_GET request append ?color=<CODE> to the URL & repalce <CODE> with name of the desired color.
+// /   If a user attempts a color that is not available --Button Color-- will be used instead.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$AllowUserSelectableColor = TRUE;
+// /  --Supported Colors--
+// /   The list of colors that are supported by this application.
+// /   Before adding a supported color be sure to add the matching $ButtonStyle code to styleCore.php for each insalled GUI.
+// /   Errors will occur if you add an element to this array without also adding code to each GUI to support the added color.
+// /   Default is 'red', 'green', 'blue', 'grey'.
+$SupportedColors = array('red', 'green', 'blue', 'grey');
 // /  --Button Color--
 // /   Set the default color scheme to use for buttons.
 // /   Valid options are 'RED', 'GREEN', 'BLUE' or 'GREY'.
@@ -304,7 +320,7 @@ $PPURL = 'https://www.honestrepair.net/index.php/privacy-policy/';
 
 // / ------------------------------
 // / --Supported File Format Information--
-
+// /
 // /  --Supported Archive Formats--
 $UserArchiveArray = array('zip', 'rar', 'tar', '7z', 'iso');
 // /  --Supported Dearchive Formats--

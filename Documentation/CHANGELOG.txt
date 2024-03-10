@@ -27,7 +27,25 @@ Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 -----------------------------------------------------------------------------------
 
 --------------------
-COMMIT 10/30/2023
+COMMIT 3/8/2024
+v3.3.2 - Add green check, red X where loading spinner goes after a file operation is complete.
+
+-v3.3.2.
+-Fix bug where the loading spinner would never disappear for archive operations.
+-Update docker URL in installation instructions.
+-Add victory and failure icons where the loading spinner goes for 5 seconds after a file operation.
+-Add Wide GUI.
+-Fix bug with GUI selection where the GET input was case sensitive, but the core was forcing it to be interpreted as lower case.
+-Fix bug with GUI selection variables not being scoped properly.
+-Make colors user selectable.
+-Add missing div tag to convergGui2.html.
+  -I can't find any HTML erros in console anywhere. Yipee!!!
+-Utilize POST and GET for language, GUI, and color inputs.
+  -Utilize the standardized sanitization procedure for these inputs.
+  -It was somewhat ad-hoc before, even though the global sanitized variables were already pre-prepared.
+
+--------------------
+COMMIT 3/7/2024
 v3.3.1 - Reorganize folders, create docker file, consolidate UI.
 
 -v3.3.1.
@@ -60,10 +78,10 @@ v3.3.1 - Reorganize folders, create docker file, consolidate UI.
 -Move default installation location to /DATA/HRConvert2 to make it consistent for Docker implementation.
 -Start working on official Docker version.
 -Minor update to installation instructions, consistency, consolidate steps.
--Added icon files to the Resources directory to be used in a future update. 
+-Added icon files to the Resources directory to be used in a future update.
 
 --------------------
-COMMIT 10/30/2023
+COMMIT 3/5/2024
 v3.3 - Update Readme, fix cleanup bug, flip button CSS.
 
 -v3.3.

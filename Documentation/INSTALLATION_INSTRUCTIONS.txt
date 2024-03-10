@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 APPLICATION INFORMATION ...
-HRConvert2, Copyright on 3/5/2024 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 3/7/2024 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.3.
+v3.3.2.
 This file contains a walkthrough guide for installing HRConvert2.
 
 HARDWARE REQUIREMENTS ... 
@@ -41,7 +41,7 @@ In this step we will obtain a copy of HRConvert2. There are several options avai
 Please take a moment to read through the documentation to familiarize yourself with the application.
 
   Option 1. Download the Docker image.
-    a. For more information visit  'https://github.com/zelon88/HRConvert2-Docker'
+    a. For more information visit  'https://hub.docker.com/r/zelon88/hrconvert2'
     b. The procedure contained in this document DOES NOT apply to this installation option.
 
   Option 2. Download HRConvert2 directly from the official Github repository.
@@ -54,15 +54,14 @@ Please take a moment to read through the documentation to familiarize yourself w
 3. Adjust the directory in the following command to reflect your username, then run  'mkdir /home/USERNAME/Desktop/Temp'
 4. Navigate to your  'Downloads'  directory and locate the HRConvert2 archive.
 5. Adjust the directory in the following path to reflect your username, then extract the HRConvert2 archive to  '/home/USERNAME/Desktop/Temp'
-6. Adjust the directory in the following command to reflect your username, then run  'sudo featherpad /home/USERNAME/Desktop/Temp/config.php'
+6. Adjust the directory in the following command to reflect your username, then run  'sudo featherpad /home/USERNAME/Desktop/Temp/Resources/config.php'
 7. Carefully read and completely fill out the  'config.php'  file, changing the values of each variable to reflect the desired environment.
 8. Select a path to use as the  '$ConvertLoc'  where HRConvert2 can store temporary files during conversions.
   8a. When selecting the  '$ConvertLoc'  choose a directory path that is not hosted with plenty of space. 
   8b. The  '$ConvertLoc'  must be a freshly created directory that has never been used before.
 9. Adjust the directory in the following command to reflect the selected  '$ConvertLoc' then run  'sudo mkdir /Path/To/ConvertLoc'
 10. Adjust the directory in the following command to reflect the selected  '$ConvertLoc' then run  'sudo chmod -R 0755 /Path/To/ConvertLoc'
-11. Adjust the directory in the following command to reflect the selected  '$ConvertLoc' then run  'sudo chown -R www-data /Path/To/ConvertLoc'
-12. Adjust the directory in the following command to reflect the selected  '$ConvertLoc' then run  'sudo chgrp -R www-data /Path/To/ConvertLoc'
+11. Adjust the directory in the following command to reflect the selected  '$ConvertLoc' then run  'sudo chown -R www-data:Www-data /Path/To/ConvertLoc'
 -----------------------------------------------------------------------------------
 
 
@@ -110,22 +109,21 @@ In this step we will install dependencies to enable file conversions.
 6. Run  'sudo apt-get install meshlab && sudo apt-get install dia && sudo apt-get install pandoc'
 7. Run  'sudo apt-get install poppler-utils && sudo apt-get install nodejs && sudo apt-get install gnuplot'
 8. Run  'sudo apt-get install libnode-dev && sudo apt-get install node-gyp && sudo apt-get install npm'
-9. Run  'sudo chown -R www-data:www-data /var/www'
-10. Open a file explorer and navigate to  '/etc/'
-11. If you DO NOT have a file named  'rc.local'  located in the  '/etc/'  directory, or the  'rc.local'  file is blank:
+9. Open a file explorer and navigate to  '/etc/'
+10. If you DO NOT have a file named  'rc.local'  located in the  '/etc/'  directory, or the  'rc.local'  file is blank:
   11a. Extract the  'rc.local'  file contained in the root of the HRConvert2 repository to your Desktop.
   11b. Adjust the directory in the following command to reflect your username, then run  'sudo cp /home/USERNAME/Desktop/rc.local /etc/rc.local'
   11c. Run  'sudo chmod +x /etc/rc.local'
-12. If you DO have a file named  'rc.local'  located in the  '/etc/'  directory and the  'rc.local'  file is NOT blank:
+11. If you DO have a file named  'rc.local'  located in the  '/etc/'  directory and the  'rc.local'  file is NOT blank:
   12a. Run  'sudo featherpad /etc/rc.local'
   12b. Add the following line above the  'exit 0'  line:  '/usr/bin/soffice --headless --accept="socket,host=127.0.0.1,port=$soffice_port;urp;" --nofirststartwizard &'
-13. Run  'sudo systemctl enable rc-local.service'
-14. If you encounter errors while running the previous command:
+12. Run  'sudo systemctl enable rc-local.service'
+13. If you encounter errors while running the previous command:
   14a. Extract the  'rc-local.service'  file contained in the root of the HRConvert2 repository to your Desktop.
   14b. Adjust the directory in the following command to reflect your username, then run  'sudo cp /home/USERNAME/Desktop/rc-local.service /etc/rc.local /etc/systemd/system/rc-local.service'
   14c. Run  'sudo chmod +x /etc/rc.local.service'
   14d. Run  'sudo systemctl enable rc-local.service'
-15. Completely reboot the computer.
+14. Completely reboot the computer.
 -----------------------------------------------------------------------------------
 
 

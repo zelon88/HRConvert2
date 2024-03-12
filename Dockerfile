@@ -1,8 +1,8 @@
 # Build this with...
-#   docker build -t HRConvert2
+#   docker build -t hrconvert2 .
 
 # Run this with...
-#   docker run -d -p 8080:80 -p 8443:443 HRConvert2
+#   docker run -d -p 8080:80 -p 8443:443 hrconvert2
 
 # Use the official PHP parent image.
 FROM php:8.1-apache
@@ -10,37 +10,36 @@ FROM php:8.1-apache
 # Set the working directory in the container.
 WORKDIR /var/www/html/HRProprietary
 
+# Run install commands.
+RUN apt-get update
+#RUN apt-get upgrade
+RUN apt-get install -y zlib1g-dev
+RUN apt-get install -y libpng-dev
+RUN apt-get install -y libzip-dev
+RUN docker-php-ext-install gd zip
+RUN apt-get install -y libreoffice-common default-jre libreoffice-java-common poppler-utils
+RUN apt-get install -y clamav unoconv p7zip-full meshlab dia pandoc
+RUN apt-get install -y git python3 zip unzip
+
 # Download the latest HRConvert2 source code from the official repository.
 RUN git clone https://github.com/zelon88/HRConvert2
 
-# Run install commands.
-RUN apt-get update && docker-php-ext-install gd zip all-dev
-
-  # Install PHP extensions & other dependencies.
-  apt-get install libreoffice-common && sudo apt-get install libreoffice-java-common
-  apt-get install clamav && sudo apt-get install unoconv && sudo apt-get install default-jre
-  apt-get install rar && sudo apt-get install unrar && sudo apt-get install p7zip-full
-  apt-get install meshlab && sudo apt-get install dia && sudo apt-get install pandoc
-  apt-get install poppler-utils && sudo apt-get install nodejs && sudo apt-get install gnuplot
-  apt-get install libnode-dev && sudo apt-get install node-gyp && sudo apt-get install npm
-  
-  # Create required directories.
-  mkdir /DATA
+# Create required directories.
+RUN mkdir /DATA && \
   mkdir /DATA/HRConvert2
 
-  # Set permissions for required directories.
-  chmod -R 0755 /DATA
-  chown -R www-data:www-data /DATA
-  chmod -R 0755 /var/www/html
+# Set permissions for required directories.
+RUN chmod -R 0755 /DATA && \
+  chown -R www-data:www-data /DATA && \
+  chmod -R 0755 /var/www/html && \
   chown -R www-data:www-data /var/www/html
 
-  # Copy required configuration files.
-  cp Documentation/Build/php.ini /etc/php/apache2/8.1/php.ini
+# Copy required configuration files.
+RUN cp HRConvert2/Documentation/Build/php.ini /usr/local/etc/php.ini
 
 # Expose the ports Apache listens on to the host.
 EXPOSE 80
 EXPOSE 443
 
 # Start Apache & Unoconv when the container runs.
-CMD ["apache2-foreground"]
-CMD ["unoconv --listen"]
+CMD ["sh", "-c", "apache2-foreground && python3 /usr/bin/unoconv -l"]

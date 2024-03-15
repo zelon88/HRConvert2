@@ -10,6 +10,8 @@ FROM php:8.1-apache
 # Set the working directory in the container.
 WORKDIR /var/www/html/HRProprietary
 
+COPY Documentation/Build/debian.sources /etc/apt/sources.list.d/
+
 # Run install commands.
 RUN apt-get update
 #RUN apt-get upgrade
@@ -19,7 +21,7 @@ RUN apt-get install -y libzip-dev
 RUN docker-php-ext-install gd zip
 RUN apt-get install -y libreoffice-common default-jre libreoffice-java-common poppler-utils
 RUN apt-get install -y clamav unoconv p7zip-full meshlab dia pandoc
-RUN apt-get install -y git python3 zip unzip
+RUN apt-get install -y git python3 zip unzip rar
 
 # Download the latest HRConvert2 source code from the official repository.
 RUN git clone https://github.com/zelon88/HRConvert2

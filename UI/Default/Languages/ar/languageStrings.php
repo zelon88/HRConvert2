@@ -1,6 +1,6 @@
 <?php
 // / -----------------------------------------------------------------------------------
-// / APPLICATION INFORMATION ...
+// / COPYRIGHT INFORMATION ...
 // / HRConvert2, Copyright on 4/18/2023 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
@@ -102,7 +102,7 @@ $Gui1Text15 = 'تنسيقات جداول البيانات';
 // / 'Presentation Formats'
 $Gui1Text16 = 'تنسيقات العرض';
 // / 'Archive Formats'
-$Gui1Text17 = 'Archive Formats';
+$Gui1Text17 = 'تنسيقات الأرشيف';
 // / 'Can convert between archive formats & disk image formats.'
 $Gui1Text18 = 'يمكن التحويل بين تنسيقات أرشيف مختارة وتنسيقات صور القرص.';
 // / 'Image Formats'

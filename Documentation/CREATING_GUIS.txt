@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-APPLICATION INFORMATION ...
-HRConvert2, Copyright on 5/5/2023 by Justin Grimes, www.github.com/zelon88
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 3/12/2024 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.2.9.
+v3.3.3.
 This plain text file describes the process for creating, formatting, and installing additional GUIs into HRConvert2.
 
 HARDWARE REQUIREMENTS ... 
@@ -172,9 +172,22 @@ This file must be manually copied & pasted into any folders that are manually cr
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About 'Languages' Folder--
 
-This folder must exist in each language pack.
-This folder contains the major language-specific files.
-Each subdirectory of this folder represents a different language pack.
+The 'Languages' folder must exist in each GUI.
+The 'Languages' folder contains the major language-specific files for the GUI.
+Each subdirectory of the 'Languages' folder represents a different language pack.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About 'Resources' Folder--
+
+The 'Resources' folder is optional, but it makes the life of the HRConvert2 developer much easier.
+The 'Resources' folder contains & organizes the scripts, stylesheets, & images required by the GUI.
+The HRConvert2 core will not check for the existence of the 'Resources' folder.
+The HRConvert2 core will define the following variables which map to subdirectories of the 'Resources' folder;
+  $GuiResourcesDir, Maps to 'Resources/' folder.
+  $GuiImageDir, Maps to 'Resources/Images' folder.
+  $GuiCSSDir, Maps to 'Resources/CSS' folder.
+  $GuiJSDir, Maps to 'Resources/JS' folder.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -187,7 +200,7 @@ This GUI only has access to certain variables. Variables that are available to t
   $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, 
   $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, 
   $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, 
-  $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed
+  $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -219,14 +232,19 @@ When redirecting the user to a download you must send them to the proper filenam
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About File Sharing Operations--
+
+File sharing can be implemented entirely client-side by submitting a 'download' POST request which returns a URL that can be copied to the users clipboard.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About The API--
 
 HRConvert2 supports inputs through POST and GET requests.
-All requests should be submitted to convertCore.php.
+All requests should be submitted to convertCore.php & all POST requests must be encoded as "multipart/form-data".
 If Token1 and Token2 are not submitted via POST input, then convertGui1.php will be displayed prompting for file uploads.
 If Token1 and Token2 are both submitted via POST input, then convertGui2.php will be displayed providing conversion options.
 The included GUIs makes extensive use of JQuery + Ajax to submit requests & process responses.
-All API requests should be sent to convertCore.php.
 GUI files cannot handle API requests and will generate an error if they receive API requests.
 All API inputs are sanitized by the core for special characters to prevent malicious or unintentional code injection.
 As a result of sanitization the filename may change after upload.
@@ -234,38 +252,174 @@ As a result of sanitization the filename may change after upload.
 To use HRConvert2 via POST & GET requests only;
   1. Submit a blank GET request to convertCore.php to retrieve the value of Token1 and Token2.
   2. Submit a file upload along with Token1 and Token2 to convertCore.php via POST input.
-  3. Submit an uploaded filename, a new filename, a file extension, Token1, Token2, and a valid set of file conversion options to convertCore.php via POST input.
+  3. Submit an uploaded filename, a new filename, a file extension, Token1, Token2, and a valid set of conversion options to convertCore.php via POST input.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-The following is a list of supported GET inputs & their supported values;
-  noGui - 1
-  gui - String
-  language - String
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About User Supplied GET Requests--
 
-The following is a list of supported POST inputs & their supported values;
-  Token1 - String
-  Token2 - String
-  height - Integer
-  width - Integer
-  rotate - Integer
-  bitrate - Integer
-  method - 0 or 1
-  archive - 1
-  extension - String
-  filesToArchive - String or Array of Strings
-  filesToDelete - String or Array of Strings
-  download - String or Array of Strings
-  archExtension - String
-  userfilename - String
-  userconvertfilename - String
-  pdfworkSelected - String or Array of Strings
-  convertSelected - String or Array of Strings
-  pdfextension - String
-  userpdfconvertfilename - String
-  scantype - String (clamav or scancore or all)
-  filestoscan - String or Array of Strings
-  clamScanButton - 1
-  scancorebutton - 1
-  scanallbutton - 1
+The following is a list of supported GET inputs with description & supported values for each;
+
+  noGui
+      GUI Operation
+      Display the minimal amount of GUI elements to accomplish the mission.
+      Set this input to any value to trigger the UI to display the least amount of elements that is possible.
+      This input can also be specified by POST request, but GET will always take precedence.
+
+  gui
+      GUI Operation
+      Select the GUI to use.
+      Can be enabled/disabled in config.php.
+      Supported GUI's can be added/removed in config.php.
+      Set this input to the name of a UI that is installed to the UI folder & defined in config.php.
+      This input can also be specified by POST request, but GET will always take precedence.
+
+  language
+      GUI Operation
+      Select the language to use.
+      Can be enabled/disabled in config.php to.
+      Supported languages can be added/removed in config.php.
+      Set this input to the nane of an installed ISO 639-1 language defined in config.php.
+      This input can also be specified by POST request, but GET will always take precedence.
+  
+  color
+      GUI Operation
+      Select the color to use.
+      Can be enabled/disabled in config.php to.
+      Supported colors can be added/removed in config.php.
+      Set this input to a supported color scheme defined in config.php.
+      This input can also be specified by POST request, but GET will always take precedence.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About User Supplied POST Requests--
+
+The following is a list of supported POST inputs, organized into sections based on when they are used, with description & supported values for each;
+
+  General Use
+      Token1
+          String.
+          This input is used whenever a user intends to use HRConvert2.
+          This input is provided to the user by HRConvert2 via a hidden form field.
+          This value must be stored & resubmitted with every subsequent request that is part of the same session.
+          Set this input to the value of the hidden form field from convertGui1.php that has an 'id' of 'Token1'.
+      Token2
+          String.
+          This input is used whenever a user intends to use HRConvert2.
+          This input is provided to the user by HRConvert2 via a hidden form field.
+          This value must be stored & resubmitted with every subsequent request that is part of the same session.
+          Set this input to the value of the hidden form field from convertGui1.php that has an 'id' of 'Token2'.
+
+  General File Operations
+      download
+          String or JSON Array.
+          This input is used at any time to download user files.
+          This input is used to generate file URLs for sharing operations.
+          Set this input to a name or list of names to use for input files.
+      filesToDelete
+          String or JSON Array.
+          This input is used at any time to delete user files.
+          Set this input to a name or list of names to use for input files.
+
+  File Conversion Operations
+      convertSelected
+          String or JSON Array.
+          This input is used during File Conversions (excluding OCR & bulk archiving)
+          Set this input to a name or list of names to use for input files.
+      extension
+          String.
+          This input is used during File Conversions (excluding OCR & bulk archiving)
+          Set this input to an extension to use for the output file.
+      userconvertfilename
+          String.
+          This input is used during File Conversions (excluding OCR & bulk archiving)
+          Set this input to a name to use for the output file.
+
+  Image Conversions
+      height
+          Integer.
+          This input is used during Image Conversions.
+          Image height in number of pixels to use for the output file.
+          Set this input to 0 to not resize the original image.
+      width
+          Integer.
+          This input is used during Image Conversions.
+          Image width in number of pixels to use for the output file.
+          Set this input to 0 to not resize the original image.
+      rotate 
+          Integer.
+          This input is used during Image Conversions.
+          Number of degrees to rotate the image clockwise.
+          Set this input to 0 to not rotate the original image.
+
+  Audio Conversions
+      bitrate
+          Integer.
+          This input is used during Audio Conversions.
+          Bitrate to use for the output file.
+          Set this input to 0 to use automatic bitrate detection.
+
+  Archive Operations
+      archive
+          String.
+          This input is used during Archive Operations (excluding conversions).
+          Set this input to any value to trigger archive operations.
+      userfilename
+          String.
+          This input is used during Archive Operations (excluding conversions).
+          Set this input to the name to use for the output file.
+      archExtension
+          String.
+          This input is used during Archive Operations (excluding conversions).
+          Set this input to an extension to use for the output file.
+      filesToArchive
+          String or JSON Array.
+          This input is used during Archive Operations (excluding conversions).
+          Set this input to a name or list of names to use for input files.
+
+  Optical Character Recognition (OCR) Operations
+      pdfworkSelected
+          String or JSON Array.
+          This input is used during OCR Operations.
+          Set this input to a name or list of names to use for input files.
+      userpdfconvertfilename
+          String.
+          This input is used during OCR Operations.
+          Set this input to a name to use for the output file.
+      pdfextension
+          String.
+          This input is used during OCR Operations.
+          Set this input to an extension to use for the output file.
+      method
+          Integer, 0 or 1.
+          This input is used during OCR Operations.
+          This input determines the internal method to use for performing the conversion.
+          Set this input to 0 to use a simple approach to OCR.
+          Set this input to 1 to use a more advanced approach to OCR.
+
+  Virus Scanning Operations
+      scantype
+          String (clamav or scancore or all).
+          This input is used during Virus Scanning Operations to scan a specific file.
+          Set this input to 'clamav' to perform a virus scan with ClamAV Virus Scanner.
+          Set this input to 'scancore' to perform a virus scan with ScanCore Virus Scanner.
+          Set this input to 'all' to perform a virus scan with all installed Virus Scanners.
+      filestoscan
+          String or JSON Array.
+          This input is used during Virus Scanning Operations.
+          Set this input to a name or list of names to use for input files.
+      clamScanButton
+          String.
+          This input is used during Virus Scanning Operations to scan all files with ClamAV.
+          Set this input to any value to trigger virus scanning operations.
+      scancorebutton
+          String.
+          This input is used during Virus Scanning Operations to scan all files with ScanCore.
+          Set this input to any value to trigger virus scanning operations.
+      scanallbutton
+          String.
+          This input is used during Virus Scanning Operations to scan all files with all installed virus scanners.
+          Set this input to any value to trigger virus scanning operations. 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
-APPLICATION INFORMATION ...
-HRConvert2, Copyright on 3/5/2024 by Justin Grimes, www.github.com/zelon88
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 3/12/2024 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.3.1.
+v3.3.3.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -25,6 +25,33 @@ Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 
 <3 Open-Source
 -----------------------------------------------------------------------------------
+
+
+
+--------------------
+COMMIT 3/12/2024
+v3.3.3 - Misc cleanup. Update developer docs w/API information.
+
+-Create official Docker image.
+  -https://hub.docker.com/repository/docker/zelon88/hrconvert2
+-Delete UI/Default/Resources/CSS/basic.css.
+-Delete UI/Wide/Resources/CSS/basic.css.
+-Update Documentation/CREATING_GUIS.txt to better communicate the API, including POST and GET requests.
+-Replace "APPLICATION INFORMATION" with "COPYRIGHT INFORMATION" in the header of each code file.
+-Move Dockerfile to Documentation/Build.
+-Adjust core logic that cleans up the Dockerfile with the new location.
+-Add header text to the Dockerfile consistent with the project.
+-Update Dockerfile to copy the index.html file to HRProprietary and HRConvert2 installation folders.
+-Add logic to the core to provide the option of using alternative software for handling rar files in the future.
+  -The core will check for config.php to see what $RARArchiveMethod is set to, and then check for the existence of /usr/bin/rar
+  -This is mostly for development so I can easily test alternatives to the rar software that we're stuck with.
+-Update dependencies in installation instructions.
+  -Add lots of missing dependencies.
+  -Call out mkisofs and tar explicitly because who knows what kind of docker images people are starting with out there.
+  -Add requirement for p7zip-rar.
+-Thanks to @bit-man for help on Issue #60.
+  -bit-man single handedly solved the rar problem by figuring out how to get non-free repositories into the docker image.
+-Added a config.php entry for controlling how many times the core will retry significant file operations.
 
 --------------------
 COMMIT 3/8/2024

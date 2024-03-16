@@ -1,6 +1,6 @@
 // / -----------------------------------------------------------------------------------
-// / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 4/11/2022 by Justin Grimes, www.github.com/zelon88
+// / COPYRIGHT INFORMATION ...
+// / HRConvert2, Copyright on 3/7/2024 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,6 +11,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION
+// / v3.3.2.
 // / This file contains the client side javascript library that supports the HRConvert2 GUI.
 // /
 // / HARDWARE REQUIREMENTS ...

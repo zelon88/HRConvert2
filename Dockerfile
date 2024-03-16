@@ -78,7 +78,6 @@ RUN apt-get install -y libzip-dev
 RUN docker-php-ext-install gd zip
 RUN apt-get install -y libreoffice-common default-jre libreoffice-java-common poppler-utils
 RUN apt-get install -y clamav unoconv p7zip-full meshlab dia pandoc python3 zip unzip rar
-RUN apt-get install -y rar unrar
 
 # Copy required configuration files.
 RUN cp HRConvert2/Documentation/Build/php.ini /usr/local/etc/php.ini

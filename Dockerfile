@@ -1,4 +1,4 @@
-# -----------------------------------------------------------------------------------
+tar# -----------------------------------------------------------------------------------
 # COPYRIGHT INFORMATION ...
 # HRConvert2, Copyright on 3/12/2024 by Justin Grimes, www.github.com/zelon88
 
@@ -80,7 +80,7 @@ RUN apt-get install -y libzip-dev
 RUN docker-php-ext-install gd zip
 RUN apt-get install -y libreoffice-common default-jre libreoffice-java-common poppler-utils
 RUN apt-get install -y clamav unoconv p7zip-full meshlab dia pandoc python3 zip unzip rar ffmpeg
-RUN apt-get install -y xpdf mkisofs imagemagick meshlab tesseract-ocr
+RUN apt-get install -y xpdf mkisofs imagemagick meshlab tesseract-ocr tar
 
 # Copy required files.
 RUN cp HRConvert2/Documentation/Build/php.ini /usr/local/etc/php.ini

@@ -1,8 +1,8 @@
 <!DOCTYPE HTML>
 <?php
 // / -----------------------------------------------------------------------------------
-// / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 3/7/2024 by Justin Grimes, www.github.com/zelon88
+// / COPYRIGHT INFORMATION ...
+// / HRConvert2, Copyright on 3/12/2024 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.3.2.
+// / v3.3.3.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -104,12 +104,12 @@ function sanitize($Variable, $strict) {
 // / A function to load required HRConvert2 files.
 function verifyInstallation() {
   // / Set variables.
-  global $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6, $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $DefaultColor, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $URL, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationArray, $UserImageArray, $UserMediaArray, $UserVideoArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleArray, $UserPDFWorkArr;
+  global $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6, $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $DefaultColor, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $URL, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationArray, $UserImageArray, $UserMediaArray, $UserVideoArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount;
   // / Define absolute paths for files that we only have relative paths for.
   $InstallationIsVerified = $buildDirDeleted = $dockerFileDeleted = $readmeDeleted = $changelogFileDeleted = $buildEnvDeleted = $devDocsDeleted = $checkOne = $checkTwo = FALSE;
   $ConfigFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'config.php');
   $VersionInfoFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'versionInfo.php');
-  $dockerFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Dockerfile');
+  $dockerFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build'.DIRECTORY_SEPARATOR.'Dockerfile');
   $changelogFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'CHANGELOG.txt');
   $readmeFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'README.md');
   $buildDir = realpath(dirname(__DIR__).DIRECTORY_SEPARATOR.'Build');
@@ -456,12 +456,13 @@ function securePath($PathToSecure, $DangerArr, $isURL) {
 // / A function to set the global variables for the session.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationArray, $UserImageArray, $UserMediaArray, $UserVideoArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleArray, $UserPDFWorkArr;
+  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationArray, $UserImageArray, $UserMediaArray, $UserVideoArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleArray, $UserPDFWorkArr, $RetryCount;
   // / Application related variables.
-  $HRConvertVersion = 'v3.3.2';
+  $HRConvertVersion = 'v3.3.3';
   $GlobalsAreVerified = FALSE;
   $CoreLoaded = TRUE;
-  $StopCounter = $SleepTimer = 0;
+  $SleepTimer = 0;
+  $StopCounter = $RetryCount;
   $PermissionLevels = 0755;
   $ApacheUser = 'www-data';
   // / Convinience variables.
@@ -1054,7 +1055,7 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
 // / A function to convert archive & disk image formats.
 function convertArchives($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $ConvertDir, $Lol, $Lolol, $StopCounter, $SleepTimer, $PathExt, $PermissionLevels;
+  global $Verbose, $ConvertDir, $Lol, $Lolol, $StopCounter, $SleepTimer, $PathExt, $PermissionLevels, $RARArchiveMethod;
   $ConversionSuccess = $ConversionErrors = FALSE;
   $returnData = '';
   $filename = pathinfo($pathname, PATHINFO_FILENAME);
@@ -1066,6 +1067,7 @@ function convertArchives($pathname, $newPathname, $extension) {
   $array7zo2 = array('vhd', 'vdi', 'iso');
   $arraytaro = array('tar.gz', 'tar.bz2', 'tar');
   $arrayraro = array('rar');
+  $rarMethod = 'other';
   $stopper = 0;
   $sleepTime = $SleepTimer;
   $oldExtension =  pathinfo($pathname, $PathExt);
@@ -1150,12 +1152,15 @@ function convertArchives($pathname, $newPathname, $extension) {
         errorEntry('The archiver timed out!', 13004, FALSE); } } }
   // / Code to rearchive archive files using rar.
   if (in_array($extension, $arrayraro)) {
+    if ($RARArchiveMethod === 'rar' && file_exists('/usr/bin/rar')) $rarMethod = 'rar';
+    else $rarMethod = 'other';
     // / This code will attempt the archive operation up to $StopCounter number of times.
     while ($stopper <= $StopCounter) {
       // / If the last conversion attempt failed, wait a moment before trying again.
       if ($stopper !== 0) sleep($sleepTime++);
       // / Attempt the conversion.
-      $returnData = shell_exec('rar a -ep1 -r '.$newPathname.' '.$safedir2);
+      if ($rarMethod === 'rar') $returnData = shell_exec('rar a -ep1 -r '.$newPathname.' '.$safedir2);
+      else $returnData = shell_exec('7z a -t'.$extension.' '.$newPathname.' '.$safedir2);
       if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
       // / Count the number of conversions to avoid infinite loops.
       $stopper++;
@@ -1171,8 +1176,8 @@ function convertArchives($pathname, $newPathname, $extension) {
   // / Code to clean up temporary files & directories.
   cleanFiles($safedir2);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $filename = $safedir2 = $safedir3 = $safedir4 = $oldExtension = $returnData = $pathname = $newPathname = $extension = $array7zo = $arrayzipo = $array7zo2 = $arraytaro = $arrayraro = $sleepTime = NULL;
-  unset($filename, $safedir2, $safedir3, $safedir4, $oldExtension, $returnData, $pathname, $newPathname, $extension, $array7zo, $arrayzipo, $array7zo2, $arraytaro, $arrayraro, $sleepTime);
+  $filename = $safedir2 = $safedir3 = $safedir4 = $oldExtension = $returnData = $pathname = $newPathname = $extension = $array7zo = $arrayzipo = $array7zo2 = $arraytaro = $arrayraro = $sleepTime = $rarMethod = NULL;
+  unset($filename, $safedir2, $safedir3, $safedir4, $oldExtension, $returnData, $pathname, $newPathname, $extension, $array7zo, $arrayzipo, $array7zo2, $arraytaro, $arrayraro, $sleepTime, $rarMethod);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -1462,7 +1467,7 @@ function deleteFiles($FilesToDelete) {
 // / A function to archive a selection of files.
 function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
   // / Set variables.
-  global $Verbose, $VirusScan, $ConvertTempDir, $Lol, $Lolol;
+  global $Verbose, $VirusScan, $ConvertTempDir, $Lol, $Lolol, $RARArchiveMethod;
   $ArchiveComplete = $ArchiveErrors = $virusFound = $skip = $variableIsSanitized = FALSE;
   $clean = $copy = TRUE;
   $returnData = $file = '';
@@ -1470,6 +1475,7 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
   $ziparr = array('zip');
   $tararr = array('7z', 'tar', 'tar.gz', 'tar.bz2');
   $isoarr = array('iso');
+  $rarMethod = 'other';
   // / Make sure the input files are formatted into an array.
   if (!is_array($FilesToArchive)) $FilesToArchive = array($FilesToArchive);
   // / Iterate through the array of input files.
@@ -1499,7 +1505,11 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
       if ($virusFound) errorEntry('Virus detected!', 4003, TRUE);
       if ($Verbose) logEntry('Virus scan complete.'); }
     // / Handle archiving of rar compatible files.
-    if (in_array($UserExtension, $rararr)) $returnData = shell_exec('rar a -ep '.$newPathname.' '.$pathname);
+    if (in_array($UserExtension, $rararr)) {
+      if ($RARArchiveMethod === 'rar') $rarMethod = 'rar';
+      else $rarMethod = 'other';
+      if ($rarMethod === 'rar' && file_exists('/usr/bin/rar')) $returnData = shell_exec('rar a -ep '.$newPathname.' '.$pathname);
+      else $returnData = shell_exec('7z a '.$newPathname.' '.$pathname); }
     // / Handle archiving of .zip compatible files.
     if (in_array($UserExtension, $ziparr)) $returnData = shell_exec('zip -j '.$newPathname.' '.$pathname);
     // / Handle archiving of 7zipper compatible files.
@@ -1512,10 +1522,10 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
       errorEntry('Could not archive file '.$pathname.' to '.$newPathname.'!', 4004, FALSE); }
     else {
       $ArchiveComplete = TRUE;
-      if ($Verbose) logEntry('Archived file '.$pathname.' to '.$ConvertTempDir.$file.'.'); } }
+      if ($Verbose) logEntry('Archived file '.$pathname.' to '.$newPathname.'.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $rararr = $ziparr = $tararr = $isoarr = $pathname = $userFileName = $oldPathname = $newPathname = $scanComplete = $virusFound = $returnData = $variableIsSanitized = $fileIsVerified = $oldExtension = $clean = $copy = $skip = $variableIsSanitized = NULL;
-  unset ($file, $rararr, $ziparr, $tararr, $isoarr, $pathname, $userFileName, $oldPathname, $newPathname, $scanComplete, $virusFound, $returnData, $variableIsSanitized, $fileIsVerified, $oldExtension, $clean, $copy, $skip, $variableIsSanitized); 
+  $file = $rararr = $ziparr = $tararr = $isoarr = $pathname = $userFileName = $oldPathname = $newPathname = $scanComplete = $virusFound = $returnData = $variableIsSanitized = $fileIsVerified = $oldExtension = $clean = $copy = $skip = $variableIsSanitized = $rarMethod = NULL;
+  unset ($file, $rararr, $ziparr, $tararr, $isoarr, $pathname, $userFileName, $oldPathname, $newPathname, $scanComplete, $virusFound, $returnData, $variableIsSanitized, $fileIsVerified, $oldExtension, $clean, $copy, $skip, $variableIsSanitized, $rarMethod); 
   return array($ArchiveComplete, $ArchiveErrors); }
 // / -----------------------------------------------------------------------------------
 

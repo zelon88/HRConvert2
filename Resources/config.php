@@ -1,6 +1,6 @@
 <?php
 // / -----------------------------------------------------------------------------------
-// / APPLICATION INFORMATION ...
+// / COPYRIGHT INFORMATION ...
 // / HRConvert2, Copyright on 3/7/2024 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
@@ -309,13 +309,27 @@ $ShowGUI = TRUE;
 // /   Default is TRUE.
 $ShowFinePrint = TRUE;
 // /  --Terms of Service URL--
-// /   The URL to use for the Terms of Service link at te bottom of the GUI.
+// /   Set the URL to use for the Terms of Service link at te bottom of the GUI.
 // /   Only takes effect if --Show Fine Print-- is set to TRUE.
 $TOSURL = 'https://www.honestrepair.net/index.php/terms-of-service/';
 // /  --Privacy Policy URL--
-// /   The URL to use for the Privacy Policy link at te bottom of the GUI.
+// /   Set the URL to use for the Privacy Policy link at te bottom of the GUI.
 // /   Only takes effect if --Show Fine Print-- is set to TRUE.
 $PPURL = 'https://www.honestrepair.net/index.php/privacy-policy/';
+// / --RAR Archive Method--
+// /   Set the software package to use for creating .rar archives.
+// /   This setting allows you to specify which software to use when creating .rar archives.
+// /   Currently only RAR is supported.
+// /   Valid options are 'rar'.
+// /   Default is 'rar'.
+$RARArchiveMethod = 'rar';
+// / --File Operation Retry Count--
+// /   Set this to the number of attempts to make during file operations.
+// /   The core will attempt significant file operations this many times, with a pause in between.
+// /   If a significant file operation fails, the core will retry the operation this many times.
+// /   Valid options are integers smaller than 10.
+// /   Default is 5.
+$RetryCount = 5;
 // / ------------------------------
 
 // / ------------------------------

@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
-// / APPLICATION INFORMATION ...
-// / HRConvert2, Copyright on 3/7/2024 by Justin Grimes, www.github.com/zelon88
+// / COPYRIGHT INFORMATION ...
+// / HRConvert2, Copyright on 3/12/2024 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -9,10 +9,10 @@
 // /
 // / APPLICATION INFORMATION ...
 // / This application is designed to provide a web-interface for converting file formats
-// / on a server for users of any web browser without authentication.
+// / on a server for users of any web browser without authentication.l
 // /
 // / FILE INFORMATION ...
-// / v3.3.2.
+// / v3.3.3.
 // / This file contains the current HRConvert2 version for update verification purposes.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -30,5 +30,5 @@
 
 // / -----------------------------------------------------------------------------------
 // / The version of this HRConvert2 installation.
-$Version = 'v3.3.2';
+$Version = 'v3.3.3';
 // / -----------------------------------------------------------------------------------

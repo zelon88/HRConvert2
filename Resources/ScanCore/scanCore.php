@@ -1,328 +1,353 @@
 <?php
 // / -----------------------------------------------------------------------------------
-// / APPLICATION INFORMATION ...
-// /   HR-AV, Copyright on 1/4/2023 by Justin Grimes, www.github.com/zelon88 
-// /   This file is a heavily modified version of PHP-AV maintained by Justin Grimes.
-// /   This file was designed to function as part of the HR-AV anti-virus application.
-// /   This file may not work properly outside of it's intended environment or use-case.
-// /   This file should be used outside it's intended application only during development.
-// /   Serious data loss or filesystem damage may result! Execute this file at your own risk!
+// / COPYRIGHT INFORMATION ...
+// / ScanCore, Copyright on 3/22/2024 by Justin Grimes, www.github.com/zelon88 
 // / 
 // / LICENSE INFORMATION ...
-// /   This project is protected by the GNU GPLv3 Open-Source license.
+// / This project is protected by the GNU GPLv3 Open-Source license.
+// / https://www.gnu.org/licenses/gpl-3.0.html
+// / 
+// / APPLICATION INFORMATION ...
+// / This application is designed to scan files & folders for viruses.
+// / 
+// / FILE INFORMATION ...
+// / v1.0.
+// / This file contains the core logic of the ScanCore application.
+// /
+// / HARDWARE REQUIREMENTS ...
+// / This application requires at least a Raspberry Pi Model B+ or greater.
+// / This application will run on just about any x86 or x64 computer.
 // / 
 // / DEPENDENCY REQUIREMENTS ... 
-// /   This application requires Windows 7 (or later) with PHP 7.0 (or later).
+// / This application should run on Linux or Windows systems with PHP 8.0 (or later).
 // / 
 // / VALID SWITCHES / ARGUMENTS / USAGE ...
-// /   Quick Start Example:
-// /    C:\Path-To-PHP-Binary.exe C:\Path-To-ScanCore.php C:\Path-To-Scan\ -m [integer] -c [integer] -v -d
+// / Quick Start Example:
+// /  C:\Path-To-PHP-Binary.exe C:\Path-To-ScanCore.php C:\Path-To-Scan\ -m [integer] -c [integer] -v -d
 // / 
-// /   Start by opening a command-prompt.
-// /   Type the absolute path to a portable PHP 7.0+ binary. Don't press enter just yet.
-// /   Now type the absolute path to this PHP file as the only argument for the PHP binary.
-// /   Everything after the path to this script will be passed to this file as an argument.
-// /   The first Argument Must be a valid absolute path to the file or folder being scanned.
-// /   Optional arguments can be specified after the scan path. Separate them with spaces.
-// /   
-// /   Optional Arguments Include:
-// /     Force recursion:                        -recursion
-// /                                             -r
+// / Start by opening a command-prompt.
+// / Type the absolute path to a portable PHP 7.0+ binary. Don't press enter just yet.
+// / Now type the absolute path to this PHP file as the only argument for the PHP binary.
+// / Everything after the path to this script will be passed to this file as an argument.
+// / The first Argument Must be a valid absolute path to the file or folder being scanned.
+// / Optional arguments can be specified after the scan path. Separate them with spaces.
 // / 
-// /     Force no recursion:                     -norecursion
-// /                                             -nr
+// / Optional Arguments Include:
+// /   Force recursion:                        -recursion
+// /                                           -r
 // / 
-// /     Specify memory limit (in bytes):        -memorylimit ####
-// /                                             -m ####
+// /   Force no recursion:                     -norecursion
+// /                                           -nr
 // / 
-// /     Specify chunk size (in bytes);          -chunksize ####
-// /                                             -c ####
+// /   Specify memory limit (in bytes):        -memorylimit ####
+// /                                           -m ####
 // / 
-// /     Enable "debug" mode (more logging):     -debug
-// /                                             -d
+// /   Specify chunk size (in bytes);          -chunksize ####
+// /                                           -c ####
 // / 
-// /     Enable "verbose" mode (more console):   -verbose
-// /                                             -v
+// /   Enable "debug" mode (more logging):     -debug
+// /                                           -d
 // / 
-// /     Force a specific log file:              -logfile /path/to/file
-// /                                             -lf path/to/file
+// /   Enable "verbose" mode (more console):   -verbose
+// /                                           -v
 // / 
-// /     Force a specific report file:           -reportfile /path/to/file
-// /                                             -rf path/to/file
+// /   Force a specific log file:              -logfile /path/to/file
+// /                                           -lf path/to/file
 // / 
-// /     Force maximum log size (in bytes):      -maxlogsize ###
-// /                                             -ml ###
+// /   Force a specific report file:           -reportfile /path/to/file
+// /                                           -rf path/to/file
 // / 
+// /   Force maximum log size (in bytes):      -maxlogsize ###
+// /                                           -ml ###
+// / 
+// / <3 Open-Source
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / The following code will load required HR-AV files.
-$rp = realpath(dirname(__FILE__));
-if (!file_exists($rp.DIRECTORY_SEPARATOR.'ScanCore_Config.php')) die ('ERROR!!! ScanCore-0, Cannot process the HR-AV ScanCore Configuration file (config.php)!'.PHP_EOL); 
-else require_once ($rp.DIRECTORY_SEPARATOR.'ScanCore_Config.php');
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / The following code sets the global variables for the session.
+// / The following code sets global variables for the session.
+function verifySCInstallation() {
+  // / Set variables.
+  global $SCVersions, $SCDate, $SCTime, $SCSEP, $SCReportFile, $SCLogfile, $SCConfigFile, $SCRequiredDirs, $SCVersion, $SCVersions, $argv, $SCEOL, $SCMaxLogSize, $SCDebug, $SCVerbose, $DefaultMemoryLimit, $DefaultChunkSize, $DefaultMaxLogSize, $SCReportFileName, $SCConfigVersion, $DefsFile, $DefsFileName, $FileCount;
   // / Application related variables.
-  $scanCoreVersion = 'v0.9';
-  $Versions = 'PHP-AV App v4.1 | Virus Definition v4.9, 4/10/2019';
-  $encType = 'ripemd160';
-  $dirCount = 1;
-  $fileCount = $infected = 0;
+  $SCInstallationVerified = $SCConfigLoaded = $SCReportFile = $SCLogfile = $SCRequiredDirs = FALSE;
+  $SCEOL = PHP_EOL;
+  $SCRequiredDirs = array();
+  $SCSEP = DIRECTORY_SEPARATOR;
+  $SCConfigFile = 'ScanCore_Config.php';
+  $SCVersion = 'v1.0';
+  $SCVersions = $SCConfigVersion;
+  $rp = realpath(dirname(__FILE__));
+  $FileCount = 0;
   // / Time related variables.
-  $Date = date("m_d_y");
-  $Time = date("F j, Y, g:i a"); 
-  // / Directory related variables.
-  $Separator = DIRECTORY_SEPARATOR;
-  $ReportFile = $Separator.$ReportDir.$Separator.$ReportFileName;
-  $ScanCoreLogfile = $ReportDir.$ScanCoreLogfilename;
-  $RequiredDirs = array($ReportDir);
-  // / Unset unneeded variables for security purposes.
-  $encType = $RandomNumber = $SesHash = $SesHash2 = $SesHash3 = $Salts1 = $Salts2 = $Salts3 = $Salts4 = $Salts5 = $Salts6 = NULL;
-  unset($encType, $RandomNumber, $SesHash, $SesHash2, $SesHash3, $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6);
+  $SCDate = date("m_d_y");
+  $SCTime = date("F j, Y, g:i a");
+  // / Initialize an empty array if no arguments are set.
+  if (!isset($argv)) $argv = array();
+  // / Load the configuration file (ScanCore_Config.php).
+  if (file_exists($rp.$SCSEP.$SCConfigFile)) $SCConfigLoaded = require_once ($rp.$SCSEP.$SCConfigFile);
+  // / Check to make sure the configuration file was loaded & the configuration version is compatible with the core.
+  if (isset($ScanLoc) && isset($DefsFile) && isset($SCConfigVersion) && $SCConfigVersion === $SCVersion && $SCConfigLoaded) {
+    // / Configuration related variables.
+    $SCInstallationVerified = TRUE;
+    $SCReportFile = $ReportDir.$SCSEP.$SCReportFileName;
+    $SCLogfile = $ReportDir.$SCLogFileName;
+    $SCRequiredDirs = array($ReportDir);
+    $SCMaxLogSize = $DefaultMaxLogSize; 
+    $SCDebug = $Debug;
+    $SCVerbose = $Verbose;
+    $SCMemoryLimit = $DefaultMemoryLimit;
+    $SCChunkSize = $DefaultChunkSize; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $rp = NULL;
+  unset($rp); 
+  return array($SCInstallationVerified, $SCConfigLoaded); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to create required directories when they do not already exist.
-function createDirs($RequiredDirs) { 
-  global $Time;
-  foreach ($RequiredDirs as $reqdDir) {
+function createDirs($SCRequiredDirs) { 
+  // / Set variables.
+  global $SCTime;
+  $SCRequiredDirsExist = TRUE;
+  foreach ($SCRequiredDirs as $reqdDir) {
     if (!file_exists($reqdDir)) mkdir($reqdDir);
-    if (!file_exists($reqdDir)) die('ERROR!!! ScanCore-10 on '.$Time.', Cannot create required directory "'.$reqdDir.'"!'.PHP_EOL); }
-  return TRUE; }
+    if (!file_exists($reqdDir)) $SCRequiredDirsExist = FALSE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $reqdDir = NULL;
+  unset($reqdDir); 
+  return array($SCRequiredDirsExist); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to add an entry to the logs.
 function addLogEntry($entry, $error, $errorNumber) {
-  global $ReportFile, $Time;
+  // / Set variables.
+  global $SCReportFile, $SCTime, $SCEOL;
   if (!is_numeric($errorNumber)) $errorNumber = 0;
-  if ($error === TRUE) $preText = 'ERROR!!! ScanCore-'.$errorNumber.' on '.$Time.', ';
-  else $preText = $Time.', ';
-  return(file_put_contents($ReportFile, $preText.$entry.PHP_EOL, FILE_APPEND)); } 
+  if ($error === TRUE) $preText = 'ERROR!!! ScanCore-'.$errorNumber.' on '.$SCTime.', ';
+  else $preText = $SCTime.', ';
+  $SCLogCreated = file_put_contents($SCReportFile, $preText.$entry.$SCEOL, FILE_APPEND);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $preText = $error = $entry = $errorNumber = NULL;
+  unset($preText, $error, $entry, $errorNumber); 
+  return array($SCLogCreated); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to handle important messages to the console & log file.
+function processOutput($txt, $error, $errorNumber, $requiredLog, $requiredConsole, $fatal) {
+  global $SCEOL, $SCDebug, $SCVerbose;
+  $OutputProcessed = FALSE;
+  // / Verify that all inputs are of the correct type.
+  if (!is_string($txt)) $txt = '';
+  if (!is_bool($error)) $error = FALSE;
+  if (!is_int($errorNumber)) $errorNumber = 0;
+  if (!is_bool($requiredLog)) $requiredLog = FALSE;
+  if (!is_bool($requiredConsole)) $requiredConsole = FALSE;
+  // / Log the provided text if $SCDebug variable (-d switch) is set.
+  if ($SCDebug or $requiredLog) list ($OutputProcessed) = addLogEntry($txt, $error, $errorNumber);
+  // / Output the summary text to the terminal if the $SCVerbose (-v switch) variable is set.
+  if ($SCVerbose or $requiredConsole) echo $txt.$SCEOL;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $txt = $error = $errorNumber = $requiredLog = $requiredConsole = NULL;
+  unset($txt, $error, $errorNumber, $requiredLog, $requiredConsole); 
+  // / Stop execution as needed.
+  if ($fatal) die();
+  return array($OutputProcessed); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to parse supplied command-line arguments.
-function parseArgs($argv) { 
-  global $ReportFile, $ScanCoreLogfile, $MaxLogSize, $debug, $verbose;
-  $memoryLimit = 4000000;
-  $chunkSize = 1000000; 
-  $recursion = TRUE;
-  $debug = $pathToScan = $verbose = FALSE;
-  $reportFile = $ReportFile;
-  $maxLogSize = $MaxLogSize;
+function parseArgs($argv) {
+  // / Set variables. 
+  // / Most of these should already be set to the values contained in the configuration file.
+  global $SCArgsParsed, $SCReportFile, $SCLogfile, $SCMaxLogSize, $SCDebug, $SCVerbose, $SCEOL, $SCChunkSize, $SCMemoryLimit, $DefaultMemoryLimit, $DefaultChunkSize;
+  $SCRecursion = FALSE;
+  $SCArgsParsed = $SCPathToScan = FALSE;
   foreach ($argv as $key => $arg) {
-    trim($arg);
     $arg = htmlentities(str_replace(str_split('~#[](){};:$!#^&%@>*<"\''), '', $arg));
-    if ($arg == '-memorylimit' or $arg == '-m') $memoryLimit = $argv[$key + 1];
-    if ($arg == '-chunksize' or $arg == '-c') $chunkSize = $argv[$key + 1];
-    if ($arg == '-debug' or $arg == '-d') $debug = TRUE;
-    if ($arg == '-verbose' or $arg == '-v') $verbose = TRUE;
-    if ($arg == '-recursion' or $arg == '-r') $recursion = TRUE;
-    if ($arg == '-norecursion' or $arg == '-nr') $recursion = FALSE;
-    if ($arg == '-reportfile' or $arg == '-rf') $reportFile = $argv[$key + 1];
-    if ($arg == '-logfile' or $arg == '-lf') $ScanCoreLogfile = $argv[$key + 1];
-    if ($arg == '-maxlogsize' or $arg == '-ml') $maxLogSize = $argv[$key + 1]; }
-  if (!isset($argv[1])) {
-    $txt = 'There were no arguments set!'; 
-    addLogEntry($txt, TRUE, 100);
-    die ($txt.PHP_EOL); }
-  if (!file_exists($argv[1])) { 
-    $txt = 'The specified file was not found! The first argument must be a valid file or directory path!'; 
-    addLogEntry($txt, TRUE, 200);
-    die ($txt.PHP_EOL); }
-  $pathToScan = $argv[1];
-  if (!is_numeric($memoryLimit) or !is_numeric($chunkSize)) { 
-    $txt = 'Either the chunkSize argument or the memoryLimit argument is invalid. Substituting default values.';
-    addLogEntry($txt, TRUE, 300); 
-    echo $txt.PHP_EOL;
-    $memoryLimit = $defaultMemoryLimit; 
-    $chunkSize = $defaultChunkSize; }
-  return(array($pathToScan, $memoryLimit, $chunkSize, $debug, $verbose, $recursion, $reportFile, $ScanCoreLogfile, $maxLogSize)); }
+    if ($arg == '-memorylimit' or $arg == '-m') $SCMemoryLimit = $argv[$key + 1];
+    if ($arg == '-chunksize' or $arg == '-c') $SCChunkSize = $argv[$key + 1];
+    if ($arg == '-debug' or $arg == '-d') $SCDebug = TRUE;
+    if ($arg == '-verbose' or $arg == '-v') $SCVerbose = TRUE;
+    if ($arg == '-recursion' or $arg == '-r') $SCRecursion = TRUE;
+    if ($arg == '-norecursion' or $arg == '-nr') $SCRecursion = FALSE;
+    if ($arg == '-reportfile' or $arg == '-rf') $SCReportFile = $argv[$key + 1];
+    if ($arg == '-logfile' or $arg == '-lf') $SCLogfile = $argv[$key + 1];
+    if ($arg == '-maxlogsize' or $arg == '-ml') $SCMaxLogSize = $argv[$key + 1]; }
+  // / Detect if a file path to scan was specified.
+  if (!isset($argv[1])) processOutput('There were no arguments set!', TRUE, 100, TRUE, TRUE, FALSE);
+  else $SCPathToScan = $argv[1];
+  // / Detect if the MemoryLimit and ChunkSize variables are valid.
+  if (!is_numeric($SCMemoryLimit) or !is_numeric($SCChunkSize)) { 
+    processOutput('Either the chunkSize argument or the memoryLimit argument is invalid. Attempting to use default values.', TRUE, 200, TRUE, TRUE, FALSE);
+    $SCMemoryLimit = $DefaultMemoryLimit;
+    $SCChunkSize = $DefaultChunkSize; }
+  if (!file_exists($argv[1])) processOutput('The specified file was not found! The first argument must be a valid file or directory path!', TRUE, 300, TRUE, TRUE, FALSE);
+  else {
+    $SCArgsParsed = TRUE;
+    processOutput('Starting ScanCore!', FALSE, 0, TRUE, FALSE, FALSE); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $key = $arg = NULL;
+  unset($key, $arg); 
+  return array($SCArgsParsed, $SCPathToScan, $SCMemoryLimit, $SCChunkSize, $SCDebug, $SCVerbose, $SCRecursion, $SCReportFile, $SCLogfile, $SCMaxLogSize); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // Hunts files/folders recursively for scannable items.
-function file_scan($folder, $defs, $DefsFile, $defData, $debug, $verbose, $memoryLimit, $chunkSize, $recursion) {
-  global $fileCount, $dirCount, $infected, $Separator;
+function file_scan($folder, $Defs, $DefsFile, $DefData, $SCDebug, $SCVerbose, $SCMemoryLimit, $SCChunkSize, $SCRecursion) {
+  // / Set variables.
+  global $SCSEP, $SCEOL, $FileCount;
+  $ScanComplete = FALSE;
+  $DirCount = 1;
+  $Infected = 0;
   if (is_dir($folder)) {
     $files = scandir($folder);
     foreach ($files as $file) {
       if ($file === '' or $file === '.' or $file === '..') continue;
-      $entry = str_replace($Separator.$Separator, $Separator, $folder.$Separator.$file);
-      if (!is_dir($entry)) list($fileCount, $infected) = virus_check($entry, $defs, $DefsFile, $defData, $debug, $verbose, $memoryLimit, $chunkSize);
-      else if (is_dir($entry) && $recursion) {
-        if ($debug) { 
-          $txt = 'Scanning folder "'.$entry.'" ... ';
-          addLogEntry($txt, FALSE, 0); }
-        if ($verbose) { 
-          $txt = 'Scanning folder "'.$entry.'" ... ';
-          echo $txt.PHP_EOL; } }
-        $dirCount++; 
-        list ($dirCount1, $fileCount1, $infected1) = file_scan($entry, $defs, $DefsFile, $defData, $debug, $verbose, $memoryLimit, $chunkSize, $recursion); } }
+      $entry = str_replace($SCSEP.$SCSEP, $SCSEP, $folder.$SCSEP.$file);
+      if (!is_dir($entry)) list($checkComplete, $Infected) = virus_check($entry, $Defs, $DefsFile, $DefData, $SCDebug, $SCVerbose, $SCMemoryLimit, $SCChunkSize);
+      else if (is_dir($entry) && $SCRecursion) {
+        processOutput('Scanning folder "'.$entry.'" ... ', FALSE, 0, TRUE, TRUE, FALSE);
+        $DirCount++; 
+        list ($scanComplete, $DirCount, $FileCount, $Infected) = file_scan($entry, $Defs, $DefsFile, $DefData, $SCDebug, $SCVerbose, $SCMemoryLimit, $SCChunkSize, $SCRecursion); 
+        $entry = ''; } } }
   if (!is_dir($folder) && $folder !== '.' && $folder !== '..') {
-    $fileCount++;
-    list($fileCount1, $infected1) = virus_check($folder, $defs, $DefsFile, $defData, $debug, $verbose, $memoryLimit, $chunkSize); }
-  return array($dirCount, $fileCount, $infected); }
+    $FileCount++;
+    list($checkComplete, $Infected) = virus_check($folder, $Defs, $DefsFile, $DefData, $SCDebug, $SCVerbose, $SCMemoryLimit, $SCChunkSize); }
+  $ScanComplete = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $files = $file = $entry = $folder = NULL;
+  unset($files, $file, $entry, $folder); 
+  return array($ScanComplete, $DirCount, $FileCount, $Infected); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // Reads tab-delimited defs file. Also hashes the file to avoid self-detection.
-function load_defs($file, $debug, $verbose) {
-  if (!file_exists($file)) {
-    $defs = $defData = FALSE;
-    $txt = 'Could not load the virus definition file located at "'.$file.'"! File either does not exist or cannot be read!';
-    addLogEntry($txt, TRUE, 600); 
-    if ($verbose) echo $txt.PHP_EOL;
-    die(); }
+function load_defs($DefsFile) {
+  // / Set variables.
+  global $SCEOL, $SCDebug, $SCVerbose;
+  $SCDefsLoaded = $Defs = $DefData = FALSE;
+  if (!file_exists($DefsFile)) processOutput('Could not load the virus definition file located at "'.$DefsFile.'"! File either does not exist or cannot be read!', TRUE, 600, TRUE, TRUE, FALSE);
   else { 
-    $defs = file($file);
+    $Defs = file($DefsFile);
+    $DefData = hash_file('sha256', $DefsFile);
     $counter = 0;
-    $counttop = sizeof($defs);
-    $defData = hash_file('sha256', $file);
+    $counttop = sizeof($Defs);
     while ($counter < $counttop) {
-      $defs[$counter] = explode('  ', $defs[$counter]);
+      $Defs[$counter] = explode('  ', $Defs[$counter]);
       $counter++; }
-    if ($debug) { 
-      $txt = 'Loaded '.sizeof($defs).' virus definitions.';
-      addLogEntry($txt, FALSE, 0); } }
-    if ($verbose) { 
-      $txt = 'Loaded '.sizeof($defs).' virus definitions.'; 
-      echo $txt.PHP_EOL; } 
-  return (array($defs, $defData)); }
+    processOutput('Loaded '.sizeof($Defs).' virus definitions.', FALSE, 0, FALSE, FALSE, FALSE);
+    $SCDefsLoaded = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $counter = $counttop = NULL;
+  unset($counter, $counttop); 
+  return array($SCDefsLoaded, $Defs, $DefData); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // Hashes and checks files/folders for viruses against static virus defs.
-function virus_check($file, $defs, $DefsFile, $defData, $debug, $verbose, $memoryLimit, $chunkSize) {
-  global $fileCount, $dirCount, $infected, $DefsFileName;
+function virus_check($file, $Defs, $DefsFile, $DefData, $SCDebug, $SCVerbose, $SCMemoryLimit, $SCChunkSize) {
+  // / Set variables.
+  global $Infected, $DefsFileName, $SCEOL;
+  $CheckComplete = FALSE;
   if ($file !== $DefsFileName) {
-    if (file_exists($file)) { 
-      $txt = ('Scanning file "'.$file.'".');
-      addLogEntry($txt, FALSE, 0);
-      if ($verbose) echo $txt.PHP_EOL;
+    if (file_exists($file)) {
+      processOutput('Scanning file ... ', FALSE, 0, TRUE, TRUE, FALSE);
       $filesize = filesize($file);
       $data1 = hash_file('md5', $file);
       $data2 = hash_file('sha256', $file);
       $data3 = hash_file('sha1', $file);
       // / Scan files larger than the memory limit by breaking them into chunks.
-      if ($filesize >= $memoryLimit && file_exists($file)) { 
-        if ($debug) { 
-          $txt = 'Chunking file ... ';
-          addLogEntry($txt, FALSE, 0); }
-        if ($verbose) {
-          $txt = 'Chunking File ... ';
-          echo $txt.PHP_EOL; }
+      if ($filesize >= $SCMemoryLimit && file_exists($file)) { 
+        processOutput('Chunking file ... ', FALSE, 0, FALSE, FALSE, FALSE);
         $handle = @fopen($file, "r");
         if ($handle) {
-          while (($buffer = fgets($handle, $chunkSize)) !== FALSE) {
-            $data = $buffer; 
-            if ($debug) { 
-              $txt = 'Scanning chunk ... ';
-              addLogEntry($txt, FALSE, 0); }
-            if ($verbose) { 
-              $txt = 'Scanning chunk ... '; 
-              echo $txt.PHP_EOL; }
-            foreach ($defs as $virus) {
+          while (($buffer = fgets($handle, $SCChunkSize)) !== FALSE) {
+            $data = $buffer;
+            processOutput('Scanning chunk ... ', FALSE, 0, FALSE, FALSE, FALSE);
+            foreach ($Defs as $virus) {
               $virus = explode("\t", $virus[0]);
               if (isset($virus[1]) && !is_null($virus[1]) && $virus[1] !== '' && $virus[1] !== ' ') {
                 if (strpos(strtolower($data), strtolower($virus[1])) !== FALSE or strpos(strtolower($file), strtolower($virus[1])) !== FALSE) { 
                   // File matches virus defs.
-                  $txt = 'Infected: '.$file.' ('.$virus[0].', Data Match: '.$virus[1].')';
-                  addLogEntry($txt, FALSE, 0);
-                  if ($verbose) echo $txt.PHP_EOL;
-                  $infected++; } } } }
+                  processOutput('Infected: '.$file.' ('.$virus[0].', Data Match: '.$virus[1].')', FALSE, 0, TRUE, TRUE, FALSE);
+                  $Infected++; } } } }
           if (!feof($handle)) {
-            $txt = 'Unable to open "'.$file.'"!';
-            addLogEntry($txt, TRUE, 800); 
-            if ($verbose) echo $txt.PHP_EOL; }
-          fclose($handle); } 
+            processOutput('Unable to open "'.$file.'"!', TRUE, 800, TRUE, TRUE, FALSE);
+            fclose($handle); } 
           if (isset($virus[2]) && !is_null($virus[2]) && $virus[2] !== '' && $virus[2] !== ' ') {
             if (strpos(strtolower($data1), strtolower($virus[2])) !== FALSE) {
               // File matches virus defs.
-              $txt = 'Infected: '.$file.' ('.$virus[0].', MD5 Hash Match: '.$virus[2].')';
-              addLogEntry($txt, FALSE, 0);
-              if ($verbose) echo $txt.PHP_EOL;
-              $infected++; } }
+              processOutput('Infected: '.$file.' ('.$virus[0].', MD5 Hash Match: '.$virus[2].')', FALSE, 0, TRUE, TRUE, FALSE);
+              $Infected++; } }
             if (isset($virus[3]) && !is_null($virus[3]) && $virus[3] !== '' && $virus[3] !== ' ') {
               if (strpos(strtolower($data2), strtolower($virus[3])) !== FALSE) {
                 // File matches virus defs.
-                $txt = 'Infected: '.$file.' ('.$virus[0].', SHA256 Hash Match: '.$virus[3].')';
-                addLogEntry($txt, FALSE, 0);
-                if ($verbose) echo $txt.PHP_EOL;
-                $infected++; } } 
+                processOutput('Infected: '.$file.' ('.$virus[0].', SHA256 Hash Match: '.$virus[3].')', FALSE, 0, TRUE, TRUE, FALSE);
+                $Infected++; } } 
             if (isset($virus[4]) && !is_null($virus[4]) && $virus[4] !== '' && $virus[4] !== ' ') {
               if (strpos(strtolower($data3), strtolower($virus[4])) !== FALSE) {
                 // File matches virus defs.
-                $txt = 'Infected: '.$file.' ('.$virus[0].', SHA1 Hash Match: '.$virus[4].')';
-                addLogEntry($txt, FALSE, 0);
-                if ($verbose) echo $txt.PHP_EOL;
-                $infected++; } } } 
+                processOutput('Infected: '.$file.' ('.$virus[0].', SHA1 Hash Match: '.$virus[4].')', FALSE, 0, TRUE, TRUE, FALSE);
+                $Infected++; } } } }
       // / Scan files smaller than the memory limit by fitting the entire file into memory.
-      if ($filesize < $memoryLimit && file_exists($file)) {
+      if ($filesize < $SCMemoryLimit && file_exists($file)) {
         $data = file_get_contents($file); }
-      if ($defData !== $data2) {
-        foreach ($defs as $virus) {
+      if ($DefData !== $data2) {
+        foreach ($Defs as $virus) {
           $virus = explode("\t", $virus[0]);
           if (isset($virus[1]) && !is_null($virus[1]) && $virus[1] !== '' && $virus[1] !== ' ') {
             if (strpos(strtolower($data), strtolower($virus[1])) !== FALSE or strpos(strtolower($file), strtolower($virus[1])) !== FALSE) {
-             // File matches virus defs.
-              $txt = 'Infected: '.$file.' ('.$virus[0].', Data Match: '.$virus[1].')';
-              addLogEntry($txt, FALSE, 0);
-              if ($verbose) echo $txt.PHP_EOL;
-              $infected++; } }
+              // File matches virus defs.
+              processOutput('Infected: '.$file.' ('.$virus[0].', Data Match: '.$virus[1].')', FALSE, 0, TRUE, TRUE, FALSE);
+              $Infected++; } }
           if (isset($virus[2]) && !is_null($virus[2]) && $virus[2] !== '' && $virus[2] !== ' ') {
             if (strpos(strtolower($data1), strtolower($virus[2])) !== FALSE) {
-                // File matches virus defs.
-              $txt = 'Infected: '.$file.' ('.$virus[0].', MD5 Hash Match: '.$virus[2].')';
-              addLogEntry($txt, FALSE, 0);
-              if ($verbose) echo $txt.PHP_EOL;
-              $infected++; } }
+              // File matches virus defs.
+              processOutput('Infected: '.$file.' ('.$virus[0].', MD5 Hash Match: '.$virus[2].')', FALSE, 0, TRUE, TRUE, FALSE);
+              $Infected++; } }
             if (isset($virus[3]) && !is_null($virus[3]) && $virus[3] !== '' && $virus[3] !== ' ') {
               if (strpos(strtolower($data2), strtolower($virus[3])) !== FALSE) {
                 // File matches virus defs.
-                $txt = 'Infected: '.$file.' ('.$virus[0].', SHA256 Hash Match: '.$virus[3].')';
-                addLogEntry($txt, FALSE, 0);
-                if ($verbose) echo $txt.PHP_EOL;
-                $infected++; } } 
+                processOutput('Infected: '.$file.' ('.$virus[0].', SHA256 Hash Match: '.$virus[3].')', FALSE, 0, TRUE, TRUE, FALSE);
+                $Infected++; } } 
             if (isset($virus[4]) && !is_null($virus[4]) && $virus[4] !== '' && $virus[4] !== ' ') {
               if (strpos(strtolower($data3), strtolower($virus[4])) !== FALSE) {
                 // File matches virus defs.
-                $txt = 'Infected: '.$file.' ('.$virus[0].', SHA1 Hash Match: '.$virus[4].')';
-                addLogEntry($txt, FALSE, 0);
-                if ($verbose) echo $txt.PHP_EOL;
-                $infected++; } } } } } }
-  return (array($fileCount, $infected)); } 
+                processOutput('Infected: '.$file.' ('.$virus[0].', SHA1 Hash Match: '.$virus[4].')', FALSE, 0, TRUE, TRUE, FALSE);
+                $Infected++; } } } } } }
+  $CheckComplete = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $file = $filesize = $data = $buffer = $handle = $virus = $data1 = $data2 = $data3 = NULL;
+  unset($file, $filesize, $data, $buffer, $handle, $virus, $data1, $data2, $data3);
+  return array($CheckComplete, $Infected); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / The main logic of the program.
 
-// / Initialize an empty array if no arguments are set.
-if (!isset($argv)) $argv = array();
+// / Verify the installation.
+list($SCInstallationVerified, $SCConfigLoaded) = verifySCInstallation();
+if (!$SCInstallationVerified or !$SCConfigLoaded) die('ERROR!!! ScanCore-003, Cannot verify the ScanCore installation!'.PHP_EOL);
+
 // / Create required directories if they don't already exist.
-createDirs($RequiredDirs);
+list($SCRequiredDirsExist) = createDirs($SCRequiredDirs);
+if (!$SCInstallationVerified or !$SCConfigLoaded) die('ERROR!!! ScanCore-004, Cannot create required directories!'.PHP_EOL);
+
 // / Process supplied command-line arguments.
-  // / C:\Path-To-PHP-Binary.exe C:\Path-To-ScanCore.php C:\Path-To-Scan\ -m [integer] -c [integer] -v -d
-list($pathToScan, $memoryLimit, $chunkSize, $debug, $verbose, $recursion, $ReportFile, $ScanCoreLogfile, $MaxLogSize) = parseArgs($argv);
-// / Set some welcome text. 
-  // / Log the welcome text if $debug variable (-d switch) is set.
-  // / Output the welcome text to the terminal if the $verbose (-v switch) variable is set.
-$txt = 'Starting ScanCore!';
-if ($debug) addLogEntry($txt, FALSE, 0);
-if ($verbose) echo PHP_EOL.$txt.PHP_EOL;
+// / Example:  C:\Path-To-PHP-Binary.exe C:\Path-To-ScanCore.php C:\Path-To-Scan\ -m [integer] -c [integer] -v -d
+list($SCArgsParsed, $SCPathToScan, $SCMemoryLimit, $SCChunkSize, $SCDebug, $SCVerbose, $SCRecursion, $SCReportFile, $SCLogfile, $SCMaxLogSize) = parseArgs($argv);
+if (!$SCArgsParsed) processOutput('Cannot verify supplied arguments!', TRUE, 005, TRUE, TRUE, TRUE);
+else processOutput('Verified supplied arguments.', FALSE, 0, FALSE, FALSE, FALSE);
+
 // / Load the virus definitions into memory and calculate it's hash (to avoid detecting our own definitions as an infection).
-list($defs, $defData) = load_defs($DefsFile, $debug, $verbose);
+list($SCDefsLoaded, $Defs, $DefData) = load_defs($DefsFile);
+if (!$SCDefsLoaded) processOutput('Cannot load virus definitions!', TRUE, 006, TRUE, TRUE, TRUE);
+else processOutput('Loaded virus definitions.', FALSE, 0, FALSE, FALSE, FALSE);
+
 // / Start the scanner!
-list($dirCount, $fileCount, $infected) = file_scan($pathToScan, $defs, $DefsFile, $defData, $debug, $verbose, $memoryLimit, $chunkSize, $recursion);
-// / Copy the report file to the Logs directory for safe permanent keeping.
-@copy($ReportFile, $ScanCoreLogfile);
-// / Set some summary text. 
-  // / Log the summart text if $debug variable (-d switch) is set.
-  // / Output the summary text to the terminal if the $verbose (-v switch) variable is set.
-$txt = 'Scanned '.$fileCount.' files in '.$dirCount.' folders and found '.$infected.' potentially infected items.';
-if ($debug) addLogEntry($txt, FALSE, 0);
-if ($verbose) echo $txt.PHP_EOL; 
+list($ScanComplete, $DirCount, $FileCount, $Infected) = file_scan($SCPathToScan, $Defs, $DefsFile, $DefData, $SCDebug, $SCVerbose, $SCMemoryLimit, $SCChunkSize, $SCRecursion);
+if (!$ScanComplete) processOutput('Could not complete requested scan!', TRUE, 007, TRUE, TRUE, TRUE);
+else processOutput('Scanned '.$FileCount.' files in '.$DirCount.' folders and found '.$Infected.' potentially infected items.', FALSE, 0, TRUE, FALSE, TRUE);
 // / -----------------------------------------------------------------------------------

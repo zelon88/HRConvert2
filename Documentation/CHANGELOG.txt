@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 3/12/2024 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 3/22/2024 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.3.3.
+v3.3.4.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -27,11 +27,31 @@ Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 -----------------------------------------------------------------------------------
 
 
+--------------------
+COMMIT 3/22/2024
+v3.3.4 - ScanCore refactor. Update code structure, improve config.php, rename variables.
+
+-v3.3.4.
+-Added missing loop in sanitizeStrings() function.
+-Refactoring ScanCore to bring it up to the same level of code quality as the rest of the project.
+  -ScanCore to v1.0, Do away with defs versioning.
+  -Definitions can be versioned by date.
+-Remove false positive for jquery 3.6 minified from defs.
+  -Pretty sure this is the 20th anniversary for the original PHP-AV codebase, which there is very litte left.
+-Improve config.php by adding more variables to it.
+  -MemoryLimit, ChunkSize, Debug, Verbose.
+-Make the file headers more consistent.
+-Once the quality is up to par we will focus on adding features and capability.
+  -Specifically an auto-updater would be nice.
+  -Then maybe some automation tools for scraping IOCs and formatting them into the definitions file.
+-Recursion is now disabled by default.
+  -This affects behaviour of scripts that use ScanCore because now you HAVE to specify if you want recursion or scans will fail. 
 
 --------------------
 COMMIT 3/12/2024
 v3.3.3 - Misc cleanup. Update developer docs w/API information.
 
+-v3.3.3.
 -Create official Docker image.
   -https://hub.docker.com/repository/docker/zelon88/hrconvert2
 -Delete UI/Default/Resources/CSS/basic.css.

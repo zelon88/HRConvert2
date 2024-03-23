@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 3/12/2024 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 3/22/2024 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.3.3.
+// / v3.3.4.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -90,7 +90,7 @@ function sanitize($Variable, $strict) {
   else {
     // / Sanitize array inputs.
     // / Note that when $strict is TRUE this also filters out backslashes.
-    if (is_array($Variable)) $Variable[$key] = sanitizeString($Variable[$key], $strict);
+    if (is_array($Variable)) foreach ($Variable as $key => $var) $Variable[$key] = sanitizeString($Variable[$key], $strict);
     // / Sanitize string & numeric inputs.
     // / Note that when $strict is TRUE this also filters out backslashes.
     if (is_string($Variable) or is_numeric($Variable)) $Variable = sanitizeString($Variable, $strict); }
@@ -458,7 +458,7 @@ function verifyGlobals() {
   // / Set global variables to be used through the entire application.
   global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationArray, $UserImageArray, $UserMediaArray, $UserVideoArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleArray, $UserPDFWorkArr, $RetryCount;
   // / Application related variables.
-  $HRConvertVersion = 'v3.3.3';
+  $HRConvertVersion = 'v3.3.4';
   $GlobalsAreVerified = FALSE;
   $CoreLoaded = TRUE;
   $SleepTimer = 0;

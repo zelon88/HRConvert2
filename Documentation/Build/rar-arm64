@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+qemu-i386-static /tmp/rar/rar $*

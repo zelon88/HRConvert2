@@ -43,12 +43,6 @@ FROM php:8.1-apache
 RUN mkdir /DATA && \
   mkdir /DATA/HRConvert2
 
-# Set permissions for required directories.
-RUN chmod -R 0755 /DATA && \
-  chown -R www-data:www-data /DATA && \
-  chmod -R 0755 /var/www/html && \
-  chown -R www-data:www-data /var/www/html
-
 # Set the working directory in the container.
 WORKDIR /var/www/html/HRProprietary
 
@@ -86,6 +80,12 @@ RUN apt-get install -y xpdf mkisofs imagemagick meshlab tesseract-ocr tar
 RUN cp HRConvert2/Documentation/Build/php.ini /usr/local/etc/php.ini
 RUN cp HRConvert2/index.html /var/www/html/index.html
 RUN cp HRConvert2/index.html /var/www/html/HRProprietary/index.html
+
+# Set permissions for required directories.
+RUN chmod -R 0755 /DATA && \
+  chown -R www-data:www-data /DATA && \
+  chmod -R 0755 /var/www/html && \
+  chown -R www-data:www-data /var/www/html
 
 # Expose the ports Apache listens on to the host.
 # Set these to whatever ports suits your needs.

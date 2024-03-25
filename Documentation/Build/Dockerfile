@@ -80,7 +80,7 @@ RUN apt-get install -y xpdf mkisofs imagemagick meshlab tesseract-ocr tar
 
 RUN DPKG_ARCH="$(dpkg --print-architecture)"; \
     if [ "${DPKG_ARCH}" = "amd64" ]; then \
-        apt-get install -y rar \
+        apt-get install -y rar; \
     else \
         dpkg --add-architecture i386 && \
         apt-get install qemu-user-static libc6-i386-cross libstdc++6-i386-cross wget -y && \

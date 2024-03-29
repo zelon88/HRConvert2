@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 3/22/2024 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 3/28/2024 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.3.4.
+// / v3.3.5.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -458,7 +458,7 @@ function verifyGlobals() {
   // / Set global variables to be used through the entire application.
   global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationArray, $UserImageArray, $UserMediaArray, $UserVideoArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleArray, $UserPDFWorkArr, $RetryCount;
   // / Application related variables.
-  $HRConvertVersion = 'v3.3.4';
+  $HRConvertVersion = 'v3.3.5';
   $GlobalsAreVerified = FALSE;
   $CoreLoaded = TRUE;
   $SleepTimer = 0;
@@ -1024,11 +1024,18 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
   $returnData = '';
   $stopper = 0;
   $sleepTime = $SleepTimer;
-  $ext = ' -f ' .$extension;
+
+if ($extension === 'mkv') $extension = 'matroska';
+
+$AudioIn = array('');
+$AudioOut = array('');
+  $ext = ' -f '.$extension;
+
+
   // / Determine if the bitrate is being set.
   if (!is_numeric($bitrate) or $bitrate === FALSE) $bitrate = 'auto';
   if ($bitrate = 'auto') $br = ' ';
-  elseif ($bitrate != 'auto' ) $br = (' -ab ' . $bitrate . ' ');
+  elseif ($bitrate != 'auto' ) $br = (' -b:'.$bitrate.' ');
   $ConversionSuccess = $ConversionErrors = FALSE;
   if ($Verbose) logEntry('Converting audio.');
   // / This code will attempt the conversion up to $StopCounter number of times.
@@ -1036,13 +1043,14 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
     // / If the last conversion attempt failed, wait a moment before trying again.
     if ($stopper !== 0) sleep($sleepTime++);
     // / Attempt the conversion.
+    logEntry('ffmpeg -y -i '.$pathname.$ext.$br.$newPathname);
     $returnData = shell_exec('ffmpeg -y -i '.$pathname.$ext.$br.$newPathname);
     // / Count the number of conversions to avoid infinite loops.
     $stopper++;
     // / Stop attempting the conversion after $StopCounter number of attempts.
     if ($stopper === $StopCounter) {
       $ConversionErrors = TRUE;
-      errorEntry('The video converter timed out!', 12000, FALSE); } }
+      errorEntry('The audio converter timed out!', 12000, FALSE); } }
   if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
@@ -2153,18 +2161,18 @@ if ($TokensAreValid) if ($Verbose) logEntry('Verified tokens.');
 
 // / The following code sets the language for the session.
 list ($GuiIsSet, $GuiToUse, $GuiDir, $GuiFiles) = verifyGui();
-if (!$GuiIsSet) errorEntry('Could not verify GUI!', 25, TRUE);
-else if ($Verbose) logEntry('Verified GUI.');
+if (!$GuiIsSet) errorEntry('Could not verify GUI! GUI set to '.$GuiToUse.'!', 25, TRUE);
+else if ($Verbose) logEntry('Verified GUI. GUI set to '.$GuiToUse.'.');
 
 // / The following code sets the color scheme for the session.
 list ($ColorsAreSet, $ButtonCode) = verifyColors($ButtonStyle);
-if (!$ColorsAreSet) errorEntry('Could not verify color scheme!', 15, TRUE);
-else if ($Verbose) logEntry('Verified color scheme.');
+if (!$ColorsAreSet) errorEntry('Could not verify color scheme! Color set to '.$ButtonStyle.'!', 15, TRUE);
+else if ($Verbose) logEntry('Verified color scheme. Color set to '.$ButtonStyle.'.');
 
 // / The following code sets the language for the session.
 list ($LanguageIsSet, $LanguageToUse, $LanguageDir, $LanguageFiles) = verifyLanguage();
-if (!$LanguageIsSet) errorEntry('Could not verify language!', 16, TRUE);
-else if ($Verbose) logEntry('Verified language.');
+if (!$LanguageIsSet) errorEntry('Could not verify language! Language set to '.$LanguageToUse.'!', 16, TRUE);
+else if ($Verbose) logEntry('Verified language. Language set to '.$LanguageToUse.'.');
 
 // / The following code displays the appropriate GUI for the session.
 if (!isset($_POST['filesToArchive']) && !isset($_POST['convertSelected']) && !isset($_POST['pdfworkSelected']) && !isset($_POST['download']) && !isset($_POST['upload']) && !isset($_POST['filesToScan'])) {

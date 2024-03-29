@@ -43,6 +43,12 @@ FROM php:8.1-apache
 RUN mkdir /DATA && \
   mkdir /DATA/HRConvert2
 
+# Set permissions for required directories.
+RUN chmod -R 0755 /DATA && \
+  chown -R www-data:www-data /DATA && \
+  chmod -R 0755 /var/www/html && \
+  chown -R www-data:www-data /var/www/html
+
 # Set the working directory in the container.
 WORKDIR /var/www/html/HRProprietary
 
@@ -73,39 +79,13 @@ RUN apt-get install -y libpng-dev
 RUN apt-get install -y libzip-dev
 RUN docker-php-ext-install gd zip
 RUN apt-get install -y libreoffice-common default-jre libreoffice-java-common poppler-utils
-RUN apt-get install -y clamav unoconv p7zip-full meshlab dia pandoc python3 zip unzip ffmpeg
+RUN apt-get install -y clamav unoconv p7zip-full meshlab dia pandoc python3 zip unzip rar ffmpeg
 RUN apt-get install -y xpdf mkisofs imagemagick meshlab tesseract-ocr tar
-
-## arm64 rar install hack (rar CLI only available for x86/x64 from rar labs)
-
-RUN DPKG_ARCH="$(dpkg --print-architecture)"; \
-    if [ "${DPKG_ARCH}" = "amd64" ]; then \
-        apt-get install -y rar; \
-    else \
-        dpkg --add-architecture i386 && \
-        apt-get install qemu-user-static libc6-i386-cross libstdc++6-i386-cross wget -y && \
-        cp /usr/i686-linux-gnu/lib/libm.so.6 /lib && \
-        cp /usr/i686-linux-gnu/lib/libc.so.6 /lib && \
-        cp /usr/i686-linux-gnu/lib/libpthread.so.0 /lib && \
-        cp /usr/i686-linux-gnu/lib/ld-linux.so.2 /lib && \
-        cp /usr/i686-linux-gnu/lib/libstdc++.so.6 /lib && \
-        cp /usr/i686-linux-gnu/lib/libgcc_s.so.1  /lib && \
-        wget https://www.rarlab.com/rar/rarlinux-x32-700b3.tar.gz  -O /tmp/rarlinux-x32-700b3.tar.gz && \
-        tar -zxvf /tmp/rarlinux-x32-700b3.tar.gz -C /tmp && \
-        cp HRConvert2/Documentation/Build/rar-arm64 /tmp/rar-arm64 && \
-        chmod +x /tmp/rar-arm64 &&  ln -s /tmp/rar-arm64 /usr/bin/rar; \
-    fi
 
 # Copy required files.
 RUN cp HRConvert2/Documentation/Build/php.ini /usr/local/etc/php.ini
 RUN cp HRConvert2/index.html /var/www/html/index.html
 RUN cp HRConvert2/index.html /var/www/html/HRProprietary/index.html
-
-# Set permissions for required directories.
-RUN chmod -R 0755 /DATA && \
-  chown -R www-data:www-data /DATA && \
-  chmod -R 0755 /var/www/html && \
-  chown -R www-data:www-data /var/www/html
 
 # Expose the ports Apache listens on to the host.
 # Set these to whatever ports suits your needs.

@@ -1,0 +1,124 @@
+-----------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+ScanCore, Copyright on 3/28/2024 by Justin Grimes, www.github.com/zelon88 
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+BSD or MIT licensing is available. Reach out to @zelon88 for more information.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to scan files & folders for viruses.
+
+FILE INFORMATION ...
+v1.3.
+This file contains a list of itemized changes made in each iteration of the application.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ... 
+This application should run on Linux or Windows systems with PHP 8.0 (or later).
+Git is preferred for performing automatic update operations, but not required.
+
+VALID SWITCHES / ARGUMENTS / USAGE ...
+Quick Start Example:
+ C:\Path-To-PHP-Binary.exe C:\Path-To-ScanCore.php C:\Path-To-Scan\ -m [integer] -c [integer] -v -d
+
+Start by opening a command-prompt.
+Type the absolute path to a portable PHP 7.0+ binary. Don't press enter just yet.
+Now type the absolute path to this PHP file as the only argument for the PHP binary.
+Everything after the path to this script will be passed to this file as an argument.
+The first Argument Must be a valid absolute path to the file or folder being scanned.
+Optional arguments can be specified after the scan path. Separate them with spaces.
+
+Reqiured Arguments Include:
+
+  File or folder to scan:                 /path/to/scan
+
+Optional Arguments Include:
+
+  Show version information:               -version
+                                          -ver
+
+  Show help information:                  -help
+                                          -h
+
+  Force recursion:                        -recursion
+                                          -r
+
+  Force no recursion:                     -norecursion
+                                          -nr
+
+  Specify memory limit (in bytes):        -memorylimit ####
+                                          -m ####
+
+  Specify chunk size (in bytes);          -chunksize ####
+                                          -c ####
+
+  Enable "debug" mode (more logging):     -debug
+                                          -d
+
+  Enable "verbose" mode (more console):   -verbose
+                                          -v
+
+  Force a specific report file:           -reportfile /path/to/file
+                                          -rf path/to/file
+
+  Force a specific configuration file:    -configfile /path/to/file
+                                          -cf path/to/file
+
+  Force a specific definitions file:      -defsfile /path/to/file
+                                          -df path/to/file
+
+  Force maximum log size (in bytes):      -maxlogsize ###
+                                          -ml ###
+
+  Perform definition update:              -updatedefinitions
+                                          -ud
+
+  Perform application update:             -updateapplication
+                                          -ua
+
+<3 Open-Source
+-----------------------------------------------------------------------------------
+
+
+
+--------------------
+COMMIT 3/28/2024
+v1.3 - Add -defsfile, -df argument. Reorder logic & functions. Clean up output. Improve help, version output.
+
+-v1.3 - Add -defsfile, -df argument. Reorder logic & functions. Clean up output. Improve help, version output.
+  -Add -defsfile & -df argument for specifying a definition file by command line. 
+  -Now ScanCore is completely modular. It can be run against any defs file and any config file, so automating tasks is easy & granular.
+  -Add config file last modified, which core file, and which defs file to version output.
+  -Add new commands to help output.
+  -Will update the docs with proper error descriptions and instructions once the error numbers stop chaning.
+
+
+--------------------
+COMMIT 3/26/2024
+v1.2 - Add several def update methods, so even with no deps they work.
+
+-v1.2.
+  -Add 'raw' and 'git' update methods. So if you can't get git (hehe) then you can still perform updates.
+  -Use globals $EOL, $SEP for PHP_EOL and DIRECTORY_SEPARATOR, as intended.
+  -Add -version argument for displaying useful info.
+    -Info like the source for def & app updates, the original repo, subscribed defs, version, last update, ect...
+  -Added a plug to the LICENSE INFORMATION section of the header text.
+    -// / BSD or MIT licensing is available. Reach out to @zelon88 for more information.
+    -Support your favorite developer by buying a trophy license for your favorite open-source software.
+    -Imrove comments / formatting in ScanCore_Config.php. Add default values, labels, better descriptions for everything.
+    -Add -help, -h and -version, -ver arguments for showing version & help, respectively.
+    -Add -configfile, -cf argument for selecting which configuration file to use.
+      -Now one scanner can rule them all!
+      -Instead of installing multiple scanners to scan different subscriptions, just have different config files.
+    -Revise output. Make more consistent, easier to read.
+    -Remove unused $LogFile and $LogDir references from core.
+    -Remove unused $LogFile and $LogDir references from config.
+    -ReportsDir is now the only location for logs. Logs & reports are officially the same thing.
+    -The -logfile & -lf arguments are now undocumented aliases of the -reportfile and -rf arguments.
+    -I plan on removing -logfile & -lf arguments in the future.
+    -What will probably happen is I'll forget I said that and wind up re-documenting these undocumented aliases in the future.

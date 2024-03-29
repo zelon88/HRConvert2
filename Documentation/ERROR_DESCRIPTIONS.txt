@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 3/5/2024 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 3/28/2024 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.3.1
+v3.3.5
 This plain text file contains descriptions of all the native error messages contained in or produced by the HRConvert2 Diablo engine. 
 These descriptions should give administrators a starting point for debugging problems with HRConvert2 installations. 
 Each section in this file contains information about a different error message. The first one is an example to demonstrate the structure of this file.
@@ -65,6 +65,7 @@ FILE
   File is relative to the root HRConvert2 installation directory. 
   <SELECTED_LANGUAGE> will be replaced with the ISO 639-1 code that represents the language that was used during the event.
   <SELECTED_GUI> will be replaced with a text string that represents the GUI that was used during the event.
+  <SELECTED_COLOR> will be replaced with a text string that represents the color that was used during the event.
 
 FATAL
   Whether or not the occurance of this error will halt execution of the application.
@@ -389,7 +390,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15, <SESSION_IDENTIFIER>: Could not verify color scheme!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15, <SESSION_IDENTIFIER>: Could not verify color scheme! Color set to <SELECTED_COLOR>!
 
 FILE
   convertCore.php
@@ -409,7 +410,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16, <SESSION_IDENTIFIER>: Could not verify language!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16, <SESSION_IDENTIFIER>: Could not verify language! Language set to <SELECTED_LANGUAGE>!
 
 FILE
   convertCore.php
@@ -2464,7 +2465,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-25, <SESSION_IDENTIFIER>: Could not verify GUI!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-25, <SESSION_IDENTIFIER>: Could not verify GUI! GUI set to <SELECTED_GUI>! 
 
 FILE
   convertCore.php

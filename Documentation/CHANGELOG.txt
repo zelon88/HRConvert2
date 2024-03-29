@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 3/22/2024 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 3/25/2024 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.3.4.
+v3.3.5.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -26,6 +26,64 @@ Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+
+--------------------
+COMMIT 3/24/2024
+v3.3.5 - Rar on RPI fix, FFMPEG build process changes.
+
+-v3.3.5.
+-Continue ScanCore refactor.
+  -v1.1.
+    -Added support for -ud argument, which will Update Definitions!
+    -This gets defs by default from the ScanCore_Definitions repository.
+    -Defs are now broken into subscriptions.
+    -Subscriptions include Virus, Malare, & PUP.
+    -Each client will download only the subscriptions that are specified in config.php.
+    -The client will then compile its subscribed definitions into a "combined" definitions file locally.
+    -This will give users the ability to control which definitions they install, controlling what ScanCore will detect.
+    -Because ScanCore is portable, that means you can set different scanners to do different things.
+    -Need to work on a way to automate definition updates. Every scan, daily, weekly, bi-weekly, or monthly.
+  -v1.2.
+    -Add 'raw' and 'git' update methods. So if you can't get git (hehe) then you can still perform updates.
+    -Use globals $EOL, $SEP for PHP_EOL and DIRECTORY_SEPARATOR, as intended.
+    -Add -version argument for displaying useful info.
+      -Info like the source for def & app updates, the original repo, subscribed defs, version, last update, ect...
+    -Added a plug to the LICENSE INFORMATION section of the header text.
+      -// / BSD or MIT licensing is available. Reach out to @zelon88 for more information.
+      -Support your favorite developer by buying a trophy license for your favorite open-source software.
+    -Imrove comments / formatting in ScanCore_Config.php. Add default values, labels, better descriptions for everything.
+    -Add -help, -h and -version, -ver arguments for showing version & help, respectively.
+    -Add -configfile, -cf argument for selecting which configuration file to use.
+      -Now one scanner can rule them all!
+      -Instead of installing multiple scanners to scan different subscriptions, just have different config files.
+    -Revise output. Make more consistent, easier to read.
+    -Remove unused $LogFile and $LogDir references from core.
+    -Remove unused $LogFile and $LogDir references from config.
+    -ReportsDir is now the only location for logs. Logs & reports are officially the same thing.
+    -The -logfile & -lf arguments are now undocumented aliases of the -reportfile and -rf arguments.
+    -I plan on removing -logfile & -lf arguments in the future.
+    -What will probably happen is I'll forget I said that and wind up re-documenting these undocumented aliases in the future.
+  -v1.3 - Add -defsfile, -df argument. Reorder logic & functions. Clean up output. Improve help, version output.
+    -Add -defsfile & -df argument for specifying a definition file by command line. 
+    -Now ScanCore is completely modular. It can be run against any defs file and any config file, so automating tasks is easy & granular.
+    -Add config file last modified, which core file, and which defs file to version output.
+    -Add new commands to help output.
+    -Will update the docs with proper error descriptions and instructions once the error numbers stop chaning.
+-Thanks to @bit-man for submitting a fix for rar file support on RPI & non x86-64 platforms.
+-Evaluate how we're using ffmpeg, per issue #59, but also effects issue #29.
+  -Remove M4P support.
+  -Omg there's even a typo... file format oog should be ogg.
+  -Change ffmpeg build process to build from scratch.
+  -Inprove capability & file support. Considerably.
+  -Increase duration and difficulty of install process. Considerably.
+  -Start by reverse engineering https://raw.githubusercontent.com/markus-perl/ffmpeg-build-script/master/web-install-gpl-and-non-free.sh.
+  -Build process complete as of 3/25/2024. 
+    -Now we need to incorporate the new ffmpeg functionality into core.
+    -Then we can update the build / install process & documentation.
+-Add the selected GUI, Language, and Color to error or verbose success messages to enhance debugging potential.
+-Update ERROR_DESCRIPTIONS.txt with the new information.
+-This version is just the start of an overhaul to media file processing.
+-Add some temporary files to DOCS for helping me track my ffmpeg overhaul progress.
 
 --------------------
 COMMIT 3/22/2024

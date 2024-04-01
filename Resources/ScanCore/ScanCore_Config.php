@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / ScanCore, Copyright on 3/28/2024 by Justin Grimes, www.github.com/zelon88 
+// / ScanCore, Copyright on 3/29/2024 by Justin Grimes, www.github.com/zelon88 
 // / 
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / This application is designed to scan files & folders for viruses.
 // / 
 // / FILE INFORMATION ...
-// / v1.3.
+// / v1.4.
 // / This file contains the core logic of the ScanCore application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -111,6 +111,17 @@ $ApplicationUpdateDomain = 'github.com';
 // /   Valid options are the name of the repository, formatted as a string.
 // /   Default is 'ScanCore'.
 $ApplicationRepositoryName = 'ScanCore';
+// /  --Application Branch Name--
+// /   The name of the repository branch containing the application updates to use.
+// /   Valid options are the name of the application repository branch, formatted as a string.
+// /   Default is 'master'.
+$ApplicationBranchName = 'master';
+// /  --Application Subscriptions--
+// /   The type of application updates to subscribe to.
+// /   Must be formatted as an array.
+// /   Valid options are 'README.md', 'ScanCore.php', 'ScanCore_Config.php', 'index.html', 'Documentation/CHANGELOG.txt', 'Documentation/index.html'.
+// /   Default is 'README.md', 'ScanCore.php', 'ScanCore_Config.php', 'index.html', 'Documentation/CHANGELOG.txt', 'Documentation/index.html'.
+$ApplicationUpdateSubscriptions = array('README.md', 'ScanCore.php', 'ScanCore_Config.php', 'index.html', 'Documentation/CHANGELOG.txt', 'Documentation/index.html');
 // /  --Allow Definition Updates--
 // /   Allow definition updates.
 // /   Valid options are TRUE or FALSE.
@@ -132,6 +143,11 @@ $DefinitionUpdateDomain = 'github.com';
 // /   Valid options are the name of the repository, formatted as a string.
 // /   Default is 'ScanCore_Definitions'.
 $DefinitionRepositoryName = 'ScanCore_Definitions';
+// /  --Definition Branch Name--
+// /   The name of the repository branch containing the definition updates to use.
+// /   Valid options are the name of the definition repository branch, formatted as a string.
+// /   Default is 'main'.
+$DefinitionBranchName = 'main';
 // /  --Definition Subscriptions--
 // /   The type of definition updates to subscribe to.
 // /   Must be formatted as an array.
@@ -144,7 +160,7 @@ $DefinitionsUpdateSubscriptions = array('Virus', 'Malware', 'PUP');
 // /   If 'git' is not installed & cannot be installed, the 'raw' option can be used instead.
 // /   Valid options are 'git', 'raw'.
 // /   Default is 'raw'.
-$UpdateMethod = 'raw';
+$UpdateMethod = 'git';
 // /  --Default Maximum Log Size--
 // /   Number of bytes to store in each logfile before splitting to a new one.
 // /   Must be formatted as an integer, or an equation that evaluates to an integer.
@@ -173,7 +189,7 @@ $DefaultChunkSize = 1024*1024*128;
 // /  --Configuration Version--
 // /   The version of this file, used for internal version integrity checks.
 // /   Must be formatted as a string. Must match the version of ScanCore.php file.
-$ConfigVersion = 'v1.3';
+$ConfigVersion = 'v1.4';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

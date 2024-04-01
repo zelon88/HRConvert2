@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / ScanCore, Copyright on 3/28/2024 by Justin Grimes, www.github.com/zelon88 
+// / ScanCore, Copyright on 3/29/2024 by Justin Grimes, www.github.com/zelon88 
 // / 
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / This application is designed to scan files & folders for viruses.
 // / 
 // / FILE INFORMATION ...
-// / v1.3.
+// / v1.4.
 // / This file contains the core logic of the ScanCore application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -91,12 +91,13 @@
 // / The following code sets global variables for the session.
 function verifyInstallation() {
   // / Set variables.
-  global $Date, $Time, $Version, $InstallationVerified, $FileCount, $DirCount, $Infected, $EOL, $SEP, $RP, $CoreFile;
+  global $Date, $Time, $Version, $InstallationVerified, $FileCount, $DirCount, $Infected, $EOL, $SEP, $RP, $CoreFile, $DefaultConfigFile;
   // / Time related variables.
   $Date = date("m_d_y");
   $Time = date("F j, Y, g:i a");
   // / Application related variables.
-  $Version = 'v1.3';
+  $Version = 'v1.4';
+  $DefaultConfigFile = 'ScanCore_Config.php';
   $FileCount = $DirCount = $Infected = 0;;
   $EOL = PHP_EOL;
   $SEP = DIRECTORY_SEPARATOR;
@@ -112,7 +113,7 @@ function verifyInstallation() {
 // / If either the -defsfile or -df argument is not set, the definitions file named specified in 'ScanCore_Config.php' will be used instead. 
 function loadConfig($Version) {
   // / Set variables.
-  global $argv, $ConfigFilePath, $RP, $SEP, $EOL, $ConfigFile, $ScanLoc, $DefsFile, $ConfigVersion, $ConfigLoaded, $DefsExist, $Version, $ReportFile, $ReportDir, $ReportFileName, $RequiredDirs, $InstallDir, $MaxLogSize, $MemoryLimit, $ChunkSize, $DefaultMemoryLimit, $DefaultChunkSize, $DefaultMaxLogSize, $DefinitionRepositoryName, $DefinitionUpdates, $DefinitionUpdateDomain, $DefinitionUpdateURL, $DefInstallDir, $DefGitDir, $ApplicationRepositoryName, $ApplicationUpdates, $ApplicationUpdateDomain, $ApplicationUpdateURL, $AppInstallDir, $AppGitDir, $DefinitionsUpdateSubscriptions, $DefsFileName, $Verbose, $Debug, $UpdateMethod;
+  global $argv, $ConfigFilePath, $RP, $SEP, $EOL, $ConfigFile, $ScanLoc, $DefsFile, $ConfigVersion, $ConfigLoaded, $DefsExist, $Version, $ReportFile, $ReportDir, $ReportFileName, $RequiredDirs, $InstallDir, $MaxLogSize, $MemoryLimit, $ChunkSize, $DefaultMemoryLimit, $DefaultChunkSize, $DefaultMaxLogSize, $DefinitionRepositoryName, $DefinitionUpdates, $DefinitionUpdateDomain, $DefinitionUpdateURL, $DefInstallDir, $DefGitDir, $ApplicationRepositoryName, $ApplicationUpdates, $ApplicationUpdateDomain, $ApplicationUpdateURL, $AppInstallDir, $AppGitDir, $DefinitionsUpdateSubscriptions, $DefsFileName, $Verbose, $Debug, $UpdateMethod, $DefinitionBranchName, $ApplicationBranchName, $ApplicationUpdateSubscriptions;
   $ConfigLoaded = $DefsExist = FALSE;
   $ConfigFile = 'ScanCore_Config.php';
   $ConfigFilePath = $RP.$SEP.$ConfigFile;
@@ -285,8 +286,7 @@ function parseArgs($argv) {
     if ($arg == '-recursion' or $arg == '-r') $Recursion = TRUE;
     if ($arg == '-norecursion' or $arg == '-nr') $Recursion = FALSE;
     if ($arg == '-updatedefinitions' or $arg == '-ud') $PerformDefUpdate = TRUE;
-    // The update application feature is not ready yet, so don't uncomment this.
-    //if ($arg == '-updateapplication' or $arg == '-ua') $PerformAppUpdate = TRUE;
+    if ($arg == '-updateapplication' or $arg == '-ua') $PerformAppUpdate = TRUE;
     if ($arg == '-reportfile' or $arg == '-rf' or $arg == '-logfile' or $arg == '-lf') $ReportFile = $argv[$key + 1];
     if ($arg == '-maxlogsize' or $arg == '-ml') $MaxLogSize = $argv[$key + 1]; }
   // / Detect if version or help information is being requested.
@@ -381,9 +381,9 @@ function connectionSuccess($type) {
 // / A function to install definition updates.
 function updateDefinitions() {
   // / Set variables.
-  global $DefinitionUpdates, $DefinitionUpdateURL, $DefinitionsUpdateSubscriptions, $InstallDir, $DefsFile, $DefinitionRepositoryName, $DefInstallDir, $DefGitDir, $UpdateMethod, $SEP, $EOL, $SubText, $RP;
+  global $DefinitionUpdates, $DefinitionUpdateURL, $DefinitionsUpdateSubscriptions, $InstallDir, $DefsFile, $DefinitionRepositoryName, $DefInstallDir, $DefGitDir, $UpdateMethod, $SEP, $EOL, $SubText, $RP, $DefinitionBranchName;
   $UpdateDefininitionsComplete = $UpdateDefinitionsErrors = $defSubs = $writeCheck = $defInstallDirCleaned = $defGitDirCleaned = $cleanCheck = $rawWriteCheck = $rawWriteCheckDir = FALSE;
-  $subData = $subData1 = $returnData = $rawDefData = $rawDefURL = '';
+  $subData = $subData1 = $returnData = $rawDefData = $rawDefURL = $defSubFile = '';
   $subCount = 0;
   $subCount1 = count($DefinitionsUpdateSubscriptions);
   // / Only perform definition updates if they are enabled in $ConfigFile.
@@ -408,10 +408,10 @@ function updateDefinitions() {
         foreach ($DefinitionsUpdateSubscriptions as $defSubs) {
           $rawDefData = '';
           $defSubFile = $DefInstallDir.$SEP.'ScanCore_'.$defSubs.'.def';
-          $rawDefURL = $DefinitionUpdateURL.'/raw/main/ScanCore_'.$defSubs.'.def';
+          $rawDefURL = $DefinitionUpdateURL.'/raw/'.$DefinitionBranchName.'/ScanCore_'.$defSubs.'.def';
           processOutput('Attempting download with built in functions against URL:  '.$rawDefURL, FALSE, 0, FALSE, FALSE, FALSE);
           if (file_exists($rawDefURL)) $rawDefData = file_get_contents($DefinitionUpdateURL);
-          if (!file_exists($rawDefURL) or $rawDefData === '') {
+          if (!file_exists($rawDefURL) or $rawDefData === '' or $rawDefData !== '404: Not Found') {
             processOutput('Attempting download with cURL against URL:  '.$rawDefURL, FALSE, 0, FALSE, FALSE, FALSE);
             $returnData = shell_exec('curl -Ls '.$rawDefURL.' --output '.$defSubFile); 
             $rawWriteCheck = file_exists($defSubFile); }
@@ -453,32 +453,104 @@ function updateDefinitions() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to backup the configuration file prior to commencing application updates.
+function backupConfig() {
+  // / Set variables.
+  global $ConfigFile;
+  $ConfigCopied = FALSE;
+  $configInc = 0;
+  $backupConfigFile = $ConfigFile.'_Backup_'.$configInc.'.php';
+  // / Check if an existing backup configuration file exists, & set a path to a new one with an unused name.
+  while (file_exists($backupConfigFile)) {
+    $configInc++;
+    $backupConfigFile = $ConfigFile.'_Backup_'.$configInc.'.php'; }
+  // / Copy the configuration file to a backup.
+  processOutput('Backing up the existing configuration file to:  '.$backupConfigFile, FALSE, 0, FALSE, FALSE, FALSE);
+  $ConfigCopied = copy($ConfigFile, $backupConfigFile);
+  // / Only proceed if the configuration file was backed up.
+  if (!$ConfigCopied) processOutput('Cannot backup the existing configuration file to:  '.$backupConfigFile, TRUE, 800, TRUE, TRUE, FALSE);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $configInc = $backupConfigFile = NULL;
+  unset($configInc, $backupConfigFile);
+  return array($ConfigCopied); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to install application updates.
 function updateApplication() {
-  global $ApplicationUpdates, $ApplicationUpdateURL, $InstallDir, $ApplicationRepositoryName, $AppInstallDir, $AppGitDir, $ConfigFile;
-  $UpdateApplicationComplete = $UpdateApplicationErrors = $configCopied = FALSE;
-  $returnData = '';
-  $configInc = 0;
-  $backupConfigFile = $ConfigFile.'_'.$configInc.'_'.'.bak';
+  // / Set variables.
+  global $ApplicationUpdates, $ApplicationUpdateURL, $ApplicationUpdateSubscriptions, $InstallDir, $ApplicationRepositoryName, $AppInstallDir, $AppGitDir, $UpdateMethod, $SEP, $EOL, $SubText, $RP, $ApplicationBranchName;
+  $UpdateAppininitionsComplete = $UpdateApplicationsErrors = $appSubs = $writeCheck = $appInstallDirCleaned = $appGitDirCleaned = $cleanCheck = $rawWriteCheck = $rawWriteCheckDir = FALSE;
+  $subData = $subData1 = $returnData = $rawAppData = $rawAppURL = $appSubFile ='';
+  $subCount = 0;
+  $subCount1 = count($ApplicationUpdateSubscriptions);
   // / Only perform application updates if they are enabled in $ConfigFile.
   // / If application updates are enabled, download the latest application update from the $ApplicationUpdateURL.
   if ($ApplicationUpdates) {
-    // / Check if an existing backup configuration file exists, & set a path to a new one with an unused name.
-    while (file_exists($backupConfigFile)) {
-      $configInc++;
-      $backupConfigFile = $ConfigFile.'_'.$configInc.'_'.'.bak'; }
-    // / Copy the configuration file to a backup.
-    $configCopied = copy($ConfigFile, $backupConfigFile);
-    // / Only proceed if the configuration file was backed up.
-    if ($configCopied) {
-    //$returnData = shell_exec('git clone '.$ApplicationUpdateURL.' '.$InstallDir);
-  } }
-  // / Check if the git operation returned some output.
-  if ($returnData !== '') $UpdateApplicationComplete = TRUE;
+    processOutput('Starting application update. Update method is:  '.$UpdateMethod, FALSE, 0, TRUE, FALSE, FALSE);
+    list($ConfigCopied) = backupConfig();
+    if ($ConfigCopied) {
+      processOutput('Cleaning update environment.', FALSE, 0, TRUE, FALSE, FALSE);
+      // / If a application install directory already exists, remove all the files inside & then remove the folder.
+      list($appInstallDirCleaned) = clean($AppInstallDir);
+      list($appGitDirCleaned) = clean($AppGitDir);
+      processOutput('Verifying network connectivity.', FALSE, 0, FALSE, FALSE, FALSE);
+      $ConnectionResult = connectionSuccess('application');
+      if ($ConnectionResult) processOutput('Verified network connectivity.', FALSE, 0, FALSE, FALSE, FALSE);
+      else processOutput('Cannot not verify network connectivity!', TRUE, 700, TRUE, TRUE, FALSE);
+      // / Continue only if a connection could be made and the definition install directory was able to be cleaned.
+      if ($ConnectionResult && $appGitDirCleaned && $appInstallDirCleaned) {
+        // / Download the latest application from the $ApplicationUpdateURL.
+        // / Perform the application update by downloading the raw application data.
+        if ($UpdateMethod === 'raw') {
+          processOutput('Creating a folder at:  '.$AppInstallDir, FALSE, 0, FALSE, FALSE, FALSE);
+          $rawWriteCheckDir = mkdir($AppInstallDir);
+          $rawWriteCheckDir = mkdir($AppInstallDir.$SEP.'Documentation');
+          foreach ($ApplicationUpdateSubscriptions as $appSubs) {
+            $rawAppData = '';
+            $appSubFile = $AppInstallDir.$SEP.$appSubs;
+            $appSubFile = str_replace('/', $SEP, $appSubFile);
+            $rawAppURL = $ApplicationUpdateURL.'/raw/'.$ApplicationBranchName.'/'.$appSubs;
+            processOutput('Attempting download with built in functions against URL:  '.$rawAppURL, FALSE, 0, FALSE, FALSE, FALSE);
+            if (file_exists($rawAppURL)) $rawAppData = file_get_contents($ApplicationUpdateURL);
+            if (!file_exists($rawAppURL) or $rawAppData === '' or $rawAppData !== '404: Not Found') {
+              processOutput('Attempting download with cURL against URL:  '.$rawAppURL, FALSE, 0, FALSE, FALSE, FALSE);
+              $returnData = shell_exec('curl -Ls '.$rawAppURL.' --output '.$appSubFile); 
+              $rawWriteCheck = file_exists($appSubFile); }
+            else $rawWriteCheck = file_put_contents($appSubFile, $rawAppData); } }
+          // / Perform the application update using 'git', if available.
+          if ($UpdateMethod === 'git') $returnData = shell_exec('git clone '.$ApplicationUpdateURL);
+          // / Only continue with the update if the previous operation was able to create a folder.
+          if (is_dir($AppInstallDir)) {
+            // / Copy an index.html file to the newly created folder as document root protection, incase this application is in a hosted location.
+            if (file_exists($RP.$SEP.'index.html')) copy($RP.$SEP.'index.html', $AppInstallDir.$SEP.'index.html');
+            // / Remove the .git directory, just in case this is installed in a hosted location we don't want to maintin that many directories.
+            if (is_dir($AppGitDir)) list($cleanCheck) = clean($AppGitDir);
+            // / Iterate through the list of susbscribed applications.
+            foreach ($ApplicationUpdateSubscriptions as $appSubs) {
+              $appSubFile = $AppInstallDir.$SEP.$appSubs;
+              // / Build the new applications in memory from the subscriptions that apply to this installation.
+              if (file_exists($appSubFile)) {
+                processOutput('Loading Application file:  '.$appSubFile, FALSE, 0, FALSE, FALSE, FALSE);
+                $subCount++;
+                $subData1 = file_get_contents($appSubFile);
+                $appSubFileName =  basename($appSubFile);
+                if (strpos($appSubFile, 'Documentation') > 0) $appSubFileName = 'Documentation'.$SEP.$appSubFileName;
+                if ($subData1 !== FALSE) {
+                  processOutput('Writing Application file:  '.$appSubFile, FALSE, 0, FALSE, FALSE, FALSE);
+                  $subData2 = unlink($InstallDir.$SEP.$appSubFileName);
+                  $writeCheck = file_put_contents($InstallDir.$SEP.$appSubFileName, $subData1); } } } } }
+      // / If a application install directory already exists, remove all the files inside & then remove the folder.
+      list($appInstallDirCleaned) = clean($AppInstallDir);
+      list($appGitDirCleaned) = clean($AppGitDir); }
+    else processOutput('Application update was aborted because the existing configuration file could not be backed up!', TRUE, 900, TRUE, TRUE, FALSE); }
+  // / Check if the subscription file was written successfully.
+  if ($writeCheck) $UpdateAppininitionsComplete = TRUE;
+  if ($subCount !== $subCount1) $UpdateApplicationsErrors = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $configInc = $backupConfigFile = $configCopied = NULL;
-  unset($sreturnData, $configInc, $backupConfigFile, $configCopied);
-  return array($UpdateApplicationComplete, $UpdateApplicationErrors); }
+  $appSubs = $appSubFile = $subData = $writeCheck = $subCount = $subCount1 = $returnData = $f = $i = $cleanCheck = $rawWriteCheck = $rawWriteCheckDir = $rawAppData = $rawAppURL = $appGitDirCleaned = $appInstallDirCleaned = $subData1 = $appSubFileName = NULL;
+  unset($appSubs, $appSubFile, $subData, $writeCheck, $subCount, $subCount1, $returnData, $f, $i, $cleanCheck, $rawWriteCheck, $rawWriteCheckDir, $rawAppData, $rawAppURL, $appGitDirCleaned, $appInstallDirCleaned, $subData1, $appSubFileName);
+  return array($UpdateAppininitionsComplete, $UpdateApplicationsErrors); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -511,19 +583,20 @@ function file_scan($folder, $Defs, $DefsFile, $DefData, $Debug, $Verbose, $Memor
   global $SEP, $FileCount, $DirCount, $Infected;
   $ScanComplete = FALSE;
   $DirCount++;
-  if (is_dir($folder)) {
-    processOutput('Scanning folder:  '.$folder, FALSE, 0, TRUE, FALSE, FALSE);
-    $files = scandir($folder);
-    foreach ($files as $file) {
-      if ($file === '' or $file === '.' or $file === '..') continue;
-      $entry = str_replace($SEP.$SEP, $SEP, $folder.$SEP.$file);
-      if (!is_dir($entry)) list($checkComplete, $Infected, $FileCount) = virus_check($entry, $Defs, $DefsFile, $DefData, $Debug, $Verbose, $MemoryLimit, $ChunkSize);
-      if (is_dir($entry) && $Recursion) {
-        list ($scanComplete, $DirCount, $FileCount, $Infected) = file_scan($entry, $Defs, $DefsFile, $DefData, $Debug, $Verbose, $MemoryLimit, $ChunkSize, $Recursion); 
-        $entry = ''; } } }
-  if (!is_dir($folder) && $folder !== '.' && $folder !== '..') {
-    $FileCount++;
-    list($checkComplete, $Infected, $FileCount) = virus_check($folder, $Defs, $DefsFile, $DefData, $Debug, $Verbose, $MemoryLimit, $ChunkSize); }
+  if ($folder !== '.') if ($folder !== '..') {
+    if (is_dir($folder)) {
+      processOutput('Scanning folder:  '.$folder, FALSE, 0, TRUE, FALSE, FALSE);
+      $files = scandir($folder);
+      foreach ($files as $file) {
+        if ($file === '' or $file === '.' or $file === '..') continue;
+        $entry = str_replace($SEP.$SEP, $SEP, $folder.$SEP.$file);
+        if (!is_dir($entry)) list($checkComplete, $Infected, $FileCount) = virus_check($entry, $Defs, $DefsFile, $DefData, $Debug, $Verbose, $MemoryLimit, $ChunkSize);
+        else if ($Recursion) {
+          list ($scanComplete, $DirCount, $FileCount, $Infected) = file_scan($entry, $Defs, $DefsFile, $DefData, $Debug, $Verbose, $MemoryLimit, $ChunkSize, $Recursion); 
+          $entry = ''; } } }
+    else {
+      $FileCount++;
+      list($checkComplete, $Infected, $FileCount) = virus_check($folder, $Defs, $DefsFile, $DefData, $Debug, $Verbose, $MemoryLimit, $ChunkSize); } }
   $ScanComplete = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $files = $file = $entry = $folder = NULL;
@@ -537,74 +610,76 @@ function virus_check($file, $Defs, $DefsFile, $DefData, $Debug, $Verbose, $Memor
   // / Set variables.
   global $Infected, $DefsFileName, $FileCount;
   $CheckComplete = FALSE;
-  if ($file !== $DefsFileName) {
-    if (file_exists($file)) {
-      $FileCount++;
+  // / Check that the file exists & is not the currently loaded definitions file.
+  if (file_exists($file)) if ($file !== $DefsFileName) {
       processOutput('Scanning file:  '.$file, FALSE, 0, TRUE, FALSE, FALSE);
-      $filesize = filesize($file);
-      $data1 = hash_file('md5', $file);
       $data2 = hash_file('sha256', $file);
-      $data3 = hash_file('sha1', $file);
-      // / Scan files larger than the memory limit by breaking them into chunks.
-      if ($filesize >= $MemoryLimit && file_exists($file)) { 
-        processOutput('Chunking file:  '.$file, FALSE, 0, TRUE, FALSE, FALSE);
-        $handle = @fopen($file, "r");
-        if ($handle) {
-          while (($buffer = fgets($handle, $ChunkSize)) !== FALSE) {
-            $data = $buffer;
-            processOutput('Scanning chunk.', FALSE, 0, TRUE, FALSE, FALSE);
-            foreach ($Defs as $virus) {
-              $virus = explode("\t", $virus[0]);
-              if (isset($virus[1]) && !is_null($virus[1]) && $virus[1] !== '' && $virus[1] !== ' ') {
-                if (strpos(strtolower($data), strtolower($virus[1])) !== FALSE or strpos(strtolower($file), strtolower($virus[1])) !== FALSE) { 
-                  // File matches virus defs.
-                  processOutput('Infected: '.$file.' ('.$virus[0].', Data Match: '.$virus[1].')', FALSE, 0, TRUE, TRUE, FALSE);
-                  $Infected++; } } } }
-          if (!feof($handle)) {
-            processOutput('Unable to open '.$file.'!', TRUE, 600, TRUE, TRUE, FALSE);
-            fclose($handle); } 
-          if (isset($virus[2]) && !is_null($virus[2]) && $virus[2] !== '' && $virus[2] !== ' ') {
+      // / Double check that the file we're scanning is not the currently loaded definitions file.
+      if ($DefData !== $data2) {
+        $FileCount++;
+        $filesize = filesize($file);
+        $data1 = hash_file('md5', $file);
+        $data3 = hash_file('sha1', $file);
+        // / Scan files larger than the memory limit by breaking them into chunks.
+        if ($filesize >= $MemoryLimit) {
+          processOutput('Chunking file:  '.$file, FALSE, 0, TRUE, FALSE, FALSE);
+          $handle = @fopen($file, "r");
+          if ($handle) {
+            // / Break the file into chunks & iterate through each chunk.
+            while (($buffer = fgets($handle, $ChunkSize)) !== FALSE) {
+              $data = $buffer;
+              processOutput('Scanning chunk.', FALSE, 0, TRUE, FALSE, FALSE);
+              // / Scan the current chunk for data matches.
+              foreach ($Defs as $virus) {
+                $virus = explode("\t", $virus[0]);
+                if (isset($virus[1])) if (!is_null($virus[1])) if ($virus[1] !== '') if ($virus[1] !== ' ') {
+                  if (strpos(strtolower($data), strtolower($virus[1])) !== FALSE or strpos(strtolower($file), strtolower($virus[1])) !== FALSE) { 
+                    // File matches virus defs.
+                    processOutput('Infected: '.$file.' ('.$virus[0].', Data Match: '.$virus[1].')', FALSE, 0, TRUE, TRUE, FALSE);
+                    $Infected++; } } } }
+                if (!feof($handle)) processOutput('Unable to open '.$file.'!', TRUE, 600, TRUE, TRUE, FALSE);
+                fclose($handle); }
+          if (isset($virus[2])) if (!is_null($virus[2])) if ($virus[2] !== '') if ($virus[2] !== ' ') {
             if (strpos(strtolower($data1), strtolower($virus[2])) !== FALSE) {
               // File matches virus defs.
               processOutput('Infected: '.$file.' ('.$virus[0].', MD5 Hash Match: '.$virus[2].')', FALSE, 0, TRUE, TRUE, FALSE);
               $Infected++; } }
-            if (isset($virus[3]) && !is_null($virus[3]) && $virus[3] !== '' && $virus[3] !== ' ') {
+          if (isset($virus[3])) if (!is_null($virus[3])) if ($virus[3] !== '') if ($virus[3] !== ' ') {
+            if (strpos(strtolower($data2), strtolower($virus[3])) !== FALSE) {
+              // File matches virus defs.
+              processOutput('Infected: '.$file.' ('.$virus[0].', SHA256 Hash Match: '.$virus[3].')', FALSE, 0, TRUE, TRUE, FALSE);
+              $Infected++; } }
+          if (isset($virus[4])) if (!is_null($virus[4])) if ($virus[4] !== '') if ($virus[4] !== ' ') {
+            if (strpos(strtolower($data3), strtolower($virus[4])) !== FALSE) {
+              // File matches virus defs.
+              processOutput('Infected: '.$file.' ('.$virus[0].', SHA1 Hash Match: '.$virus[4].')', FALSE, 0, TRUE, TRUE, FALSE);
+              $Infected++; } } }
+        // / Scan files smaller than the memory limit by fitting the entire file into memory.
+        else {
+          $data = file_get_contents($file);
+          foreach ($Defs as $virus) {
+            $virus = explode("\t", $virus[0]);
+            if (isset($virus[1])) if (!is_null($virus[1])) if ($virus[1] !== '') if ($virus[1] !== ' ') {
+              if (strpos(strtolower($data), strtolower($virus[1])) !== FALSE or strpos(strtolower($file), strtolower($virus[1])) !== FALSE) {
+                // File matches virus defs.
+                processOutput('Infected: '.$file.' ('.$virus[0].', Data Match: '.$virus[1].')', FALSE, 0, TRUE, TRUE, FALSE);
+                $Infected++; } }
+            if (isset($virus[2])) if (!is_null($virus[2])) if ($virus[2] !== '') if ($virus[2] !== ' ') {
+              if (strpos(strtolower($data1), strtolower($virus[2])) !== FALSE) {
+                // File matches virus defs.
+                processOutput('Infected: '.$file.' ('.$virus[0].', MD5 Hash Match: '.$virus[2].')', FALSE, 0, TRUE, TRUE, FALSE);
+                $Infected++; } }
+            if (isset($virus[3])) if (!is_null($virus[3])) if ($virus[3] !== '') if ($virus[3] !== ' ') {
               if (strpos(strtolower($data2), strtolower($virus[3])) !== FALSE) {
                 // File matches virus defs.
                 processOutput('Infected: '.$file.' ('.$virus[0].', SHA256 Hash Match: '.$virus[3].')', FALSE, 0, TRUE, TRUE, FALSE);
                 $Infected++; } } 
-            if (isset($virus[4]) && !is_null($virus[4]) && $virus[4] !== '' && $virus[4] !== ' ') {
+            if (isset($virus[4])) if (!is_null($virus[4])) if ($virus[4] !== '') if ($virus[4] !== ' ') {
               if (strpos(strtolower($data3), strtolower($virus[4])) !== FALSE) {
                 // File matches virus defs.
                 processOutput('Infected: '.$file.' ('.$virus[0].', SHA1 Hash Match: '.$virus[4].')', FALSE, 0, TRUE, TRUE, FALSE);
                 $Infected++; } } } }
-      // / Scan files smaller than the memory limit by fitting the entire file into memory.
-      if ($filesize < $MemoryLimit && file_exists($file)) {
-        $data = file_get_contents($file); }
-      if ($DefData !== $data2) {
-        foreach ($Defs as $virus) {
-          $virus = explode("\t", $virus[0]);
-          if (isset($virus[1]) && !is_null($virus[1]) && $virus[1] !== '' && $virus[1] !== ' ') {
-            if (strpos(strtolower($data), strtolower($virus[1])) !== FALSE or strpos(strtolower($file), strtolower($virus[1])) !== FALSE) {
-              // File matches virus defs.
-              processOutput('Infected: '.$file.' ('.$virus[0].', Data Match: '.$virus[1].')', FALSE, 0, TRUE, TRUE, FALSE);
-              $Infected++; } }
-          if (isset($virus[2]) && !is_null($virus[2]) && $virus[2] !== '' && $virus[2] !== ' ') {
-            if (strpos(strtolower($data1), strtolower($virus[2])) !== FALSE) {
-              // File matches virus defs.
-              processOutput('Infected: '.$file.' ('.$virus[0].', MD5 Hash Match: '.$virus[2].')', FALSE, 0, TRUE, TRUE, FALSE);
-              $Infected++; } }
-            if (isset($virus[3]) && !is_null($virus[3]) && $virus[3] !== '' && $virus[3] !== ' ') {
-              if (strpos(strtolower($data2), strtolower($virus[3])) !== FALSE) {
-                // File matches virus defs.
-                processOutput('Infected: '.$file.' ('.$virus[0].', SHA256 Hash Match: '.$virus[3].')', FALSE, 0, TRUE, TRUE, FALSE);
-                $Infected++; } } 
-            if (isset($virus[4]) && !is_null($virus[4]) && $virus[4] !== '' && $virus[4] !== ' ') {
-              if (strpos(strtolower($data3), strtolower($virus[4])) !== FALSE) {
-                // File matches virus defs.
-                processOutput('Infected: '.$file.' ('.$virus[0].', SHA1 Hash Match: '.$virus[4].')', FALSE, 0, TRUE, TRUE, FALSE);
-                $Infected++; } } } } } }
-  $CheckComplete = TRUE;
+        $CheckComplete = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $file = $filesize = $data = $buffer = $handle = $virus = $data1 = $data2 = $data3 = NULL;
   unset($file, $filesize, $data, $buffer, $handle, $virus, $data1, $data2, $data3);
@@ -643,7 +718,7 @@ if ($PerformDefUpdate) {
 if ($PerformAppUpdate) {
   list($UpdateApplicationComplete, $UpdateApplicationErrors) = updateApplication();
   if (!$UpdateApplicationComplete) processOutput('Cannot install application update!', TRUE, 7, TRUE, TRUE, TRUE); 
-  else processOutput('Installed application update.', FALSE, 0, TRUE, TRUE, TRUE); }
+  else processOutput('Installed application update. Please open '.$DefaultConfigFile.' & validate configuration entries.', FALSE, 0, TRUE, TRUE, TRUE); }
 
 // / Perform scanning operations, when required
 if ($PerformScan) {

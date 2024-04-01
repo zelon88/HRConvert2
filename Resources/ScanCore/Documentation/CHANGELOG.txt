@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-ScanCore, Copyright on 3/28/2024 by Justin Grimes, www.github.com/zelon88 
+ScanCore, Copyright on 3/29/2024 by Justin Grimes, www.github.com/zelon88 
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ APPLICATION INFORMATION ...
 This application is designed to scan files & folders for viruses.
 
 FILE INFORMATION ...
-v1.3.
+v1.4.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ...
@@ -85,6 +85,17 @@ Optional Arguments Include:
 -----------------------------------------------------------------------------------
 
 
+
+--------------------
+COMMIT 3/29/2024
+v1.4 - Finish Application Update logic. Now the app is fully self-updating.
+
+-v1.4.
+-Finish application update logic.
+-Supports url_fopen, cURL, or git update methods.
+  -Represented in config as raw or git.
+-Config files are backed up prior to application updates.
+  -These must remain .php files. If ScanCore is installed to a hosted location, they will not be downloadable.
 
 --------------------
 COMMIT 3/28/2024

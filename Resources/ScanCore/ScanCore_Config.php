@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / ScanCore, Copyright on 3/29/2024 by Justin Grimes, www.github.com/zelon88 
+// / ScanCore, Copyright on 3/31/2024 by Justin Grimes, www.github.com/zelon88 
 // / 
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / This application is designed to scan files & folders for viruses.
 // / 
 // / FILE INFORMATION ...
-// / v1.4.
+// / v1.5.
 // / This file contains the core logic of the ScanCore application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -189,7 +189,7 @@ $DefaultChunkSize = 1024*1024*128;
 // /  --Configuration Version--
 // /   The version of this file, used for internal version integrity checks.
 // /   Must be formatted as a string. Must match the version of ScanCore.php file.
-$ConfigVersion = 'v1.4';
+$ConfigVersion = 'v1.5';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

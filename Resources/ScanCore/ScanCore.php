@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / ScanCore, Copyright on 3/29/2024 by Justin Grimes, www.github.com/zelon88 
+// / ScanCore, Copyright on 3/31/2024 by Justin Grimes, www.github.com/zelon88 
 // / 
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / This application is designed to scan files & folders for viruses.
 // / 
 // / FILE INFORMATION ...
-// / v1.4.
+// / v1.5.
 // / This file contains the core logic of the ScanCore application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -96,7 +96,7 @@ function verifyInstallation() {
   $Date = date("m_d_y");
   $Time = date("F j, Y, g:i a");
   // / Application related variables.
-  $Version = 'v1.4';
+  $Version = 'v1.5';
   $DefaultConfigFile = 'ScanCore_Config.php';
   $FileCount = $DirCount = $Infected = 0;;
   $EOL = PHP_EOL;
@@ -113,8 +113,8 @@ function verifyInstallation() {
 // / If either the -defsfile or -df argument is not set, the definitions file named specified in 'ScanCore_Config.php' will be used instead. 
 function loadConfig($Version) {
   // / Set variables.
-  global $argv, $ConfigFilePath, $RP, $SEP, $EOL, $ConfigFile, $ScanLoc, $DefsFile, $ConfigVersion, $ConfigLoaded, $DefsExist, $Version, $ReportFile, $ReportDir, $ReportFileName, $RequiredDirs, $InstallDir, $MaxLogSize, $MemoryLimit, $ChunkSize, $DefaultMemoryLimit, $DefaultChunkSize, $DefaultMaxLogSize, $DefinitionRepositoryName, $DefinitionUpdates, $DefinitionUpdateDomain, $DefinitionUpdateURL, $DefInstallDir, $DefGitDir, $ApplicationRepositoryName, $ApplicationUpdates, $ApplicationUpdateDomain, $ApplicationUpdateURL, $AppInstallDir, $AppGitDir, $DefinitionsUpdateSubscriptions, $DefsFileName, $Verbose, $Debug, $UpdateMethod, $DefinitionBranchName, $ApplicationBranchName, $ApplicationUpdateSubscriptions;
-  $ConfigLoaded = $DefsExist = FALSE;
+  global $argv, $ConfigFilePath, $RP, $SEP, $EOL, $ConfigFile, $ScanLoc, $DefsFile, $ConfigVersion, $ConfigLoaded, $DefsExist, $Version, $ReportFile, $ReportDir, $ReportFileName, $RequiredDirs, $InstallDir, $MaxLogSize, $MemoryLimit, $ChunkSize, $DefaultMemoryLimit, $DefaultChunkSize, $DefaultMaxLogSize, $DefinitionRepositoryName, $DefinitionUpdates, $DefinitionUpdateDomain, $DefinitionUpdateURL, $DefInstallDir, $DefGitDir, $ApplicationRepositoryName, $ApplicationUpdates, $ApplicationUpdateDomain, $ApplicationUpdateURL, $AppInstallDir, $AppGitDir, $DefinitionsUpdateSubscriptions, $DefsFileName, $Verbose, $Debug, $UpdateMethod, $DefinitionBranchName, $ApplicationBranchName, $ApplicationUpdateSubscriptions, $VersionsMatch;
+  $ConfigLoaded = $DefsExist = $VersionsMatch = FALSE;
   $ConfigFile = 'ScanCore_Config.php';
   $ConfigFilePath = $RP.$SEP.$ConfigFile;
   // / Initialize an empty array if no arguments are set.
@@ -123,13 +123,17 @@ function loadConfig($Version) {
   foreach ($argv as $key => $arg) if ($arg == '-configfile' or $arg == '-cf') $ConfigFilePath = $argv[$key + 1];
   // / Load the configuration file located at $ConfigFile.
   if (file_exists($ConfigFilePath)) $ConfigLoaded = require_once ($ConfigFilePath);
-  // / Briefly iterate through supplied arguments just to see if we need to load a special definitions file.
-  foreach ($argv as $key => $arg) if ($arg == '-defsfile' or $arg == '-df') $DefsFile = $argv[$key + 1];
+  // / Briefly iterate through supplied arguments just to see if we need to create or load a special definitions file.
+  foreach ($argv as $key => $arg) if ($arg == '-defsfile' or $arg == '-df') {
+    $DefsFile = $argv[$key + 1];
+    // / Create a blank definitions file if needed.
+    foreach ($argv as $key => $arg) if ($arg == '-updatedefinitions' or $arg == '-ud') if (!file_exists($DefsFile)) file_put_contents($DefsFile, ''); }
   // / Check to make sure the configuration file was loaded & the configuration version is compatible with the core.
-  if (isset($ScanLoc) && isset($DefsFile) && isset($ConfigVersion) && $ConfigVersion === $Version && $ConfigLoaded) {
+  if (file_exists($DefsFile)) $DefsExist = TRUE;
+  if (isset($ConfigVersion) && $ConfigVersion === $Version && $ConfigLoaded) {
     // / Check if the definitions file exists.
-    if (file_exists($DefsFile)) $DefsExist = TRUE;
     // / Configuration related variables.
+    $VersionsMatch = TRUE;
     $ReportFile = $ReportDir.$SEP.$ReportFileName;
     $RequiredDirs = array($ReportDir);
     $UpdateMethod = strtolower($UpdateMethod);
@@ -143,7 +147,7 @@ function loadConfig($Version) {
     // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
     $arg = $key = NULL;
     unset($arg, $key);
-  return array($ConfigLoaded, $DefsExist, $ConfigFilePath); }
+  return array($ConfigLoaded, $DefsExist, $ConfigFilePath, $VersionsMatch); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -319,7 +323,7 @@ function parseArgs($argv) {
         processOutput('Starting ScanCore!', FALSE, 0, TRUE, TRUE, FALSE);
         processOutput('Loaded configuration file:  '.$ConfigFilePath, FALSE, 0, TRUE, FALSE, FALSE);
         if (is_numeric($ChunkSize)) processOutput('The ChunkSize is:  '.$ChunkSize, TRUE, 0, FALSE, FALSE, FALSE);
-        if (is_numeric($MemoryLimit)) processOutput('The MemoryLimit is:  '.$ChunkSize, TRUE, 0, FALSE, FALSE, FALSE);
+        if (is_numeric($MemoryLimit)) processOutput('The MemoryLimit is:  '.$MemoryLimit, TRUE, 0, FALSE, FALSE, FALSE);
         $ArgsParsed = $PerformScan = TRUE; } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $key = $arg = $showVersion = $showHelp = NULL;
@@ -694,41 +698,42 @@ list($InstallationVerified, $Version) = verifyInstallation();
 if (!$InstallationVerified) die('ERROR!!! ScanCore-1, Cannot verify the ScanCore installation!'.$EOL);
 
 // / Load the configuration file.
-list ($ConfigLoaded, $DefsExist, $ConfigFilePath) = loadConfig($Version);
+list ($ConfigLoaded, $DefsExist, $ConfigFilePath, $VersionsMatch) = loadConfig($Version);
 if (!$ConfigLoaded) die('ERROR!!! ScanCore-2, Cannot load the configuration file located at:  '.$ConfigFilePath.$EOL);
 if (!$DefsExist) die('ERROR!!! ScanCore-3, Cannot verify the definitions file located at:  '.$DefsFile.$EOL);
+if (!$VersionsMatch) die('ERROR!!! ScanCore-4, Cannot verify the definitions file located at:  '.$DefsFile.$EOL);
 
 // / Create required directories if they don't already exist.
 list($RequiredDirsExist) = createDirs($RequiredDirs);
-if (!$ConfigLoaded) die('ERROR!!! ScanCore-4, Cannot create required directories!'.$EOL);
+if (!$ConfigLoaded) die('ERROR!!! ScanCore-5, Cannot create required directories!'.$EOL);
 
 // / Process supplied command-line arguments.
 // / Example:  C:\Path-To-PHP-Binary.exe C:\Path-To-ScanCore.php C:\Path-To-Scan\ -m [integer] -c [integer] -v -d
 list($ArgsParsed, $PerformScan, $PathToScan, $MemoryLimit, $ChunkSize, $Debug, $Verbose, $Recursion, $ReportFile, $MaxLogSize, $PerformDefUpdate, $PerformAppUpdate) = parseArgs($argv);
-if (!$ArgsParsed) processOutput('Cannot verify supplied arguments!', TRUE, 5, TRUE, TRUE, TRUE);
+if (!$ArgsParsed) processOutput('Cannot verify supplied arguments!', TRUE, 6, TRUE, TRUE, TRUE);
 else processOutput('Verified supplied arguments.', FALSE, 0, TRUE, FALSE, FALSE);
 
 // / Perform a definition update, when required.
 if ($PerformDefUpdate) {
   list($UpdateDefininitionsComplete, $UpdateDefinitionsErrors) = updateDefinitions();
-  if (!$UpdateDefininitionsComplete) processOutput('Cannot install definition update!', TRUE, 6, TRUE, TRUE, TRUE); 
+  if (!$UpdateDefininitionsComplete) processOutput('Cannot install definition update!', TRUE, 7, TRUE, TRUE, TRUE); 
   else processOutput('Installed definition update.', FALSE, 0, TRUE, TRUE, FALSE); }
 
 // / Perform an application update, when required.
 if ($PerformAppUpdate) {
   list($UpdateApplicationComplete, $UpdateApplicationErrors) = updateApplication();
-  if (!$UpdateApplicationComplete) processOutput('Cannot install application update!', TRUE, 7, TRUE, TRUE, TRUE); 
+  if (!$UpdateApplicationComplete) processOutput('Cannot install application update!', TRUE, 8, TRUE, TRUE, TRUE); 
   else processOutput('Installed application update. Please open '.$DefaultConfigFile.' & validate configuration entries.', FALSE, 0, TRUE, TRUE, TRUE); }
 
 // / Perform scanning operations, when required
 if ($PerformScan) {
   // / Load the virus definitions into memory and calculate it's hash (to avoid detecting our own definitions as an infection).
   list($DefsLoaded, $Defs, $DefData) = load_defs($DefsFile);
-  if (!$DefsLoaded) processOutput('Cannot load definitions!', TRUE, 8, TRUE, TRUE, TRUE);
+  if (!$DefsLoaded) processOutput('Cannot load definitions!', TRUE, 9, TRUE, TRUE, TRUE);
   else processOutput('Loaded definitions.', FALSE, 0, TRUE, FALSE, FALSE);
 
   // / Start the scanner!
   list($ScanComplete, $DirCount, $FileCount, $Infected) = file_scan($PathToScan, $Defs, $DefsFile, $DefData, $Debug, $Verbose, $MemoryLimit, $ChunkSize, $Recursion);
-  if (!$ScanComplete) processOutput('Cannot not complete requested scan!', TRUE, 9, TRUE, TRUE, TRUE);
+  if (!$ScanComplete) processOutput('Cannot not complete requested scan!', TRUE, 10, TRUE, TRUE, TRUE);
   else processOutput('Scanned '.$FileCount.' files in '.$DirCount.' folders and found '.$Infected.' potentially infected items.', FALSE, 0, TRUE, TRUE, TRUE); }
 // / -----------------------------------------------------------------------------------

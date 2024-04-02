@@ -1894,7 +1894,7 @@ function startScanCore($pathname, $UserScanCoreLogFile) {
   // / Set variables.
   global $InstLoc, $ConvertDir, $MaxLogSize, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $DirSep, $ScanCoreVerbose, $ScanCoreDebug, $Date, $SesHash, $SesHash2; 
   $ReturnData = $scVerbose = $scDebug = '';
-  $ScanCoreFile = $InstLoc.$DirSep.'Resources'.$DirSep.'ScanCore'.$DirSep.'scanCore.php';
+  $ScanCoreFile = $InstLoc.$DirSep.'Resources'.$DirSep.'ScanCore'.$DirSep.'ScanCore.php';
   $scInc = 0;
   if ($ScanCoreVerbose) $scVerbose = ' -v';
   if ($ScanCoreDebug) $scDebug = ' -d';

@@ -11,7 +11,7 @@ APPLICATION INFORMATION ...
 This application is designed to scan files & folders for viruses.
 
 FILE INFORMATION ...
-v1.4.
+v1.5.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ...
@@ -85,6 +85,18 @@ Optional Arguments Include:
 -----------------------------------------------------------------------------------
 
 
+
+
+--------------------
+COMMIT 3/31/2024
+v1.5 - Finish Application Update logic. Now the app is fully self-updating.
+
+-v1.5.
+-Add additional text to index files.
+  -"This is a command line application! Please open a terminal, navigate to this directory, and submit commands to ScanCore.php!"
+-Fix potential infinite loop bug in chunking.
+-Improve optimization by reducing the amount of exposed logic, especially in scanning logic.
+-Fix indentation of code blocks.
 
 --------------------
 COMMIT 3/29/2024

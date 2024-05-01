@@ -1662,7 +1662,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
       if ($Verbose) logEntry('Virus scan complete.'); }
     if (in_array(strtolower($oldExtension), $allowedOCR)) {
       // / Code to convert a PDF to a document.
-      if (!in_array(strtolower($oldExtension), $pdf1array)) {
+      if (in_array(strtolower($oldExtension), $pdf1array)) {
         if (in_array($UserExtension, $doc1array)) {
           // / If Method 1 is selected, attempt a direct conversion.
           if ($Method === 0 or $Method === '0' or $Method === '') {

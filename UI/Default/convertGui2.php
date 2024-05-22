@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 3/7/2024 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 5/22/2024 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.3.2.
+// / v3.3.6.
 // / This file contains language specific GUI elements for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -99,6 +99,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
         </script>
       <?php } ?>
         <hr style='width: 50%;'/>
+        <?php if (in_array('Archive', $SupportedConversionTypes)) { ?>
         <p><strong><?php echo $Gui2Text4; ?></strong></p>
         <p><?php echo $Gui2Text17; ?><input type='text' id='userarchallfilename' name='userarchallfilename' value='<?php echo $ApplicationName; ?>_Files-<?php echo $Date; ?>'></p>
         <select id='archallextension' name='archallextension'>
@@ -146,6 +147,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                         toggle_visibility('failureCommandDiv'); }, 5000);
                       alert('<?php echo $Gui2Text71; ?>'); } }); }); });
         </script>
+        <?php } ?>
         <hr style='width: 50%;'/>
       </div>
     </div>
@@ -250,7 +252,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
            onclick="toggle_visibility('pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('docscanButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('docscanXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text13; ?>' alt='<?php echo $Gui2Text13; ?>'/>
           <?php } 
 
-          if (in_array($extension, $ArchiveArray) && in_array('Archive', $SupportedConversionTypes)) { ?>
+          if (in_array($extension, $DearchiveArray) && in_array('Archive', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='archiveButton<?php echo $ConvertGuiCounter1; ?>' name='archiveButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>convert.png' style='float:<?php echo $GUIAlignment; ?>; display:block;'

@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 3/28/2024 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 5/22/2024 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.3.5.
+// / v3.3.6.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -458,7 +458,7 @@ function verifyGlobals() {
   // / Set global variables to be used through the entire application.
   global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationArray, $UserImageArray, $UserMediaArray, $UserVideoArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleArray, $UserPDFWorkArr, $RetryCount;
   // / Application related variables.
-  $HRConvertVersion = 'v3.3.5';
+  $HRConvertVersion = 'v3.3.6';
   $GlobalsAreVerified = FALSE;
   $CoreLoaded = TRUE;
   $SleepTimer = 0;
@@ -506,7 +506,7 @@ function verifyGlobals() {
   // / Format related variables.
   $ArchiveArray = $DearchiveArray = $DocumentArray = $SpreadsheetArray = $PresentationArray = $ImageArray = $MediaArray = $VideoArray = $StreamArray = $DrawingArray = $ModelArray = $SubtitleArray = $PDFWorkArr = array();
   if (in_array('Archive', $SupportedConversionTypes)) $ArchiveArray = $UserArchiveArray;
-  if (in_array('Archive', $SupportedConversionTypes)) $DearchiveArray = $UserArchiveArray;
+  if (in_array('Archive', $SupportedConversionTypes)) $DearchiveArray = $UserDearchiveArray;
   if (in_array('Document', $SupportedConversionTypes)) $DocumentArray = $UserDocumentArray;
   if (in_array('Document', $SupportedConversionTypes)) $SpreadsheetArray = $UserSpreadsheetArray;
   if (in_array('Document', $SupportedConversionTypes)) $PresentationArray = $UserPresentationArray;
@@ -1070,7 +1070,7 @@ function convertArchives($pathname, $newPathname, $extension) {
   $safedir2 = $ConvertDir.$filename;
   $safedir3 = $safedir2.'.7z';
   $safedir4 = $safedir2.'.zip';
-  $array7zo = array('7z');
+  $array7zo = array('7z', 'cbz', 'cbr');
   $arrayzipo = array('zip');
   $array7zo2 = array('vhd', 'vdi', 'iso');
   $arraytaro = array('tar.gz', 'tar.bz2', 'tar');

@@ -1,6 +1,9 @@
 This is a development document only and has no instructional or debugging value.
 
 
+Need to update install instructions to include new ffmpeg build instructions
+
+
 
 
 The following input formats are supported for audio operations.

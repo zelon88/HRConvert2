@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 3/25/2024 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 5/22/2024 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.3.5.
+v3.3.6.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -25,6 +25,35 @@ Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 
 <3 Open-Source
 -----------------------------------------------------------------------------------
+
+
+
+--------------------
+COMMIT 5/22/2024
+v3.3.6 - Add pdf to image support, cbr, cbz support to archive support.
+
+-v3.3.6.
+-Special thanks to:
+  Ask Ubuntu User:  Lucas Walter
+  https://askubuntu.com/questions/1127260/imagemagick-convert-not-allowed
+  https://askubuntu.com/users/27302/lucas-walter
+
+  # Open the file 
+  sudo nano /etc/ImageMagick-6/policy.xml
+
+  # find and edit the line
+  <policy domain="coder" rights="none" pattern="PDF" />
+  # to :
+  <policy domain="coder" rights="read|write" pattern="PDF" />
+
+-The above code will allow pre-installed versions to convert pdf files as images in addition to documents and OCR.
+-Added CBR and CBZ support. 
+  -They are just zip files full of jpeg images.
+  -We treat them as .zip files, but we use 7z to extract them because zip doesn't work for some reason.
+  -After they are converted to a proper archive we can convert them further.
+  -It could be possible to improve quality of the jpegs by creating a dedicated convertComics() function with direct output formats.
+  -Can we get the comic community to show the project some love to get this done? ;)
+  -Update the installation instructioins to allow PDF conversions as images.
 
 
 --------------------

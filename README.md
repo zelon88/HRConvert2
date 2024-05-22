@@ -3,7 +3,7 @@
 -----------------------------------------------
 # HRConvert2
 
-### A self-hosted drag-and-drop file conversion server & file sharing tool that supports 86 file formats with 4 color schemes & 13 end-user selectable languages. 
+### A self-hosted drag-and-drop file conversion server & file sharing tool that supports 88 file formats with 4 color schemes & 13 end-user selectable languages. 
 
 ![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/HRConvert2-1.png)
 

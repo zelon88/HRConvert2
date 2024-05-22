@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 3/7/2024 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 5/22/2024 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.3.2.
+// / v3.3.6.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -338,7 +338,7 @@ $RetryCount = 5;
 // /  --Supported Archive Formats--
 $UserArchiveArray = array('zip', 'rar', 'tar', '7z', 'iso');
 // /  --Supported Dearchive Formats--
-$UserDearchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi', 'tar.bz2', 'tar.gz');
+$UserDearchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi', 'tar.bz2', 'tar.gz', 'cbr', 'cbz');
 // /  --Supported Document Formats--
 $UserDocumentArray = array('txt', 'doc', 'docx', 'rtf', 'odt', 'pdf');
 // /  --Supported Spreadsheet Formats--
@@ -346,9 +346,9 @@ $UserSpreadsheetArray = array('csv', 'xls', 'xlsx', 'ods');
 // /  --Supported Presentation Formats--
 $UserPresentationArray = array('pages', 'pptx', 'ppt', 'xps', 'potx', 'potm', 'pot', 'ppa', 'odp');
 // /  --Supported Image Formats--
-$UserImageArray = array('jpeg', 'jpg', 'jpe', 'png', 'bmp', 'gif', 'webp', 'cin', 'dds', 'dib', 'flif', 'avif', 'gplt', 'sct', 'xcf', 'heic', 'ico');
+$UserImageArray = array('jpeg', 'jpg', 'jpe', 'png', 'bmp', 'gif', 'webp', 'cin', 'dds', 'dib', 'flif', 'avif', 'gplt', 'sct', 'xcf', 'heic', 'ico', 'pdf');
 // /  --Supported Audio Formats--
-$UserMediaArray = array('mp3', 'aac', 'oog', 'wma', 'mp2', 'flac', 'm4a', 'm4p');
+$UserMediaArray = array('mp3', 'aac', 'ogg', 'wma', 'mp2', 'flac', 'm4a');
 // /  --Supported Video Formats--
 $UserVideoArray = array('3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv', 'mov', 'm4v');
 // /  --Supported Stream Formats--

@@ -53,7 +53,7 @@ RUN apt-get update
 RUN apt-get install -y git sed
 
 # Download the latest HRConvert2 source code from the official repository.
-RUN git clone https://github.com/zelon88/HRConvert2
+RUN git clone https://github.com/zelon88/HRConvert2.git
 
 # Add non-free repos to software sources. Required for rar support.
 # There are two options for accomplishing this. 

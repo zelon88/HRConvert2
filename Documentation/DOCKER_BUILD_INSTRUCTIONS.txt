@@ -82,7 +82,7 @@ If you truly want to build your own Docker Image from source this document will 
   1a. Run  'sudo service docker restart'
   1b. Run  'sudo /etc/init.d/docker restart'
   1c. Run  'sudo snap restart docker'
-2. Before building, make sure you've updated the Github repo specified in the Dockerfile
+2. Before building, make sure you've updated the Github repo specified in the Dockerfile.
   2a. If you don't update the Github repo, you will build old source code.
 3. Next, select one of the build commands below based on your specific use case.
   3a. To run a full, clean build; Navigate to the Desktop/HRConvert2 folder, then adjust the version & run  'docker build --no-cache -t zelon88/hrconvert2:v#.#.# .'

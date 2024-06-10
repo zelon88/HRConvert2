@@ -1,0 +1,98 @@
+-----------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 6/9/2024 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats
+on a server for users of any web browser without authentication. 
+
+FILE INFORMATION ...
+v3.3.7.
+This file contains a walkthrough guide for building an HRConvert2 Docker Image from source.
+
+HARDWARE REQUIREMENTS ... 
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ... 
+This application requires Debian Linux (w/3rd Party audio license), 
+Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip, 
+7zipper, FFMPEG, PdfToText, Dia, PopplerUtils, MeshLab, Mkisofs & ImageMagick.
+
+<3 Open-Source
+-----------------------------------------------------------------------------------
+
+
+
+-----PREFACE-----
+For this guide, it is assumed that the user is installing HRConvert2 on a PC which meets the above conditions.
+This document contains instructions for building an HRConvert2 Docker Image on a fresh deployment of Lubuntu 21.04 LTS with no dependencies. 
+
+For a walkthrough of installing a Ubuntu distro, visit:
+  https://www.ubuntu.com/download/desktop/install-ubuntu-desktop
+-----------------------------------------------------------------------------------
+
+
+-----STEP 0 - ARE YOU IN THE RIGHT PLACE?-----
+In this step we will make sure your use case aligns with the purpose of this document.
+It is not necessary to perform the steps in this document to simply install and use the official HRConvert2 Docker Image.
+This document is intended to be used for development purposes by HRConvert2 maintainers.
+
+If you simply want to download and run HRConvert2, you can download the official pre-built docker image at the following URL.
+  https://hub.docker.com/r/zelon88/hrconvert2
+
+Usually people who want to run the official Docker image are people who;
+  1. Want to use HRConvert2 for personal, industrial, educational, non-profit, or commercial use on a small number of servers.
+  2. Want to run the most stable, secure, & up-to-date version of HRConvert2 that is available.
+  3. Just want to convert files.
+  4. Are not planning on contributing to development.
+  5. Are not planning on modifying the code or dependencies.
+
+Usually people who want to build their own Docker Image from source are people who;
+  1. Have modified the code or dependencies, and want to share the changes or deploy them on many servers.
+  2. Have a custom configuration that needs to be deployed on many servers.
+  3. Are contributing to a branch of HRConvert2 for distribution.
+
+If you truly want to build your own Docker Image from source this document will guide you through the Docker Image Build Instructions.
+-----------------------------------------------------------------------------------
+
+
+
+-----STEP 1 - PREPARE THE FILES-----
+1. Grab a cup of coffee.
+2. Update the Dockerfile located at HRConvert2/Documentation/Build/Dockerfile.
+3. Complete the source code update of HRConvert2 and upload it to the Github repo.
+  3a. Note that the repo is the official source code location for the Dockerfile.
+  3b. The source you copy over with the docker file is for reference only, and IS NOT USED to generate the image.
+  3c. The source code used to generate the image comes from the Github repo specified in the Dockerfile.
+4. Navigate to /var/www/html/HRProprietary/HRConvert2 and copy all folders EXCEPT Logs and DATA.
+5. Paste the folders onto into a folder on the Desktop.
+  5a. Note that the source code contained in these files is mostly unused. 
+  5b. The Dockerfile creates a container that downloads the source code from the Github repo.
+-----------------------------------------------------------------------------------
+
+
+-----STEP 2 - BUILD THE DOCKER IMAGE-----
+1. Before building, ALWAYS restart the Docker service. Doing so resolves countless errors.
+  1a. Run  'sudo service docker restart'
+  1b. Run  'sudo /etc/init.d/docker restart'
+  1c. Run  'sudo snap restart docker'
+2. Before building, make sure you've updated the Github repo specified in the Dockerfile
+  2a. If you don't update the Github repo, you will build old source code.
+3. Next, select one of the build commands below based on your specific use case.
+  3a. To run a full, clean build; Navigate to the Desktop/HRConvert2 folder, then run  'docker build --no-cache -t hrconvert2 .'
+  3b. To run an build from the last successful step; Navigate to the Desktop/HRConvert2 folder, then run  'docker build -t hrconvert2 .'
+  3c. To regenerate the sources.list file, uncomment the dockerfile line '#RUN rm -vf /var/lib/apt/lists/*', then run  'docker build -t hrconvert2 .'
+4. Grab another cup of coffee. The build process will take some time. 
+  4a. For my 16C, 64GB server it takes about 1,500 seconds to build the Docker Image from scratch.
+-----------------------------------------------------------------------------------
+
+
+-----STEP 3 - PUSH THE DOCKER IMAGE TO DOCKER HUB-----
+
+1. On a computer with docker account linked, modify the version number in the following command, then run  'docker push zelon88/hrconvert2:v#.#.#'
+-----------------------------------------------------------------------------------

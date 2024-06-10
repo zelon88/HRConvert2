@@ -1,0 +1,1356 @@
+-----------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 6/9/2024 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats
+on a server for users of any web browser without authentication. 
+
+FILE INFORMATION ...
+v3.3.7.
+This file contains a list of itemized changes made in each iteration of the application.
+
+HARDWARE REQUIREMENTS ... 
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ... 
+This application requires Debian Linux (w/3rd Party audio license), 
+Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip, 
+7zipper, FFMPEG, PdfToText, Dia, PopplerUtils, MeshLab, Mkisofs & ImageMagick.
+
+<3 Open-Source
+-----------------------------------------------------------------------------------
+
+
+
+--------------------
+COMMIT 5/22/2024
+v3.3.7 - Add support for 357 formats. Update build process.
+
+-v3.3.7.
+-Clean up config.php comments.
+-Delete "SUPPORTED_FORMAT_INFORMATION.txt" development work file.
+-Finish updating and adding support to the list of supported formats using the latest ffmpeg build process.
+-Added support for ~357 file formats. The total of supported formats is now up to 445. (!!!)
+-Update INSTALLATION_INSTRUCTIONS.txt to reflect the ffmpeg build-from-source procedure.
+-Create DOCKER_BUILD_INSTRUCTIONS.txt for me to remember how to build docker images.
+  -I typically develop this stuff on VMware with installed locally dependencies.
+-Update Dockerfile with the latest ImageMagick and FFMPEG build process.
+-Fix Docker build process, update Docker Hub.
+
+--------------------
+COMMIT 5/22/2024
+v3.3.6 - Add pdf to image support, cbr, cbz support to archive support.
+
+-v3.3.6.
+-Special thanks to:
+  Ask Ubuntu User:  Lucas Walter
+  https://askubuntu.com/questions/1127260/imagemagick-convert-not-allowed
+  https://askubuntu.com/users/27302/lucas-walter
+
+  # Open the file 
+  sudo nano /etc/ImageMagick-6/policy.xml
+
+  # find and edit the line
+  <policy domain="coder" rights="none" pattern="PDF" />
+  # to :
+  <policy domain="coder" rights="read|write" pattern="PDF" />
+
+-The above code will allow pre-installed versions to convert pdf files as images in addition to documents and OCR.
+-Added CBR and CBZ support. 
+  -They are just zip files full of jpeg images.
+  -We treat them as .zip files, but we use 7z to extract them because zip doesn't work for some reason.
+  -After they are converted to a proper archive we can convert them further.
+  -It could be possible to improve quality of the jpegs by creating a dedicated convertComics() function with direct output formats.
+  -Can we get the comic community to show the project some love to get this done? ;)
+  -Update the installation instructioins to allow PDF conversions as images.
+
+
+--------------------
+COMMIT 3/24/2024
+v3.3.5 - Rar on RPI fix, FFMPEG build process changes.
+
+-v3.3.5.
+-Continue ScanCore refactor.
+  -v1.1.
+    -Added support for -ud argument, which will Update Definitions!
+    -This gets defs by default from the ScanCore_Definitions repository.
+    -Defs are now broken into subscriptions.
+    -Subscriptions include Virus, Malare, & PUP.
+    -Each client will download only the subscriptions that are specified in config.php.
+    -The client will then compile its subscribed definitions into a "combined" definitions file locally.
+    -This will give users the ability to control which definitions they install, controlling what ScanCore will detect.
+    -Because ScanCore is portable, that means you can set different scanners to do different things.
+    -Need to work on a way to automate definition updates. Every scan, daily, weekly, bi-weekly, or monthly.
+  -v1.2.
+    -Add 'raw' and 'git' update methods. So if you can't get git (hehe) then you can still perform updates.
+    -Use globals $EOL, $SEP for PHP_EOL and DIRECTORY_SEPARATOR, as intended.
+    -Add -version argument for displaying useful info.
+      -Info like the source for def & app updates, the original repo, subscribed defs, version, last update, ect...
+    -Added a plug to the LICENSE INFORMATION section of the header text.
+      -// / BSD or MIT licensing is available. Reach out to @zelon88 for more information.
+      -Support your favorite developer by buying a trophy license for your favorite open-source software.
+    -Imrove comments / formatting in ScanCore_Config.php. Add default values, labels, better descriptions for everything.
+    -Add -help, -h and -version, -ver arguments for showing version & help, respectively.
+    -Add -configfile, -cf argument for selecting which configuration file to use.
+      -Now one scanner can rule them all!
+      -Instead of installing multiple scanners to scan different subscriptions, just have different config files.
+    -Revise output. Make more consistent, easier to read.
+    -Remove unused $LogFile and $LogDir references from core.
+    -Remove unused $LogFile and $LogDir references from config.
+    -ReportsDir is now the only location for logs. Logs & reports are officially the same thing.
+    -The -logfile & -lf arguments are now undocumented aliases of the -reportfile and -rf arguments.
+    -I plan on removing -logfile & -lf arguments in the future.
+    -What will probably happen is I'll forget I said that and wind up re-documenting these undocumented aliases in the future.
+  -v1.3 - Add -defsfile, -df argument. Reorder logic & functions. Clean up output. Improve help, version output.
+    -Add -defsfile & -df argument for specifying a definition file by command line. 
+    -Now ScanCore is completely modular. It can be run against any defs file and any config file, so automating tasks is easy & granular.
+    -Add config file last modified, which core file, and which defs file to version output.
+    -Add new commands to help output.
+    -Will update the docs with proper error descriptions and instructions once the error numbers stop chaning.
+-Thanks to @bit-man for submitting a fix for rar file support on RPI & non x86-64 platforms.
+-Evaluate how we're using ffmpeg, per issue #59, but also effects issue #29.
+  -Remove M4P support.
+  -Omg there's even a typo... file format oog should be ogg.
+  -Change ffmpeg build process to build from scratch.
+  -Inprove capability & file support. Considerably.
+  -Increase duration and difficulty of install process. Considerably.
+  -Start by reverse engineering https://raw.githubusercontent.com/markus-perl/ffmpeg-build-script/master/web-install-gpl-and-non-free.sh.
+  -Build process complete as of 3/25/2024. 
+    -Now we need to incorporate the new ffmpeg functionality into core.
+    -Then we can update the build / install process & documentation.
+-Add the selected GUI, Language, and Color to error or verbose success messages to enhance debugging potential.
+-Update ERROR_DESCRIPTIONS.txt with the new information.
+-This version is just the start of an overhaul to media file processing.
+-Add some temporary files to DOCS for helping me track my ffmpeg overhaul progress.
+
+--------------------
+COMMIT 3/22/2024
+v3.3.4 - ScanCore refactor. Update code structure, improve config.php, rename variables.
+
+-v3.3.4.
+-Added missing loop in sanitizeStrings() function.
+-Refactoring ScanCore to bring it up to the same level of code quality as the rest of the project.
+  -ScanCore to v1.0, Do away with defs versioning.
+  -Definitions can be versioned by date.
+-Remove false positive for jquery 3.6 minified from defs.
+  -Pretty sure this is the 20th anniversary for the original PHP-AV codebase, which there is very litte left.
+-Improve config.php by adding more variables to it.
+  -MemoryLimit, ChunkSize, Debug, Verbose.
+-Make the file headers more consistent.
+-Once the quality is up to par we will focus on adding features and capability.
+  -Specifically an auto-updater would be nice.
+  -Then maybe some automation tools for scraping IOCs and formatting them into the definitions file.
+-Recursion is now disabled by default.
+  -This affects behaviour of scripts that use ScanCore because now you HAVE to specify if you want recursion or scans will fail. 
+
+--------------------
+COMMIT 3/12/2024
+v3.3.3 - Misc cleanup. Update developer docs w/API information.
+
+-v3.3.3.
+-Create official Docker image.
+  -https://hub.docker.com/repository/docker/zelon88/hrconvert2
+-Delete UI/Default/Resources/CSS/basic.css.
+-Delete UI/Wide/Resources/CSS/basic.css.
+-Update Documentation/CREATING_GUIS.txt to better communicate the API, including POST and GET requests.
+-Replace "APPLICATION INFORMATION" with "COPYRIGHT INFORMATION" in the header of each code file.
+-Move Dockerfile to Documentation/Build.
+-Adjust core logic that cleans up the Dockerfile with the new location.
+-Add header text to the Dockerfile consistent with the project.
+-Update Dockerfile to copy the index.html file to HRProprietary and HRConvert2 installation folders.
+-Add logic to the core to provide the option of using alternative software for handling rar files in the future.
+  -The core will check for config.php to see what $RARArchiveMethod is set to, and then check for the existence of /usr/bin/rar
+  -This is mostly for development so I can easily test alternatives to the rar software that we're stuck with.
+-Update dependencies in installation instructions.
+  -Add lots of missing dependencies.
+  -Call out mkisofs and tar explicitly because who knows what kind of docker images people are starting with out there.
+  -Add requirement for p7zip-rar.
+-Thanks to @bit-man for help on Issue #60.
+  -bit-man single handedly solved the rar problem by figuring out how to get non-free repositories into the docker image.
+-Added a config.php entry for controlling how many times the core will retry significant file operations.
+
+--------------------
+COMMIT 3/8/2024
+v3.3.2 - Add green check, red X where loading spinner goes after a file operation is complete.
+
+-v3.3.2.
+-Fix bug where the loading spinner would never disappear for archive operations.
+-Update docker URL in installation instructions.
+-Add victory and failure icons where the loading spinner goes for 5 seconds after a file operation.
+-Add Wide GUI.
+-Fix bug with GUI selection where the GET input was case sensitive, but the core was forcing it to be interpreted as lower case.
+-Fix bug with GUI selection variables not being scoped properly.
+-Make colors user selectable.
+-Add missing div tag to convergGui2.html.
+  -I can't find any HTML erros in console anywhere. Yipee!!!
+-Utilize POST and GET for language, GUI, and color inputs.
+  -Utilize the standardized sanitization procedure for these inputs.
+  -It was somewhat ad-hoc before, even though the global sanitized variables were already pre-prepared.
+
+--------------------
+COMMIT 3/7/2024
+v3.3.1 - Reorganize folders, create docker file, consolidate UI.
+
+-v3.3.1.
+-Move a bunch of files.
+  -Move versionInfo.php and config.php into the Resources folder.
+  -Create build folder.
+  -Move rc.local, rc.local.service, and a php.ini sample file in there that will be used for Docker installs.
+  -Move all resources into the UI\Default folder.
+  -Relieve the core of the logic of defining CSS, JS, and images for the UI pack. That's not very modular.
+  -Now the UI pack defines these in header.php.
+  -Resources folder is not a required part of a UI pack. So the core won't check for it, 
+  -Although the core does define a relative path where the Resources folder, and JS, CSS, Images subfolders should go as a convinience.
+  -It is not required by the core to have these folders, or to organize your theme into them.
+  -Remove LICENSE file from the root of the repository, as this is also in the Documentation folder. 
+-Add a return value to cleanFiles() because I need one for the changes to verifyInstallation().
+  -Use the return value to make the variables $CleanedConvertLoc and $CleanedTempLoc meaningful by passing the return value to them.
+-verifyInstallation() now checks config.php for $DeleteBuildEnvironment, and if true will delete the /Build folder.
+  -This is enabled by default to prevent attackers from using this to enumerate configuration information about the server or application.
+-Improve documentation, formatting of styleCore.php for consistency/readability.
+-Continue the long, ardous task of converting all the double quotes in convertGui2.php to single quotes.
+  -This will take a while, but I have done enough to be able to find/replace what I need.
+-Remove Error 2-1 from ERROR_DESCRIPTIONS.txt because it is no longer generated by the application.
+-Move supported formats to config.php so server administrators can control their own fate, if they dare.
+  -Default values are also listed in config.php if needed.
+-Add support to remove the build environment & "development docs" that give away version info like readme.md & changelog.txt.
+-Changed default color scheme from grey to blue because grey is especially gross looking to me right now.
+-Fix bug where font defined in config.php was not propagating to styleCore.php.
+-Fix bug with user virus scans when using ClamAV to scan an individual file for viruses. 
+  -The scan would complete, but it would utilize both ScanCore and ClamAV when all the user asked for was ClamAV.
+-Move default installation location to /DATA/HRConvert2 to make it consistent for Docker implementation.
+-Start working on official Docker version.
+-Minor update to installation instructions, consistency, consolidate steps.
+-Added icon files to the Resources directory to be used in a future update.
+
+--------------------
+COMMIT 3/5/2024
+v3.3 - Update Readme, fix cleanup bug, flip button CSS.
+
+-v3.3.
+-Update README.md.
+  -Remove mention of Docker repo, as it is not maintained.
+  -I appreciate all of the community feedback at https://github.com/zelon88/HRConvert2/issues/46.
+  -I will come up with an official Docker solution.
+-Fix bug in cleanFiles() function that was causing problems with archive conversions & preventing cleanup.
+-Flip button CSS, so buttons don't appear quite so... upside-down... all the time.
+-Remove un-needed (redundant) button related CSS from HRConvert2.css.
+-Increase default DeleteThreshold in config.php from 30 to 60 minutes.
+-Remove un-needed extension being passed to the convertDrawings() function.
+-Fix drawings not returning a valid filename.
+  -Conversions would complete, but not download.
+-Tested ImageMagick support for SVG, could not get it to work.
+-Tested Dia support for converting things into PNG, BMP, and JPG. Got PNG to work, so added support.
+
+--------------------
+COMMIT 10/30/2023
+v3.2.9 - Improve docs, improve quality, update KO language pack.
+
+-v3.2.9.
+-Happy Halloween!
+  -I started this commit a couple months ago and just got around to finishing it.
+  -The next commit will hopefully be a small quality commit / release v3.3.
+-Fix missed translation in Arabic language pack (languageStrings.php) for Default GUI.
+  -'Archive Formats'
+-Fix spelling, consistency errors in comments of config.php.
+  -No logical changes, just comments.
+  -'fules' instead of 'files'.
+  -Standardize some comments around the verbiage 'Provide users with the option to'. 
+-Fix bug in verifyDocumentConversionEngine() function.
+  -This bug would have prevented the verifyDocumentConversionEngine() function from starting anything.
+  -This would cause document conversion errors in cases where the rc.local steps of the installation instructions were not implemented.
+-Update it, ko, pt, ru, uk, zh language packs.
+-Fix bug with displaying number of files that were uploaded.
+  -Move logic that calculates this to before the languageStrings.php call.
+-Fix bug in convertGui2.php where the download button would produce a 404 unless the share link had been generated already.
+  -Missing ajax request type: post.
+
+--------------------
+COMMIT 5/3/2023
+v3.2.8 - Continue implementing separation of UI from language packs.
+
+-v3.2.8.
+-A UI now contains the language packs for the UI.
+-A UI now contains it's own styleCore.php file containing stylesheets for each color.
+-The UI is now completely modular!
+-Multiple UIs can now be installed simultaniously and selected by the user via GET request.
+  -Adding supported GUIs is the same process as adding supported language packs.
+-Add "CREATING_GUIS.txt" file to 'Documentation' folder.
+-update "CREATING_LANGUAGE_PACKS.txt" to reflect the new locations & GUI / language pack format.
+-Add languageStrings.php to Italian language pack.
+  -Language packs complete:
+  -Note that h,1,2,f are not needed anymore because they are all the same, stored in \UI folder.
+    -Ar l
+    -Bn l
+    -De l
+    -En l
+    -Es l
+    -Fr l
+    -Hi l
+    -It l
+    -Ko
+    -Pt
+    -Ru
+    -Uk
+    -Zh
+
+--------------------
+COMMIT 4/26/2023
+v3.2.7 - Implement separation of UI from language packs.
+
+-v3.2.7.
+-Clean up error procedures and error descriptions in delete function.
+  -Cleaned up spacing, documentation inconsistencies, incomplete error messages.
+-Updated CREATING_LANGUAGE_PACKS.txt to be more informational.
+-Add verifyGui() function.
+  -Mostly copy verifyLanguage() function.
+  -Add ERROR 25, "Could not verify GUI!".
+  -Add ERROR 25 to ERROR_DESCRIPTIONS.txt.
+-Move UI files to UI folder in root of installation location.
+  -Now the loading spinner, colors, language, and UI theme will be adjustable.
+  -Language and UI theme will be user selectable.
+  -Need to add config entries, other supporting logic.
+  -Need to update language pack docs.
+  -Need to update api information.
+  -Need to update config.php
+-Add languageStrings.php to Hindi language pack.
+  -Language packs complete:
+    -Ar l,h,1,2,f
+    -Bn l,h,1,2,f
+    -De l,h,1,2,f
+    -En l,h,1,2,f
+    -Es l,h,1,2,f
+    -Fr l,h,1,2,f
+    -Hi l,h,1,2,f
+    -It
+    -Ko
+    -Pt
+    -Ru
+    -Uk
+    -Zh
+
+--------------------
+COMMIT 4/18/2023
+v3.2.6 - Add Spanish, French languageString.php file.
+
+-v3.2.6.
+-Remove duplicate global variables from buildGui() function in convertCore.php.
+-Create UI folder in root HRConvert2 directory.
+-Move UI pages to UI folder.
+-Update languageStrings.php files to have $CoreError variable.
+  -ar
+  -bn
+  -de
+  -en
+  -es
+  -fr
+
+--------------------
+COMMIT 4/17/2023
+v3.2.5 - Add Spanish, French languageString.php file.
+
+-v3.2.5.
+-CONCEPT EXPLORATION: I Want to make UI's all exactly the same.
+  -The quest for modularity / scalability / maintainability continues!
+    -Making the UI and language packs separate, we enable the development of UIs to be language-agnostic.
+      -Add an errorStrings.php to each language pack.
+        -Define log language + error language in config, use errorStrings to translate core errors also.
+      -Add error translations to the ERROR_DESCRIPTIONS.txt file in a
+      -If we develop a a UI, it will apply to every language pack.
+      -If we develop a language pack, it will apply to every UI.
+      -UI developers can add/require their own supplemental languageStrings files, or bake this text into the UI.
+      -UI developers can chose to completely ignore the stock languageStrings file if they want.
+  -Create new root folder called UI.
+  -Move h,1,2,f files into UI folder.
+    -Create a subfolder for existing UI called Default.
+    -Move styleCore and stylesheets.css into UI/Default folder.
+    -Future ideas for UIs include "dark" "light" and various holiday themes.
+      -Maybe an automatic holiday selection mechanism based on timezone?
+  -Move errors from h,1,2,f to languageStrings.php.
+  -Make core check for existence of h,1,2,f files in the language pack folder.
+    -If style is specified & user style selection is allowed, use specified style.
+    -If h,1,2,f files exist and no style specified, use UI/Default.
+    -If h,1,2,f files don't exist and no style specified, use UI/Default. 
+-Tweak German language pack.
+  -Remove extra whitespace in UI1 buttons to save room.
+-Add languageStrings.php to Spanish, French language packs.
+-Language packs complete:
+  -Ar l,h,1,2,f
+  -Bn l,h,1,2,f
+  -De l,h,1,2,f
+  -En l,h,1,2,f
+  -Es l,h,1,2,f
+  -Fr l,h,1,2,f
+  -Hi
+  -It
+  -Ko
+  -Pt
+  -Ru
+  -Uk
+  -Zh
+
+--------------------
+COMMIT 4/14/2023
+v3.2.4 - Misc cleanup.
+
+-v3.2.4.
+-Merge security related checks in file operations inside the error check code.
+  -Try to make them all consistent. Move some log code to after the sanitization process in upload/download/delete.
+-The log message 'Could not verify tokens!' will now only appear in logs if $Verbose is set in config.php.
+-Fix missing translations in subtitles, subtitles labeled as models.
+  -Was leftover copy-pasta.
+-Add jpe to supported formats.
+-I really want to rework PDFs soon. 
+  -Want to add the ability to convert between any supported format using existing functions.
+
+--------------------
+COMMIT 4/13/2023
+v3.2.3 - Continue working on languageStrings concept, enable subtitle conversions.
+
+-v3.2.3.
+-Implemented subtitle conversions for Arabic, Bengali, German, & English language packs.
+-Work on German language pack.
+  -Copy English as a template.
+-Language packs complete:
+  -Ar l,h,1,2,f
+  -Bn l,h,1,2,f
+  -De l,h,1,2,f
+  -En l,h,1,2,f
+  -Es
+  -Fr
+  -Hi
+  -It
+  -Ko
+  -Pt
+  -Ru
+  -Uk
+  -Zh
+
+--------------------
+COMMIT 4/5/2023
+v3.2.2 - Continue working on languageStrings concept.
+
+-v3.2.2.
+-Language packs complete:
+  -Ar l,h,1,2,f
+  -Bn l,h,1,2,f
+  -De
+  -En l,h,1,2,f
+  -Es
+  -Fr
+  -Hi
+  -It
+  -Ko
+  -Pt
+  -Ru
+  -Uk
+  -Zh
+
+--------------------
+COMMIT 4/4/2023
+v3.2.1 - Continue working on languageStrings concept.
+
+-v3.2.1.
+-Work on Arabic language pack.
+-Add $GUIAlignment variable to control the float of UI elements.
+  -This is needed to make lists presentable in right-to-left languages.
+-Add dynamic supported format counting instead of hard-coding the number of formats for each UI.
+  -Previously we would count and adjust the number of unique conversions that are supported, then hard code this value into each UI.
+  -Now the core counts the number of supported formats and uses this value when building the UI.
+  -This is more maintainable, and more accurate.
+  -Now each converter will reflect the number of formats that are actually supproted.
+  -So if an administrator disables all conversions except for model conversions, there will be a very small number of supported conversions reflected in the UI.
+
+--------------------
+COMMIT 3/28/2023
+v3.2 - Continue working on languageStrings concept.
+
+-v3.2.
+-Implement dynamic supported format list in UI1 (english language pack only).
+  -The UI will now only display supported formats that are backed by logic.
+  -The lists of supported formats contained within the UI no longer need to be updated.
+  -The lists of supported formats are now entirely derived by logic.
+  -Still need to add OCR related formats when that refactor takes place.
+  -Need to keep going on UI2.
+-Added version verification to convertCore.php.
+  -The logic is split between verifyInstallation() and verifyGlobals(). 
+  -verifyInstallation() verifies versionInfo.php and loads it.
+  -verifyGlobals() performs the actual version check.
+  -Modified ERROR_DESCRIPTIONS.txt to match these changes.
+  -Added ERROR 24000 when unable to load the versionInfo.php file.
+-Updated ERROR 11.
+  -Added information about the new version check.
+-Continue changing double quotes in HTML to single quotes.
+  -Header is done.
+  -UI1 is done.
+  -Footer is done.
+-Move paths for scripts, stylesheets, javascript & favicon to verifyGlobals().
+-The name of the archive when a user selects to compress all files now reflects $ApplicationName variable.
+  -This was previously hard-coded to "HRConvert2_Files-<DATE>".
+-Added mysteriously missing bitrate UI features.
+-Adjust the list of supported formats to be more reliable, predictible, maintainable.
+-Only set FormatArray variables for the SupportedConversionTypes enabled in config.php.
+  -Now the arrays aren't even populated unless the conversion type is enabled.
+-Move "The user selected..." text to the beginning of the upload and download functions.
+-Prevent the upload of unsupported file formats.
+-Prevent the download of unsupported file formats.
+  -Add ERROR 3004 "Unsupported File Format" to ERROR_DESCRIPTIONS.txt.
+  -Copy ERROR 6001.
+-Add extra line of detail to error 6001: "The file that causes this error will be skipped."
+-OCR operations now require that both OCR and Document conversion types are allowed in config.php.
+-Stream conversion operations now require that both Stream and Audio conversion types are allowed in config.php.
+-Add a $GUIDirection variable to languageStrings.php that determines the reading order of the UI.
+  -Can either be "ltr" for "left to right" or "rtl" for "right to left".
+  -A default is defined in verifyGlobals() but this is overridden later by languageStrings.php.
+  -This should make migrating old language packs easier.
+-Add delete functionality to core logic section & UI.
+  -Add ERROR 24, Delete Failed.
+-Disable loading spinner on error return in UI2.
+  -Before the spinner would remain on error.
+
+--------------------
+COMMIT 3/20/2023
+v3.1.9.9 - Continue working on languageStrings concept.
+
+-v3.1.9.9.
+-Standardize logic format across all UI elements.
+  -Header. UI1, UI2, Footer.
+  -They all declare that they are loaded and error when the core is not loaded.
+  -The rest of the error logic is contained within languageStrings.php.
+  -Per language pack, the logic is only contained within the code once. Instead of once for each UI file.
+-Start moving UI1 text to languageStrings.php.
+-Adjust the format of languageStrings.php.
+-Add icon for future delete functionality.
+  -https://www.iconarchive.com/show/koloria-icons-by-graphicrating.1.html
+-Update subtitle icon.
+  -https://www.iconarchive.com/show/koloria-icons-by-graphicrating.1.html
+
+--------------------
+COMMIT 3/9/2023
+v3.1.9.8 - Clean up core variable assignments. Start working on delete functionality.
+
+-v3.1.9.8.
+-Taking a break from languageStrings to work on the core a bit.
+  -Need a change of pace.
+-Added deleteFiles() function for removing files manually (before they are deleted automatically).
+-Preparing for the next round of UI feature updates.
+  -Subtitle conversions.
+  -Delete files manually.
+-Added errors 23000, 23001, 23002.
+-Reordered errors so they are sequential in the ERROR_DESCRIPTIONS.txt file.
+  -Before they went in logical order as they are written in convertCore.php, which is confusing unless you know the code.
+
+--------------------
+COMMIT 3/9/2023
+v3.1.9.7 - Continue working on languageStrings concept.
+
+-v3.1.9.7.
+-Keep working on english GUI2.
+-Make buildGui() function with comprehensive checks to ensure that things are loaded properly.
+-This commit will still cause Error 16 because I've only completed one language pack.
+  -Hopefully once this is done to all language packs things will be more maintanable.
+
+--------------------
+COMMIT 3/9/2023
+v3.1.9.6 - Continue working on languageStrings concept.
+
+-v3.1.9.6.
+-Development Version.
+  -Language packs other than English will not work.
+  -English language pack is unreliable.
+  -OCR operations need attention.
+-I screwed up and posted the last batch of commits (v3.1.9.5) to to the wrong branch! 
+  -Then got frustrated and deleted the development branch.
+  -Now that I'm not as frustrated I will try again.
+-Reduce the amount of HTML tags that goes into languageStrings.php.
+  -This is needed because of variable scope. 
+  -The file loop in convertGui2.php doesn't update variables contained in languageStrings.php due to where it is called in.
+-Start converting the UI HTML to single quotes wherever possible.
+
+--------------------
+COMMIT 3/7/2023
+v3.1.9.5 - Continue working on languageStrings concept.
+
+-v3.1.9.5.
+-Added an official Development branch to the official repo.
+  -The reason for this is because I'd like to stage updates on the Development branch until they are ready.
+  -Then the master branch will get updated only to stable versions.
+  -This is required because it has been taking me several commits to fully implement several features/fixes/improvements.
+  -I always try to have an error free program at commit time, but still; new users should not be exposed to an incomplete versions.
+-Shortened verifyGlobals() in convertCore.php by assigning multiple variables of the same value at the same time.
+-Add alt and title text to english language pack, download button.
+  -Will continue adding the rest.
+-Updated CREATING_LANGUAGE_PACKS.txt file.
+  -Expanded on --About Language Packs-- section.
+  -Added --Maintaining Language Packs-- section, in case anyone else out there gets super ambitious ;)
+  -Added --Development Tips-- section.
+  -Added info about languageStrings.php file.
+  -Revised the wording for the rest of the files.
+-Add array check in verifyLanguage() function to $SupportedLanguages array.
+-Fix bug in verifyLanguage.php caused by misplaced bracket (with matching bad indentation). 
+  -Would have caused problems during reverting to default language if $AllowUserSelectableLanguage was set to FALSE.
+
+--------------------
+COMMIT 3/6/2023
+v3.1.9.4 - Work on languageStrings concept - separate language specific UI & logic from base UI elements.
+
+-v3.1.9.4.
+-The goal of moving the language specific text and logic from the base UI elements is that it becomes easier to maintain language packs.
+  -Currently every time I release an update that modifies a language pack, I must duplicate that update 14 times and change relevant language related text.
+  -By separating this and itemizing it in variables contained in a new languageStrings.php file, maintaining things and adding features becomes easier.
+  -Also, the base files header, convertGui1, convertGui2, and footer become universal. Meaning that changes to them can be easily duplicated.
+  -We could simply get rid of these from the language packs and simplify a language pack down to just the languageStrings file.
+  -We can explore that later.
+-Update english language pack, working on formatting new style for all language packs.
+  -Move all language related logic to new languageStrings.php file.
+-Improve ERROR 16 description in ERROR_DESCRIPTIONS.txt.
+-Make verifyLanguage function more robust.
+  -Add detection for if the root Language folder exists.
+  -Utilize global variables for required directory detection.
+-Add global variables to contain language pack file paths.
+
+--------------------
+COMMIT 3/2/2023
+v3.1.9.3 - Continue updating language packs.
+
+-v3.1.9.3.
+-Work on it, ko, pt, ru, uk, zh language packs.
+-Keep numbering language packs to v3.1.9.1.
+-Finally finished v3.1.9.1 language packs!!!
+-Remove PDF from imagearray.
+-Update "CREATING_LANGUAGE_PACKS.txt" to remove duplicate API inputs.
+
+--------------------
+COMMIT 2/27/2023
+v3.1.9.2 - Continue updating language packs.
+
+-v3.1.9.2.
+-Work on es, fr, hi language packs.
+-Keep numbering language packs to v3.1.9.1.
+-Update language pack update procedure.
+-Add "languageStrings.php" file to english language pack as a placeholder.
+  -Will eventually migrate all locale specific text strings and direct formatting to this file.
+  -With all strings separated from the UI it will be easier to maintain the UI.
+  -We could keep separate h,1,2,f files or keep a master set and only load the languageStrings file.
+  -If we keep separate people can modify their language easier. Also makes lh/rh reading order easier.
+  -If we use a master set we reduce size and complexity.
+
+--------------------
+COMMIT 2/21/2023
+v3.1.9.1 - Continue updating language packs.
+
+-v3.1.9.1.
+-Work on bn, de, en, ar, es, fr language packs.
+-Update language pack update procedure.
+-Update File Information section header text missing dots.
+-Evaluate subtitle conversion options.
+  -https://ffmpeg.org/ffmpeg-all.html#Subtitle-Formats
+  -https://superuser.com/questions/1090989/changing-subtitle-format-with-ffmpeg
+  -WebVTT X X X X
+  -SSA/ASS X X X X
+  -SRT  X X X X
+  -DVB X X X X
+-Add core support for subtitle conversions for testing purposes.
+-Added & documented ERROR 22000 for subtitle conversion errors.
+-Need to update the UI when this is ready.
+-Inspired by Issue # 32 (https://github.com/zelon88/HRConvert2/issues/32). 
+
+--------------------
+COMMIT 2/21/2023
+v3.1.9 - Finish updating language packs.
+
+-v3.1.9.
+-Adjust v3.1.8 update procedure.
+-Finish English language pack.
+-Finish Arabic language pack.
+-Work on bn, de, es, fr, hr, it, ko, pt, ru, uk, zh language packs.
+-LANGUAGE PACKS COMPLETE
+  -ar h,1,2,f
+  -en h,1,2,f
+  -bn h,1,2,f
+  -de h,1,2,f
+  -es h,1,2,f
+  -fr h,1,2,f
+  -hi h,1,2,f
+  -it h,1,2,f
+  -ko h,1,2,f
+  -pt h,1,2,f
+  -ru h,,,f
+  -uk h,,,f
+  -zh h,,,f
+
+--------------------
+COMMIT 1/31/2023
+v3.1.8 - Add supported conversion type array to config, fix csv support, make static UI elements dynamic.
+
+-v3.1.8.
+-Remove $AllowStreams variable.
+-Exposed the $SupportedConversionTypes variable in config.php.
+-Fix HTML error in gui2 of each language pack.
+-Fix archive conversions.
+-Fix OCR operations.
+-Add Csv Support.
+-Create v3.1.8 UI Update Procedure.
+  -No user action required, list for tracking purposes only.
+  -Header
+    -Update header, add dots, update date.
+  -UI1
+    -Update FILE INFORMATION section of header comment text.
+    -Add Csv line to supported spreadsheets.
+  -UI2
+    -Update FILE INFORMATION section of header comment text.
+    -Copy & paste && $SupportedConversionTypes condition to each button code.
+    -Add Spaces.
+    -Copy and paste from php start tag of file foreach to buttondiv.
+    -Add csv to each spreadsheet conversion dropdown.
+    -Fix javascript error on archiveconvertsubmit around line 555.
+    -Check for ending /div tag.
+  -Footer
+    -Update header, add dots, update date.
+
+--------------------
+COMMIT 1/20/2023
+v3.1.7 - Continue updating language packs.
+
+-v3.1.7.
+-Finish adding errors 13001, 13002, 13003, 13004, 13005 to docs.
+-Move main loading spinner to under the cursor.
+-Continuing work on updating language packs.
+  -The following process can be repeated for each language pack to update them to v3.1.5.
+  -Header/Footer 
+    -Update "FILE INFORMATION" section of header.
+  -GUI1
+    -Update "FILE INFORMATION" section of header.
+    -Copy/Paste to replace all file format HTML.
+    -Retranslate/replace all conversion specific text.
+  -GUI2
+    -Update "FILE INFORMATION" section of header.
+    -Update icons for media, videos.
+    -Search for utility div, copy+paste lower, rename upper.
+    -Append PHP counter to all loading div calls inside the file loop.
+    -Replace all conversion option formats.
+      -image
+      -drawing
+      -model
+      -archive
+  -LANGUAGE PACKS COMPLETE
+    -ar h,1,2,f
+    -en h,1,2,f
+    -bn h,1,2,f
+    -de h,1,2,f
+    -es h,1,2,f
+    -fr h.1.2.f
+    -hi h,1,2,f
+    -it h,1,2,f
+    -ko h,1,2,f
+    -pt h,1,2,f
+    -ru h,1,2,f
+    -uk h,1,2,f
+    -zh h,1,2,f
+-To Do...
+  -Need to redesign/standardize PDFWork functions.
+    -Utilize convert() functions instead of rewriting them.
+  -Need to add csv output support.
+  -Need to add default options to disable specific conversion types, similar to AllowStreams.
+    -Maybe make an array of allowed types instead of separate variables?
+  -Need to make arrays in config.php to store default allowed output formats.
+    -This will make maintaining things easier by not having to replace the UI elements each time.
+    -DisplayOutputFormats(FormatType,  DisplayType)
+      -Where FormatType is the type of file and DisplayType is the type of list generated.
+
+--------------------
+COMMIT 1/20/2023
+v3.1.6 - General logic updates, add error checks, improve conversion attempt procedures.
+
+-v3.1.6.
+-Improve comments.
+-Add $PermissionLevels & $ApacheUser variables to verifyGlobals().
+-Add a pause between conversion attempts.
+-The pause is set in verifyGlobals() by $SleepTimer.
+-The pause increments by 1 second every attempt.
+-The max number of attempts is now set in verifyGlobals() by $StopCounter.
+-Incremented values are discarded. Each conversion attempt starts with default $SleepTimer.
+-Simplify image conversion process. Remove Method 1 and Method 2, now only one method to rule them all.
+-Reduce number of times $SupportedConversionType is checked during a conversion.
+-Removed error 8000.
+-Add errors 8001, 13001,
+
+--------------------
+COMMIT 1/20/2023
+v3.1.5 - Create language pack upgrade to v3.1.5 procedure.
+
+-v3.1.5.
+-Replace Leafpad with Featherpad in instructions.
+-Create language pack upgrade to v3.1.5 procedure.
+-Lots of changes were made to the GUI.
+-This procedure is for development purposes only. No action is required by users or admins.
+-This is just so I can keep track of things. 
+-The following process can be repeated for each language pack to update them to v3.1.5.
+-GUI1
+  -Update "FILE INFORMATION" section of header.
+  -Copy/Paste to replace all file format HTML.
+  -Retranslate/replace all conversion specific text.
+-GUI2
+  -Update "FILE INFORMATION" section of header.
+  -Search for utility div, copy+paste lower, rename upper.
+  -Append PHP counter to all loading div calls inside the file loop.
+  -Replace all conversion option formats.
+-LANGUAGE PACKS COMPLETE
+  -ar
+  -en
+-AFTER ALl LANGUAGE PACKS ARE COMPLETE
+  -Test each language pack.
+  -Check for HTML errors.
+-Need to fix loading spinner on virus scan.
+
+--------------------
+COMMIT 1/11/2023
+v3.1.2 - Improve image support. $AllowStreams config entry, bump JQuery, add some icons.
+
+-v3.1.2.
+-Improve Installation_Instructions.txt.
+-Revise 3D Model support, Vector file support, Image support, Iso support.
+-Improve securePath function comments, add URL support.
+-Trying to automate the translation into other languages.
+-Add rc-local.service template file for systems where it is missing and needs to be installed.
+
+--------------------
+COMMIT 1/10/2023
+v3.1.1 - Improve image support. $AllowStreams config entry, bump JQuery, add some icons.
+
+-v3.1.1.
+-Add code to prevent stream related UI elements from displaying when the $AllowStreams config entry is set to FALSE.
+-Update JQuery from v3.6.0.min to v3.6.3.min.
+-Checked for Dropzone.js updates, already at latest version.
+-Minor comment changes in config.php.
+-Translate index files of language packs into the language of the pack.
+-Add comments section containing file & application information to GUI-related files.
+-Clean up array declarations, improve readibility, scalability, debugging.
+-Vastly improve image support for both input and output operations.
+-Added support for Heic files.
+-Added support for several misc image files.
+-Bumped format support count to 79 file formats.
+-Adjust icons for media, videos to be unique from streams.
+-Add mkisofs as a dependency, fix iso creation.
+-Revise verbiage of UI elements.
+-Added element specific loading spinners that are under the cursor, so less disruptive.
+
+--------------------
+COMMIT 1/4/2023
+v3.1 - ScanCore to v0.9, PHP-AV v4.1.
+
+-v3.1.
+-ScanCore to v0.9, PHP-AV v4.1.
+-Correct logging location, remove erroneous log directory created alongside ScanCore.
+-Improve argument handling.
+-Add $AllowStreams config entry to selectivly disable stream formats.
+
+--------------------
+COMMIT 1/3/2023
+v3.0 - Fix syntax error, typo in config.
+
+-v3.0.
+-Fix syntax error.
+-Improve config.php comments.
+
+--------------------
+COMMIT 1/3/2023
+v2.9.8 & v2.9.9 - Merge pull request # 24 & 25.
+
+-v2.9.8.
+-Merge pull request # 24.
+-"Added .mov to videoArray and created error"
+-Pull request URL:  https://github.com/zelon88/HRConvert2/pull/24.
+-Commit URL:  https://github.com/zelon88/HRConvert2/commit/cd83790bcddfbf8f97cfcefef019fede9395efdb
+-Special thanks to author @HenriChabert.
+
+-v2.9.9.
+-Merge pull request # 24.
+-"Add m3u8 stream support"
+-Pull request URL:  https://github.com/zelon88/HRConvert2/pull/25.
+-Commit URL:  https://github.com/zelon88/HRConvert2/commit/6bf64dd03caf2874075209f0a7145003e1927722
+-Special thanks to author @MangoTornado.
+-Updated all language packs with Stream support.
+
+--------------------
+COMMIT 1/3/2023
+v2.9.7 - Merge pull request # 23.
+
+-v2.9.7.
+-Merge pull request # 23.
+-"Replace spaces with _ in filename"
+-Pull request URL:  https://github.com/zelon88/HRConvert2/pull/23.
+-Commit URL:  https://github.com/zelon88/HRConvert2/commit/24403d8518308f8c4d303af1e9acd7945f877bd5
+-Special thanks to author @HenriChabert.
+
+--------------------
+COMMIT 1/3/2023
+v2.9.6 - Fix error in documentation.
+
+-v2.9.6.
+-Fix error in documentation.
+
+--------------------
+COMMIT 7/18/2022
+v2.9.5 - Fix bug in OCR where non-PDF conversions would fail.
+
+-v2.9.5.
+-There was a bug in convertCore.php that lead to issue found by Github user @dwaan.
+-https://github.com/dwaaan/HRConvert2-Docker/issues/6
+
+--------------------
+COMMIT 4/28/2022
+v2.9.4 - Add CREATING_LANGUAGE_PACKS.txt to Documents directory.
+
+-v2.9.4.
+-Add CREATING_LANGUAGE_PACKS.txt to Documents directory.
+
+--------------------
+COMMIT 4/28/2022
+v2.9.3 - Update docs, ERRO_DESCRIPTIONS.txt, add application information header to important files.
+
+-v2.9.3.
+-Improve documentation.
+
+--------------------
+COMMIT 4/28/2022
+v2.9.2 - Finish adding latest core features to langauge packs.
+
+-v2.9.2.
+-Added newest features to more language packs.
+  -Portuguese,
+  -Russian,
+  -Ukranian,
+  -& Chinese.
+
+--------------------
+COMMIT 4/26/2022
+v2.9.1 - Continue adding latest core features to langauge packs.
+
+-v2.9.1.
+-Added newest features to more language packs.
+  -Hindu has the latest features.
+  -Italian has the latest features.
+  -Korean has the latest features.
+-Still need to add latest features to...
+  -Portuguese,
+  -Russian,
+  -Ukranian,
+  -& Chinese.
+
+--------------------
+COMMIT 4/23/2022
+v2.9 - Continue adding latest core features to language packs.
+
+-v2.9.
+-Added newest features to more language packs.
+  -Arabic has the latest features.
+  -Bengali has the latest features.
+  -German has the latest features.
+  -English has the latest features.
+  -Spanish has the latest features.
+  -French has the latest features.
+-Still need to add latest features to...
+  -Hindi,
+  -Italian,
+  -Korean,
+  -Portuguese,
+  -Russian,
+  -Ukranian,
+  -& Chinese.
+-Adjusted ScanCore-config.php so that the Reports directory is the Logs directory.
+  -It was creating empty directories that can be abused to view the servers document root depending on server config.
+-If your HRConvert2 installation directory contains a subdirectory called "Reports"; it should be manually deleted.
+
+--------------------
+COMMIT 4/21/2022
+v2.8.9 - Added Share File button, option to disable in config.php.
+
+-v2.8.9.
+-Added a "Share File" button to convertGui2.php for creating & copying a link to the file.
+-Allows users to generate shareable URLs.
+-Added $AllowUserShare in conig.php for disabling the share file feature.
+-Currently the Share file feature is only avaialble in the English language pack.
+-I expect to have all the language packs caught up in the next update.
+
+--------------------
+COMMIT 4/20/2022
+v2.8.8 - Discovered bugs in ScanCore routine, improve User Virus Scanning.
+
+-v2.8.8.
+-Fixed the way User ScanCore Scans are called.
+-Reworked the way Scan Errors & Scan Complete is determined.
+-Revised logic to avoid errors during normal operation.
+-Both User Scan Methods successfully detected the Eicar test virus sample.
+
+--------------------
+COMMIT 4/20/2022
+v2.8.7 - Added User Virus Scanning support, download button, loading spinner options & more.
+
+-v2.8.7.
+-Fixed an undefined variable warning in the virusScan() function.
+-Cleaned up memory deallocation routine in the virusScan() function.
+-Only enable file related operations if valid tokens have been supplied.
+-Improved sanitization integrity.
+-Combined the functionality of HRScan2 into HRConvert2.
+  -Now users can select to scan uploaded files for viruses on-demand using ClamAV or zelon88/ScanCore.
+  -The codebases for both are "sisters" so maintainence has always been a pain.
+  -Whenever one gets updated a lot of the code needed to be modified and merged into the other one.
+  -Considering the major refactor that just took place with HRConvert2 (which took almmost 38 caffene fueled hours) I figure we would merge functionality instead of refactoring another core.
+  -These features can be disabled via config.php.
+  -Some administrators won't want users uploading potentially malicious files, which makes sense.
+  -If $UserVirusScanning is enabled in config.php the HRScan2 features will be savailable.
+  -If $UserVirusScanning is not enabled in config.php the HRScan2 features will be unavailable.
+  -This behaviour change requires some changes to the way regular virus scanning is performed.
+  -If $UserVirusScanning is enabled we must disable regular virus scanning during the file upload phase.
+  -Note that all other regular virus scan operations are still enforced.
+  -Meaning that if a user uploads a file that is infected, they will still NOT be allowed to perform download, conversion, archive, or OCR operations on them.
+  -They WILL be allowed to scan the file using User Virus Scan options.
+  -Also if a normal virus scan detects a malicious file while $AllowUserVirusScan is enabled, the file WILL NOT be immediately deleted.
+  -It will be allowed to remain until regular cleanup activities remove it (after the $DeleteThreshold has passed).
+-Added color specific down arrow buttons to the GUI.
+-Added Download File button to convertGui2.php page.
+  -Now you can redownload any file in the HRConvert2 scratch space.
+-Added Scan File & Scan All buttons to convertGui2.php page.
+-Added config entry for adjusting the backround color of the GUI.
+-Added config entry for adjusting the loading spinner style.
+-Added 6 spinners for each color scheme (24 spinners total).
+-Can now specify your own spinner in config.php.
+-Refactored convertGui2.php file for English & Arabic so far.
+  -Need to continue doing the rest.
+  -Only English & Arabic language packs have support for the new API features related to User Virus Scans.
+-Updated ERROR_DESCIPTIONS.txt with the latest errors related to virus scanning.
+-Fixed dropdown boxes showing reversed in Arabic language pack.
+-Made dropdown arrow colors match the color scheme being used.
+
+--------------------
+COMMIT 4/19/2022
+v2.8.3 - Reordered some error numbers. Finished ERROR_DESCRIPTIONS.txt.
+
+-v2.8.3.
+-Fixed Dropzone box translation not happening after updating dropzone to latest version.
+-Reodered some error numbers.
+-Finished adding errors and descriptions to ERROR_DESCRIPTIONS.txt.
+-Took some updated screenshots.
+-Saved pending changes to UI docs that should have been uploaded yesterday.
+-Updated Slack Team link in README.md.
+
+--------------------
+COMMIT - 4/17/2022
+v2.8.2 - Adding documentation, polishing edges.
+
+-v2.8.2.
+-"Polishing the edges" of the repo, so to speak.
+-Cleaning up directory structure.
+  -Added Documentation directory.
+  -Moved Documentation to the documentation directory.
+  -Added ERROR_DESCRIPTIONS with detailed descriptions of every error message produced in the logs.
+    -Still need to add more messages.
+  -Renamed How_To_Install_HRConvert.txt to INSTALLATION_INSTRUCTIONS.txt & moved to Documentation directory.
+  -Moved ICON_CREDITS.txt to Documentation directory.
+  -Cleaned up the comment intro section to all PHP files to have the same basic formatting & structure.
+  -Polish the README some more.
+  -Make logs respect the $ApplicationName variable as soon as it becomes available.
+    -No more hardcoded "HRConvert2" in log entries.
+  -Moved styleCore.php to Resources directory, since it only contains 4 front-end related variables and no logic of its own.
+  -The goal is to cleanup the root of the repo to make it more presentable & approacable for newbies.
+    -All the important files related to logic are in the root of the repo.
+    -Makes the repo more modular as well.
+-Make $_GET['language'] codes language case-insensitive.
+-Log files are now named after the $ApplicationName variable set in config.php rather than using HRConvert2 in the filename.
+-Reordered some logic.
+-Disable GUI compilation when responding to a file operation request.
+  -The front end doesn't use output from the core anyway.
+  -This clears the way to enable such functionality by controlling the when GUI elements are actually needed.
+-No longer throws 404 errors when a file conversion fails.
+-No longer opens compatible files in the browser but starts a download instead.
+-No more HTML undefined errors when requesitng a download.
+-Added a check to verifySessionHash() function to make sure the $Salts variables are formatted as strings.
+
+--------------------
+COMMIT - 4/17/2022
+v2.8.1 - Update DropZone version, update stylesheet, fix bugs.
+
+-v2.8.1.
+-Shortened some of the longer lines of code in convertCore.php.
+-Fixed bugs during some operations when $VirusScan is set to TRUE in config.php.
+-Update dropzone.js & dropone.css to latest release.
+-Thinking about adding the option to scan with ClamAV & zelon88/ScanCore.
+  -This will effectively merge the zelon88/HRScan2 project into HRConvert2.
+-Thinking about adding Pell editor (port from HRCloud2 & update) to enable real-time in browser document editing.
+-Going to start working on the next feature release.
+  -Tick... Tock.
+
+--------------------
+COMMIT - 4/14/2022
+v2.8 - Major convertCore.php refactor. Complete modular redesign. Same functionality, same look, more predictable & consistent. Easier to maintain.
+
+-v2.8.
+-Refactor the core.
+  -The original codebase was developed more than 4 years ago.
+    -The first unpublished experiments began in 2014.
+  -The "generation" of the HRConvert2 codebase until today was "Valkyrie".
+    -HonestRepair server side software comes in 3 generations. 
+    -The first generation is unsafe to use. It is part of the "zelon88/HRToolkitTools" repo.
+      -It was called the "Genesis" engine because it was a proof-of-concept design.
+      -Hence the name "Genesis".
+    -The second generation is performant & safe to use but hard to maintain.
+      -It is called the "Valkyrie" engine because the runtime environment is "dynamically constructed".
+      -The "Valkyrie" in Norse mythology is any of a group of maidens who serves the god Odin.
+      -Valkyrie's were also the "Choosers of the slain" and decided who would die on the battlefield.
+      -Because the "Valkyrie" codebase is made up of one main core served by smaller cores that dynamically call dependencies.
+      -Hence the name "Valkyrie" is very fitting.
+    -The third and current generation is called "Diablo". It is secure, performant, & modular.
+      -"Diablo" is Spanish for Devil. 
+      -The coding convention was introduced in the "Zelon88/HRCloud3" alpha repo and is currently under active development. 
+      -If you're a major Cloud provider you should fear Diablo.
+  -Removes most core output except from log files or when logs cannot be reached.
+  -Uses a more consistent logging/error catching mechanism.
+  -Makes the core extremely modular and easy to work on.
+  -Adding new features is easier because logging and error functions are repeatable & consistent.
+  -Output is consistent.
+  -Logic flow is capable of withstanding non-fatal errors.
+    -Before we stopped execution for a lot more things.
+    -Logic behavior is more intuitive.
+  -Errors produced use incremental error numbers that can be easily adjusted or documented.
+  -Log generation happens earlier during execution, meaning more logs can be captured.
+    -More logs means problems are easier to identify & debug.
+  -Switching to a modern design will mean more interoperability of functions between applications.
+    -It becomes easier to apply simiilar patches to other products.
+  -I don't have to look at my old code anymore.
+    -Programmers grow. Programming styles change. 
+    -I am a better programmer now than I was when I first wrote this.
+    -There will probably be bugs introduced and regressions but at least I'll enjoy working on the codebase again.
+    -This work needed to get done eventually anyway considering it will be needed for HRCloud3.
+-Added $Verbose config entry for controlling the amount of logging performed.
+  -If $Verbose is set to TRUE every significant operation will create a log entry.
+  -If $Verbose is set to FALSE only errors will create a log entry.
+-$VirusScan config entry now only accepts boolean values.
+-Improve formatting of config.php file for readability.
+-All conversions except archive conversions now receive 5 conversion attempts.
+  -Previously it was only for documents and the threshold was 10 attempts.
+-Reworked the way the document conversion engine is started and verified.
+-Removed a lot of unused variables.
+-Started using the same capitalization scheme as HRCloud3 (Diablo style).
+  -Lower case first letter variables denote highly limited scope.
+  -Upper case first letter variables denote very wide (almost global) scope.
+  -I know that PHP takes care of memory cleanup, and I know how variable scope works in functions.
+    -I also don't care. 
+    -Doing the capitalization scheme and manually NULL'ing + unsetting variables helps me keep track of variables.
+    -I came up with this scheme exactly because I kept seeing dead variables in my code and I wanted it to stop.
+    -This forces accountability for all variables and puts visiblity on most of them.
+    -So when one of them isn't used anywhere it kind of stands out.
+-Refactored Javascript a tiny bit.
+-Now the core will remember when you leave and come back for a short while.
+-Added unique identifier for logs. 
+  -Makes searching logs much easier because requests group together.
+-Core now captures the stdout of it's dependencies.
+  -Writes to log if $Verbose is set to TRUE.
+-Changed extraction behaviour for archive conversions.
+  -Archive conversions where the destination folder already exists will have the new contents ADDED to the original archive instead of replacing them.
+  -You can now build archives in this fashion, admittedly it is not for the faint of heart.
+-Remove sanitizeCore.php.
+  -This has been replaced by the verifyGlobals() function in convertCore.php.
+  -This was a suggestion made about 5 years ago on Reddit. It finally happened!
+-I worked on this commit for 30 hours straight with no sleep.
+  -With only one consecutive 90 minute break to take a phone call.
+  -Then I took a 3 hour nap and finished the rest, over the next 8 hours.
+  -I am recovering from a broken leg and surgery to fix it and I still have a couple more weeks to go.
+  -Send halp!
+
+--------------------
+COMMIT - 4/13/2022
+v2.7.5 - Added 7 language translations, fixed compression bug.
+
+-v2.7.5.
+-Added code to each UI in Languages to prevent execution without the core having been loaded already.
+-Fixed a bug when creating archives in .zip and .7z format.
+-Touched up README.md.
+-Added Russian language translation (ru).
+-Added Ukranian language translation (uk).
+-Added Bengali language translation (bn).
+-Added German language translation (de).
+-Added Korean language translation (ko).
+-Added Italian language translation (it).
+-Added Portugese language translation (pt).
+
+--------------------
+COMMIT - 4/13/2022
+v2.7.4 - Added 4 language translations.
+
+-v2.7.4.
+-Switch from Microsoft Locale Codes to ISO 639-1 language standard.
+-Updated English, French translations (en & fr).
+-Added Spanish language translation (es).
+-Added Chinese (Simplified) language translation (zh).
+-Added Hindi language translation (hi).
+-Added Arabic language translation (ar).
+-Added a bunch of updated screenshots.
+
+--------------------
+COMMIT - 4/13/2022
+v2.7.3 - Added multiple color schemes, French language translation, & dynamic language selection.
+
+-v2.7.3.
+-Remove winetrics dependency from installation instructions.
+-Add gnuplot dependency to installation instructions.
+-Consolidated some of the installation instructions.
+-Added the ability to control button color via config.php.
+  -Set $ButtonStyles to one of the approved options listed in config.php. 
+  -If the config entry is not defined a default will be used instead (grey).
+  -Supports RED, GREEN, BLUE, and GREY.
+-Updated index.html files in subdirectories to the latest version from root directory.
+-Moved the UI to the Languages subdirectory.
+-Added French language UI.
+-Added the ability to easily add more language packs.
+-Added ability to control language display via $_GET request.
+-Added ability to disable $_GET request language selection in config.php.
+-Reworked the way the GUI is assembled to make it compatible with multiple language packs.
+
+--------------------
+COMMIT - 4/13/2022
+v2.7.2 - Fixed bugs reported by a Reddit user.
+
+-v2.7.2.
+-Fix undefined variable errors in sanitizeCore.php and convertCore.php when converting PDF files.
+-Fixed multiple page detection code.
+
+--------------------
+COMMIT - 4/13/2022
+v2.7.1 - Add a ton of supported image formats.
+
+-v2.7.1
+-HRConvert2 uses ImageMagick to support image conversions.
+-I have gone through the list of supported image formats and added some easy to support formats to expand HRConvert2's capabilities.
+  -CRW
+  -CIN
+  -DCR
+  -DDS
+  -DIB
+  -FLIF
+  -GPLT
+  -NEF
+  -ORF
+  -ORA
+  -SCT
+  -SFW
+  -XCF
+  -XWD
+  -AVIF
+  -ICO
+-Also added gnuplot to the list of dependencies (to support GPLT input files).
+-Fixed some supported filetype checks.
+-Clean up formatting of config.php.
+-Clean up some mis-indented code blocks (brackets were correct).
+
+--------------------
+COMMIT - 4/11/2022
+v2.7 - v2.7 - Fix a ton of bugs, make compatible w/PHP8.
+
+-v2.7.
+-Update documentation.
+  -Update installation docs to reflect latest PHP.
+  -Remove mySQL requirements.
+-Remove 'odf' support, change to 'odt' support.
+-Specifically define $URLEcho to fix undefined variable warnings.
+-Added $ShowGUI config variable for determining whether to show a full or minimal GUI.
+  -Detects if the variable is set and manually defines $_GET['noGUI'].
+  -Has the same function as $_GET['noGUI']. 
+  -If users don't have this variable set in their config.php file then a full GUI will be shown.
+-HRConvert2 looks best when you use it in an iframe on your website.
+-Fixed some if/while/foreach statements not having whitespace before the opening '('.
+-Removed reference to $UserID in logs.
+-Verified that all PDFWork is capable of functioning.
+-Verified that all document conversions are capable of functioning.
+-Reworked the way archives are extracted & compressed.
+-Improved logging during dearchiving.
+-Added $ApplicationName & $ApplicationTitle config entries in config.php.
+  -If these are not set; defaults are used instead.
+-Upgraded to JQuery 3.6.0 from 3.3.1.
+  -Remove 3.3.1 & 3.1.0 legacy versions as they are no longer required.
+-Added $ShowFinePrint config entry to config.php for showing or hiding the TOS & PP links.
+  -If this is not set; a default is used instead.
+-Fixed noGUI mode so that the divs are centered & the produced HTML is valid.
+-Cleaned up some sloppy assignments in dearch/rearch code.
+-Move temporary archive location to ConvertDir from ConvertTempDir.
+-Improved consistency of UI elements.
+-Switched dearchive code from using the 7z e switch to the 7z x switch to preserve paths.
+-Fixed a bug in rar archive output paths.
+-Changed the rar archiving arguments from "rar a -ep " to "rar a -ep1 -r" to preserve folder structure.
+-Verified that all extraction / rearchiving operations work.
+-Remove $Thorough & $HighPerformanceAV from config.php as they were no longer applicable.
+-Reworked the way sanitizeCore.php converts strings into arrays.
+-Changed $VirusScan config entry default value from '1' to TRUE.
+  -The core will still recognize '1' as a valid entry to support legacy config files.
+-Remove tar.bz2 option from archiveAll menu.
+-Rework the way archiveAll feature is accomplished.
+-Improve logging consistencies.
+-Remove old iPhone code from index.html.
+  -This is easier to accomplish with screen size anyway.
+
+--------------------
+COMMIT - 2/11/2020
+v2.6 - Improve sanitization per Issue #4.
+
+-v2.6.
+-Improve sanitization per Issue #4.
+-Github user @robre pointed out some typos in sanitizeCore.php, specifically lines 95 & line 96 from v2.4.
+-These bugs mean to me that I need to review more of this code.
+-Thank you, @robre!
+
+--------------------
+COMMIT 11/18/2018
+v2.4 - Improve sanitization.
+
+-v2.4.
+-Improve sanitization.
+-Based on input from neogeovr on Reddit.
+
+--------------------
+COMMIT 10/23/2018
+v2.3 - Add support for m4a, m4p, m4v files.
+
+-v2.3.
+-Add support for m4a, m4p, and m4v input files.
+
+--------------------
+COMMIT 9/25/2018
+v2.2 - Fix typos in comments.
+
+-v2.2.
+-Fix typos in comments.
+
+--------------------
+COMMIT 7/22/2018
+v2.1 - Fix occasional warnings during file cleanup.
+
+-v2.1.
+-Fix occasional warnings.
+
+----------
+COMMIT 7/20/2018
+v2.0 - Polish some rough edges in the back end.
+
+-v2.0.
+-Consolidate some code in similar fashion to the recent HRC2 refactor.
+-Now when no extension is specified a default will be used instead of displaying a 404 error.
+-Tweak auto-cleaner to make it work in a safer, more reliable way.
+-Add conversion and archive support for tar.bz2.
+-Now when bulk archives are created any converted files will be included in the archive as well as the originals.
+-Fix the way files sync between locations and the way symlinks are controlled.
+
+----------
+COMMIT 7/8/2018
+v1.9 - Improve security.
+
+-v1.9.
+-Added checks for dangerous files to all Convert operations and to the GUI.
+-Fix PDF files showing the image options button when there is no div to display.
+-Added this changelog to keep track of thoughts, changes, and ideas.
+----------

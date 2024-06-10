@@ -1,6 +1,6 @@
 # -----------------------------------------------------------------------------------
 # COPYRIGHT INFORMATION ...
-# HRConvert2, Copyright on 3/12/2024 by Justin Grimes, www.github.com/zelon88
+# HRConvert2, Copyright on 6/9/2024 by Justin Grimes, www.github.com/zelon88
 
 # LICENSE INFORMATION ...
 # This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@
 # on a server for users of any web browser without authentication.
 
 # FILE INFORMATION ...
-# v3.3.3.
+# v3.3.7.
 # This file contains the Docker build file for the project.
 # Build this with...
 #   docker build -t HRConvert2 .
@@ -47,6 +47,7 @@ RUN mkdir /DATA && \
 WORKDIR /var/www/html/HRProprietary
 
 # Create & process a debian.sources file.
+RUN rm -vf /var/lib/apt/lists/*
 RUN apt-get update
 
 # Install git.
@@ -73,10 +74,12 @@ RUN apt-get install -y libpng-dev
 RUN apt-get install -y libzip-dev
 RUN docker-php-ext-install gd zip
 RUN apt-get install -y libreoffice-common default-jre libreoffice-java-common poppler-utils
-RUN apt-get install -y clamav unoconv p7zip-full meshlab dia pandoc python3 zip unzip ffmpeg
+RUN apt-get install -y clamav unoconv p7zip-full meshlab dia pandoc python3 zip unzip
 RUN apt-get install -y xpdf mkisofs imagemagick meshlab tesseract-ocr tar
-
 ## arm64 rar install hack (rar CLI only available for x86/x64 from rar labs)
+RUN /bin/bash HRConvert2/Documentation/Build/ffmpeg-build2.sh --build --enable-gpl-and-non-free
+RUN rm -r packages
+RUN rm -r workspace
 
 RUN DPKG_ARCH="$(dpkg --print-architecture)"; \
     if [ "${DPKG_ARCH}" = "amd64" ]; then \
@@ -98,6 +101,7 @@ RUN DPKG_ARCH="$(dpkg --print-architecture)"; \
 
 # Copy required files.
 RUN cp HRConvert2/Documentation/Build/php.ini /usr/local/etc/php.ini
+RUN cp HRConvert2/Documentation/Build/policy.xml /etc/ImageMagick-6/policy.xml
 RUN cp HRConvert2/index.html /var/www/html/index.html
 RUN cp HRConvert2/index.html /var/www/html/HRProprietary/index.html
 

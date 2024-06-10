@@ -64,15 +64,16 @@ If you truly want to build your own Docker Image from source this document will 
 
 -----STEP 1 - PREPARE THE FILES-----
 1. Grab a cup of coffee.
-2. Update the Dockerfile located at HRConvert2/Documentation/Build/Dockerfile.
-3. Complete the source code update of HRConvert2 and upload it to the Github repo.
-  3a. Note that the repo is the official source code location for the Dockerfile.
-  3b. The source you copy over with the docker file is for reference only, and IS NOT USED to generate the image.
-  3c. The source code used to generate the image comes from the Github repo specified in the Dockerfile.
-4. Navigate to /var/www/html/HRProprietary/HRConvert2 and copy all folders EXCEPT Logs and DATA.
-5. Paste the folders onto into a folder on the Desktop.
-  5a. Note that the source code contained in these files is mostly unused. 
-  5b. The Dockerfile creates a container that downloads the source code from the Github repo.
+2. Make sure you have Docker installed. Run  'sudo apt-get install docker.io'
+3. Update the Dockerfile located at /var/www/html/HRProprietary/HRConvert2/Documentation/Build/Dockerfile.
+4. Complete the source code update of HRConvert2 and upload it to the Github repo.
+  4a. Note that the repo is the official source code location for the Dockerfile.
+  4b. The source you copy over with the docker file is for reference only, and IS NOT USED to generate the image.
+  4c. The source code used to generate the image comes from the Github repo specified in the Dockerfile.
+5. Navigate to /var/www/html/HRProprietary/HRConvert2 and copy all folders EXCEPT Logs and DATA.
+6. Paste the folders onto into a folder on the Desktop.
+  6a. Note that the source code contained in these files is mostly unused. 
+  6b. The Dockerfile creates a container that downloads the source code from the Github repo.
 -----------------------------------------------------------------------------------
 
 
@@ -84,15 +85,34 @@ If you truly want to build your own Docker Image from source this document will 
 2. Before building, make sure you've updated the Github repo specified in the Dockerfile
   2a. If you don't update the Github repo, you will build old source code.
 3. Next, select one of the build commands below based on your specific use case.
-  3a. To run a full, clean build; Navigate to the Desktop/HRConvert2 folder, then run  'docker build --no-cache -t hrconvert2 .'
-  3b. To run an build from the last successful step; Navigate to the Desktop/HRConvert2 folder, then run  'docker build -t hrconvert2 .'
+  3a. To run a full, clean build; Navigate to the Desktop/HRConvert2 folder, then adjust the version & run  'docker build --no-cache -t zelon88/hrconvert2:v#.#.# .'
+  3b. To run an build from the last successful step; Navigate to the Desktop/HRConvert2 folder, then adjust the version & run  'docker build -t zelon88/hrconvert2:v#.#.# .'
   3c. To regenerate the sources.list file, uncomment the dockerfile line '#RUN rm -vf /var/lib/apt/lists/*', then run  'docker build -t hrconvert2 .'
 4. Grab another cup of coffee. The build process will take some time. 
-  4a. For my 16C, 64GB server it takes about 1,500 seconds to build the Docker Image from scratch.
+  4a. For my 16C, 64GB server it takes about 1,500 seconds (25 minutes) to build the Docker Image from scratch.
 -----------------------------------------------------------------------------------
 
 
------STEP 3 - PUSH THE DOCKER IMAGE TO DOCKER HUB-----
+-----STEP 3 - TEST THE DOCKER IMAGE-----
 
-1. On a computer with docker account linked, modify the version number in the following command, then run  'docker push zelon88/hrconvert2:v#.#.#'
+1. Run  'docker run -d -p 8080:80 -p 8443:443 zelon88/hrconvert2:v#.#.#'
+2. Open a browser and navigate to ' http://localhost:8080' to test the converter.
+-----------------------------------------------------------------------------------
+
+
+-----STEP 4 - PUSH THE DOCKER IMAGE TO DOCKER HUB-----
+
+1. On a computer with Docker Hub account linked, modify the version number in the following command, then run  'docker push zelon88/hrconvert2:v#.#.#'
+-----------------------------------------------------------------------------------
+
+
+-----NOTES-----
+
+1. If you forget to tag your release, don't re-build it! Use the following procedure to add the missing tags.
+  1a. Run  'docker images'
+  1b. Copy the Image ID of the Docker Image you want to tag.
+  1c. Add a new tag to the existing image by running  'docker tag ########### zelon88/hrconvert2:v#.#.#'  where ##### is the Image ID and v#.#.# is the version being tagged.
+  1d. To remove a tag, run  'docker rmi zelon88/hrconvert2:v#.#.#'
+2. Adding the  'latest'  tag is helpful to users.
+3. Building the Docker Image from source will take at least 25 minutes on a high performance server.
 -----------------------------------------------------------------------------------

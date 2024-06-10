@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 3/7/2024 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 6/9/2024 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.3.2.
+// / v3.3.7.
 // / This file contains language specific GUI elements for accepting file uploads.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -63,14 +63,14 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
             <strong><?php echo $Gui1Text10; ?></strong>
             <p><i><?php echo $Gui1Text11; ?></i></p>
             <ol>
-              <?php foreach ($MediaArray as $gui1AudArr) { ?>
+              <?php foreach ($MediaInputArray as $gui1AudArr) { ?>
               <li><?php echo $gui1AudArr; ?></li>
               <?php } ?>
             </ol>
             <?php } if (in_array('Video', $SupportedConversionTypes)) { ?>
             <strong><?php echo $Gui1Text12; ?></strong>
             <ol>
-              <?php foreach ($VideoArray as $gui1VidArr) { ?>
+              <?php foreach ($VideoInputArray as $gui1VidArr) { ?>
               <li><?php echo $gui1VidArr; ?></li>
               <?php } ?>
             </ol>
@@ -129,7 +129,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
             <?php } if (in_array('Subtitle', $SupportedConversionTypes)) { ?>
             <strong><?php echo $Gui1Text31; ?></strong>
             <ol>
-              <?php foreach ($SubtitleArray as $gui1SubArr) { ?>
+              <?php foreach ($SubtitleInputArray as $gui1SubArr) { ?>
               <li><?php echo $gui1SubArr; ?></li>
               <?php } ?>
             </ol>

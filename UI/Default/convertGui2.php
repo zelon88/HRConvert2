@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 5/22/2024 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 6/9/2024 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.3.6.
+// / v3.3.7.
 // / This file contains language specific GUI elements for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -297,7 +297,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
            onclick='toggle_visibility("imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("imageButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("imageXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
           <?php }
 
-          if (in_array($extension, $MediaArray) && in_array('Audio', $SupportedConversionTypes)) { ?>
+          if (in_array($extension, $MediaInputArray) && in_array('Audio', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='mediaButton<?php echo $ConvertGuiCounter1; ?>' name='mediaButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>media.png' style='float:<?php echo $GUIAlignment; ?>; display:block;'
@@ -306,7 +306,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
            onclick='toggle_visibility("audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("mediaButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("mediaXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
           <?php } 
 
-          if (in_array($extension, $VideoArray) && in_array('Video', $SupportedConversionTypes)) { ?>
+          if (in_array($extension, $VideoInputArray) && in_array('Video', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='videoButton<?php echo $ConvertGuiCounter1; ?>' name='videoButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>video.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
@@ -342,7 +342,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
            onclick='toggle_visibility("modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("modelButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("modelXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
           <?php } 
 
-          if (in_array($extension, $SubtitleArray) && in_array('Subtitle', $SupportedConversionTypes)) { ?>
+          if (in_array($extension, $SubtitleInputArray) && in_array('Subtitle', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='subtitleButton<?php echo $ConvertGuiCounter1; ?>' name='subtitleButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>subtitle.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
@@ -845,7 +845,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
         </div>
         <?php }
 
-        if (in_array($extension, $MediaArray) && in_array('Audio', $SupportedConversionTypes)) {
+        if (in_array($extension, $MediaInputArray) && in_array('Audio', $SupportedConversionTypes)) {
         ?>
         <div id='audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
@@ -853,7 +853,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
           <p><?php echo $Gui2Text17; ?><input type="text" id='useraudiofilename<?php echo $ConvertGuiCounter1; ?>' name='useraudiofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='audioextension<?php echo $ConvertGuiCounter1; ?>' name='audioextension<?php echo $ConvertGuiCounter1; ?>'> 
             <option value="mp3"><?php echo $Gui2Text18; ?></option>
-            <?php foreach ($MediaArray as $gui2AudArr) { ?>
+            <?php foreach ($MediaOutputArray as $gui2AudArr) { ?>
             <option value="<?php echo $gui2AudArr; ?>"><?php echo $gui2AudArr; ?></option>
             <?php } ?>
           </select></p>
@@ -897,7 +897,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
         </div>
         <?php } 
 
-        if (in_array($extension, $VideoArray) && in_array('Video', $SupportedConversionTypes)) {
+        if (in_array($extension, $VideoInputArray) && in_array('Video', $SupportedConversionTypes)) {
         ?>
         <div id='videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
@@ -905,7 +905,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
           <p><?php echo $Gui2Text17; ?><input type="text" id='uservideofilename<?php echo $ConvertGuiCounter1; ?>' name='uservideofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='videoextension<?php echo $ConvertGuiCounter1; ?>' name='videoextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="mp4"><?php echo $Gui2Text18; ?></option> 
-            <?php foreach ($VideoArray as $gui2VidArr) { ?>
+            <?php foreach ($VideoOutputArray as $gui2VidArr) { ?>
             <option value="<?php echo $gui2VidArr; ?>"><?php echo $gui2VidArr; ?></option>
             <?php } ?>
           </select></p>
@@ -955,7 +955,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
           <p><?php echo $Gui2Text17; ?><input type="text" id='userstreamfilename<?php echo $ConvertGuiCounter1; ?>' name='userstreamfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='streamextension<?php echo $ConvertGuiCounter1; ?>' name='streamextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="mp4"><?php echo $Gui2Text18; ?></option>
-            <?php foreach ($MediaArray as $gui2StreamArr) { ?>
+            <?php foreach ($MediaOutputArray as $gui2StreamArr) { ?>
             <option value="<?php echo $gui2StreamArr; ?>"><?php echo $gui2StreamArr; ?></option>
             <?php } ?>
           </select></p>
@@ -1048,7 +1048,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
         </div>
         <?php } 
 
-        if (in_array($extension, $SubtitleArray) && in_array('Subtitle', $SupportedConversionTypes)) {
+        if (in_array($extension, $SubtitleInputArray) && in_array('Subtitle', $SupportedConversionTypes)) {
         ?>
         <div id='subtitleOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='subtitleOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
@@ -1056,7 +1056,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
           <p><?php echo $Gui2Text17; ?><input type="text" id='usersubtitlefilename<?php echo $ConvertGuiCounter1; ?>' name='usersubtitlefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='subtitleextension<?php echo $ConvertGuiCounter1; ?>' name='subtitleextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value=""><?php echo $Gui2Text18; ?></option>
-            <?php foreach ($SubtitleArray as $gui2SubArr) { ?>
+            <?php foreach ($SubtitleOutputArray as $gui2SubArr) { ?>
             <option value="<?php echo $gui2SubArr; ?>"><?php echo $gui2SubArr; ?></option>
             <?php } ?>
           </select></p>

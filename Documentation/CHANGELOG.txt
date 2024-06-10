@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 5/22/2024 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 6/9/2024 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.3.6.
+v3.3.7.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -27,6 +27,21 @@ Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 -----------------------------------------------------------------------------------
 
 
+
+--------------------
+COMMIT 5/22/2024
+v3.3.7 - Add support for 357 formats. Update build process.
+
+-v3.3.7.
+-Clean up config.php comments.
+-Delete "SUPPORTED_FORMAT_INFORMATION.txt" development work file.
+-Finish updating and adding support to the list of supported formats using the latest ffmpeg build process.
+-Added support for ~357 file formats. The total of supported formats is now up to 445. (!!!)
+-Update INSTALLATION_INSTRUCTIONS.txt to reflect the ffmpeg build-from-source procedure.
+-Create DOCKER_BUILD_INSTRUCTIONS.txt for me to remember how to build docker images.
+  -I typically develop this stuff on VMware with installed locally dependencies.
+-Update Dockerfile with the latest ImageMagick and FFMPEG build process.
+-Fix Docker build process, update Docker Hub.
 
 --------------------
 COMMIT 5/22/2024

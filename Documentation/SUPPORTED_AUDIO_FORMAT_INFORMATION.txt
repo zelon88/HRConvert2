@@ -1,32 +1,80 @@
 This is a development document only and has no instructional or debugging value.
 
-
-Need to update install instructions to include new ffmpeg build instructions
-
-
-
-
-The following input formats are supported for audio operations.
-
+VIDEO
+smoothstreaming Smooth Streaming Muxer
+svcd            MPEG-2 PS SVCD
+swf             SWF ShockWave Flash
+truehd          raw TrueHD
+vc1             raw VC-1 video
+vc1test         VC-1 test bitstream
+vcd             MPEG-1 Systems / MPEG program stream VCD
+vob             MPEG-2 PS VOB
+vvc             raw H.266/VVC video
+webm            WebM
+yuv4mpegpipe    YUV4MPEG pipe
+mpjpeg          MIME multipart JPEG
+mxf             MXF Material eXchange Format
+mxf_d10         MXF Material eXchange Format D-10 Mapping
+mxf_opatom      MXF Material eXchange Format Operational Pattern Atom
+nut             NUT
+obu             AV1 low overhead OBU
+ogv             Ogg Video
+psp             PSP MP4 MPEG-4 Part 14
+rawvideo        raw video
+rm              RealMedia
+roq             raw id RoQ
+rtp_mpegts      RTP/mpegts output format
+smjpeg          Loki SDL MJPEG
+hevc            raw HEVC video
+hls             Apple HTTP Live Streaming
+image2          image2 sequence
+image2pipe      piped image2 sequence
+ipod            iPod H.264 MP4 MPEG-4 Part 14
+ismv            ISMV/ISMA Smooth Streaming
+ivf             On2 IVF
+m4v             raw MPEG-4 video
+matroska        Matroska
+mjpeg           raw MJPEG video
+mkvtimestamp_v2 extract pts as timecode v2 format
+mov             QuickTime / MOV
+mp4             MP4 MPEG-4 Part 14
+mpeg            MPEG-1 Systems / MPEG program stream
+mpeg1video      raw MPEG-1 video
+mpeg2video      raw MPEG-2 video
+mpegts          MPEG-TS MPEG-2 Transport Stream
+mpegtsraw       raw MPEG-TS MPEG-2 Transport Stream
+mpegvideo       MPEG-TS MPEG-2 Transport Stream
+fbdev           Linux framebuffer
+film_cpk        Sega FILM / CPK
+filmstrip       Adobe Filmstrip
+flv             FLV Flash Video
+gxf             GXF General eXchange Format
+h261            raw H.261
+h263            raw H.263
+h264            raw H.264 video
+hds             HDS Muxer
+avs2            raw AVS2-P2/IEEE1857.4
+avs3            AVS3-P2/IEEE1857.10
+cavsvideo       raw Chinese AVS Audio Video Standard
+codec2          codec2 .c2 muxer
+codec2raw       raw codec2 muxer
+dirac           raw Dirac
+dnxhd           raw DNxHD SMPTE VC-3
+dv              DV Digital Video
+dvd             MPEG-2 PS DVD VOB
+evc             raw EVC video
+3g2             3GP2 3GPP2 file format
+3gp             3GP 3GPP file format
+apng            Animated Portable Network Graphics
+argo_asf        Argonaut Games ASF
+argo_cvg        Argonaut Games CVG
+asf             ASF Advanced / Active Streaming Format
+asf_stream      ASF Advanced / Active Streaming Format
+avi             AVI Audio Video Interleaved
+avif            AVIF
+avm2            SWF ShockWave Flash AVM2
 3dostr          3DO STR
 4xm             4X Technologies
-aa              Audible AA format files
-aac             raw ADTS AAC (Advanced Audio Coding)
-aax             CRI AAX
-ac3             raw AC-3
-ac4             raw AC-4
-ace             tri-Ace Audio Container
-acm             Interplay ACM
-
-
-
-
-
-
-
-
-
-VIDEO
 adf             Artworx Data Format
 ads             Sony PS2 ADS
 alias_pix       Alias/Wavefront PIX image
@@ -34,11 +82,11 @@ anm             Deluxe Paint Animation
 apng            Animated Portable Network Graphics
 argo_brp        Argonaut Games BRP
 argo_cvg        Argonaut Games CVG
-asf             ASF (Advanced / Active Streaming Format)
-asf_o           ASF (Advanced / Active Streaming Format)
+asf             ASF Advanced / Active Streaming Format
+asf_o           ASF Advanced / Active Streaming Format
 av1             AV1 Annex B
-avi             AVI (Audio Video Interleaved)
-avr             AVR (Audio Visual Research)
+avi             AVI Audio Video Interleaved
+avr             AVR Audio Visual Research
 avs             Argonaut Games Creature Shock
 avs2            raw AVS2-P2/IEEE1857.4
 avs3            raw AVS3-P2/IEEE1857.10
@@ -60,11 +108,11 @@ derf            Xilam DERF
 dfa             Chronomaster DFA
 dhav            Video DAV
 dirac           raw Dirac
-dnxhd           raw DNxHD (SMPTE VC-3)
+dnxhd           raw DNxHD SMPTE VC-3
 dpx             piped dpx sequence
 dsicin,cin      Delphine Software International CIN
 dtshd           raw DTS-HD
-dv              DV (Digital Video)
+dv              DV Digital Video
 dxa             DXA
 ea              Electronic Arts Multimedia
 evc             EVC Annex B
@@ -74,12 +122,12 @@ film_cpk,film   Sega FILM / CPK
 filmstrip       Adobe Filmstrip
 fits            Flexible Image Transport System
 flic            FLI/FLC/FLX animation
-flv             FLV (Flash Video)
+flv             FLV Flash Video
 frm             Megalux Frame
 gdv             Gremlin Digital Video
 genh            GENeric Header
-gif             CompuServe Graphics Interchange Format (GIF)
-gxf             GXF (General eXchange Format)
+gif             CompuServe Graphics Interchange Format GIF
+gxf             GXF General eXchange Format
 h261            raw H.261
 h263            raw H.263
 h264            raw H.264 video
@@ -88,7 +136,7 @@ hevc            raw HEVC video
 hls             Apple HTTP Live Streaming
 hnm             Cryo HNM v4
 idcin           id Cinematic
-iff             IFF (Interchange File Format)
+iff             IFF Interchange File Format
 ifv             IFV CCTV DVR
 ingenient,cgi   raw Ingenient MJPEG
 ipmovie         Interplay MVE
@@ -96,24 +144,201 @@ ipu             raw IPU Video
 iss             Funcom ISS
 iv8             IndigoVision 8000 video
 ivf             On2 IVF
-ivr             IVR (Internet Video Recording)
+ivr             IVR Internet Video Recording
 j2k,jp2         j2k sequence
 jpegxl          Animated JPEG XL
 jv              Bitmap Brothers JV
-live_flv        live RTMP FLV (Flash Video)
+live_flv        live RTMP FLV Flash Video
 lmlm4           raw lmlm4
+mtv             MTV
+mv              Silicon Graphics Movie
+mvi             Motion Pixels MVI
+mxg             MxPEG clip
+nsv             Nullsoft Streaming Video
+nut             NUT
+nuv             NuppelVideo
+obu             AV1 low overhead OBU
+ogg             Ogg
+osq             raw OSQ
+pcx_pipe        piped pcx sequence
+pdv             PlayDate Video
+pgm_pipe        piped pgm sequence
+pgmyuv_pipe     piped pgmyuv sequence
+pgx_pipe        piped pgx sequence
+phm_pipe        piped phm sequence
+photocd_pipe    piped photocd sequence
+pictor_pipe     piped pictor sequence
+png_pipe        piped png sequence
+ppm_pipe        piped ppm sequence
+psd_pipe        piped psd sequence
+qdraw_pipe      piped qdraw sequence
+qoi_pipe        piped qoi sequence
+r3d             REDCODE R3D
+redspark        RedSpark
+roq             id RoQ
+rsd             GameCube RSD
+rtsp            RTSP input
+sdr2            SDR2
+ser             SER Simple uncompressed video format for astronomical capturing
+sga             Digital Pictures SGA
+sgi_pipe        piped sgi sequence
+shn             raw Shorten
+sunrast_pipe    piped sunrast sequence
+svg_pipe        piped svg sequence
+tiff_pipe       piped tiff sequence
+tmv             8088flex TMV
+v210            Uncompressed 4:2:2 10-bit
+v210x           Uncompressed 4:2:2 10-bit
+vbn_pipe        piped vbn sequence
+video4linux2    Video4Linux2 device grab
+v4l2            Video4Linux2 device grab
+vividas         Vividas VIV
+vivo            Vivo
+vmd             Sierra VMD
+wc3movie        Wing Commander III movie
+webm_dash_manifest WebM DASH Manifest
+webp_pipe       piped webp sequence
+wtv             Windows Television WTV
+xmv             Microsoft XMV
+xvag            Sony PS3 XVAG
+xwd_pipe        piped xwd sequence
+
+smoothstreaming,svcd,swf,truehd,vc1,vc1test,vcd,vob,vvc,webm,yuv4mpegpipe,mpjpeg,mxf,mxf_d10,mxf_opatom,nut,obu,ogv,psp,rawvideo,rm,roq,rtp_mpegts,smjpeg,hevc,hls,image2,image2pipe,ipod,ismv,ivf,m4v,matroska,mjpeg,mkvtimestamp_v2,mov,mp4,mpeg,mpeg1video,mpeg2video,mpegts,mpegtsraw,mpegvideo,fbdev,film_cpk,filmstrip,flv,gxf,h261,h263,h264,hds,avs2,avs3,cavsvideo,codec2,codec2raw,dirac,dnxhd,dv,dvd,evc,3g2,3gp,apng,argo_asf,argo_cvg,asf,asf_stream,avi,avif,avm2,3dostr,4xm,adf,ads,alias_pix,anm,argo_brp,asf_o,avi,av1,avs,bethsoftvid,bfi,bink,bmp,bmv,brender_pix,brender,bmv,cdg,cdxl,cine,concat,cri,dcstr,derf,dfa,dhav,dirac,dnxhd,dsicin,dtshd,dv,dxa,ea,evc,exr,fbdev,film_cpk,filmstrip,fits,flic,flv,frm,gdv,genh,gif,gxf,h261,h263,h264,hevc,hls,hnm,idcin,iff,ifv,ingenient,ipmovie,iss,iv8,ivf,ivr,j2k,jp2,jv,live_flv,lmlm4,mtv,mv,mvi,mxg,nsv,nut,nuv,obu,ogg,osq,pcx_pipe,pdv,pgm_pipe,pgmuv_pipe,pgx_pipe,phm_pipe,protocol_pipe,pictor_pipe,png_pipe,ppm_pipe,psd_pipe,qdraw_pipe,qoi_pipe,r3d,redspark,rroq,rsd,rtsp,sdr2,ser,sga,sgi_pipe,shn,sunrast_pipe,svg_pipe,tiff_pipe,tmv,v210,v210x,vbn_pipe,video4linux2,v4l2,vividas,vivo,vmd,wc3movie,webm_dash_manifest,webp_pipe,wtv,xmv,xvag,xwd_pipe
+
+176
 
 
 SUBTITLE
+srt             SubRip subtitle
+stream_segment  streaming segment muxer
+ssegment        streaming segment muxer
+streamhash      Per-stream hash testing
+sup             raw HDMV Presentation Graphic Stream
+subtitles       subtitles
+ttml            TTML subtitle
+uncodedframecrc uncoded framecrc testing
+webvtt          WebVTT subtitle
+wtv             Windows Television WTV
+oma             Sony OpenMG audio
+rso             Lego Mindstorms RSO
+rtp             RTP output
+rtsp            RTSP output
+scc             Scenarist Closed Captions
+sdl             SDL2 output device
+sdl2            SDL2 output device
+segment         segment
+sap             SAP output
+jacosub         JACOsub subtitle format
+kvag            Simon & Schuster Interactive VAG
+microdvd        MicroDVD subtitle format
+ffmetadata      FFmpeg metadata in text
+fifo            FIFO queue pseudo-muxer
+fifo_test       Fifo test muxer
+fits            Flexible Image Transport System
+framecrc        framecrc testing
+framehash       Per-frame hash testing
+framemd5        Per-frame MD5 testing
+dash            DASH Muxer
+crc             CRC testing
 aqtitle         AQTitle subtitles
 dvbsub          raw dvbsub
 dvbtxt          dvbtxt
 gsm             raw GSM
 jacosub         JACOsub subtitle format
-ass             SSA (SubStation Alpha) subtitle
+ass             SSA SubStation Alpha subtitle
+vobsub          VobSub subtitle format
+mpl2            MPL2 subtitles
+mpsub           MPlayer subtitles
+pjs             PJS Phoenix Japanimation Society subtitles
+realtext        RealText subtitle format
+sami            SAMI subtitle format
+stl             Spruce subtitle format
+subviewer       SubViewer subtitle format
+subviewer1      SubViewer v1 subtitle format
+vplayer         VPlayer subtitles
+tedcaptions     TED Talks captions
+txd             Renderware TeXture Dictionary
 
+srt,stream_segment,ssegment,streamhash,sup,subtitles,ttml,uncodedframecrc,webvtt,wtv,oma,rso,rtp,rtsp,scc,sdl,sdl2,segment,sap,jacosub,kvag,microdvd,ffmetadata,fifo,fifo_test,fits,framecrc,framehash,framemd5,dash,crc,dvbsub,dvbtxt,gsm,ass,vobsub,mpl2,mpsub,pjs,realtext,sami,stl,subviewer,subviewer1,sunrast_pipe,vplayer,tedcaptions,txd
+
+54
 
 AUDIO
+sox             SoX Sound eXchange native
+spdif           IEC 61937 used on S/PDIF IEC958
+spx             Ogg Speex
+tta             TTA True Audio
+u16be           PCM unsigned 16-bit big-endian
+u16le           PCM unsigned 16-bit little-endian
+u24be           PCM unsigned 24-bit big-endian
+u24le           PCM unsigned 24-bit little-endian
+u32be           PCM unsigned 32-bit big-endian
+u32le           PCM unsigned 32-bit little-endian
+u8              PCM unsigned 8-bit
+voc             Creative Voice
+wav             WAV / WAVE Waveform Audio
+wv              raw WavPack
+wsaud           Westwood Studios audio
+mulaw           PCM mu-law
+mxf             MXF Material eXchange Format
+mxf_d10         MXF Material eXchange Format D-10 Mapping
+mxf_opatom      MXF Material eXchange Format Operational Pattern Atom
+oga             Ogg Audio
+ogg             Ogg
+opus            Ogg Opus
+oss             OSS Open Sound System
+psp             PSP MP4 MPEG-4 Part 14
+rawvideo        raw video
+s16be           PCM signed 16-bit big-endian
+s16le           PCM signed 16-bit little-endian
+s24be           PCM signed 24-bit big-endian
+s24le           PCM signed 24-bit little-endian
+s32be           PCM signed 32-bit big-endian
+s32le           PCM signed 32-bit little-endian
+s8              PCM signed 8-bit
+sbc             raw SBC
+ilbc            iLBC storage
+ircam           Berkeley/IRCAM/CARL Sound Format
+latm            LOAS/LATM
+lrc             LRC lyrics
+mp2             MP2 MPEG audio layer 2
+mp3             MP3 MPEG audio layer 3
+mlp             raw MLP
+flac            raw FLAC
+g722            raw G.722
+g723_1          raw G.723.1
+g726            raw big-endian G.726
+g726le          raw little-endian G.726
+gsm             raw GSM
+aac             AVS2-P2/IEEE1857.4
+bit             G.729 BIT file format
+caf             Apple CAF Core Audio Format
+daud            D-Cinema audio
+dts             raw DTS
+eac3            raw E-AC-3
+f32be           PCM 32-bit floating-point big-endian
+f32le           PCM 32-bit floating-point little-endian
+f64be           PCM 64-bit floating-point big-endian
+f64le           PCM 64-bit floating-point little-endian
+ac3             raw AC-3
+ac4             raw AC-4
+adts            ADTS AAC Advanced Audio Coding
+aiff            Audio IFF
+alaw            PCM A-law
+amr             3GPP AMR
+aptx            raw aptX Audio Processing Technology for Bluetooth
+aptx_hd         raw aptX HD Audio Processing Technology for Bluetooth
+argo_asf        Argonaut Games ASF
+argo_cvg        Argonaut Games CVG
+ast             AST Audio Stream
+au              Sun AU
+a64             video for Commodore 64 though this is primarily a video format, it can also contain audio
+aa              Audible AA format files
+aac             raw ADTS AAC Advanced Audio Coding
+aax             CRI AAX
+ac3             raw AC-3
+ac4             raw AC-4
+acm             Interplay ACM
 act             ACT Voice file format
 adp             ADP
 adx             CRI ADX
@@ -133,22 +358,22 @@ apm             Ubisoft Rayman 2 APM
 aptx            raw aptX
 aptx_hd         raw aptX HD
 argo_asf        Argonaut Games ASF
-ast             AST (Audio Stream)
+ast             AST Audio Stream
 au              Sun AU
-bfstm           BFSTM (Binary Cafe Stream)
+bfstm           BFSTM Binary Cafe Stream
 binka           Bink Audio
 bit             G.729 BIT file format
 boa             Black Ops Audio
 bonk            raw Bonk
-brstm           BRSTM (Binary Revolution Stream)
-caf             Apple CAF (Core Audio Format)
-cavsvideo       raw Chinese AVS (Audio Video Standard)
+brstm           BRSTM Binary Revolution Stream
+caf             Apple CAF Core Audio Format
+cavsvideo       raw Chinese AVS Audio Video Standard
 codec2          codec2 .c2 demuxer
 codec2raw       raw codec2 demuxer
 daud            D-Cinema audio
 dfpwm           raw DFPWM1a
-dsf             DSD Stream File (DSF)
-dss             Digital Speech Standard (DSS)
+dsf             DSD Stream File DSF
+dss             Digital Speech Standard DSS
 dts             raw DTS
 eac3            raw E-AC-3
 epaf            Ensoniq Paris Audio File
@@ -161,108 +386,63 @@ fsb             FMOD Sample Bank
 fwse            Capcom's MT Framework sound
 g722            raw G.722
 g723_1          G.723.1
-g726            raw big-endian G.726 ("left aligned")
-g726le          raw little-endian G.726 ("right aligned")
+g726            raw big-endian G.726 "left aligned"
+g726le          raw little-endian G.726 "right aligned"
 g729            G.729 raw format demuxer
 hca             CRI HCA
 idf             iCE Draw File
 ilbc            iLBC storage
 ircam           Berkeley/IRCAM/CARL Sound Format
-kux             KUX (YouKu)
-kvag,vag            Simon & Schuster Interactive VAG
-laf             LAF (Limitless Audio Format)
-
-
+kux             KUX YouKu
+kvag            Simon & Schuster Interactive VAG
+vag             Simon & Schuster Interactive VAG
+laf             LAF Limitless Audio Format
 lavfi           Libavfilter virtual input device
 loas            LOAS AudioSyncStream
 lrc             LRC lyrics
 luodat          Video CCTV DAT
 lvf             LVF
-lxf             VR native stream (LXF)
-m4v             raw MPEG-4 video
-matroska,mkv,webm   Matroska / WebM
+lxf             VR native stream LXF
 mca             MCA Audio Format
 mcc             MacCaption
 mgsts           Metal Gear Solid: The Twin Snakes
-microdvd        MicroDVD subtitle format
-mjpeg           raw MJPEG video
-mjpeg_2000      raw MJPEG 2000 video
 mlp             raw MLP
-mlv             Magic Lantern Video (MLV)
+mlv             Magic Lantern Video MLV
 mm              American Laser Games MM
 mmf             Yamaha SMAF
 mods            MobiClip MODS
 moflex          MobiClip MOFLEX
-mov,mp4,m4a,3gp,3g2,mj2 QuickTime / MOV
-mp3             MP2/3 (MPEG audio layer 2/3)
+mp3             MP2/3 MPEG audio layer 2/3
 mpc             Musepack
 mpc8            Musepack SV8
-mpeg            MPEG-PS (MPEG-2 Program Stream)
-mpegts          MPEG-TS (MPEG-2 Transport Stream)
-mpegtsraw       raw MPEG-TS (MPEG-2 Transport Stream)
-mpegvideo       raw MPEG video
-mpjpeg          MIME multipart JPEG
-mpl2            MPL2 subtitles
-mpsub           MPlayer subtitles
 msf             Sony PS3 MSF
 msnwctcp        MSN TCP Webcam stream
-msp             Microsoft Paint (MSP))
+msp             Microsoft Paint MSP
 mtaf            Konami PS2 MTAF
-mtv             MTV
 mulaw           PCM mu-law
 musx            Eurocom MUSX
-mv              Silicon Graphics Movie
-mvi             Motion Pixels MVI
-mxf             MXF (Material eXchange Format)
-mxg             MxPEG clip
+mxf             MXF Material eXchange Format
 nc              NC camera feed
 nistsphere      NIST SPeech HEader REsources
 nsp             Computerized Speech Lab NSP
-nsv             Nullsoft Streaming Video
-nut             NUT
-nuv             NuppelVideo
-obu             AV1 low overhead OBU
-ogg             Ogg
 oma             Sony OpenMG audio
-osq             raw OSQ
-oss             OSS (Open Sound System) capture
+oss             OSS Open Sound System capture
 paf             Amazing Studio Packed Animation File
 pam_pipe        piped pam sequence
 pbm_pipe        piped pbm sequence
-pcx_pipe        piped pcx sequence
-pdv             PlayDate Video
 pfm_pipe        piped pfm sequence
-pgm_pipe        piped pgm sequence
-pgmyuv_pipe     piped pgmyuv sequence
-pgx_pipe        piped pgx sequence
-phm_pipe        piped phm sequence
-photocd_pipe    piped photocd sequence
-pictor_pipe     piped pictor sequence
-pjs             PJS (Phoenix Japanimation Society) subtitles
 pmp             Playstation Portable PMP
-png_pipe        piped png sequence
 pp_bnk          Pro Pinball Series Soundbank
-ppm_pipe        piped ppm sequence
-psd_pipe        piped psd sequence
 psxstr          Sony Playstation STR
 pva             TechnoTrend PVA
-pvf             PVF (Portable Voice Format)
+pvf             PVF Portable Voice Format
 qcp             QCP
-qdraw_pipe      piped qdraw sequence
-qoi_pipe        piped qoi sequence
-r3d             REDCODE R3D
-rawvideo        raw video
-realtext        RealText subtitle format
-redspark        RedSpark
-rka             RKA (RK Audio)
+rka             RKA RK Audio
 rl2             RL2
 rm              RealMedia
-roq             id RoQ
 rpl             RPL / ARMovie
-rsd             GameCube RSD
 rso             Lego Mindstorms RSO
 rtp             RTP input
-rtsp            RTSP input
 s16be           PCM signed 16-bit big-endian
 s16le           PCM signed 16-bit little-endian
 s24be           PCM signed 24-bit big-endian
@@ -271,50 +451,29 @@ s32be           PCM signed 32-bit big-endian
 s32le           PCM signed 32-bit little-endian
 s337m           SMPTE 337M
 s8              PCM signed 8-bit
-sami            SAMI subtitle format
 sap             SAP input
-sbc             raw SBC (low-complexity subband codec)
+sbc             raw SBC low-complexity subband codec
 sbg             SBaGen binaural beats script
-scc             Scenarist Closed Captions
 scd             Square Enix SCD
 sdns            Xbox SDNS
 sdp             SDP
-sdr2            SDR2
 sds             MIDI Sample Dump Standard
 sdx             Sample Dump eXchange
-ser             SER (Simple uncompressed video format for astronomical capturing)
-sga             Digital Pictures SGA
-sgi_pipe        piped sgi sequence
-shn             raw Shorten
 siff            Beam Software SIFF
 simbiosis_imx   Simbiosis Interactive IMX
 sln             Asterisk raw pcm
-smjpeg          Loki SDL MJPEG
 smk             Smacker
 smush           LucasArts Smush
 sol             Sierra SOL
-sox             SoX (Sound eXchange) native
-spdif           IEC 61937 (compressed data in S/PDIF)
-srt             SubRip subtitle
-stl             Spruce subtitle format
-subviewer       SubViewer subtitle format
-subviewer1      SubViewer v1 subtitle format
-sunrast_pipe    piped sunrast sequence
-sup             raw HDMV Presentation Graphic Stream subtitles
+sox             SoX Sound eXchange native
+spdif           IEC 61937 compressed data in S/PDIF
 svag            Konami PS2 SVAG
-svg_pipe        piped svg sequence
 svs             Square SVS
-swf             SWF (ShockWave Flash)
 tak             raw TAK
-tedcaptions     TED Talks captions
 thp             THP
 tiertexseq      Tiertex Limited SEQ
-tiff_pipe       piped tiff sequence
-tmv             8088flex TMV
-truehd          raw TrueHD
-tta             TTA (True Audio)
+tta             TTA True Audio
 tty             Tele-typewriter
-txd             Renderware TeXture Dictionary
 ty              TiVo TY Stream
 u16be           PCM unsigned 16-bit big-endian
 u16le           PCM unsigned 16-bit little-endian
@@ -324,229 +483,30 @@ u32be           PCM unsigned 32-bit big-endian
 u32le           PCM unsigned 32-bit little-endian
 u8              PCM unsigned 8-bit
 usm             CRI USM
-v210            Uncompressed 4:2:2 10-bit
-v210x           Uncompressed 4:2:2 10-bit
 vag             Sony PS2 VAG
-vbn_pipe        piped vbn sequence
-vc1             raw VC-1
-vc1test         VC-1 test bitstream
 vidc            PCM Archimedes VIDC
-video4linux2,v4l2 Video4Linux2 device grab
-vividas         Vividas VIV
-vivo            Vivo
-vmd             Sierra VMD
-vobsub          VobSub subtitle format
 voc             Creative Voice
 vpk             Sony PS2 VPK
-vplayer         VPlayer subtitles
-vqf             Nippon Telegraph and Telephone Corporation (NTT) TwinVQ
-vvc             raw H.266/VVC video
+vqf             Nippon Telegraph and Telephone Corporation NTT TwinVQ
 w64             Sony Wave64
 wady            Marble WADY
-wav             WAV / WAVE (Waveform Audio)
+wav             WAV / WAVE Waveform Audio
 wavarc          Waveform Archiver
-wc3movie        Wing Commander III movie
-webm_dash_manifest WebM DASH Manifest
-webp_pipe       piped webp sequence
-webvtt          WebVTT subtitle
 wsaud           Westwood Studios audio
-wsd             Wideband Single-bit Data (WSD)
+wsd             Wideband Single-bit Data WSD
 wsvqa           Westwood Studios VQA
-wtv             Windows Television (WTV)
 wv              WavPack
 wve             Psion 3 audio
 xa              Maxis XA
-xbin            eXtended BINary text (XBIN)
+xbin            eXtended BINary text XBIN
 xbm_pipe        piped xbm sequence
 xmd             Konami XMD
-xmv             Microsoft XMV
 xpm_pipe        piped xpm sequence
-xvag            Sony PS3 XVAG
-xwd_pipe        piped xwd sequence
 xwma            Microsoft xWMA
 yop             Psygnosis YOP
-yuv4mpegpipe    YUV4MPEG pipe
 
+sox,spdif,spx,tta,u16be,u16le,u24be,u24le,u32be,u32le,u8,voc,wav,wv,wsaud,mulaw,mxf,mxf_d10,mxf_opatom,oga,ogg,opus,oss,psp,rawvideo,s16be,s16le,s24be,s24le,s32be,s32le,s8,sbc,ilbc,ircam,latm,lrc,mp2,mp3,mlp,flac,g722,g723_1,g726,g726le,gsm,aac,caf,daud,dts,eac3,f32be,f32le,f64be,f64le,ac3,ac4,adts,aiff,alaw,amr,aptx,aptx_hd,argo_asf,argo_cvg,ast,au,a64,aa,aac,aax,acm,act,adp,adx,aea,afc,aiff,aix,alaw,alp,amr,amrnb,amrwb,apac,apc,ape,apm,aptx,aptx_hd,argo_asf,ast,au,bfstm,binka,bit,boa,bonk,brstm,caf,cavsvideo,codec2,codec2raw,daud,dfpwm,dsf,dss,dts,eac3,epaf,fsb,fwse,flac,f32be,f32le,f64be,f64le,g722,g723_1,g726,g726le,g729,hca,idf,ilbc,ircam,kux,kvag,laf,lavfi,loas,lrc,luodat,lvf,lxf,mca,mcc,megsts,mlp,mlv,mm,mmf,mods,moflex,mp3,mpc,mpc8,msf,msnwctcp,msp,mtaf,mulaw,musx,mxf,nc,nistsphere,nsp,oma,oss,paf,pam_pipe,pbm_pipe,pfm_pipe,pmp,pp_bnk,psxstr,pva,pvf,qcp,rka,rl2,rm,rpl,rso,rtp,s16be,s16le,s24be,s24le,s32be,s32le,s337m,s8,sap,sbc,sbg,scd,sdns,sdp,sds,sdx,siff,simbiosis_imx,sln,smk,smush,sol,sox,spdif,svag,svs,tak,thp,tierexseq,tta,tty,ty,u16be,u16le,u24be,u24le,u32be,u32le,u8,usm,vag,vidc,voc,vpk,vqf,w64,wady,wav,wavarc,wsaud,wsd,wsvqa,wv,wve,xa,xbin,xbm_pipe,xmd,xpm_pipe,xwma,yop
 
-The following output formats are supported for audio operations.
+176
 
-3g2             3GP2 (3GPP2 file format)
-3gp             3GP (3GPP file format)
-a64             a64 - video for Commodore 64
-ac3             raw AC-3
-ac4             raw AC-4
-adts            ADTS AAC (Advanced Audio Coding)
-adx             CRI ADX
-aiff            Audio IFF
-alaw            PCM A-law
-alp             LEGO Racers ALP
-amr             3GPP AMR
-amv             AMV
-apm             Ubisoft Rayman 2 APM
-apng            Animated Portable Network Graphics
-aptx            raw aptX (Audio Processing Technology for Bluetooth)
-aptx_hd         raw aptX HD (Audio Processing Technology for Bluetooth)
-argo_asf        Argonaut Games ASF
-argo_cvg        Argonaut Games CVG
-asf             ASF (Advanced / Active Streaming Format)
-asf_stream      ASF (Advanced / Active Streaming Format)
-ass             SSA (SubStation Alpha) subtitle
-ast             AST (Audio Stream)
-au              Sun AU
-avi             AVI (Audio Video Interleaved)
-avif            AVIF
-avm2            SWF (ShockWave Flash) (AVM2)
-avs2            raw AVS2-P2/IEEE1857.4 video
-avs3            AVS3-P2/IEEE1857.10
-bit             G.729 BIT file format
-caf             Apple CAF (Core Audio Format)
-cavsvideo       raw Chinese AVS (Audio Video Standard) video
-codec2          codec2 .c2 muxer
-codec2raw       raw codec2 muxer
-crc             CRC testing
-dash            DASH Muxer
-data            raw data
-daud            D-Cinema audio
-dfpwm           raw DFPWM1a
-dirac           raw Dirac
-dnxhd           raw DNxHD (SMPTE VC-3)
-dts             raw DTS
-dv              DV (Digital Video)
-dvd             MPEG-2 PS (DVD VOB)
-eac3            raw E-AC-3
-evc             raw EVC video
-f32be           PCM 32-bit floating-point big-endian
-f32le           PCM 32-bit floating-point little-endian
-f4v             F4V Adobe Flash Video
-f64be           PCM 64-bit floating-point big-endian
-f64le           PCM 64-bit floating-point little-endian
-fbdev           Linux framebuffer
-ffmetadata      FFmpeg metadata in text
-fifo            FIFO queue pseudo-muxer
-fifo_test       Fifo test muxer
-film_cpk        Sega FILM / CPK
-filmstrip       Adobe Filmstrip
-fits            Flexible Image Transport System
-flac            raw FLAC
-flv             FLV (Flash Video)
-framecrc        framecrc testing
-framehash       Per-frame hash testing
-framemd5        Per-frame MD5 testing
-g722            raw G.722
-g723_1          raw G.723.1
-g726            raw big-endian G.726 ("left-justified")
-g726le          raw little-endian G.726 ("right-justified")
-gif             CompuServe Graphics Interchange Format (GIF)
-gsm             raw GSM
-gxf             GXF (General eXchange Format)
-h261            raw H.261
-h263            raw H.263
-h264            raw H.264 video
-hash            Hash testing
-hds             HDS Muxer
-hevc            raw HEVC video
-hls             Apple HTTP Live Streaming
-ico             Microsoft Windows ICO
-ilbc            iLBC storage
-image2          image2 sequence
-image2pipe      piped image2 sequence
-ipod            iPod H.264 MP4 (MPEG-4 Part 14)
-ircam           Berkeley/IRCAM/CARL Sound Format
-ismv            ISMV/ISMA (Smooth Streaming)
-ivf             On2 IVF
-jacosub         JACOsub subtitle format
-kvag            Simon & Schuster Interactive VAG
-latm            LOAS/LATM
-lrc             LRC lyrics
-m4v             raw MPEG-4 video
-matroska        Matroska
-md5             MD5 testing
-microdvd        MicroDVD subtitle format
-mjpeg           raw MJPEG video
-mkvtimestamp_v2 extract pts as timecode v2 format, as defined by mkvtoolnix
-mlp             raw MLP
-mmf             Yamaha SMAF
-mov             QuickTime / MOV
-mp2             MP2 (MPEG audio layer 2)
-mp3             MP3 (MPEG audio layer 3)
-mp4             MP4 (MPEG-4 Part 14)
-mpeg            MPEG-1 Systems / MPEG program stream
-mpeg1video      raw MPEG-1 video
-mpeg2video      raw MPEG-2 video
-mpegts          MPEG-TS (MPEG-2 Transport Stream)
-mpjpeg          MIME multipart JPEG
-mulaw           PCM mu-law
-mxf             MXF (Material eXchange Format)
-mxf_d10         MXF (Material eXchange Format) D-10 Mapping
-mxf_opatom      MXF (Material eXchange Format) Operational Pattern Atom
-null            raw null video
-nut             NUT
-obu             AV1 low overhead OBU
-oga             Ogg Audio
-ogg             Ogg
-ogv             Ogg Video
-oma             Sony OpenMG audio
-opus            Ogg Opus
-oss             OSS (Open Sound System) playback
-psp             PSP MP4 (MPEG-4 Part 14)
-rawvideo        raw video
-rm              RealMedia
-roq             raw id RoQ
-rso             Lego Mindstorms RSO
-rtp             RTP output
-rtp_mpegts      RTP/mpegts output format
-rtsp            RTSP output
-s16be           PCM signed 16-bit big-endian
-s16le           PCM signed 16-bit little-endian
-s24be           PCM signed 24-bit big-endian
-s24le           PCM signed 24-bit little-endian
-s32be           PCM signed 32-bit big-endian
-s32le           PCM signed 32-bit little-endian
-s8              PCM signed 8-bit
-sap             SAP output
-sbc             raw SBC
-scc             Scenarist Closed Captions
-sdl,sdl2        SDL2 output device
-segment         segment
-smjpeg          Loki SDL MJPEG
-smoothstreaming Smooth Streaming Muxer
-sox             SoX (Sound eXchange) native
-spdif           IEC 61937 (used on S/PDIF - IEC958)
-spx             Ogg Speex
-srt             SubRip subtitle
-stream_segment,ssegment streaming segment muxer
-streamhash      Per-stream hash testing
-sup             raw HDMV Presentation Graphic Stream subtitles
-svcd            MPEG-2 PS (SVCD)
-swf             SWF (ShockWave Flash)
-tee             Multiple muxer tee
-truehd          raw TrueHD
-tta             TTA (True Audio)
-ttml            TTML subtitle
-u16be           PCM unsigned 16-bit big-endian
-u16le           PCM unsigned 16-bit little-endian
-u24be           PCM unsigned 24-bit big-endian
-u24le           PCM unsigned 24-bit little-endian
-u32be           PCM unsigned 32-bit big-endian
-u32le           PCM unsigned 32-bit little-endian
-u8              PCM unsigned 8-bit
-uncodedframecrc uncoded framecrc testing
-vc1             raw VC-1 video
-vc1test         VC-1 test bitstream
-vcd             MPEG-1 Systems / MPEG program stream (VCD)
-vidc            PCM Archimedes VIDC
-video4linux2,v4l2 Video4Linux2 output device
-vob             MPEG-2 PS (VOB)
-voc             Creative Voice
-vvc             raw H.266/VVC video
-w64             Sony Wave64
-wav             WAV / WAVE (Waveform Audio)
-webm            WebM
-webm_chunk      WebM Chunk Muxer
-webm_dash_manifest WebM DASH Manifest
-webp            WebP
-webvtt          WebVTT subtitle
-wsaud           Westwood Studios audio
-wtv             Windows Television (WTV)
-wv              raw WavPack
-yuv4mpegpipe    YUV4MPEG pipe
+Total 406

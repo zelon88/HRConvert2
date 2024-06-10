@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 5/22/2024 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 6/9/2024 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.3.6.
+v3.3.7.
 This file contains a walkthrough guide for installing HRConvert2.
 
 HARDWARE REQUIREMENTS ... 
@@ -100,13 +100,13 @@ Then we will install and configure PHP and required plugins.
 
 
 -----STEP 3 - INSTALL BASIC FEATURE DEPENDENCIES-----
-In this step we will install dependencies to enable file conversions.
+In this step we will install dependencies to enable most common file conversions.
 
 1. Grab another cup of coffee.
 2. Run  'sudo apt-get install libreoffice-common && sudo apt-get install libreoffice-java-common && sudo apt-get install tar'
 3. Run  'sudo apt-get install clamav && sudo apt-get install unoconv && sudo apt-get install default-jre'
 4. Run  'sudo apt-get install rar && sudo apt-get install unrar && sudo apt-get install p7zip-rar'
-5. Run  'sudo apt-get install imagemagick && sudo apt-get install ffmpeg && sudo apt-get install tesseract-ocr'
+5. Run  'sudo apt-get install imagemagick && sudo apt-get install tesseract-ocr'
 6. Run  'sudo apt-get install meshlab && sudo apt-get install dia && sudo apt-get install pandoc && sudo apt-get install mkisofs'
 7. Run  'sudo apt-get install poppler-utils && sudo apt-get install nodejs && sudo apt-get install gnuplot'
 8. Run  'sudo featherpad /etc/ImageMagick-6/policy.xml'
@@ -130,7 +130,17 @@ In this step we will install dependencies to enable file conversions.
 -----------------------------------------------------------------------------------
 
 
------STEP 4 - INSTALL HRCONVERT2-----
+-----STEP 4 - INSTALL ADVANCED FEATURE DEPENDENCIES-----
+In this step we will build dependencies from source to enable advanced file conversions.
+
+1. Run  'cd /home/USERNAME/Desktop/Temp/Documentation/Build'
+2. Run  './ffmpeg-build.sh'  then follow the instructions to download & build FFMPEG from source.
+3. Run  'rm -r ffmpeg-build'  to delete the FFMPEG build environment.
+4. Completely reboot the computer.
+-----------------------------------------------------------------------------------
+
+
+-----STEP 5 - INSTALL HRCONVERT2-----
 In this step we will install the HRConvert2 files configured earlier.
 
 1. Run  'sudo mkdir /var/www/html/HRProprietary'
@@ -145,7 +155,7 @@ In this step we will install the HRConvert2 files configured earlier.
 -----------------------------------------------------------------------------------
 
 
------STEP 5 - VISIT YOUR CONVERTER!!!-----
+-----STEP 6 - VISIT YOUR CONVERTER!!!-----
 In this step we visit the converter using a browser for the first time.
 
 Go to 'http://YOUR-IP-OR-HOSTNAME/HRProprietary/HRConvert2/convertCore.php' to view your Converter! 
@@ -154,7 +164,7 @@ The server will only be available on LAN networks unless additional firewall, ro
 -----------------------------------------------------------------------------------
 
 
------STEP 6 - CONFIGURE STATIC IP, PORT FORWARDING, & FIREWALL EXCEPTIONS ON YOUR ROUTER-----
+-----STEP 7 - CONFIGURE STATIC IP, PORT FORWARDING, & FIREWALL EXCEPTIONS ON YOUR ROUTER-----
 In this step we will configure a router to route traffic to the HRConvert2 server.
 
 1. Maybe just one more cup of coffee.

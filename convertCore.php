@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 5/22/2024 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 6/9/2024 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.3.6.
+// / v3.3.7.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -104,7 +104,7 @@ function sanitize($Variable, $strict) {
 // / A function to load required HRConvert2 files.
 function verifyInstallation() {
   // / Set variables.
-  global $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6, $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $DefaultColor, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $URL, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationArray, $UserImageArray, $UserMediaArray, $UserVideoArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount;
+  global $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6, $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $DefaultColor, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $URL, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount;
   // / Define absolute paths for files that we only have relative paths for.
   $InstallationIsVerified = $buildDirDeleted = $dockerFileDeleted = $readmeDeleted = $changelogFileDeleted = $buildEnvDeleted = $devDocsDeleted = $checkOne = $checkTwo = FALSE;
   $ConfigFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'config.php');
@@ -456,9 +456,9 @@ function securePath($PathToSecure, $DangerArr, $isURL) {
 // / A function to set the global variables for the session.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaArray, $VideoArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationArray, $UserImageArray, $UserMediaArray, $UserVideoArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleArray, $UserPDFWorkArr, $RetryCount;
+  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount;
   // / Application related variables.
-  $HRConvertVersion = 'v3.3.6';
+  $HRConvertVersion = 'v3.3.7';
   $GlobalsAreVerified = FALSE;
   $CoreLoaded = TRUE;
   $SleepTimer = 0;
@@ -511,14 +511,17 @@ function verifyGlobals() {
   if (in_array('Document', $SupportedConversionTypes)) $SpreadsheetArray = $UserSpreadsheetArray;
   if (in_array('Document', $SupportedConversionTypes)) $PresentationArray = $UserPresentationArray;
   if (in_array('Image', $SupportedConversionTypes)) $ImageArray = $UserImageArray;
-  if (in_array('Audio', $SupportedConversionTypes)) $MediaArray = $UserMediaArray;
-  if (in_array('Video', $SupportedConversionTypes)) $VideoArray = $UserVideoArray;
+  if (in_array('Audio', $SupportedConversionTypes)) $MediaInputArray = $UserMediaInputArray;
+  if (in_array('Audio', $SupportedConversionTypes)) $MediaOutputArray = $UserMediaOutputArray;
+  if (in_array('Video', $SupportedConversionTypes)) $VideoInputArray = $UserVideoInputArray;
+  if (in_array('Video', $SupportedConversionTypes)) $VideoOutputArray = $UserVideoOutputArray;
   if (in_array('Stream', $SupportedConversionTypes) && in_array('Audio', $SupportedConversionTypes)) $StreamArray = $UserStreamArray;
   if (in_array('Drawing', $SupportedConversionTypes)) $DrawingArray = $UserDrawingArray;
   if (in_array('Model', $SupportedConversionTypes)) $ModelArray = $UserModelArray;
-  if (in_array('Subtitle', $SupportedConversionTypes)) $SubtitleArray = $UserSubtitleArray;
+  if (in_array('Subtitle', $SupportedConversionTypes)) $SubtitleInputArray = $UserSubtitleInputArray;
+  if (in_array('Subtitle', $SupportedConversionTypes)) $SubtitleOutputArray = $UserSubtitleOutputArray;
   if (in_array('OCR', $SupportedConversionTypes) && in_array('Document', $SupportedConversionTypes)) $PDFWorkArr = $UserPDFWorkArr;
-  $Allowed = array_unique(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge($ArchiveArray, $DearchiveArray), $DocumentArray), $SpreadsheetArray), $PresentationArray), $ImageArray), $MediaArray), $VideoArray), $StreamArray), $DrawingArray), $ModelArray), $SubtitleArray), $PDFWorkArr));
+  $Allowed = array_unique(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge($ArchiveArray, $DearchiveArray), $DocumentArray), $SpreadsheetArray), $PresentationArray), $ImageArray), $MediaInputArray), $VideoInputArray), $StreamArray), $DrawingArray), $ModelArray), $SubtitleInputArray), $PDFWorkArr));
   $SupportedFormatCount = count($Allowed);
   // / Perform a version integrity check.
   if ($HRConvertVersion === $Version) $GlobalsAreVerified = TRUE;
@@ -1024,14 +1027,8 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
   $returnData = '';
   $stopper = 0;
   $sleepTime = $SleepTimer;
-
-if ($extension === 'mkv') $extension = 'matroska';
-
-$AudioIn = array('');
-$AudioOut = array('');
+  if ($extension === 'mkv') $extension = 'matroska';
   $ext = ' -f '.$extension;
-
-
   // / Determine if the bitrate is being set.
   if (!is_numeric($bitrate) or $bitrate === FALSE) $bitrate = 'auto';
   if ($bitrate = 'auto') $br = ' ';
@@ -1280,7 +1277,7 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
 // / A function to build the GUI.
 function buildGUI($guiType, $ButtonCode) {
   // / Set variables.
-  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoArray, $SubtitleArray, $StreamArray, $MediaArray, $PresentationArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir;
+  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir;
   $guiUIFile = $GuiUI1File;
   $Files = array();
   $FileCount = 0;
@@ -1541,17 +1538,17 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
 // / A function to convert a selection of files.
 function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, $Width, $Rotate, $Bitrate) {
   // / Set variables.
-  global $Verbose, $VirusScan, $DocumentArray, $ImageArray, $ModelArray, $DrawingArray, $VideoArray, $SubtitleArray, $StreamArray, $MediaArray, $ArchiveArray;
+  global $Verbose, $VirusScan, $DocumentArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $SubtitleInputArray, $StreamArray, $MediaInputArray, $ArchiveArray;
   $MainConversionSuccess = $MainConversionErrors = $virusFound = $skip = $isExtensionSupported = $fileIsVerified = $variableIsSanitized = FALSE;
   $clean = $copy = TRUE;
   $docarray =  $DocumentArray;
   $imgarray = $ImageArray;
   $modelarray = $ModelArray;
   $drawingarray = $DrawingArray;
-  $videoarray =  $VideoArray;
-  $subtitleArray = $SubtitleArray;
+  $videoarray =  $VideoInputArray;
+  $subtitleArray = $SubtitleInputArray;
   $streamarray = $StreamArray;
-  $audioarray =  $MediaArray;
+  $audioarray =  $MediaInputArray;
   $archarray = $ArchiveArray; 
   $pdfarray = array('pdf');
   $array7z = array('7z', 'zip', 'rar', 'iso', 'vhd');

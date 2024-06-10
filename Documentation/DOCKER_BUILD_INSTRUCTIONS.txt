@@ -96,7 +96,7 @@ If you truly want to build your own Docker Image from source this document will 
 -----STEP 3 - TEST THE DOCKER IMAGE-----
 
 1. Run  'docker run -d -p 8080:80 -p 8443:443 -t zelon88/hrconvert2:v#.#.# -t zelon88/hrconvert2:latest -t ghcr.io/zelon88/hrconvert2:v#.#.# -t ghcr.io/zelon88/hrconvert2:latest'
-2. Open a browser and navigate to ' http://localhost:8080' to test the converter.
+2. Open a browser and navigate to 'http://localhost:8080' to test the converter.
 -----------------------------------------------------------------------------------
 
 

@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 5/22/2024 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 6/9/2024 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.3.6.
+// / v3.3.7.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -38,7 +38,7 @@
 // /  --Salts--
 // /   Salts for hashing operations.
 // /   Change these Salts to something completely random and keep them secret. 
-// /   Store your Salts in hardcopy form or an encrypted drive in case of emergency.
+// /   Store your Salts in hardcopy form or on an encrypted drive in case of emergency.
 $Salts1 = 'something1SoRa21nDoMThatNobody_4Wiljl_evar+guess+i1tgdgdfgfdsfgdasfdas';
 $Salts2 = 'gdf4sgdfsg1sdfsomethingSoRa33nDoMThatNobody_Will2_evar_guess+it';
 $Salts3 = 'somethingSoRanDoMThatNobo423432dy54534534_Will_evar+guess+it';
@@ -56,7 +56,7 @@ $URL = 'localhost';
 // /   Set to TRUE to enable virus scanning with ClamAV during file operations.
 // /   Set to FALSE to disable virus scanning during file operations.
 // /   The --User Virus Scanning-- config entry has a major impact on how regular virus scans are performed.
-// /   If set to TRUE & --User Virus Scanning-- is set to TRUE infected files detected during virus scans will remain until normal cleanup.
+// /   If set to TRUE & --User Virus Scanning-- is set to TRUE infected files detected during virus scans will not be removed automatically.
 // /   If set to TRUE & --User Virus Scanning-- is set to FALSE any infected file will immediately be deleted upon detection.
 // /   If set to TRUE & --User Virus Scanning-- is set to TRUE incoming file uploads will not be scanned for viruses.
 // /   If set to TRUE & --User Virus Scanning-- is set to FALSE incoming file uploads will be scanned for viruses.
@@ -67,10 +67,10 @@ $VirusScan = FALSE;
 // /  --User Virus Scanning--
 // /   Provide users with options to scan their uploaded files for viruses.
 // /   Requires ClamAV to be installed on the server.
-// /   Set to TRUE to enable users to upload potentially infected files.
-// /   Set to FALSE to disable users uploading potentially infected files.
+// /   Set to TRUE to allow users to upload potentially infected files.
+// /   Set to FALSE to disallow users uploading potentially infected files.
 // /   This config entry has a major impact on how regular virus scans are performed.
-// /   If set to TRUE & --Virus Scanning-- is set to TRUE infected files detected during virus scans will remain until normal cleanup.
+// /   If set to TRUE & --Virus Scanning-- is set to TRUE infected files detected during virus scans will not be removed automatically.
 // /   If set to FALSE & --Virus Scanning-- is set to TRUE any infected file will immediately be deleted upon detection.
 // /   If set to TRUE & --Virus Scanning-- is set to TRUE incoming file uploads will not be scanned for viruses.
 // /   If set to FALSE & --Virus Scanning-- is set to TRUE incoming file uploads will be scanned for viruses.
@@ -181,7 +181,7 @@ $ApplicationTitle = 'Convert Anything!';
 // /   The list of GUIs that are supported by this application.
 // /   Before adding a supported GUI be sure to add the matching folder full of GUI files to /UI.
 // /   Errors will occur if you add an element to this array without also adding a matching GUI folder.
-// /   Default is 'Default'.
+// /   Default is 'Default', 'Wide'.
 $SupportedGuis = array('Default', 'Wide');
 // /  --Default GUI--
 // /   The default GUI to use.
@@ -238,7 +238,7 @@ $AllowUserShare = TRUE;
 // /   The list of supported conversion types.
 // /   Only conversion types contained in this list will be processed.
 // /   If a conversion type is disabled, options for processing that conversion will not be displayed by the UI.
-// /   Default is 'Document', 'Image', 'Model', 'Drawing', 'Video', 'Audio', 'Archive', 'Stream', 'OCR'.
+// /   Default is 'Document', 'Image', 'Model', 'Drawing', 'Video', 'Subtitle', 'Audio', 'Archive', 'Stream', 'OCR'.
 $SupportedConversionTypes = array('Document', 'Image', 'Model', 'Drawing', 'Video', 'Subtitle', 'Audio', 'Archive', 'Stream', 'OCR');
 // /  --File Deletion Age Theshold--
 // /   Age in minutes of files to be deleted.
@@ -347,18 +347,24 @@ $UserSpreadsheetArray = array('csv', 'xls', 'xlsx', 'ods');
 $UserPresentationArray = array('pages', 'pptx', 'ppt', 'xps', 'potx', 'potm', 'pot', 'ppa', 'odp');
 // /  --Supported Image Formats--
 $UserImageArray = array('jpeg', 'jpg', 'jpe', 'png', 'bmp', 'gif', 'webp', 'cin', 'dds', 'dib', 'flif', 'avif', 'gplt', 'sct', 'xcf', 'heic', 'ico', 'pdf');
-// /  --Supported Audio Formats--
-$UserMediaArray = array('mp3', 'aac', 'ogg', 'wma', 'mp2', 'flac', 'm4a');
-// /  --Supported Video Formats--
-$UserVideoArray = array('3gp', 'mkv', 'avi', 'mp4', 'flv', 'mpeg', 'wmv', 'mov', 'm4v');
+// /  --Supported Audio Input Formats--
+$UserMediaInputArray = array('sox', 'spdif', 'spx', 'tta', 'u16be', 'u16le', 'u24be', 'u24le', 'u32be', 'u32le', 'u8', 'voc', 'wav', 'wv', 'wsaud', 'mulaw', 'mxf', 'mxf_d10', 'mxf_opatom', 'oga', 'ogg', 'opus', 'oss', 'psp', 'rawvideo', 's16be', 's16le', 's24be', 's24le', 's32be', 's32le', 's8', 'sbc', 'ilbc', 'ircam', 'latm', 'lrc', 'mp2', 'mp3', 'mlp', 'flac', 'g722', 'g723_1', 'g726', 'g726le', 'gsm', 'caf', 'daud', 'dts', 'eac3', 'f32be', 'f32le', 'f64be', 'f64le', 'ac3', 'ac4', 'adts', 'aiff', 'alaw', 'amr', 'aptx', 'aptx_hd', 'argo_asf', 'argo_cvg', 'ast', 'au', 'a64', 'aa', 'aac', 'aax', 'acm', 'act', 'adp', 'adx', 'aea', 'afc', 'aix', 'alp', 'amrnb', 'amrwb', 'apac', 'apc', 'ape', 'apm', 'argo_asf', 'binka', 'bit', 'boa', 'bonk', 'brstm', 'dfpwm', 'dsf', 'dss', 'epaf', 'fsb', 'fwse', 'g729', 'hca', 'idf', 'kux', 'kvag', 'laf', 'lavfi', 'loas', 'luodat', 'lvf', 'lxf', 'mca', 'mcc', 'megsts', 'mlv', 'mmf', 'mods', 'moflex', 'mpc8', 'msf', 'msnwctcp', 'mtaf', 'musx', 'nc', 'nistsphere', 'nsp', 'paf', 'pam_pipe', 'pbm_pipe', 'pfm_pipe', 'pp_bnk', 'psxstr', 'pva', 'pvf', 'qcp', 'rka', 'rl2', 'rpl', 'rso', 's337m', 'sap', 'sbg', 'scd', 'sdns', 'sdp', 'sds', 'sdx', 'siff', 'simbiosis_imx', 'sln', 'smk', 'smush', 'sol', 'svag', 'svs', 'tak', 'thp', 'tierexseq', 'tty', 'ty', 'usm', 'vag', 'vidc', 'vpk', 'vqf', 'w64', 'wady', 'wavarc', 'wsd', 'wsvqa', 'wve', 'xa', 'xbin', 'xbm_pipe', 'xmd', 'xpm_pipe', 'xwma', 'yop', 'wma', 'm4a');
+// /  --Supported Audio Output Formats--
+$UserMediaOutputArray = array('mp3', 'aac', 'ogg', 'wma', 'mp2', 'flac', 'm4a');
+// /  --Supported Video Input Formats--
+$UserVideoInputArray = array('smoothstreaming', 'svcd', 'swf', 'truehd', 'vc1', 'vc1test', 'vcd', 'vob', 'vvc', 'webm', 'yuv4mpegpipe', 'mpjpeg', 'mxf', 'mxf_d10', 'mxf_opatom', 'nut', 'obu', 'ogv', 'psp', 'rawvideo', 'rm', 'roq', 'rtp_mpegts', 'smjpeg', 'hevc', 'hls', 'image2', 'image2pipe', 'ipod', 'ismv', 'm4v', 'matroska', 'mjpeg', 'mkvtimestamp_v2', 'mov', 'mp4', 'mpeg', 'mpeg1video', 'mpeg2video', 'mpegts', 'mpegtsraw', 'mpegvideo', 'fbdev', 'film_cpk', 'filmstrip', 'gxf', 'h261', 'h263', 'h264', 'hds', 'avs2', 'avs3', 'cavsvideo', 'cavs', 'dirac', 'dnxhd', 'dv', 'dvd', 'evc', '3g2', '3gp', 'apng', 'argo_asf', 'argo_cvg', 'asf', 'asf_stream', 'avi', 'avif', 'avm2', '3dostr', '4xm', 'adf', 'ads', 'alias_pix', 'anm', 'argo_brp', 'asf_o', 'av1', 'avs', 'bethsoftvid', 'bfi', 'bink', 'bmv', 'brender_pix', 'brender', 'cdg', 'cdxl', 'cine', 'concat', 'cri', 'dcstr', 'derf', 'dfa', 'dhav', 'dsicin', 'dtshd', 'dxa', 'ea', 'exr', 'fits', 'flic', 'frm', 'gdv', 'genh', 'gif', 'idcin', 'iff', 'ifv', 'ingenient', 'ipmovie', 'iss', 'iv8', 'ivf', 'ivr', 'j2k', 'jp2', 'jv', 'live_flv', 'lmlm4', 'mtv', 'mv', 'mvi', 'mxg', 'nsv', 'nuv', 'osq', 'pcx_pipe', 'pdv', 'pgm_pipe', 'pgmuv_pipe', 'pgx_pipe', 'phm_pipe', 'protocol_pipe', 'pictor_pipe', 'png_pipe', 'ppm_pipe', 'psd_pipe', 'qdraw_pipe', 'qoi_pipe', 'r3d', 'redspark', 'rroq', 'rsd', 'rtsp', 'sdr2', 'ser', 'sga', 'sgi_pipe', 'shn', 'sunrast_pipe', 'svg_pipe', 'tiff_pipe', 'tmv', 'v210', 'v210x', 'vbn_pipe', 'video4linux2', 'v4l2', 'vividas', 'vivo', 'vmd', 'wc3movie', 'webm_dash_manifest', 'webp_pipe', 'wtv', 'xmv', 'xvag', 'xwd_pipe', 'mkv', 'wmv');
+// /  --Supported Video Output Formats--
+$UserVideoOutputArray = array('3gp', 'mkv', 'avi', 'mp4', 'mpeg', 'wmv', 'mov', 'm4v');
 // /  --Supported Stream Formats--
 $UserStreamArray = array('m3u8');
 // /  --Supported Drawing Formats--
 $UserDrawingArray = array('svg', 'dxf', 'vdx', 'fig', 'dia', 'wpg', 'png');
 // /  --Supported Model Formats--
 $UserModelArray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'gts', 'dxf', 'u3d', 'vrml', 'x3d');
-// /  --Supported Subtitle Formats--
-$UserSubtitleArray = array('vtt', 'ssa', 'ass', 'srt', 'dvb');
+// /  --Supported Subtitle Input Formats--
+$UserSubtitleInputArray = array('srt', 'stream_segment', 'ssegment', 'streamhash', 'sup', 'subtitles', 'ttml', 'uncodedframecrc', 'webvtt', 'wtv', 'oma', 'rso', 'rtp', 'rtsp', 'scc', 'sdl', 'sdl2', 'segment', 'sap', 'jacosub', 'kvag', 'microdvd', 'ffmetadata', 'fifo', 'fifo_test', 'fits', 'framecrc', 'framehash', 'framemd5', 'dash', 'crc', 'dvbsub', 'dvbtxt', 'gsm', 'ass', 'vobsub', 'mpl2', 'mpsub', 'pjs', 'realtext', 'sami', 'stl', 'subviewer', 'subviewer1', 'tedcaptions', 'txd', 'vtt', 'ssa', 'dvb', 'vplayer');
+// /  --Supported Subtitle Output Formats--
+$UserSubtitleOutputArray = array('vtt', 'ssa', 'ass', 'srt', 'dvb');
 // /  --Supported OCR Formats--
 $UserPDFWorkArr = array('pdf', 'jpg', 'jpeg', 'png', 'bmp', 'webp', 'gif');
 // / ------------------------------

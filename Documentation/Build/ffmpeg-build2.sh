@@ -348,7 +348,7 @@ if build "yasm" "1.3.0"; then
 fi
 
 if build "nasm" "2.16.01"; then
-  download "https://www.nasm.us/pub/nasm/releasebuilds/$CURRENT_PACKAGE_VERSION/nasm-$CURRENT_PACKAGE_VERSION.tar.xz"
+  download "https://ftp2.osuosl.org/pub/blfs/conglomeration/nasm/nasm-$CURRENT_PACKAGE_VERSION.tar.xz"
   execute ./configure --prefix="${WORKSPACE}" --disable-shared --enable-static
   execute make -j $MJOBS
   execute make install
@@ -388,7 +388,7 @@ if build "automake" "1.16.5"; then
 fi
 
 if build "libtool" "2.4.7"; then
-  download "https://ftpmirror.gnu.org/libtool/libtool-$CURRENT_PACKAGE_VERSION.tar.gz"
+  download "https://ftp.gnu.org/gnu/libtool/libtool-$CURRENT_PACKAGE_VERSION.tar.gz"
   execute ./configure --prefix="${WORKSPACE}" --enable-static --disable-shared
   execute make -j $MJOBS
   execute make install

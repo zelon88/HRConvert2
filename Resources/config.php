@@ -137,6 +137,13 @@ $DeleteDevelopmentDocumentation = FALSE;
 // / ------------------------------
 // / ---Directory Information---
 // / 
+// /  --Home Directory--
+// /   This is the Home directory for the web server user.
+// /   Do not include a trailing slash.
+// /   Do not use a path with whitespace.
+// /   Changing this value is not recommended.
+// /   Default is /var/www/html/HRProprietary.
+$HomeLoc = '/var/www/html/HRProprietary';
 // /  --Installation Directory--
 // /   Install HRConvert2 to the following directory.
 // /   Do not include a trailing slash.
@@ -330,6 +337,13 @@ $RARArchiveMethod = 'rar';
 // /   Valid options are integers smaller than 10.
 // /   Default is 5.
 $RetryCount = 5;
+// / --Document Engine Sleep Timer--
+// /   Set this to the number of seconds to wait after attempting to start the Document Conversion Engine for it to start.
+// /   Try increasing this value if Logs indicate that the Document Conversion Engine won't start.
+// /   Valid options are integers smaller than 60.
+// /   Do not set this timer longer than the Execution Time specified in php.ini.
+// /   Default is 5.
+$DocumentEngineSleepTimer = 5;
 // / ------------------------------
 
 // / ------------------------------

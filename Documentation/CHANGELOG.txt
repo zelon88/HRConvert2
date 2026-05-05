@@ -35,6 +35,7 @@ v3.4 - Strengthen sanitization process. Improve OCR, Document Conversions.
 -Further strengthen the sanitization process to prevent potential command injection.
   -Github user KhaelK138 discovered another sanitization vulnerability, this one as severe as the last one.
   -Added chr(10) to the lists of sanitized characters in both strict and non-strict modes.
+  -GHSA-f74g-4wj8-j35h
 -Improve OCR operations.
   -More verbose logging, when Verbose is enabled in config.php.
   -Minor corrections to code spacing and grouping.

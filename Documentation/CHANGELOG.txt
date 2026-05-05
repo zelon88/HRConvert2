@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 5/4/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 5/5/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.3.8.
+v3.4.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -26,6 +26,36 @@ Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+
+--------------------
+COMMIT 5/5/2026
+v3.4 - Strengthen sanitization process. Improve OCR, Document Conversions.
+
+-v3.4.
+-Further strengthen the sanitization process to prevent potential command injection.
+  -Github user KhaelK138 discovered another sanitization vulnerability, this one as severe as the last one.
+  -Added chr(10) to the lists of sanitized characters in both strict and non-strict modes.
+-Improve OCR operations.
+  -More verbose logging, when Verbose is enabled in config.php.
+  -Minor corrections to code spacing and grouping.
+  -Added Error 15010 "Could not verify the document conversion engine...".
+  -Added Error 15011 "Could not create a file at ..." for when OCR operations fail to generate required files.
+  -Fixed a bug where the error checker was nested too high and would only really check the last operation performed by the loop.
+    -Typically only one file operation is performed at a time with the standard GUI, but the core can do batches of files. Well, now it can ;).
+-Discovered that document conversions won't work if soffice.bin is running as another user.
+  -Added checks and a mitigation for this in the verifyDocumentEngine() function.
+  -Previously the verifyDocumentEngine() function would not check who the owner was.
+  -Now verifyDocumentEngine() function will check who the owner is, and if it is not root or $ApacheUser will attempt to start a new instance.
+-Improve whitespace consistency.
+  -Remove whitespace chars after opening brackets.
+-Improve comment consistency.
+  -Make sure that when code snippits appear multiple times that the comments sections match.
+-Add several new comment sections, elaborate on several others.
+-Remove unused $returnData variable references in the userVirusScan() function.
+-Updated config.php.
+  -Added $HomeLoc variable for the $ApacheUser home folder.
+  -Added $DocumentEngineSleepTimer to determine how long to wait after trying to start the Document Conversion Engine.
+-Added a line of code to the verifyGlobals() function to specify the home folder for the $ApacheUser to be the $HomeLoc.
 
 --------------------
 COMMIT 5/3/2026

@@ -20,9 +20,9 @@
 // / This application will run on just about any x86 or x64 computer.
 // /
 // / DEPENDENCY REQUIREMENTS ...
-// / This application requires Debian Linux (w/3rd Party audio license),
-// / Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
-// / 7zipper, FFMPEG, PDFTOTEXT, Dia, PopplerUtils, MeshLab, Mkisofs & ImageMagick.
+// / This application requires Debian Linux (w/3rd Party audio license), Apache 2.4,
+// / PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract,  Unzip, FFMPEG, Mkisofs, 7zip,
+// / Rar, Unrar, libgxps-utils, PopplerUtils, MeshLab, PDFTOTEXT, Dia, ImageMagick.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -33,7 +33,7 @@ $UIDisplayed = TRUE;
 // / Check if the core is loaded.
 if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
 // / Assign temporary variables.
-$gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = array();
+$gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2XpsArr = array();
 // / -----------------------------------------------------------------------------------
 ?>
   <body>
@@ -279,7 +279,16 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
            onclick="toggle_visibility('spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
           <?php }
 
-          if (in_array($extension, $PresentationArray) && in_array('Document', $SupportedConversionTypes)) { ?>
+          if (in_array($extension, $XPSInputArray) && in_array('Document', $SupportedConversionTypes)) { ?>
+          <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
+
+          <img id='xpsButton<?php echo $ConvertGuiCounter1; ?>' name='xpsButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>document.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
+           onclick='toggle_visibility("xpsOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("xpsButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("xpsXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+          <img id='xpsXButton<?php echo $ConvertGuiCounter1; ?>' name='xpsXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;'
+           onclick='toggle_visibility("xpsOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("xpsButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("xpsXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+          <?php }
+
+          if (in_array($extension, $PresentationInputArray) && in_array('Document', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='presentationButton<?php echo $ConvertGuiCounter1; ?>' name='presentationButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>presentation.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
@@ -795,15 +804,65 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
         </div>
         <?php }
 
-        if (in_array($extension, $PresentationArray) && in_array('Document', $SupportedConversionTypes)) {
+        if (in_array($extension, $XPSInputArray) && in_array('Document', $SupportedConversionTypes)) {
+        ?>
+        <div id='xpsOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='xpsOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+          <p style="max-width:1000px;"></p>
+          <p><strong><?php echo $Gui2Text78; ?></strong></p>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='userxpsfilename<?php echo $ConvertGuiCounter1; ?>' name='userxpsfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <select id='xpsextension<?php echo $ConvertGuiCounter1; ?>' name='xpsextension<?php echo $ConvertGuiCounter1; ?>'>
+            <option value="pdf"><?php echo $Gui2Text18; ?></option>
+            <?php foreach ($XPSOutputArray as $gui2XpsArr) { ?>
+            <option value="<?php echo $gui2XpsArr; ?>"><?php echo $gui2XpsArr; ?></option>
+            <?php } ?>
+          </select></p>
+          <input type="submit" id="xpsconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="xpsconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text56; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <script type="text/javascript">
+            $(document).ready(function () {
+              $('#xpsconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
+                $.ajax({
+                  type: 'POST',
+                  url: 'convertCore.php',
+                  data: {
+                    Token1:'<?php echo $Token1; ?>',
+                    Token2:'<?php echo $Token2; ?>',
+                    convertSelected:'<?php echo $File; ?>',
+                    extension:document.getElementById('xpsextension<?php echo $ConvertGuiCounter1; ?>').value,
+                    userconvertfilename:document.getElementById('userxpsfilename<?php echo $ConvertGuiCounter1; ?>').value },
+                    success: function(ReturnData) {
+                      $.ajax({
+                      type: 'POST',
+                      url: 'convertCore.php',
+                      data: { 
+                        Token1:'<?php echo $Token1; ?>',
+                        Token2:'<?php echo $Token2; ?>',
+                        download:document.getElementById('userxpsfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('xpsextension<?php echo $ConvertGuiCounter1; ?>').value },
+                      success: function(returnFile) {
+                        toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userxpsfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('xpsextension<?php echo $ConvertGuiCounter1; ?>').value; 
+                        document.getElementById('downloadTarget').click(); } }); },
+                      error: function(ReturnData) {
+                        toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() {
+                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        alert("<?php echo $Gui2Text71; ?>"); } }); }); });
+          </script>
+        </div>
+        <?php }
+
+        if (in_array($extension, $PresentationInputArray) && in_array('Document', $SupportedConversionTypes)) {
         ?>
         <div id='presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
-          <p><strong>Convert This Presentation</strong></p>
+          <p><strong><?php echo $Gui2Text77; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type="text" id='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' name='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='presentationextension<?php echo $ConvertGuiCounter1; ?>' name='presentationextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="odp"><?php echo $Gui2Text18; ?></option>
-            <?php foreach ($PresentationArray as $gui2PresArr) { ?>
+            <?php foreach ($PresentationOutputArray as $gui2PresArr) { ?>
             <option value="<?php echo $gui2PresArr; ?>"><?php echo $gui2PresArr; ?></option>
             <?php } ?>
           </select></p>
@@ -833,7 +892,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                         toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         setTimeout(function() {
                           toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                        document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userspreadfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('presentationextension<?php echo $ConvertGuiCounter1; ?>').value; 
+                        document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userpresentationfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('presentationextension<?php echo $ConvertGuiCounter1; ?>').value; 
                         document.getElementById('downloadTarget').click(); } }); },
                       error: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');

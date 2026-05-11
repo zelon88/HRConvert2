@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 5/3/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 5/8/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.3.8.
+// / v3.4.1.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -23,9 +23,9 @@
 // / This application will run on just about any x86 or x64 computer.
 // /
 // / DEPENDENCY REQUIREMENTS ... 
-// / This application requires Debian Linux (w/3rd Party audio license), 
-// / Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip, 
-// / 7zipper, FFMPEG, PdfToText, Dia, PopplerUtils, MeshLab, Mkisofs & ImageMagick.
+// / This application requires Debian Linux (w/3rd Party audio license), Apache 2.4,
+// / PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract,  Unzip, FFMPEG, Mkisofs, 7zip,
+// / Rar, Unrar, libgxps-utils, PopplerUtils, MeshLab, PDFTOTEXT, Dia, ImageMagick.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -142,15 +142,22 @@ $DeleteDevelopmentDocumentation = FALSE;
 // /   Do not include a trailing slash.
 // /   Do not use a path with whitespace.
 // /   Changing this value is not recommended.
-// /   Default is /var/www/html/HRProprietary.
-$HomeLoc = '/var/www/html/HRProprietary';
+// /   Default is /var/www
+$HomeLoc = '/var/www';
 // /  --Installation Directory--
-// /   Install HRConvert2 to the following directory.
+// /   Install HRConvert2 files to the following directory.
 // /   Do not include a trailing slash.
 // /   Do not use a path with whitespace.
 // /   Changing this value is not recommended.
 // /   Default is /var/www/html/HRProprietary/HRConvert2.
 $InstLoc = '/var/www/html/HRProprietary/HRConvert2';
+// /  --Proprietary Directory--
+// /   Install the HRConvert2 folder to the following directory.
+// /   Do not include a trailing slash.
+// /   Do not use a path with whitespace.
+// /   Changing this value is not recommended.
+// /   Default is /var/www/html/HRProprietary.
+$ProprietaryLoc = '/var/www/html/HRProprietary';
 // /  --Server Root Directory--
 // /   This should be pointed at the root of your web server directory.
 // /   Do not include a trailing slash.
@@ -162,7 +169,7 @@ $ServerRootDir = '/var/www/html';
 // /   Do not include a trailing slash.
 // /   Do not use a path with whitespace.
 // /   Default is /DATA/HRConvert2.
-$ConvertLoc = '/DATA/HRConvert2';
+$ConvertLoc = '/path/to/convertloc';
 // /  --Log Storage Directory--
 // /   This is where permanent Log files are stored.
 // /   Do not include a trailing slash.
@@ -357,8 +364,14 @@ $UserDearchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso',
 $UserDocumentArray = array('txt', 'doc', 'docx', 'rtf', 'odt', 'pdf');
 // /  --Supported Spreadsheet Formats--
 $UserSpreadsheetArray = array('csv', 'xls', 'xlsx', 'ods');
-// /  --Supported Presentation Formats--
-$UserPresentationArray = array('pages', 'pptx', 'ppt', 'xps', 'potx', 'potm', 'pot', 'ppa', 'odp');
+// /  --Supported XPS Input Formats--
+$UserXPSInputArray = array('xps', 'oxps');
+// /  --Supported XPS Output Formats--
+$UserXPSOutputArray = array('pdf');
+// /  --Supported Presentation Input Formats--
+$UserPresentationInputArray = array('pptx', 'ppt', 'potx', 'potm', 'pot', 'ppa', 'odp');
+// /  --Supported Presentation Output Formats--
+$UserPresentationOutputArray = array('pptx', 'ppt', 'potx', 'potm', 'pot', 'ppa', 'odp', 'pdf');
 // /  --Supported Image Formats--
 $UserImageArray = array('jpeg', 'jpg', 'jpe', 'png', 'bmp', 'gif', 'webp', 'cin', 'dds', 'dib', 'flif', 'avif', 'gplt', 'sct', 'xcf', 'heic', 'ico');
 // /  --Supported Audio Input Formats--

@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 4/18/2023 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 5/8/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.2.6.
+// / v3.4.1.
 // / This file contains language specific GUI related text for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -20,9 +20,9 @@
 // / This application will run on just about any x86 or x64 computer.
 // /
 // / DEPENDENCY REQUIREMENTS ...
-// / This application requires Debian Linux (w/3rd Party audio license),
-// / Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
-// / 7zipper, FFMPEG, PDFTOTEXT, Dia, PopplerUtils, MeshLab, Mkisofs & ImageMagick.
+// / This application requires Debian Linux (w/3rd Party audio license), Apache 2.4,
+// / PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract,  Unzip, FFMPEG, Mkisofs, 7zip,
+// / Rar, Unrar, libgxps-utils, PopplerUtils, MeshLab, PDFTOTEXT, Dia, ImageMagick.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -278,10 +278,14 @@ $Gui2Text72 = 'Cannot perform a virus scan on this file!';
 $Gui2Text73 = 'File Link Copied to Clipboard!';
 // / 'Operation Failed!'
 $Gui2Text74 = 'Operation Failed!';
-// / Convert These Subtitles'
+// / 'Convert These Subtitles'
 $Gui2Text75 = 'Convert These Subtitles';
-// / Convert Subtitles'
+// / 'Convert Subtitles'
 $Gui2Text76 = 'Convert Subtitles';
+// / 'Convert This Presentation'
+$Gui2Text77 = 'Convert This Presentation';
+// / 'Convert This XPS File'
+$Gui2Text78 = 'Convert This XPS File';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

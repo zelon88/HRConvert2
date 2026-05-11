@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 5/5/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 5/8/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.4.
+// / v3.4.1.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -21,9 +21,9 @@
 // / This application will run on just about any x86 or x64 computer.
 // /
 // / DEPENDENCY REQUIREMENTS ...
-// / This application requires Debian Linux (w/3rd Party audio license),
-// / Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
-// / 7zipper, FFMPEG, PDFTOTEXT, Dia, PopplerUtils, MeshLab, Mkisofs & ImageMagick.
+// / This application requires Debian Linux (w/3rd Party audio license), Apache 2.4,
+// / PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract,  Unzip, FFMPEG, Mkisofs, 7zip,
+// / Rar, Unrar, libgxps-utils, PopplerUtils, MeshLab, PDFTOTEXT, Dia, ImageMagick.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -104,9 +104,9 @@ function sanitize($Variable, $strict) {
 // / A function to load required HRConvert2 files.
 function verifyInstallation() {
   // / Set variables.
-  global $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6, $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $DefaultColor, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $URL, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc;
+  global $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6, $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $DefaultColor, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $URL, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc;
   // / Define absolute paths for files that we only have relative paths for.
-  $InstallationIsVerified = $buildDirDeleted = $dockerFileDeleted = $readmeDeleted = $changelogFileDeleted = $buildEnvDeleted = $devDocsDeleted = $checkOne = $checkTwo = FALSE;
+  $InstallationIsVerified = $buildDirDeleted = $dockerFileDeleted = $readmeDeleted = $changelogFileDeleted = $buildEnvDeleted = $devDocsDeleted = FALSE;
   $ConfigFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'config.php');
   $VersionInfoFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'versionInfo.php');
   $dockerFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build'.DIRECTORY_SEPARATOR.'Dockerfile');
@@ -122,25 +122,25 @@ function verifyInstallation() {
   if ($DeleteBuildEnvironment) {
     if (is_dir($buildDir)) $buildDirDeleted = cleanFiles($buildDir);
     if (file_exists($dockerFile)) $dockerFileDeleted = unlink($dockerFile);
-    if ($buildDirDeleted && $dockerFileDeleted) $buildEnvDeleted = TRUE; }
+    if (file_exists($dockerFile) && file_exists($buildDir)) $buildEnvDeleted = TRUE; }
   // / Delete the development environment if specified by config.php.
   if ($DeleteDevelopmentDocumentation) {
     if (file_exists($changelogFile)) $changelogFileDeleted = unlink($changelogFile);
     if (file_exists($readmeFile)) $readmeDeleted = unlink($readmeFile);
-    if ($changelogFileDeleted && $readmeDeleted) $devDocsDeleted = TRUE; }
-  // / Perform a check to see if any required operations failed. 
-  if ($DeleteBuildEnvironment) if (!$buildEnvDeleted) $checkOne = TRUE;
-  if ($DeleteDevelopmentDocumentation) if (!$devDocsDeleted) $checkTwo = TRUE;
+    if (!file_exists($changelogFile) && !file_exists($readmeFile)) $devDocsDeleted = TRUE; }
+  // / Perform a check to see if any required operations failed.
   // / Installation is considered verified when check one & check two are both false.
-  if (!$checkOne && !$checkTwo) $InstallationIsVerified = TRUE;
+  $InstallationIsVerified = TRUE;
+  if ($DeleteBuildEnvironment) if (!$buildEnvDeleted) $InstallationIsVerified = FALSE;
+  if ($DeleteDevelopmentDocumentation) if (!$devDocsDeleted) $InstallationIsVerified = FALSE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $buildDir = $buildDirDeleted = $dockerFile = $dockerFileDeleted = $readmeFile = $readmeDeleted = $changelogFile = $changelogFileDeleted = $buildEnvDeleted = $devDocsDeleted = $checkOne = $checkTwo = NULL;
-  unset($buildDir, $buildDirDeleted, $dockerFile, $dockerFileDeleted, $readmeFile, $readmeDeleted, $changelogFile, $changelogFileDeleted, $buildEnvDeleted, $devDocsDeleted, $checkOne, $checkTwo);
+  unset($buildDir, $buildDirDeleted, $dockerFile, $dockerFileDeleted, $readmeFile, $readmeDeleted, $changelogFile, $changelogFileDeleted, $buildEnvDeleted, $devDocsDeleted);
   return array($InstallationIsVerified, $ConfigFile, $Version); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to attempt to detect the users IP so it can be used as an identifier for the session.
+// / A function to detect the users IP so it can be used as an identifier for the session.
 function verifySession() {
   // / Set variables.
   $IP = '';
@@ -456,10 +456,10 @@ function securePath($PathToSecure, $DangerArr, $isURL) {
 // / A function to set the global variables for the session.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc;
+  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders;
   // / Application related variables.
   putenv('HOME='.$HomeLoc);
-  $HRConvertVersion = 'v3.4';
+  $HRConvertVersion = 'v3.4.1';
   $GlobalsAreVerified = FALSE;
   $CoreLoaded = TRUE;
   $SleepTimer = 0;
@@ -475,7 +475,7 @@ function verifyGlobals() {
   // / UI Related variables.
   $ConvertGuiCounter1 = 0;
   $File = $FCPlural = $FCPlural1 = $FCPlural2 = $FCPlural3 = $GreenButtonCode = $BlueButtonCode = $RedButtonCode = $DefaultButtonCode = '';
-  $HeaderDisplayed = $UIDisplayed = $FooterDisplayed =$LanguageStringsLoaded = $GUIDisplayed = FALSE;
+  $HeaderDisplayed = $UIDisplayed = $FooterDisplayed = $LanguageStringsLoaded = $MediaOutputArray = $GUIDiInputsplayed = $VideoOutputArray = FALSE;
   $GUIDirection = 'ltr';
   $GUIAlignment = 'left';
   $Alert = 'Cannot convert this file! Try changing the name.';
@@ -495,8 +495,9 @@ function verifyGlobals() {
   $ConvertTemp = securePath($InstLoc.'/DATA', $DangerousFiles, FALSE);
   $convertTempDir0 = securePath($ConvertTemp.$DirSep.$SesHash, $DangerousFiles, FALSE);
   $ConvertTempDir = securePath($convertTempDir0.$DirSep.$SesHash2.$DirSep, $DangerousFiles, FALSE);
-  $RequiredDirs = array($convertDir0, $ConvertDir, $ConvertTemp, $convertTempDir0, $ConvertTempDir);
+  $RequiredDirs = array($HomeLoc, $convertDir0, $ConvertDir, $ConvertTemp, $convertTempDir0, $ConvertTempDir);
   $RequiredIndexes = array($ConvertTemp, $convertTempDir0, $ConvertTempDir);
+  $RequiredCleanupFolders = array($InstLoc.$DirSep.'.cache', $InstLoc.$DirSep.'.config', $ProprietaryLoc.$DirSep.'.cache', $ProprietaryLoc.$DirSep.'.config');
   // / A/V related variables.
   $UserClamLogFileName = 'User_ClamScan_Virus_Scan_Report.txt';
   $UserClamLogFile = $ConvertDir.$UserClamLogFileName;
@@ -505,12 +506,15 @@ function verifyGlobals() {
   $ConsolidatedLogFileName = 'User_Consolidated_Virus_Scan_Report.txt';
   $ConsolidatedLogFile = $ConvertTempDir.$ConsolidatedLogFileName;
   // / Format related variables.
-  $ArchiveArray = $DearchiveArray = $DocumentArray = $SpreadsheetArray = $PresentationArray = $ImageArray = $MediaArray = $VideoArray = $StreamArray = $DrawingArray = $ModelArray = $SubtitleArray = $PDFWorkArr = array();
+  $ArchiveArray = $DearchiveArray = $DocumentArray = $SpreadsheetArray = $PresentationInputArray = $PresentationOutputArray = $XPSInputArray = $XPSOutputArray = $ImageArray = $MediaInputArray = $MediaOutputArray = $VideoInputArray = $VideoOutputArray = $StreamArray = $DrawingArray = $ModelArray = $SubtitleArray = $PDFWorkArr = $allArrays = array();
   if (in_array('Archive', $SupportedConversionTypes)) $ArchiveArray = $UserArchiveArray;
   if (in_array('Archive', $SupportedConversionTypes)) $DearchiveArray = $UserDearchiveArray;
   if (in_array('Document', $SupportedConversionTypes)) $DocumentArray = $UserDocumentArray;
   if (in_array('Document', $SupportedConversionTypes)) $SpreadsheetArray = $UserSpreadsheetArray;
-  if (in_array('Document', $SupportedConversionTypes)) $PresentationArray = $UserPresentationArray;
+  if (in_array('Document', $SupportedConversionTypes)) $XPSInputArray = $UserXPSInputArray;
+  if (in_array('Document', $SupportedConversionTypes)) $XPSOutputArray = $UserXPSOutputArray;
+  if (in_array('Document', $SupportedConversionTypes)) $PresentationInputArray = $UserPresentationInputArray;
+  if (in_array('Document', $SupportedConversionTypes)) $PresentationOutputArray = $UserPresentationOutputArray;
   if (in_array('Image', $SupportedConversionTypes)) $ImageArray = $UserImageArray;
   if (in_array('Audio', $SupportedConversionTypes)) $MediaInputArray = $UserMediaInputArray;
   if (in_array('Audio', $SupportedConversionTypes)) $MediaOutputArray = $UserMediaOutputArray;
@@ -522,18 +526,24 @@ function verifyGlobals() {
   if (in_array('Subtitle', $SupportedConversionTypes)) $SubtitleInputArray = $UserSubtitleInputArray;
   if (in_array('Subtitle', $SupportedConversionTypes)) $SubtitleOutputArray = $UserSubtitleOutputArray;
   if (in_array('OCR', $SupportedConversionTypes) && in_array('Document', $SupportedConversionTypes)) $PDFWorkArr = $UserPDFWorkArr;
-  $Allowed = array_unique(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge(array_merge($ArchiveArray, $DearchiveArray), $DocumentArray), $SpreadsheetArray), $PresentationArray), $ImageArray), $MediaInputArray), $VideoInputArray), $StreamArray), $DrawingArray), $ModelArray), $SubtitleInputArray), $PDFWorkArr));
+  $allArrays = [
+    $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray,
+    $PresentationInputArray, $PresentationOutputArray, $ImageArray,
+    $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray,
+    $StreamArray, $DrawingArray, $ModelArray, $SubtitleInputArray, $PDFWorkArr,
+    $XPSInputArray, $XPSOutputArray ];
+  $Allowed = array_unique(array_merge(...$allArrays));
   $SupportedFormatCount = count($Allowed);
   // / Perform a version integrity check.
   if ($HRConvertVersion === $Version) $GlobalsAreVerified = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $convertDir0 = $convertTempDir0 = $subDir = $partURL = NULL;
-  unset($convertDir0, $convertTempDir0, $subDir, $partURL);
+  $convertDir0 = $convertTempDir0 = $subDir = $partURL = $allArrays = NULL;
+  unset($convertDir0, $convertTempDir0, $subDir, $partURL, $allArrays);
   return array($GlobalsAreVerified, $CoreLoaded); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to sanitize & verifie an array of files.
+// / A function to sanitize & verify an array of files.
 function getFiles($pathToFiles) {
   // / Set variables.
   global $DangerousFiles, $DirSep, $PathExt;
@@ -644,7 +654,7 @@ function virusScan($path) {
 // / A function to create required directories if they do not exist.
 function verifyRequiredDirs() {
   // /  Set variables.
-  global $ConvertLoc, $RequiredDirs, $RequiredIndexes, $Time, $LogFile, $Verbose, $PermissionLevels;
+  global $ConvertLoc, $RequiredDirs, $RequiredIndexes, $RequiredCleanupFolders, $Time, $LogFile, $Verbose, $PermissionLevels, $DirSep, $InstLoc;
   $RequiredDirsExist = FALSE;
   // / If the $ConvertLoc does not exist we stop execution rather than create one.
   if (!is_dir($ConvertLoc)) errorEntry('The specified Data Storage Directory does not exist at '.$ConvertLoc.'!', 1000, TRUE);
@@ -659,10 +669,11 @@ function verifyRequiredDirs() {
     if (is_dir($requiredDir)) $RequiredDirsExist = TRUE;
     else errorEntry('Could not create a directory at '.$requiredDir.'!', 1001, TRUE); }
   // / Make sure that each required directory has an index.html file for document root protection.
-  foreach ($RequiredIndexes as $requiredIndex) @copy('index.html', $requiredIndex.'/index.html');
+  foreach ($RequiredIndexes as $requiredIndex) @copy($InstLoc.$DirSep.'index.html', $requiredIndex.$DirSep.'index.html');
+  foreach ($RequiredCleanupFolders as $requiredCleanupFolder) if (file_exists($requiredCleanupFolder)) cleanFiles($requiredCleanupFolder);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $requiredDir = $requiredIndex = $MAKELogFile = NULL;
-  unset($requiredDir, $requiredIndex, $MAKELogFile); 
+  $requiredDir = $requiredIndex = $requiredCleanupFolder = NULL;
+  unset($requiredDir, $requiredIndex, $requiredCleanupFolder); 
   return array($RequiredDirsExist, $RequiredDirs); }
 // / -----------------------------------------------------------------------------------
 
@@ -677,8 +688,9 @@ function cleanFiles($path) {
   list ($path, $variableIsSanitized) = sanitize($path, FALSE);
   // / Make sure the selected directory is actually a directory.
   if ($variableIsSanitized && is_dir($path)) {
-    $i = array_diff(scandir($path), array('..', '.'));
+    // / Make sure the $ApacheUser owns the selected directory and that is has the correct permissions.
     // / Iterate through each file object in the directory.
+    $i = array_diff(scandir($path), array('..', '.'));
     foreach ($i as $f) {
       // / If the selected file object is a file, delete it.
       if (is_file($path.$DirSep.$f) && !in_array(basename($path.$DirSep.$f), $DefaultApps)) @unlink($path.$DirSep.$f);
@@ -821,11 +833,13 @@ function verifyDocumentConversionEngine() {
 // / A function to convert document formats.
 function convertDocuments($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $PathExt, $XPSInputArray;
   $ConversionSuccess = $ConversionErrors = FALSE;
   $returnData = '';
   $stopper = 0;
   $sleepTime = $SleepTimer;
+  $arrayxpsi = array('xps', 'oxps');
+  $oldExtension =  pathinfo($pathname, $PathExt);
   // / The following code verifies that the Document Conversion Engine is installed & running.
   list ($documentEngineStarted, $documentEnginePID) = verifyDocumentConversionEngine();
   if (!$documentEngineStarted) {
@@ -839,8 +853,9 @@ function convertDocuments($pathname, $newPathname, $extension) {
     while (!file_exists($newPathname) && $stopper <= $StopCounter) {
       // / If the last conversion attempt failed, wait a moment before trying again.
       if ($stopper !== 0) sleep($sleepTime++);
-      // / Attempt the conversion.
-      $returnData = shell_exec('unoconv -o '.$newPathname.' -f '.$extension.' '.$pathname);
+      if (in_array(strtolower($oldExtension), $arrayxpsi)) $returnData = shell_exec('xpstopdf '.$pathname.' '.$newPathname);
+      // / Attempt the conversion using Unoconv for all other files.
+      if (!in_array(strtolower($oldExtension), $arrayxpsi)) $returnData = shell_exec('unoconv -o '.$newPathname.' -f '.$extension.' '.$pathname);
       // / Count the number of conversions to avoid infinite loops.
       $stopper++;
       // / Stop attempting the conversion after $StopCounter number of attempts.
@@ -851,8 +866,8 @@ function convertDocuments($pathname, $newPathname, $extension) {
     if ($Verbose && trim($returnData) !== '') logEntry('Unoconv returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); }
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $stopper = $pathname = $newPathname = $extension = $returnData = $documentEngineStarted = $documentEnginePID = $sleepTime = NULL;
-  unset($stopper, $pathname, $newPathname, $extension, $returnData, $documentEngineStarted, $documentEnginePID, $sleepTime);
+  $stopper = $pathname = $newPathname = $extension = $returnData = $documentEngineStarted = $documentEnginePID = $sleepTime = $oldExtension = $arrayxpsi = NULL;
+  unset($stopper, $pathname, $newPathname, $extension, $returnData, $documentEngineStarted, $documentEnginePID, $sleepTime, $oldExtension, $arrayxpsi);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -1256,8 +1271,8 @@ function syncLocations() {
   // / Iterate through each file object in the $ConvertDir, skipping dots.
   foreach ($iterator = new \RecursiveIteratorIterator (new \RecursiveDirectoryIterator ($ConvertDir, \RecursiveDirectoryIterator::SKIP_DOTS), \RecursiveIteratorIterator::SELF_FIRST) as $item) {
     // / Verify the permissions on the file object.
-    @chmod($item, $PermissionLevels);
     @chown($item, $ApacheUser);
+    @chmod($item, $PermissionLevels);
     // / If the file object is a directory, make a corresponding directory in the $ConvertTempDir.
     if (is_dir($item)) {
       if (!file_exists($ConvertTempDir.$DirSep.$iterator->getSubPathName())) @mkdir($ConvertTempDir.$DirSep.$iterator->getSubPathName(), $PermissionLevels); }
@@ -1315,7 +1330,7 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
 // / A function to build the GUI.
 function buildGUI($guiType, $ButtonCode) {
   // / Set variables.
-  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir;
+  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir;
   $guiUIFile = $GuiUI1File;
   $Files = array();
   $FileCount = 0;
@@ -1577,10 +1592,10 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
 // / A function to convert a selection of files.
 function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, $Width, $Rotate, $Bitrate) {
   // / Set variables.
-  global $Verbose, $VirusScan, $DocumentArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $SubtitleInputArray, $StreamArray, $MediaInputArray, $ArchiveArray;
+  global $Verbose, $VirusScan, $SpreadsheetArray, $PresentationInputArray, $XPSInputArray, $DocumentArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $SubtitleInputArray, $StreamArray, $MediaInputArray, $ArchiveArray;
   $MainConversionSuccess = $MainConversionErrors = $virusFound = $skip = $isExtensionSupported = $fileIsVerified = $variableIsSanitized = FALSE;
   $clean = $copy = TRUE;
-  $docarray =  $DocumentArray;
+  $docarray =  array_merge($DocumentArray, $SpreadsheetArray, $PresentationInputArray, $XPSInputArray);
   $imgarray = $ImageArray;
   $modelarray = $ModelArray;
   $drawingarray = $DrawingArray;

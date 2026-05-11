@@ -169,7 +169,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
       foreach ($Files as $File) {
         $extension = getExtension($ConvertTempDir.'/'.$File);
         $FileNoExt = str_replace($extension, '', $File);
-        if (!in_array($extension, $Allowed)) continue;
+        if (!in_array(strtolower($extension), $Allowed)) continue;
         $ConvertGuiCounter1++;
       ?>
 

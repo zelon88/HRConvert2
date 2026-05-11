@@ -88,6 +88,9 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
               <?php foreach ($DocumentArray as $gui1DocArr) { ?>
               <li><?php echo $gui1DocArr; ?></li>
               <?php } ?>
+              <?php foreach ($XPSInputArray as $gui1XpsArr) { ?>
+              <li><?php echo $gui1XpsArr; ?></li>
+              <?php } ?>
             </ol>
             <?php } if (in_array('Document', $SupportedConversionTypes)) { ?>
             <strong><?php echo $Gui1Text15; ?></strong>
@@ -200,5 +203,5 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
     </div>
     <?php }
     // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-    $gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui1PresArr = $gui1ArchArr = $gui1ImaArr = $gui1ModArr = $gui2SubArr = $gui1DraArr = NULL;
-    unset($gui1AudArr, $gui1VidArr, $gui1StreamArr, $gui1DocArr, $gui1SpreadArr, $gui1PresArr, $gui1ArchArr, $gui1ImaArr, $gui1ModArr, $gui2SubArr, $gui1DraArr);
+    $gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui1XpsArr = $gui1PresArr = $gui1ArchArr = $gui1ImaArr = $gui1ModArr = $gui2SubArr = $gui1DraArr = NULL;
+    unset($gui1AudArr, $gui1VidArr, $gui1StreamArr, $gui1DocArr, $gui1SpreadArr, $gui1XpsArr, $gui1PresArr, $gui1ArchArr, $gui1ImaArr, $gui1ModArr, $gui2SubArr, $gui1DraArr);

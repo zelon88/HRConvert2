@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 6/9/2024 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 5/8/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.3.7.
+// / v3.4.1.
 // / This file contains language specific GUI elements for accepting file uploads.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -99,7 +99,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
             <?php } if (in_array('Document', $SupportedConversionTypes)) { ?>
             <strong><?php echo $Gui1Text16; ?></strong>
             <ol>
-              <?php foreach ($PresentationArray as $gui1PresArr) { ?>
+              <?php foreach ($PresentationInputArray as $gui1PresArr) { ?>
               <li><?php echo $gui1PresArr; ?></li>
               <?php } ?>
             </ol>

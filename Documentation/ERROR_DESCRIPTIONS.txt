@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 6/9/2024 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 5/8/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.3.7
+v3.4.1.
 This plain text file contains descriptions of all the native error messages contained in or produced by the HRConvert2 Diablo engine. 
 These descriptions should give administrators a starting point for debugging problems with HRConvert2 installations. 
 Each section in this file contains information about a different error message. The first one is an example to demonstrate the structure of this file.
@@ -21,8 +21,9 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ... 
-This application requires Debian Linux (w/3rd Party audio license), Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip, 7zipper, 
-Ffmpeg, PdfToText, Dia, PopplerUtils, MeshLab, Mkisofs & ImageMagick.
+This application requires Debian Linux (w/3rd Party audio license), Apache 2.4,
+PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract,  Unzip, FFMPEG, Mkisofs, 7zip,
+Rar, Unrar, libgxps-utils, PopplerUtils, MeshLab, PDFTOTEXT, Dia, ImageMagick.
 
 ADDITIONAL INFORMATION
 HRConvert2 logs information about it's operational activity to the Logs subdirectory where HRConvert2 is installed by default.

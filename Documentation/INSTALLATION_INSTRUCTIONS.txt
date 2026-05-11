@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 6/9/2024 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 5/8/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.3.7.
+v3.4.1.
 This file contains a walkthrough guide for installing HRConvert2.
 
 HARDWARE REQUIREMENTS ... 
@@ -19,9 +19,9 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ... 
-This application requires Debian Linux (w/3rd Party audio license), 
-Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip, 
-7zipper, FFMPEG, PdfToText, Dia, PopplerUtils, MeshLab, Mkisofs & ImageMagick.
+This application requires Debian Linux (w/3rd Party audio license), Apache 2.4,
+PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract,  Unzip, FFMPEG, Mkisofs, 7zip,
+Rar, Unrar, libgxps-utils, PopplerUtils, MeshLab, PDFTOTEXT, Dia, ImageMagick.
 
 <3 Open-Source
 -----------------------------------------------------------------------------------
@@ -108,7 +108,7 @@ In this step we will install dependencies to enable most common file conversions
 4. Run  'sudo apt-get install rar && sudo apt-get install unrar && sudo apt-get install p7zip-rar'
 5. Run  'sudo apt-get install imagemagick && sudo apt-get install tesseract-ocr'
 6. Run  'sudo apt-get install meshlab && sudo apt-get install dia && sudo apt-get install pandoc && sudo apt-get install mkisofs'
-7. Run  'sudo apt-get install poppler-utils && sudo apt-get install nodejs && sudo apt-get install gnuplot'
+7. Run  'sudo apt-get install poppler-utils && sudo apt-get install nodejs && sudo apt-get install gnuplot && sudo apt-get install libgxps-utils'
 8. Run  'sudo featherpad /etc/ImageMagick-6/policy.xml'
 9. Search for the following line in the  'policy.xml'  file and adjust the value to match the one displayed below.
   <policy domain="coder" rights="read|write" pattern="PDF" />

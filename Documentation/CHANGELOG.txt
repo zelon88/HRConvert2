@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 5/5/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 5/8/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.4.
+v3.4.1.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -19,13 +19,52 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ... 
-This application requires Debian Linux (w/3rd Party audio license), 
-Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip, 
-7zipper, FFMPEG, PdfToText, Dia, PopplerUtils, MeshLab, Mkisofs & ImageMagick.
+This application requires Debian Linux (w/3rd Party audio license), Apache 2.4,
+PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract,  Unzip, FFMPEG, Mkisofs, 7zip,
+Rar, Unrar, libgxps-utils, PopplerUtils, MeshLab, PDFTOTEXT, Dia, ImageMagick.
 
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+--------------------
+COMMIT 5/8/2026
+v3.4.1 - Add support for OXPS documents. Lots of quality improvements.
+
+-v3.4.1.
+-Users who are upgrading can install new dependencies and adjust folder permissions by.....
+  -Install libgxps-utils with the 'sudo apt install libgxps-utils' command.
+  -Grant ownership of the /var/www folder to the www-data user using the command 'sudo chown www-data:www-data /var/www'
+    -This is because this folder acts as the www-data home folder when HRConvert2 is running. 
+    -The Document Conversion Engine (soffice.bin) needs a home folder that is writable in order to function.  
+-Add support for OXPS documents.
+  -As requested by Github User physics515 in issue #86, https://github.com/zelon88/HRConvert2/issues/86.
+  -Experimented with Ghostscript XPS support and also libgxps-utils and determined that libgxps-utils is the most suitable candidate for adding XPS and OXPS support to HRConvert2.
+  -New dependency can be added by running 'sudo apt install libgxps-utils' 
+  -Add libgxps-utils to the the depency text in the file header for code files.
+  -Put OXPS related code under Presentation array.
+-Switch the singular PresentationArray to PresentationInputArray and PresentationOutputArray to control which options that are displayed by the UI & when.
+  -This also required modifying lines 282, 798, and 806 in the UI/Default/convertGui2.php and UI/Wide/convertGui2.php files.
+-Fix some typos in comments.
+  -Core, LanguageStrings.
+-Fix bug in the verifyInstallation() function for optionally cleans up build and/or development environments.
+  -The checks being performed to decide whether or not to execute cleanup were inadvertantly mutually exclusive.
+  -Before the code for cleanup of either build environment or dev docs would only happen if both were enabled.
+  -Now the checks are truly independant.
+-Move the Document Conversion Engine cache location ($HomeLoc) from /var/www/html/HRProprietary to /var/www
+  -Also added reusable code to cleanup old .cache and .config locations that may exist.
+    -$RequiredCleanupFolders specified in verifyGlobals().
+    -More information below.
+-Improve syncLocations() function.
+  -Flip to use chown then chmod (was chmod then chown).
+  -Remove ancient $MAKELogFile variable reference.
+    -This was probably the oldest piece of code in the application until now.
+-Improve verifyRequiredDirs() function.
+  -Add code to cleanup unneeded folders. From previous versions for example.
+  -The array for this is contained in the verifyGlobals() function.
+  -Added $ProprietaryLoc entry to config.php.
+-Update Language Strings files.
+  -Add new code for XPS files.
+  -Fix Static (always English) code for Presentation files.
 
 --------------------
 COMMIT 5/5/2026

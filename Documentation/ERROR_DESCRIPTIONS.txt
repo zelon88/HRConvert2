@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 5/8/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 5/11/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.4.1.
+v3.4.2.
 This plain text file contains descriptions of all the native error messages contained in or produced by the HRConvert2 Diablo engine. 
 These descriptions should give administrators a starting point for debugging problems with HRConvert2 installations. 
 Each section in this file contains information about a different error message. The first one is an example to demonstrate the structure of this file.
@@ -634,6 +634,56 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-300, <SESSION_IDENTIFIER>: 'Could not process extension for file <FILE_PATH>!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The user submitted an invalid or dangerous file extension.
+  The user submitted a request for a file they should not have access to.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+  The user is trying to escape their designated data location.
+  A 3rd party application is imporperly attempting to submit data to the API.
+  The application is being fuzzed or scanned for vulnerabilities.
+  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  This error is not fatal but the file that causes it will be skipped.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-400, <SESSION_IDENTIFIER>: Could not display file <FILE_NAME>!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The user submitted an invalid or dangerous file extension.
+  The user submitted a request for a file they should not have access to.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+  The user is trying to escape their designated data location.
+  A 3rd party application is imporperly attempting to submit data to the API.
+  The application is being fuzzed or scanned for vulnerabilities.
+  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  This error is not fatal but the file that causes it will be skipped.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-500, <SESSION_IDENTIFIER>: There were potentially infected files detected at <FILE_PATH>!
 
 FILE
@@ -1110,6 +1160,7 @@ ERROR DESCRIPTION
   Other errors preceding this error will help narrow down the cause of this error.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5006, <SESSION_IDENTIFIER>: File extension <FILE_EXTENSION> is not supported!
@@ -1127,6 +1178,7 @@ ERROR DESCRIPTION
   The file submitted by the user has an extension that is not supported by HRConvert.
   Other errors preceding this error will help narrow down the cause of this error.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
@@ -1671,6 +1723,7 @@ ERROR DESCRIPTION
   The request contained character types or encoded data that are not supported.
   One of the $_POST or $_GET variables submitted was empty after sanitization.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

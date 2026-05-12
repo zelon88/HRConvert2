@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 5/8/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 5/11/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.4.1.
+v3.4.2.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -26,6 +26,38 @@ Rar, Unrar, libgxps-utils, PopplerUtils, MeshLab, PDFTOTEXT, Dia, ImageMagick.
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+--------------------
+COMMIT 5/11/2026
+v3.4.2 - Add support for OXPS documents. Lots of quality improvements.
+
+-v3.4.2.
+-Need to run 'sudo apt install xvfb' on the HRConvert2 server to install the latest dependency.
+  -This is required to fix a bug in 3D model conversions using MeshLabServer.
+-Improve sanitization & handling of file extensions.
+  -The Gui now uses the getExtension() function from convertCore.php.
+  -Added sanitization to getExtension() function.
+  -Added & documented Error 300 which verifies that getExtension() was properly sanitized using the function return from the sanitize() function.
+  -Made getExtension() and getFiles() functions more robust by initializing variables and adding sanity checks.
+  -Added & documented Error 400 which verifies that the getFiles() function does not return an unsafe file.
+-Fix 3D Model conversions.
+  -These were getting mixed up with .stl subtitle conversions.
+  -Added an output format check to the loop that executes the conversion to prevent this collision of formats.
+  -Now only the desired conversion will take place.
+  -Discover that new versions of Meshlabserver require the www-data user to have a UI environment.
+    -To get around this, use xvfb-run to create a virtual environment.
+    -Also call the meshlabserver binary by absolute path instead of assuming it is in PATH.
+-Fix subtitle conversions.
+  -Adjust the input / output formats. Added some, removed others.
+  -Fix collision with .stl subtitle formats triggering the 3D model converter.
+  -Now only desired conversions take place.
+-Add 'xvfb-run' as a dependency.
+  -The current list of dependencies that need to be added to the Docker repos are.....
+    -xvfb-run
+    -libgxps-utils
+  -Need to update the Docker repos, very soon.
+-Replace individual queries for file extensions with getExtension() function calls.
+  -This improves consistency of the code and ensures proper sanitization wherever the extension is used.
+  
 --------------------
 COMMIT 5/8/2026
 v3.4.1 - Add support for OXPS documents. Lots of quality improvements.

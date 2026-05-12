@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 5/8/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 5/11/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.4.1.
+// / v3.4.2.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -459,7 +459,7 @@ function verifyGlobals() {
   global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders;
   // / Application related variables.
   putenv('HOME='.$HomeLoc);
-  $HRConvertVersion = 'v3.4.1';
+  $HRConvertVersion = 'v3.4.2';
   $GlobalsAreVerified = FALSE;
   $CoreLoaded = TRUE;
   $SleepTimer = 0;
@@ -543,33 +543,18 @@ function verifyGlobals() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to sanitize & verify an array of files.
-function getFiles($pathToFiles) {
-  // / Set variables.
-  global $DangerousFiles, $DirSep, $PathExt;
-  $Files = $dirtyFileArr = array();
-  if (is_dir($pathToFiles)) $dirtyFileArr = @scandir($pathToFiles);
-  // / Iterate through each detected file & make sure it's not dangerous before adding it to the output array.
-  foreach ($dirtyFileArr as $dirtyFile) {
-    $dirtyExt = pathinfo($pathToFiles.$DirSep.$dirtyFile, $PathExt);
-    // / Make sure the file is safe to handle.
-    if (in_array(strtolower($dirtyExt), $DangerousFiles) or is_dir($pathToFiles.$DirSep.$dirtyFile)) continue;
-    array_push($Files, $dirtyFile); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $dirtyFile = $pathToFiles = $dirtyFileArr = NULL;
-  unset($dirtyFile, $pathToFiles, $dirtyFileArr);
-  return $Files; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to return the extension to a specified file.
+// / A function to sanitize & return the extension to a specified file.
 function getExtension($pathToFile) {
   // / Set variables.
   global $PathExt;
-  $Pathinfo = pathinfo($pathToFile, $PathExt);
+  $Pathinfo = '';
+  $pathinfoCleaned = FALSE;
+  list ($pathinfo, $pathinfoCleaned) = sanitize(pathinfo(strtolower($pathToFile), $PathExt), TRUE);
+  if ($pathinfoCleaned) $Pathinfo = trim($pathinfo);
+  else errorEntry('Could not process extension for file '.$pathToFile.'!', 300, FALSE);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $pathToFile = NULL;
-  unset($pathToFile);
+  $pathToFile = $pathinfoCleaned = $pathinfo = NULL;
+  unset($pathToFile, $pathinfoCleaned, $pathinfo);
   return $Pathinfo;  }
 // / -----------------------------------------------------------------------------------
 
@@ -584,6 +569,25 @@ function getFilesize($File) {
   elseif (($Size < 1073741824) && ($Size > 1048575)) $Size = round($Size / 1048576, 1)." MB";
   else $Size = round($Size/1073741824, 1)." GB";
   return $Size; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to sanitize & verify an array of files.
+function getFiles($pathToFiles) {
+  // / Set variables.
+  global $DangerousFiles, $DirSep;
+  $Files = $dirtyFileArr = array();
+  if (is_dir($pathToFiles)) $dirtyFileArr = @scandir($pathToFiles);
+  // / Iterate through each detected file & make sure it's not dangerous before adding it to the output array.
+  foreach ($dirtyFileArr as $dirtyFile) {
+    $dirtyExt = getExtension($pathToFiles.$DirSep.$dirtyFile);
+    // / Add the selected file to the array of clean files only if it is safe to handle.
+    if (!in_array(strtolower($dirtyExt), $DangerousFiles) && !is_dir($pathToFiles.$DirSep.$dirtyFile)) array_push($Files, $dirtyFile);
+    else errorEntry('Could not display file '.$dirtyFile.'!', 400, FALSE); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $dirtyFile = $pathToFiles = $dirtyFileArr = $dirtyExt = NULL;
+  unset($dirtyFile, $pathToFiles, $dirtyFileArr, $dirtyExt);
+  return $Files; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -833,13 +837,13 @@ function verifyDocumentConversionEngine() {
 // / A function to convert document formats.
 function convertDocuments($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $PathExt, $XPSInputArray;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $XPSInputArray;
   $ConversionSuccess = $ConversionErrors = FALSE;
   $returnData = '';
   $stopper = 0;
   $sleepTime = $SleepTimer;
   $arrayxpsi = array('xps', 'oxps');
-  $oldExtension =  pathinfo($pathname, $PathExt);
+  $oldExtension =  getExtension($pathname);
   // / The following code verifies that the Document Conversion Engine is installed & running.
   list ($documentEngineStarted, $documentEnginePID) = verifyDocumentConversionEngine();
   if (!$documentEngineStarted) {
@@ -924,7 +928,7 @@ function convertModels($pathname, $newPathname) {
     // / If the last conversion attempt failed, wait a moment before trying again.
     if ($stopper !== 0) sleep($sleepTime++);
     // / Attempt the conversion.
-    $returnData = shell_exec('meshlabserver -i '.$pathname.' -o '.$newPathname);
+    $returnData = shell_exec('xvfb-run -a /usr/bin/meshlabserver -i '.$pathname.' -o '.$newPathname);
     // / Count the number of conversions to avoid infinite loops.
     $stopper++;
     // / Stop attempting the conversion after $StopCounter number of attempts.
@@ -1107,7 +1111,7 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
 // / A function to convert archive & disk image formats.
 function convertArchives($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $ConvertDir, $Lol, $Lolol, $StopCounter, $SleepTimer, $PathExt, $PermissionLevels, $RARArchiveMethod;
+  global $Verbose, $ConvertDir, $Lol, $Lolol, $StopCounter, $SleepTimer, $PermissionLevels, $RARArchiveMethod;
   $ConversionSuccess = $ConversionErrors = FALSE;
   $returnData = '';
   $filename = pathinfo($pathname, PATHINFO_FILENAME);
@@ -1122,7 +1126,7 @@ function convertArchives($pathname, $newPathname, $extension) {
   $rarMethod = 'other';
   $stopper = 0;
   $sleepTime = $SleepTimer;
-  $oldExtension =  pathinfo($pathname, $PathExt);
+  $oldExtension =  getExtension($pathname);
   // / Create a folder to contain extracted files.
   @mkdir($safedir2, $PermissionLevels);
   if (!is_dir($safedir2)) $ConversionErrors = TRUE;
@@ -1230,7 +1234,7 @@ function convertArchives($pathname, $newPathname, $extension) {
   if (!file_exists($newPathname)) {
     $ConversionErrors = TRUE;
     errorEntry('The archiver failed to produce an archive!', 13000, FALSE); }
-  else $ConversionSuccess = TRUE;
+  else ($ConversionSuccess = TRUE);
   // / Code to clean up temporary files & directories.
   cleanFiles($safedir2);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
@@ -1287,13 +1291,13 @@ function syncLocations() {
 // / -----------------------------------------------------------------------------------
 // / A function to verify files before performing operations on them.
 function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) {
-  global $DangerousFiles, $ConvertDir, $ConvertTempDir, $Allowed, $Verbose, $PathExt;
+  global $DangerousFiles, $ConvertDir, $ConvertTempDir, $Allowed, $Verbose;
   $FileIsVerified = $Pathname = $OldPathname = $NewPathname = $variableIsSanitized = FALSE;
   // / Check to make sure all iteration specific required variables are properly sanitized.
   list ($file, $variableIsSanitized) = sanitize($file, FALSE);
   list ($Pathname, $variableIsSanitized) = sanitize($ConvertTempDir.$file, FALSE);
   list ($OldPathname, $variableIsSanitized) = sanitize($ConvertDir.$file, FALSE);
-  $OldExtension = pathinfo($Pathname, $PathExt);
+  $OldExtension = getExtension($Pathname);
   // / Check if the selected file is safe to handle.
   if (in_array(strtolower($OldExtension), $Allowed) && !in_array(strtolower($OldExtension), $DangerousFiles) && $file !== '.' && $file !== '..' && $file !== 'index.html') $FileIsVerified = TRUE;
   if (!$FileIsVerified) errorEntry('The file '.$file.' failed first stage validation!', 14000, TRUE);
@@ -1383,7 +1387,7 @@ function showGUI($ShowGUI, $ButtonCode) {
 // / A function to upload a selection of files.
 function uploadFiles() {
   // / Set variables.
-  global $DangerousFiles, $VirusScan, $AllowUserVirusScan, $ConvertDir, $LogFile, $Verbose, $PathExt, $PermissionLevels, $Allowed;
+  global $DangerousFiles, $VirusScan, $AllowUserVirusScan, $ConvertDir, $LogFile, $Verbose, $PermissionLevels, $Allowed;
   $UploadComplete = $UploadErrors = $virusFound = $variableIsSanitized = FALSE;
   $file = $f0 = $f1 = '';
   // / Make sure the input files are formatted into an array.
@@ -1398,7 +1402,7 @@ function uploadFiles() {
       errorEntry('Could not sanitize the input file!', 6000, FALSE); 
       continue; }
     if ($Verbose) logEntry('User selected to Upload file '.$file.'.');
-    $f0 = pathinfo($file, $PathExt);
+    $f0 = getExtension($file);
     // / Make sure the file is not in the list of dangerous formats.
     if (in_array(strtolower($f0), $DangerousFiles) or !in_array(strtolower($f0), $Allowed)) {
       errorEntry('Unsupported file format, '.$f0.'!', 6001, FALSE);
@@ -1433,7 +1437,7 @@ function uploadFiles() {
 // / A function to upload a selection of files.
 function downloadFiles($Download) {
   // / Set variables.
-  global $DangerousFiles, $Verbose, $PathExt, $Download, $ConvertDir, $ConsolidatedLogFileName, $Allowed;
+  global $DangerousFiles, $Verbose, $Download, $ConvertDir, $ConsolidatedLogFileName, $Allowed;
   $DownloadComplete = $DownloadErrors = $clean = $copy = $skip = $variableIsSanitized = FALSE;
   $file = $f0 = '';
   list ($Download, $variableIsSanitized) = sanitize($Download, FALSE);
@@ -1451,7 +1455,7 @@ function downloadFiles($Download) {
     if ($Verbose) logEntry('User selected to Download file '.$file.'.');
     if ($file === $ConsolidatedLogFileName) $skip = TRUE;
     else $clean = $copy = TRUE;
-    $f0 = pathinfo($file, $PathExt);
+    $f0 = getExtension($file);
     // / Make sure the file is not in the list of dangerous formats.
     if (in_array(strtolower($f0), $DangerousFiles) or !in_array(strtolower($f0), $Allowed)) {
       errorEntry('Unsupported file format, '.$f0.'!', 3004, FALSE);
@@ -1497,7 +1501,7 @@ function deleteFiles($FilesToDelete) {
       errorEntry('Could not sanitize the input file!', 23000, FALSE); 
       continue; }
     if ($Verbose) logEntry('User selected to Delete file '.$file.'.');
-    $f0 = pathinfo($file, $PathExt);
+    $f0 = getExtension($file);
     // / Make sure the file is not in the list of dangerous formats.
     if (in_array(strtolower($f0), $DangerousFiles)) {
       errorEntry('Unsupported file format, '.$f0.'!', 23001, FALSE);
@@ -1646,17 +1650,18 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
       if ($Verbose) logEntry('Virus scan complete.'); }
     // / Iterate through the array of supported formats & call the appropriate code to perform the conversion.
     foreach ($arrayArray as $arrKey => $arrArray) {
-      // / Code to convert & manipulate files.
+      // / Code to convert & manipulate files, only if both the selected input & output formats are supported.
       if (in_array(strtolower($oldExtension), $arrArray)) {
-        $isExtensionSupported = TRUE;
-        list ($ConversionSuccess, $ConversionErrors) = convert($arrKey, $pathname, $newPathname, $UserExtension, $Height, $Width, $Rotate, $Bitrate);
-        if (!$ConversionSuccess) {
-          $MainConversionSuccess = FALSE;
-          errorEntry('Could not convert the selected '.$arrKey.'!', 5004, FALSE); }
-        if ($ConversionErrors) {
-          $MainConversionErrors = TRUE;
-          logEntry($arrKey.' conversion finished with errors.'); }
-        if ($Verbose) logEntry($arrKey.' Conversion Complete'); } }
+        if (in_array(strtolower($UserExtension), $arrArray)) {
+          $isExtensionSupported = TRUE;
+          list ($ConversionSuccess, $ConversionErrors) = convert($arrKey, $pathname, $newPathname, $UserExtension, $Height, $Width, $Rotate, $Bitrate);
+          if (!$ConversionSuccess) {
+            $MainConversionSuccess = FALSE;
+            errorEntry('Could not convert the selected '.$arrKey.'!', 5004, FALSE); }
+          if ($ConversionErrors) {
+            $MainConversionErrors = TRUE;
+            logEntry($arrKey.' conversion finished with errors.'); }
+          if ($Verbose) logEntry($arrKey.' Conversion Complete'); } } }
     // / Error handler & logger for converting files.
     if (!$isExtensionSupported) errorEntry('File extension '.$oldExtension.' is not supported!', 5006, FALSE);
     if (!file_exists($newPathname)) {

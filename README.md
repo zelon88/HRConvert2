@@ -3,9 +3,10 @@
 -----------------------------------------------
 # HRConvert2
 
-### A self-hosted drag-and-drop file conversion server & file sharing tool that supports 445 file formats with 4 color schemes & 13 end-user selectable languages. 
+### A self-hosted drag-and-drop file conversion server & file sharing tool that supports 445 file formats with highly customizable GUI & 13 end-user selectable languages. 
 
-![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/HRConvert2-1.png)
+![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/new-webui.png)
+![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/new-webui2.png)
 
 ---
 ### Features
@@ -19,6 +20,8 @@
 - Minimalistic drag & drop interface.
 - Each user gets their own temporary scratch space!
 - End users can switch between 13 languages by appending it to the URL like this: `?language=en`
+- End users can switch between 3 GUI environments by appending it to the URL like this: `?gui=Original`
+- End users can switch between 4 color schemes (on supported GUIs) by appending it to the URL like this: `?color=green`
 - Safe enough for public facing environments (when properly implemented).
 - No databases. No cookies. No cache files. 
 - Installs cleanly alongside other popular software (like WordPress).
@@ -176,6 +179,12 @@ Developers can craft links or redirects to load the correct language for each us
 
 ---
 # Screenshots
+![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/new-webui.png)
+
+![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/new-webui2.png)
+
+![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/HRConvert2-1.png)
+
 ![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/HRConvert2-10.png)
 
 ![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/HRConvert2-11.png)

@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 5/8/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 5/12/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.4.1.
+// / v3.4.3.
 // / This file contains language specific GUI elements for accepting file uploads.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -20,9 +20,9 @@
 // / This application will run on just about any x86 or x64 computer.
 // /
 // / DEPENDENCY REQUIREMENTS ...
-// / This application requires Debian Linux (w/3rd Party audio license), Apache 2.4,
-// / PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract,  Unzip, FFMPEG, Mkisofs, 7zip,
-// / Rar, Unrar, libgxps-utils, PopplerUtils, MeshLab, PDFTOTEXT, Dia, ImageMagick.
+// / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia,
+// / Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, Rar,
+// / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -33,7 +33,7 @@ $UIDisplayed = TRUE;
 // / Check if the core is loaded.
 if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
 // / Assign temporary variables.
-$gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = array();
+$gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2XpsArr = array();
 // / -----------------------------------------------------------------------------------
 ?>
   <body>
@@ -203,5 +203,5 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
     </div>
     <?php }
     // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-    $gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui1XpsArr = $gui1PresArr = $gui1ArchArr = $gui1ImaArr = $gui1ModArr = $gui2SubArr = $gui1DraArr = NULL;
-    unset($gui1AudArr, $gui1VidArr, $gui1StreamArr, $gui1DocArr, $gui1SpreadArr, $gui1XpsArr, $gui1PresArr, $gui1ArchArr, $gui1ImaArr, $gui1ModArr, $gui2SubArr, $gui1DraArr);
+    $gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui1XpsArr = $gui1PresArr = $gui1ArchArr = $gui1ImaArr = $gui1ModArr = $gui2SubArr = $gui1DraArr = $gui2XpsArr = NULL;
+    unset($gui1AudArr, $gui1VidArr, $gui1StreamArr, $gui1DocArr, $gui1SpreadArr, $gui1XpsArr, $gui1PresArr, $gui1ArchArr, $gui1ImaArr, $gui1ModArr, $gui2SubArr, $gui1DraArr, $gui2XpsArr);

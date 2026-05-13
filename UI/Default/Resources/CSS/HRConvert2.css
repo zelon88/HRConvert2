@@ -1,12 +1,13 @@
 select {
-  width: 140px;
+  width: 120px;
   padding: 5px 5px 5px 5px;
-  font-size: 16px;
+  font-size: 14px;
   border: 1px solid #ccc;
-  height: 34px;
+  height: 30px;
   -webkit-appearance: none;
   -moz-appearance: none;
-  appearance: none; }
+  appearance: none; 
+  border-radius: 5px;}
 
 /* CAUTION: IE hackery ahead */
 select::-ms-expand { 

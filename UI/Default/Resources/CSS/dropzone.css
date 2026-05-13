@@ -206,8 +206,9 @@
 .dropzone {
   min-height: 150px;
   border: 2px solid rgba(0, 0, 0, 0.3);
-  background: white;
+  background: #fff7e9;
   padding: 20px 20px;
+  border-radius: 10px;
 }
 .dropzone.dz-clickable {
   cursor: pointer;
@@ -236,7 +237,11 @@
   color: inherit;
   border: none;
   padding: 0;
-  font: inherit;
+cursor: pointer;
+  outline: inherit;
+  font-weight: bold;
+  font-size: larger;
+  color: #bfbfbf;
   cursor: pointer;
   outline: inherit;
 }

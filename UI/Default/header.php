@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 3/5/2024 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 5/12/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,17 +12,19 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.3.1.
+// / v3.4.3.
 // / This file contains language specific GUI elements to be displayed at the top of pages.
+// / This file was created by Github user hernandito as part of his forked repo, available 
+// / at https://github.com/hernandito/HRConvert2/tree/master. Thank you, hernandito!
 // /
 // / HARDWARE REQUIREMENTS ...
 // / This application requires at least a Raspberry Pi Model B+ or greater.
 // / This application will run on just about any x86 or x64 computer.
 // /
 // / DEPENDENCY REQUIREMENTS ...
-// / This application requires Debian Linux (w/3rd Party audio license), Apache 2.4,
-// / PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract,  Unzip, FFMPEG, Mkisofs, 7zip,
-// / Rar, Unrar, libgxps-utils, PopplerUtils, MeshLab, PDFTOTEXT, Dia, ImageMagick.
+// / This application requires Debian Linux (w/3rd Party audio license),
+// / Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
+// / 7zipper, FFMPEG, PDFTOTEXT, Dia, PopplerUtils, MeshLab, Mkisofs & ImageMagick.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -34,7 +36,7 @@ $HeaderDisplayed = TRUE;
 if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
 // / Set required resource file related variables.
 $FaviconPath = $GuiImageDir.'favicon.ico';
-$JqueryPath = $GuiJSDir.'jquery-3.6.3.min.js';
+$JqueryPath = $GuiJSDir.'jquery-4.0.0.min.js';
 $JsLibraryPath = $GuiJSDir.'HRC2-Functions.js';
 $DropzonePath = $GuiJSDir.'dropzone.js';
 $StylesheetPath = $GuiCSSDir.'HRConvert2.css';

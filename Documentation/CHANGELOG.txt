@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 5/11/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 5/12/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.4.2.
+v3.4.3.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -19,12 +19,48 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ... 
-This application requires Debian Linux (w/3rd Party audio license), Apache 2.4,
-PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract,  Unzip, FFMPEG, Mkisofs, 7zip,
-Rar, Unrar, libgxps-utils, PopplerUtils, MeshLab, PDFTOTEXT, Dia, ImageMagick.
+This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia,
+Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, Rar,
+Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
 
 <3 Open-Source
 -----------------------------------------------------------------------------------
+
+
+--------------------
+COMMIT 5/12/2026
+v3.4.3 - Bump JQuery to v4.0.0. Update GUI. Update documentation.
+
+-v3.4.3.
+-Added information to the file header of code files with the new dependency information.
+  -xvfb-run.
+  -Every time I add a dependency I re-order the list of dependencies to make them visually appealing.
+-Bump JQuery to 4.0.0 released January 17th, 2026.
+  -Old version was 3.6.3 from December 20th, 2022.
+-Update INSTALLATION_INSTRUCTIONS.txt with.....
+  -Instructions to install the latest dependencies (xvfb and libgxps-utils)
+  -Adjustments to the permissions related commands to set permissions on the $ApacheUser $HomeLoc (defined in config.php).
+    -Before we were focusing chown and chmod commands with -R at /var/www/html. Now we are focusing those commands at /var/www instead.
+    -This change is because the www-data user needs a home directory in order to run soffice.bin and meshlabserver.
+    -We want the www-data home directory to be writable to the www-data user, but not hosted (accessible over the network).
+    -The home directory for the www-data user is represented by the $HomeLoc variable and is set in config.php.
+    -We could probably create a $HomeLoc in /home/www-data if you want. Just make sure to give ownership and rw permissions (0755) to www-data.
+-Added CODING_CONVENTIONS.txt to describe the conventions in-use in the codebase so they can be devloped transperantly alongisde the code.
+-Added SUPPORTING_THE_PROJECT.txt to describe ways for inspired users to get involved with the HRConvert2 community.
+-Evaluate 2 community submitted UIs.
+  -The first one was very good, but missing a convertGui2.php file.
+  -The second one was forked by Github user hernandito and is availalbe for download at https://github.com/hernandito/HRConvert2/tree/master.
+    -Bumped the version by incorporating changes to the UI since v3.3.7.
+    -I have incorporated this into the Master branch as the new "Default" UI. 
+    -The old UI be accessed by appending the ?gui=Original GET variable to the URL.
+    -Also added screenshots from hernandido's repository to the official readme.
+-Update README.md.
+  -Add the latest screenshots.
+  -Adjust the list of features to include mention of the "highly customizable GUI".
+-I should really work on adding buttons to the default UIs to switch between the UIs. 
+  -And flag icons to switch between languages.
+  -And color icons to switch between the colors (on supported UIS).
+-Added an exception to ERROR 400 that prevents '.' and '..' from triggering the error and raising a false alarm.
 
 --------------------
 COMMIT 5/11/2026

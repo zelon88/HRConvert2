@@ -1,0 +1,54 @@
+-----------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 5/12/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats
+on a server for users of any web browser without authentication. 
+
+FILE INFORMATION ...
+v3.4.3.
+This file contains detailed information about how end-users can contribute to the 
+continued development of HRConvert2.
+
+HARDWARE REQUIREMENTS ... 
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ... 
+This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia,
+Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, Rar,
+Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
+
+<3 Open-Source
+-----------------------------------------------------------------------------------
+
+
+-----SUPPORTING THIS PROJECT-----
+Perhaps the easiest way to support HRConvert2 development is to become active on the 
+Github repository by posting a comment, forking the project, creating an issue, or 
+improving documentation. You don't need to be a developer to participate. Even sharing
+on social media, or showing off to your friends will give the project a huge boost.
+
+Some great ideads to help our project grow include;
+  -Sharing the repository on social media.
+  -Operating, using, & promoting a public facing instance.
+  -Posting an issue, feature request, enhancement, or comment on the repository.
+  -Forking & editing the repository.
+  -Submitting a Pull Request.
+  -Hacking on the code, then sharing your results.
+  -Send a Venmo contribution to @zelon88. 
+-----------------------------------------------------------------------------------
+
+-----PROVIDING FINANCIAL SUPPORT-----
+If you would like to support the development of HRConvert2 financially, you can do so
+by sending payments to @zelon88 on Venmo. 
+
+Please note that @zelon88 is not a charitable organization. @zelon88 is a middle-aged
+dad writing HRConvert2 by hand in his living room for the past 10 years. Without using 
+AI tools. Your contribution will support on continuing the development of HRConvert2.
+-----------------------------------------------------------------------------------

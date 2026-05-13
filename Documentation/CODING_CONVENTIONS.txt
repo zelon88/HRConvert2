@@ -1,0 +1,100 @@
+-----------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 5/12/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats
+on a server for users of any web browser without authentication. 
+
+FILE INFORMATION ...
+v3.4.3.
+This file contains detailed information about the coding & quality conventions in-use 
+in the HRConvert2 codebase.
+
+HARDWARE REQUIREMENTS ... 
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ... 
+This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia,
+Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, Rar,
+Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
+
+<3 Open-Source
+-----------------------------------------------------------------------------------
+
+
+-----BUILD PROCESS-----
+HRConvert2 is maintained by Zelon88 with help from an amazing & dedicated community on Github.
+Github is the source control management platform where all HRConvert2 development takes place.
+Docker repositorsies are updated less often than Github, but offer much easier installation.
+
+'Nightly Builds' what you get when you download the repo at any point in time.
+'Nightly Builds' have the latest features and are updated regularly.
+'Releases' available on the Releases page on Github typically represent major milestones.
+'Releases' have the best stability and are updated only for major patches or changes.
+Devel
+-----------------------------------------------------------------------------------
+
+
+-----CODING CONVENTIONS-----
+HRConvert2 is built using strict coding & quality conventions to promote quality and 
+consistency within the codebase. Those conventions are detailed here so they can be
+developed in the open, alongside the code they are designed to safeguard.
+
+1. Core Logic and interface are completely separate. UI Pages must not contain any 
+  core logic. Any logic contained within UI pages must be only for the purpose of 
+  generating local UI elements.
+
+2. The Core must not itself contain any UI elements. The Core must "build" or 
+  "assemble" the UI from separate, modular components.
+
+3. Upper case first letter variables are global in scope. Only variables with upper-case can
+  transcend multiple functions. Upper case first letter variables can be used as Globals or
+  function returns.
+
+4. Lower case variables are severely limited in scope. Lower case first letter variables 
+  must not be used or extended outside of the function in which they are initialized.
+  
+5. Lower case variables must be initialized only within the function where they are used,
+  and destroyed via 'NULL' and 'Unset' immediately after they are no longer required.
+
+6. Functions go first. Logic goes after. All functions must be defined sequentially at 
+  the top of a code file. Do not define functions nested with logical code.
+
+7. If a function is complex or longer than approximately 35 lines of code, then it must
+  return a sanity check in addition to it's usual output.
+
+8. If a function has a sanity check bundled with it's return, the calling code must 
+  ensure that the sanity check has passed.
+
+9. If a sanity check could alter behavior; failing the check must be logged.
+
+10. Any and all code changes must be mentioned in the CHANGELOG.txt file.
+
+11. Code comments must be written in complete sentences, with proper grammar & punctuation.
+
+12. Functions must be prefaced with a comment describing it's functionality.
+
+13. Function input and return variable names should be coherent to a human reader. Do not
+  use generic, non-descriptive variable names like $f or $a in function inputs or returns.
+
+14. Changes to code files should be batched into groups, tested completely and thoroughly,
+  and uploaded to the repository only once they are complete. Do not upload in-process or 
+  untested code to the repository under any circumstances. Code contained in the repository
+  must always be fully executable.
+
+15. No browser console errors or HTML syntax errors are allowed to exist in any release or 
+  nightly build that gets uploaded to the repositopry. The code contained in the repository 
+  must execute in all tested cases without HTML, JS, or PHP Errors or Warnings. Warnings or
+  errors that are generated normally during expected operation are acceptable.
+
+16. Any warning or error message that the application code may produce must be documented
+  in the ERROR_DESCRIPTIONS.txt file.
+
+17. No cookies. No databases. No third party connections. No analytics. No exceptions.
+-----------------------------------------------------------------------------------

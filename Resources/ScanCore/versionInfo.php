@@ -1,0 +1,34 @@
+<?php
+// / -----------------------------------------------------------------------------------
+// / COPYRIGHT INFORMATION ...
+// / HRConvert2, Copyright on 5/12/2026 by Justin Grimes, www.github.com/zelon88
+// /
+// / LICENSE INFORMATION ...
+// / This project is protected by the GNU GPLv3 Open-Source license.
+// / https://www.gnu.org/licenses/gpl-3.0.html
+// /
+// / APPLICATION INFORMATION ...
+// / This application is designed to provide a web-interface for converting file formats
+// / on a server for users of any web browser without authentication.l
+// /
+// / FILE INFORMATION ...
+// / v3.4.3.
+// / This file contains the current HRConvert2 version for update verification purposes.
+// /
+// / HARDWARE REQUIREMENTS ...
+// / This application requires at least a Raspberry Pi Model B+ or greater.
+// / This application will run on just about any x86 or x64 computer.
+// /
+// / DEPENDENCY REQUIREMENTS ...
+// / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia,
+// / Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, Rar,
+// / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
+// /
+// / <3 Open-Source
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / The version of this HRConvert2 installation.
+$Version = 'v3.4.3';
+// / -----------------------------------------------------------------------------------

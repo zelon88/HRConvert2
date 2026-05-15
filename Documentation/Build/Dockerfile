@@ -1,6 +1,6 @@
 # -----------------------------------------------------------------------------------
 # COPYRIGHT INFORMATION ...
-# HRConvert2, Copyright on 6/9/2024 by Justin Grimes, www.github.com/zelon88
+# HRConvert2, Copyright on 5/13/2026 by Justin Grimes, www.github.com/zelon88
 
 # LICENSE INFORMATION ...
 # This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@
 # on a server for users of any web browser without authentication.
 
 # FILE INFORMATION ...
-# v3.3.7.
+# v3.4.3.
 # This file contains the Docker build file for the project.
 # Build this with...
 #   docker build -t HRConvert2 .
@@ -23,9 +23,9 @@
 # This application will run on just about any x86 or x64 computer.
 
 # DEPENDENCY REQUIREMENTS ...
-# This application requires Debian Linux (w/3rd Party audio license),
-# Apache 2.4, PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract, Rar, Unrar, Unzip,
-# 7zipper, FFMPEG, PDFTOTEXT, Dia, PopplerUtils, MeshLab, Mkisofs & ImageMagick.
+# This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia,
+# Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, Rar,
+# Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
 
 # <3 Open-Source
 # -----------------------------------------------------------------------------------
@@ -37,7 +37,7 @@
 #   docker run -d -p 8080:80 -p 8443:443 hrconvert2
 
 # Use the official PHP parent image.
-FROM php:8.1-apache
+FROM php:8.3-apache
 
 # Create required directories.
 RUN mkdir /DATA && \
@@ -75,7 +75,7 @@ RUN apt-get install -y libzip-dev
 RUN docker-php-ext-install gd zip
 RUN apt-get install -y libreoffice-common default-jre libreoffice-java-common poppler-utils
 RUN apt-get install -y clamav unoconv p7zip-full meshlab dia pandoc python3 zip unzip
-RUN apt-get install -y xpdf mkisofs imagemagick meshlab tesseract-ocr tar
+RUN apt-get install -y xpdf mkisofs imagemagick meshlab tesseract-ocr tar libxps-utils xvfb
 ## arm64 rar install hack (rar CLI only available for x86/x64 from rar labs)
 RUN /bin/bash HRConvert2/Documentation/Build/ffmpeg-build2.sh --build --enable-gpl-and-non-free
 RUN rm -r packages

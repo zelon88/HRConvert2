@@ -319,7 +319,7 @@ fi
 ##
 
 if build "giflib" "5.2.1"; then
-  download "https://netactuate.dl.sourceforge.net/project/giflib/giflib-$CURRENT_PACKAGE_VERSION.tar.gz"
+  download "https://netactuate.dl.sourceforge.net/project/giflib/giflib-5.x/giflib-5.2.1.tar.gz"
   if [[ "$OSTYPE" == "darwin"* ]]; then
     download "https://sourceforge.net/p/giflib/bugs/_discuss/thread/4e811ad29b/c323/attachment/Makefile.patch"
     execute patch -p0 --forward "${PACKAGES}/giflib-$CURRENT_PACKAGE_VERSION/Makefile" "${PACKAGES}/Makefile.patch" || true

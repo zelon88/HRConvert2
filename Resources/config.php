@@ -169,7 +169,7 @@ $ServerRootDir = '/var/www/html';
 // /   Do not include a trailing slash.
 // /   Do not use a path with whitespace.
 // /   Default is /DATA/HRConvert2.
-$ConvertLoc = '/path/to/convertloc';
+$ConvertLoc = '/DATA/HRConvert2';
 // /  --Log Storage Directory--
 // /   This is where permanent Log files are stored.
 // /   Do not include a trailing slash.

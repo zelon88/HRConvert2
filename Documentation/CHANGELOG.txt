@@ -28,6 +28,21 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
 
 
 --------------------
+COMMIT 5/17/2026
+v3.4.4 - Preparing for Docker update. Fork dependency Unoconv, update code to Python 3.14+.
+
+-v.3.4.4.
+-Preparing for Docker update.
+-I keep finding bugs when building the Docker version.
+-Discover that Unoconv is not compatible with Python 3.14+.
+  -Fork the unoconv repo to https://github.com/zelon88/unoconv.
+  -Modify the unoconv file to make it compatible with latest versions of Python.
+    -Remove setuptools LooseVersion calls that were causing errors.
+    -Now Unoconv will not detect Office versions older than 3.3, but those are technically unsupported in v0.8 anyway.
+-Include the "Patched" version of unoconv and a config entry on whether to use it or the apt version.
+
+
+--------------------
 COMMIT 5/12/2026
 v3.4.3 - Bump JQuery to v4.0.0. Update GUI. Update documentation.
 

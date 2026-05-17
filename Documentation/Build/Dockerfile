@@ -1,6 +1,6 @@
 # -----------------------------------------------------------------------------------
 # COPYRIGHT INFORMATION ...
-# HRConvert2, Copyright on 5/13/2026 by Justin Grimes, www.github.com/zelon88
+# HRConvert2, Copyright on 5/17/2026 by Justin Grimes, www.github.com/zelon88
 
 # LICENSE INFORMATION ...
 # This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@
 # on a server for users of any web browser without authentication.
 
 # FILE INFORMATION ...
-# v3.4.3.
+# v3.4.4.
 # This file contains the Docker build file for the project.
 # Build this with...
 #   docker build -t HRConvert2 .
@@ -43,15 +43,15 @@ FROM php:8.3-apache
 RUN mkdir /DATA && \
   mkdir /DATA/HRConvert2
 
-# Set the working directory in the container.
-WORKDIR /var/www/html/HRProprietary
-
 # Create & process a debian.sources file.
-RUN rm -vf /var/lib/apt/lists/*
+#RUN rm -vf /var/lib/apt/lists/*
 RUN apt-get update
 
 # Install git.
 RUN apt-get install -y git sed
+
+# Set the working directory in the container.
+WORKDIR /var/www/html/HRProprietary
 
 # Download the latest HRConvert2 source code from the official repository.
 RUN git clone https://github.com/zelon88/HRConvert2
@@ -69,18 +69,27 @@ RUN apt-get update
 
 # Install dependencies.
 #RUN apt-get upgrade
-RUN apt-get install -y zlib1g-dev
+RUN apt-get install -y --allow-downgrades zlib1g=1:1.2.13.dfsg-1 zlib1g-dev=1:1.2.13.dfsg-1
 RUN apt-get install -y libpng-dev
 RUN apt-get install -y libzip-dev
-RUN docker-php-ext-install gd zip
-RUN apt-get install -y libreoffice-common default-jre libreoffice-java-common poppler-utils
-RUN apt-get install -y clamav unoconv p7zip-full meshlab dia pandoc python3 zip unzip
-RUN apt-get install -y xpdf mkisofs imagemagick meshlab tesseract-ocr tar libxps-utils xvfb
-## arm64 rar install hack (rar CLI only available for x86/x64 from rar labs)
+RUN apt-get install -y libreoffice-common
+RUN apt --fix-broken install
+RUN apt-get install -y libreoffice-java-common
+RUN apt-get install -y poppler-utils
+RUN apt-get install -y clamav unoconv p7zip-full 
+RUN apt-get install -y dia pandoc python3 zip unzip
+RUN apt-get install -y xpdf mkisofs imagemagick
+RUN apt-get install -y --allow-downgrades libx11-6=2:1.8.4-2+deb12u2
+RUN apt-get install -y libgl1-mesa-glx 
+RUN apt-get install -y xvfb
+RUN apt-get install -y meshlab
+RUN apt-get install -y tesseract-ocr tar libgxps-utils
 RUN /bin/bash HRConvert2/Documentation/Build/ffmpeg-build2.sh --build --enable-gpl-and-non-free
+RUN docker-php-ext-install gd zip
 RUN rm -r packages
 RUN rm -r workspace
 
+## arm64 rar install hack (rar CLI only available for x86/x64 from rar labs)
 RUN DPKG_ARCH="$(dpkg --print-architecture)"; \
     if [ "${DPKG_ARCH}" = "amd64" ]; then \
         apt-get install -y rar; \
@@ -117,4 +126,4 @@ EXPOSE 80
 EXPOSE 443
 
 # Start Apache & Unoconv when the container runs.
-CMD ["sh", "-c", "apache2-foreground && python3 /usr/bin/unoconv -l"]
+CMD ["sh", "-c", "apache2-foreground && python3 /var/www/HRProprietary/HRConvert2/Resources/Unoconv/unoconv -l"]

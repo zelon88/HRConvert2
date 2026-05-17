@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 5/12/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 5/17/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.4.3.
+// / v3.4.4.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -169,7 +169,7 @@ $ServerRootDir = '/var/www/html';
 // /   Do not include a trailing slash.
 // /   Do not use a path with whitespace.
 // /   Default is /DATA/HRConvert2.
-$ConvertLoc = '/DATA/HRConvert2';
+$ConvertLoc = '/var/www/ConvertLoc';
 // /  --Log Storage Directory--
 // /   This is where permanent Log files are stored.
 // /   Do not include a trailing slash.
@@ -310,8 +310,8 @@ $SpinnerStyle = 6;
 $SpinnerColor = $ButtonStyle;
 // /  --Show Full GUI--
 // /   Set whether or not to display a full GUI by default.
-// /   If this is set to TRUE a full GUI with text will be displayed.
-// /   If this is set to FALSE a minimal GUI with only required elements will be displayed.
+// /   If set to TRUE a full GUI with text will be displayed.
+// /   If set to FALSE a minimal GUI with only required elements will be displayed.
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
 $ShowGUI = TRUE;
@@ -351,6 +351,15 @@ $RetryCount = 5;
 // /   Do not set this timer longer than the Execution Time specified in php.ini.
 // /   Default is 5.
 $DocumentEngineSleepTimer = 5;
+// / --Substitute Patched Conversion Engine--
+// /   The developer of HRConvert2 maintains an alternative fork of the "Unoconv" package.
+// /   HRConvert2 can use the included copy of Unoconv, or the system copy of Unoconv.
+// /   If your system uses Python 3.12 or later, set this to TRUE.
+// /   If your system uses Python 3.11 or earlier, this can be set to either TRUE or FALSE.
+// /   If set to TRUE, the included "zelon88 patched" version of Unoconv will be used for document conversions.
+// /   If set to FALSE, the system version of Unoconv will be used for document conversins.
+// /   Defai;t is TRUE.
+$UsePatchedDocumentEngine = TRUE;
 // / ------------------------------
 
 // / ------------------------------

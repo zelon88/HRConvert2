@@ -28,6 +28,25 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
 
 
 --------------------
+COMMIT 5/18/2026
+v3.4.5 - Preparing for Docker update.
+
+-v3.4.5.
+-Working dilligently on the Docker build process update.
+-Added entrypoint.sh to contain runtime code.
+-Take over maintanence of Unoconv.
+  -Now HRConvert2 bundles it's own fork of Unoconv.
+  -Add option called $UsePatchedDocumentEngine to config.php to specify which Unoconv to use.
+-Update convertCore.php to specifically call unoconv with verbose and profile path arguments.
+  -Set profile path to $HomeLoc which should be /var/www.
+  -Explicitly define which Unoconv to use.
+-Update docker build process.
+  -Adjust dependencies to optimize compatibility.
+  -Update url in ffmpeg build scripts.
+  -Add file headers to ffmpeg build scripts.
+  -Update Docker PHP version to php 8.5.
+
+--------------------
 COMMIT 5/17/2026
 v3.4.4 - Preparing for Docker update. Fork dependency Unoconv, update code to Python 3.14+.
 

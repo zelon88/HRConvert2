@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 5/17/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 5/18/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.4.4.
+// / v3.4.5.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -785,7 +785,7 @@ function cleanConvertLoc() {
 // / A function to verify that the Document Conversion Engine is installed & running.
 function verifyDocumentConversionEngine() {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $ApacheUser, $DocumentEngineSleepTimer, $PathToUnoconv;
+  global $Verbose, $Lol, $Lolol, $ApacheUser, $DocumentEngineSleepTimer, $PathToUnoconv, $HomeLoc;
   $DocEnginePID = 0;
   $docEnginePIDCheck = $docEngineUserCheck = $DocumentEngineStarted = $installCheck = $okToStart = FALSE;
   $returnData = $docEngineUser = '';
@@ -819,7 +819,7 @@ function verifyDocumentConversionEngine() {
     if ($okToStart) { 
       // / Try to start the Document Conversion Engine.
       if ($Verbose) logEntry('Starting the Document Conversion Engine.');
-      $returnData = exec('python3 '.$PathToUnoconv.' -l > /dev/null 2>&1 &');
+      $returnData = exec('python3 '.$PathToUnoconv.' -l --verbose --user-profile='.$HomeLoc.' > /dev/null 2>&1 &');
       sleep($DocumentEngineSleepTimer);
       if ($Verbose && trim($returnData) !== '') logEntry('The Document Conversion Engine returned the following: '.str_replace($Lol, '', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); } }
   // / Try to determine the PID for soffice.bin using pgrep.
@@ -839,7 +839,7 @@ function verifyDocumentConversionEngine() {
 // / A function to convert document formats.
 function convertDocuments($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $XPSInputArray, $PathToUnoconv;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $XPSInputArray, $PathToUnoconv, $HomeLoc;
   $ConversionSuccess = $ConversionErrors = FALSE;
   $returnData = '';
   $stopper = 0;
@@ -861,7 +861,7 @@ function convertDocuments($pathname, $newPathname, $extension) {
       if ($stopper !== 0) sleep($sleepTime++);
       if (in_array(strtolower($oldExtension), $arrayxpsi)) $returnData = shell_exec('xpstopdf '.$pathname.' '.$newPathname);
       // / Attempt the conversion using Unoconv for all other files.
-      if (!in_array(strtolower($oldExtension), $arrayxpsi)) $returnData = shell_exec('python3 '.$PathToUnoconv.' -o '.$newPathname.' -f '.$extension.' '.$pathname);
+      if (!in_array(strtolower($oldExtension), $arrayxpsi)) $returnData = shell_exec('python3 '.$PathToUnoconv.' --verbose --user-profile='.$HomeLoc.' -o '.$newPathname.' -f '.$extension.' '.$pathname);
       // / Count the number of conversions to avoid infinite loops.
       $stopper++;
       // / Stop attempting the conversion after $StopCounter number of attempts.
@@ -1683,7 +1683,7 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
 // / A function to OCR a selection of files.
 function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   // / Set variables.
-  global $Verbose, $VirusScan, $ConvertTempDir, $ConvertDir, $Lol, $Lolol, $Append, $PathToUnoconv;
+  global $Verbose, $VirusScan, $ConvertTempDir, $ConvertDir, $Lol, $Lolol, $Append, $PathToUnoconv, $HomeLoc;
   $OperationSuccessful = $OperationErrors = $multiple = $virusFound = $skip = $variableIsSanitized = FALSE;
   $clean = $copy = TRUE;
   $returnData = $file = '';
@@ -1789,7 +1789,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
               $OperationErrors = TRUE;
               errorEntry('Could not verify the Document Conversion Engine!', 15007, FALSE); }
             // / Perform the conversion using Unoconv.
-            $returnData = shell_exec('python3 '.$PathToUnoconv.' -o '.$newPathname.' -f pdf '.$pathname);
+            $returnData = shell_exec('python3 '.$PathToUnoconv.' --verbose --user-profile='.$HomeLoc.' -o '.$newPathname.' -f pdf '.$pathname);
             // / Log the output of the operation to the logfile, if it is not blank.
             if ($Verbose && trim($returnData) !== '') logEntry('The converter (U-1) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); } }
         // / Code to convert an image to a PDF.
@@ -1809,7 +1809,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
               errorEntry('Could not verify the Document Conversion Engine!', 15008, FALSE); }
             if ($Verbose) logEntry('Performing OCR intermediate operation using method 0.');
             // / Perform the conversion using Unoconv.
-            $returnData = shell_exec('python3 '.$PathToUnoconv.' -o '.$pathnameTEMP3.' -f pdf '.$pathname);
+            $returnData = shell_exec('python3 '.$PathToUnoconv.' --verbose --user-profile='.$HomeLoc.' -o '.$pathnameTEMP3.' -f pdf '.$pathname);
             // / Log the output of the operation to the logfile, if it is not blank.
                   if ($Verbose && trim($returnData) !== '') logEntry('The converter (U-2) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
             // / Perform the conversion using PDFTOTEXT.
@@ -1833,7 +1833,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
             $OperationErrors = TRUE;
             errorEntry('Could not verify the Document Conversion Engine!', 15010, FALSE); }
         // / Perform the conversion using Unoconv.
-        $returnData = shell_exec('python3 '.$PathToUnoconv.' -o '.$newPathname.' -f '.$UserExtension.' '.$pathnameTEMP);
+        $returnData = shell_exec('python3 '.$PathToUnoconv.' --verbose --user-profile='.$HomeLoc.' -o '.$newPathname.' -f '.$UserExtension.' '.$pathnameTEMP);
         // / Log the output of the operation to the logfile, if it is not blank.
         if ($Verbose && trim($returnData) !== '') logEntry('The converter (U-3) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); }
       // / Error handler for if the output file does not exist.

@@ -1,6 +1,6 @@
 # -----------------------------------------------------------------------------------
 # COPYRIGHT INFORMATION ...
-# HRConvert2, Copyright on 5/17/2026 by Justin Grimes, www.github.com/zelon88
+# HRConvert2, Copyright on 5/18/2026 by Justin Grimes, www.github.com/zelon88
 
 # LICENSE INFORMATION ...
 # This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@
 # on a server for users of any web browser without authentication.
 
 # FILE INFORMATION ...
-# v3.4.4.
+# v3.4.5.
 # This file contains the Docker build file for the project.
 # Build this with...
 #   docker build -t HRConvert2 .
@@ -37,7 +37,7 @@
 #   docker run -d -p 8080:80 -p 8443:443 hrconvert2
 
 # Use the official PHP parent image.
-FROM php:8.3-apache
+FROM php:8.5-apache
 
 # Create required directories.
 RUN mkdir /DATA && \
@@ -86,6 +86,7 @@ RUN apt-get install -y meshlab
 RUN apt-get install -y tesseract-ocr tar libgxps-utils
 RUN /bin/bash HRConvert2/Documentation/Build/ffmpeg-build2.sh --build --enable-gpl-and-non-free
 RUN docker-php-ext-install gd zip
+RUN apt install -y default-jre
 RUN rm -r packages
 RUN rm -r workspace
 
@@ -116,14 +117,19 @@ RUN cp HRConvert2/index.html /var/www/html/HRProprietary/index.html
 
 # Set permissions for required directories.
 RUN chmod -R 0755 /DATA && \
+  chmod +x /var/www/html/HRProprietary/HRConvert2/Resources/Unoconv/unoconv && \
   chown -R www-data:www-data /DATA && \
-  chmod -R 0755 /var/www/html && \
-  chown -R www-data:www-data /var/www/html
+  chmod -R 0755 /var/www && \
+  chown -R www-data:www-data /var/www
 
-# Expose the ports Apache listens on to the host.
+# Expose the ports Apache & Unoconv listens on to the host.
 # Set these to whatever ports suits your needs.
 EXPOSE 80
 EXPOSE 443
 
-# Start Apache & Unoconv when the container runs.
-CMD ["sh", "-c", "apache2-foreground && python3 /var/www/HRProprietary/HRConvert2/Resources/Unoconv/unoconv -l"]
+# Copy the startup script into the container
+COPY Documentation/Build/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Use ENTRYPOINT instead of CMD to ensure both run reliably
+ENTRYPOINT ["/entrypoint.sh"]

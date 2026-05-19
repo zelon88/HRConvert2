@@ -862,6 +862,7 @@ function convertDocuments($pathname, $newPathname, $extension) {
       if (in_array(strtolower($oldExtension), $arrayxpsi)) $returnData = shell_exec('xpstopdf '.$pathname.' '.$newPathname);
       // / Attempt the conversion using Unoconv for all other files.
       if (!in_array(strtolower($oldExtension), $arrayxpsi)) $returnData = shell_exec('python3 '.$PathToUnoconv.' --verbose --user-profile='.$HomeLoc.' -o '.$newPathname.' -f '.$extension.' '.$pathname);
+      logEntry('python3 '.$PathToUnoconv.' --verbose --user-profile='.$HomeLoc.' -o '.$newPathname.' -f '.$extension.' '.$pathname);
       // / Count the number of conversions to avoid infinite loops.
       $stopper++;
       // / Stop attempting the conversion after $StopCounter number of attempts.

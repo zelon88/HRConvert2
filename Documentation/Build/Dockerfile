@@ -36,7 +36,7 @@
 # Run this with...
 #   docker run -d -p 8080:80 -p 8443:443 hrconvert2
 
-# Use the official PHP parent image.
+# Use the official PHP parent image.aaaaaaaaaaaa
 FROM php:8.5-apache
 
 # Create required directories.
@@ -45,16 +45,16 @@ RUN mkdir /DATA && \
 
 # Create & process a debian.sources file.
 #RUN rm -vf /var/lib/apt/lists/*
-RUN apt-get update
+RUN apt update
 
 # Install git.
-RUN apt-get install -y git sed
+RUN apt install -y git sed
 
 # Set the working directory in the container.
 WORKDIR /var/www/html/HRProprietary
 
 # Download the latest HRConvert2 source code from the official repository.
-RUN git clone https://github.com/zelon88/HRConvert2
+RUN git clone http://github.com/zelon88/HRConvert2
 
 # Add non-free repos to software sources. Required for rar support.
 # There are two options for accomplishing this. 
@@ -65,38 +65,41 @@ RUN cp HRConvert2/Documentation/Build/debian.sources /etc/apt/sources.list.d/deb
 #RUN sed -i -e's/ main/ main contrib non-free/g' /etc/apt/sources.list.d/debian.sources
 
 # Re-process the updated debian.sources file.
-RUN apt-get update
+RUN apt update
 
 # Install dependencies.
-#RUN apt-get upgrade
-RUN apt-get install -y --allow-downgrades zlib1g=1:1.2.13.dfsg-1 zlib1g-dev=1:1.2.13.dfsg-1
-RUN apt-get install -y libpng-dev
-RUN apt-get install -y libzip-dev
-RUN apt-get install -y libreoffice-common
+#RUN apt upgrade
+RUN apt install -y --allow-downgrades zlib1g=1:1.2.13.dfsg-1 zlib1g-dev=1:1.2.13.dfsg-1
+RUN apt install -y libpng-dev
+RUN apt install -y libzip-dev
+RUN apt install -y libreoffice-common
 RUN apt --fix-broken install
-RUN apt-get install -y libreoffice-java-common
-RUN apt-get install -y poppler-utils
-RUN apt-get install -y clamav unoconv p7zip-full 
-RUN apt-get install -y dia pandoc python3 zip unzip
-RUN apt-get install -y xpdf mkisofs imagemagick
-RUN apt-get install -y --allow-downgrades libx11-6=2:1.8.4-2+deb12u2
-RUN apt-get install -y libgl1-mesa-glx 
-RUN apt-get install -y xvfb
-RUN apt-get install -y meshlab
-RUN apt-get install -y tesseract-ocr tar libgxps-utils
+RUN apt install -y libreoffice-java-common
+RUN apt install -y poppler-utils
+RUN apt install -y clamav unoconv p7zip-full 
+RUN apt install -y dia pandoc python3 zip unzip
+RUN apt install -y xpdf mkisofs imagemagick
+RUN apt install -y --allow-downgrades libx11-6=2:1.8.4-2+deb12u2
+RUN apt install -y libgl1-mesa-glx 
+RUN apt install -y xvfb
+RUN apt install -y meshlab
+RUN apt install -y tesseract-ocr tar libgxps-utils
 RUN /bin/bash HRConvert2/Documentation/Build/ffmpeg-build2.sh --build --enable-gpl-and-non-free
 RUN docker-php-ext-install gd zip
 RUN apt install -y default-jre
+# I understand that the following line will probably uninstall some previous version of LibreOffice, 
+#  but this seems to be the only way to get soffice.bin to work. I can't explain it.
+RUN apt install -y libreoffice
 RUN rm -r packages
 RUN rm -r workspace
 
 ## arm64 rar install hack (rar CLI only available for x86/x64 from rar labs)
 RUN DPKG_ARCH="$(dpkg --print-architecture)"; \
     if [ "${DPKG_ARCH}" = "amd64" ]; then \
-        apt-get install -y rar; \
+        apt install -y rar; \
     else \
         dpkg --add-architecture i386 && \
-        apt-get install qemu-user-static libc6-i386-cross libstdc++6-i386-cross wget -y && \
+        apt install qemu-user-static libc6-i386-cross libstdc++6-i386-cross wget -y && \
         cp /usr/i686-linux-gnu/lib/libm.so.6 /lib && \
         cp /usr/i686-linux-gnu/lib/libc.so.6 /lib && \
         cp /usr/i686-linux-gnu/lib/libpthread.so.0 /lib && \
@@ -131,5 +134,6 @@ EXPOSE 443
 COPY Documentation/Build/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Use ENTRYPOINT instead of CMD to ensure both run reliably
+# Start Apache & Unoconv when the container runs.
+#CMD ["sh", "-c", "apache2-foreground"]
 ENTRYPOINT ["/entrypoint.sh"]

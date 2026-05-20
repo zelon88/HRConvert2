@@ -28,7 +28,7 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
 
 
 --------------------
-COMMIT 5/18/2026
+COMMIT 5/19/2026
 v3.4.6 - Improve sanitization. Harden system calls.
 
 -v3.4.6.

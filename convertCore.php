@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 5/18/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 5/19/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.4.5.
+// / v3.4.6.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -65,8 +65,8 @@ function verifyTime() {
 // / This function will replace whitespace with the underscore character.
 // / Set $strict to TRUE to also filter out backslash characters as well. Example:  /
 function sanitizeString($Variable, $strict) {
-  if ($strict) $Variable = htmlentities(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split('|\\~#[](){};:$!#^&%@>*<"\'/`'.chr(9).chr(10)), '', $Variable))))), ENT_QUOTES, 'UTF-8');
-  if (!$strict) $Variable = htmlentities(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split('|\\[](){};"\''.'`'.chr(9).chr(10)), '', $Variable))))), ENT_QUOTES, 'UTF-8');
+  if ($strict) $Variable = htmlentities(trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split('|\\~#[](){};:$!#^&%@>*<"\'/`'.chr(9).chr(10).chr(13).chr(0)), '', $Variable))))), '-'), ENT_QUOTES, 'UTF-8');
+  if (!$strict) $Variable = htmlentities(trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split('|\\[](){};"\''.'`'.chr(9).chr(10).chr(13).chr(0)), '', $Variable))))), '-'), ENT_QUOTES, 'UTF-8');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $strict = NULL;
   unset($strict);
@@ -459,7 +459,7 @@ function verifyGlobals() {
   global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine;
   // / Application related variables.
   putenv('HOME='.$HomeLoc);
-  $HRConvertVersion = 'v3.4.5';
+  $HRConvertVersion = 'v3.4.6';
   $GlobalsAreVerified = FALSE;
   $CoreLoaded = TRUE;
   $SleepTimer = 0;
@@ -862,7 +862,6 @@ function convertDocuments($pathname, $newPathname, $extension) {
       if (in_array(strtolower($oldExtension), $arrayxpsi)) $returnData = shell_exec('xpstopdf '.$pathname.' '.$newPathname);
       // / Attempt the conversion using Unoconv for all other files.
       if (!in_array(strtolower($oldExtension), $arrayxpsi)) $returnData = shell_exec('python3 '.$PathToUnoconv.' --verbose --user-profile='.$HomeLoc.' -o '.$newPathname.' -f '.$extension.' '.$pathname);
-      logEntry('python3 '.$PathToUnoconv.' --verbose --user-profile='.$HomeLoc.' -o '.$newPathname.' -f '.$extension.' '.$pathname);
       // / Count the number of conversions to avoid infinite loops.
       $stopper++;
       // / Stop attempting the conversion after $StopCounter number of attempts.
@@ -1133,15 +1132,12 @@ function convertArchives($pathname, $newPathname, $extension) {
   // / Create a folder to contain extracted files.
   @mkdir($safedir2, $PermissionLevels);
   if (!is_dir($safedir2)) $ConversionErrors = TRUE;
-  // / Check if output files already exist & delete them if they do.
-  if (file_exists($safedir3)) @unlink($safedir3);
-  if (file_exists($safedir4)) @unlink($safedir4);
-  if ($Verbose) logEntry('Extracting file '.$pathname,' to '.$safedir2.'.');
   // / Code to Extract the selected archive.
   // / Currently only 7z is used, but this code exists to give flexibility.
   // / At one time I tried using zip for zip, rar for rar, ect.
   // / I determined that 7z was the most reliable in all cases.
   // / However that may some day change, so the code exists to allow future granularity.
+  if ($Verbose) logEntry('Extracting file '.$pathname,' to '.$safedir2.'.');
   if (in_array(strtolower($oldExtension), $arrayzipo)) $returnData = shell_exec('7z x -aoa '.$pathname.' -o'.$safedir2);
   if (in_array(strtolower($oldExtension), $array7zo)) $returnData = shell_exec('7z x -aoa '.$pathname.' -o'.$safedir2);
   if (in_array(strtolower($oldExtension), $array7zo2)) $returnData = shell_exec('7z x -y '.$pathname.' -o'.$safedir2);
@@ -1296,13 +1292,15 @@ function syncLocations() {
 function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) {
   global $DangerousFiles, $ConvertDir, $ConvertTempDir, $Allowed, $Verbose;
   $FileIsVerified = $Pathname = $OldPathname = $NewPathname = $variableIsSanitized = FALSE;
+  // / If the $UserFilename is blank then use the original filename instead.
+  $OldExtension = getExtension($file);
+  if ($UserFilename === '') $UserFilename = trim(str_replace('.'.$OldExtension, '', $file), '.');
   // / Check to make sure all iteration specific required variables are properly sanitized.
   list ($file, $variableIsSanitized) = sanitize($file, FALSE);
   list ($Pathname, $variableIsSanitized) = sanitize($ConvertTempDir.$file, FALSE);
   list ($OldPathname, $variableIsSanitized) = sanitize($ConvertDir.$file, FALSE);
-  $OldExtension = getExtension($Pathname);
   // / Check if the selected file is safe to handle.
-  if (in_array(strtolower($OldExtension), $Allowed) && !in_array(strtolower($OldExtension), $DangerousFiles) && $file !== '.' && $file !== '..' && $file !== 'index.html') $FileIsVerified = TRUE;
+  if (in_array(strtolower($UserExtension), $Allowed) or $UserExtension == '') if (in_array(strtolower($OldExtension), $Allowed) && !in_array(strtolower($OldExtension), $DangerousFiles) && $file !== '.' && $file !== '..' && $file !== 'index.html') $FileIsVerified = TRUE;
   if (!$FileIsVerified) errorEntry('The file '.$file.' failed first stage validation!', 14000, TRUE);
   if ($FileIsVerified) {
     if ($Verbose && file_exists($Pathname) && $clean) logEntry('Deleting stale file '.$Pathname.'.');
@@ -1316,10 +1314,11 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
     // / Check to make sure the temporary file was created.
     if (!$skip) if (!file_exists($Pathname)) errorEntry('The file '.$Pathname.' failed second stage validation!', 14002, TRUE);
     if (file_exists($Pathname)) if ($Verbose  && $copy) logEntry('Copied file '.$file.'.');
-    // / If the $UserFilename & $UserExtension variables are valid we can prepare for a $NewPathfile.
+    // / If the $UserFilename & $UserExtension variables are valid we can prepare for a $NewPathname.
     if ($UserFilename && $UserExtension) {
+      list($UserFilename, $variableIsSanitized) = sanitize($UserFilename.'.'.$UserExtension, TRUE);
       // / Define the $NewPathname if required.
-      list ($NewPathname, $variableIsSanitized) = sanitize($ConvertDir.$UserFilename.'.'.$UserExtension, FALSE);
+      list ($NewPathname, $variableIsSanitized) = sanitize($ConvertDir.$UserFilename, FALSE);
       // / Make sure the $NewPathname is not a dangerous file.
       if (in_array(strtolower($UserExtension), $DangerousFiles) or !in_array(strtolower($UserExtension), $Allowed)) errorEntry('The file '.$file.' failed third stage validation!', 14003, TRUE);
       if ($Verbose && file_exists($NewPathname) && $clean) logEntry('Deleting stale file '.$Pathname.'.');
@@ -1330,7 +1329,7 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $file = $variableIsSanitized = NULL;
   unset($file, $variableIsSanitized);
-  return array($FileIsVerified, $Pathname, $OldPathname, $OldExtension, $NewPathname); }
+  return array($FileIsVerified, $Pathname, $OldPathname, $OldExtension, $NewPathname, $UserFilename); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1464,7 +1463,7 @@ function downloadFiles($Download) {
       errorEntry('Unsupported file format, '.$f0.'!', 3004, FALSE);
       continue; }
     // / Make sure all iteration specific required variables are properly sanitized.
-    list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname) = verifyFile($file, FALSE, FALSE, $clean, $copy, $skip);
+    list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname, $UserFilename) = verifyFile($file, FALSE, FALSE, $clean, $copy, $skip);
     if (!$fileIsVerified) {
       $ArchiveErrors = TRUE;
       errorEntry('Could not verify the input file.', 3001, FALSE);
@@ -1532,7 +1531,7 @@ function deleteFiles($FilesToDelete) {
 // / A function to archive a selection of files.
 function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
   // / Set variables.
-  global $Verbose, $VirusScan, $ConvertTempDir, $Lol, $Lolol, $RARArchiveMethod;
+  global $Verbose, $VirusScan, $ConvertTempDir, $Lol, $Lolol, $RARArchiveMethod, $Lol;
   $ArchiveComplete = $ArchiveErrors = $virusFound = $skip = $variableIsSanitized = FALSE;
   $clean = $copy = TRUE;
   $returnData = $file = '';
@@ -1556,7 +1555,7 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
     if (count($FilesToArchive) > 1) $clean = FALSE; $copy = TRUE;
     if ($Verbose) logEntry('User selected to Archive file '.$file.'.');
     // / Verify the file before performing any operations on it.
-    list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname) = verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip);
+    list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname, $UserFilename) = verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip);
     if (!$fileIsVerified) {
       $ArchiveErrors = TRUE;
       errorEntry('Could not verify the input file.', 4001, FALSE);
@@ -1588,6 +1587,7 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
       errorEntry('Could not archive file '.$pathname.' to '.$newPathname.'!', 4004, FALSE); }
     else {
       $ArchiveComplete = TRUE;
+      print ($UserFilename.$Lol);
       if ($Verbose) logEntry('Archived file '.$pathname.' to '.$newPathname.'.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $file = $rararr = $ziparr = $tararr = $isoarr = $pathname = $userFileName = $oldPathname = $newPathname = $scanComplete = $virusFound = $returnData = $variableIsSanitized = $fileIsVerified = $oldExtension = $clean = $copy = $skip = $variableIsSanitized = $rarMethod = NULL;
@@ -1599,7 +1599,7 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
 // / A function to convert a selection of files.
 function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, $Width, $Rotate, $Bitrate) {
   // / Set variables.
-  global $Verbose, $VirusScan, $SpreadsheetArray, $PresentationInputArray, $XPSInputArray, $DocumentArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $SubtitleInputArray, $StreamArray, $MediaInputArray, $ArchiveArray;
+  global $Verbose, $VirusScan, $SpreadsheetArray, $PresentationInputArray, $XPSInputArray, $DocumentArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $SubtitleInputArray, $StreamArray, $MediaInputArray, $ArchiveArray, $Lol;
   $MainConversionSuccess = $MainConversionErrors = $virusFound = $skip = $isExtensionSupported = $fileIsVerified = $variableIsSanitized = FALSE;
   $clean = $copy = TRUE;
   $docarray =  array_merge($DocumentArray, $SpreadsheetArray, $PresentationInputArray, $XPSInputArray);
@@ -1638,7 +1638,7 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
     if (in_array($UserExtension, $docarray)) $clean = FALSE;
     if ($Verbose) logEntry('User selected to Convert file '.$file.'.');
     // / Verify the file before performing any operations on it.
-    list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname) = verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip);
+    list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname, $UserFilename) = verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip);
     if (!$fileIsVerified) {
       $MainConversionErrors = TRUE;
       errorEntry('Could not verify the input file.', 5001, FALSE);
@@ -1658,6 +1658,7 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
         if (in_array(strtolower($UserExtension), $arrArray)) {
           $isExtensionSupported = TRUE;
           list ($ConversionSuccess, $ConversionErrors) = convert($arrKey, $pathname, $newPathname, $UserExtension, $Height, $Width, $Rotate, $Bitrate);
+          if ($ConversionSuccess) print($UserFilename.$Lol);
           if (!$ConversionSuccess) {
             $MainConversionSuccess = FALSE;
             errorEntry('Could not convert the selected '.$arrKey.'!', 5004, FALSE); }
@@ -1684,7 +1685,7 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
 // / A function to OCR a selection of files.
 function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   // / Set variables.
-  global $Verbose, $VirusScan, $ConvertTempDir, $ConvertDir, $Lol, $Lolol, $Append, $PathToUnoconv, $HomeLoc;
+  global $Verbose, $VirusScan, $ConvertTempDir, $ConvertDir, $Lol, $Lolol, $Append, $PathToUnoconv, $HomeLoc, $Lol;
   $OperationSuccessful = $OperationErrors = $multiple = $virusFound = $skip = $variableIsSanitized = FALSE;
   $clean = $copy = TRUE;
   $returnData = $file = '';
@@ -1705,7 +1706,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
       continue; }
     if ($Verbose) logEntry('User selected to perform OCR on file '.$file.'.');
     // / Verify the file before performing any operations on it.
-    list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname) = verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip);
+    list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname, $UserFilename) = verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip);
     $pathnameTEMP = str_replace('..', '', str_replace('.'.$oldExtension, '.txt' , $pathname));
     if (!$fileIsVerified) {
       $MainConversionErrors = TRUE;
@@ -1838,7 +1839,9 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
         // / Log the output of the operation to the logfile, if it is not blank.
         if ($Verbose && trim($returnData) !== '') logEntry('The converter (U-3) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); }
       // / Error handler for if the output file does not exist.
-      if (file_exists($newPathname)) $loopCheck = TRUE;
+      if (file_exists($newPathname)) {
+        $loopCheck = TRUE;
+        print($UserFilename.$Lol); }
       else if ($Verbose) errorEntry('Could not create a file at '.$pathnameTEMP.'!', 15011, FALSE); } }
   // / Error handler for if any failures happened during file loops.
   if ($loopCheck) $OperationSuccessful = TRUE;
@@ -1931,7 +1934,7 @@ function userClamScan($FilesToScan) {
       continue; }
     if ($Verbose) logEntry('User selected to perform a Clam Scan on file '.$file.'.');
     // / Verify the file before performing any operations on it.
-    list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname) = verifyFile($file, $userFilename, $userExtension, $clean, $copy, $skip);
+    list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname, $UserFilename) = verifyFile($file, $userFilename, $userExtension, $clean, $copy, $skip);
     if (!$fileIsVerified) {
       $OperationErrors = TRUE;
       errorEntry('Could not verify the input file.', 17001, FALSE);
@@ -2015,7 +2018,7 @@ function userScanCoreScan($FilesToScan) {
       continue; }
     if ($Verbose) logEntry('User selected to perform a ScanCore Scan on file '.$file.'.');
     // / Verify the file before performing any operations on it.
-    list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname) = verifyFile($file, $userFilename, $userExtension, $clean, $copy, $skip);
+    list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname, $UserFilename) = verifyFile($file, $userFilename, $userExtension, $clean, $copy, $skip);
     if (!$fileIsVerified) {
       $OperationErrors = TRUE;
       errorEntry('Could not verify the input file.', 19001, FALSE);
@@ -2111,7 +2114,7 @@ function verifyConsolidatedLogFile() {
 // / Type can be either 'clamav', 'scancore', or 'all'.
 function consolidateLogs($type, $UserClamLogFile, $UserScanCoreLogFile) {
   // / Set variables.
-  global $Verbose, $Lol, $Append, $ConsolidatedLogFile, $UserClamLogFile, $UserScanCoreLogFile;
+  global $Verbose, $Lol, $Append, $ConsolidatedLogFile, $UserClamLogFile, $UserScanCoreLogFile, $ConsolidatedLogFile, $ConsolidatedLogFileName;
   $ConsolidatedLogsExist = $ConsolidatedLogErrors = $logWrittenA = $logWrittenB = $logWrittenC = $logWrittenD = $logWrittenE = FALSE;
   $userClamLogData = $userScanCoreData = $consolidatedLogData = $txt = $userScanCoreLogData = '';
   $spacer = '----------';
@@ -2140,7 +2143,7 @@ function consolidateLogs($type, $UserClamLogFile, $UserScanCoreLogFile) {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $type = $txt = $spacer = $logWrittenA = $logWrittenB = $logWrittenC = $logWrittenD = $logWrittenE = $userClamLogData = $userScanCoreLogData = NULL;
   unset($type, $txt, $spacer, $logWrittenA, $logWrittenB, $logWrittenC, $logWrittenD, $logWrittenE, $userClamLogData, $userScanCoreLogData);
-  return array($ConsolidatedLogsExist, $ConsolidatedLogErrors); }
+  return array($ConsolidatedLogsExist, $ConsolidatedLogErrors, $ConsolidatedLogFile, $ConsolidatedLogFileName); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -2148,7 +2151,7 @@ function consolidateLogs($type, $UserClamLogFile, $UserScanCoreLogFile) {
 // / Type can be either 'clamav', 'scancore', or 'all'.
 function userVirusScan($FilesToScan, $type) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $ApplicationName, $UserClamLogFile, $UserScanCoreLogFile;
+  global $Verbose, $Lol, $Lolol, $ApplicationName, $UserClamLogFile, $UserScanCoreLogFile, $ConsolidatedLogFile, $ConsolidatedLogFileName;
   $ScanComplete = $ScanErrors = $UserVirusFound = $scan1Complete = $scan1Errors = $scan2Complete = $scan2Errors = $ConsolidatedLogsExist = $ConsolidatedLogErrors = FALSE;
   $fileToScan = '';
   // / Check that the $type input variable is valid.
@@ -2170,14 +2173,14 @@ function userVirusScan($FilesToScan, $type) {
   // / Check the results of the virus scan for failures or errors.
   list ($ScanComplete, $ScanErrors) = checkUserVirusScanResults($type, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors);
   // / Consolidate the log files created during the scan into the $ConvertTempDir so the user can access them.
-  list ($ConsolidatedLogsExist, $ConsolidatedLogErrors) = consolidateLogs($type, $UserClamLogFile, $UserScanCoreLogFile);
+  list ($ConsolidatedLogsExist, $ConsolidatedLogErrors, $ConsolidatedLogFile, $ConsolidatedLogFileName) = consolidateLogs($type, $UserClamLogFile, $UserScanCoreLogFile);
   // / Verify that all operations are complete.
   if ($ScanErrors or $ConsolidatedLogErrors) $ScanErrors = TRUE;
   if (!$ConsolidatedLogsExist) $ScanComplete = FALSE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $fileToScan = $path = $type = $scan1Complete = $scan1Errors = $scan2Complete = $scan2Errors = NULL;
   unset($fileToScan, $returnData ,$path, $type, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors);
-  return array($ScanComplete, $ScanErrors, $UserVirusFound); }
+  return array($ScanComplete, $ScanErrors, $UserVirusFound, $ConsolidatedLogFile, $ConsolidatedLogFileName); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

@@ -13,6 +13,8 @@
 // /
 // / FILE INFORMATION ...
 // / v3.4.3.
+// / The files in this UI were submitted by Github user hernandito in Issue #85. Thank you!
+// / https://github.com/hernandito
 // / This file contains the dynamic stylesheets for HRConvert2.
 // / This file was created by Github user hernandito as part of his forked repo, available 
 // / at https://github.com/hernandito/HRConvert2/tree/master. Thank you, hernandito!

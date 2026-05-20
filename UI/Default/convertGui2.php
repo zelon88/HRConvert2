@@ -13,6 +13,8 @@
 // /
 // / FILE INFORMATION ...
 // / v3.4.3.
+// / The files in this UI were submitted by Github user hernandito in Issue #85. Thank you!
+// / https://github.com/hernandito
 // / This file contains language specific GUI elements for performing file conversions.
 // / This file was created by Github user hernandito as part of his forked repo, available 
 // / at https://github.com/hernandito/HRConvert2/tree/master. Thank you, hernandito!
@@ -88,7 +90,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
                       download:'<?php echo $ConsolidatedLogFileName; ?>' },
-                    success: function(returnFile) {
+                    success: function(ReturnData) {
                       toggle_visibility('loadingCommandDiv');
                       toggle_visibility('victoryCommandDiv');
                       setTimeout(function() {
@@ -136,7 +138,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('userarchallfilename').value+'.'+extension },
-                    success: function(returnFile) {
+                    success: function(ReturnData) {
                       toggle_visibility('loadingCommandDiv');
                       toggle_visibility('victoryCommandDiv');
                       setTimeout(function() {
@@ -203,7 +205,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                   Token1:'<?php echo $Token1; ?>',
                   Token2:'<?php echo $Token2; ?>',
                   download:'<?php echo $File; ?>' },
-                success: function(returnFile) {
+                success: function(ReturnData) {
                   toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                   toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                   setTimeout(function() {
@@ -399,7 +401,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                         Token1:'<?php echo $Token1; ?>',
                         Token2:'<?php echo $Token2; ?>',
                         download:document.getElementById('userarchfilefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archfileextension<?php echo $ConvertGuiCounter1; ?>').value },
-                      success: function(returnFile) {
+                      success: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         document.getElementById('downloadTarget').href = "<?php echo 'DATA/'.$SesHash3.'/'; ?>"+document.getElementById('userarchfilefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archfileextension<?php echo $ConvertGuiCounter1; ?>').value; 
                         toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
@@ -434,7 +436,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                   Token1:'<?php echo $Token1; ?>',
                   Token2:'<?php echo $Token2; ?>',
                   download:'<?php echo $File; ?>' },
-                success: function(returnFile) {
+                success: function(ReturnData) {
                   toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                   document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text24; ?><i><?php echo $Gui2Text26; ?></i>';
                   document.getElementById('shareclipStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text27; ?><i><?php echo $Gui2Text28; ?></i>';
@@ -458,7 +460,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                   Token1:'<?php echo $Token1; ?>',
                   Token2:'<?php echo $Token2; ?>',
                   download:'<?php echo $File; ?>' },
-                success: function(returnFile) {
+                success: function(ReturnData) {
                   toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                   toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                   setTimeout(function() {
@@ -489,7 +491,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                   Token1:'<?php echo $Token1; ?>',
                   Token2:'<?php echo $Token2; ?>',
                   filesToDelete:'<?php echo $File; ?>' },
-                success: function(returnFile) {
+                success: function(ReturnData) {
                   toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                   location.reload(); },
                 error: function(ReturnData) {
@@ -524,7 +526,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                         Token1:'<?php echo $Token1; ?>',
                         Token2:'<?php echo $Token2; ?>',
                         download:'<?php echo $ConsolidatedLogFileName; ?>' },
-                      success: function(returnFile) {
+                      success: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         setTimeout(function() {
@@ -554,7 +556,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                         Token1:'<?php echo $Token1; ?>',
                         Token2:'<?php echo $Token2; ?>',
                         download:'<?php echo $ConsolidatedLogFileName; ?>' },
-                      success: function(returnFile) {
+                      success: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         setTimeout(function() {
@@ -584,7 +586,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                         Token1:'<?php echo $Token1; ?>',
                         Token2:'<?php echo $Token2; ?>',
                         download:'<?php echo $ConsolidatedLogFileName; ?>' },
-                      success: function(returnFile) {
+                      success: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         setTimeout(function() {
@@ -640,7 +642,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                         Token1:'<?php echo $Token1; ?>',
                         Token2:'<?php echo $Token2; ?>',
                         download:document.getElementById('userpdffilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('pdfextension<?php echo $ConvertGuiCounter1; ?>').value },
-                      success: function(returnFile) {
+                      success: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         setTimeout(function() {
@@ -690,7 +692,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                         Token1:'<?php echo $Token1; ?>',
                         Token2:'<?php echo $Token2; ?>',
                         download:document.getElementById('userarchivefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('archiveextension<?php echo $ConvertGuiCounter1; ?>').value },
-                      success: function(returnFile) {
+                      success: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         setTimeout(function() {
@@ -740,7 +742,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                         Token1:'<?php echo $Token1; ?>',
                         Token2:'<?php echo $Token2; ?>',
                         download:document.getElementById('userdocfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('docextension<?php echo $ConvertGuiCounter1; ?>').value },
-                      success: function(returnFile) {
+                      success: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         setTimeout(function() {
@@ -790,7 +792,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                         Token1:'<?php echo $Token1; ?>',
                         Token2:'<?php echo $Token2; ?>',
                         download:document.getElementById('userspreadfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('spreadextension<?php echo $ConvertGuiCounter1; ?>').value },
-                      success: function(returnFile) {
+                      success: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         setTimeout(function() {
@@ -840,7 +842,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                         Token1:'<?php echo $Token1; ?>',
                         Token2:'<?php echo $Token2; ?>',
                         download:document.getElementById('userxpsfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('xpsextension<?php echo $ConvertGuiCounter1; ?>').value },
-                      success: function(returnFile) {
+                      success: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         setTimeout(function() {
@@ -889,7 +891,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                         Token1:'<?php echo $Token1; ?>',
                         Token2:'<?php echo $Token2; ?>',
                         download:document.getElementById('userpresentationfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('presentationextension<?php echo $ConvertGuiCounter1; ?>').value },
-                      success: function(returnFile) {
+                      success: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         setTimeout(function() {
@@ -941,7 +943,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                         Token1:'<?php echo $Token1; ?>',
                         Token2:'<?php echo $Token2; ?>',
                         download:document.getElementById('useraudiofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('audioextension<?php echo $ConvertGuiCounter1; ?>').value },
-                      success: function(returnFile) {
+                      success: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         setTimeout(function() {
@@ -991,7 +993,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                         Token1:'<?php echo $Token1; ?>',
                         Token2:'<?php echo $Token2; ?>',
                         download:document.getElementById('uservideofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('videoextension<?php echo $ConvertGuiCounter1; ?>').value },
-                      success: function(returnFile) {
+                      success: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         setTimeout(function() {
@@ -1041,7 +1043,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                         Token1:'<?php echo $Token1; ?>',
                         Token2:'<?php echo $Token2; ?>',
                         download:document.getElementById('userstreamfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('streamextension<?php echo $ConvertGuiCounter1; ?>').value },
-                      success: function(returnFile) {
+                      success: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         setTimeout(function() {
@@ -1091,7 +1093,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                         Token1:'<?php echo $Token1; ?>',
                         Token2:'<?php echo $Token2; ?>',
                         download:document.getElementById('usermodelfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('modelextension<?php echo $ConvertGuiCounter1; ?>').value },
-                      success: function(returnFile) {
+                      success: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         setTimeout(function() {
@@ -1142,7 +1144,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                         Token1:'<?php echo $Token1; ?>',
                         Token2:'<?php echo $Token2; ?>',
                         download:document.getElementById('usersubtitlefilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('subtitleextension<?php echo $ConvertGuiCounter1; ?>').value },
-                      success: function(returnFile) {
+                      success: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         setTimeout(function() {
@@ -1192,7 +1194,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                         Token1:'<?php echo $Token1; ?>',
                         Token2:'<?php echo $Token2; ?>',
                         download:document.getElementById('userdrawingfilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('drawingextension<?php echo $ConvertGuiCounter1; ?>').value },
-                      success: function(returnFile) {
+                      success: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         setTimeout(function() {
@@ -1259,7 +1261,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                         Token1:'<?php echo $Token1; ?>',
                         Token2:'<?php echo $Token2; ?>',
                         download:document.getElementById('userphotofilename<?php echo $ConvertGuiCounter1; ?>').value+'.'+document.getElementById('photoextension<?php echo $ConvertGuiCounter1; ?>').value },
-                      success: function(returnFile) {
+                      success: function(ReturnData) {
                         toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                         setTimeout(function() {

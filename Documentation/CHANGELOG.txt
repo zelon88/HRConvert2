@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 5/12/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 5/19/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.4.3.
+v3.4.6.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -26,6 +26,47 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+
+--------------------
+COMMIT 5/18/2026
+v3.4.6 - Improve sanitization. Harden system calls.
+
+-v3.4.6.
+-Improve sanitize() function.
+  -Add chr(13), chr(0) to list of stipped characters.
+  -Trim leading and trailing dashes to prevent argument injection.
+-Improve verifyFile() function.
+  -Add a check to ensure the UserExtension is in the $Allowed extension array.
+  -Handle blank NewFilename and use the original filename.
+    -This makes HRConvert2 much more batch / API friendly.
+      -Try asking your AI agent to review the Documentation and then use the HRConvert2 API to convert batches of files without the UI.
+-Added filename output to relevant operations so the UI can stop returning 404's when conversions fail.
+  -This was started today, but will be finished in a future release, soon. Very soon.
+-Give hernandito proper credit for developing the new default GUI.
+  -Modify file headers of main GUI files to contain a reference to his Github profile.
+  -Add a UI_CREDITS.txt file to the UI giving him credit for his time & effort.
+-I received a pending security advisory which appears to be AI generated claiming that the sanitization routine was faulty allowing code injection.
+  -I had a long conversation with Copilot about the Sanitization routine.
+  -The pending advisory did not contain a proof of concept exploit.
+  -The claims seemed unlikely due to way sanitization is used within the core.
+  -I attempted to replicate the claims and was unable to do so. 
+  -During testing, HRConvert2 v3.4.5 successfully thwarted every code injection attempt. 
+  -I believe that v3.4.3 would also pass the same tests, as the sanitization implementation is essentially unchanged.
+  -Copilot AI and I attempted to hack the code. 
+  -Initially Copilot scoffed at the sanitization routines.
+    -The critisizm I got from Copilot was suspiciously similar to the claims being made in the pending security advisory.
+    -Initially Copilot was convinced that the routine was mortally flawed, and offered examples.
+    -Each example outright failed during testing.
+    -After half a dozen back-and-forth prompts Copilot was unable to gain arbitrary code execution or inject a payload into HRConvert2.
+    -Copilot almost hallucinated several times before admitting that it could not actually accomplish any of the exploits it thought it could.
+    -Copilot did identify that chr(13) and chr(0) were not being stripped, and reccomended stipping them.
+    -The security advisory attempted to exploit the dash character as a leading character in file extensions and file names. 
+    -That is very clever, although I couldn't get a PoC to work.
+    -HRConvert2 passed all tests with leading dashes. 
+    -The core was still hardened to eliminate any risk of leading dash abuse.
+    -I stand by HRConvert2 as a secure product.
+    -I believe that HRConvert2 v3.4.3+ is secure enough for public facing environments when proper network best-practices are used.
+    -I invite anyone to attempt to break the sanitization routine. 
 
 --------------------
 COMMIT 5/18/2026

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 5/19/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 5/20/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.4.6.
+v3.4.7.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -26,6 +26,20 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+
+--------------------
+COMMIT 5/20/2026
+v3.4.7 - Reduce 404 errors, improve user experience.
+
+-v3.4.7.
+-The core now passes the new filename back to the UI.
+  -Previously the UI would try to predict the new filename.
+  -This would often fail, such as when sanitization modified the filename or if the filename was blank.
+  -Now the UI will always get the correct filename and won't redirect users to a 404 page anymore.
+  -If an error occurs and the file cannot be downloaded, errors are displayed via an alert box instead of a 404.
+-The core now properly passes blank filenames and preserves whatever the original filename was.
+-Removed CSS for old IE versions from the Default UI.
+  -Leave them in the Original and Wide UIs for now.
 
 --------------------
 COMMIT 5/19/2026

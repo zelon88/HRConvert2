@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 5/20/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 5/25/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.4.7.
+// / v3.4.8.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -60,22 +60,25 @@ function verifyTime() {
 
 // / -----------------------------------------------------------------------------------
 // / A function to sanitize input strings with varying degrees of tolerance.
-// / Filters a given string of | \ ~ # [ ] ( ) { } ; : $ ! # ^ & % @ > * < " / '
+// / Filters a given string of | \ ~ # [ ] ( ) { } ; : $ ! # ^ & % @ > * < " / ' ` chr(9) chr(10) chr(13) chr(0)
 // / This function will replace any of the above specified charcters with NOTHING. No character at all. An empty string.
 // / This function will replace whitespace with the underscore character.
+// / This function will remove leading and traling dashes.
 // / Set $strict to TRUE to also filter out backslash characters as well. Example:  /
 function sanitizeString($Variable, $strict) {
+  $dangerFiles = array('.js', '.php', '.html', '.css', '.phar', '..', 'index.php', 'index.html');
+  foreach ($dangerFiles as $danFile) $Variable = str_replace($danFile, '', $Variable);
   if ($strict) $Variable = htmlentities(trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split('|\\~#[](){};:$!#^&%@>*<"\'/`'.chr(9).chr(10).chr(13).chr(0)), '', $Variable))))), '-'), ENT_QUOTES, 'UTF-8');
   if (!$strict) $Variable = htmlentities(trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split('|\\[](){};"\''.'`'.chr(9).chr(10).chr(13).chr(0)), '', $Variable))))), '-'), ENT_QUOTES, 'UTF-8');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $strict = NULL;
-  unset($strict);
+  $strict = $dangerFiles = $danFile = NULL;
+  unset($strict, $dangerFiles, $danFile);
   return $Variable; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to sanitize input strings or arrays with varying degrees of tolerance.
-// / Filters a given string of | \ ~ # [ ] ( ) { } ; : $ ! # ^ & % @ > * < " / '
+// / Filters a given string of | \ ~ # [ ] ( ) { } ; : $ ! # ^ & % @ > * < " / ' ` chr(9) chr(10) chr(13) chr(0)
 // / This function will replace any of the above specified charcters with NOTHING. No character at all. An empty string.
 // / This function will replace whitespace with the underscore character.
 // / Set $strict to TRUE to also filter out backslash characters as well. Example:  /
@@ -434,32 +437,13 @@ function verifyLanguage() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to reliably sanitize a path or URL of dangerous strings.
-function securePath($PathToSecure, $DangerArr, $isURL) {
-  // / Set variables.
-  global $DirSep;
-  // / Loop through each dangerous file & remove it from the supplied path.
-  foreach ($DangerArr as $dArr) $PathToSecure = str_replace($dArr, '', $PathToSecure);
-  // / Remove double directory separatorsthat may have been created during the last step.
-  $PathToSecure = str_replace($DirSep.$DirSep, $DirSep, str_replace($DirSep.$DirSep, $DirSep, str_replace('..', '', $PathToSecure)));
-  // / Detect if the path is a URL & remove double directory separators that may exist.
-  if ($isURL) $PathToSecure = str_replace($DirSep, '/', $PathToSecure);
-  // / Rempve double dots that may have been created during the last step.
-  $PathToSecure = str_replace('..', '', $PathToSecure);
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $dArr = $isURL = NULL;
-  unset($dArr, $isURL);
-  return $PathToSecure; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
 // / A function to set the global variables for the session.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
   global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine;
   // / Application related variables.
   putenv('HOME='.$HomeLoc);
-  $HRConvertVersion = 'v3.4.7';
+  $HRConvertVersion = 'v3.4.8';
   $GlobalsAreVerified = FALSE;
   $CoreLoaded = TRUE;
   $SleepTimer = 0;
@@ -484,17 +468,17 @@ function verifyGlobals() {
   $Alert3 = 'Operation Failed!';
   // / Security related variables.
   $DefaultApps = array('.', '..');
-  $DangerousFiles = array('js', 'php', '.html', 'css', 'phar', '.', '..', 'index.php', 'index.html');
+  $DangerousFiles = array('.js', '.php', '.html', '.css', '.phar', '..', 'index.php', 'index.html');
   // / URL related variables.
-  $subDir = securePath(str_replace($ServerRootDir.$DirSep, '', $InstLoc), $DangerousFiles, TRUE);
-  $partURL = securePath($URL.'/'.$subDir, $DangerousFiles, TRUE);
+  $subDir = sanitizeString(str_replace($ServerRootDir.$DirSep, '', $InstLoc), FALSE);
+  $partURL = sanitizeString($URL.'/'.$subDir, FALSE);
   $FullURL = 'http'.$URLEcho.'://'.$partURL;
   // / Directory related variables.
-  $convertDir0 = securePath($ConvertLoc.$DirSep.$SesHash, $DangerousFiles, $DangerousFiles, FALSE);
-  $ConvertDir = securePath($convertDir0.$DirSep.$SesHash2.$DirSep, $DangerousFiles, FALSE);
-  $ConvertTemp = securePath($InstLoc.$DirSep.'DATA', $DangerousFiles, FALSE);
-  $convertTempDir0 = securePath($ConvertTemp.$DirSep.$SesHash, $DangerousFiles, FALSE);
-  $ConvertTempDir = securePath($convertTempDir0.$DirSep.$SesHash2.$DirSep, $DangerousFiles, FALSE);
+  $convertDir0 = sanitizeString($ConvertLoc.$DirSep.$SesHash, FALSE);
+  $ConvertDir = sanitizeString($convertDir0.$DirSep.$SesHash2.$DirSep, FALSE);
+  $ConvertTemp = sanitizeString($InstLoc.$DirSep.'DATA', FALSE);
+  $convertTempDir0 = sanitizeString($ConvertTemp.$DirSep.$SesHash, FALSE);
+  $ConvertTempDir = sanitizeString($convertTempDir0.$DirSep.$SesHash2.$DirSep, FALSE);
   $RequiredDirs = array($HomeLoc, $convertDir0, $ConvertDir, $ConvertTemp, $convertTempDir0, $ConvertTempDir);
   $RequiredIndexes = array($ConvertTemp, $convertTempDir0, $ConvertTempDir);
   $RequiredCleanupFolders = array($InstLoc.$DirSep.'.cache', $InstLoc.$DirSep.'.config', $ProprietaryLoc.$DirSep.'.cache', $ProprietaryLoc.$DirSep.'.config');
@@ -1336,6 +1320,8 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
 // / A function to build the GUI.
 function buildGUI($guiType, $ButtonCode) {
   // / Set variables.
+  // / The variables defined here will be usable in GUI elements, 
+  // / Files like header, footer, styleCore, convertGui1, & convertGui2 have access to these variables.
   global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir;
   $guiUIFile = $GuiUI1File;
   $Files = array();

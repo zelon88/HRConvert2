@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 5/20/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 5/25/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.4.7.
+v3.4.8.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -26,6 +26,24 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+
+--------------------
+COMMIT 5/25/2026
+v3.4.8 - Further harden core. Further expand usage of sanitization.
+
+-v3.4.8.
+-Remove the securePath() function.
+  -It was redundant.
+  -sanitizeString can do the job better.
+-Improve sanitizeString().
+  -Move dangerous files check to sanitizeString().
+  -Hard-coded the dangerarray in-vase the global version was changed.
+-Tested with already uploaded file with hostile name.
+  -Threw error 14002, as expected.
+-Tested with trying to set a file with a hostile name.
+  -The core sanitized the name and processed normally.
+-Tested uploading a file with a hostile name.
+  -The core sanitized the name and processed normally.
 
 --------------------
 COMMIT 5/20/2026

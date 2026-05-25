@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 5/25/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 5/26/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.4.8.
+// / v3.4.9.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -66,10 +66,18 @@ function verifyTime() {
 // / This function will remove leading and traling dashes.
 // / Set $strict to TRUE to also filter out backslash characters as well. Example:  /
 function sanitizeString($Variable, $strict) {
-  $dangerFiles = array('.js', '.php', '.html', '.css', '.phar', '..', 'index.php', 'index.html');
+  // / Set variables.
+  // / Note that this function does not use the global $DangerousFiles. 
+  // / Instead this function defines & destroys it's own array every time it is called.
+  $dangerFiles = array(NULL, '.js', '.php', '.html', '.css', '.phar', '..', 'index.php', 'index.html', '--');
+  // / Check for dangerous files or escape conditions.
   foreach ($dangerFiles as $danFile) $Variable = str_replace($danFile, '', $Variable);
-  if ($strict) $Variable = htmlentities(trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split('|\\~#[](){};:$!#^&%@>*<"\'/`'.chr(9).chr(10).chr(13).chr(0)), '', $Variable))))), '-'), ENT_QUOTES, 'UTF-8');
-  if (!$strict) $Variable = htmlentities(trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split('|\\[](){};"\''.'`'.chr(9).chr(10).chr(13).chr(0)), '', $Variable))))), '-'), ENT_QUOTES, 'UTF-8');
+  if ($strict) $Variable = htmlentities(trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split(',|\\~#[](){};:$!#^&%@>*<"\'/`'.chr(9).chr(10).chr(13).chr(0)), '', $Variable))))), '-'), ENT_QUOTES, 'UTF-8');
+  if (!$strict) $Variable = htmlentities(trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split(',|\\~#[](){};:$!#^&%@>*<"\'`'.chr(9).chr(10).chr(13).chr(0)), '', $Variable))))), '-'), ENT_QUOTES, 'UTF-8');
+  // / Check for dangerous files or escape conditions one more time.
+  foreach ($dangerFiles as $danFile) $Variable = str_replace($danFile, '', $Variable);
+  // / Trim the variable one last time to avoid any crafted leading dashes or directory separators.
+  $Variable = trim(trim(trim(trim($Variable, '-'), '.'), '-'), '.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $strict = $dangerFiles = $danFile = NULL;
   unset($strict, $dangerFiles, $danFile);
@@ -443,7 +451,7 @@ function verifyGlobals() {
   global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine;
   // / Application related variables.
   putenv('HOME='.$HomeLoc);
-  $HRConvertVersion = 'v3.4.8';
+  $HRConvertVersion = 'v3.4.9';
   $GlobalsAreVerified = FALSE;
   $CoreLoaded = TRUE;
   $SleepTimer = 0;
@@ -468,7 +476,7 @@ function verifyGlobals() {
   $Alert3 = 'Operation Failed!';
   // / Security related variables.
   $DefaultApps = array('.', '..');
-  $DangerousFiles = array('.js', '.php', '.html', '.css', '.phar', '..', 'index.php', 'index.html');
+  $DangerousFiles = array('.js', '.php', '.html', '.css', '.phar', '..', 'index.php', 'index.html', '--');
   // / URL related variables.
   $subDir = sanitizeString(str_replace($ServerRootDir.$DirSep, '', $InstLoc), FALSE);
   $partURL = sanitizeString($URL.'/'.$subDir, FALSE);

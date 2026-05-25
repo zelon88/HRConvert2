@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 5/18/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 5/25/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.4.5.
+// / v3.4.8.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -60,7 +60,6 @@ $URL = 'localhost';
 // /   If set to TRUE & --User Virus Scanning-- is set to FALSE any infected file will immediately be deleted upon detection.
 // /   If set to TRUE & --User Virus Scanning-- is set to TRUE incoming file uploads will not be scanned for viruses.
 // /   If set to TRUE & --User Virus Scanning-- is set to FALSE incoming file uploads will be scanned for viruses.
-// /   Regardless of how --User Virus Scanning-- is set, infected files cannot be downloaded, archived, converted, or OCR'd.
 // /   Valid options are TRUE or FALSE.
 // /   Defalt is FALSE.
 $VirusScan = FALSE;
@@ -74,7 +73,6 @@ $VirusScan = FALSE;
 // /   If set to FALSE & --Virus Scanning-- is set to TRUE any infected file will immediately be deleted upon detection.
 // /   If set to TRUE & --Virus Scanning-- is set to TRUE incoming file uploads will not be scanned for viruses.
 // /   If set to FALSE & --Virus Scanning-- is set to TRUE incoming file uploads will be scanned for viruses.
-// /   Regardless of how --User Virus Scanning-- is set, infected files cannot be downloaded, archived, converted, or OCR'd.
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
 $AllowUserVirusScan = TRUE;
@@ -142,39 +140,40 @@ $DeleteDevelopmentDocumentation = FALSE;
 // /   Do not include a trailing slash.
 // /   Do not use a path with whitespace.
 // /   Changing this value is not recommended.
-// /   Default is /var/www
+// /   Default is '/var/www'
 $HomeLoc = '/var/www';
 // /  --Installation Directory--
 // /   Install HRConvert2 files to the following directory.
 // /   Do not include a trailing slash.
 // /   Do not use a path with whitespace.
 // /   Changing this value is not recommended.
-// /   Default is /var/www/html/HRProprietary/HRConvert2.
+// /   Default is '/var/www/html/HRProprietary/HRConvert2'
 $InstLoc = '/var/www/html/HRProprietary/HRConvert2';
 // /  --Proprietary Directory--
 // /   Install the HRConvert2 folder to the following directory.
 // /   Do not include a trailing slash.
 // /   Do not use a path with whitespace.
 // /   Changing this value is not recommended.
-// /   Default is /var/www/html/HRProprietary.
+// /   Default is '/var/www/html/HRProprietary'
 $ProprietaryLoc = '/var/www/html/HRProprietary';
 // /  --Server Root Directory--
 // /   This should be pointed at the root of your web server directory.
 // /   Do not include a trailing slash.
 // /   Do not use a path with whitespace.
-// /   Default is /var/www/html.
+// /   Changing this value is not recommended.
+// /   Default is '/var/www/html'
 $ServerRootDir = '/var/www/html';
 // /  --Data Storage Directory--
 // /   This is where temporary data files are stored.
 // /   Do not include a trailing slash.
 // /   Do not use a path with whitespace.
-// /   Default is /DATA/HRConvert2.
+// /   Default is '/DATA/HRConvert2'
 $ConvertLoc = '/DATA/HRConvert2';
 // /  --Log Storage Directory--
 // /   This is where permanent Log files are stored.
 // /   Do not include a trailing slash.
 // /   Do not use a path with whitespace.
-// /   Default is /var/www/html/HRProprietary/HRConvert2/Logs.
+// /   Default is '/var/www/html/HRProprietary/HRConvert2/Logs'
 $LogDir = '/var/www/html/HRProprietary/HRConvert2/Logs';
 // / ------------------------------
 
@@ -280,7 +279,7 @@ $Font = 'Arial';
 // /   Provide users with the option to adjust which colors are displayed via appending a parameter to the URL.
 // /   Enable or disable dynamic GUI selection via the $_GET['color'] variable.
 // /   If set to TRUE a user will be able to select different colors via $_GET['gui'].
-// /   If set to FALSE the $DefaultGui will always be used.
+// /   If set to FALSE the --Button Color-- will always be used.
 // /   To submit a $_GET request append ?color=<CODE> to the URL & repalce <CODE> with name of the desired color.
 // /   If a user attempts a color that is not available --Button Color-- will be used instead.
 // /   Valid options are TRUE or FALSE.
@@ -335,7 +334,7 @@ $PPURL = 'https://www.honestrepair.net/index.php/privacy-policy/';
 // /   This setting allows you to specify which software to use when creating .rar archives.
 // /   Currently only RAR is supported.
 // /   Valid options are 'rar'.
-// /   Default is 'rar'.
+// /   Default is rar.
 $RARArchiveMethod = 'rar';
 // / --File Operation Retry Count--
 // /   Set this to the number of attempts to make during file operations.

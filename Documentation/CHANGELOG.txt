@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 5/25/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 6/15/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.4.8.
+v3.4.9.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -28,8 +28,16 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
 
 
 --------------------
-COMMIT 5/25/2026
+COMMIT 6/15/2026
 v3.4.9 - Even further harden core.
+
+-v3.5.
+-Add additional layer of sanitization for raw $_GET color, language, and gui to verifyInputs().
+
+
+--------------------
+COMMIT 5/25/2026
+v3.4.8 - Further harden core. Further expand usage of sanitization.
 
 -v3.4.9.
 -Add a second check for dangerousFiles in the sanitizeString() function.
@@ -39,6 +47,7 @@ v3.4.9 - Even further harden core.
 -I tested sanitization with a filename of ,-..-,-,-*,o/ `>>she l5l.,php$DirSep.
   -I successfully got a file of o_she_l5lDirSep.webp.
   -Note the tab character in the middle.
+
 
 --------------------
 COMMIT 5/25/2026

@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 6/15/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 7/30/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.5.
+// / v3.5.1.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -59,6 +59,18 @@ function verifyTime() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// A function to thwart any potential blind server-side-request forgery (SSRF) attacks.
+// Introduces arbitrary noice into every output in the form of random, stacked delay timers.
+// This function introduces entropy into the duration of every HRConvert2 operation.
+// Set $opType to one of the following options; sanitize, filework, or core.
+// When $opType is set to ''
+function ssrfProtect($opType) {
+
+
+}
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to sanitize input strings with varying degrees of tolerance.
 // / Filters a given string of | \ ~ # [ ] ( ) { } ; : $ ! # ^ & % @ > * < " / ' ` chr(9) chr(10) chr(13) chr(0)
 // / This function will replace any of the above specified charcters with NOTHING. No character at all. An empty string.
@@ -72,8 +84,8 @@ function sanitizeString($Variable, $strict) {
   $dangerFiles = array(NULL, '.js', '.php', '.html', '.css', '.phar', '..', 'index.php', 'index.html', '--');
   // / Check for dangerous files or escape conditions.
   foreach ($dangerFiles as $danFile) $Variable = str_replace($danFile, '', $Variable);
-  if ($strict) $Variable = htmlentities(trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split(',|\\~#[](){};:$!#^&%@>*<"\'/`'.chr(9).chr(10).chr(13).chr(0)), '', $Variable))))), '-'), ENT_QUOTES, 'UTF-8');
-  if (!$strict) $Variable = htmlentities(trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split(',|\\~#[](){};:$!#^&%@>*<"\'`'.chr(9).chr(10).chr(13).chr(0)), '', $Variable))))), '-'), ENT_QUOTES, 'UTF-8');
+  if ($strict) $Variable = trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split(',|\\~#[](){};:$!#^&%@>*<"\'/`'.chr(9).chr(10).chr(13).chr(0)), '', $Variable))))), '-');
+  if (!$strict) $Variable = trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split(',|\\~#[](){};:$!#^&%@>*<"\'`'.chr(9).chr(10).chr(13).chr(0)), '', $Variable))))), '-');
   // / Check for dangerous files or escape conditions one more time.
   foreach ($dangerFiles as $danFile) $Variable = str_replace($danFile, '', $Variable);
   // / Trim the variable one last time to avoid any crafted leading dashes or directory separators.
@@ -115,7 +127,7 @@ function sanitize($Variable, $strict) {
 // / A function to load required HRConvert2 files.
 function verifyInstallation() {
   // / Set variables.
-  global $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6, $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $DefaultColor, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $URL, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine;
+  global $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6, $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $DefaultColor, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $URL, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize;;
   // / Define absolute paths for files that we only have relative paths for.
   $InstallationIsVerified = $buildDirDeleted = $dockerFileDeleted = $readmeDeleted = $changelogFileDeleted = $buildEnvDeleted = $devDocsDeleted = FALSE;
   $ConfigFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'config.php');
@@ -451,10 +463,10 @@ function verifyLanguage() {
 // / A function to set the global variables for the session.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine;
+  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID;
   // / Application related variables.
   putenv('HOME='.$HomeLoc);
-  $HRConvertVersion = 'v3.5';
+  $HRConvertVersion = 'v3.5.1';
   $GlobalsAreVerified = FALSE;
   $CoreLoaded = TRUE;
   $SleepTimer = 0;
@@ -479,7 +491,11 @@ function verifyGlobals() {
   $Alert3 = 'Operation Failed!';
   // / Security related variables.
   $DefaultApps = array('.', '..');
-  $DangerousFiles = array('.js', '.php', '.html', '.css', '.phar', '..', 'index.php', 'index.html', '--');
+  $DangerousFiles = array(NULL, '.js', '.php', '.html', '.css', '.phar', '..', 'index.php', 'index.html', '--');
+  $StreamWatchTimeout = (int)$StreamWatchTimeout * 60;
+  $StreamConnectionTimeout = $StreamConnectionTimeout * 1000000;
+  $WaitForStream = FALSE;
+  $StreamPID = 0;
   // / URL related variables.
   $subDir = sanitizeString(str_replace($ServerRootDir.$DirSep, '', $InstLoc), FALSE);
   $partURL = sanitizeString($URL.'/'.$subDir, FALSE);
@@ -490,7 +506,8 @@ function verifyGlobals() {
   $ConvertTemp = sanitizeString($InstLoc.$DirSep.'DATA', FALSE);
   $convertTempDir0 = sanitizeString($ConvertTemp.$DirSep.$SesHash, FALSE);
   $ConvertTempDir = sanitizeString($convertTempDir0.$DirSep.$SesHash2.$DirSep, FALSE);
-  $RequiredDirs = array($HomeLoc, $convertDir0, $ConvertDir, $ConvertTemp, $convertTempDir0, $ConvertTempDir);
+  $StreamTemp = $ConvertDir.$DirSep.'StreamTemp';
+  $RequiredDirs = array($HomeLoc, $convertDir0, $ConvertDir, $ConvertTemp, $convertTempDir0, $ConvertTempDir, $StreamTemp);
   $RequiredIndexes = array($ConvertTemp, $convertTempDir0, $ConvertTempDir);
   $RequiredCleanupFolders = array($InstLoc.$DirSep.'.cache', $InstLoc.$DirSep.'.config', $ProprietaryLoc.$DirSep.'.cache', $ProprietaryLoc.$DirSep.'.config');
   $PathToUnoconv = $InstLoc.$DirSep.'Resources'.$DirSep.'Unoconv'.$DirSep.'unoconv';  
@@ -517,7 +534,7 @@ function verifyGlobals() {
   if (in_array('Audio', $SupportedConversionTypes)) $MediaOutputArray = $UserMediaOutputArray;
   if (in_array('Video', $SupportedConversionTypes)) $VideoInputArray = $UserVideoInputArray;
   if (in_array('Video', $SupportedConversionTypes)) $VideoOutputArray = $UserVideoOutputArray;
-  if (in_array('Stream', $SupportedConversionTypes) && in_array('Audio', $SupportedConversionTypes)) $StreamArray = $UserStreamArray;
+  if (in_array('Stream', $SupportedConversionTypes) && in_array('Audio', $SupportedConversionTypes)) $StreamArray = array_merge($UserStreamArray, $UserMediaOutputArray);
   if (in_array('Drawing', $SupportedConversionTypes)) $DrawingArray = $UserDrawingArray;
   if (in_array('Model', $SupportedConversionTypes)) $ModelArray = $UserModelArray;
   if (in_array('Subtitle', $SupportedConversionTypes)) $SubtitleInputArray = $UserSubtitleInputArray;
@@ -639,7 +656,7 @@ function virusScan($path) {
   $returnData = shell_exec(str_replace('  ', ' ', str_replace('  ', ' ', 'clamscan -r '.$path.' | grep FOUND >> '.$ClamLogFile)));
   $clamLogFileDATA = @file_get_contents($ClamLogFile);
   // / Check if ClamAV found an infection in the specified file.
-  if (strpos($clamLogFileDATA, 'Virus Detected') !== FALSE or strpos($clamLogFileDATA, 'FOUND') !== FALSE) {
+  if (stripos($clamLogFileDATA, 'Virus Detected') !== FALSE or strpos($clamLogFileDATA, 'FOUND') !== FALSE) {
     $ScanComplete = $virusFound = TRUE;
     // / If the specified file exists, is infected, is not a directory, & $AllowUserVirusScan is set to FALSE then delete the infected file. 
     if (file_exists($path)) if (is_file($path) && !is_dir($path) && !$AllowUserVirusScan) @unlink($path);
@@ -1035,34 +1052,669 @@ function convertSubtitles($pathname, $newPathname) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to simply return whether or not an IP is private or public.
+// / Used for server-side request forgery (SSRF) protection.
+// / Returns TRUE only for publicly routable addresses. Anything private, reserved, loopback,
+// / or link-local returns FALSE, as does any string that is not a valid IP at all.
+// / This is the single source of truth for IP safety. Do not duplicate this logic.
+function isPubliclyRoutableIP($ip) {
+  // / Set variables.
+  $Check = (bool)filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+  return $Check; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to perform DNS lookups without following redirects.
+// / Also used to detect if a host resolves to a LAN segment or private IP range.
+// / Note that this has an intentionally redundant check for whether or not the IP is private.
+// / A private/reserved answer means this host is untrustworthy regardless of what else it returned.
+// / $URLIP will return FALSE if the lookup failed or if a DNS rebind attack is suspected.
+// / $StreamContainsLAN will return TRUE if the response contained a local or reserved IP address.
+// / $LookupFailed will return TRUE if no DNS response was received or FALSE if DNS succeeded.
+// / Return order: URLIP, StreamContainsLAN, LookupFailed.
+function dnsLookup($URLHost) {
+  // / Set variables.
+  $records = $record = array();
+  $urlIP = $URLIP = $LookupFailed = $StreamContainsLAN = $isPublic = FALSE;
+  // / Perform the actual DNS lookup against the $URLHost.
+  $records = @dns_get_record($URLHost, DNS_A + DNS_AAAA);
+  // / Check that the records received from the DNS provider were formed properly.
+  if (is_array($records) && !empty($records)) {
+    foreach ($records as $record) {
+      // / Parse the received DNS records.
+      $urlIP = $record['ip'] ?? $record['ipv6'] ?? NULL;
+      if ($urlIP === NULL) continue;
+      $isPublic = isPubliclyRoutableIP($urlIP);
+      if ($isPublic) $URLIP = $urlIP;
+      else {
+        // / A private/reserved answer means this host is untrustworthy regardless of what else it returned.
+        // / Discard any safe IP already found. A host answering with both is a rebinding setup, not a partial success.
+        $StreamContainsLAN = TRUE;
+        $URLIP = FALSE;
+        break; } } }
+  // / Set a flag to tell if the lookup failed outright.
+  else $LookupFailed = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $records = $record = $urlIP = $isPublic = NULL;
+  unset($records, $record, $urlIP, $isPublic);
+  return array($URLIP, $StreamContainsLAN, $LookupFailed); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to scan a stream URL received from a stream file such as .m3u8 & determine if it is safe for FFMPEG to handle.
+// / This function performs a DNS lookup on the provided URL but DOES NOT follow redirects. Not following redirects is critical.
+// / To perform adequate SSRF protection, we must obtain a non-redirected DNS lookup for each remote host in a stream file.
+// / We will use the information contained in this DNS lookup to bind downstream dependencies like CURL & FFMPEG to these locations.
+// / Return order: InspectionFailed, StreamURLResolutionFailed, StreamContainsLAN, LookupFailed, URLHost, URLPort, URLScheme, URLIP.
+function gatherRemoteStreamHostInfo($StreamURL) {
+  // / Set variables.
+  global $Verbose, $AllowStreamOverHTTP;
+  $StreamURL = sanitize($StreamURL, TRUE);
+  $LookupFailed = $InspectionFailed = TRUE;
+  $URLIP = $URLHost = $URLPort = $URLScheme = $StreamContainsLAN = $StreamDNSContainsLAN = $StreamURLResolutionFailed = FALSE;
+  $allowedSchemes = array('https');
+  $urlParts = array();
+  if ($Verbose) logEntry('Inspecting Stream URL: '.$StreamURL.'.');
+  // / Check if plain http stream URLs are allowed by config.php, & add them as a supported scheme if enabled.
+  if ($AllowStreamOverHTTP) array_push($allowedSchemes, 'http');
+  // / Parse the provided URL to gather DNS information.
+  // / Returns FALSE if the response was seriously malformed.
+  $urlParts = parse_url($StreamURL);
+  // / If the parse_url response is malformed, then consider the URL unresolvable.
+  if (!$urlParts) $StreamURLResolutionFailed = TRUE;
+  // / If the parse_url response makes sense, then keep going.
+  else {
+    $urlParts = sanitize($urlParts, TRUE);
+    // / If the parse_url response is incomplete, then consider the URL unresolvable.
+    if (empty($urlParts['scheme']) or empty($urlParts['host'])) $StreamURLResolutionFailed = TRUE;
+    // / If the parse_url response makes sense, then keep going.
+    else {
+      // / If the scheme required by the remote host does not match what is supported by config.php, then consider the URL unresolvable.
+      $URLScheme = sanitize(strtolower($urlParts['scheme']), TRUE);
+      if (!in_array($URLScheme, $allowedSchemes, TRUE)) $StreamURLResolutionFailed = TRUE;
+      // / If the scheme required by the remote host matches what is supported by config.php, then keep going.
+      else {
+        // / Detect the host.
+        $URLHost = sanitize(strtolower($urlParts['host']), TRUE);
+        // / Detect the port & the scheme where applicable.
+        // / Be very careful making changes to this code.
+        // / Uses the Port supplied by the request when available, or falls back to 443, or falls back again to 80.
+        // / This code prevents dependencies from silently performing their own DNS lookups & potentially following malicious redirects.
+        // / If this code fails to produce a valid host or port, subsequent dependencies will ignore our DNS binding and do their own lookup.
+        // / To prevent SSRF attacks, things like CURL or FFMPEG cannot be allowed to do DNS lookups which could be spoofed into following redirects.
+        $URLPort = isset($urlParts['port']) ? (int)$urlParts['port'] : ($URLScheme === 'https' ? 443 : 80); } } }
+  // / If we have successfully obtained a $URLHost, $URLPort, & $URLScheme, then resolve the address.
+  if (!$StreamURLResolutionFailed) {
+    // / If $URLHost is already a literal IP, validate it directly & skip DNS entirely.
+    if (filter_var($URLHost, FILTER_VALIDATE_IP)) {
+      if (isPubliclyRoutableIP($URLHost)) {
+        $URLIP = $URLHost;
+        $LookupFailed = FALSE; }
+      else $StreamContainsLAN = TRUE; }
+    // / Otherwise it's a hostname, so resolve it without following redirects.
+    else list($URLIP, $StreamDNSContainsLAN, $LookupFailed) = dnsLookup($URLHost);
+    // / If the DNS results for $URLHost were not publicly routable, then consider it LAN which will be denied.
+    // / Note that this condenses $StreamDNSContainsLAN with $StreamContainsLAN as anything that contains LAN should be denied.
+    if ($StreamDNSContainsLAN) $StreamContainsLAN = TRUE; }
+  // / If any check failed or any required value is empty, then consider the whole inspection failed.
+  if ($StreamURLResolutionFailed or $StreamContainsLAN or $LookupFailed or empty($URLHost) or empty($URLPort) or empty($URLScheme) or empty($URLIP)) $InspectionFailed = TRUE;
+  // / If everything passed then consider the inspection to have passed.
+  else $InspectionFailed = FALSE;
+  // / Write the information obtained to the log file.
+  if ($Verbose) logEntry('URL Inspection Result: '.($InspectionFailed ? 'FAILED' : 'PASSED').', Host: '.$URLHost.', Port: '.$URLPort.', Scheme: '.$URLScheme.', Contains LAN: '.($StreamContainsLAN ? 'TRUE' : 'FALSE').', URL Resolution Failed: '.($StreamURLResolutionFailed ? 'TRUE' : 'FALSE').', Lookup Failed: '.($LookupFailed ? 'TRUE' : 'FALSE').'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $allowedSchemes = $urlParts = $StreamDNSContainsLAN = NULL;
+  unset($allowedSchemes, $urlParts, $StreamDNSContainsLAN);
+  return array($InspectionFailed, $StreamURLResolutionFailed, $StreamContainsLAN, $LookupFailed, $URLHost, $URLPort, $URLScheme, $URLIP); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to turn a URI found inside a stream file into a complete, absolute URL.
+// / Stream files routinely reference segments & nested playlists by relative path, which
+// / inherit their missing parts from the URL the PARENT manifest was downloaded from.
+// / $ParentURL is empty for the file the user uploaded, because nobody fetched it. A relative
+// / URI at that layer therefore resolves against nothing & is refused rather than guessed at.
+// / Returns an empty string when the URI cannot be honestly resolved. The caller must deny on empty.
+function resolveStreamURI($StreamURI, $ParentURL) {
+  // / Set variables.
+  $AbsoluteURL = '';
+  $parentParts = array();
+  $parentScheme = $parentHost = $parentPort = $parentDir = '';
+  $StreamURI = trim($StreamURI);
+  // / Nothing to resolve.
+  if ($StreamURI === '') return $AbsoluteURL;
+  // / Case 1. The URI is already absolute & carries its own scheme. Nothing is inherited.
+  // / Note this deliberately matches ANY scheme, including file: and gopher:, so that
+  // / gatherRemoteStreamHostInfo() sees & rejects them rather than us silently mangling them.
+  if (preg_match('#^[a-zA-Z][a-zA-Z0-9+.-]*:#', $StreamURI)) return $StreamURI;
+  // / Everything below here is relative & needs a parent to inherit from.
+  // / The user's uploaded file has no parent, so a relative URI at layer 0 is unresolvable.
+  if ($ParentURL === '') return $AbsoluteURL;
+  $parentParts = parse_url($ParentURL);
+  if (!$parentParts or empty($parentParts['scheme']) or empty($parentParts['host'])) return $AbsoluteURL;
+  $parentScheme = strtolower($parentParts['scheme']);
+  $parentHost = strtolower($parentParts['host']);
+  $parentPort = isset($parentParts['port']) ? ':'.(int)$parentParts['port'] : '';
+  // / Case 2. Protocol-relative (//cdn.example.com/seg.ts). Inherits the scheme only.
+  if (substr($StreamURI, 0, 2) === '//') $AbsoluteURL = $parentScheme.':'.$StreamURI;
+  // / Case 3. Root-relative (/hls/seg.ts). Inherits scheme, host & port. The path is replaced outright.
+  elseif ($StreamURI[0] === '/') $AbsoluteURL = $parentScheme.'://'.$parentHost.$parentPort.$StreamURI;
+  // / Case 4. Plain relative (seg003.ts). Appended to the parent's DIRECTORY, never to its filename.
+  else {
+    $parentDir = rtrim(dirname($parentParts['path'] ?? '/'), '/');
+    $AbsoluteURL = $parentScheme.'://'.$parentHost.$parentPort.$parentDir.'/'.$StreamURI; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $parentParts = $parentScheme = $parentHost = $parentPort = $parentDir = NULL;
+  unset($parentParts, $parentScheme, $parentHost, $parentPort, $parentDir);
+  return $AbsoluteURL; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to gather and validate IPv4 & IPv6 addresses from stream files.
+// / Does not perform DNS or any remote validation.
+// / This function only validates the syntactical form of IP addresses, and ensures they are not in a reserved range.
+// / Return order: IPMatches, IPCount, StreamContainsLAN, StreamContainsIP.
+function inspectStreamIP($streamFileContents) {
+  // / Set variables.
+  $ipMatch = '';
+  $IPCount = 0;
+  $ipMatchesTemp = $ip4Temp = $ip6Temp = $IPMatches = array();
+  $StreamContainsLAN = $StreamContainsIP = FALSE;
+  // / Regex pattern to extract matching IPv4 formats.
+  $ip4Pattern = '/\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/';
+  // / Regex pattern to extract matching IPv6 formats.
+  // / Loose candidate matcher. Finds hex-and-colon runs that MIGHT be IPv6.
+  // / Deliberately over-matches; filter_var() (called below) is the authority on validity.
+  $ip6Pattern = '/(?<![0-9A-Fa-f:])(?:[0-9A-Fa-f]{0,4}:){2,7}[0-9A-Fa-f]{0,4}(?::[0-9]{1,3}(?:\.[0-9]{1,3}){3})?(?![0-9A-Fa-f:])/';
+  // / Check if the $streamFile contains any IP addresses, if those addresses are valid, & if they fall into a private subnet.
+  // / $ipMatchesTemp = flat array of every potential IP string matched by either pattern.
+  // / $IPMatches = flat array of every valid, publicly routable IP confirmed by filter_var.
+  preg_match_all($ip4Pattern, $streamFileContents, $ip4Temp);
+  preg_match_all($ip6Pattern, $streamFileContents, $ip6Temp);
+  $ipMatchesTemp = array_merge($ip4Temp[0], $ip6Temp[0]);
+  if (!empty($ipMatchesTemp)) {
+    foreach ($ipMatchesTemp as $ipMatch) {
+      // / Strip brackets from URL-form IPv6 (https://[::1]/) before validating.
+      $ipMatch = trim($ipMatch, '[]');
+      // / Not a real IP at all. Probably a regex over-match. Discard silently, do NOT flag.
+      if (!filter_var($ipMatch, FILTER_VALIDATE_IP)) continue;
+      // / Set a flag if the entry that was found is a genuine raw IP address.
+      $StreamContainsIP = TRUE;
+      // / Check whether each extracted IP is on a local / private subnet, or something we should not be probing.
+      if (isPubliclyRoutableIP($ipMatch)) array_push($IPMatches, $ipMatch);
+      else {
+        // / Set a flag if the IP address that was found appears to be on a local or private subnet.
+        $StreamContainsLAN = TRUE;
+        // / Stop as soon as we find a dangerous IP address. There is no need to continue validating a malicious file.
+        break; } } }
+  // / Count the number of publicly routable IPs found before we stopped.
+  $IPCount = count($IPMatches);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $ipMatch = $ipMatchesTemp = $ip4Pattern = $ip6Pattern = $streamFileContents = $ip4Temp = $ip6Temp = NULL;
+  unset($ipMatch, $ipMatchesTemp, $ip4Pattern, $ip6Pattern, $streamFileContents, $ip4Temp, $ip6Temp);
+  return array($IPMatches, $IPCount, $StreamContainsLAN, $StreamContainsIP); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to gather and validate domain names from stream files.
+// / Does not perform DNS or any remote validation.
+// / This function only validates the syntactical form of domain names.
+// / Preserves http:// and https:// as the only allowed protocols.
+// / Return order: DomainNames, DomainCount, StreamContainsDomain.
+function inspectStreamDomain($streamFileContents) {
+  // / Set variables.
+  $DomainCount = 0;
+  $DomainNames = $domainMatches = array();
+  $StreamContainsDomain = FALSE;
+  // / Matches only absolute http/https URLs & captures the hostname portion in group 1.
+  // / Skips any userinfo (user:pass@) so the REAL host is captured, not the decoy before the @.
+  $domainPattern = '/\bhttps?:\/\/(?:[^\/?#@\s]*@)?([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,63})(?=[:\/?#]|\s|$)/i';
+  // / Check if the $streamFile contains any domain names, and whether those domain names are valid.
+  if (preg_match_all($domainPattern, $streamFileContents, $domainMatches)) {
+    // / Set a flag if the entry that was found appears to be a domain name.
+    $StreamContainsDomain = TRUE;
+    // / $domainMatches[1] holds the bare hostnames & is the only row safe to hand to DNS.
+    $DomainNames = $domainMatches[1];
+    // / $domainMatches[0] holds the FULL match, including scheme & any user:pass@ decoy.
+    // / $domainMatches[0] is NOT safe to use for DNS. It is only referenced here for counting.
+    $DomainCount = count($domainMatches[0]); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $domainPattern = $streamFileContents = $domainMatches = NULL;
+  unset($domainPattern, $streamFileContents, $domainMatches);
+  return array($DomainNames, $DomainCount, $StreamContainsDomain); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to confirm a downloaded file is genuinely MPEG-TS & not something disguised as one.
+// / MPEG-TS is a fixed-size packet format: every packet is 188 bytes & begins with sync byte 0x47.
+// / Requiring the sync byte at EVERY expected boundary makes a coincidental match effectively impossible.
+// / Does NOT check the file extension. FFMPEG dispatches on content, so we must too.
+// / Note that $MaxStreamInspectionFileSize must stay above ($packetSize * $packetsToCheck) or
+// / every genuine segment will fail this check for the wrong reason.
+function inspectTSFile($fileContents) {
+  // / Set variables.
+  $packetSize = 188;
+  $packetsToCheck = 5;
+  $syncByte = "\x47";
+  $offset = 0;
+  $bytesRequired = 0;
+  $Check = FALSE;
+  $bytesRequired = $packetSize * $packetsToCheck;
+  // / A file too short to hold the packets we intend to check cannot be validated, so reject it.
+  // / Returning here also prevents the loop below from reading past the end of the string.
+  if (strlen($fileContents) < $bytesRequired) return $Check;
+  // / Walk the expected packet boundaries & confirm the sync byte appears at every one.
+  // / Assume success, then let any single missing sync byte disprove it & stop immediately.
+  $Check = TRUE;
+  for ($offset = 0; $offset < $bytesRequired; $offset += $packetSize) {
+    if ($fileContents[$offset] !== $syncByte) {
+      $Check = FALSE;
+      break; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $packetSize = $packetsToCheck = $syncByte = $offset = $bytesRequired = $fileContents = NULL;
+  unset($packetSize, $packetsToCheck, $syncByte, $offset, $bytesRequired, $fileContents);
+  return $Check; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to determine what a stream file actually IS, based only on its content.
+// / The filename & extension are deliberately ignored. FFMPEG dispatches on content markers,
+// / so a .ts file whose bytes begin with #EXTM3U will be treated by FFMPEG as a playlist.
+// / This is the single source of truth for stream file classification. Do not duplicate this logic.
+// / Return order: IsPlaylist, IsSegment. Both FALSE means the content is unrecognized & must be denied.
+function classifyStreamContent($streamContents) {
+  // / Set variables.
+  $IsPlaylist = $IsSegment = FALSE;
+  // / A playlist must open with the #EXTM3U tag. ltrim handles a BOM or leading whitespace.
+  if (strncmp(ltrim($streamContents), '#EXTM3U', 7) === 0) $IsPlaylist = TRUE;
+  // / Only check for MPEG-TS if it is not already a playlist. Nothing can legitimately be both.
+  else $IsSegment = inspectTSFile($streamContents);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $streamContents = NULL;
+  unset($streamContents);
+  return array($IsPlaylist, $IsSegment); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to download a single remote stream file to local disk for inspection.
+// / Saves with a numeric name & NO extension so nothing downstream can be fooled by the filename.
+// / The original URI is preserved in the $StreamURIs record, not on disk.
+// / Does NOT follow redirects & does NOT let CURL perform its own DNS lookup.
+// / Fetches only the first $MaxStreamInspectionFileSize bytes. We are classifying files, not streaming them.
+// / Return order: DownloadFailed, LocalStreamPath, StreamFileTruncated.
+function downloadStreamFile($StreamURL, $URLHost, $URLPort, $URLIP, $URLScheme, $FileNumber) {
+  // / Set variables.
+  global $Verbose, $AllowStreamOverHTTP, $StreamConnectionTimeout, $StreamWatchTimeout, $DirSep, $MaxStreamInspectionFileSize, $StreamTemp;
+  $DownloadFailed = $StreamFileTruncated = TRUE;
+  $curlOutput = array();
+  $curlExitCode = 1;
+  $downloadedBytes = 0;
+  // / Sequential name for every file saved to StreamTemp. Never resets.
+  // / A layer 2 file must never overwrite a layer 1 file.
+  // / The real URI lives in the $StreamURIs record, not on disk.
+  $LocalStreamPath = $StreamTemp.$DirSep.$FileNumber;
+  $protoString = 'https';
+  // / Only widen to plain http when config allows it AND this specific URL actually uses it.
+  if ($AllowStreamOverHTTP && $URLScheme === 'http') $protoString = 'http,https';
+  // / Refuse outright if any component needed for the DNS pin is missing.
+  // / An empty component produces a malformed --resolve entry which CURL silently ignores,
+  // / after which CURL performs its own lookup & every rebinding protection is lost.
+  if (empty($URLHost) or empty($URLPort) or empty($URLIP) or empty($StreamURL)) {
+    if ($Verbose) logEntry('Stream download refused: incomplete validation data for '.$StreamURL.'.');
+    return array($DownloadFailed, '', $StreamFileTruncated); }
+  // / Build the command. Every user-influenced value is escaped. No -L, so redirects are never followed.
+  // / -r requests only the first chunk. --max-filesize enforces the same ceiling when a host ignores -r.
+  $curlCommand = 'curl'
+    .' --resolve '.escapeshellarg($URLHost.':'.$URLPort.':'.$URLIP)
+    .' --proto '.escapeshellarg('='.$protoString)
+    .' --proto-redir '.escapeshellarg('='.$protoString)
+    .' -r '.escapeshellarg('0-'.((int)$MaxStreamInspectionFileSize - 1))
+    .' --max-filesize '.(int)$MaxStreamInspectionFileSize
+    .' --connect-timeout '.(int)$StreamConnectionTimeout
+    .' -m '.(int)($StreamWatchTimeout * 60)
+    .' -sS -o '.escapeshellarg($LocalStreamPath)
+    .' -- '.escapeshellarg($StreamURL).' 2>&1';
+  exec($curlCommand, $curlOutput, $curlExitCode);
+  // / Exit code 0 AND a file that actually exists with content. Either alone is not proof of success.
+  if ($curlExitCode === 0 && file_exists($LocalStreamPath)) {
+    $downloadedBytes = filesize($LocalStreamPath);
+    if ($downloadedBytes > 0) $DownloadFailed = FALSE;
+    // / A file that filled the entire budget was almost certainly cut short.
+    // / We are only holding part of it, so we cannot claim to have inspected the whole thing.
+    if ($downloadedBytes < (int)$MaxStreamInspectionFileSize) $StreamFileTruncated = FALSE; }
+  else if ($Verbose) logEntry('Stream download failed for '.$StreamURL.'. CURL exit code: '.$curlExitCode.'.');
+  // / Log the outcome of this single download.
+  if ($Verbose) logEntry('Stream Download Result: '.($DownloadFailed ? 'FAILED' : 'SUCCESS').', File: '.$FileNumber.', Bytes: '.$downloadedBytes.', Truncated: '.($StreamFileTruncated ? 'TRUE' : 'FALSE').'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $curlCommand = $curlOutput = $protoString = $curlExitCode = $downloadedBytes = NULL;
+  unset($curlCommand, $curlOutput, $protoString, $curlExitCode, $downloadedBytes);
+  return array($DownloadFailed, $LocalStreamPath, $StreamFileTruncated); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to scan a single local stream file & determine if it is safe for FFMPEG to handle.
+// / $CurrentLayer 0 is the file the user uploaded. Layers 1+ are files HRConvert2 downloaded for inspection.
+// / Downloaded files are saved with a numeric name & NO extension on purpose, so extension-based
+// / checks apply to layer 0 only. From layer 1 onward, content is the only authority.
+// / This function inspects. It does not connect to anything & it does not decide the fate of the walk.
+// / Return order: InspectionFailed, StreamURIs, StreamContainsLAN, StreamContainsIP, StreamContainsHTTP, looksLikePlaylist, looksLikeSegment.
+function inspectStreamFile($StreamFile, $ParentURL, $CurrentLayer) {
+  // / Set variables.
+  global $Verbose, $AllowStreamOverHTTP, $SupportedConversionTypes, $StreamArray;
+  $StreamContainsIP = $StreamContainsLAN = $StreamContainsHTTP = $StreamContainsDomain = FALSE;
+  $streamFileExtension = $RawURI = $streamFileContents = '';
+  $StreamURIs = $DomainMatches = $IPMatches = $streamLineMatches = array();
+  $DomainCount = $IPCount = 0;
+  $looksLikePlaylist = $looksLikeSegment = $ContentMismatch = $ContentUnknown = $InspectionFailed = FALSE;
+  $extensionAllowed = TRUE;
+  // / Get the file extension of the $StreamFile.
+  $streamFileExtension = getExtension($StreamFile);
+  // / Log the start of stream file inspection.
+  if ($Verbose) logEntry('Inspecting Stream File '.$StreamFile.' at layer '.$CurrentLayer.' for security risks.');
+  // / For sanity, double check that Stream & Audio operations are even allowed in config.php.
+  // / Extra precaution is required due to the cost, sensitivity, & potential consequences of this function being abused.
+  // / The supported-format check applies to layer 0 only. Files we downloaded have no extension by design.
+  if ($CurrentLayer === 0 && !in_array($streamFileExtension, $StreamArray)) $extensionAllowed = FALSE;
+  if (in_array('Stream', $SupportedConversionTypes) && in_array('Audio', $SupportedConversionTypes) && $extensionAllowed) {
+    // / Read the contents of the stream file.
+    $streamFileContents = file_get_contents($StreamFile);
+    // / Classify by content. This is the ONLY place that decision is made. See classifyStreamContent().
+    list ($looksLikePlaylist, $looksLikeSegment) = classifyStreamContent($streamFileContents);
+    // / Determine if the content of the file matches its file extension.
+    // / Layer 0 only. A name that disagrees with the content is not a quirk to work around, it is the attack.
+    if ($CurrentLayer === 0) {
+      if ($looksLikePlaylist && $streamFileExtension !== 'm3u8') $ContentMismatch = TRUE;
+      if ($looksLikeSegment && $streamFileExtension !== 'ts') $ContentMismatch = TRUE; }
+    // / Neither format. FFMPEG would probe this & pick some demuxer we never anticipated.
+    if (!$looksLikePlaylist && !$looksLikeSegment) $ContentUnknown = TRUE;
+    // / Any single failure condition ends this inspection immediately.
+    if ($ContentMismatch or $ContentUnknown) $InspectionFailed = TRUE;
+    // / If the file passed classification, then continue.
+    if (!$InspectionFailed) {
+      // / Set a flag if the file references any plain-http address. Controlled by config.php.
+      if (stripos($streamFileContents, 'http://') !== FALSE) $StreamContainsHTTP = TRUE;
+      // / Check the stream file contents for domain names and assemble them into an array.
+      list ($DomainMatches, $DomainCount, $StreamContainsDomain) = inspectStreamDomain($streamFileContents);
+      // / Check the stream file contents for raw IP addresses and assemble them into an array.
+      list ($IPMatches, $IPCount, $StreamContainsLAN, $StreamContainsIP) = inspectStreamIP($streamFileContents);
+      // / Iterate through the $streamFileContents & extract the complete URI from each URI line.
+      // / These URIs are raw & completely unvalidated. The walker validates them one at a time.
+      foreach (preg_split('/\R/', $streamFileContents) as $streamLine) {
+        $streamLine = trim($streamLine);
+        // / Skip empty lines in the playlist file.
+        if ($streamLine === '') continue;
+        // / Non-# lines are URIs. # lines may still carry a URI="" attribute.
+        // / #EXT-X-KEY, #EXT-X-MAP & #EXT-X-MEDIA all reference fetchable URIs this way.
+        if ($streamLine[0] !== '#') $RawURI = $streamLine;
+        elseif (preg_match('/URI="([^"]*)"/i', $streamLine, $streamLineMatches)) $RawURI = $streamLineMatches[1];
+        // / A # line with no URI attribute is just a tag. Nothing to inspect.
+        else continue;
+        // / One record per URI found. Only RawURI, ParentURL & Layer are knowable here.
+        // / Everything else is filled in later by the walker as each stage completes.
+        $StreamURIs[] = array(
+          'RawURI'      => $RawURI,
+          'AbsoluteURL' => '',
+          'ParentURL'   => $ParentURL,
+          'Layer'       => $CurrentLayer,
+          'URLHost'     => '',
+          'URLPort'     => '',
+          'URLScheme'   => '',
+          'URLIP'       => '',
+          'LocalPath'   => '',
+          'IsPlaylist'  => FALSE,
+          'IsSegment'   => FALSE,
+          'Inspected'   => FALSE,
+          'Failed'      => FALSE,
+          'FailReason'  => ''); } } }
+  // / If the operation is not permitted by config.php, or the extension is not supported, then fail.
+  else $InspectionFailed = TRUE;
+  // / Any single failure condition fails this file. Flags are one-way & nothing can clear them.
+  if ($StreamContainsLAN or $ContentMismatch or $ContentUnknown) $InspectionFailed = TRUE;
+  // / A plain-http reference is only fatal when config.php has disabled it.
+  if ($StreamContainsHTTP && !$AllowStreamOverHTTP) $InspectionFailed = TRUE;
+  // / Log the result of the inspection of this single file.
+  if ($Verbose) logEntry('Stream File Inspection Result: '.($InspectionFailed ? 'FAILED' : 'PASSED').', Layer: '.$CurrentLayer.', URIs Found: '.count($StreamURIs).', Domains: '.$DomainCount.', IPs: '.$IPCount.', Contains LAN: '.($StreamContainsLAN ? 'TRUE' : 'FALSE').', Contains IP: '.($StreamContainsIP ? 'TRUE' : 'FALSE').', Contains Domain: '.($StreamContainsDomain ? 'TRUE' : 'FALSE').', Contains HTTP: '.($StreamContainsHTTP ? 'TRUE' : 'FALSE').', Content Mismatch: '.($ContentMismatch ? 'TRUE' : 'FALSE').', Content Unknown: '.($ContentUnknown ? 'TRUE' : 'FALSE').'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $streamFileContents = $DomainMatches = $IPMatches = $streamLineMatches = $RawURI = $extensionAllowed = NULL;
+  unset($streamFileContents, $DomainMatches, $IPMatches, $streamLineMatches, $RawURI, $extensionAllowed);
+  return array($InspectionFailed, $StreamURIs, $StreamContainsLAN, $StreamContainsIP, $StreamContainsHTTP, $looksLikePlaylist, $looksLikeSegment); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / The walker. Owns the queue, the seen-set, the depth counter & every budget.
+// / Every other stream function answers a question. This one is the only thing that decides to continue.
+// / $FileBudget resets each layer because it bounds the width of one layer.
+// / $TotalBudget never resets because it bounds the entire tree regardless of shape.
+// / $Halt is one-way. Once anything sets it, nothing may clear it.
+// / Return order: InspectionFailed, StreamBudgetExhausted, HaltReason, AllStreamURIs, SeenURLs.
+function streamFileWalker($StreamFile) {
+  global $Verbose, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction;
+  // / Set variables.
+  $Halt = $StreamBudgetExhausted = $InspectionFailed = $DownloadFailed = $StreamFileTruncated = FALSE;
+  $looksLikePlaylist = $looksLikeSegment = $StreamContainsLAN = $StreamContainsIP = $StreamContainsHTTP = FALSE;
+  $StreamURLResolutionFailed = $LookupFailed = FALSE;
+  $urlHost = $urlPort = $urlScheme = $urlIP = FALSE;
+  $SeenURLs = $AllStreamURIs = array();
+  $currentLayerFiles = $nextLayerFiles = $streamURIs = $layerFile = $uriRecord = array();
+  $currentLayer = $FileNumber = $FileBudget = $index = 0;
+  $HaltReason = '';
+  $LayerBudget = $StreamInspectionLayers;
+  // / Hard ceiling on total connections for the entire walk, regardless of tree shape.
+  // / Per-layer budgets bound each file individually. This bounds the whole tree.
+  $TotalBudget = $StreamInspectionLayers * $StreamInspectionFilesPerLayer;
+  // / Layer 0 is the user's uploaded file. It has no SourceURL because nobody fetched it.
+  $currentLayerFiles[] = array('LocalPath' => $StreamFile, 'SourceURL' => '');
+  if ($Verbose) logEntry('Beginning Stream Walk on '.$StreamFile.'. Layer budget: '.$LayerBudget.', Files per layer: '.$StreamInspectionFilesPerLayer.', Total connection budget: '.$TotalBudget.'.');
+  // / Walk one whole layer at a time until we run out of layers, work, or patience.
+  while (!$Halt && !empty($currentLayerFiles) && $LayerBudget > 0) {
+    $FileBudget = $StreamInspectionFilesPerLayer;
+    $nextLayerFiles = array();
+    foreach ($currentLayerFiles as $layerFile) {
+      if ($Halt) break;
+      // / Inspect one local file. Returns the URIs it references & its own local flags.
+      list ($InspectionFailed, $streamURIs, $StreamContainsLAN, $StreamContainsIP, $StreamContainsHTTP, $looksLikePlaylist, $looksLikeSegment) = inspectStreamFile($layerFile['LocalPath'], $layerFile['SourceURL'], $currentLayer);
+      if ($InspectionFailed) {
+        $Halt = TRUE;
+        $HaltReason = 'File inspection failed at layer '.$currentLayer.' on '.$layerFile['LocalPath'];
+        break; }
+      // / A genuine segment is a leaf. It has no URIs & nothing to recurse into, so this branch is done.
+      if ($looksLikeSegment) continue;
+      // / A file that is neither playlist nor segment should never have passed inspection.
+      // / If it somehow did, refuse rather than guessing what FFMPEG would make of it.
+      if (!$looksLikePlaylist) {
+        $Halt = TRUE;
+        $InspectionFailed = TRUE;
+        $HaltReason = 'Unclassifiable file passed inspection at layer '.$currentLayer;
+        break; }
+      // / Early exit. If this file alone exceeds the per-layer budget, the walk can never complete.
+      // / Deny now, before spending a single connection on a file that was never going to pass.
+      if (count($streamURIs) > $FileBudget) {
+        $StreamBudgetExhausted = TRUE;
+        $Halt = TRUE;
+        $HaltReason = 'File references '.count($streamURIs).' URIs, exceeding the per-layer budget of '.$FileBudget;
+        break; }
+      foreach ($streamURIs as $index => $uriRecord) {
+        // / Resolve relative URIs against the URL this manifest came from.
+        $streamURIs[$index]['AbsoluteURL'] = resolveStreamURI($uriRecord['RawURI'], $uriRecord['ParentURL']);
+        // / An empty result means the URI was relative with no parent to inherit from,
+        // / or the parent URL itself was unusable. Never guess. Refuse.
+        if ($streamURIs[$index]['AbsoluteURL'] === '') {
+          $streamURIs[$index]['Failed'] = TRUE;
+          $streamURIs[$index]['FailReason'] = 'Unresolvable URI';
+          $Halt = TRUE;
+          $InspectionFailed = TRUE;
+          $HaltReason = 'Unresolvable URI "'.$uriRecord['RawURI'].'" at layer '.$currentLayer;
+          break; }
+        // / Skip anything already seen. Prevents cycles from burning the budget.
+        // / No budget is refunded here because none was ever spent on this URL.
+        if (isset($SeenURLs[$streamURIs[$index]['AbsoluteURL']])) continue;
+        $SeenURLs[$streamURIs[$index]['AbsoluteURL']] = TRUE;
+        // / Validate scheme, host & DNS. Nothing connects until this passes.
+        list ($InspectionFailed, $StreamURLResolutionFailed, $StreamContainsLAN, $LookupFailed, $urlHost, $urlPort, $urlScheme, $urlIP) = gatherRemoteStreamHostInfo($streamURIs[$index]['AbsoluteURL']);
+        if ($InspectionFailed) {
+          $streamURIs[$index]['Failed'] = TRUE;
+          $streamURIs[$index]['FailReason'] = 'Host validation failed';
+          $Halt = TRUE;
+          $HaltReason = 'Host validation failed for '.$streamURIs[$index]['AbsoluteURL'].' (LAN: '.($StreamContainsLAN ? 'TRUE' : 'FALSE').', Lookup Failed: '.($LookupFailed ? 'TRUE' : 'FALSE').', URL Resolution Failed: '.($StreamURLResolutionFailed ? 'TRUE' : 'FALSE').')';
+          break; }
+        $streamURIs[$index]['URLHost'] = $urlHost;
+        $streamURIs[$index]['URLPort'] = $urlPort;
+        $streamURIs[$index]['URLScheme'] = $urlScheme;
+        $streamURIs[$index]['URLIP'] = $urlIP;
+        // / Spend budget BEFORE connecting, never after.
+        if ($FileBudget < 1 or $TotalBudget < 1) {
+          $StreamBudgetExhausted = TRUE;
+          $Halt = TRUE;
+          $HaltReason = 'Budget exhausted before connecting (files remaining this layer: '.$FileBudget.', total remaining: '.$TotalBudget.')';
+          break; }
+        $FileBudget--;
+        $TotalBudget--;
+        // / Increment before the call so a failed download still burns its number.
+        // / Reusing a number could leave a partial file where the next fetch expects to write.
+        $FileNumber++;
+        // / Fetch with the pinned IP so CURL cannot re-resolve or follow a redirect we did not validate.
+        list ($DownloadFailed, $streamURIs[$index]['LocalPath'], $StreamFileTruncated) = downloadStreamFile($streamURIs[$index]['AbsoluteURL'], $urlHost, $urlPort, $urlIP, $urlScheme, $FileNumber);
+        if ($DownloadFailed) {
+          $streamURIs[$index]['Failed'] = TRUE;
+          $streamURIs[$index]['FailReason'] = 'Download failed';
+          $Halt = TRUE;
+          $InspectionFailed = TRUE;
+          $HaltReason = 'Download failed for '.$streamURIs[$index]['AbsoluteURL'];
+          break; }
+        // / Classify what actually came back. The URI's extension is irrelevant & untrustworthy.
+        $downloadedContents = file_get_contents($streamURIs[$index]['LocalPath']);
+        list ($streamURIs[$index]['IsPlaylist'], $streamURIs[$index]['IsSegment']) = classifyStreamContent($downloadedContents);
+        $downloadedContents = NULL;
+        unset($downloadedContents);
+        // / Neither format. FFMPEG would probe this & pick some demuxer we never anticipated.
+        if (!$streamURIs[$index]['IsPlaylist'] && !$streamURIs[$index]['IsSegment']) {
+          $streamURIs[$index]['Failed'] = TRUE;
+          $streamURIs[$index]['FailReason'] = 'Unrecognized content';
+          $Halt = TRUE;
+          $InspectionFailed = TRUE;
+          $HaltReason = 'Unrecognized content returned by '.$streamURIs[$index]['AbsoluteURL'];
+          break; }
+        // / A playlist we only half-read cannot be honestly called inspected. A truncated segment is fine,
+        // / because a segment only ever needed its first few packets to be identified.
+        if ($streamURIs[$index]['IsPlaylist'] && $StreamFileTruncated) {
+          $streamURIs[$index]['Failed'] = TRUE;
+          $streamURIs[$index]['FailReason'] = 'Playlist exceeded inspection size limit';
+          $Halt = TRUE;
+          $InspectionFailed = TRUE;
+          $HaltReason = 'Playlist at '.$streamURIs[$index]['AbsoluteURL'].' exceeded the inspection size limit & could only be partially read';
+          break; }
+        $streamURIs[$index]['Inspected'] = TRUE;
+        // / Only playlists have children. Segments are leaves & cost nothing further.
+        // / Queue playlists with the URL THEY were fetched from, because that is what
+        // / their own relative URIs must resolve against.
+        if ($streamURIs[$index]['IsPlaylist']) $nextLayerFiles[] = array(
+          'LocalPath' => $streamURIs[$index]['LocalPath'],
+          'SourceURL' => $streamURIs[$index]['AbsoluteURL']); }
+      // / Preserve this file's records before $streamURIs is overwritten by the next file in the layer.
+      $AllStreamURIs = array_merge($AllStreamURIs, $streamURIs); }
+    // / This layer is finished. Advance to whatever it queued up.
+    $currentLayerFiles = $nextLayerFiles;
+    $currentLayer++;
+    $LayerBudget--; }
+  // / Ran out of layers with work still pending. The inspection is incomplete either way.
+  if (!empty($currentLayerFiles) && $LayerBudget < 1) {
+    $StreamBudgetExhausted = TRUE;
+    if ($HaltReason === '') $HaltReason = 'Layer budget exhausted with '.count($currentLayerFiles).' file(s) still uninspected'; }
+  // / Apply the configured forfeit action to any incomplete inspection.
+  if ($StreamBudgetExhausted && $DefaultStreamInspectionForfeitAction === 'DENY') $InspectionFailed = TRUE;
+  // / Log the outcome of the entire walk.
+  if ($Verbose) logEntry('Stream Walk Result: '.($InspectionFailed ? 'DENIED' : 'ALLOWED').', Layers Walked: '.$currentLayer.', Files Downloaded: '.$FileNumber.', URIs Examined: '.count($AllStreamURIs).', Unique URLs Seen: '.count($SeenURLs).', Budget Exhausted: '.($StreamBudgetExhausted ? 'TRUE' : 'FALSE').', Reason: '.($HaltReason === '' ? 'NONE' : $HaltReason).'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $layerFile & $uriRecord hold whole records including validated IPs & local paths, so they matter most here.
+  $currentLayerFiles = $nextLayerFiles = $streamURIs = $layerFile = $uriRecord = $currentLayer = $index = NULL;
+  $urlHost = $urlPort = $urlScheme = $urlIP = NULL;
+  unset($currentLayerFiles, $nextLayerFiles, $streamURIs, $layerFile, $uriRecord, $currentLayer, $index);
+  unset($urlHost, $urlPort, $urlScheme, $urlIP);
+  return array($InspectionFailed, $StreamBudgetExhausted, $HaltReason, $AllStreamURIs, $SeenURLs); }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / A function to supervise a backgrounded FFMPEG stream conversion after the user has been served.
+// / Polls the process & kills it once $StreamWatchTimeout minutes have elapsed.
+// / This is the only thing preventing an abandoned stream from running until PHP or the OS intervenes.
+// / Return order: StreamCompleted, StreamKilled, ElapsedSeconds.
+function waitForStream($StreamPID, $newPathname) {
+  // / Set variables.
+  global $Verbose, $StreamWatchTimeout;
+  $StreamCompleted = $StreamKilled = FALSE;
+  $psOutput = array();
+  $ElapsedSeconds = $pollInterval = 0;
+  $pollInterval = 2;
+  $timeoutSeconds = $StreamWatchTimeout;
+  // / Nothing to supervise.
+  if ((int)$StreamPID < 1) return array($StreamCompleted, $StreamKilled, $ElapsedSeconds);
+  if ($Verbose) logEntry('Supervising stream PID '.$StreamPID.' for up to '.$timeoutSeconds.' seconds.');
+  while ($ElapsedSeconds < $timeoutSeconds) {
+    $psOutput = array();
+    // / A ps listing with only its header row means the process is gone.
+    exec('ps -p '.(int)$StreamPID, $psOutput);
+    if (count($psOutput) < 2) {
+      $StreamCompleted = TRUE;
+      break; }
+    sleep($pollInterval);
+    $ElapsedSeconds += $pollInterval; }
+  // / Still running after the full watch window. Terminate it.
+  if (!$StreamCompleted) {
+    exec('kill -9 '.(int)$StreamPID);
+    $StreamKilled = TRUE;
+    if ($Verbose) logEntry('Stream PID '.$StreamPID.' exceeded the watch timeout & was terminated.'); }
+  else if ($Verbose) logEntry('Stream PID '.$StreamPID.' finished after '.$ElapsedSeconds.' seconds. Output exists: '.(file_exists($newPathname) ? 'TRUE' : 'FALSE').'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $psOutput = $pollInterval = $timeoutSeconds = NULL;
+  unset($psOutput, $pollInterval, $timeoutSeconds);
+  return array($StreamCompleted, $StreamKilled, $ElapsedSeconds); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to convert stream formats.
+// / The stream file is fully inspected before FFMPEG is allowed anywhere near it.
+// / FFMPEG is launched in the background so the user can be served immediately.
+// / Return order: ConversionSuccess, ConversionErrors, WaitForStream, StreamPID.
 function convertStreams($pathname, $newPathname) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer;
-  $ConversionSuccess = $ConversionErrors = FALSE;
-  $returnData = '';
-  $stopper = 0;
-  $sleepTime = $SleepTimer;
-  if ($Verbose) logEntry('Converting stream.');
-  // / This code will attempt the conversion up to $StopCounter number of times.
-  while (!file_exists($newPathname) && $stopper <= $StopCounter) {
-    // / If the last conversion attempt failed, wait a moment before trying again.
-    if ($stopper !== 0) sleep($sleepTime++);
-    // / Attempt the conversion.
-    $returnData = shell_exec('ffmpeg -protocol_whitelist file,http,https,tcp,tls,crypto -i '.$pathname.' -c copy '.$newPathname);
-    // / Count the number of conversions to avoid infinite loops.
-    $stopper++;
-    // / Stop attempting the conversion after $StopCounter number of attempts.
-    if ($stopper === $StopCounter) {
-      $ConversionErrors = TRUE;
-      errorEntry('The stream converter timed out!', 21000, FALSE); } }
-  // / Log the output of the operation to the logfile, if it is not blank.
-  if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-  if (file_exists($newPathname)) $ConversionSuccess = TRUE;
+  global $Verbose, $Lol, $Lolol, $StreamConnectionTimeout, $AllowStreamOverHTTP;
+  $ConversionSuccess = $ConversionErrors = $WaitForStream = FALSE;
+  $InspectionFailed = $StreamBudgetExhausted = FALSE;
+  $AllStreamURIs = $SeenURLs = array();
+  $HaltReason = $httpString = $returnData = '';
+  $StreamPID = 0;
+  if ($Verbose) logEntry('Beginning stream conversion for '.$pathname.'.');
+  // / Inspect the entire stream tree BEFORE FFMPEG is permitted to touch it.
+  // / Nothing below this point runs unless the walk returned a clean verdict.
+  list ($InspectionFailed, $StreamBudgetExhausted, $HaltReason, $AllStreamURIs, $SeenURLs) = streamFileWalker($pathname);
+  if ($InspectionFailed) {
+    $ConversionErrors = TRUE;
+    errorEntry('Stream inspection denied this file. '.$HaltReason, 21001, FALSE);
+    return array($ConversionSuccess, $ConversionErrors, $WaitForStream, $StreamPID); }
+  // / Only widen the protocol whitelist to plain http when config.php explicitly allows it.
+  if ($AllowStreamOverHTTP) $httpString = ',http';
+  // / Launch FFMPEG in the background & capture its PID so waitForStream() can reap it later.
+  // / -rw_timeout is an INPUT option & must appear before -i to have any effect.
+  $ffmpegCommand = 'ffmpeg -protocol_whitelist '.escapeshellarg('file,https,tcp,tls,crypto'.$httpString)
+    .' -rw_timeout '.((int)$StreamConnectionTimeout * 1000000)
+    .' -i '.escapeshellarg($pathname)
+    .' -c copy '.escapeshellarg($newPathname)
+    .' > /dev/null 2>&1 & echo $!';
+  $returnData = shell_exec($ffmpegCommand);
+  $StreamPID = (int)trim($returnData);
+  // / A PID of 0 means the process never started at all.
+  if ($StreamPID > 0) {
+    $ConversionSuccess = TRUE;
+    $WaitForStream = TRUE;
+    if ($Verbose) logEntry('FFMPEG launched in background as PID '.$StreamPID.' for '.$newPathname.'.'); }
+  else {
+    $ConversionErrors = TRUE;
+    errorEntry('The stream converter failed to launch!', 21000, FALSE); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $newPathname = $sleepTime = NULL;
-  unset($returnData, $stopper, $pathname, $newPathname, $sleepTime);
-  return array($ConversionSuccess, $ConversionErrors); }
+  $returnData = $ffmpegCommand = $httpString = $AllStreamURIs = $SeenURLs = NULL;
+  unset($returnData, $ffmpegCommand, $httpString, $AllStreamURIs, $SeenURLs);
+  return array($ConversionSuccess, $ConversionErrors, $WaitForStream, $StreamPID); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1241,7 +1893,7 @@ function convertArchives($pathname, $newPathname, $extension) {
 // / A function to convert a file based on a pre-determined input type and return the results.
 function convert($type, $pathname, $newPathname, $extension, $height, $width, $rotate, $bitrate) {
   // / Set variables.
-  global $Verbose, $SupportedConversionTypes;
+  global $Verbose, $SupportedConversionTypes, $WaitForStream, $StreamPID;
   $ConversionSuccess = $ConversionErrors = FALSE;
   // / Check that the required conversion type is allowed.
   if (in_array($type, $SupportedConversionTypes)) { 
@@ -1251,7 +1903,7 @@ function convert($type, $pathname, $newPathname, $extension, $height, $width, $r
     if ($type === 'Drawing') list ($ConversionSuccess, $ConversionErrors) = convertDrawings($pathname, $newPathname);
     if ($type === 'Video') list ($ConversionSuccess, $ConversionErrors) = convertVideos($pathname, $newPathname);
     if ($type === 'Subtitle') list ($ConversionSuccess, $ConversionErrors) = convertSubtitles($pathname, $newPathname);
-    if ($type === 'Stream') list ($ConversionSuccess, $ConversionErrors) = convertStreams($pathname, $newPathname);
+    if ($type === 'Stream') list ($ConversionSuccess, $ConversionErrors) = convertStreams($pathname, $newPathname, $WaitForStream, $StreamPID);
     if ($type === 'Audio') list ($ConversionSuccess, $ConversionErrors) = convertAudio($pathname, $newPathname, $extension, $bitrate);
     if ($type === 'Archive') list ($ConversionSuccess, $ConversionErrors) = convertArchives($pathname, $newPathname, $extension); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
@@ -1748,8 +2400,8 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
                 foreach ($pagedFilesArrRAW as $pagedFile) {
                   $filename = pathinfo($pathname, PATHINFO_FILENAME);
                   // / Look for files with the same filename but in .jpg format. Skip the rest.
-                  if (strpos($pagedFile, $filename) !== TRUE) continue;
-                  if (strpos($pagedFile, '.jpg') !== TRUE) continue;
+                  if (stripos($pagedFile, $filename) !== TRUE) continue;
+                  if (stripos($pagedFile, '.jpg') !== TRUE) continue;
                   if ($pagedFile == '.' or $pagedFile == '..' or $pagedFile == '.AppData' or $pagedFile == 'index.html') continue;
                   // / Set page specific variables.
                   $pathnameTEMP1 = str_replace('..', '', str_replace('.'.$oldExtension, '.jpg' , $pathname));
@@ -2033,7 +2685,7 @@ function userScanCoreScan($FilesToScan) {
     // / Load the contents of the User ScanCore Log File for processing because it has been sanitized of unnecessary data & whitespace.
     $scanCoreLogFileDATA = @file_get_contents($UserScanCoreLogFile);
     // / Check the contents of the User ScanCore Log File for virus detections.
-    if (strpos($scanCoreLogFileDATA, 'Infected') !== FALSE or strpos($scanCoreLogFileDATA, 'Infected') === TRUE) {
+    if (stripos($scanCoreLogFileDATA, 'Infected') !== FALSE or stripos($scanCoreLogFileDATA, 'Infected') === TRUE) {
       $UserVirusFound = TRUE;
       $txt = 'WARNING!!! Potentially infected file detected at '.$file.'!';
       if ($Verbose) logEntry($txt);
@@ -2178,6 +2830,15 @@ function userVirusScan($FilesToScan, $type) {
   $fileToScan = $path = $type = $scan1Complete = $scan1Errors = $scan2Complete = $scan2Errors = NULL;
   unset($fileToScan, $returnData ,$path, $type, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors);
   return array($ScanComplete, $ScanErrors, $UserVirusFound, $ConsolidatedLogFile, $ConsolidatedLogFileName); }
+
+// / -----------------------------------------------------------------------------------
+// / A function to close the web server connection.
+function closeHRC2Connection() {
+  ignore_user_abort(TRUE);
+  if (function_exists('fastcgi_finish_request')) fastcgi_finish_request();
+  else {
+    if (ob_get_level() > 0) ob_end_flush();
+    flush(); } }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -2263,6 +2924,12 @@ if (!isset($_POST['filesToArchive']) && !isset($_POST['convertSelected']) && !is
   else if ($Verbose)  logEntry('Displaying the GUI.'); }
 else if ($Verbose) logEntry('Skipping display GUI procedure.');
 
+// / Close the web server connection after all required content has been served.
+if (!$TokensAreValid) {
+  logEntry('Closing connection.');
+  closeHRC2Connection();
+  die(); }
+
 // / Only enable file related operations if valid tokens have been supplied.
 if ($TokensAreValid) {
   // / The following code is performed when a user initiates a file upload.
@@ -2321,6 +2988,22 @@ if ($TokensAreValid) {
     if ($UserVirusFound) logEntry('The User Virus Scan detected infected files.');
     if (!$UserVirusFound) logEntry('The User Virus Scan did not detect any infected files.');
     if ($ScanErrors) logEntry('User Virus Scan finished with errors.');
-    if ($Verbose)  logEntry('User Virus Scan Complete.'); } }
+    if ($Verbose)  logEntry('User Virus Scan Complete.'); }
+
+  // / Close the web server connection after all required content has been served.
+  logEntry('Closing connection.');
+  closeHRC2Connection();
+
+  // / If a user still has a pending stream open, keep running to monitor the FFMPEG process.
+  // / The user has already been served. Anything below this point is cleanup the user never waits for.
+  // / Flush & close the connection first, then supervise the backgrounded stream.
+  if ($WaitForStream && $StreamPID > 0) {
+    logEntry('Waiting up to '.$StreamWatchTimeout.' minutes for the user to watch the stream.');
+    list ($StreamCompleted, $StreamKilled, $ElapsedSeconds) = waitForStream($StreamPID, $newPathname);
+    if ($StreamKilled) logEntry('The users stream was killed.');
+    if ($StreamCompleted) logEntry('The users stream has completed after '.$ElapsedSeconds.'.'); } 
+  
+  // / Stop execution of the application.
+  die(); }
 // / -----------------------------------------------------------------------------------
 ?>

@@ -27,9 +27,88 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
 -----------------------------------------------------------------------------------
 
 
+v3.5.1 - Add SSRF protection to core. Harden against SSRF & Blind SSRF attacks.
+
+-v3.5.1.
+-Before I start this change-note I want to highlight the fact that this repository and everything in it was written by humans.
+  -Half a dozen humans made this. Mostly @zelon88. Over a decade.
+  -This application is a shrinking resource. Human-only codebases.
+  -We as maintainers of HRConvert2 have an extraordinary responsibility to maintain the highest quality human code we possibly can.
+  -This codebase will become more valuable as time progresses and human developed software becomes increasingly scarce.
+  -Please continue to submit AI generated Security Advisories. 
+    -I might snap at you for not running the code.
+    -I may snap at you for taking 4 lines of code out of context and only fuzzing that.
+    -Please have your AI agents be humble, thorough, scan EVERY file for variables it's using, and look at the ENTIRE codebase.
+-The HRConvert2 Development team (me, @zelon88) received another AI generated security advisory.
+  -This advisory claimed that HRConvert2 is susceptible to SSRF. It is not.
+  -HRConvert2 v3.5 is not currently known to be vulnerable to server side request forgery.
+  -The security advisory attempted to leverage the convertStreams() function to force the FFMPEG dependency to perform "blind SSRF" against a local LAN segment.
+  -After fixing some minor bugs with the POC I tried using it to trick FFMPEG into committing SSRF.
+  -I discovered that HRConvert2 prevented the attack due to a logic bug. An actual flaw in the codebase.
+  -The flaw that prevents SSRF from taking place also prevents m3u8 stream conversion from working at all.
+  -Before I fix the flaw and restore m3u8 functionality, I want to address the underlying SSRF issue.
+-Harden the core against SSRF (Server Side Request Forgery) attacks. Specifically against ffmpeg + streams.
+-Fix long-standing m3u8 conversion bug.
+  -The UI offered output formats from $MediaOutputArray instead of a stream-specific array.
+  -$UserStreamArray contained only m3u8, so no output format was ever eligible.
+  -Every m3u8 conversion has failed at the format check on line 1656 since the feature shipped.
+  -Discovered while investigating a blind SSRF advisory that turned out to be unprovable.
+-Add isPubliclyRoutableIP().
+  -Single source of truth for IP safety. Returns TRUE only for publicly routable addresses.
+  -Replaces three separate hand-rolled checks that had drifted apart.
+-Add dnsLookup().
+  -Resolves a host WITHOUT following redirects.
+  -Scans every returned record. A host answering with both public and private addresses is treated as a rebinding setup.
+  -Discards any safe IP found if a private one appears. Stops on the first bad answer.
+-Add gatherRemoteStreamHostInfo().
+  -Parses one URL, enforces the scheme allowlist, resolves and validates the host.
+  -Returns the host, port, scheme and validated IP used to pin CURL.
+-Add resolveStreamURI().
+  -Resolves relative URIs against the URL the parent manifest was fetched from.
+  -Refuses relative URIs at layer 0. The uploaded file has no parent to inherit from.
+-Add inspectStreamIP() and inspectStreamDomain().
+  -Text-level scan for raw IPv4/IPv6 addresses and domain names.
+  -Domain pattern skips user:pass@ decoys so the real host is captured.
+  -Costs nothing. Catches hostile manifests before any connection is made.
+-Add inspectTSFile() and classifyStreamContent().
+  -Classify files by CONTENT, never by extension.
+  -FFMPEG dispatches on content markers, so a .ts file opening with #EXTM3U is parsed by FFMPEG as a playlist.
+  -MPEG-TS confirmed by sync byte 0x47 at every 188-byte boundary across 5 packets.
+-Add downloadStreamFile().
+  -Pins CURL to the pre-validated IP with --resolve. CURL never performs its own DNS lookup.
+  -No -L. Redirects are never followed.
+  -Protocol locked with --proto and --proto-redir. HTTP only when config allows AND the URL uses it.
+  -Fetches the first 8191 bytes only. Enough to classify, not enough to be abused.
+  -Saves with a numeric name and no extension so nothing downstream can be fooled by a filename.
+-Add streamFileWalker().
+  -Owns the queue, the seen-set, the depth counter and every budget.
+  -Layer budget bounds depth. Per-layer budget bounds width. Total budget bounds the whole tree.
+  -Seen-set prevents cycles from burning the budget.
+  -Budget is spent BEFORE connecting, never after.
+  -Halt is one-way. Nothing can clear it once set.
+  -Denies immediately if a file references more URIs than the layer budget can cover.
+-Add waitForStream().
+  -FFMPEG now launches in the background so the user is served immediately.
+  -Connection is closed, then the process is supervised and killed at $StreamWatchTimeout.
+-Add config.php options.
+  -$StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction.
+  -$MaxStreamInspectionFileSize, $AllowStreamOverHTTP.
+  -HTTP is disabled by default. Admins must opt in deliberately.
+  -Forfeit action defaults to DENY. An incomplete inspection is never an approval.
+-Add StreamTemp to the installation verification routine.
+-Tested with the m3u8 from the SSRF advisory pointing at 127.0.0.1 over http.
+  -Threw error 21001, as expected.
+  -Denied at layer 0 on the text scan. Files Downloaded: 0. No connection was ever made.
+  -Caught independently by both the LAN check and the HTTP check.
+-Note: FFMPEG v2.0 through v6.0 carry a severe vulnerability related to downloading stream files.
+  -Disable stream conversions on those versions.
+-Move the default logs directory to the un-hosted $CloudLoc.
+-Update default $Salts.
+-Need to add URL field to Stream Operation UI so users can add missing URLs.
+
 --------------------
 COMMIT 6/15/2026
-v3.4.9 - Even further harden core.
+v3.5 - Even further harden core.
 
 -v3.5.
 -Add additional layer of sanitization for raw $_GET color, language, and gui to verifyInputs().

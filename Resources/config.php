@@ -39,12 +39,12 @@
 // /   Salts for hashing operations.
 // /   Change these Salts to something completely random and keep them secret. 
 // /   Store your Salts in hardcopy form or on an encrypted drive in case of emergency.
-$Salts1 = 'something1SoRa21nDoMThatNobody_4Wiljl_evar+guess+i1tgdgdfgfdsfgdasfdas';
-$Salts2 = 'gdf4sgdfsg1sdfsomethingSoRa33nDoMThatNobody_Will2_evar_guess+it';
-$Salts3 = 'somethingSoRanDoMThatNobo423432dy54534534_Will_evar+guess+it';
-$Salts4 = 'somethin1gSoRanDoMThat123:l_will_evar-guess+it';
-$Salts5 = 'somethingSoRanDoMThatNobodyr3454r3r33_Will_evar+guess+it';
-$Salts6 = 'somethingSoR5anDoMThatNob2odyawryoglukfgy;/,6^&__Will_evar+guess+it';
+$Salts1 = 'sodfasfsadmething1SoRa21nDoMThatNobody_4WiMoewodad+guess+i1tgdg';
+$Salts2 = 'gdf4sgdfsg1sdfsomethingSoRa33nDoMThatNobody_Will2_evar_ghbfdsf7854';
+$Salts3 = 'somethingSoR6523489gujikmeow32dy54534534_Will_evar+guess+i22t';
+$Salts4 = 'powlsomethin1gSoRanDoMThamooportawill_evar-guess+it';
+$Salts5 = 'som2thingSoRanDoMThatNobodyr3454r3r33_Will_evar+guess+it';
+$Salts6 = 'sometfff5f45ghhingSoR5anDoMThatNob2odyawryogluk2234vf/21^&__Will_evar+guess+it';
 // /  --Server URL--
 // /   Externally or internally accesible domain or IP.
 // /   Do not include a trailing slash.
@@ -130,6 +130,80 @@ $DeleteBuildEnvironment = FALSE;
 // /   Valid options are TRUE or FALSE.
 // /   Default is FALSE.
 $DeleteDevelopmentDocumentation = FALSE;
+// /  --Stream Duration Timeout--
+// /   Set the maximum amount of time in minutes that FFMPEG will stream a file from a streaming provider for a user.
+// /   This setting must be lower than the PHP execution timer set in php.ini.
+// /   This setting must be lower than the --Delete Threshold-- located in the ---General Information--- section of this config.php file.
+// /   This setting is costly because it requires FFMPEG & HRConvert2 to both maintain dedicated threads for the duration of the users stream.
+// /   On popular public facing servers, setting this too high can result in the server becoming overwhelmed by on-going streams.
+// /   Valid options are integers greater than 1, but not more than the PHP execution time or the --Delete Threshold--.
+// /   This option MUST be set higher than 0.
+// /   Default is 15
+$StreamWatchTimeout = 15;
+// /  --Stream Connection Timeout--
+// /   Set the minimum amount of time in seconds that FFMPEG will wait after attempting to make a connection to a remote stream provider.
+// /   This is used as a "blind SSRF" protection feature by introducing a minimum execution duration into specific FFMPEG operations.
+// /   Valid options are integers between 3 and 10.
+// /   This option MUST be set higher than 2.
+// /   Default is 10.
+$StreamConnectionTimeout = 10;
+// /  --Allow Streams Over HTTP---
+// /   During stream conversions, HRConvert2 will attempt to connect to the stream provider specified in the stream file provided by the user.
+// /   If set to TRUE, HRConvert2 will attempt to connect to non-encrypted, plain-text providers over HTTP when specified by the stream file.
+// /   If set to FALSE, HRConvert2 will not utilize HTTP.
+// /   Requires FFMPEG v6.1 or later. Note that FFMPEG v2.0 through v6.0 carry a severe vulnerability related to downloading stream files.
+// /   If you have FFMPEG v6.0 or earlier installed, disable Stream Conversions & remove m3u8 from the list of supported file formats.
+// /   Check FFMPEG version by opening a terminal on the server and running 'ffmpeg -v'
+// /   Valid options are TRUE or FALSE.
+// /   Default is FALSE.
+$AllowStreamOverHTTP = FALSE;
+// /  --Stream Inspection Layers---
+// /   Stream operations are especially sensitive as they require allowing dependencies to connect to remote hosts from user-supplied URLs.
+// /   HRConvert2 inspects stream files uploaded by the user to prevent malicious abuse of the FFMPEG dependency.
+// /   During inspection, HRConvert2 may discover that a stream file will request FFMPEG to download additional stream files from remote hosts.
+// /   The first inspection is performed on the file that was uploaded by the user. This inspection cannot be disabled. 
+// /   Subsequent inspections are performed on the stream that FFMPEG would be asked to download, if the operation were allowed to proceed.
+// /   The maximum possible cost for inspecting each stream conversion is one remote onnection * ($StreamInspectionLayers * $StreamInspectionFilesPerLayer).
+// /   This setting tells HRConvert2 how many nested layers of stream files it is allowed to inspect before making a decision based on cost.
+// /   This setting determines how much effort HRConvert2 is willing to spend before an inspection is considered complete.
+// /   Set to 0 to not perform any inspection on remote stream files. Local stream files uploaded by the user will still be inspected.
+// /   Valid options are integers 0 and larger.
+// /   Default is 3.
+// /   Maximum reccomended value is 10.
+$StreamInspectionLayers = 3;
+// /  --Stream Inspection Files Per Layer---
+// /   Stream operations are especially sensitive as they require allowing dependencies to connect to remote hosts from user-supplied URLs.
+// /   HRConvert2 inspects stream files uploaded by the user to prevent malicious abuse of the FFMPEG dependency.
+// /   During inspection, HRConvert2 may discover that a stream file will request FFMPEG to download additional stream files from remote hosts.
+// /   The first inspection is performed on the file that was uploaded by the user. This inspection cannot be disabled. 
+// /   Subsequent inspections are performed on the stream that FFMPEG would be asked to download, if the operation were allowed to proceed.
+// /   The maximum possible cost for inspecting each stream conversion is one remote onnection * ($StreamInspectionLayers * $StreamInspectionFilesPerLayer).
+// /   This setting tells HRConvert2 how many files per layer of stream files it is allowed to inspect before making a decision based on cost.
+// /   This setting determines how much effort HRConvert2 is willing to spend before an inspection is considered complete.
+// /   Set to 0 to not perform any inspection on remote stream files. Local stream files uploaded by the user will still be inspected.
+// /   Valid options are integers 0 and larger.
+// /   Default is 7.
+// /   Maximum reccomended value is 15.
+$StreamInspectionFilesPerLayer = 7;
+// /  --Default Stream Inspection Forfeit Action---
+// /   Stream operations are especially sensitive as they require allowing dependencies to connect to remote hosts from user-supplied URLs.
+// /   HRConvert2 inspects stream files uploaded by the user to prevent malicious abuse of the FFMPEG dependency.
+// /   During inspection, HRConvert2 may discover that a stream file will request FFMPEG to download additional stream files from remote hosts.
+// /   The first inspection is performed on the file that was uploaded by the user. This inspection cannot be disabled. 
+// /   Subsequent inspections are performed on the stream that FFMPEG would be asked to download, if the operation were allowed to proceed.
+// /   The maximum possible cost for inspecting each stream conversion is one remote onnection * ($StreamInspectionLayers * $StreamInspectionFilesPerLayer).
+// /   This setting tells HRConvert2 what to do in the event that it has reached the end of it's inspection budget with no adverse findings.
+// /   If set to 'ALLOW', HRConvert2 will allow FFMPEG to process the file only when the inspection has exhausted the budget with no findings.
+// /   If set to 'DENY', HRConvert2 will not allow FFMPEG to process the file unless it can afford to inspect & approve every required stream file.
+// /   Valid options are 'DENY' or 'ALLOW'.
+// /   Default is 'DENY'
+$DefaultStreamInspectionForfeitAction = 'DENY';
+// /  -- Maximum Stream Inspection Size--
+// /   The Stream Inspector will download up to this many bytes of a manifest file for validation during operation.
+// /   The max file potential download amount observed at the server per stream request is...
+// /   --Stream Inspection Layers--  X  --StreamInspectionFilesPerLayer--  X  --MaxStreamInspectionFileSize--
+// /   Valid options are integers greater than 940.
+$MaxStreamInspectionFileSize = 8191;
 // / ------------------------------
 
 // / ------------------------------
@@ -173,8 +247,8 @@ $ConvertLoc = '/DATA/HRConvert2';
 // /   This is where permanent Log files are stored.
 // /   Do not include a trailing slash.
 // /   Do not use a path with whitespace.
-// /   Default is '/var/www/html/HRProprietary/HRConvert2/Logs'
-$LogDir = '/var/www/html/HRProprietary/HRConvert2/Logs';
+// /   Default is $ConvertLoc.'/Logs'
+$LogDir = $ConvertLoc.'/Logs';
 // / ------------------------------
 
 // / ------------------------------
@@ -252,10 +326,15 @@ $AllowUserShare = TRUE;
 // /   Only conversion types contained in this list will be processed.
 // /   If a conversion type is disabled, options for processing that conversion will not be displayed by the UI.
 // /   Default is 'Document', 'Image', 'Model', 'Drawing', 'Video', 'Subtitle', 'Audio', 'Archive', 'Stream', 'OCR'.
+// /   The 'Stream' option requires FFMPEG v6.0 or later. 
+// /   Note that FFMPEG v2.0 through v6.0 carry a severe vulnerability related to downloading stream files.
+// /   If you have FFMPEG v6.0 or earlier installed, disable Stream Conversions & remove m3u8 from the list of supported file formats.
+// /   Check FFMPEG version by opening a terminal on the server and running 'ffmpeg -v'
 $SupportedConversionTypes = array('Document', 'Image', 'Model', 'Drawing', 'Video', 'Subtitle', 'Audio', 'Archive', 'Stream', 'OCR');
 // /  --File Deletion Age Theshold--
 // /   Age in minutes of files to be deleted.
 // /   Set to 0 to keep files forever.
+// /   Valid options are integers 0 or larger.
 // /   Default is 60.
 $DeleteThreshold = 60;
 // /  --Enhanced Logging Verbosity--
@@ -357,7 +436,7 @@ $DocumentEngineSleepTimer = 5;
 // /   If your system uses Python 3.11 or earlier, this can be set to either TRUE or FALSE.
 // /   If set to TRUE, the included "zelon88 patched" version of Unoconv will be used for document conversions.
 // /   If set to FALSE, the system version of Unoconv will be used for document conversins.
-// /   Defai;t is TRUE.
+// /   Default is TRUE.
 $UsePatchedDocumentEngine = TRUE;
 // / ------------------------------
 
@@ -391,7 +470,7 @@ $UserVideoInputArray = array('smoothstreaming', 'svcd', 'swf', 'truehd', 'vc1', 
 // /  --Supported Video Output Formats--
 $UserVideoOutputArray = array('3gp', 'mkv', 'avi', 'mp4', 'mpeg', 'wmv', 'mov', 'm4v');
 // /  --Supported Stream Formats--
-$UserStreamArray = array('m3u8');
+$UserStreamArray = array('m3u8', 'ts');
 // /  --Supported Drawing Formats--
 $UserDrawingArray = array('svg', 'dxf', 'vdx', 'fig', 'dia', 'wpg', 'png');
 // /  --Supported Model Formats--

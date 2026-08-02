@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 6/15/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/2/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.4.9.
+v3.5.2.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -26,7 +26,16 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+--------------------
+COMMIT 8/2/2026
+v3.5.2 - Harden against RCE.
 
+-v3.5.2.
+-Use sanitize() function for IP sanitization instead of hardcoded strings.
+-Removve htmlentities() from sanitize() function.
+
+--------------------
+COMMIT 8/2/2026
 v3.5.1 - Add SSRF protection to core. Harden against SSRF & Blind SSRF attacks.
 
 -v3.5.1.

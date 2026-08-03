@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/2/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/5/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.5.1.
+// / v3.5.3.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -34,17 +34,7 @@
 // / ------------------------------
  
 // / ---Security Informations---
-// / 
-// /  --Salts--
-// /   Salts for hashing operations.
-// /   Change these Salts to something completely random and keep them secret. 
-// /   Store your Salts in hardcopy form or on an encrypted drive in case of emergency.
-$Salts1 = 'sodfasfsadmething1SoRa21nDoMThatNobody_4WiMoewodad+guess+i1tgdg';
-$Salts2 = 'gdf4sgdfsg1sdfsomethingSoRa33nDoMThatNobody_Will2_evar_ghbfdsf7854';
-$Salts3 = 'somethingSoR6523489gujikmeow32dy54534534_Will_evar+guess+i22t';
-$Salts4 = 'powlsomethin1gSoRanDoMThamooportawill_evar-guess+it';
-$Salts5 = 'som2thingSoRanDoMThatNobodyr3454r3r33_Will_evar+guess+it';
-$Salts6 = 'sometfff5f45ghhingSoR5anDoMThatNob2odyawryogluk2234vf/21^&__Will_evar+guess+it';
+// /
 // /  --Server URL--
 // /   Externally or internally accesible domain or IP.
 // /   Do not include a trailing slash.
@@ -249,6 +239,24 @@ $ConvertLoc = '/DATA/HRConvert2';
 // /   Do not use a path with whitespace.
 // /   Default is $ConvertLoc.'/Logs'
 $LogDir = $ConvertLoc.'/Logs';
+
+
+// /  --Append Log Hash To Log Files--
+// /   This setting is used to append a 12 digit unique identifier to log file names.
+// /   This randomizes log file names across multiple installations & servers.
+// /   Helps to obfuscate log filenames to protect from against blind filename probes.
+// /   If set to TRUE, HRConvert2 will add a random 12 digit number to the end of the log file name.
+// /   If set to FALSE, HRConvert2 will not add any random digits to the log file name.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$AppendLogHashToLogFiles = TRUE;
+
+// /  --Unique Daily Log Hash Rotation--
+// /   Log files are appended with t
+// /   Do not include a trailing slash.
+// /   Do not use a path with whitespace.
+// /   Default is $ConvertLoc.'/Logs'
+$UniqueDailyLogHash = TRUE;
 // / ------------------------------
 
 // / ------------------------------

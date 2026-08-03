@@ -27,6 +27,69 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
 -----------------------------------------------------------------------------------
 
 --------------------
+COMMIT 8/3/2026
+v3.5.3 - Work on Stream functionality. Harden against log exfiltration. Harden against session hash derivation attacks.
+
+-v3.5.3.
+-Stream now requires three conversions be enabled in config.php.
+  -Stream conversions now require Audio & Video conversions be enabled also.
+-Update UI to dispaly output options from video files & audio files as eligible output for stream formats.
+  -Applied to Default, Original, & Wide UIs & all language packs.
+-config.php changes. 
+  -Add AppendLogHashToLogFiles & UniqueDailyLogHash to config.php.
+  -AppendLogHashToLogFiles is a boolean for controlling whether or not to append a per-server unique identifier to the end of log files.
+  -UniqueDailyLogs is a boolean for controlling whether or not the unique identifier appended to log files is rotated daily or not.
+  -UniqueDailyLogs requires AppendLogHashToFiles be set to TRUE in order to have any effect.
+  -Remove $Salts variables.
+-verifyInstallation changes.
+  -Generates a secret key that is used to derive SesHash variables from a per-install secret rather than hard-coded $Salt strings in config.php.
+  -Fix delete dev environment and delete changelog routine.
+-verifySession() & verifySesHash() changes.
+  -Added token input to log output in core section that calls verifyTokens().
+  -Now Tokens contains random numbers generated using standard PHP functions at runtime instead of using stored $Salts. 
+  -Now a secret is generated at install time and maintained by verifyInstallation().
+  -Switch from ripemd160 to sha256, remove early truncation steps to preserve as much unique data for the final hash operations as possible.
+  -All hashes used for generating unique URIs went from 12 characters to 18 characters & use SHA256 algorithm instead of ripemd160.
+  -Log hash appended to log files goes from 12 characters to 18, from ripemd160 to SHA256.
+  -No longer truncate URL hash operations. Leave full length hash for as long as possible. Increases entropy.
+  -Token2 is now 64 characters.
+  -Truncate log file operations to 18 characters to leave enough name length overhead for linux directory structure.
+  -Logs were moved out of the hosted directory in v3.5.1, so probing log files has become a lot less practical now for multiple reasons.
+  -Instead filename obscurity being the only line of defense against log exfiltration, now they are protected by default.
+  -Filename security becomes a bonus side-dish security feature, not the main course, and can be controlled via config.php.
+-verifyTokens() changes.
+  -Accurately reject tokens over 18 characters in length.
+-convert() changes.
+  -Add support for continuing streams after the conversion has returned the output file.
+-convertFiles() changes.
+  -Cleaned up dead array references.
+  -Reworked error handling, more robust architecture.
+  -Reworked supported file detection.
+  -$MainConversionErrors is now thrown on every error path.
+  -$isExtensionSupported resets per file. 
+  -Previously $isExtensionSupported was erroneously set once and not cleared on subsequent file loops.
+  -Break addded to the format detection loop to improve performance.
+  -Consolidate sources of truth for determining operation result. 
+  -Error 5004 was redundant and has been removed.
+  -Consilidate error checking routine. Reduce log volume & noise. 
+  -Add error exception for in-process streams.
+-deleteFiles() changes.
+  -Fix variable assignment bug that left undeleted files.
+-Add generateInstallSecret() function.
+  -Generates the install secret.
+-Add generateRandomNumber() function.
+  -Generates fixed length random number tokens.
+-Stream SSRF Protection routine changes
+  -Removed all early returns. 
+  -All functions now have one return at the bottom of each function.
+  -This ensures memory cleanup functions as intended.
+  -Also prevents code path confusion during debugging.
+-Fix cleanup routine.
+  -Add isDirEmptyOfUserFiles() function for telling if all files except index.html have been removed from a hosted directory.
+  -Add removeEmptiedSessionDir() for determining if index.html is the only file left in a folder to be deleted.
+-Fix convertAudio bitrate selection bug.
+
+--------------------
 COMMIT 8/2/2026
 v3.5.2 - Harden against RCE.
 

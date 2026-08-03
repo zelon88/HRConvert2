@@ -1091,7 +1091,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <p><?php echo $Gui2Text17; ?><input type="text" id='userstreamfilename<?php echo $ConvertGuiCounter1; ?>' name='userstreamfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='streamextension<?php echo $ConvertGuiCounter1; ?>' name='streamextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="mp4"><?php echo $Gui2Text18; ?></option>
-            <?php foreach ($MediaOutputArray as $gui2StreamArr) { ?>
+            <?php foreach ($StreamOutputArray as $gui2StreamArr) { ?>
             <option value="<?php echo $gui2StreamArr; ?>"><?php echo $gui2StreamArr; ?></option>
             <?php } ?>
           </select></p>

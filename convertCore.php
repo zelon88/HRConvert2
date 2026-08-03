@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/2/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/5/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.5.2.
+// / v3.5.3.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -59,12 +59,12 @@ function verifyTime() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// A function to thwart any potential blind server-side-request forgery (SSRF) attacks.
-// Introduces arbitrary noice into every output in the form of random, stacked delay timers.
+// A function to thwart any potential blind attacks that utilize time as an exfiltration mechanism.
+// Introduces arbitrary noise in the form of random delay timers.
 // This function introduces entropy into the duration of every HRConvert2 operation.
 // Set $opType to one of the following options; sanitize, filework, or core.
 // When $opType is set to ''
-function ssrfProtect($opType) {
+function timingProtect($opType) {
 
 
 }
@@ -124,104 +124,190 @@ function sanitize($Variable, $strict) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to produce random number variables for truly unique per-session identifiers.
+// / This function uses the built-in PHP "random_int" function to generate the random number.
+// / This function does not generate it's own number. It produces a number from random_int().
+// / Random number range is hardcoded to 100000000000000000 to 999999999999999999 for consistency.
+// / Returns FALSE in $RandomNumberCheck if the system entropy source was unavailable.
+// / The caller MUST check $RandomNumberCheck. A predictable identifier is worse than none.
+function generateRandomNumber() {
+  // / Set variables.
+  $RandomNumber = FALSE;
+  $RandomNumberCheck = TRUE;
+  // / random_int() throws rather than returning a poor result when entropy is unavailable.
+  try { $RandomNumber = random_int(100000000000000000, 999999999999999999); }
+  catch (Throwable $error) { $RandomNumberCheck = FALSE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $error = NULL;
+  unset($error);
+  return array($RandomNumber, $RandomNumberCheck); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to generate the per-install secret used to derive session identifiers.
+// / 32 bytes gives 256 bits of entropy & returns as a 64 hexadecimal character string.
+function generateInstallSecret() {
+  // / Set variables.
+  $InstallSecret = FALSE;
+  $InstallSecretCheck = TRUE;
+  // / random_bytes() throws rather than returning a poor result when entropy is unavailable.
+  // / Fail closed. A predictable secret is worse than no installation at all.
+  try { $InstallSecret = bin2hex(random_bytes(32)); }
+  catch (Throwable $error) { $InstallSecretCheck = FALSE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $error = NULL;
+  unset($error);
+  return array($InstallSecret, $InstallSecretCheck); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to load required HRConvert2 files.
+// / This function verifies the installation environment.
 function verifyInstallation() {
   // / Set variables.
-  global $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6, $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $DefaultColor, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $URL, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize;;
+  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $DefaultColor, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey;
+  $InstallationIsVerified = $secret = $secretFile = $secretFileContent = $createSecretFile = $SecretKey = $secretFailed = $loadSecretFile = $secretFileWriteComplete = $secretCheck = FALSE;
+  $check1 = $check2 = TRUE;
+  $bytesWritten = 0;
   // / Define absolute paths for files that we only have relative paths for.
-  $InstallationIsVerified = $buildDirDeleted = $dockerFileDeleted = $readmeDeleted = $changelogFileDeleted = $buildEnvDeleted = $devDocsDeleted = FALSE;
   $ConfigFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'config.php');
   $VersionInfoFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'versionInfo.php');
-  $dockerFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build'.DIRECTORY_SEPARATOR.'Dockerfile');
-  $changelogFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'CHANGELOG.txt');
-  $readmeFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'README.md');
-  $buildDir = realpath(dirname(__DIR__).DIRECTORY_SEPARATOR.'Build');
   // / Check for required files & stop execution if they are missing.
   if (!file_exists($ConfigFile)) die ('ERROR!!! HRConvert2-0: Could not process the HRConvert2 Configuration file (config.php)!'.PHP_EOL.'<br />');
   else require_once ($ConfigFile);
   if (!file_exists($VersionInfoFile)) die ('ERROR!!! HRConvert2-24000: Could not process the HRConvert2 Version Information file (versionInfo.php)!'.PHP_EOL.'<br />');
   else require_once ($VersionInfoFile);
-  // / Delete the build environment if specified by config.php.
-  if ($DeleteBuildEnvironment) {
-    if (is_dir($buildDir)) $buildDirDeleted = cleanFiles($buildDir);
-    if (file_exists($dockerFile)) $dockerFileDeleted = unlink($dockerFile);
-    if (file_exists($dockerFile) && file_exists($buildDir)) $buildEnvDeleted = TRUE; }
-  // / Delete the development environment if specified by config.php.
-  if ($DeleteDevelopmentDocumentation) {
-    if (file_exists($changelogFile)) $changelogFileDeleted = unlink($changelogFile);
-    if (file_exists($readmeFile)) $readmeDeleted = unlink($readmeFile);
-    if (!file_exists($changelogFile) && !file_exists($readmeFile)) $devDocsDeleted = TRUE; }
-  // / Perform a check to see if any required operations failed.
-  // / Installation is considered verified when check one & check two are both false.
-  $InstallationIsVerified = TRUE;
-  if ($DeleteBuildEnvironment) if (!$buildEnvDeleted) $InstallationIsVerified = FALSE;
-  if ($DeleteDevelopmentDocumentation) if (!$devDocsDeleted) $InstallationIsVerified = FALSE;
+  // / Define the location of the per-install secret file.
+  $secretFile = $ConvertLoc.DIRECTORY_SEPARATOR.'secret.php';
+  // / If a secret file does not exist, create one.
+  if (!file_exists($secretFile)) {
+    $createSecretFile = TRUE;
+    list ($secret, $secretCheck) = generateInstallSecret();
+    if ($secretCheck) {
+      $secretFileContent = '<?php $SecretKey = \''.$secret.'\';';
+      $bytesWritten = file_put_contents($secretFile, $secretFileContent, LOCK_EX); }
+    // / Check that the secret key, & only the secret key, was written to the secret file.
+    // / If we just appended the secret to an existing file this will catch it & delete the file.
+    if ($secretCheck && $bytesWritten === strlen($secretFileContent)) {
+      @chmod($secretFile, 0600);
+      $SecretKey = $secret;
+      $secretFileWriteComplete = TRUE; }
+    else if (file_exists($secretFile)) @unlink($secretFile); }
+  // / If a secret file does exist, load it & make sure it is valid.
+  else {
+    @chmod($secretFile, 0600);
+    $loadSecretFile = TRUE;
+    require_once ($secretFile);
+    if (empty($SecretKey) or strlen($SecretKey) !== 64) $secretFailed = TRUE; }
+  // / Check if a secret file was needed, & whether it was actually created.
+  if ($createSecretFile) if (!$secretFileWriteComplete) $check1 = FALSE;
+  // / Check if a secret key file was found, & if the secret key was loaded successfully.
+  if ($loadSecretFile) if ($secretFailed or empty($SecretKey)) $check2 = FALSE;
+  // / Perform a check to see if all required tests passed.
+  if ($check1 && $check2) $InstallationIsVerified = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $buildDir = $buildDirDeleted = $dockerFile = $dockerFileDeleted = $readmeFile = $readmeDeleted = $changelogFile = $changelogFileDeleted = $buildEnvDeleted = $devDocsDeleted = $checkOne = $checkTwo = NULL;
-  unset($buildDir, $buildDirDeleted, $dockerFile, $dockerFileDeleted, $readmeFile, $readmeDeleted, $changelogFile, $changelogFileDeleted, $buildEnvDeleted, $devDocsDeleted);
+  // / $SecretKey is deliberately NOT cleared here because the rest of the core needs it.
+  $secret = $secretCheck = $secretFile = $secretFileContent = $secretFileWriteComplete = $createSecretFile = $loadSecretFile = $secretFailed = $bytesWritten = $check1 = $check2 = NULL;
+  unset($secret, $secretCheck, $secretFile, $secretFileContent, $secretFileWriteComplete, $createSecretFile, $loadSecretFile, $secretFailed, $bytesWritten, $check1, $check2);
   return array($InstallationIsVerified, $ConfigFile, $Version); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to detect the users IP so it can be used as an identifier for the session.
+// / A function to detect the users IP & user agent.
+// / NOTE: As of v3.5.x the IP is NO LONGER used to derive any session identifier.
+// / HTTP_CLIENT_IP & HTTP_X_FORWARDED_FOR are attacker-supplied headers & cannot be trusted
+// / as a binding factor. They also rotate legitimately on mobile networks, which broke sessions.
+// / The token pair is the credential. The IP is retained for logging purposes only.
 function verifySession() {
   // / Set variables.
   $IP = '';
-  $HashedUserAgent = hash('sha256', $_SERVER['HTTP_USER_AGENT']);
-  $SessionIsVerified = TRUE;
-  // / Detect an IP that we can use as an identifier for the session.
+  $SessionIsVerified = FALSE;
+  list ($HashedUserAgent, $SessionIsVerified) = sanitize(hash('sha256', $_SERVER['HTTP_USER_AGENT'] ?? ''), TRUE);
+  // / Detect an IP for logging. Header-supplied values are recorded but never trusted.
   if (!empty($_SERVER['HTTP_CLIENT_IP'])) list ($IP, $SessionIsVerified) = sanitize($_SERVER['HTTP_CLIENT_IP'], TRUE);
   elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) list ($IP, $SessionIsVerified) = sanitize($_SERVER['HTTP_X_FORWARDED_FOR'], TRUE);
-  else list ($IP, $SessionIsVerified) = sanitize($_SERVER['REMOTE_ADDR'], TRUE);
+  else list ($IP, $SessionIsVerified) = sanitize($_SERVER['REMOTE_ADDR'] ?? '', TRUE);
   return array($SessionIsVerified, $IP, $HashedUserAgent); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to define the $SesHash related variables for the session.
-function verifySesHash($IP, $HashedUserAgent) {
+// / $SesHash  = per-server-per-day. The parent directory holding every session for today.
+// / $SesHash2 = per-session. The individual user directory inside today's parent.
+// / $SesHash3 = the combined relative path, "[server-daily]/[session]".
+// / $SesHash4 = per-server-per-day log file identifier. Never tied to any individual session.
+// / Every one of these is derived with HMAC keyed on the per-install $SecretKey.
+// / Nothing here is derivable from the server name, the date, the version file, or a default
+// / config.php. An attacker who knows the machine still cannot compute any of these values.
+function verifySesHash($Token1) {
   // / Set variables.
-  global $Date, $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6, $Token1;
-  if (is_string($Salts1) && is_string($Salts2) && is_string($Salts3) && is_string($Salts4) && is_string($Salts4) && is_string($Salts5) && is_string($Salts6)) {
-    $SesHashIsVerified = TRUE;
-    $SesHash = substr(hash('ripemd160', $Date.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6), -12);
-    $SesHash2 = substr(hash('ripemd160', $SesHash.$Token1.$Date.$IP.$HashedUserAgent.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6), -12);
-    $SesHash3 = $SesHash.'/'.$SesHash2;
-    $SesHash4 = hash('ripemd160', $Salts6.$Salts5.$Salts4.$Salts3.$Salts2.$Salts1); }
-  else $SesHashIsVerified = $SesHash = $SesHash2 = $SesHash3 = $SesHash4 = FALSE;
+  global $Date, $SecretKey, $UniqueDailyLogHash;
+  $SesHashIsVerified = $inputsAreUsable = FALSE;
+  $SesHash = $SesHash2 = $SesHash3 = $SesHash4 = FALSE;
+  $dailyContext = '';
+  // / Both the install secret & a well formed Token1 are required before anything can be derived.
+  if (!empty($SecretKey) && strlen($SecretKey) === 64 && !empty($Token1) && ctype_digit((string)$Token1) && strlen((string)$Token1) === 18) $inputsAreUsable = TRUE;
+  if ($inputsAreUsable) {
+    // / The daily context. Server name is included only for domain separation between vhosts
+    // / sharing one installation. It contributes no secrecy & is not relied on for any.
+    $dailyContext = 'HRC2-DAILY|'.$Date.'|'.($_SERVER['SERVER_NAME'] ?? '');
+    // / Per-server-per-day parent directory.
+    $SesHash = substr(hash_hmac('sha256', $dailyContext, $SecretKey), -18);
+    // / Per-session directory. Bound to the daily parent so a token cannot be replayed into a different day's directory tree.
+    $SesHash2 = substr(hash_hmac('sha256', 'HRC2-SESSION|'.$SesHash.'|'.(string)$Token1, $SecretKey), -18);
+    // / The combined relative path used everywhere else in the core.
+    $SesHash3 = $SesHash.DIRECTORY_SEPARATOR.$SesHash2;
+    // / The log file identifier. Distinct context string so it can never collide with $SesHash.
+    // / Derived only from daily context so it is never tied to an individual user.
+    if ($UniqueDailyLogHash) $SesHash4 = substr(hash_hmac('sha256', 'HRC2-LOG|'.$dailyContext, $SecretKey), -18);
+    else $SesHash4 = substr(hash_hmac('sha256', 'HRC2-LOG|'.($_SERVER['SERVER_NAME'] ?? ''), $SecretKey), -18);
+    // / Confirm every identifier came out the expected length before anything trusts them.
+    if (strlen($SesHash) === 18 && strlen($SesHash2) === 18 && strlen($SesHash4) === 18 && !empty($SesHash3)) $SesHashIsVerified = TRUE; }
+  // / Any failure at any point invalidates all four. Never hand back a partial set.
+  if (!$SesHashIsVerified) $SesHash = $SesHash2 = $SesHash3 = $SesHash4 = FALSE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $dailyContext = $inputsAreUsable = NULL;
+  unset($dailyContext, $inputsAreUsable);
   return array($SesHashIsVerified, $SesHash, $SesHash2, $SesHash3, $SesHash4); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to create a logfile if one does not exist.
+// / The log hash suffix is assembled before any filename that uses it is built.
+// / The ClamAV rotation loop rotates the ClamAV log instead of the application log.
+// / The rotation condition compares the file size directly against the configured maximum.
 function verifyLogs() {
   // / Set variables.
-  global $LogDir, $LogFile, $MaxLogSize, $InstLoc, $SesHash, $SesHash4, $DefaultLogDir, $DefaultLogSize, $Time, $Date, $LogInc, $LogInc2, $MaxLogSize, $LogDir, $LogFile, $VirusScan, $ApplicationName, $PermissionLevels, $ConvertLoc;
+  global $LogDir, $LogFile, $MaxLogSize, $InstLoc, $SesHash, $SesHash4, $DefaultLogDir, $DefaultLogSize, $Time, $Date, $LogInc, $LogInc2, $VirusScan, $ApplicationName, $PermissionLevels, $ConvertLoc, $AppendLogHashToLogFiles;
   $LogExists = $logWritten = FALSE;
+  $logHashAppend = '';
   $LogInc = $LogInc2 = 0;
-  $LogFile = str_replace('..', '', $LogDir.'/'.$ApplicationName.'_'.$LogInc.'_'.$Date.'_'.$SesHash4.'_'.$SesHash.'.txt');
   $DefaultLogDir = $ConvertLoc.'/Logs';
   $DefaultLogSize = 1048576;
-  $ClamLogFile = str_replace('..', '', $LogDir.'/ClamLog_'.$LogInc2.'_'.$Date.'_'.$SesHash4.'_'.$SesHash.'.txt');
+  // / Build the hash suffix before it is used in any filename.
+  if ($AppendLogHashToLogFiles) $logHashAppend = '_'.$SesHash4;
+  $ClamLogFile = str_replace('..', '', $LogDir.'/ClamLog_'.$LogInc2.'_'.$Date.$logHashAppend.'.txt');
+  $LogFile = str_replace('..', '', $LogDir.'/'.$ApplicationName.'_'.$LogInc.'_'.$Date.$logHashAppend.'.txt');
   if (!is_numeric($MaxLogSize)) $MaxLogSize = $DefaultLogSize;
   if (!is_dir($LogDir)) @mkdir($LogDir, $PermissionLevels);
   if (!is_dir($LogDir)) $LogDir = $DefaultLogDir;
   if (!is_dir($LogDir)) die('ERROR!!! '.$Time.': '.$ApplicationName.'-3, The log directory does not exist at '.$LogDir.'.');
   if (!file_exists($LogDir.'/index.html')) @copy('index.html', $LogDir.'/index.html');
-  // / Create a log file depending on whether or not the max filesize has been reached.
-  while (file_exists($LogFile) && round((filesize($LogFile) / $MaxLogSize), 2) > $MaxLogSize) {
+  // / Advance to a new log file whenever the current one has reached the maximum size.
+  while (file_exists($LogFile) && filesize($LogFile) > $MaxLogSize) {
     $LogInc++;
-    $LogFile = str_replace('..', '', $LogDir.'/'.$ApplicationName.'_'.$LogInc.'_'.$Date.'_'.$SesHash4.'_'.$SesHash.'.txt');
-    $logWritten = file_put_contents($LogFile, 'OP-Act, '.$Time.': Logfile created using method 0.'.PHP_EOL, FILE_APPEND); }
+    $LogFile = str_replace('..', '', $LogDir.'/'.$ApplicationName.'_'.$LogInc.'_'.$Date.$logHashAppend.'.txt'); }
   if (!file_exists($LogFile)) $logWritten = file_put_contents($LogFile, 'OP-Act, '.$Time.': Logfile created using method 1.'.PHP_EOL, FILE_APPEND);
   if (file_exists($LogFile)) $LogExists = TRUE;
-  // / Set a clamlog file depending on whether or not the max filesize has been reached, but do not create one yet.
+  // / Set a clamlog file depending on whether or not the max filesize has been reached.
+  // / The ClamAV log file is not created here, only named.
   if ($VirusScan) {
-    while (file_exists($ClamLogFile) && round((filesize($ClamLogFile) / $MaxLogSize), 2) > $MaxLogSize) {
+    while (file_exists($ClamLogFile) && filesize($ClamLogFile) > $MaxLogSize) {
       $LogInc2++;
-      $LogFile = str_replace('..', '', $LogDir.'/ClamLog_'.$LogInc2.'_'.$Date.'_'.$SesHash4.'_'.$SesHash.'.txt'); } }
+      $ClamLogFile = str_replace('..', '', $LogDir.'/ClamLog_'.$LogInc2.'_'.$Date.$logHashAppend.'.txt'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $logWritten = NULL;
-  unset($logWritten);
+  $logWritten = $logHashAppend = NULL;
+  unset($logWritten, $logHashAppend);
   return array($LogExists, $LogFile, $ClamLogFile); }
 // / -----------------------------------------------------------------------------------
 
@@ -268,15 +354,42 @@ function verifyEncryption() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to set or validate a Token so it can be used as a unique identifier for the session.
+// / A function to set or validate the token pair used to identify a session.
+// / Token1 is the session credential & carries the entropy. It is an 18 digit random number.
+// / Token2 is an HMAC signature over Token1, keyed with the per-install $SecretKey.
+// / An attacker who does not hold $SecretKey cannot produce a valid Token2 for any Token1.
+// / This validation touches no files & depends on no directory state.
+// / This validation runs BEFORE the session hashes exist & introduces no circular dependency.
+// / This validation is arithmetic only. 
 function verifyTokens($Token1, $Token2) {
-  // / Verify variables.
-  global $Salts1, $Salts2, $Salts3, $Salts4, $Salts5, $Salts6;
-  $TokensAreValid = TRUE;
-  // / Check that tokens are valid & set them if they are not.
-  if (!isset($Token1) or $Token1 === '' or strlen($Token1) < 19) $Token1 = hash('ripemd160', rand(0, 1000000000).rand(0, 1000000000));
-  if (isset($Token2)) if ($Token2 !== hash('ripemd160', $Token1.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6)) $TokensAreValid = FALSE;
-  if (!isset($Token2) or $Token2 === '' or strlen($Token2) < 19) $Token2 = hash('ripemd160', $Token1.$Salts1.$Salts2.$Salts3.$Salts4.$Salts5.$Salts6);
+  // / Set variables.
+  global $SecretKey;
+  $TokensAreValid = $randomCheck = $secretIsUsable = $issueNewSession = FALSE;
+  $expectedToken2 = '';
+  // / Without the install secret nothing can be validated or signed.
+  if (!empty($SecretKey) && strlen($SecretKey) === 64) $secretIsUsable = TRUE;
+  // / An absent or malformed Token1 means there is no session to validate, so issue a new one.
+  // / Note this deliberately discards any Token2 that arrived with it. A Token2 signed
+  // / over a token we are about to replace is meaningless.
+  if (empty($Token1) or !ctype_digit((string)$Token1) or strlen((string)$Token1) !== 18) $issueNewSession = TRUE;
+  // / Token1 is well formed, so recompute what Token2 SHOULD be & compare.
+  // / hash_equals() compares in constant time so the comparison itself leaks nothing.
+  elseif ($secretIsUsable) {
+    $expectedToken2 = hash_hmac('sha256', (string)$Token1, $SecretKey);
+    if (!empty($Token2) && hash_equals($expectedToken2, (string)$Token2)) $TokensAreValid = TRUE;
+    // / The pair did not verify. Do not trust either half. Issue an entirely new session.
+    else $issueNewSession = TRUE; }
+  // / Issue a fresh token pair. This is the only place tokens are ever generated.
+  if ($issueNewSession && $secretIsUsable) {
+    list ($Token1, $randomCheck) = generateRandomNumber();
+    if ($randomCheck) {
+      $Token2 = hash_hmac('sha256', (string)$Token1, $SecretKey);
+      $TokensAreValid = TRUE; } }
+  // / Any failure at any point invalidates both halves. Never hand back a partial pair.
+  if (!$TokensAreValid) $Token1 = $Token2 = FALSE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $expectedToken2 = $randomCheck = $secretIsUsable = $issueNewSession = NULL;
+  unset($expectedToken2, $randomCheck, $secretIsUsable, $issueNewSession);
   return array($TokensAreValid, $Token1, $Token2); }
 // / -----------------------------------------------------------------------------------
 
@@ -461,12 +574,16 @@ function verifyLanguage() {
 
 // / -----------------------------------------------------------------------------------
 // / A function to set the global variables for the session.
+// / The stream timeouts are left in the units config.php documents them in.
+// / $StreamWatchTimeout is stated in minutes & $StreamConnectionTimeout is stated in seconds.
+// / Each point of use converts once, where the required unit is actually known.
+// / Converting here as well produced a fifteen hour watch timeout & a ten million second connect timeout.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID;
+  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray;
   // / Application related variables.
   putenv('HOME='.$HomeLoc);
-  $HRConvertVersion = 'v3.5.2';
+  $HRConvertVersion = 'v3.5.3';
   $GlobalsAreVerified = FALSE;
   $CoreLoaded = TRUE;
   $SleepTimer = 0;
@@ -476,13 +593,13 @@ function verifyGlobals() {
   // / Convinience variables.
   $DirSep = DIRECTORY_SEPARATOR;
   $Lol = PHP_EOL;
-  $Lolol = $Lolol;
+  $Lolol = PHP_EOL.PHP_EOL;
   $Append = FILE_APPEND;
   $PathExt = PATHINFO_EXTENSION;
   // / UI Related variables.
   $ConvertGuiCounter1 = 0;
   $File = $FCPlural = $FCPlural1 = $FCPlural2 = $FCPlural3 = $GreenButtonCode = $BlueButtonCode = $RedButtonCode = $DefaultButtonCode = '';
-  $HeaderDisplayed = $UIDisplayed = $FooterDisplayed = $LanguageStringsLoaded = $MediaOutputArray = $GUIDiInputsplayed = $VideoOutputArray = FALSE;
+  $HeaderDisplayed = $UIDisplayed = $FooterDisplayed = $LanguageStringsLoaded = $MediaOutputArray = $GUIDisplayed = $VideoOutputArray = FALSE;
   $GUIDirection = 'ltr';
   $GUIAlignment = 'left';
   $Alert = 'Cannot convert this file! Try changing the name.';
@@ -492,10 +609,12 @@ function verifyGlobals() {
   // / Security related variables.
   $DefaultApps = array('.', '..');
   $DangerousFiles = array(NULL, '.js', '.php', '.html', '.css', '.phar', '..', 'index.php', 'index.html', '--');
-  $StreamWatchTimeout = (int)$StreamWatchTimeout * 60;
-  $StreamConnectionTimeout = $StreamConnectionTimeout * 1000000;
+  // / Stream related variables.
+  // / The two stream timeouts are deliberately left in their documented units here.
+  // / Do not convert them in this function.
   $WaitForStream = FALSE;
   $StreamPID = 0;
+  $StreamOutputPath = '';
   // / URL related variables.
   $subDir = sanitizeString(str_replace($ServerRootDir.$DirSep, '', $InstLoc), FALSE);
   $partURL = sanitizeString($URL.'/'.$subDir, FALSE);
@@ -506,11 +625,11 @@ function verifyGlobals() {
   $ConvertTemp = sanitizeString($InstLoc.$DirSep.'DATA', FALSE);
   $convertTempDir0 = sanitizeString($ConvertTemp.$DirSep.$SesHash, FALSE);
   $ConvertTempDir = sanitizeString($convertTempDir0.$DirSep.$SesHash2.$DirSep, FALSE);
-  $StreamTemp = $ConvertDir.$DirSep.'StreamTemp';
-  $RequiredDirs = array($HomeLoc, $convertDir0, $ConvertDir, $ConvertTemp, $convertTempDir0, $ConvertTempDir, $StreamTemp);
+  $StreamTemp = $ConvertDir.'StreamTemp';
+  $RequiredDirs = array($HomeLoc, $convertDir0, $ConvertDir, $ConvertTemp, $convertTempDir0, $ConvertTempDir, $StreamTemp, $LogDir);
   $RequiredIndexes = array($ConvertTemp, $convertTempDir0, $ConvertTempDir);
-  $RequiredCleanupFolders = array($InstLoc.$DirSep.'.cache', $InstLoc.$DirSep.'.config', $ProprietaryLoc.$DirSep.'.cache', $ProprietaryLoc.$DirSep.'.config');
-  $PathToUnoconv = $InstLoc.$DirSep.'Resources'.$DirSep.'Unoconv'.$DirSep.'unoconv';  
+  $RequiredCleanupFolders = array($InstLoc.$DirSep.'Logs', $InstLoc.$DirSep.'.cache', $InstLoc.$DirSep.'.config', $ProprietaryLoc.$DirSep.'.cache', $ProprietaryLoc.$DirSep.'.config');
+  $PathToUnoconv = $InstLoc.$DirSep.'Resources'.$DirSep.'Unoconv'.$DirSep.'unoconv';
   if (!$UsePatchedDocumentEngine) $PathToUnoconv = $DirSep.'usr'.$DirSep.'bin'.$DirSep.'unoconv';
   // / A/V related variables.
   $UserClamLogFileName = 'User_ClamScan_Virus_Scan_Report.txt';
@@ -534,7 +653,8 @@ function verifyGlobals() {
   if (in_array('Audio', $SupportedConversionTypes)) $MediaOutputArray = $UserMediaOutputArray;
   if (in_array('Video', $SupportedConversionTypes)) $VideoInputArray = $UserVideoInputArray;
   if (in_array('Video', $SupportedConversionTypes)) $VideoOutputArray = $UserVideoOutputArray;
-  if (in_array('Stream', $SupportedConversionTypes) && in_array('Audio', $SupportedConversionTypes)) $StreamArray = array_merge($UserStreamArray, $UserMediaOutputArray);
+  if (in_array('Stream', $SupportedConversionTypes) && in_array('Audio', $SupportedConversionTypes) && in_array('Video', $SupportedConversionTypes)) $StreamArray = array_merge(array_merge($UserStreamArray, $UserMediaOutputArray), $UserVideoOutputArray);
+  if (in_array('Stream', $SupportedConversionTypes) && in_array('Audio', $SupportedConversionTypes) && in_array('Video', $SupportedConversionTypes)) $StreamOutputArray = array_merge($UserMediaOutputArray, $UserVideoOutputArray);
   if (in_array('Drawing', $SupportedConversionTypes)) $DrawingArray = $UserDrawingArray;
   if (in_array('Model', $SupportedConversionTypes)) $ModelArray = $UserModelArray;
   if (in_array('Subtitle', $SupportedConversionTypes)) $SubtitleInputArray = $UserSubtitleInputArray;
@@ -554,6 +674,56 @@ function verifyGlobals() {
   $convertDir0 = $convertTempDir0 = $subDir = $partURL = $allArrays = NULL;
   unset($convertDir0, $convertTempDir0, $subDir, $partURL, $allArrays);
   return array($GlobalsAreVerified, $CoreLoaded); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to remove the build & development environments when config.php asks for it.
+// / This runs from the core after verifyGlobals() so every global it needs already exists.
+// / It also runs after verifyLogs() so its failures can actually be written to the log.
+// / These paths live under the application directory, not part of the regular cleanup routine.
+function cleanBuildEnvironment() {
+  // / Set variables.
+  global $Verbose, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $DirSep;
+  $BuildEnvCleaned = TRUE;
+  $BuildEnvDeleted = $DevDocsDeleted = FALSE;
+  $buildDirContents = array();
+  $buildDirEntry = '';
+  // / Define absolute paths for the files & folders that may need to be removed.
+  $dockerFile = realpath(dirname(__FILE__).$DirSep.'Documentation'.$DirSep.'Build'.$DirSep.'Dockerfile');
+  $changelogFile = realpath(dirname(__FILE__).$DirSep.'Documentation'.$DirSep.'CHANGELOG.txt');
+  $readmeFile = realpath(dirname(__FILE__).$DirSep.'README.md');
+  $buildDir = realpath(dirname(__DIR__).$DirSep.'Build');
+  // / Delete the build environment if specified by config.php.
+  if ($DeleteBuildEnvironment) {
+    if ($Verbose) logEntry('Removing the build environment.');
+    // / Remove the contents of the build directory one entry at a time.
+    if ($buildDir !== FALSE && is_dir($buildDir)) {
+      $buildDirContents = array_diff(scandir($buildDir), array('.', '..'));
+      foreach ($buildDirContents as $buildDirEntry) {
+        if (is_file($buildDir.$DirSep.$buildDirEntry)) @unlink($buildDir.$DirSep.$buildDirEntry); }
+      @rmdir($buildDir); }
+    if ($dockerFile !== FALSE && file_exists($dockerFile)) @unlink($dockerFile);
+    // / Confirm the build environment is actually gone before reporting success.
+    if (!file_exists($dockerFile) && !is_dir($buildDir)) $BuildEnvDeleted = TRUE;
+    else {
+      $BuildEnvCleaned = FALSE;
+      errorEntry('Could not remove the build environment!', 26000, FALSE); }
+    if ($Verbose && $BuildEnvDeleted) logEntry('Removed the build environment.'); }
+  // / Delete the development documentation if specified by config.php.
+  if ($DeleteDevelopmentDocumentation) {
+    if ($Verbose) logEntry('Removing the development documentation.');
+    if ($changelogFile !== FALSE && file_exists($changelogFile)) @unlink($changelogFile);
+    if ($readmeFile !== FALSE && file_exists($readmeFile)) @unlink($readmeFile);
+    // / Confirm the development documentation is actually gone before reporting success.
+    if (!file_exists($changelogFile) && !file_exists($readmeFile)) $DevDocsDeleted = TRUE;
+    else {
+      $BuildEnvCleaned = FALSE;
+      errorEntry('Could not remove the development documentation!', 26001, FALSE); }
+    if ($Verbose && $DevDocsDeleted) logEntry('Removed the development documentation.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $dockerFile = $changelogFile = $readmeFile = $buildDir = $buildDirContents = $buildDirEntry = NULL;
+  unset($dockerFile, $changelogFile, $readmeFile, $buildDir, $buildDirContents, $buildDirEntry);
+  return array($BuildEnvCleaned, $BuildEnvDeleted, $DevDocsDeleted); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -618,7 +788,10 @@ function symlinkmtime($symlinkPath) {
 // / -----------------------------------------------------------------------------------
 // / A function to return the file time of a specified file.
 // / Only returns a value if the specified file exists.
+// / Returns FALSE when the path cannot be read.
 function fileTime($filePath) {
+  // / Set variables.
+  $Stat = FALSE;
   if (file_exists($filePath)) $Stat = @filemtime($filePath);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $filePath = NULL;
@@ -628,21 +801,45 @@ function fileTime($filePath) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to test if a folder is empty.
-// / Returns TRUE when a folder is empty.
-// / Returns FALSE when a folder is not empty.
+// / Returns TRUE only when the folder exists & holds nothing at all.
+// / Returns FALSE when the folder holds anything, or when the path is not a folder.
+// / Every directory contains a . and a .. entry, so both are discarded before testing.
 function is_dir_empty($dir) {
   // / Set variables.
   $Check = TRUE;
+  $contents = array();
   // / Make sure the selected directory is actually a directory.
   if (is_dir($dir)) {
-    // / Gather the contents of the directory.
-    $contents = scandir($dir);
-    // / Iterate through the contents of the directory & break once any valid file is found.
-    foreach ($contents as $content) if ($content == '.' or $content == '..') $Check = FALSE; }
+    // / Gather the contents of the directory, discarding the two entries every directory has.
+    $contents = array_diff(scandir($dir), array('.', '..'));
+    // / Anything left over means the directory holds something.
+    if (!empty($contents)) $Check = FALSE; }
+  // / A path that is not a directory at all must never be reported as an empty one.
+  else $Check = FALSE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $dir = $contents = $content = NULL;
-  unset($dir, $contents, $content); 
+  $dir = $contents = NULL;
+  unset($dir, $contents);
   return $Check; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to determine whether a folder holds nothing but protected file objects.
+// / A hosted session directory always contains an index.html file for document root protection.
+// / This overlooks the required files and only looks to see if any user requested files remain.
+function isDirEmptyOfUserFiles($path) {
+  // / Set variables.
+  global $DefaultApps;
+  $DirIsEmptyOfUserFiles = FALSE;
+  $remaining = array();
+  if (is_dir($path)) {
+    $remaining = array_diff(scandir($path), array('..', '.'));
+    // / Discard every protected file object. Whatever is left belongs to a user.
+    $remaining = array_diff($remaining, $DefaultApps);
+    if (empty($remaining)) $DirIsEmptyOfUserFiles = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $remaining = $path = NULL;
+  unset($remaining, $path);
+  return $DirIsEmptyOfUserFiles; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -696,100 +893,197 @@ function verifyRequiredDirs() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to clean a selection of files.
-// / Recursively deletes files.
-// / This function is extremely dangerous! Please handle with care.
-function cleanFiles($path) {
+// / A function to remove a session directory once nothing of the user's remains in it.
+// / Protected file objects such as the enforced index.html are removed only at this point.
+function removeEmptiedSessionDir($sessionPath) {
   // / Set variables.
-  global $ConvertLoc, $ConvertTemp, $DefaultApps, $DirSep;
-  $variableIsSanitized = $i = $f = $CleanSuccess = $pathCheck = $loopCheck = FALSE;
-  list ($path, $variableIsSanitized) = sanitize($path, FALSE);
-  // / Make sure the selected directory is actually a directory.
-  if ($variableIsSanitized && is_dir($path)) {
-    // / Make sure the $ApacheUser owns the selected directory and that is has the correct permissions.
-    // / Iterate through each file object in the directory.
-    $i = array_diff(scandir($path), array('..', '.'));
-    foreach ($i as $f) {
-      // / If the selected file object is a file, delete it.
-      if (is_file($path.$DirSep.$f) && !in_array(basename($path.$DirSep.$f), $DefaultApps)) @unlink($path.$DirSep.$f);
-      // / If the selected file object is a directory, try to delete it.
-      if (is_dir($path.$DirSep.$f) && !in_array(basename($path.$DirSep.$f), $DefaultApps) && is_dir_empty($path)) @rmdir($path.$DirSep.$f);
-      // / If the selected file object is a directory that still exists, run this function on it to remove any file objects it contains.
-      if (is_dir($path.$DirSep.$f) && !in_array(basename($path.$DirSep.$f), $DefaultApps) && !is_dir_empty($path)) $loopCheck = cleanFiles($path.$DirSep.$f); }
-    // / Once all file objects in the selected directory have been deleted, attempt to delete the selected directory.
-    if ($path !== $ConvertLoc && $path !== $ConvertTemp) @rmdir($path); }
-  // / Check if the function was successful. Note that $ConvertLoc and $ConvertTemp locations are not deleted..
-  $pathCheck = is_dir($path);
-  if ($pathCheck) if (is_dir_empty($path)) $CleanSuccess = TRUE;
-  if (!$pathCheck) $CleanSuccess = TRUE;
+  global $DefaultApps, $DirSep;
+  $SessionDirRemoved = FALSE;
+  $leftovers = array();
+  $leftover = '';
+  if (isDirEmptyOfUserFiles($sessionPath)) {
+    $leftovers = array_diff(scandir($sessionPath), array('..', '.'));
+    // / Only protected file objects can be left at this point. Remove them with the directory.
+    foreach ($leftovers as $leftover) {
+      if (is_file($sessionPath.$DirSep.$leftover)) @unlink($sessionPath.$DirSep.$leftover); }
+    @rmdir($sessionPath);
+    if (!is_dir($sessionPath)) $SessionDirRemoved = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $path = $i = $f = $variableIsSanitized = $pathCheck = $loopCheck = NULL;
-  unset($path, $i, $f, $variableIsSanitized, $pathCheck, $loopCheck); 
-  return $CleanSuccess; }
+  $leftovers = $leftover = $sessionPath = NULL;
+  unset($leftovers, $leftover, $sessionPath);
+  return $SessionDirRemoved; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to clean a selection of files.
+// / Recursively deletes files.
+// / This function is extremely dangerous! Please handle with care.
+// / This function refuses to operate on anything outside $ConvertLoc or $ConvertTemp. Both sides of the comparison are passed
+// / through realpath() first, so a path containing .. cannot walk out of an approved root
+// / while still matching it as a string prefix. If a future edit ever hands this function
+// / the wrong variable, the result is a no-op & a FALSE return, not an incident.
+function cleanFiles($path) {
+  // / Set variables.
+  global $ConvertLoc, $ConvertTemp, $DefaultApps, $DirSep, $RequiredCleanupFolders;
+  $variableIsSanitized = $CleanSuccess = $pathCheck = $pathIsContained = FALSE;
+  $loopCheck = TRUE;
+  $dirContents = $allowedRoots = array();
+  $dirEntry = $childPath = $realPath = $realRoot = $allowedRoot = '';
+  list ($path, $variableIsSanitized) = sanitize($path, FALSE);
+  // / Assemble every location this function is permitted to operate inside.
+  // / $RequiredCleanupFolders holds the maintenance locations the core needs cleaned.
+  $allowedRoots = array($ConvertLoc, $ConvertTemp);
+  if (is_array($RequiredCleanupFolders)) $allowedRoots = array_merge($allowedRoots, $RequiredCleanupFolders);
+  // / Resolve the supplied path to its true location before any comparison is made.
+  // / realpath() returns FALSE for anything that does not exist, which fails the check below.
+  $realPath = realpath($path);
+  // / Confirm the resolved path sits inside an approved root & is not the root itself.
+  // / The trailing separator on the root is required. Without it a sibling directory named
+  // / like "ConvertLocEvil" would match "ConvertLoc" as a prefix & be accepted.
+  if ($realPath !== FALSE) {
+    foreach ($allowedRoots as $allowedRoot) {
+      if (empty($allowedRoot)) continue;
+      $realRoot = realpath($allowedRoot);
+      if ($realRoot !== FALSE && strpos($realPath, $realRoot.$DirSep) === 0) {
+        $pathIsContained = TRUE;
+        break; } } }
+  // / Make sure the selected directory is contained, sanitized, & actually a directory.
+  if ($pathIsContained && $variableIsSanitized && is_dir($path)) {
+    // / Iterate through each file object in the directory.
+    $dirContents = array_diff(scandir($path), array('..', '.'));
+    foreach ($dirContents as $dirEntry) {
+      // / Build the full path to this child ONCE. Every check below refers to the CHILD,
+      // / never to the parent. Testing the parent here would choose the wrong branch.
+      $childPath = $path.$DirSep.$dirEntry;
+      // / Protected file objects are never touched at any depth.
+      if (in_array(basename($childPath), $DefaultApps)) continue;
+      // / If the selected file object is a file, delete it.
+      if (is_file($childPath)) @unlink($childPath);
+      // / If the selected file object is an empty directory, remove it outright.
+      elseif (is_dir($childPath) && is_dir_empty($childPath)) @rmdir($childPath);
+      // / If the selected file object is a directory with contents, recurse into it.
+      // / A failure anywhere below must propagate up, so $loopCheck is never reset to TRUE here.
+      elseif (is_dir($childPath)) {
+        if (!cleanFiles($childPath)) $loopCheck = FALSE; } }
+    // / Once all file objects in the selected directory have been deleted, attempt to delete the selected directory.
+    // / The containment check above already prevents reaching any approved root, but this
+    // / explicit comparison is retained so the intent survives any future change to that check.
+    if (!in_array($path, $allowedRoots, TRUE)) @rmdir($path); }
+  // / Check if the function was successful. Note that approved root locations are never deleted.
+  $pathCheck = is_dir($path);
+  if ($pathCheck && is_dir_empty($path)) $CleanSuccess = TRUE;
+  if (!$pathCheck) $CleanSuccess = TRUE;
+  // / A failure in any recursive call invalidates the whole operation regardless of what is left here.
+  if (!$loopCheck) $CleanSuccess = FALSE;
+  // / An uncontained path is never a success. Nothing was cleaned & nothing should report otherwise.
+  if (!$pathIsContained) $CleanSuccess = FALSE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $path = $dirContents = $dirEntry = $childPath = $realPath = $realRoot = $allowedRoot = $allowedRoots = $variableIsSanitized = $pathCheck = $pathIsContained = $loopCheck = NULL;
+  unset($path, $dirContents, $dirEntry, $childPath, $realPath, $realRoot, $allowedRoot, $allowedRoots, $variableIsSanitized, $pathCheck, $pathIsContained, $loopCheck);
+  return $CleanSuccess; }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
 // / A function to clean up old files in the $TempLoc.
+// / The directory structure is two levels: [server-daily]/[individual-session].
+// / Sessions are swept individually. 
+// / A daily parent's own mtime only changes when a NEW session is created inside it.
+// / So the parent cannot be trusted to reflect whether the sessions it holds are still in use.
+// / A quiet hour would otherwise delete active sessions.
 function cleanTempLoc() {
   // / Set variables.
   global $ConvertTemp, $DeleteThreshold, $DefaultApps, $DirSep, $PermissionLevels;
   $TempLocDeepCleaned = FALSE;
   $CleanedTempLoc = $loopCheck = TRUE;
+  $dailyDirs = $sessionDirs = array();
+  $dailyDir = $sessionDir = $dailyPath = $sessionPath = '';
+  $now = time();
   // / Make sure the directory to be scanned exists.
   if (file_exists($ConvertTemp)) {
-    $dFiles = array_diff(scandir($ConvertTemp), array('..', '.'));
-    $now = time();
-    // / Iterate through each subfolder in the directory.
-    foreach ($dFiles as $dFile) {
+    $dailyDirs = array_diff(scandir($ConvertTemp), array('..', '.'));
+    // / Iterate through each daily folder in the directory.
+    foreach ($dailyDirs as $dailyDir) {
       // / Validate the folder.
-      if (in_array($dFile, $DefaultApps)) continue;
-      $dFilePath = $ConvertTemp.$DirSep.$dFile;
-      if ($dFilePath == $ConvertTemp.'/index.html') continue;
-      // / See if the folder is due for deletion.
-      if ($now - fileTime($dFilePath) > ($DeleteThreshold * 60)) {
-        // / If the folder is due to be deleted, recursively delete it.
-        if (is_dir($dFilePath)) {
+      if (in_array($dailyDir, $DefaultApps)) continue;
+      $dailyPath = $ConvertTemp.$DirSep.$dailyDir;
+      // / The hosted location enforces an index.html in every folder as a document root
+      // / misconfiguration protection mechanism. It is never a session & is never swept.
+      if ($dailyPath === $ConvertTemp.$DirSep.'index.html') continue;
+      // / Only directories hold sessions. Files at this level are left alone entirely.
+      if (!is_dir($dailyPath)) continue;
+      $sessionDirs = array_diff(scandir($dailyPath), array('..', '.'));
+      // / Iterate through each session folder inside this day.
+      foreach ($sessionDirs as $sessionDir) {
+        if (in_array($sessionDir, $DefaultApps)) continue;
+        $sessionPath = $dailyPath.$DirSep.$sessionDir;
+        if (!is_dir($sessionPath)) continue;
+        // / See if this individual session is due for deletion.
+        if ($now - fileTime($sessionPath) > ($DeleteThreshold * 60)) {
           $TempLocDeepCleaned = TRUE;
-          @chmod ($dFilePath, $PermissionLevels);
-          $loopCheck = cleanFiles($dFilePath);
-          if (is_dir_empty($dFilePath)) @rmdir($dFilePath); } }
-      // / Check if the most recent iteration of the loop was successful.
-      if (!$loopCheck) $CleanedTempLoc = FALSE; $loopCheck = TRUE; } }
+          @chmod ($sessionPath, $PermissionLevels);
+          $loopCheck = cleanFiles($sessionPath);
+          // / Remove the session shell, including any protected file objects still in it.
+          removeEmptiedSessionDir($sessionPath); }
+        // / Check if the most recent iteration of the loop was successful.
+        if (!$loopCheck) { $CleanedTempLoc = FALSE; }
+        $loopCheck = TRUE; }
+      // / Remove the daily parent only once every session inside it is gone.
+      if (isDirEmptyOfUserFiles($dailyPath)) removeEmptiedSessionDir($dailyPath); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $dFiles = $dFile = $dFilePath = $now = $loopCheck = NULL;
-  unset($dFiles, $dFile, $dFilePath, $now, $loopCheck);
+  $dailyDirs = $dailyDir = $dailyPath = $sessionDirs = $sessionDir = $sessionPath = $now = $loopCheck = NULL;
+  unset($dailyDirs, $dailyDir, $dailyPath, $sessionDirs, $sessionDir, $sessionPath, $now, $loopCheck);
   return array($CleanedTempLoc, $TempLocDeepCleaned); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to clean up old files in the $ConvertLoc.
+// / The directory structure is two levels: [server-daily]/[individual-session].
+// / Sessions are swept individually. 
+// / A daily parent's own mtime only changes when a NEW session is created inside it.
+// / So the parent cannot be trusted to reflect whether the sessions it holds are still in use.
+// / A quiet hour would otherwise delete active sessions.
+// / NOTE: secret.php lives at the root of this directory & must NEVER be removed.
+// / It is protected here by the is_dir() check, since it is a file & not a directory.
 function cleanConvertLoc() {
   // / Set variables.
   global $ConvertLoc, $DeleteThreshold, $DefaultApps, $DirSep, $PermissionLevels;
   $ConvertLocDeepCleaned = FALSE;
   $CleanedConvertLoc = $loopCheck = TRUE;
+  $dailyDirs = $sessionDirs = array();
+  $dailyDir = $sessionDir = $dailyPath = $sessionPath = '';
+  $now = time();
   // / Make sure the directory to be scanned exists.
   if (file_exists($ConvertLoc)) {
-    $dFiles = array_diff(scandir($ConvertLoc), array('..', '.'));
-    $now = time();
-    // / Iterate through each subfolder in the directory.
-    foreach ($dFiles as $dFile) {
+    $dailyDirs = array_diff(scandir($ConvertLoc), array('..', '.'));
+    // / Iterate through each daily folder in the directory.
+    foreach ($dailyDirs as $dailyDir) {
       // / Validate the folder.
-      if (in_array($dFile, $DefaultApps)) continue;
-      $dFilePath = $ConvertLoc.$DirSep.$dFile;
-      // / See if the folder is due for deletion.
-      if ($now - fileTime($dFilePath) > ($DeleteThreshold * 60)) {
-        // / If the folder is due to be deleted, recursively delete it.
-        if (is_dir($dFilePath)) {
+      if (in_array($dailyDir, $DefaultApps)) continue;
+      $dailyPath = $ConvertLoc.$DirSep.$dailyDir;
+      // / Only directories hold sessions. Files at this level, including secret.php, are never touched.
+      if (!is_dir($dailyPath)) continue;
+      $sessionDirs = array_diff(scandir($dailyPath), array('..', '.'));
+      // / Iterate through each session folder inside this day.
+      foreach ($sessionDirs as $sessionDir) {
+        if (in_array($sessionDir, $DefaultApps)) continue;
+        $sessionPath = $dailyPath.$DirSep.$sessionDir;
+        if (!is_dir($sessionPath)) continue;
+        // / See if this individual session is due for deletion.
+        if ($now - fileTime($sessionPath) > ($DeleteThreshold * 60)) {
           $ConvertLocDeepCleaned = TRUE;
-          @chmod ($dFilePath, $PermissionLevels);
-          $loopCheck = cleanFiles($dFilePath);
-          if (is_dir_empty($dFilePath)) @rmdir($dFilePath); } }
-      // / Check if the most recent iteration of the loop was successful.
-      if (!$loopCheck) $CleanedConvertLoc = FALSE; $loopCheck = TRUE; } }
+          @chmod ($sessionPath, $PermissionLevels);
+          $loopCheck = cleanFiles($sessionPath);
+          // / Remove the session shell, including any protected file objects still in it.
+          removeEmptiedSessionDir($sessionPath); }
+        // / Check if the most recent iteration of the loop was successful.
+        if (!$loopCheck) { $CleanedConvertLoc = FALSE; }
+        $loopCheck = TRUE; }
+      // / Remove the daily parent only once every session inside it is gone.
+      if (isDirEmptyOfUserFiles($dailyPath)) removeEmptiedSessionDir($dailyPath); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $dFiles = $dFile = $dFilePath = $now = $loopCheck = NULL;
-  unset($dFiles, $dFile, $dFilePath, $now, $loopCheck);
+  $dailyDirs = $dailyDir = $dailyPath = $sessionDirs = $sessionDir = $sessionPath = $now = $loopCheck = NULL;
+  unset($dailyDirs, $dailyDir, $dailyPath, $sessionDirs, $sessionDir, $sessionPath, $now, $loopCheck);
   return array($CleanedConvertLoc, $ConvertLocDeepCleaned); }
 // / -----------------------------------------------------------------------------------
 
@@ -1071,7 +1365,6 @@ function isPubliclyRoutableIP($ip) {
 // / $URLIP will return FALSE if the lookup failed or if a DNS rebind attack is suspected.
 // / $StreamContainsLAN will return TRUE if the response contained a local or reserved IP address.
 // / $LookupFailed will return TRUE if no DNS response was received or FALSE if DNS succeeded.
-// / Return order: URLIP, StreamContainsLAN, LookupFailed.
 function dnsLookup($URLHost) {
   // / Set variables.
   $records = $record = array();
@@ -1101,70 +1394,78 @@ function dnsLookup($URLHost) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to scan a stream URL received from a stream file such as .m3u8 & determine if it is safe for FFMPEG to handle.
-// / This function performs a DNS lookup on the provided URL but DOES NOT follow redirects. Not following redirects is critical.
-// / To perform adequate SSRF protection, we must obtain a non-redirected DNS lookup for each remote host in a stream file.
-// / We will use the information contained in this DNS lookup to bind downstream dependencies like CURL & FFMPEG to these locations.
-// / Return order: InspectionFailed, StreamURLResolutionFailed, StreamContainsLAN, LookupFailed, URLHost, URLPort, URLScheme, URLIP.
+// / A function to scan a stream URL received from a stream file such as .m3u8.
+// / This function determines whether that URL is safe for FFMPEG to handle.
+// / This function performs a DNS lookup on the provided URL but DOES NOT follow redirects.
+// / Not following redirects is critical.
+// / To perform adequate SSRF protection we must obtain a non-redirected lookup for each remote host.
+// / The information obtained here binds downstream dependencies like CURL & FFMPEG to these locations.
 function gatherRemoteStreamHostInfo($StreamURL) {
   // / Set variables.
   global $Verbose, $AllowStreamOverHTTP;
-  $StreamURL = sanitize($StreamURL, TRUE);
   $LookupFailed = $InspectionFailed = TRUE;
   $URLIP = $URLHost = $URLPort = $URLScheme = $StreamContainsLAN = $StreamDNSContainsLAN = $StreamURLResolutionFailed = FALSE;
+  $urlIsSanitized = $partsAreSanitized = $schemeIsSanitized = $hostIsSanitized = FALSE;
   $allowedSchemes = array('https');
   $urlParts = array();
+  // / Sanitize the supplied URL before anything else looks at it.
+  list ($StreamURL, $urlIsSanitized) = sanitize($StreamURL, TRUE);
   if ($Verbose) logEntry('Inspecting Stream URL: '.$StreamURL.'.');
-  // / Check if plain http stream URLs are allowed by config.php, & add them as a supported scheme if enabled.
+  // / Check if plain http stream URLs are allowed by config.php.
   if ($AllowStreamOverHTTP) array_push($allowedSchemes, 'http');
-  // / Parse the provided URL to gather DNS information.
-  // / Returns FALSE if the response was seriously malformed.
-  $urlParts = parse_url($StreamURL);
-  // / If the parse_url response is malformed, then consider the URL unresolvable.
-  if (!$urlParts) $StreamURLResolutionFailed = TRUE;
-  // / If the parse_url response makes sense, then keep going.
+  // / A URL that could not be sanitized is unresolvable before we even parse it.
+  if (!$urlIsSanitized) $StreamURLResolutionFailed = TRUE;
   else {
-    $urlParts = sanitize($urlParts, TRUE);
-    // / If the parse_url response is incomplete, then consider the URL unresolvable.
-    if (empty($urlParts['scheme']) or empty($urlParts['host'])) $StreamURLResolutionFailed = TRUE;
+    // / Parse the provided URL to gather DNS information.
+    // / parse_url returns FALSE if the response was seriously malformed.
+    $urlParts = parse_url($StreamURL);
+    // / If the parse_url response is malformed, then consider the URL unresolvable.
+    if (!$urlParts) $StreamURLResolutionFailed = TRUE;
     // / If the parse_url response makes sense, then keep going.
     else {
-      // / If the scheme required by the remote host does not match what is supported by config.php, then consider the URL unresolvable.
-      $URLScheme = sanitize(strtolower($urlParts['scheme']), TRUE);
-      if (!in_array($URLScheme, $allowedSchemes, TRUE)) $StreamURLResolutionFailed = TRUE;
-      // / If the scheme required by the remote host matches what is supported by config.php, then keep going.
+      list ($urlParts, $partsAreSanitized) = sanitize($urlParts, TRUE);
+      // / If the parse_url response is incomplete, then consider the URL unresolvable.
+      if (!$partsAreSanitized or empty($urlParts['scheme']) or empty($urlParts['host'])) $StreamURLResolutionFailed = TRUE;
+      // / If the parse_url response makes sense, then keep going.
       else {
-        // / Detect the host.
-        $URLHost = sanitize(strtolower($urlParts['host']), TRUE);
-        // / Detect the port & the scheme where applicable.
-        // / Be very careful making changes to this code.
-        // / Uses the Port supplied by the request when available, or falls back to 443, or falls back again to 80.
-        // / This code prevents dependencies from silently performing their own DNS lookups & potentially following malicious redirects.
-        // / If this code fails to produce a valid host or port, subsequent dependencies will ignore our DNS binding and do their own lookup.
-        // / To prevent SSRF attacks, things like CURL or FFMPEG cannot be allowed to do DNS lookups which could be spoofed into following redirects.
-        $URLPort = isset($urlParts['port']) ? (int)$urlParts['port'] : ($URLScheme === 'https' ? 443 : 80); } } }
-  // / If we have successfully obtained a $URLHost, $URLPort, & $URLScheme, then resolve the address.
+        // / If the scheme is not supported by config.php, then consider the URL unresolvable.
+        list ($URLScheme, $schemeIsSanitized) = sanitize(strtolower($urlParts['scheme']), TRUE);
+        if (!$schemeIsSanitized or !in_array($URLScheme, $allowedSchemes, TRUE)) $StreamURLResolutionFailed = TRUE;
+        // / If the scheme is supported by config.php, then keep going.
+        else {
+          // / Detect the host.
+          list ($URLHost, $hostIsSanitized) = sanitize(strtolower($urlParts['host']), TRUE);
+          if (!$hostIsSanitized) $StreamURLResolutionFailed = TRUE;
+          // / Detect the port where applicable.
+          // / Be very careful making changes to this code.
+          // / This uses the port supplied by the request when available.
+          // / When no port was supplied it falls back to 443 for https & 80 for http.
+          // / This code prevents dependencies from silently performing their own DNS lookups.
+          // / If this code fails to produce a valid host or port, dependencies will ignore our binding.
+          // / CURL & FFMPEG cannot be allowed to do lookups that could be spoofed into following redirects.
+          else $URLPort = isset($urlParts['port']) ? (int)$urlParts['port'] : ($URLScheme === 'https' ? 443 : 80); } } } }
+  // / If we have successfully obtained a host, port & scheme, then resolve the address.
   if (!$StreamURLResolutionFailed) {
-    // / If $URLHost is already a literal IP, validate it directly & skip DNS entirely.
+    // / If the host is already a literal IP, validate it directly & skip DNS entirely.
     if (filter_var($URLHost, FILTER_VALIDATE_IP)) {
       if (isPubliclyRoutableIP($URLHost)) {
         $URLIP = $URLHost;
         $LookupFailed = FALSE; }
       else $StreamContainsLAN = TRUE; }
-    // / Otherwise it's a hostname, so resolve it without following redirects.
+    // / Otherwise it is a hostname, so resolve it without following redirects.
     else list($URLIP, $StreamDNSContainsLAN, $LookupFailed) = dnsLookup($URLHost);
-    // / If the DNS results for $URLHost were not publicly routable, then consider it LAN which will be denied.
-    // / Note that this condenses $StreamDNSContainsLAN with $StreamContainsLAN as anything that contains LAN should be denied.
+    // / A DNS result that was not publicly routable is treated as LAN & will be denied.
+    // / This condenses the DNS finding into one flag because anything containing LAN is denied.
     if ($StreamDNSContainsLAN) $StreamContainsLAN = TRUE; }
-  // / If any check failed or any required value is empty, then consider the whole inspection failed.
+  // / If any check failed or any required value is empty, then the whole inspection failed.
   if ($StreamURLResolutionFailed or $StreamContainsLAN or $LookupFailed or empty($URLHost) or empty($URLPort) or empty($URLScheme) or empty($URLIP)) $InspectionFailed = TRUE;
   // / If everything passed then consider the inspection to have passed.
   else $InspectionFailed = FALSE;
   // / Write the information obtained to the log file.
   if ($Verbose) logEntry('URL Inspection Result: '.($InspectionFailed ? 'FAILED' : 'PASSED').', Host: '.$URLHost.', Port: '.$URLPort.', Scheme: '.$URLScheme.', Contains LAN: '.($StreamContainsLAN ? 'TRUE' : 'FALSE').', URL Resolution Failed: '.($StreamURLResolutionFailed ? 'TRUE' : 'FALSE').', Lookup Failed: '.($LookupFailed ? 'TRUE' : 'FALSE').'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $allowedSchemes = $urlParts = $StreamDNSContainsLAN = NULL;
-  unset($allowedSchemes, $urlParts, $StreamDNSContainsLAN);
+  $allowedSchemes = $urlParts = $StreamDNSContainsLAN = $urlIsSanitized = $partsAreSanitized = $schemeIsSanitized = $hostIsSanitized = NULL;
+  unset($allowedSchemes, $urlParts, $StreamDNSContainsLAN, $urlIsSanitized, $partsAreSanitized, $schemeIsSanitized, $hostIsSanitized);
   return array($InspectionFailed, $StreamURLResolutionFailed, $StreamContainsLAN, $LookupFailed, $URLHost, $URLPort, $URLScheme, $URLIP); }
 // / -----------------------------------------------------------------------------------
 
@@ -1180,32 +1481,35 @@ function resolveStreamURI($StreamURI, $ParentURL) {
   $AbsoluteURL = '';
   $parentParts = array();
   $parentScheme = $parentHost = $parentPort = $parentDir = '';
+  $uriIsAbsolute = $parentIsUsable = FALSE;
   $StreamURI = trim($StreamURI);
-  // / Nothing to resolve.
-  if ($StreamURI === '') return $AbsoluteURL;
-  // / Case 1. The URI is already absolute & carries its own scheme. Nothing is inherited.
+  // / Case 1. The URI already carries its own scheme, so nothing is inherited & we are done.
   // / Note this deliberately matches ANY scheme, including file: and gopher:, so that
   // / gatherRemoteStreamHostInfo() sees & rejects them rather than us silently mangling them.
-  if (preg_match('#^[a-zA-Z][a-zA-Z0-9+.-]*:#', $StreamURI)) return $StreamURI;
+  if ($StreamURI !== '' && preg_match('#^[a-zA-Z][a-zA-Z0-9+.-]*:#', $StreamURI)) {
+    $uriIsAbsolute = TRUE;
+    $AbsoluteURL = $StreamURI; }
   // / Everything below here is relative & needs a parent to inherit from.
   // / The user's uploaded file has no parent, so a relative URI at layer 0 is unresolvable.
-  if ($ParentURL === '') return $AbsoluteURL;
-  $parentParts = parse_url($ParentURL);
-  if (!$parentParts or empty($parentParts['scheme']) or empty($parentParts['host'])) return $AbsoluteURL;
-  $parentScheme = strtolower($parentParts['scheme']);
-  $parentHost = strtolower($parentParts['host']);
-  $parentPort = isset($parentParts['port']) ? ':'.(int)$parentParts['port'] : '';
-  // / Case 2. Protocol-relative (//cdn.example.com/seg.ts). Inherits the scheme only.
-  if (substr($StreamURI, 0, 2) === '//') $AbsoluteURL = $parentScheme.':'.$StreamURI;
-  // / Case 3. Root-relative (/hls/seg.ts). Inherits scheme, host & port. The path is replaced outright.
-  elseif ($StreamURI[0] === '/') $AbsoluteURL = $parentScheme.'://'.$parentHost.$parentPort.$StreamURI;
-  // / Case 4. Plain relative (seg003.ts). Appended to the parent's DIRECTORY, never to its filename.
-  else {
-    $parentDir = rtrim(dirname($parentParts['path'] ?? '/'), '/');
-    $AbsoluteURL = $parentScheme.'://'.$parentHost.$parentPort.$parentDir.'/'.$StreamURI; }
+  if (!$uriIsAbsolute && $StreamURI !== '' && $ParentURL !== '') {
+    $parentParts = parse_url($ParentURL);
+    if ($parentParts && !empty($parentParts['scheme']) && !empty($parentParts['host'])) $parentIsUsable = TRUE; }
+  // / Inherit whatever the relative form is missing from the parent it was found in.
+  if ($parentIsUsable) {
+    $parentScheme = strtolower($parentParts['scheme']);
+    $parentHost = strtolower($parentParts['host']);
+    $parentPort = isset($parentParts['port']) ? ':'.(int)$parentParts['port'] : '';
+    // / Case 2. Protocol-relative (//cdn.example.com/seg.ts). Inherits the scheme only.
+    if (substr($StreamURI, 0, 2) === '//') $AbsoluteURL = $parentScheme.':'.$StreamURI;
+    // / Case 3. Root-relative (/hls/seg.ts). Inherits scheme, host & port. The path is replaced outright.
+    elseif ($StreamURI[0] === '/') $AbsoluteURL = $parentScheme.'://'.$parentHost.$parentPort.$StreamURI;
+    // / Case 4. Plain relative (seg003.ts). Appended to the parent's DIRECTORY, never to its filename.
+    else {
+      $parentDir = rtrim(dirname($parentParts['path'] ?? '/'), '/');
+      $AbsoluteURL = $parentScheme.'://'.$parentHost.$parentPort.$parentDir.'/'.$StreamURI; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $parentParts = $parentScheme = $parentHost = $parentPort = $parentDir = NULL;
-  unset($parentParts, $parentScheme, $parentHost, $parentPort, $parentDir);
+  $parentParts = $parentScheme = $parentHost = $parentPort = $parentDir = $uriIsAbsolute = $parentIsUsable = NULL;
+  unset($parentParts, $parentScheme, $parentHost, $parentPort, $parentDir, $uriIsAbsolute, $parentIsUsable);
   return $AbsoluteURL; }
 // / -----------------------------------------------------------------------------------
 
@@ -1213,7 +1517,6 @@ function resolveStreamURI($StreamURI, $ParentURL) {
 // / A function to gather and validate IPv4 & IPv6 addresses from stream files.
 // / Does not perform DNS or any remote validation.
 // / This function only validates the syntactical form of IP addresses, and ensures they are not in a reserved range.
-// / Return order: IPMatches, IPCount, StreamContainsLAN, StreamContainsIP.
 function inspectStreamIP($streamFileContents) {
   // / Set variables.
   $ipMatch = '';
@@ -1260,7 +1563,6 @@ function inspectStreamIP($streamFileContents) {
 // / Does not perform DNS or any remote validation.
 // / This function only validates the syntactical form of domain names.
 // / Preserves http:// and https:// as the only allowed protocols.
-// / Return order: DomainNames, DomainCount, StreamContainsDomain.
 function inspectStreamDomain($streamFileContents) {
   // / Set variables.
   $DomainCount = 0;
@@ -1321,7 +1623,6 @@ function inspectTSFile($fileContents) {
 // / The filename & extension are deliberately ignored. FFMPEG dispatches on content markers,
 // / so a .ts file whose bytes begin with #EXTM3U will be treated by FFMPEG as a playlist.
 // / This is the single source of truth for stream file classification. Do not duplicate this logic.
-// / Return order: IsPlaylist, IsSegment. Both FALSE means the content is unrecognized & must be denied.
 function classifyStreamContent($streamContents) {
   // / Set variables.
   $IsPlaylist = $IsSegment = FALSE;
@@ -1337,57 +1638,68 @@ function classifyStreamContent($streamContents) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to download a single remote stream file to local disk for inspection.
-// / Saves with a numeric name & NO extension so nothing downstream can be fooled by the filename.
-// / The original URI is preserved in the $StreamURIs record, not on disk.
-// / Does NOT follow redirects & does NOT let CURL perform its own DNS lookup.
-// / Fetches only the first $MaxStreamInspectionFileSize bytes. We are classifying files, not streaming them.
-// / Return order: DownloadFailed, LocalStreamPath, StreamFileTruncated.
+// / Files are saved with a numeric name & no extension so nothing downstream is fooled by a filename.
+// / The original URI is preserved in the stream record, not on disk.
+// / This function does NOT follow redirects.
+// / This function does NOT let CURL perform its own DNS lookup.
+// / Only the first $MaxStreamInspectionFileSize bytes are fetched.
+// / We are classifying files here, not streaming them.
+// / $StreamConnectionTimeout is documented in seconds & is used directly.
+// / $StreamWatchTimeout is documented in minutes & is converted once here.
 function downloadStreamFile($StreamURL, $URLHost, $URLPort, $URLIP, $URLScheme, $FileNumber) {
   // / Set variables.
   global $Verbose, $AllowStreamOverHTTP, $StreamConnectionTimeout, $StreamWatchTimeout, $DirSep, $MaxStreamInspectionFileSize, $StreamTemp;
   $DownloadFailed = $StreamFileTruncated = TRUE;
+  $pinIsComplete = FALSE;
   $curlOutput = array();
+  $curlCommand = '';
   $curlExitCode = 1;
   $downloadedBytes = 0;
-  // / Sequential name for every file saved to StreamTemp. Never resets.
+  // / Sequential name for every file saved to StreamTemp.
+  // / This number never resets during a walk.
   // / A layer 2 file must never overwrite a layer 1 file.
-  // / The real URI lives in the $StreamURIs record, not on disk.
   $LocalStreamPath = $StreamTemp.$DirSep.$FileNumber;
   $protoString = 'https';
   // / Only widen to plain http when config allows it AND this specific URL actually uses it.
   if ($AllowStreamOverHTTP && $URLScheme === 'http') $protoString = 'http,https';
   // / Refuse outright if any component needed for the DNS pin is missing.
-  // / An empty component produces a malformed --resolve entry which CURL silently ignores,
-  // / after which CURL performs its own lookup & every rebinding protection is lost.
-  if (empty($URLHost) or empty($URLPort) or empty($URLIP) or empty($StreamURL)) {
-    if ($Verbose) logEntry('Stream download refused: incomplete validation data for '.$StreamURL.'.');
-    return array($DownloadFailed, '', $StreamFileTruncated); }
-  // / Build the command. Every user-influenced value is escaped. No -L, so redirects are never followed.
-  // / -r requests only the first chunk. --max-filesize enforces the same ceiling when a host ignores -r.
-  $curlCommand = 'curl'
-    .' --resolve '.escapeshellarg($URLHost.':'.$URLPort.':'.$URLIP)
-    .' --proto '.escapeshellarg('='.$protoString)
-    .' --proto-redir '.escapeshellarg('='.$protoString)
-    .' -r '.escapeshellarg('0-'.((int)$MaxStreamInspectionFileSize - 1))
-    .' --max-filesize '.(int)$MaxStreamInspectionFileSize
-    .' --connect-timeout '.(int)$StreamConnectionTimeout
-    .' -m '.(int)($StreamWatchTimeout * 60)
-    .' -sS -o '.escapeshellarg($LocalStreamPath)
-    .' -- '.escapeshellarg($StreamURL).' 2>&1';
-  exec($curlCommand, $curlOutput, $curlExitCode);
-  // / Exit code 0 AND a file that actually exists with content. Either alone is not proof of success.
-  if ($curlExitCode === 0 && file_exists($LocalStreamPath)) {
-    $downloadedBytes = filesize($LocalStreamPath);
-    if ($downloadedBytes > 0) $DownloadFailed = FALSE;
-    // / A file that filled the entire budget was almost certainly cut short.
-    // / We are only holding part of it, so we cannot claim to have inspected the whole thing.
-    if ($downloadedBytes < (int)$MaxStreamInspectionFileSize) $StreamFileTruncated = FALSE; }
-  else if ($Verbose) logEntry('Stream download failed for '.$StreamURL.'. CURL exit code: '.$curlExitCode.'.');
-  // / Log the outcome of this single download.
-  if ($Verbose) logEntry('Stream Download Result: '.($DownloadFailed ? 'FAILED' : 'SUCCESS').', File: '.$FileNumber.', Bytes: '.$downloadedBytes.', Truncated: '.($StreamFileTruncated ? 'TRUE' : 'FALSE').'.');
+  // / An empty component produces a malformed --resolve entry which CURL silently ignores.
+  // / CURL would then perform its own lookup & every rebinding protection would be lost.
+  if (!empty($URLHost) && !empty($URLPort) && !empty($URLIP) && !empty($StreamURL)) $pinIsComplete = TRUE;
+  else if ($Verbose) logEntry('Stream download refused: incomplete validation data for '.$StreamURL.'.');
+  if ($pinIsComplete) {
+    // / Build the command with every user influenced value escaped.
+    // / There is no -L flag, so redirects are never followed.
+    // / The -r flag requests only the first chunk of the file.
+    // / The --max-filesize flag enforces the same ceiling when a host ignores -r.
+    $curlCommand = 'curl'
+      .' --resolve '.escapeshellarg($URLHost.':'.$URLPort.':'.$URLIP)
+      .' --proto '.escapeshellarg('='.$protoString)
+      .' --proto-redir '.escapeshellarg('='.$protoString)
+      .' -r '.escapeshellarg('0-'.((int)$MaxStreamInspectionFileSize - 1))
+      .' --max-filesize '.(int)$MaxStreamInspectionFileSize
+      .' --connect-timeout '.(int)$StreamConnectionTimeout
+      .' -m '.((int)$StreamWatchTimeout * 60)
+      .' -sS -o '.escapeshellarg($LocalStreamPath)
+      .' -- '.escapeshellarg($StreamURL).' 2>&1';
+    exec($curlCommand, $curlOutput, $curlExitCode);
+    // / A successful download requires exit code 0 AND a file that exists with content.
+    // / Either one alone is not proof of success.
+    if ($curlExitCode === 0 && file_exists($LocalStreamPath)) {
+      $downloadedBytes = filesize($LocalStreamPath);
+      if ($downloadedBytes > 0) $DownloadFailed = FALSE;
+      // / A file that filled the entire budget was almost certainly cut short.
+      // / We are only holding part of it, so we cannot claim to have inspected the whole thing.
+      if ($downloadedBytes < (int)$MaxStreamInspectionFileSize) $StreamFileTruncated = FALSE; }
+    else if ($Verbose) logEntry('Stream download failed for '.$StreamURL.'. CURL exit code: '.$curlExitCode.'.');
+    // / Log the outcome of this single download.
+    if ($Verbose) logEntry('Stream Download Result: '.($DownloadFailed ? 'FAILED' : 'SUCCESS').', File: '.$FileNumber.', Bytes: '.$downloadedBytes.', Truncated: '.($StreamFileTruncated ? 'TRUE' : 'FALSE').'.'); }
+  // / Never report a path we did not successfully write to.
+  // / The caller reads this file immediately after this function returns.
+  if ($DownloadFailed) $LocalStreamPath = '';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $curlCommand = $curlOutput = $protoString = $curlExitCode = $downloadedBytes = NULL;
-  unset($curlCommand, $curlOutput, $protoString, $curlExitCode, $downloadedBytes);
+  $curlCommand = $curlOutput = $protoString = $curlExitCode = $downloadedBytes = $pinIsComplete = NULL;
+  unset($curlCommand, $curlOutput, $protoString, $curlExitCode, $downloadedBytes, $pinIsComplete);
   return array($DownloadFailed, $LocalStreamPath, $StreamFileTruncated); }
 // / -----------------------------------------------------------------------------------
 
@@ -1397,7 +1709,6 @@ function downloadStreamFile($StreamURL, $URLHost, $URLPort, $URLIP, $URLScheme, 
 // / Downloaded files are saved with a numeric name & NO extension on purpose, so extension-based
 // / checks apply to layer 0 only. From layer 1 onward, content is the only authority.
 // / This function inspects. It does not connect to anything & it does not decide the fate of the walk.
-// / Return order: InspectionFailed, StreamURIs, StreamContainsLAN, StreamContainsIP, StreamContainsHTTP, looksLikePlaylist, looksLikeSegment.
 function inspectStreamFile($StreamFile, $ParentURL, $CurrentLayer) {
   // / Set variables.
   global $Verbose, $AllowStreamOverHTTP, $SupportedConversionTypes, $StreamArray;
@@ -1486,7 +1797,6 @@ function inspectStreamFile($StreamFile, $ParentURL, $CurrentLayer) {
 // / $FileBudget resets each layer because it bounds the width of one layer.
 // / $TotalBudget never resets because it bounds the entire tree regardless of shape.
 // / $Halt is one-way. Once anything sets it, nothing may clear it.
-// / Return order: InspectionFailed, StreamBudgetExhausted, HaltReason, AllStreamURIs, SeenURLs.
 function streamFileWalker($StreamFile) {
   global $Verbose, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction;
   // / Set variables.
@@ -1633,41 +1943,41 @@ function streamFileWalker($StreamFile) {
   return array($InspectionFailed, $StreamBudgetExhausted, $HaltReason, $AllStreamURIs, $SeenURLs); }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to supervise a backgrounded FFMPEG stream conversion after the user has been served.
 // / Polls the process & kills it once $StreamWatchTimeout minutes have elapsed.
 // / This is the only thing preventing an abandoned stream from running until PHP or the OS intervenes.
-// / Return order: StreamCompleted, StreamKilled, ElapsedSeconds.
 function waitForStream($StreamPID, $newPathname) {
   // / Set variables.
   global $Verbose, $StreamWatchTimeout;
-  $StreamCompleted = $StreamKilled = FALSE;
+  $StreamCompleted = $StreamKilled = $pidIsUsable = FALSE;
   $psOutput = array();
-  $ElapsedSeconds = $pollInterval = 0;
+  $ElapsedSeconds = 0;
   $pollInterval = 2;
-  $timeoutSeconds = $StreamWatchTimeout;
-  // / Nothing to supervise.
-  if ((int)$StreamPID < 1) return array($StreamCompleted, $StreamKilled, $ElapsedSeconds);
-  if ($Verbose) logEntry('Supervising stream PID '.$StreamPID.' for up to '.$timeoutSeconds.' seconds.');
-  while ($ElapsedSeconds < $timeoutSeconds) {
-    $psOutput = array();
-    // / A ps listing with only its header row means the process is gone.
-    exec('ps -p '.(int)$StreamPID, $psOutput);
-    if (count($psOutput) < 2) {
-      $StreamCompleted = TRUE;
-      break; }
-    sleep($pollInterval);
-    $ElapsedSeconds += $pollInterval; }
-  // / Still running after the full watch window. Terminate it.
-  if (!$StreamCompleted) {
-    exec('kill -9 '.(int)$StreamPID);
-    $StreamKilled = TRUE;
-    if ($Verbose) logEntry('Stream PID '.$StreamPID.' exceeded the watch timeout & was terminated.'); }
-  else if ($Verbose) logEntry('Stream PID '.$StreamPID.' finished after '.$ElapsedSeconds.' seconds. Output exists: '.(file_exists($newPathname) ? 'TRUE' : 'FALSE').'.');
+  // / Config states this value in MINUTES. Convert once, here, so the loop reads in seconds.
+  $timeoutSeconds = (int)$StreamWatchTimeout * 60;
+  // / Nothing to supervise without a real process id.
+  if ((int)$StreamPID > 0) $pidIsUsable = TRUE;
+  if ($pidIsUsable) {
+    if ($Verbose) logEntry('Supervising stream PID '.$StreamPID.' for up to '.$timeoutSeconds.' seconds.');
+    while ($ElapsedSeconds < $timeoutSeconds) {
+      $psOutput = array();
+      // / A ps listing with only its header row means the process is gone.
+      exec('ps -p '.(int)$StreamPID, $psOutput);
+      if (count($psOutput) < 2) {
+        $StreamCompleted = TRUE;
+        break; }
+      sleep($pollInterval);
+      $ElapsedSeconds += $pollInterval; }
+    // / Still running after the full watch window. Terminate it.
+    if (!$StreamCompleted) {
+      exec('kill -9 '.(int)$StreamPID);
+      $StreamKilled = TRUE;
+      if ($Verbose) logEntry('Stream PID '.$StreamPID.' exceeded the watch timeout & was terminated.'); }
+    else if ($Verbose) logEntry('Stream PID '.$StreamPID.' finished after '.$ElapsedSeconds.' seconds. Output exists: '.(file_exists($newPathname) ? 'TRUE' : 'FALSE').'.'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $psOutput = $pollInterval = $timeoutSeconds = NULL;
-  unset($psOutput, $pollInterval, $timeoutSeconds);
+  $psOutput = $pollInterval = $timeoutSeconds = $pidIsUsable = NULL;
+  unset($psOutput, $pollInterval, $timeoutSeconds, $pidIsUsable);
   return array($StreamCompleted, $StreamKilled, $ElapsedSeconds); }
 // / -----------------------------------------------------------------------------------
 
@@ -1675,14 +1985,13 @@ function waitForStream($StreamPID, $newPathname) {
 // / A function to convert stream formats.
 // / The stream file is fully inspected before FFMPEG is allowed anywhere near it.
 // / FFMPEG is launched in the background so the user can be served immediately.
-// / Return order: ConversionSuccess, ConversionErrors, WaitForStream, StreamPID.
 function convertStreams($pathname, $newPathname) {
   // / Set variables.
   global $Verbose, $Lol, $Lolol, $StreamConnectionTimeout, $AllowStreamOverHTTP;
   $ConversionSuccess = $ConversionErrors = $WaitForStream = FALSE;
   $InspectionFailed = $StreamBudgetExhausted = FALSE;
   $AllStreamURIs = $SeenURLs = array();
-  $HaltReason = $httpString = $returnData = '';
+  $HaltReason = $httpString = $returnData = $ffmpegCommand = '';
   $StreamPID = 0;
   if ($Verbose) logEntry('Beginning stream conversion for '.$pathname.'.');
   // / Inspect the entire stream tree BEFORE FFMPEG is permitted to touch it.
@@ -1690,56 +1999,56 @@ function convertStreams($pathname, $newPathname) {
   list ($InspectionFailed, $StreamBudgetExhausted, $HaltReason, $AllStreamURIs, $SeenURLs) = streamFileWalker($pathname);
   if ($InspectionFailed) {
     $ConversionErrors = TRUE;
-    errorEntry('Stream inspection denied this file. '.$HaltReason, 21001, FALSE);
-    return array($ConversionSuccess, $ConversionErrors, $WaitForStream, $StreamPID); }
-  // / Only widen the protocol whitelist to plain http when config.php explicitly allows it.
-  if ($AllowStreamOverHTTP) $httpString = ',http';
-  // / Launch FFMPEG in the background & capture its PID so waitForStream() can reap it later.
-  // / -rw_timeout is an INPUT option & must appear before -i to have any effect.
-  $ffmpegCommand = 'ffmpeg -protocol_whitelist '.escapeshellarg('file,https,tcp,tls,crypto'.$httpString)
-    .' -rw_timeout '.((int)$StreamConnectionTimeout * 1000000)
-    .' -i '.escapeshellarg($pathname)
-    .' -c copy '.escapeshellarg($newPathname)
-    .' > /dev/null 2>&1 & echo $!';
-  $returnData = shell_exec($ffmpegCommand);
-  $StreamPID = (int)trim($returnData);
-  // / A PID of 0 means the process never started at all.
-  if ($StreamPID > 0) {
-    $ConversionSuccess = TRUE;
-    $WaitForStream = TRUE;
-    if ($Verbose) logEntry('FFMPEG launched in background as PID '.$StreamPID.' for '.$newPathname.'.'); }
+    errorEntry('Stream inspection denied this file. '.$HaltReason, 21001, FALSE); }
+  // / The inspection returned a clean verdict, so FFMPEG may now be permitted to run.
   else {
-    $ConversionErrors = TRUE;
-    errorEntry('The stream converter failed to launch!', 21000, FALSE); }
+    // / Only widen the protocol whitelist to plain http when config.php explicitly allows it.
+    if ($AllowStreamOverHTTP) $httpString = ',http';
+    // / Launch FFMPEG in the background & capture its PID so waitForStream() can reap it later.
+    // / -rw_timeout is an INPUT option & must appear before -i to have any effect.
+    $ffmpegCommand = 'ffmpeg -protocol_whitelist '.escapeshellarg('file,https,tcp,tls,crypto'.$httpString)
+      .' -rw_timeout '.((int)$StreamConnectionTimeout * 1000000)
+      .' -i '.escapeshellarg($pathname)
+      .' -c copy '.escapeshellarg($newPathname)
+      .' > /dev/null 2>&1 & echo $!';
+    $returnData = shell_exec($ffmpegCommand);
+    $StreamPID = (int)trim($returnData);
+    // / A PID of 0 means the process never started at all.
+    if ($StreamPID > 0) {
+      $ConversionSuccess = TRUE;
+      $WaitForStream = TRUE;
+      if ($Verbose) logEntry('FFMPEG launched in background as PID '.$StreamPID.' for '.$newPathname.'.'); }
+    else {
+      $ConversionErrors = TRUE;
+      errorEntry('The stream converter failed to launch!', 21000, FALSE); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $ffmpegCommand = $httpString = $AllStreamURIs = $SeenURLs = NULL;
-  unset($returnData, $ffmpegCommand, $httpString, $AllStreamURIs, $SeenURLs);
+  $returnData = $ffmpegCommand = $httpString = $AllStreamURIs = $SeenURLs = $HaltReason = $StreamBudgetExhausted = NULL;
+  unset($returnData, $ffmpegCommand, $httpString, $AllStreamURIs, $SeenURLs, $HaltReason, $StreamBudgetExhausted);
   return array($ConversionSuccess, $ConversionErrors, $WaitForStream, $StreamPID); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to convert audio formats.
+// / The bitrate check compares instead of assigning.
 function convertAudio($pathname, $newPathname, $extension, $bitrate) {
   // / Set variables.
   global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer;
   $ConversionSuccess = $ConversionErrors = FALSE;
-  $returnData = '';
+  $returnData = $br = '';
   $stopper = 0;
   $sleepTime = $SleepTimer;
   if ($extension === 'mkv') $extension = 'matroska';
   $ext = ' -f '.$extension;
   // / Determine if the bitrate is being set.
   if (!is_numeric($bitrate) or $bitrate === FALSE) $bitrate = 'auto';
-  if ($bitrate = 'auto') $br = ' ';
-  elseif ($bitrate != 'auto' ) $br = (' -b:'.$bitrate.' ');
-  $ConversionSuccess = $ConversionErrors = FALSE;
+  if ($bitrate === 'auto') $br = ' ';
+  else $br = ' -b:a '.$bitrate.' ';
   if ($Verbose) logEntry('Converting audio.');
   // / This code will attempt the conversion up to $StopCounter number of times.
   while (!file_exists($newPathname) && $stopper <= $StopCounter) {
     // / If the last conversion attempt failed, wait a moment before trying again.
     if ($stopper !== 0) sleep($sleepTime++);
     // / Attempt the conversion.
-    logEntry('ffmpeg -y -i '.$pathname.$ext.$br.$newPathname);
     $returnData = shell_exec('ffmpeg -y -i '.$pathname.$ext.$br.$newPathname);
     // / Count the number of conversions to avoid infinite loops.
     $stopper++;
@@ -1751,8 +2060,8 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
   if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $newPathname = $ext = $extension = $sleepTime = NULL;
-  unset($returnData, $stopper, $pathname, $newPathname, $ext, $extension, $sleepTime);
+  $returnData = $stopper = $pathname = $newPathname = $ext = $br = $extension = $bitrate = $sleepTime = NULL;
+  unset($returnData, $stopper, $pathname, $newPathname, $ext, $br, $extension, $bitrate, $sleepTime);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -1890,20 +2199,25 @@ function convertArchives($pathname, $newPathname, $extension) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to convert a file based on a pre-determined input type and return the results.
+// / A function to convert a file based on a pre-determined input type & return the results.
+// / Streams are the only conversion that keeps running after the user has been served.
+// / The stream supervision variables are globals so the core can reach them after this returns.
 function convert($type, $pathname, $newPathname, $extension, $height, $width, $rotate, $bitrate) {
   // / Set variables.
-  global $Verbose, $SupportedConversionTypes, $WaitForStream, $StreamPID;
+  global $Verbose, $SupportedConversionTypes, $WaitForStream, $StreamPID, $StreamOutputPath;
   $ConversionSuccess = $ConversionErrors = FALSE;
   // / Check that the required conversion type is allowed.
-  if (in_array($type, $SupportedConversionTypes)) { 
+  if (in_array($type, $SupportedConversionTypes)) {
     if ($type === 'Document') list ($ConversionSuccess, $ConversionErrors) = convertDocuments($pathname, $newPathname, $extension);
     if ($type === 'Image') list ($ConversionSuccess, $ConversionErrors) = convertImages($pathname, $newPathname, $height, $width, $rotate);
     if ($type === 'Model') list ($ConversionSuccess, $ConversionErrors) = convertModels($pathname, $newPathname);
     if ($type === 'Drawing') list ($ConversionSuccess, $ConversionErrors) = convertDrawings($pathname, $newPathname);
     if ($type === 'Video') list ($ConversionSuccess, $ConversionErrors) = convertVideos($pathname, $newPathname);
     if ($type === 'Subtitle') list ($ConversionSuccess, $ConversionErrors) = convertSubtitles($pathname, $newPathname);
-    if ($type === 'Stream') list ($ConversionSuccess, $ConversionErrors) = convertStreams($pathname, $newPathname, $WaitForStream, $StreamPID);
+    // / Capture the stream supervision values into globals the core can read later.
+    if ($type === 'Stream') {
+      list ($ConversionSuccess, $ConversionErrors, $WaitForStream, $StreamPID) = convertStreams($pathname, $newPathname);
+      $StreamOutputPath = $newPathname; }
     if ($type === 'Audio') list ($ConversionSuccess, $ConversionErrors) = convertAudio($pathname, $newPathname, $extension, $bitrate);
     if ($type === 'Archive') list ($ConversionSuccess, $ConversionErrors) = convertArchives($pathname, $newPathname, $extension); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
@@ -1985,7 +2299,7 @@ function buildGUI($guiType, $ButtonCode) {
   // / Set variables.
   // / The variables defined here will be usable in GUI elements, 
   // / Files like header, footer, styleCore, convertGui1, & convertGui2 have access to these variables.
-  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir;
+  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray;
   $guiUIFile = $GuiUI1File;
   $Files = array();
   $FileCount = 0;
@@ -2028,9 +2342,9 @@ function showGUI($ShowGUI, $ButtonCode) {
   // / Determine whether to show a full or minimal GUI.
   if (isset($ShowGUI)) if (!$ShowGUI) $_GET['noGui'] = TRUE;
   // / Call the GUI from the selected language pack after files have been uploaded.
-  if (isset($_GET['showFiles'])) $GUIDisplayed = buildGui(2, $ButtonCode);
+  if (isset($_GET['showFiles'])) $GUIDisplayed = buildGUI(2, $ButtonCode);
   // / Call the GUI from the selected language pack before files have been uploaded.
-  if (!isset($_GET['showFiles'])) $GUIDisplayed = buildGui(1, $ButtonCode);
+  if (!isset($_GET['showFiles'])) $GUIDisplayed = buildGUI(1, $ButtonCode);
   return $GUIDisplayed; }
 // / -----------------------------------------------------------------------------------
 
@@ -2134,9 +2448,10 @@ function downloadFiles($Download) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to delete a selection of files.
+// / Each location is now unlinked using its own variable.
 function deleteFiles($FilesToDelete) {
   // / Set variables.
-  global $DangerousFiles, $Verbose, $FilesToDelete, $ConvertDir, $ConvertTempDir;
+  global $DangerousFiles, $Verbose, $ConvertDir, $ConvertTempDir;
   $DeleteComplete = $DeleteErrors = $variableIsSanitized = FALSE;
   $file = $f0 = $f1 = '';
   list ($FilesToDelete, $variableIsSanitized) = sanitize($FilesToDelete, FALSE);
@@ -2148,8 +2463,8 @@ function deleteFiles($FilesToDelete) {
     // / Make sure the file is sanitized before processing it.
     list ($file, $variableIsSanitized) = sanitize($file, TRUE);
     if (!$variableIsSanitized or !is_string($file) or $file === '' or $file === '.' or $file === '..' or $file === 'index.html') {
-      $OperationErrors = TRUE;
-      errorEntry('Could not sanitize the input file!', 23000, FALSE); 
+      $DeleteErrors = TRUE;
+      errorEntry('Could not sanitize the input file!', 23000, FALSE);
       continue; }
     if ($Verbose) logEntry('User selected to Delete file '.$file.'.');
     $f0 = getExtension($file);
@@ -2157,22 +2472,22 @@ function deleteFiles($FilesToDelete) {
     if (in_array(strtolower($f0), $DangerousFiles)) {
       errorEntry('Unsupported file format, '.$f0.'!', 23001, FALSE);
       continue; }
+    // / Remove the selected file from the hosted location.
     list ($f0, $variableIsSanitized) = sanitize($ConvertTempDir.pathinfo($file, PATHINFO_BASENAME), FALSE);
-    // / Code to remove the selected file from the $ConvertTempDir.
-    if (file_exists($f0)) @unlink($f1);
+    if (file_exists($f0)) @unlink($f0);
+    // / Remove the selected file from the working location.
     list ($f1, $variableIsSanitized) = sanitize($ConvertDir.pathinfo($file, PATHINFO_BASENAME), FALSE);
-    // / Code to remove the selected file from the $ConvertDir.
     if (file_exists($f1)) @unlink($f1);
     // / Check that the selected files were deleted.
     if (!file_exists($f0) && !file_exists($f1)) {
-     if ($Verbose) logEntry('Deleted file '.$file.'.');
-     $DeleteComplete = TRUE; }
+      if ($Verbose) logEntry('Deleted file '.$file.'.');
+      $DeleteComplete = TRUE; }
     else {
       $DeleteErrors = TRUE;
-      if ($Verbose) logEntry('Could not delete file '.$file.'!', 23002, FALSE); } }
+      errorEntry('Could not delete file '.$file.'!', 23002, FALSE); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $f0 = $f1 = NULL;
-  unset($file, $f0, $f1);
+  $file = $f0 = $f1 = $variableIsSanitized = NULL;
+  unset($file, $f0, $f1, $variableIsSanitized);
   return array($DeleteComplete, $DeleteErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -2246,10 +2561,12 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to convert a selection of files.
+// / A backgrounded stream has no output file when this function returns.
+// / $WaitForStream tells us the conversion is still running & must not be judged by its output.
 function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, $Width, $Rotate, $Bitrate) {
   // / Set variables.
-  global $Verbose, $VirusScan, $SpreadsheetArray, $PresentationInputArray, $XPSInputArray, $DocumentArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $SubtitleInputArray, $StreamArray, $MediaInputArray, $ArchiveArray, $Lol;
-  $MainConversionSuccess = $MainConversionErrors = $virusFound = $skip = $isExtensionSupported = $fileIsVerified = $variableIsSanitized = FALSE;
+  global $Verbose, $VirusScan, $SpreadsheetArray, $PresentationInputArray, $XPSInputArray, $DocumentArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $SubtitleInputArray, $StreamArray, $MediaInputArray, $ArchiveArray, $Lol, $WaitForStream;
+  $MainConversionSuccess = $MainConversionErrors = $virusFound = $skip = $isExtensionSupported = $fileIsVerified = $variableIsSanitized = $outputExists = FALSE;
   $clean = $copy = TRUE;
   $docarray =  array_merge($DocumentArray, $SpreadsheetArray, $PresentationInputArray, $XPSInputArray);
   $imgarray = $ImageArray;
@@ -2259,14 +2576,7 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
   $subtitleArray = $SubtitleInputArray;
   $streamarray = $StreamArray;
   $audioarray =  $MediaInputArray;
-  $archarray = $ArchiveArray; 
-  $pdfarray = array('pdf');
-  $array7z = array('7z', 'zip', 'rar', 'iso', 'vhd');
-  $array7zo = array('7z', 'zip');
-  $arrayzipo = array('zip');
-  $array7zo2 = array('vhd', 'iso');
-  $arraytaro = array('tar.gz', 'tar.bz2', 'tar');
-  $arrayraro = array('rar');
+  $archarray = $ArchiveArray;
   $arrayArray = array('Document' => $docarray, 'Image' => $imgarray, 'Model' => $modelarray, 'Drawing' => $drawingarray, 'Video' => $videoarray, 'Subtitle' => $subtitleArray, 'Stream' => $streamarray, 'Audio' => $audioarray, 'Archive' => $archarray);
   $arrKey = 0;
   $file = '';
@@ -2274,17 +2584,16 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
   if (!is_array($ConvertSelected)) $ConvertSelected = array($ConvertSelected);
   // / Iterate through the array of input files.
   foreach ($ConvertSelected as $file) {
-    $MainConversionSuccess = FALSE;
+    $MainConversionSuccess = $isExtensionSupported = FALSE;
     // / Make sure the file is sanitized before processing it.
     list ($file, $variableIsSanitized) = sanitize($file, TRUE);
     if (!$variableIsSanitized or !is_string($file) or $file === '' or $file === '.' or $file === '..' or $file === 'index.html') {
-      $OperationErrors = TRUE;
-      errorEntry('Could not sanitize the input file!', 5000, FALSE); 
+      $MainConversionErrors = TRUE;
+      errorEntry('Could not sanitize the input file!', 5000, FALSE);
       continue; }
-    // / Set the $clean & $copy arguments for the verifyFiles() function as needed,
-    if (count($ConvertSelected) > 1) $clean = FALSE; $copy = TRUE;
-    if (in_array($UserExtension, $archarray)) $clean = FALSE;
-    if (in_array($UserExtension, $docarray)) $clean = FALSE;
+    // / Set the $clean & $copy arguments for the verifyFiles() function as needed.
+    if (count($ConvertSelected) > 1) $clean = FALSE;
+    if (in_array($UserExtension, $archarray) or in_array($UserExtension, $docarray)) $clean = FALSE;
     if ($Verbose) logEntry('User selected to Convert file '.$file.'.');
     // / Verify the file before performing any operations on it.
     list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname, $UserFilename) = verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip);
@@ -2300,33 +2609,41 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
       if (!$scanComplete) errorEntry('Could not perform a virus scan!', 5002, TRUE);
       if ($virusFound) errorEntry('Virus detected!', 5003, TRUE);
       if ($Verbose) logEntry('Virus scan complete.'); }
-    // / Iterate through the array of supported formats & call the appropriate code to perform the conversion.
+// / Find the one format family that handles both the input & the output extension.
+    // / Only one family can ever match, so stop looking as soon as it is found.
     foreach ($arrayArray as $arrKey => $arrArray) {
-      // / Code to convert & manipulate files, only if both the selected input & output formats are supported.
-      if (in_array(strtolower($oldExtension), $arrArray)) {
-        if (in_array(strtolower($UserExtension), $arrArray)) {
-          $isExtensionSupported = TRUE;
-          list ($ConversionSuccess, $ConversionErrors) = convert($arrKey, $pathname, $newPathname, $UserExtension, $Height, $Width, $Rotate, $Bitrate);
-          if ($ConversionSuccess) print($UserFilename.$Lol);
-          if (!$ConversionSuccess) {
-            $MainConversionSuccess = FALSE;
-            errorEntry('Could not convert the selected '.$arrKey.'!', 5004, FALSE); }
-          if ($ConversionErrors) {
-            $MainConversionErrors = TRUE;
-            logEntry($arrKey.' conversion finished with errors.'); }
-          if ($Verbose) logEntry($arrKey.' Conversion Complete'); } } }
-    // / Error handler & logger for converting files.
-    if (!$isExtensionSupported) errorEntry('File extension '.$oldExtension.' is not supported!', 5006, FALSE);
-    if (!file_exists($newPathname)) {
+      if (!in_array(strtolower($oldExtension), $arrArray)) continue;
+      if (!in_array(strtolower($UserExtension), $arrArray)) continue;
+      $isExtensionSupported = TRUE;
+      list ($ConversionSuccess, $ConversionErrors) = convert($arrKey, $pathname, $newPathname, $UserExtension, $Height, $Width, $Rotate, $Bitrate);
+      if ($ConversionErrors) {
+        $MainConversionErrors = TRUE;
+        logEntry($arrKey.' conversion finished with errors.'); }
+      if ($Verbose) logEntry($arrKey.' Conversion Complete.');
+      break; }
+    // / An unsupported combination never reached a converter at all.
+    if (!$isExtensionSupported) {
       $MainConversionErrors = TRUE;
-      $MainConversionSuccess = FALSE;
-      errorEntry('Could not create '.$newPathname.' from '.$oldPathname.'!', 5005, FALSE); }
-    if (file_exists($newPathname)) {
+      errorEntry('File extension '.$oldExtension.' is not supported!', 5006, FALSE);
+      continue; }
+    // / The converter already failed & already logged the reason it failed.
+    // / Checking for an output file here would only report the same failure a second time.
+    if (!$ConversionSuccess) {
+      $MainConversionErrors = TRUE;
+      continue; }
+    // / A backgrounded stream is judged by its launch, everything else by its output file.
+    $outputExists = $WaitForStream ? TRUE : file_exists($newPathname);
+    if ($outputExists) {
       $MainConversionSuccess = TRUE;
-      if ($Verbose) logEntry('Created a file at '.$newPathname.'.'); } }
+      // / Output the filename of the converted file to the UI so it can be given to the user.
+      print($UserFilename.$Lol);
+      if ($Verbose) logEntry('Created a file at '.$newPathname.'.'); }
+    else {
+      $MainConversionErrors = TRUE;
+      errorEntry('Could not create '.$newPathname.' from '.$oldPathname.'!', 5005, FALSE); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $pathname = $oldPathname = $oldExtension= $newPathname = $docarray = $imgarray = $audioarray = $videoarray = $subtitleArray = $streamarray = $modelarray = $drawingarray = $pdfarray = $archarray = $array7z = $array7zo = $arrayzipo = $arraytaro = $arrayraro = $arrayArray = $fileIsVerified = $scanComplete = $virusFound = $variableIsSanitized = $arrKey = $clean = $copy = $skip = $isExtensionSupported = NULL;
-  unset ($file, $pathname, $oldPathname, $oldExtension, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $subtitleArray, $streamarray, $modelarray, $drawingarray, $pdfarray, $archarray, $array7z, $array7zo, $arrayzipo, $arraytaro, $arrayraro, $arrayArray, $fileIsVerified, $scanComplete, $virusFound, $variableIsSanitized, $arrKey, $clean, $copy, $skip, $isExtensionSupported);
+  $file = $pathname = $oldPathname = $oldExtension = $newPathname = $docarray = $imgarray = $audioarray = $videoarray = $subtitleArray = $streamarray = $modelarray = $drawingarray = $archarray = $arrayArray = $fileIsVerified = $scanComplete = $virusFound = $variableIsSanitized = $arrKey = $clean = $copy = $skip = $isExtensionSupported = $outputExists = NULL;
+  unset($file, $pathname, $oldPathname, $oldExtension, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $subtitleArray, $streamarray, $modelarray, $drawingarray, $archarray, $arrayArray, $fileIsVerified, $scanComplete, $virusFound, $variableIsSanitized, $arrKey, $clean, $copy, $skip, $isExtensionSupported, $outputExists);
   return array($MainConversionSuccess, $MainConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -2505,7 +2822,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
 // / Type can be either 'clamav' or 'scancore'.
 function verifyUserVirusLogs($type) {
   // / Set variables.
-  global $Verbose, $Time, $ConvertDir, $ConvertTempDir, $UserClamLogFile, $UserScanCoreLogFile, $SesHash3, $Lol, $Append, $UserScanCoreLogFileName;
+  global $Verbose, $Time, $ConvertDir, $ConvertTempDir, $UserClamLogFile, $UserScanCoreLogFile, $SesHash3, $Lol, $Append, $UserScanCoreFileName;
   $LogsExist = FALSE;
   $userClamLogFileName = $userScanCoreLogFileName = '';
   // / Verify the User Clam Log File if needed.
@@ -2529,7 +2846,7 @@ function verifyUserVirusLogs($type) {
       if ($Verbose) logEntry('Deleting stale file '.$UserScanCoreLogFileName.'.');
       @unlink($UserScanCoreLogFile); }
     // / Make sure that the stale file was deleted if required or creating a new one will cause problems.
-    if (file_exists($UserScanCoreLogFile)) errorEntry('Could not delete stale file '.$UserScanCoreFile.'!', 16002, TRUE);
+    if (file_exists($UserScanCoreLogFile)) errorEntry('Could not delete stale file '.$UserScanCoreFileName.'!', 16002, TRUE);
     else file_put_contents($UserScanCoreLogFile, 'Op-Act, '.$Time.', '.$SesHash3.': Created a User ScanCore Log File.'.$Lol, $Append);
     // / Make sure that the file was successfully replaced.
     if (!file_exists($UserScanCoreLogFile)) errorEntry('Could not create a file at '.$UserScanCoreLogFile.'!', 16003, TRUE);
@@ -2830,6 +3147,7 @@ function userVirusScan($FilesToScan, $type) {
   $fileToScan = $path = $type = $scan1Complete = $scan1Errors = $scan2Complete = $scan2Errors = NULL;
   unset($fileToScan, $returnData ,$path, $type, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors);
   return array($ScanComplete, $ScanErrors, $UserVirusFound, $ConsolidatedLogFile, $ConsolidatedLogFileName); }
+// / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to close the web server connection.
@@ -2864,8 +3182,12 @@ if (!$InputsAreVerified) die('ERROR!!! '.$Time.', '.$ApplicationName.'-6: Could 
 list ($SessionIsVerified, $IP, $HashedUserAgent) = verifySession();
 if (!$SessionIsVerified) die('ERROR!!! '.$Time.', '.$ApplicationName.'-7: Could not verify session!');
 
+// / The following code verifies the tokens supplied by the user, if any.
+// / If no tokens were supplied by the user, generate new ones.
+list ($TokensAreValid, $Token1, $Token2) = verifyTokens($Token1, $Token2);
+
 // / The following code generates a series of unique session identifiers.
-list ($SesHashIsVerified, $SesHash, $SesHash2, $SesHash3, $SesHash4) = verifySesHash($IP, $HashedUserAgent);
+list ($SesHashIsVerified, $SesHash, $SesHash2, $SesHash3, $SesHash4) = verifySesHash($Token1);
 if (!$SesHashIsVerified) die('ERROR!!! '.$Time.': '.$ApplicationName.'-8: Could not verify unique session identifier!');
 
 // / The following code verifies the logging environment.
@@ -2897,12 +3219,12 @@ list ($CleanedConvertLoc, $ConvertLocDeepCleaned) = cleanConvertLoc();
 if (!$CleanedConvertLoc) errorEntry('Could not clean the convert location!', 14, TRUE);
 else if ($Verbose) logEntry('Cleaned convert location.');
 
-// / The following code verifies the tokens supplied by the user, if any.
-list ($TokensAreValid, $Token1, $Token2) = verifyTokens($Token1, $Token2);
-if (!$TokensAreValid) if ($Verbose) logEntry('Could not verify tokens.');
-if ($TokensAreValid) if ($Verbose) logEntry('Verified tokens.');
+// / The following code removes the build & development environments if config.php asks for it.
+list ($BuildEnvCleaned, $BuildEnvDeleted, $DevDocsDeleted) = cleanBuildEnvironment();
+if (!$BuildEnvCleaned) errorEntry('Could not clean the build environment!', 26, TRUE);
+else if ($Verbose) logEntry('Verified the build environment.');
 
-// / The following code sets the language for the session.
+// / The following code sets the GUI for the session.
 list ($GuiIsSet, $GuiToUse, $GuiDir, $GuiFiles) = verifyGui();
 if (!$GuiIsSet) errorEntry('Could not verify GUI! GUI set to '.$GuiToUse.'!', 25, TRUE);
 else if ($Verbose) logEntry('Verified GUI. GUI set to '.$GuiToUse.'.');
@@ -2921,19 +3243,22 @@ else if ($Verbose) logEntry('Verified language. Language set to '.$LanguageToUse
 if (!isset($_POST['filesToArchive']) && !isset($_POST['convertSelected']) && !isset($_POST['pdfworkSelected']) && !isset($_POST['download']) && !isset($_POST['upload']) && !isset($_POST['filesToScan'])) {
   $GUIDisplayed = showGUI($ShowGUI, $ButtonCode);
   if (!$GUIDisplayed) errorEntry('Could not display GUI!', 17, TRUE);
-  else if ($Verbose)  logEntry('Displaying the GUI.'); }
+  else if ($Verbose) logEntry('Displaying the GUI.'); }
 else if ($Verbose) logEntry('Skipping display GUI procedure.');
 
-// / Close the web server connection after all required content has been served.
+// / Close the web server connection when the supplied tokens could not be verified.
 if (!$TokensAreValid) {
+  if ($Verbose) logEntry('Could not verify tokens. Token1: '.$Token1.' Token2: '.$Token2.'.');
   logEntry('Closing connection.');
   closeHRC2Connection();
   die(); }
 
 // / Only enable file related operations if valid tokens have been supplied.
 if ($TokensAreValid) {
+  if ($Verbose) logEntry('Verified tokens. Token1: '.$Token1.' Token2: '.$Token2.'.');
+
   // / The following code is performed when a user initiates a file upload.
-  if ($TokensAreValid && !empty($_FILES)) {
+  if (!empty($_FILES)) {
     logEntry('Initiating Uploader.');
     list ($UploadComplete, $UploadErrors) = uploadFiles();
     if (!$UploadComplete) errorEntry('Upload Failed!', 18, TRUE);
@@ -2957,7 +3282,7 @@ if ($TokensAreValid) {
     if ($Verbose) logEntry('Delete Complete.'); }
 
   // / The following code is performed when a user archives a selection of files.
-  if (isset($_POST['filesToArchive'])) { 
+  if (isset($_POST['filesToArchive'])) {
     logEntry('Initiating Archiver.');
     list ($ArchiveComplete, $ArchiveErrors) = archiveFiles($FilesToArchive, $UserFilename, $UserExtension);
     if (!$ArchiveComplete) errorEntry('Archive Failed!', 20, TRUE);
@@ -2978,7 +3303,7 @@ if ($TokensAreValid) {
     list ($ConversionComplete, $ConversionErrors) = ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method);
     if (!$ConversionComplete) errorEntry('OCR Operation Failed!', 22, TRUE);
     if ($ConversionErrors) logEntry('OCR Operation finished with errors.');
-    if ($Verbose)  logEntry('Conversion Complete.'); }
+    if ($Verbose) logEntry('Conversion Complete.'); }
 
   // / The following code is performed when a user performs a virus scan on a selection of files.
   if (isset($_POST['filesToScan']) && $AllowUserVirusScan) {
@@ -2988,21 +3313,21 @@ if ($TokensAreValid) {
     if ($UserVirusFound) logEntry('The User Virus Scan detected infected files.');
     if (!$UserVirusFound) logEntry('The User Virus Scan did not detect any infected files.');
     if ($ScanErrors) logEntry('User Virus Scan finished with errors.');
-    if ($Verbose)  logEntry('User Virus Scan Complete.'); }
+    if ($Verbose) logEntry('User Virus Scan Complete.'); }
 
   // / Close the web server connection after all required content has been served.
   logEntry('Closing connection.');
   closeHRC2Connection();
 
+  // / Nothing below this point may produce any output.
+  // / The user has already been served & the connection is already closed.
   // / If a user still has a pending stream open, keep running to monitor the FFMPEG process.
-  // / The user has already been served. Anything below this point is cleanup the user never waits for.
-  // / Flush & close the connection first, then supervise the backgrounded stream.
   if ($WaitForStream && $StreamPID > 0) {
     logEntry('Waiting up to '.$StreamWatchTimeout.' minutes for the user to watch the stream.');
-    list ($StreamCompleted, $StreamKilled, $ElapsedSeconds) = waitForStream($StreamPID, $newPathname);
+    list ($StreamCompleted, $StreamKilled, $ElapsedSeconds) = waitForStream($StreamPID, $StreamOutputPath);
     if ($StreamKilled) logEntry('The users stream was killed.');
-    if ($StreamCompleted) logEntry('The users stream has completed after '.$ElapsedSeconds.'.'); } 
-  
+    if ($StreamCompleted) logEntry('The users stream has completed after '.$ElapsedSeconds.' seconds.'); }
+
   // / Stop execution of the application.
   die(); }
 // / -----------------------------------------------------------------------------------

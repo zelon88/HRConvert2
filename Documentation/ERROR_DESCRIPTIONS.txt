@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 7/30/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/32026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.5.1.
+v3.5.4.
 This plain text file contains descriptions of all the native error messages contained in or produced by the HRConvert2 Diablo engine. 
 These descriptions should give administrators a starting point for debugging problems with HRConvert2 installations. 
 Each section in this file contains information about a different error message. The first one is an example to demonstrate the structure of this file.
@@ -365,6 +365,7 @@ ERROR DESCRIPTION
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The supplied path is not a subdirectory of either the convert location or the temporary location.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -386,6 +387,7 @@ ERROR DESCRIPTION
   This may be the result of incorrect file permission levels on the directory where Data is stored.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The www-data:www-data user:group needs to have read & write access to the Data directory.
+  The supplied path is not a subdirectory of either the convert location or the temporary location.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -770,10 +772,10 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-2000, <SESSION_IDENTIFIER>: Could not verify the document conversion engine installation at /usr/bin/unoconv!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-2000, <SESSION_IDENTIFIER>: Could not verify the Document Conversion Engine installation at <FILE_PATH>!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -782,12 +784,44 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Unoconv is not installed.
-  The file or folder located at /usr/bin/unoconv does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to /usr/bin/unoconv file.
-  This may be the result of incorrect file permission levels on /usr/bin/unoconv.
-  This may be the result of incorrect user or group associations for the www-data user or group.
-  The device where data is stored has an insufficient amount of storage space available.
+  The path is supplied by <FILE_PATH> because the engine location is selectable in config.php.
+  The Document Conversion Engine is a bundled fork of unoconv which starts a LibreOffice listener.
+  The engine could not be found at the path HRConvert2 expected.
+  The path is set by --Use Patched Document Engine-- in config.php.
+  When --Use Patched Document Engine-- is TRUE the bundled engine under the installation directory is used.
+  When --Use Patched Document Engine-- is FALSE the system engine at /usr/bin/unoconv is used instead.
+  The system engine may not be installed, or the bundled engine may be missing from the installation.
+  The www-data:www-data user:group needs read access to the engine file.
+  This may be the result of incorrect file permission levels on the installation directory.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-2001, <SESSION_IDENTIFIER>: The installed LibreOffice version is missing, unidentifiable, or too old!
+
+FILE
+  /convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  LibreOffice is the engine behind every document, spreadsheet, presentation & XPS conversion.
+  The Document Conversion Engine passes work to it, so no document conversion can succeed without it.
+  LibreOffice may not be installed, or may not be reachable on the system path used by the web server user.
+  The installed LibreOffice may be older than the --Minimum LibreOffice Version-- setting in config.php.
+  This minimum exists for format support & conversion reliability & is not a security control.
+  LibreOffice changed versioning schemes in 2024, moving from version 7.6 directly to version 24.2.
+  The new scheme is year.month, so a major of 24 or higher is newer than a major of 7.
+  HRConvert2 compares these values numerically, so both schemes are ranked correctly.
+  Some distributions ship only the soffice binary, & HRConvert2 tries that name when libreoffice is absent.
+  HRConvert2 refuses any build it cannot positively identify, because an unknown build cannot be cleared.
+  Check the installed version by running 'libreoffice --version' as the web server user.
+  The listener is only started once both the installation check & the version check have passed.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -1503,6 +1537,32 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-11001, <SESSION_IDENTIFIER>: The installed FFMPEG version is missing, unidentifiable, or too old!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The FFMPEG dependency required to convert video files could not be verified.
+  FFMPEG may not be installed, or may not be reachable on the system path used by the web server user.
+  The installed FFMPEG may be older than the --Minimum FFMPEG Version-- setting in config.php.
+  The installed FFMPEG may be a development or git build which does not report a parseable version number.
+  HRConvert2 refuses any build it cannot positively identify, because an unknown build cannot be cleared.
+  Verify the installed version by running 'ffmpeg -version' as the web server user.
+  This minimum exists for feature and format support and is not a security control.
+  Video conversions read a local file and never fetch anything remote.
+  The stream playlist protocol bypass affecting older builds cannot reach this operation.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-12000, <SESSION_IDENTIFIER>: The audio converter timed out!
 
 FILE
@@ -1530,6 +1590,32 @@ ERROR DESCRIPTION
   The device where data is stored has an insufficient amount of storage space available.
   The request contained character types or encoded data that are not supported.
   One of the $_POST or $_GET variables submitted was empty after sanitization.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-12001, <SESSION_IDENTIFIER>: The installed FFMPEG version is missing, unidentifiable, or too old!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The FFMPEG dependency required to convert audio files could not be verified.
+  FFMPEG may not be installed, or may not be reachable on the system path used by the web server user.
+  The installed FFMPEG may be older than the --Minimum FFMPEG Version-- setting in config.php.
+  The installed FFMPEG may be a development or git build which does not report a parseable version number.
+  HRConvert2 refuses any build it cannot positively identify, because an unknown build cannot be cleared.
+  Verify the installed version by running 'ffmpeg -version' as the web server user.
+  This minimum exists for feature and format support and is not a security control.
+  Audio conversions read a local file and never fetch anything remote.
+  The stream playlist protocol bypass affecting older builds cannot reach this operation.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -2359,10 +2445,10 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-21000, <SESSION_IDENTIFIER>: The stream converter timed out!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-21000, <SESSION_IDENTIFIER>: The stream converter failed to launch!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -2371,21 +2457,72 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Ffmpeg is not responding.
-  The conversion operation was attempted 5 times but no output file could be created.
-  The user submitted a request to convert a file that does not exist.
-  The user submitted a request that was incorrect, malformed, or corrupt.
-  The user has requested to convert a file that was deleted for exceededing the --File Deletion Age Theshold-- specified in config.php.
-  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
-  This may be the result of incorrect file permission levels on the directory where the application is installed.
-  This may be the result of incorrect file permission levels on the directory where Data is stored.
-  This may be the result of incorrect user or group associations for the www-data user or group.
-  The device where data is stored has an insufficient amount of storage space available.
-  The request contained character types or encoded data that are not supported.
-  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  NOTE. This message replaces the previous 21000 message, 'The stream converter timed out!'.
+  Stream conversions are now launched in the background so the user can be served immediately.
+  A backgrounded process cannot time out during the request, so that condition no longer exists here.
+  A stream that runs too long is now terminated by the stream supervisor after --Stream Duration Timeout--.
+  This error means the FFMPEG process was never started at all and no process identifier was returned.
+  FFMPEG may not be installed, or may not be reachable on the system path used by the web server user.
+  The web server user may not have permission to spawn background processes on this system.
+  The shell used by PHP may not support the background operator or the process identifier echo.
+  This error occurs only after the stream file has already passed full inspection.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-21001, <SESSION_IDENTIFIER>: Stream inspection denied this file. <ADDITIONAL_DATA>.
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A stream file was inspected before conversion and something in it was refused.
+  <ADDITIONAL_DATA> will be replaced with the specific reason the inspection stopped.
+  Stream files may reference remote hosts, and HRConvert2 validates every reference before FFMPEG sees the file.
+  The file may reference a private, reserved, loopback, or link-local address.
+  The file may reference a hostname that resolves to a private address, which is a DNS rebinding pattern.
+  The file may reference a protocol other than http or https, such as file, gopher, concat, or subfile.
+  The file may reference plain http while --Allow Stream Over HTTP-- is disabled in config.php.
+  The file may contain more references than --Stream Inspection Files Per Layer-- permits.
+  The file may nest playlists deeper than --Stream Inspection Layers-- permits.
+  The file may be a playlist disguised with a .ts extension, or content of an unrecognized type.
+  A relative reference in an uploaded playlist cannot be resolved, because an upload has no source URL to inherit from.
+  Playlists downloaded from a content delivery network commonly use relative references and must be edited to use absolute URLs.
+  Consult the Verbose log entries immediately preceding this error for the layer and file involved.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-21002, <SESSION_IDENTIFIER>: The installed FFMPEG version is missing, unidentifiable, or vulnerable to stream playlist protocol bypass!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The FFMPEG dependency required to convert stream files could not be cleared for stream work.
+  FFMPEG builds from v2.0 through v6.0 apply their own protocol whitelist to segments referenced inside a playlist.
+  The whitelist HRConvert2 supplies to FFMPEG is therefore bypassed on those builds.
+  Stream inspection cannot protect an affected build, so stream conversion is refused outright.
+  This is a stricter minimum than the one applied to audio and video conversions, and it is a security control.
+  The threshold is set by --Minimum Stream FFMPEG Version-- in config.php and must never be lowered below 6.1.
+  The installed FFMPEG may be a development or git build which does not report a parseable version number.
+  HRConvert2 refuses any build it cannot positively identify, because an unknown build cannot be cleared.
+  Verify the installed version by running 'ffmpeg -version' as the web server user.
+  Audio and video conversions will continue to work on an affected build, because neither fetches remote content.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -2519,6 +2656,286 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-26000, <SESSION_IDENTIFIER>: Could not remove the build environment!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The Dockerfile or the Build directory could not be removed from the installation.
+  This work is controlled by --Delete Build Environment-- in config.php.
+  The www-data:www-data user:group needs write access to the installation directory and to the Build directory.
+  This may be the result of incorrect file permission levels on the installation directory.
+  The Build directory may contain subdirectories, which this routine does not remove.
+  The build environment is removed directly and not through cleanFiles(), because it sits outside every approved cleanup root.
+  Widening the cleanFiles() whitelist to include the application directory would make the recursive deleter far more dangerous.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-26001, <SESSION_IDENTIFIER>: Could not remove the development documentation!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The CHANGELOG.txt or README.md file could not be removed from the installation.
+  This work is controlled by --Delete Development Documentation-- in config.php.
+  The www-data:www-data user:group needs write access to the installation directory and to the Documentation directory.
+  This may be the result of incorrect file permission levels on the installation directory.
+  This may be the result of the files having already been removed by hand outside of HRConvert2.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27000, <SESSION_IDENTIFIER>: Could not prepare the OpenSCAD sources for rendering!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  HRConvert2 could not produce a sanitized copy of the OpenSCAD source it was asked to render.
+  Every uploaded OpenSCAD source is sanitized into the ScadTemp directory before OpenSCAD is allowed to run.
+  The whole upload set is sanitized rather than just the requested file, because a resolved include would otherwise reach an unfiltered source.
+  One or more sources may have failed to read or failed to write, and those failures are reported separately.
+  The ScadTemp directory inside the user session directory may be missing or may not be writable.
+  Consult error 27001 and error 27006 in the log for the specific file that failed.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27001, <SESSION_IDENTIFIER>: Could not stage the sanitized OpenSCAD source <FILE_NAME>!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A sanitized copy of an uploaded OpenSCAD source could not be written to the ScadTemp directory.
+  The number of bytes written did not match the number of bytes expected, or the write failed outright.
+  The disk or the partition holding the data storage directory may be full.
+  The www-data:www-data user:group may not have write access to the user session directory.
+  The ScadTemp directory may not exist, and it is created by the required directory routine at the start of every request.
+  HRConvert2 never modifies or replaces the source the user uploaded, so their original file is unaffected by this error.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27002, <SESSION_IDENTIFIER>: The OpenSCAD converter timed out after <ADDITIONAL_DATA> seconds!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  An OpenSCAD render exceeded the time limit set by --SCAD Conversion Timeout-- in config.php and was terminated.
+  OpenSCAD has no execution limit of its own and will render until it finishes or is killed.
+  A complex assembly may legitimately need more time than the configured limit allows.
+  A crafted model can pin a CPU core indefinitely through recursion or an extreme $fn value.
+  Renders are niced to the lowest priority, so a runaway model yields to everything else on the server.
+  Raising this limit multiplies the cost of the cheapest denial of service available against this server.
+  A three line file uploaded by a stranger can consume a PHP worker for the entire configured duration.
+  A large real world assembly of roughly thirty sources renders well within the default.
+  OpenSCAD builds newer than the pinned minimum render considerably faster because they use multiple CPU cores.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27003, <SESSION_IDENTIFIER>: The OpenSCAD converter failed with exit code <ADDITIONAL_DATA>!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  OpenSCAD ran but exited with a failure status and produced no usable output.
+  The source may contain a syntax error, or may reference a variable or module that does not exist.
+  The source may reference an include which HRConvert2 removed, leaving the remaining code unable to render.
+  The requested export format may be one this OpenSCAD build was not compiled to support.
+  The source may produce two dimensional geometry, which cannot be exported to a three dimensional format.
+  OpenSCAD standard output and standard error are deliberately discarded and never written to the log.
+  A failed parse quotes the offending line, which would turn the log into a file exfiltration channel.
+  Only the exit code is recorded, because an exit code cannot carry the contents of a file.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27004, <SESSION_IDENTIFIER>: Could not remove the sanitized OpenSCAD sources!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The sanitized copies written to the ScadTemp directory could not be removed after the render finished.
+  Sanitized sources are never retained for any reason, and are regenerated on every conversion if needed again.
+  The www-data:www-data user:group may not have write access to the user session directory.
+  A sanitized copy may be locked by another process, such as an OpenSCAD render that has not fully exited.
+  Any copies left behind are removed by the session sweep once the --Delete Threshold-- has elapsed.
+  The ScadTemp directory lives inside the non-hosted user session directory and is never reachable from the web.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27005, <SESSION_IDENTIFIER>: The installed OpenSCAD version is missing or too old!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The OpenSCAD dependency required to render OpenSCAD sources could not be verified.
+  OpenSCAD may not be installed, or may not be reachable on the system path used by the web server user.
+  The installed OpenSCAD may be older than the --Minimum OpenSCAD Version-- setting in config.php.
+  HRConvert2 does not probe OpenSCAD for capabilities and does not accommodate older builds.
+  Pinning a minimum version means the export formats offered in the interface can be trusted as written.
+  Verify the installed version by running 'openscad --version' as the web server user.
+  OpenSCAD reports its version on standard error rather than standard output.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27006, <SESSION_IDENTIFIER>: Could not read the OpenSCAD source file <FILE_NAME>!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  An uploaded OpenSCAD source could not be read while sanitizing the upload set.
+  The file may have been deleted by the user or by the session sweep between upload and conversion.
+  The www-data:www-data user:group may not have read access to the user session directory.
+  The file may be larger than the memory limit PHP is configured to allow.
+  Every uploaded OpenSCAD source is read during sanitization, not only the one selected for conversion.
+  A single unreadable source therefore fails the whole conversion, because a resolved include could have pointed at it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! HRConvert2-28000: The config.php file is missing <ADDITIONAL_DATA> required setting(s). Config version detected: <ADDITIONAL_DATA>. Config version required: <ADDITIONAL_DATA>. Missing Variables: <ADDITIONAL_DATA>
+
+FILE
+  /convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  NO
+
+ERROR DESCRIPTION
+  The config.php file does not define every setting this version of the core requires.
+  This almost always means convertCore.php was updated but config.php was not.
+  Replacing config.php with the one supplied alongside the new core is the correct fix.
+  Settings that were customized must be carried across to the new file by hand.
+  A missing setting is not a harmless omission that the core can work around.
+  An undefined setting reads as NULL, which silently becomes FALSE or zero at every point of use.
+  A missing timeout would become zero & a missing format whitelist would become empty.
+  A missing security setting would read as disabled, without any warning that it was ever absent.
+  Detecting the absence outright is the only way an administrator learns what actually happened.
+  The list of missing variables in this message is complete & names every setting that was absent.
+  The detected config version explains WHY settings are missing & is otherwise advisory.
+  A config file that predates the version stamp entirely will report a detected version of NONE.
+  A config file that carries every required setting is accepted regardless of what its stamp says.
+  This error can also appear when a setting was added to config.php & to the required list, but not to
+  the global declaration at the top of verifyInstallation(). A setting absent from that declaration
+  never reaches global scope & is therefore reported as missing even though config.php defines it.
+  Because this error takes place before the logging environment is initialized; this error will not be logged.
+  Because this error takes place before the time environment is initialized; this error will not contain a timestamp.
+  Because this error takes place before the configuration file has been validated; the Application Name configuration entry will not be used.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! HRConvert2-28001: The core file reports version <ADDITIONAL_DATA> but the version information file reports version <ADDITIONAL_DATA>. This installation is incomplete or was updated incorrectly.
+
+FILE
+  /convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  NO
+
+ERROR DESCRIPTION
+  The version recorded inside convertCore.php does not match the version recorded in versionInfo.php.
+  These two files are released together & must always report the same version.
+  This means one file was replaced during an update & the other was not.
+  This may be the result of an update that was interrupted before every file had been copied.
+  This may be the result of files being copied by hand rather than by replacing the whole installation.
+  This may be the result of a partial extraction from a release archive.
+  Reinstalling the complete release over the existing installation is the correct fix.
+  The config.php file & the secret.php file should be preserved when doing so.
+  Running a core against a mismatched version information file is never supported.
+  The two files are checked against each other before anything else is verified, because
+  every later check assumes the core & the release it belongs to are actually the same release.
+  Because this error takes place before the logging environment is initialized; this error will not be logged.
+  Because this error takes place before the time environment is initialized; this error will not contain a timestamp.
+  Because this error takes place before the configuration file has been processed; the Application Name configuration entry will not be used.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-25, <SESSION_IDENTIFIER>: Could not verify GUI! GUI set to <SELECTED_GUI>! 
 
 FILE
@@ -2537,4 +2954,29 @@ ERROR DESCRIPTION
   The requested GUI is incomplete, malformed, or missing critical components.
   This may be the result of incorrect file permission levels on the UI subdirectory.
   This may be the result of incorrect user or group associations for the www-data user or group.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-26, <SESSION_IDENTIFIER>: Could not clean the build environment!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  HRConvert2 was asked to remove the build environment or the development documentation and could not.
+  This work is controlled by --Delete Build Environment-- and --Delete Development Documentation-- in config.php.
+  Both settings default to leaving those files in place, so this error only occurs when one has been enabled.
+  The www-data:www-data user:group needs write access to the installation directory to remove these files.
+  This may be the result of incorrect file permission levels on the installation directory.
+  This may be the result of the files having already been removed by hand outside of HRConvert2.
+  This work used to run inside verifyInstallation() before the globals it needed had been defined.
+  It now runs after verifyGlobals() and after verifyLogs(), so its failures can be written to the log.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

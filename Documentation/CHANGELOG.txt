@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/3/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/4/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.5.4.
+v3.5.5.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -25,6 +25,59 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
 
 <3 Open-Source
 -----------------------------------------------------------------------------------
+
+--------------------
+COMMIT 8/4/2026
+v3.5.5 - Add config.php verification, libreoffice verification, ffmpeg verification, Stream / Audio / Video ordering issues, update docs.
+
+-v3.5.5.
+-Added a config.php version check, and a supported config.php variable in verifyInstallation.
+  -Add verifyConfigFile() function for this purpose.
+  -Now HRConvert2 will verify that the config.php file is compatible with the core.
+  -If HRConvert2 detects a config.php file mismatch, after an application update for example, the core will say so.
+  -When a config.php mismatch is detected, the core will output exactly what version config is installed and which options are missing.
+-Move version check from verifyGlobals to verifyInstallation.
+-Add config.php sanity check that verifies that all required config entries are defined.
+-Switch verifyGlobals from using the unchecked sanitizeString function to using the checked sanitize function instead.
+-The GlobalsAreVerified sanity check now ensures that the sanitization checks passed.
+  -Before it checked that the HRConvert2 versions matched.
+-Combine cleanTempLoc() & cleanConvertLoc() functions.
+-Change Document Conversion Engine from using the $HomeLoc to build the LibreOffice profile to the $ConvertLoc.
+  -Now the Logs, Secret, and LibreOffice cache all lives in the non-hosted $ConvertLoc specified in config.php.
+-Change the way $StreamArray is constructed from $UserStreamArray.
+  -It was consuming the video and audio operations & firing before the user-intended conversion took place.
+  -Now it only fires on .m3u8 & .ts files.
+  -The $StreamOutputArray is constructed from the $UserMediaOutputArray & the $UserAudioOutputArray.
+-Add min / max version checks to FFMPEG related operations.
+-Enforces FFMPEG versions for best security & compatibility.
+  -Similar in nature to the version check being done for OpenSCAD in the convertSCAD() function.
+  -Variables do exist in config.php for setting the accepted (over-riding) the enforced min versions.
+  -For Audio & Video conversions, the min is controlled in config.php by $MinimumFFMPEGVersion and the default is FFMPEG v4.1.
+  -For Stream conversions, the min is controlled in config.php by $MinimumStreamFFMPEGVersion and the default is FFMPEG v6.0.
+  -Stream conversions require higher FFMPEG levels due to security considerations & the sensitivity of handling playlist files with embedded URLs.
+  -Version enforcement also prevents custom
+-Update ERROR_DESCRIPTIONS.txt with information about the following error messages.
+  -13, Added line to ERROR DESCRIPTION section describing new failure mode; Path failed containment.
+  -14, Added line to ERROR DESCRIPTION section describing new failure mode; Path failed containment.
+  -2000, ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-2000, <SESSION_IDENTIFIER>: Could not verify the Document Conversion Engine installation at <FILE_PATH>!
+  -2001, ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-2001, <SESSION_IDENTIFIER>: The installed LibreOffice version is missing, unidentifiable, or too old!
+  -11001, ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-11001, <SESSION_IDENTIFIER>: The installed FFMPEG version is missing, unidentifiable, or too old!
+  -12001, ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-12001, <SESSION_IDENTIFIER>: The installed FFMPEG version is missing, unidentifiable, or too old!
+  -21000, ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-21000, <SESSION_IDENTIFIER>: The stream converter failed to launch!
+  -21001, ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-21001, <SESSION_IDENTIFIER>: Stream inspection denied this file. <ADDITIONAL_DATA>.
+  -21002, ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-21002, <SESSION_IDENTIFIER>: The installed FFMPEG version is missing, unidentifiable, or vulnerable to stream playlist protocol bypass!
+  -26, ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-26, <SESSION_IDENTIFIER>: Could not clean the build environment!
+  -26000, ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-26000, <SESSION_IDENTIFIER>: Could not remove the build environment!
+  -26001, ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-26001, <SESSION_IDENTIFIER>: Could not remove the development documentation!
+  -27000, ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27000, <SESSION_IDENTIFIER>: Could not prepare the OpenSCAD sources for rendering!
+  -27001, ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27001, <SESSION_IDENTIFIER>: Could not stage the sanitized OpenSCAD source <FILE_NAME>!
+  -27002, ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27002, <SESSION_IDENTIFIER>: The OpenSCAD converter timed out after <ADDITIONAL_DATA> seconds!
+  -27003, ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27003, <SESSION_IDENTIFIER>: The OpenSCAD converter failed with exit code <ADDITIONAL_DATA>!
+  -27004, ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27004, <SESSION_IDENTIFIER>: Could not remove the sanitized OpenSCAD sources!
+  -27005, ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27005, <SESSION_IDENTIFIER>: The installed OpenSCAD version is missing or too old!
+  -27006, ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27006, <SESSION_IDENTIFIER>: Could not read the OpenSCAD source file <FILE_NAME>!
+  -28000, ERROR!!! HRConvert2-28000: The config.php file is missing <ADDITIONAL_DATA> required setting(s). Config version detected: <ADDITIONAL_DATA>. Config version required: <ADDITIONAL_DATA>. Missing Variables: <ADDITIONAL_DATA>
+  -28001, ERROR!!! HRConvert2-28001: The core file reports version <ADDITIONAL_DATA> but the version information file reports version <ADDITIONAL_DATA>. This installation is incomplete or was updated incorrectly.
 
 --------------------
 COMMIT 8/3/2026

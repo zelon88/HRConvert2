@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 5/8/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/3/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.4.1.
+// / v3.5.4.
 // / This file contains language specific GUI related text for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -128,6 +128,12 @@ $Gui1Text29 = 'চালিয়ে যান...';
 $Gui1Text30 = 'স্ট্রিম ফর্ম্যাটগুলিকে ভিডিও ফর্ম্যাটে রূপান্তর করতে পারে৷';
 // / 'Subtitle Formats'
 $Gui1Text31 = 'সাবটাইটেল ফরম্যাট';
+// / 'OpenSCAD Formats'
+$Gui1Text32 = 'OpenSCAD ফরম্যাট';
+// / 'Renders OpenSCAD source into 3D model formats.'
+$Gui1Text33 = 'OpenSCAD সোর্স কোডকে ত্রিমাত্রিক মডেল ফরম্যাটে রূপান্তর করে।';
+// / 'File references inside uploaded sources are removed unless the server allows resolving them.'
+$Gui1Text34 = 'সার্ভার অনুমতি না দিলে আপলোড করা সোর্স ফাইলের ভিতরের ফাইল রেফারেন্স মুছে ফেলা হয়।';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -286,6 +292,10 @@ $Gui2Text76 = 'সাবটাইটেল রূপান্তর করুন
 $Gui2Text77 = 'এই উপস্থাপনাটি রূপান্তর করুন';
 // / 'Convert This XPS File'
 $Gui2Text78 = 'এই ফাইলটি রূপান্তর করুন';
+// / 'Render This OpenSCAD Model'
+$Gui2Text79 = 'এই OpenSCAD মডেলটি রেন্ডার করুন';
+// / 'Render Model'
+$Gui2Text80 = 'মডেল রেন্ডার করুন';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 5/8/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/3/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.4.1.
+// / v3.5.4.
 // / This file contains language specific GUI related text for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -123,6 +123,12 @@ $Gui1Text29 = '계속하다 ...';
 $Gui1Text30 = '스트림 형식을 비디오 형식으로 변환할 수 있습니다.';
 // / 'Subtitle Formats'
 $Gui1Text31 = '자막 형식';
+// / 'OpenSCAD Formats'
+$Gui1Text32 = 'OpenSCAD 형식';
+// / 'Renders OpenSCAD source into 3D model formats.'
+$Gui1Text33 = 'OpenSCAD 소스 코드를 3D 모델 형식으로 변환합니다.';
+// / 'File references inside uploaded sources are removed unless the server allows resolving them.'
+$Gui1Text34 = '서버가 허용하지 않는 한 업로드된 소스 파일 내부의 파일 참조는 제거됩니다.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -281,6 +287,10 @@ $Gui2Text76 = '자막 변환';
 $Gui2Text77 = '이 프레젠테이션 변환하기';
 // / 'Convert This XPS File'
 $Gui2Text78 = 'C이 파일을 변환하세요';
+// / 'Render This OpenSCAD Model'
+$Gui2Text79 = '이 OpenSCAD 모델 렌더링';
+// / 'Render Model'
+$Gui2Text80 = '모델 렌더링';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

@@ -33,7 +33,7 @@ $UIDisplayed = TRUE;
 // / Check if the core is loaded.
 if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
 // / Assign temporary variables.
-$gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2XpsArr = array();
+$gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2XpsArr = $gui2ScadArr = array();
 // / -----------------------------------------------------------------------------------
 ?>
   <body>
@@ -350,6 +350,15 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
           <img id='modelXButton<?php echo $ConvertGuiCounter1; ?>' name='modelXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;'
            onclick='toggle_visibility("modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("modelButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("modelXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
           <?php } 
+
+          if ($extension === 'scad' && in_array('Scad', $SupportedConversionTypes)) { ?>
+          <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
+
+          <img id='scadButton<?php echo $ConvertGuiCounter1; ?>' name='scadButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>convert.png' style='float:<?php echo $GUIAlignment; ?>; display:block;'
+           onclick='toggle_visibility("scadOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scadButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scadXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+          <img id='scadXButton<?php echo $ConvertGuiCounter1; ?>' name='scadXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;'
+           onclick='toggle_visibility("scadOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scadButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scadXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+          <?php }
 
           if (in_array($extension, $SubtitleInputArray) && in_array('Subtitle', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
@@ -1105,7 +1114,66 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
 
           </script>
         </div>
+
         <?php } 
+
+        if ($extension === 'scad' && in_array('Scad', $SupportedConversionTypes)) {
+        ?>
+        <div id='scadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='scadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+          <p style="max-width:500px;"></p>
+          <p><strong><?php echo $Gui2Text79; ?></strong></p>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='userscadfilename<?php echo $ConvertGuiCounter1; ?>' name='userscadfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <select id='scadextension<?php echo $ConvertGuiCounter1; ?>' name='scadextension<?php echo $ConvertGuiCounter1; ?>'>
+            <option value=""><?php echo $Gui2Text18; ?></option>
+            <?php foreach ($SCADOutputArray as $gui2ScadArr) { ?>
+            <option value="<?php echo $gui2ScadArr; ?>"><?php echo $gui2ScadArr; ?></option>
+            <?php } ?>
+          </select></p>
+          <input type="submit" id="scadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="scadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text80; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <script type="text/javascript">
+            $(document).ready(function () {
+              $('#scadconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
+                $.ajax({
+                  type: 'POST',
+                  url: 'convertCore.php',
+                  data: {
+                    Token1:'<?php echo $Token1; ?>',
+                    Token2:'<?php echo $Token2; ?>',
+                    convertSelected:'<?php echo $File; ?>',
+                    extension:document.getElementById('scadextension<?php echo $ConvertGuiCounter1; ?>').value,
+                    userconvertfilename:document.getElementById('userscadfilename<?php echo $ConvertGuiCounter1; ?>').value },
+                    success: function(ReturnData) {
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                      const ReturnDataArray = ReturnData.split(/\r?\n/);
+                      ReturnDataArray.slice(1).forEach((line, index) => {
+                        if (line.includes('ERROR!!!')) {
+                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                          setTimeout(function() {
+                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                          alert(line); }
+                        else if (line !== '') {
+                          $.ajax({
+                            type: 'POST',
+                            url: 'convertCore.php',
+                            data: {
+                              Token1:'<?php echo $Token1; ?>',
+                              Token2:'<?php echo $Token2; ?>',
+                              download:line },
+                            success: function(ReturnData) {
+                              if (ReturnData !== '') {
+                                document.getElementById('downloadTarget').href = '<?php echo 'DATA/'.$SesHash3.'/'; ?>'+line;
+                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                                setTimeout(function() {
+                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                                document.getElementById('downloadTarget').click(); } },
+                            error: function(ReturnData) {
+                              toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                              setTimeout(function() {
+                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+          </script>
+        </div>
+        <?php }
 
         if (in_array($extension, $SubtitleInputArray) && in_array('Subtitle', $SupportedConversionTypes)) {
         ?>
@@ -1267,5 +1335,5 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
     </div>
     <?php
     // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-    $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2XpsArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = NULL;
-    unset($gui2AudArr, $gui2VidArr, $gui2StreamArr, $gui2DocArr, $gui2SpreadArr, $gui2XpsArr, $gui2PresArr, $gui2ArchArr, $gui2ImaArr, $gui2ModArr, $gui2SubArr, $gui2DraArr, $gui2OcrArr);
+    $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2XpsArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2ScadArr = NULL;
+    unset($gui2AudArr, $gui2VidArr, $gui2StreamArr, $gui2DocArr, $gui2SpreadArr, $gui2XpsArr, $gui2PresArr, $gui2ArchArr, $gui2ImaArr, $gui2ModArr, $gui2SubArr, $gui2DraArr, $gui2OcrArr, $gui2ScadArr);

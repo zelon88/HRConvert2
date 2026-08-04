@@ -137,6 +137,15 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);">
               <li><?php echo $gui1ModArr; ?></li>
               <?php } ?>
             </ol>
+            <?php } if (in_array('Scad', $SupportedConversionTypes)) { ?>
+            <strong><?php echo $Gui1Text32; ?></strong>
+            <p><i><?php echo $Gui1Text33; ?></i></p>
+            <p><i><?php echo $Gui1Text34; ?></i></p>
+            <ol>
+              <?php foreach ($SCADOutputArray as $gui1ScadArr) { ?>
+              <li><?php echo $gui1ScadArr; ?></li>
+              <?php } ?>
+            </ol>
             <?php } if (in_array('Subtitle', $SupportedConversionTypes)) { ?>
             <strong><?php echo $Gui1Text31; ?></strong>
             <ol>

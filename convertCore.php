@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.5.4.
+// / v3.5.5.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -161,23 +161,127 @@ function generateInstallSecret() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to confirm the config.php file carries every setting this core requires.
+// / A config file from an older release will be missing settings the core now depends on.
+// / An undefined setting evaluates as NULL, which silently reads as FALSE or zero.
+// / A missing timeout would become zero & a missing whitelist would become empty, without warning.
+// / Detecting the absence outright is the only way an administrator learns what actually happened.
+// / $ConfigVersion is advisory & explains WHY settings are missing.
+// / The variable list is authoritative & reports WHICH settings are missing.
+// / A config file predating the version stamp will report no version rather than a wrong one.
+// / Version stamps carry a leading v which must be stripped before any numeric comparison.
+// / Casting 'v3' to an integer yields 0, which would silently reduce this to a minor & patch check.
+function verifyConfigVersion($RequiredConfigVersion) {
+  // / Set variables.
+  global $ConfigVersion;
+  $ConfigIsValid = TRUE;
+  $MissingConfigVars = array();
+  $requiredConfigVars = $configVersionParts = $requiredVersionParts = array();
+  $requiredConfigVar = $detectedConfigVersion = $cleanConfigVersion = $cleanRequiredVersion = '';
+  $configVersionIsCurrent = FALSE;
+  // / Every setting the core reads from config.php.
+  // / A setting added to config.php must be added here or this check stops covering it.
+  $requiredConfigVars = array(
+    'ConfigVersion',
+    'URL', 'InstLoc', 'ServerRootDir', 'ConvertLoc', 'LogDir', 'HomeLoc', 'ProprietaryLoc',
+    'ApplicationName', 'ApplicationTitle', 'Verbose', 'MaxLogSize', 'DeleteThreshold',
+    'UniqueDailyLogHash', 'AppendLogHashToLogFiles',
+    'VirusScan', 'AllowUserVirusScan', 'ScanCoreMemoryLimit', 'ScanCoreChunkSize',
+    'ScanCoreDebug', 'ScanCoreVerbose',
+    'SupportedLanguages', 'DefaultLanguage', 'AllowUserSelectableLanguage',
+    'SupportedGuis', 'DefaultGui', 'AllowUserSelectableGui',
+    'SupportedColors', 'AllowUserSelectableColor', 'ButtonStyle',
+    'Font', 'SpinnerStyle', 'SpinnerColor',
+    'ShowGUI', 'ShowFinePrint', 'TOSURL', 'PPURL', 'AllowUserShare',
+    'SupportedConversionTypes', 'RetryCount', 'DocumentEngineSleepTimer',
+    'UsePatchedDocumentEngine', 'RARArchiveMethod',
+    'DeleteBuildEnvironment', 'DeleteDevelopmentDocumentation',
+    'UserArchiveArray', 'UserDearchiveArray', 'UserDocumentArray', 'UserSpreadsheetArray',
+    'UserPresentationInputArray', 'UserPresentationOutputArray',
+    'UserXPSInputArray', 'UserXPSOutputArray', 'UserImageArray',
+    'UserMediaInputArray', 'UserMediaOutputArray',
+    'UserVideoInputArray', 'UserVideoOutputArray', 'UserStreamArray',
+    'UserDrawingArray', 'UserModelArray', 'UserSCADArray',
+    'UserSubtitleInputArray', 'UserSubtitleOutputArray', 'UserPDFWorkArr',
+    'AllowStreamOverHTTP', 'StreamWatchTimeout', 'StreamConnectionTimeout',
+    'StreamInspectionLayers', 'StreamInspectionFilesPerLayer',
+    'DefaultStreamInspectionForfeitAction', 'MaxStreamInspectionFileSize',
+    'AllowSCADIncludeResolution', 'SCADConversionTimeout',
+    'MinimumSCADVersion', 'MinimumFFMPEGVersion', 'MinimumStreamFFMPEGVersion',
+    'MinimumLibreOfficeVersion');
+  // / Check that every required setting actually exists in the global scope.
+  // / config.php is required at global scope, so every setting it defines lands in $GLOBALS.
+  // / isset() is deliberately not used because a setting legitimately set to NULL still exists.
+  foreach ($requiredConfigVars as $requiredConfigVar) {
+    if (!array_key_exists($requiredConfigVar, $GLOBALS)) array_push($MissingConfigVars, $requiredConfigVar); }
+  if (!empty($MissingConfigVars)) $ConfigIsValid = FALSE;
+  // / Compare the config version stamp against the version this core was written for.
+  // / This is advisory. It explains why settings are missing but never passes a config that is incomplete.
+  $detectedConfigVersion = array_key_exists('ConfigVersion', $GLOBALS) ? $ConfigVersion : '';
+  if ($detectedConfigVersion !== '') {
+    $cleanConfigVersion = ltrim($detectedConfigVersion, 'vV');
+    $cleanRequiredVersion = ltrim($RequiredConfigVersion, 'vV');
+    $configVersionParts = explode('.', $cleanConfigVersion);
+    $requiredVersionParts = explode('.', $cleanRequiredVersion);
+    // / Compare numerically, never as strings.
+    // / A string comparison would rank version 3.10 below version 3.9.
+    if ((int)($configVersionParts[0] ?? 0) > (int)($requiredVersionParts[0] ?? 0)) $configVersionIsCurrent = TRUE;
+    elseif ((int)($configVersionParts[0] ?? 0) === (int)($requiredVersionParts[0] ?? 0)) {
+      if ((int)($configVersionParts[1] ?? 0) > (int)($requiredVersionParts[1] ?? 0)) $configVersionIsCurrent = TRUE;
+      elseif ((int)($configVersionParts[1] ?? 0) === (int)($requiredVersionParts[1] ?? 0) && (int)($configVersionParts[2] ?? 0) >= (int)($requiredVersionParts[2] ?? 0)) $configVersionIsCurrent = TRUE; } }
+  // / A config file with no version stamp at all predates this check entirely.
+  else $detectedConfigVersion = 'NONE';
+  // / Sanity check that the config.php file is valid.
+  // / $ConfigIsValid should already be false by now, but just in case.
+  if (!$configVersionIsCurrent && !$ConfigIsValid) $ConfigIsValid = FALSE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $requiredConfigVars = $requiredConfigVar = $configVersionParts = $requiredVersionParts = $configVersionIsCurrent = $cleanConfigVersion = $cleanRequiredVersion = $RequiredConfigVersion = NULL;
+  unset($requiredConfigVars, $requiredConfigVar, $configVersionParts, $requiredVersionParts, $configVersionIsCurrent, $cleanConfigVersion, $cleanRequiredVersion, $RequiredConfigVersion);
+  return array($ConfigIsValid, $MissingConfigVars, $detectedConfigVersion); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to load required HRConvert2 files.
 // / This function verifies the installation environment.
+// / Three separate things are checked here & all three must pass.
+// / The core file version must match the version recorded in versionInfo.php.
+// / The config file must carry every setting this core reads.
+// / The per install secret must either load successfully or be created successfully.
+// / This function runs before verifyLogs(), so every failure here dies rather than logging.
 function verifyInstallation() {
   // / Set variables.
-  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $DefaultColor, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray;
-  $InstallationIsVerified = $secret = $secretFile = $secretFileContent = $createSecretFile = $SecretKey = $secretFailed = $loadSecretFile = $secretFileWriteComplete = $secretCheck = FALSE;
+  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation;
+  $InstallationIsVerified = $secret = $secretFile = $secretFileContent = $createSecretFile = $SecretKey = $secretFailed = $loadSecretFile = $secretFileWriteComplete = $secretCheck = $appVersionCheck = $configIsValid = FALSE;
   $check1 = $check2 = TRUE;
   $bytesWritten = 0;
+  $missingConfigVars = array();
+  $detectedConfigVersion = $requiredConfigVersion = $configFile = '';
+  // / Define what version of HRConvert2 this core file represents.
+  $HRConvertVersion = 'v3.5.5';
+  $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
+  // / Define the minimum acceptable config.php version that this convertCore.php can accept.
+  // / This is only raised when a release adds or removes a config setting.
+  // / A release that changes no settings leaves this alone, so existing config files keep working.
+  $requiredConfigVersion = 'v3.5.5';
+  $requiredConfigVersion = ltrim($requiredConfigVersion, 'vV');
   // / Define absolute paths for files that we only have relative paths for.
-  $ConfigFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'config.php');
+  $configFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'config.php');
   $VersionInfoFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'versionInfo.php');
   // / Check for required files & stop execution if they are missing.
-  if (!file_exists($ConfigFile)) die ('ERROR!!! HRConvert2-0: Could not process the HRConvert2 Configuration file (config.php)!'.PHP_EOL.'<br />');
-  else require_once ($ConfigFile);
   if (!file_exists($VersionInfoFile)) die ('ERROR!!! HRConvert2-24000: Could not process the HRConvert2 Version Information file (versionInfo.php)!'.PHP_EOL.'<br />');
   else require_once ($VersionInfoFile);
-  // / Define the location of the per-install secret file.
+  if (!file_exists($configFile)) die ('ERROR!!! HRConvert2-0: Could not process the HRConvert2 Configuration file (config.php)!'.PHP_EOL.'<br />');
+  else require_once ($configFile);
+  $ConfigVersion = ltrim($ConfigVersion, 'vV');
+  // / Perform a version integrity check.
+  // / A core file that does not match versionInfo.php indicates a partial or interrupted update.
+  if ($HRConvertVersion === $Version) $appVersionCheck = TRUE;
+  else die ('ERROR!!! HRConvert2-28001: The core file reports version v'.$HRConvertVersion.' but the version information file reports version v'.$Version.'. This installation is incomplete or was updated incorrectly.'.PHP_EOL.'<br />');
+  // / Confirm the config file carries every setting this core requires.
+  // / An undefined setting reads as NULL, which silently becomes FALSE or zero at every point of use.
+  list ($configIsValid, $missingConfigVars, $detectedConfigVersion) = verifyConfigVersion($requiredConfigVersion);
+  if (!$configIsValid) die ('ERROR!!! HRConvert2-28000: The config.php file is missing '.count($missingConfigVars).' required setting(s). Config version detected: v'.$detectedConfigVersion.'. Config version required: v'.$requiredConfigVersion.'. Missing Variables: '.implode(', ', $missingConfigVars).PHP_EOL.'<br />');
+  // / Define the location of the per install secret file.
   $secretFile = $ConvertLoc.DIRECTORY_SEPARATOR.'secret.php';
   // / If a secret file does not exist, create one.
   if (!file_exists($secretFile)) {
@@ -204,12 +308,12 @@ function verifyInstallation() {
   // / Check if a secret key file was found, & if the secret key was loaded successfully.
   if ($loadSecretFile) if ($secretFailed or empty($SecretKey)) $check2 = FALSE;
   // / Perform a check to see if all required tests passed.
-  if ($check1 && $check2) $InstallationIsVerified = TRUE;
+  if ($check1 && $check2 && $appVersionCheck && $configIsValid) $InstallationIsVerified = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $SecretKey is deliberately NOT cleared here because the rest of the core needs it.
-  $secret = $secretCheck = $secretFile = $secretFileContent = $secretFileWriteComplete = $createSecretFile = $loadSecretFile = $secretFailed = $bytesWritten = $check1 = $check2 = NULL;
-  unset($secret, $secretCheck, $secretFile, $secretFileContent, $secretFileWriteComplete, $createSecretFile, $loadSecretFile, $secretFailed, $bytesWritten, $check1, $check2);
-  return array($InstallationIsVerified, $ConfigFile, $Version); }
+  $secret = $secretCheck = $secretFile = $secretFileContent = $secretFileWriteComplete = $createSecretFile = $loadSecretFile = $secretFailed = $bytesWritten = $check1 = $check2 = $appVersionCheck = $configIsValid = $missingConfigVars = $detectedConfigVersion = $requiredConfigVersion = NULL;
+  unset($secret, $secretCheck, $secretFile, $secretFileContent, $secretFileWriteComplete, $createSecretFile, $loadSecretFile, $secretFailed, $bytesWritten, $check1, $check2, $appVersionCheck, $configIsValid, $missingConfigVars, $detectedConfigVersion, $requiredConfigVersion);
+  return array($InstallationIsVerified, $configFile, $Version); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -580,11 +684,10 @@ function verifyLanguage() {
 // / Converting here as well produced a fifteen hour watch timeout & a ten million second connect timeout.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray;
+  global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $MinimumFFMPEGVersion, $ProtectedRootDirs;
   // / Application related variables.
   putenv('HOME='.$HomeLoc);
-  $HRConvertVersion = 'v3.5.4';
-  $GlobalsAreVerified = FALSE;
+  $GlobalsAreVerified = $sanitizeGlobalCheck = $sanitizeGlobalCheckA = $sanitizeGlobalCheckB = $sanitizeGlobalCheckC = $sanitizeGlobalCheckD = $sanitizeGlobalCheckE = FALSE;
   $CoreLoaded = TRUE;
   $SleepTimer = 0;
   $StopCounter = $RetryCount;
@@ -609,6 +712,10 @@ function verifyGlobals() {
   // / Security related variables.
   $DefaultApps = array('.', '..');
   $DangerousFiles = array(NULL, '.js', '.php', '.html', '.css', '.phar', '..', 'index.php', 'index.html', '--');
+  // / Directories at the root of a data location that are never sessions & must never be swept.
+  // / The LibreOffice profile lives here because HOME resolves to the data location.
+  // / Rebuilding that profile is expensive, so it is deliberately preserved between requests.
+  $ProtectedRootDirs = array('.cache', '.config', 'Logs', 'ScadTemp', 'StreamTemp', 'lost+found');
   // / Stream related variables.
   // / The two stream timeouts are deliberately left in their documented units here.
   // / Do not convert them in this function.
@@ -620,16 +727,20 @@ function verifyGlobals() {
   $partURL = sanitizeString($URL.'/'.$subDir, FALSE);
   $FullURL = 'http'.$URLEcho.'://'.$partURL;
   // / Directory related variables.
-  $convertDir0 = sanitizeString($ConvertLoc.$DirSep.$SesHash, FALSE);
-  $ConvertDir = sanitizeString($convertDir0.$DirSep.$SesHash2.$DirSep, FALSE);
-  $ConvertTemp = sanitizeString($InstLoc.$DirSep.'DATA', FALSE);
-  $convertTempDir0 = sanitizeString($ConvertTemp.$DirSep.$SesHash, FALSE);
-  $ConvertTempDir = sanitizeString($convertTempDir0.$DirSep.$SesHash2.$DirSep, FALSE);
+  $webRoot = $DirSep.'var'.$DirSep.'www';
+  list ($convertDir0, $sanitizeGlobalCheckA) = sanitize($ConvertLoc.$DirSep.$SesHash, FALSE);
+  list ($ConvertDir, $sanitizeGlobalCheckB) = sanitize($convertDir0.$DirSep.$SesHash2.$DirSep, FALSE);
+  list ($ConvertTemp, $sanitizeGlobalCheckC) = sanitize($InstLoc.$DirSep.'DATA', FALSE);
+  list ($convertTempDir0, $sanitizeGlobalCheckD) = sanitize($ConvertTemp.$DirSep.$SesHash, FALSE);
+  list ($ConvertTempDir, $sanitizeGlobalCheckE) = sanitize($convertTempDir0.$DirSep.$SesHash2.$DirSep, FALSE);
+  // / Check that all required directory variables were sanitized successfully.
+  if (!$sanitizeGlobalCheckA or !$sanitizeGlobalCheckB or !$sanitizeGlobalCheckC or !$sanitizeGlobalCheckD or !$sanitizeGlobalCheckE) $sanitizeGlobalCheck = FALSE;
+  else $sanitizeGlobalCheck = TRUE;
   $StreamTemp = $ConvertDir.'StreamTemp';
   $ScadTemp = $ConvertDir.'ScadTemp';
   $RequiredDirs = array($HomeLoc, $convertDir0, $ConvertDir, $ConvertTemp, $convertTempDir0, $ConvertTempDir, $StreamTemp, $ScadTemp, $LogDir);
   $RequiredIndexes = array($ConvertTemp, $convertTempDir0, $ConvertTempDir);
-  $RequiredCleanupFolders = array($InstLoc.$DirSep.'Logs', $InstLoc.$DirSep.'.cache', $InstLoc.$DirSep.'.config', $ProprietaryLoc.$DirSep.'.cache', $ProprietaryLoc.$DirSep.'.config');
+  $RequiredCleanupFolders = array($webRoot.$DirSep.'.cache', $webRoot.$DirSep.'.config', $InstLoc.$DirSep.'Logs', $InstLoc.$DirSep.'.cache', $InstLoc.$DirSep.'.config', $ProprietaryLoc.$DirSep.'.cache', $ProprietaryLoc.$DirSep.'.config');
   $PathToUnoconv = $InstLoc.$DirSep.'Resources'.$DirSep.'Unoconv'.$DirSep.'unoconv';
   if (!$UsePatchedDocumentEngine) $PathToUnoconv = $DirSep.'usr'.$DirSep.'bin'.$DirSep.'unoconv';
   // / A/V related variables.
@@ -640,7 +751,7 @@ function verifyGlobals() {
   $ConsolidatedLogFileName = 'User_Consolidated_Virus_Scan_Report.txt';
   $ConsolidatedLogFile = $ConvertTempDir.$ConsolidatedLogFileName;
   // / Format related variables.
-  $ArchiveArray = $DearchiveArray = $DocumentArray = $SpreadsheetArray = $PresentationInputArray = $PresentationOutputArray = $XPSInputArray = $XPSOutputArray = $ImageArray = $MediaInputArray = $MediaOutputArray = $VideoInputArray = $VideoOutputArray = $StreamArray = $DrawingArray = $ModelArray = $SubtitleArray = $PDFWorkArr = $StreamOutputArray = $SCADArray = $SCADOutputArray = $allArrays = array();
+  $ArchiveArray = $DearchiveArray = $DocumentArray = $SpreadsheetArray = $PresentationInputArray = $PresentationOutputArray = $XPSInputArray = $XPSOutputArray = $ImageArray = $MediaInputArray = $MediaOutputArray = $VideoInputArray = $VideoOutputArray = $StreamArray = $DrawingArray = $ModelArray = $SubtitleInputArray = $SubtitleOutputArray = $PDFWorkArr = $StreamOutputArray = $SCADArray = $SCADOutputArray = $allArrays = array();
   if (in_array('Archive', $SupportedConversionTypes)) $ArchiveArray = $UserArchiveArray;
   if (in_array('Archive', $SupportedConversionTypes)) $DearchiveArray = $UserDearchiveArray;
   if (in_array('Document', $SupportedConversionTypes)) $DocumentArray = $UserDocumentArray;
@@ -654,7 +765,7 @@ function verifyGlobals() {
   if (in_array('Audio', $SupportedConversionTypes)) $MediaOutputArray = $UserMediaOutputArray;
   if (in_array('Video', $SupportedConversionTypes)) $VideoInputArray = $UserVideoInputArray;
   if (in_array('Video', $SupportedConversionTypes)) $VideoOutputArray = $UserVideoOutputArray;
-  if (in_array('Stream', $SupportedConversionTypes) && in_array('Audio', $SupportedConversionTypes) && in_array('Video', $SupportedConversionTypes)) $StreamArray = array_merge(array_merge($UserStreamArray, $UserMediaOutputArray), $UserVideoOutputArray);
+  if (in_array('Stream', $SupportedConversionTypes) && in_array('Audio', $SupportedConversionTypes) && in_array('Video', $SupportedConversionTypes)) $StreamArray = $UserStreamArray;
   if (in_array('Stream', $SupportedConversionTypes) && in_array('Audio', $SupportedConversionTypes) && in_array('Video', $SupportedConversionTypes)) $StreamOutputArray = array_merge($UserMediaOutputArray, $UserVideoOutputArray);
   if (in_array('Drawing', $SupportedConversionTypes)) $DrawingArray = $UserDrawingArray;
   if (in_array('Model', $SupportedConversionTypes)) $ModelArray = $UserModelArray;
@@ -667,15 +778,16 @@ function verifyGlobals() {
     $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray,
     $PresentationInputArray, $PresentationOutputArray, $ImageArray,
     $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray,
-    $StreamArray, $DrawingArray, $ModelArray, $SubtitleInputArray, $PDFWorkArr,
+    $StreamArray, $StreamOutputArray, $DrawingArray, $ModelArray,
+    $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr,
     $XPSInputArray, $XPSOutputArray, $SCADArray];
   $Allowed = array_unique(array_merge(...$allArrays));
   $SupportedFormatCount = count($Allowed);
-  // / Perform a version integrity check.
-  if ($HRConvertVersion === $Version) $GlobalsAreVerified = TRUE;
+  // / Check that all sanitization checks passed.
+  if ($sanitizeGlobalCheck) $GlobalsAreVerified = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $convertDir0 = $convertTempDir0 = $subDir = $partURL = $allArrays = NULL;
-  unset($convertDir0, $convertTempDir0, $subDir, $partURL, $allArrays);
+  $convertDir0 = $convertTempDir0 = $subDir = $partURL = $allArrays = $webRoot = $sanitizeGlobalCheck = $sanitizeGlobalCheckA = $sanitizeGlobalCheckB = $sanitizeGlobalCheckC = $sanitizeGlobalCheckD = $sanitizeGlobalCheckE = NULL;
+  unset($convertDir0, $convertTempDir0, $subDir, $partURL, $allArrays, $webRoot, $sanitizeGlobalCheck, $sanitizeGlobalCheckA, $sanitizeGlobalCheckB, $sanitizeGlobalCheckC, $sanitizeGlobalCheckD, $sanitizeGlobalCheckE);
   return array($GlobalsAreVerified, $CoreLoaded); }
 // / -----------------------------------------------------------------------------------
 
@@ -998,33 +1110,36 @@ function cleanFiles($path) {
   return $CleanSuccess; }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
-// / A function to clean up old files in the $TempLoc.
+// / A function to clean up old sessions in a data location.
+// / Both the hosted & the non-hosted data locations share this routine.
+// / They differ only in which root is swept.
 // / The directory structure is two levels: [server-daily]/[individual-session].
-// / Sessions are swept individually. 
-// / A daily parent's own mtime only changes when a NEW session is created inside it.
-// / So the parent cannot be trusted to reflect whether the sessions it holds are still in use.
-// / A quiet hour would otherwise delete active sessions.
-function cleanTempLoc() {
+// / Sessions are swept individually. A daily parent's own mtime only changes when a NEW
+// / session is created inside it, so it cannot be trusted to reflect whether the sessions
+// / it holds are still in use. A quiet hour would otherwise delete active sessions.
+// / NOTE. secret.php lives at the root of the non-hosted location & must NEVER be removed.
+// / It is protected here by the is_dir() check, since it is a file & not a directory.
+// / The enforced index.html in every hosted folder is protected by that same check.
+function cleanDataLoc($dataLoc, $locationName) {
   // / Set variables.
-  global $ConvertTemp, $DeleteThreshold, $DefaultApps, $DirSep, $PermissionLevels;
-  $TempLocDeepCleaned = FALSE;
-  $CleanedTempLoc = $loopCheck = TRUE;
+  global $DeleteThreshold, $DefaultApps, $ProtectedRootDirs, $DirSep, $PermissionLevels, $Verbose;
+  $LocationDeepCleaned = FALSE;
+  $CleanedLocation = $loopCheck = TRUE;
   $dailyDirs = $sessionDirs = array();
   $dailyDir = $sessionDir = $dailyPath = $sessionPath = '';
   $now = time();
   // / Make sure the directory to be scanned exists.
-  if (file_exists($ConvertTemp)) {
-    $dailyDirs = array_diff(scandir($ConvertTemp), array('..', '.'));
-    // / Iterate through each daily folder in the directory.
+  if (file_exists($dataLoc)) {
+    $dailyDirs = array_diff(scandir($dataLoc), array('..', '.'));
+    // / Iterate through each daily folder in the location.
     foreach ($dailyDirs as $dailyDir) {
       // / Validate the folder.
       if (in_array($dailyDir, $DefaultApps)) continue;
-      $dailyPath = $ConvertTemp.$DirSep.$dailyDir;
-      // / The hosted location enforces an index.html in every folder as a document root
-      // / misconfiguration protection mechanism. It is never a session & is never swept.
-      if ($dailyPath === $ConvertTemp.$DirSep.'index.html') continue;
+      // / A protected directory at this level is not a daily session parent & is never swept.
+      // / The LibreOffice profile lives at this level because HOME resolves to the data location.
+      if (in_array($dailyDir, $ProtectedRootDirs, TRUE)) continue;
+      $dailyPath = $dataLoc.$DirSep.$dailyDir;
       // / Only directories hold sessions. Files at this level are left alone entirely.
       if (!is_dir($dailyPath)) continue;
       $sessionDirs = array_diff(scandir($dailyPath), array('..', '.'));
@@ -1035,124 +1150,134 @@ function cleanTempLoc() {
         if (!is_dir($sessionPath)) continue;
         // / See if this individual session is due for deletion.
         if ($now - fileTime($sessionPath) > ($DeleteThreshold * 60)) {
-          $TempLocDeepCleaned = TRUE;
+          $LocationDeepCleaned = TRUE;
           @chmod ($sessionPath, $PermissionLevels);
           $loopCheck = cleanFiles($sessionPath);
           // / Remove the session shell, including any protected file objects still in it.
           removeEmptiedSessionDir($sessionPath); }
         // / Check if the most recent iteration of the loop was successful.
-        if (!$loopCheck) { $CleanedTempLoc = FALSE; }
+        if (!$loopCheck) $CleanedLocation = FALSE;
         $loopCheck = TRUE; }
       // / Remove the daily parent only once every session inside it is gone.
       if (isDirEmptyOfUserFiles($dailyPath)) removeEmptiedSessionDir($dailyPath); } }
+  // / Log the result of this sweep. The caller logs its own line, so a sweep triggered by
+  // / anything other than the core will still appear in the log on its own.
+  if ($Verbose) logEntry('Cleaned the '.$locationName.' location. Deep cleaned: '.($LocationDeepCleaned ? 'TRUE' : 'FALSE').'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $dailyDirs = $dailyDir = $dailyPath = $sessionDirs = $sessionDir = $sessionPath = $now = $loopCheck = NULL;
-  unset($dailyDirs, $dailyDir, $dailyPath, $sessionDirs, $sessionDir, $sessionPath, $now, $loopCheck);
-  return array($CleanedTempLoc, $TempLocDeepCleaned); }
+  $dailyDirs = $dailyDir = $dailyPath = $sessionDirs = $sessionDir = $sessionPath = $now = $loopCheck = $dataLoc = $locationName = NULL;
+  unset($dailyDirs, $dailyDir, $dailyPath, $sessionDirs, $sessionDir, $sessionPath, $now, $loopCheck, $dataLoc, $locationName);
+  return array($CleanedLocation, $LocationDeepCleaned); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to clean up old files in the $ConvertLoc.
-// / The directory structure is two levels: [server-daily]/[individual-session].
-// / Sessions are swept individually. 
-// / A daily parent's own mtime only changes when a NEW session is created inside it.
-// / So the parent cannot be trusted to reflect whether the sessions it holds are still in use.
-// / A quiet hour would otherwise delete active sessions.
-// / NOTE: secret.php lives at the root of this directory & must NEVER be removed.
-// / It is protected here by the is_dir() check, since it is a file & not a directory.
-function cleanConvertLoc() {
+// / A function to confirm the installed LibreOffice meets a minimum version.
+// / The minimum arrives as an argument so different operations can require different builds.
+// / LibreOffice reports its version as "LibreOffice 7.4.7.2 40(Build:2)" on standard output.
+// / LibreOffice changed versioning schemes in 2024, moving from 7.6 directly to 24.2.
+// / The new scheme is year.month, so a major of 24 or higher is NEWER than a major of 7.
+// / Comparing numerically rather than as strings is what makes that transition work correctly.
+// / Some distributions ship only the soffice binary, so that name is tried as a fallback.
+// / A build that reports no parseable version is refused, because an unknown build cannot be cleared.
+// / LibreOffice requires a writable HOME directory & will fail to start without one.
+// / The core sets HOME to the configured home location during verifyGlobals().
+function verifyLibreOfficeVersion($MinimumVersion) {
   // / Set variables.
-  global $ConvertLoc, $DeleteThreshold, $DefaultApps, $DirSep, $PermissionLevels;
-  $ConvertLocDeepCleaned = FALSE;
-  $CleanedConvertLoc = $loopCheck = TRUE;
-  $dailyDirs = $sessionDirs = array();
-  $dailyDir = $sessionDir = $dailyPath = $sessionPath = '';
-  $now = time();
-  // / Make sure the directory to be scanned exists.
-  if (file_exists($ConvertLoc)) {
-    $dailyDirs = array_diff(scandir($ConvertLoc), array('..', '.'));
-    // / Iterate through each daily folder in the directory.
-    foreach ($dailyDirs as $dailyDir) {
-      // / Validate the folder.
-      if (in_array($dailyDir, $DefaultApps)) continue;
-      $dailyPath = $ConvertLoc.$DirSep.$dailyDir;
-      // / Only directories hold sessions. Files at this level, including secret.php, are never touched.
-      if (!is_dir($dailyPath)) continue;
-      $sessionDirs = array_diff(scandir($dailyPath), array('..', '.'));
-      // / Iterate through each session folder inside this day.
-      foreach ($sessionDirs as $sessionDir) {
-        if (in_array($sessionDir, $DefaultApps)) continue;
-        $sessionPath = $dailyPath.$DirSep.$sessionDir;
-        if (!is_dir($sessionPath)) continue;
-        // / See if this individual session is due for deletion.
-        if ($now - fileTime($sessionPath) > ($DeleteThreshold * 60)) {
-          $ConvertLocDeepCleaned = TRUE;
-          @chmod ($sessionPath, $PermissionLevels);
-          $loopCheck = cleanFiles($sessionPath);
-          // / Remove the session shell, including any protected file objects still in it.
-          removeEmptiedSessionDir($sessionPath); }
-        // / Check if the most recent iteration of the loop was successful.
-        if (!$loopCheck) { $CleanedConvertLoc = FALSE; }
-        $loopCheck = TRUE; }
-      // / Remove the daily parent only once every session inside it is gone.
-      if (isDirEmptyOfUserFiles($dailyPath)) removeEmptiedSessionDir($dailyPath); } }
+  global $Verbose;
+  $LibreOfficeVersionIsValid = FALSE;
+  $versionOutput = $versionMatches = $minimumParts = array();
+  $versionExitCode = 1;
+  $detectedVersion = '';
+  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
+  // / Try the primary binary name first.
+  exec('libreoffice --version 2>&1', $versionOutput, $versionExitCode);
+  // / Some distributions ship only soffice, so try that name when the first attempt fails.
+  if ($versionExitCode !== 0) {
+    $versionOutput = array();
+    exec('soffice --version 2>&1', $versionOutput, $versionExitCode); }
+  if ($versionExitCode === 0 && !empty($versionOutput)) {
+    // / Match a major.minor pair immediately following the product name.
+    // / Anchoring on the name prevents a match against the build number later in the banner.
+    if (preg_match('/LibreOffice\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
+      $detectedMajor = (int)$versionMatches[1];
+      $detectedMinor = (int)$versionMatches[2];
+      $detectedVersion = $detectedMajor.'.'.$detectedMinor;
+      // / Split the supplied minimum into the same two parts.
+      $minimumParts = explode('.', $MinimumVersion);
+      $minimumMajor = (int)($minimumParts[0] ?? 0);
+      $minimumMinor = (int)($minimumParts[1] ?? 0);
+      // / Compare numerically, never as strings.
+      // / A string comparison would rank version 24.2 below version 7.6.
+      if ($detectedMajor > $minimumMajor) $LibreOfficeVersionIsValid = TRUE;
+      elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $LibreOfficeVersionIsValid = TRUE; } }
+  if ($Verbose) logEntry('LibreOffice Version Check: '.($LibreOfficeVersionIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $dailyDirs = $dailyDir = $dailyPath = $sessionDirs = $sessionDir = $sessionPath = $now = $loopCheck = NULL;
-  unset($dailyDirs, $dailyDir, $dailyPath, $sessionDirs, $sessionDir, $sessionPath, $now, $loopCheck);
-  return array($CleanedConvertLoc, $ConvertLocDeepCleaned); }
+  $versionOutput = $versionMatches = $versionExitCode = $detectedVersion = $minimumParts = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumVersion = NULL;
+  unset($versionOutput, $versionMatches, $versionExitCode, $detectedVersion, $minimumParts, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
+  return $LibreOfficeVersionIsValid; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to verify that the Document Conversion Engine is installed & running.
+// / The engine is a bundled fork of unoconv which starts a LibreOffice listener, soffice.bin.
+// / LibreOffice itself is version checked here, because every document conversion depends on it.
+// / The listener is only started once the installation & the version have both been cleared.
 function verifyDocumentConversionEngine() {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $ApacheUser, $DocumentEngineSleepTimer, $PathToUnoconv, $HomeLoc;
+  global $Verbose, $Lol, $Lolol, $ApacheUser, $DocumentEngineSleepTimer, $PathToUnoconv, $HomeLoc, $MinimumLibreOfficeVersion;
   $DocEnginePID = 0;
-  $docEnginePIDCheck = $docEngineUserCheck = $DocumentEngineStarted = $installCheck = $okToStart = FALSE;
+  $docEnginePIDCheck = $docEngineUserCheck = $DocumentEngineStarted = $installCheck = $okToStart = $libreOfficeVersionIsValid = FALSE;
   $returnData = $docEngineUser = '';
   // / Determine if the Document Conversion Engine (Unoconv) is installed.
+  // / This flag must be set regardless of the logging verbosity setting.
+  // / Setting it inside a verbosity check would disable document conversion on every quiet install.
   if (!file_exists($PathToUnoconv)) errorEntry('Could not verify the Document Conversion Engine installation at '.$PathToUnoconv.'!', 2000, TRUE);
-  else if ($Verbose) {
+  else {
     $installCheck = TRUE;
-    logEntry('Verified the Document Conversion Engine installation.'); }
-  // / If Unoconv is installed, check that the Unoconv listener (soffice.bin) is running.
+    if ($Verbose) logEntry('Verified the Document Conversion Engine installation.'); }
+  // / Confirm the installed LibreOffice meets the minimum version HRConvert2 requires.
+  // / LibreOffice is the engine behind every document, spreadsheet & presentation conversion.
   if ($installCheck) {
+    $libreOfficeVersionIsValid = verifyLibreOfficeVersion($MinimumLibreOfficeVersion);
+    if (!$libreOfficeVersionIsValid) errorEntry('The installed LibreOffice version is missing, unidentifiable, or too old!', 2001, TRUE); }
+  // / If Unoconv is installed & LibreOffice is new enough, check that the listener is running.
+  if ($installCheck && $libreOfficeVersionIsValid) {
     // / Try to determine the PID for soffice.bin using pgrep.
-    $DocEnginePID = str_replace($Lol, '', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim(shell_exec('pgrep soffice.bin')))));
-    if ($Verbose) logEntry('The Document Conversion Engine PID is: '.str_replace($Lol, '', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($DocEnginePID)))));
+    // / head -n 1 keeps a single PID when more than one listener process is running.
+    // / Concatenating several PIDs would produce a number that matches no process at all.
+    $DocEnginePID = trim(shell_exec('pgrep soffice.bin | head -n 1'));
+    if ($Verbose) logEntry('The Document Conversion Engine PID is: '.$DocEnginePID.'.');
     // / Parse the results of the pgrep call.
-    if ($DocEnginePID === 0 or $DocEnginePID === '' or $DocEnginePID === NULL or !$DocEnginePID) $docEnginePIDCheck = FALSE;
-    if ($DocEnginePID !== 0 && $DocEnginePID !== '' && $DocEnginePID !== NULL) $docEnginePIDCheck = TRUE;
+    if ($DocEnginePID !== '' && (int)$DocEnginePID > 0) $docEnginePIDCheck = TRUE;
     // / Try to determine who owns the Unoconv Listener (soffice.bin) process using ps.
     // / We need whoever owns the process to have read & write access to HRConvert2 data locations.
     // / If the included rc.local script is used, this process should run at system startup as the root user.
     // / For more information, please see the included INSTALLATION_INSTRUCTIONS.txt file.
-    $docEngineUser = str_replace($Lol, '', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim(shell_exec('ps -o user= -p'.$DocEnginePID)))));
-    if ($Verbose) logEntry('The Document Conversion Engine owner is: '.str_replace($Lol, '', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($docEngineUser)))));
-    if ($docEngineUser === $ApacheUser or $docEngineUser === 'root') $docEngineUserCheck = TRUE;
-    // / Parse the results of the ps call.
-    // / We should only try to start the Document Conversion Engine only under certain circumstances.
-    // / When the $docEnginePIDCheck is FALSE. This indicates that Unoconv Listener (soffice.bin) is not running.
-    // / When the $docEnginePIDCheck is TRUE but the $docEngineUSerCheck is FALSE. This indicates that Unoconv Listener is running as the incorrect user.
-    if ($docEnginePIDCheck === FALSE) $okToStart = TRUE;
-    if ($docEnginePIDCheck === TRUE) if ($docEngineUserCheck === FALSE) $okToStart = TRUE;
+    if ($docEnginePIDCheck) {
+      $docEngineUser = trim(shell_exec('ps -o user= -p '.(int)$DocEnginePID));
+      if ($Verbose) logEntry('The Document Conversion Engine owner is: '.$docEngineUser.'.');
+      if ($docEngineUser === $ApacheUser or $docEngineUser === 'root') $docEngineUserCheck = TRUE; }
+    // / We should only try to start the Document Conversion Engine under certain circumstances.
+    // / When the PID check is FALSE the listener is not running at all.
+    // / When the PID check is TRUE but the user check is FALSE the listener is running as the wrong user.
+    if (!$docEnginePIDCheck) $okToStart = TRUE;
+    if ($docEnginePIDCheck && !$docEngineUserCheck) $okToStart = TRUE;
     // / Only start the Document Conversion Engine if it is not running, or running as the incorrect user.
-    if ($okToStart) { 
+    if ($okToStart) {
       // / Try to start the Document Conversion Engine.
       if ($Verbose) logEntry('Starting the Document Conversion Engine.');
       $returnData = exec('python3 '.$PathToUnoconv.' -l --verbose --user-profile='.$HomeLoc.' > /dev/null 2>&1 &');
       sleep($DocumentEngineSleepTimer);
-      if ($Verbose && trim($returnData) !== '') logEntry('The Document Conversion Engine returned the following: '.str_replace($Lol, '', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); } }
-  // / Try to determine the PID for soffice.bin using pgrep.
-  $DocEnginePID = str_replace($Lol, '', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim(shell_exec('pgrep soffice.bin')))));
-  if ($Verbose) logEntry('The Document Conversion Engine PID is: '.str_replace($Lol, '', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($DocEnginePID)))));
-  // / Write the status of the Document Conversion Engine to the log file.
-  if ($DocEnginePID !== 0 && $DocEnginePID !== '' && $DocEnginePID !== NULL && $installCheck) {
-    $DocumentEngineStarted = TRUE;
-    if ($Verbose) logEntry('The Document Conversion Engine is running.'); }
+      if ($Verbose && trim($returnData) !== '') logEntry('The Document Conversion Engine returned the following: '.str_replace($Lol, '', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); }
+    // / Re-check the PID after any attempt to start the listener.
+    $DocEnginePID = trim(shell_exec('pgrep soffice.bin | head -n 1'));
+    if ($Verbose) logEntry('The Document Conversion Engine PID is: '.$DocEnginePID.'.');
+    // / Write the status of the Document Conversion Engine to the log file.
+    if ($DocEnginePID !== '' && (int)$DocEnginePID > 0) {
+      $DocumentEngineStarted = TRUE;
+      if ($Verbose) logEntry('The Document Conversion Engine is running.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $docEnginePIDCheck = $docEngineUserCheck = $docEngineUser = $installCheck = $okToStart = NULL;
-  unset($returnData, $docEnginePIDCheck, $docEngineUserCheck, $docEngineUser, $installCheck, $okToStart);
+  $returnData = $docEnginePIDCheck = $docEngineUserCheck = $docEngineUser = $installCheck = $okToStart = $libreOfficeVersionIsValid = NULL;
+  unset($returnData, $docEnginePIDCheck, $docEngineUserCheck, $docEngineUser, $installCheck, $okToStart, $libreOfficeVersionIsValid);
   return array($DocumentEngineStarted, $DocEnginePID); }
 // / -----------------------------------------------------------------------------------
 
@@ -1368,12 +1493,8 @@ function sanitizeSCAD($scadContents, $sessionFiles, $resolveIncludes) {
     // / Nothing on this line reads a file, so it passes through unchanged.
     if (!$lineWasHandled) $SanitizedSCAD .= $scadLine.PHP_EOL; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $scadContents = $sessionFiles = $resolveIncludes = $scadLines = $scadLine = $trimmedLine = NULL;
-  $lineMatches = $reference = $resolvedPath = $marker = $lineWasHandled = NULL;
-  $includePattern = $importPattern = $dxfFilePattern = $filePropertyPattern = NULL;
-  unset($scadContents, $sessionFiles, $resolveIncludes, $scadLines, $scadLine, $trimmedLine);
-  unset($lineMatches, $reference, $resolvedPath, $marker, $lineWasHandled);
-  unset($includePattern, $importPattern, $dxfFilePattern, $filePropertyPattern);
+  $scadContents = $sessionFiles = $resolveIncludes = $scadLines = $scadLine = $trimmedLine = $lineMatches = $reference = $resolvedPath = $marker = $lineWasHandled = $includePattern = $importPattern = $dxfFilePattern = $filePropertyPattern = NULL;
+  unset($scadContents, $sessionFiles, $resolveIncludes, $scadLines, $scadLine, $trimmedLine, $lineMatches, $reference, $resolvedPath, $marker, $lineWasHandled, $includePattern, $importPattern, $dxfFilePattern, $filePropertyPattern);
   return array($SanitizedSCAD, $ReferencesFound, $ReferencesResolved, $ReferencesRemoved); }
 // / -----------------------------------------------------------------------------------
 
@@ -1419,10 +1540,8 @@ function sanitizeAllSCADUploads() {
       errorEntry('Could not stage the sanitized OpenSCAD source '.$sessionFile.'!', 27001, FALSE); } }
   if ($Verbose) logEntry('OpenSCAD Sanitization Result: Files Sanitized: '.$FilesSanitized.', References Found: '.$ReferencesFound.', Resolved: '.$ReferencesResolved.', Removed: '.$ReferencesRemoved.', Resolution Enabled: '.($AllowSCADIncludeResolution ? 'TRUE' : 'FALSE').'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $sessionFiles = $sessionFile = $scadContents = $sanitizedSCAD = $sanitizedPath = NULL;
-  $fileFound = $fileResolved = $fileRemoved = $bytesWritten = NULL;
-  unset($sessionFiles, $sessionFile, $scadContents, $sanitizedSCAD, $sanitizedPath);
-  unset($fileFound, $fileResolved, $fileRemoved, $bytesWritten);
+  $sessionFiles = $sessionFile = $scadContents = $sanitizedSCAD = $sanitizedPath = $fileFound = $fileResolved = $fileRemoved = $bytesWritten = NULL;
+  unset($sessionFiles, $sessionFile, $scadContents, $sanitizedSCAD, $sanitizedPath, $fileFound, $fileResolved, $fileRemoved, $bytesWritten);
   return array($AllSanitized, $FilesSanitized, $ReferencesFound, $ReferencesResolved, $ReferencesRemoved); }
 // / -----------------------------------------------------------------------------------
 
@@ -1469,28 +1588,23 @@ function verifySCADVersion() {
 function convertSCAD($pathname, $newPathname, $extension) {
   // / Set variables.
   global $Verbose, $DirSep, $SCADConversionTimeout, $ScadTemp;
-  // / The version check result is cached for the life of the request.
-  // / A bulk conversion of ten files would otherwise run ten identical version checks.
-  static $SCADVersionChecked = FALSE;
-  static $SCADVersionIsValid = FALSE;
-  $ConversionSuccess = $ConversionErrors = $AllSanitized = $readyToRender = FALSE;
-  $FilesSanitized = $ReferencesFound = $ReferencesResolved = $ReferencesRemoved = $openscadExitCode = 0;
+  $ConversionSuccess = $ConversionErrors = FALSE;
+  $allSanitized = $readyToRender = $scadVersionIsValid = FALSE;
+  $filesSanitized = $referencesFound = $referencesResolved = $referencesRemoved = $openscadExitCode = 0;
   $sanitizedPath = $openscadCommand = '';
   $openscadOutput = array();
   // / Confirm the installed OpenSCAD is new enough before anything else happens.
-  if (!$SCADVersionChecked) {
-    $SCADVersionIsValid = verifySCADVersion();
-    $SCADVersionChecked = TRUE; }
-  if (!$SCADVersionIsValid) {
+  $scadVersionIsValid = verifySCADVersion();
+  if (!$scadVersionIsValid) {
     $ConversionErrors = TRUE;
-    errorEntry('The installed OpenSCAD version is missing or too old for HRConvert2!', 27005, FALSE); }
+    errorEntry('The installed OpenSCAD version is missing or too old!', 27005, FALSE); }
   else {
     // / Sanitize every uploaded source, not just this one.
     // / A resolved include points at a sanitized copy, so every copy must already exist.
-    list ($AllSanitized, $FilesSanitized, $ReferencesFound, $ReferencesResolved, $ReferencesRemoved) = sanitizeAllSCADUploads();
+    list ($allSanitized, $filesSanitized, $referencesFound, $referencesResolved, $referencesRemoved) = sanitizeAllSCADUploads();
     // / The sanitized copy of the requested file carries the same basename as the original.
     $sanitizedPath = $ScadTemp.$DirSep.basename($pathname);
-    if ($AllSanitized && file_exists($sanitizedPath)) $readyToRender = TRUE;
+    if ($allSanitized && file_exists($sanitizedPath)) $readyToRender = TRUE;
     else {
       $ConversionErrors = TRUE;
       errorEntry('Could not prepare the OpenSCAD sources for rendering!', 27000, FALSE); } }
@@ -1518,14 +1632,11 @@ function convertSCAD($pathname, $newPathname, $extension) {
     // / ScadTemp holds nothing else, so the whole directory is cleared in one operation.
     cleanFiles($ScadTemp);
     if (!is_dir_empty($ScadTemp)) errorEntry('Could not remove the sanitized OpenSCAD sources!', 27004, FALSE); }
+  // / The output file is the only verdict on whether the render actually produced anything.
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $sanitizedPath = $openscadCommand = $openscadOutput = $openscadExitCode = $readyToRender = NULL;
-  $AllSanitized = $FilesSanitized = $ReferencesFound = $ReferencesResolved = $ReferencesRemoved = NULL;
-  $pathname = $newPathname = $extension = NULL;
-  unset($sanitizedPath, $openscadCommand, $openscadOutput, $openscadExitCode, $readyToRender);
-  unset($AllSanitized, $FilesSanitized, $ReferencesFound, $ReferencesResolved, $ReferencesRemoved);
-  unset($pathname, $newPathname, $extension);
+  $sanitizedPath = $openscadCommand = $openscadOutput = $openscadExitCode = $readyToRender = $scadVersionIsValid = $allSanitized = $filesSanitized = $referencesFound = $referencesResolved = $referencesRemoved = $pathname = $newPathname = $extension = NULL;
+  unset($sanitizedPath, $openscadCommand, $openscadOutput, $openscadExitCode, $readyToRender, $scadVersionIsValid, $allSanitized, $filesSanitized, $referencesFound, $referencesResolved, $referencesRemoved, $pathname, $newPathname, $extension);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -1561,33 +1672,86 @@ function convertDrawings($pathname, $newPathname) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to confirm the installed FFMPEG meets a minimum version.
+// / The minimum arrives as an argument so different operations can require different builds.
+// / Audio & video conversions read a local file & never fetch anything remote.
+// / Stream conversions do fetch, & FFMPEG v2.0 through v6.0 bypass the protocol whitelist.
+// / Those builds apply their own whitelist to segments referenced inside a playlist.
+// / A build that reports no parseable version is refused, because an unknown build cannot be cleared.
+// / FFMPEG reports its version in three different shapes depending on how it was built.
+// / A release build reports something like "ffmpeg version 6.1.1".
+// / A distribution build reports something like "ffmpeg version 7.1-1ubuntu1".
+// / A git build reports something like "ffmpeg version N-109534-g1b2c3d4" & carries no usable number.
+function verifyFFMPEGVersion($MinimumVersion) {
+  // / Set variables.
+  global $Verbose;
+  $FFMPEGVersionIsValid = FALSE;
+  $versionOutput = $versionMatches = $minimumParts = array();
+  $versionExitCode = 1;
+  $detectedVersion = '';
+  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
+  // / FFMPEG writes its version banner to standard error, so it must be redirected to be captured.
+  exec('ffmpeg -version 2>&1', $versionOutput, $versionExitCode);
+  if ($versionExitCode === 0 && !empty($versionOutput)) {
+    // / Match a major.minor pair immediately following the word version.
+    // / Anchoring on that word prevents a match against a library version further down the banner.
+    if (preg_match('/ffmpeg version n?(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
+      $detectedMajor = (int)$versionMatches[1];
+      $detectedMinor = (int)$versionMatches[2];
+      $detectedVersion = $detectedMajor.'.'.$detectedMinor;
+      // / Split the supplied minimum into the same two parts.
+      $minimumParts = explode('.', $MinimumVersion);
+      $minimumMajor = (int)($minimumParts[0] ?? 0);
+      $minimumMinor = (int)($minimumParts[1] ?? 0);
+      // / Compare numerically, never as strings.
+      // / A string comparison would rank version 10.0 below version 6.0.
+      if ($detectedMajor > $minimumMajor) $FFMPEGVersionIsValid = TRUE;
+      elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $FFMPEGVersionIsValid = TRUE; } }
+  if ($Verbose) logEntry('FFMPEG Version Check: '.($FFMPEGVersionIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $versionOutput = $versionMatches = $versionExitCode = $detectedVersion = $minimumParts = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumVersion = NULL;
+  unset($versionOutput, $versionMatches, $versionExitCode, $detectedVersion, $minimumParts, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
+  return $FFMPEGVersionIsValid; }
+// / ----------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to convert video formats.
+// / The installed FFMPEG is verified against the general minimum, not the stream minimum.
+// / Video conversions read a local file & never fetch anything remote, so the playlist
+// / protocol bypass affecting older builds cannot reach this operation.
 function convertVideos($pathname, $newPathname) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer;
-  $ConversionSuccess = $ConversionErrors = FALSE;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumFFMPEGVersion;
+  $ConversionSuccess = $ConversionErrors = $ffmpegVersionIsValid = FALSE;
   $returnData = '';
   $stopper = 0;
   $sleepTime = $SleepTimer;
-  if ($Verbose) logEntry('Converting video.');
-  // / This code will attempt the conversion up to $StopCounter number of times.
-  while (!file_exists($newPathname) && $stopper <= $StopCounter) {
-    // / If the last conversion attempt failed, wait a moment before trying again.
-    if ($stopper !== 0) sleep($sleepTime++);
-    // / Attempt the conversion.
-    $returnData = shell_exec('ffmpeg -i '.$pathname.' -c:v libx264 '.$newPathname);
-    // / Count the number of conversions to avoid infinite loops.
-    $stopper++;
-    // / Stop attempting the conversion after $StopCounter number of attempts.
-    if ($stopper === $StopCounter) {
-      $ConversionErrors = TRUE;
-      errorEntry('The video converter timed out!', 11000, FALSE); } }
-  // / Log the output of the operation to the logfile, if it is not blank.
-  if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-  if (file_exists($newPathname)) $ConversionSuccess = TRUE;
+  // / Confirm the installed FFMPEG meets the minimum version HRConvert2 requires.
+  $ffmpegVersionIsValid = verifyFFMPEGVersion($MinimumFFMPEGVersion);
+  if (!$ffmpegVersionIsValid) {
+    $ConversionErrors = TRUE;
+    errorEntry('The installed FFMPEG version is missing, unidentifiable, or too old!', 11001, FALSE); }
+  else {
+    if ($Verbose) logEntry('Converting video.');
+    // / This code will attempt the conversion up to $StopCounter number of times.
+    while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+      // / If the last conversion attempt failed, wait a moment before trying again.
+      if ($stopper !== 0) sleep($sleepTime++);
+      // / Attempt the conversion.
+      $returnData = shell_exec('ffmpeg -i '.$pathname.' -c:v libx264 '.$newPathname);
+      // / Count the number of conversions to avoid infinite loops.
+      $stopper++;
+      // / Stop attempting the conversion after $StopCounter number of attempts.
+      if ($stopper === $StopCounter) {
+        $ConversionErrors = TRUE;
+        errorEntry('The video converter timed out!', 11000, FALSE); } }
+    // / Log the output of the operation to the logfile, if it is not blank.
+    if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+    // / The output file is the only verdict on whether the conversion produced anything.
+    if (file_exists($newPathname)) $ConversionSuccess = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $newPathname = $sleepTime = NULL;
-  unset($returnData, $stopper, $pathname, $newPathname, $sleepTime);
+  $returnData = $stopper = $pathname = $newPathname = $sleepTime = $ffmpegVersionIsValid = NULL;
+  unset($returnData, $stopper, $pathname, $newPathname, $sleepTime, $ffmpegVersionIsValid);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -2262,56 +2426,69 @@ function waitForStream($StreamPID, $newPathname) {
 // / A function to convert stream formats.
 // / The stream file is fully inspected before FFMPEG is allowed anywhere near it.
 // / FFMPEG is launched in the background so the user can be served immediately.
+// / The installed FFMPEG is verified against the stream minimum, not the general minimum.
+// / Builds from v2.0 through v6.0 apply their own protocol whitelist to nested playlist segments.
+// / Stream inspection cannot protect an affected build, so those builds are refused outright.
 function convertStreams($pathname, $newPathname) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StreamConnectionTimeout, $AllowStreamOverHTTP;
+  global $Verbose, $StreamConnectionTimeout, $AllowStreamOverHTTP, $MinimumStreamFFMPEGVersion;
   $ConversionSuccess = $ConversionErrors = $WaitForStream = FALSE;
-  $InspectionFailed = $StreamBudgetExhausted = FALSE;
-  $AllStreamURIs = $SeenURLs = array();
-  $HaltReason = $httpString = $returnData = $ffmpegCommand = '';
+  $ffmpegVersionIsValid = $inspectionFailed = $streamBudgetExhausted = FALSE;
+  $allStreamURIs = $seenURLs = array();
+  $haltReason = $httpString = $returnData = $ffmpegCommand = '';
   $StreamPID = 0;
   if ($Verbose) logEntry('Beginning stream conversion for '.$pathname.'.');
-  // / Inspect the entire stream tree BEFORE FFMPEG is permitted to touch it.
-  // / Nothing below this point runs unless the walk returned a clean verdict.
-  list ($InspectionFailed, $StreamBudgetExhausted, $HaltReason, $AllStreamURIs, $SeenURLs) = streamFileWalker($pathname);
-  if ($InspectionFailed) {
+  // / Confirm the installed FFMPEG is not one of the builds that ignores our protocol whitelist.
+  $ffmpegVersionIsValid = verifyFFMPEGVersion($MinimumStreamFFMPEGVersion);
+  if (!$ffmpegVersionIsValid) {
     $ConversionErrors = TRUE;
-    errorEntry('Stream inspection denied this file. '.$HaltReason, 21001, FALSE); }
-  // / The inspection returned a clean verdict, so FFMPEG may now be permitted to run.
+    errorEntry('The installed FFMPEG version is missing, unidentifiable, or vulnerable to stream playlist protocol bypass!', 21002, FALSE); }
   else {
-    // / Only widen the protocol whitelist to plain http when config.php explicitly allows it.
-    if ($AllowStreamOverHTTP) $httpString = ',http';
-    // / Launch FFMPEG in the background & capture its PID so waitForStream() can reap it later.
-    // / -rw_timeout is an INPUT option & must appear before -i to have any effect.
-    $ffmpegCommand = 'ffmpeg -protocol_whitelist '.escapeshellarg('file,https,tcp,tls,crypto'.$httpString)
-      .' -rw_timeout '.((int)$StreamConnectionTimeout * 1000000)
-      .' -i '.escapeshellarg($pathname)
-      .' -c copy '.escapeshellarg($newPathname)
-      .' > /dev/null 2>&1 & echo $!';
-    $returnData = shell_exec($ffmpegCommand);
-    $StreamPID = (int)trim($returnData);
-    // / A PID of 0 means the process never started at all.
-    if ($StreamPID > 0) {
-      $ConversionSuccess = TRUE;
-      $WaitForStream = TRUE;
-      if ($Verbose) logEntry('FFMPEG launched in background as PID '.$StreamPID.' for '.$newPathname.'.'); }
-    else {
+    // / Inspect the entire stream tree BEFORE FFMPEG is permitted to touch it.
+    // / Nothing below this point runs unless the walk returned a clean verdict.
+    list ($inspectionFailed, $streamBudgetExhausted, $haltReason, $allStreamURIs, $seenURLs) = streamFileWalker($pathname);
+    if ($inspectionFailed) {
       $ConversionErrors = TRUE;
-      errorEntry('The stream converter failed to launch!', 21000, FALSE); } }
+      errorEntry('Stream inspection denied this file. '.$haltReason.'.', 21001, FALSE); }
+    // / The inspection returned a clean verdict, so FFMPEG may now be permitted to run.
+    else {
+      // / Only widen the protocol whitelist to plain http when config.php explicitly allows it.
+      if ($AllowStreamOverHTTP) $httpString = ',http';
+      // / Launch FFMPEG in the background & capture its PID so waitForStream() can reap it later.
+      // / -rw_timeout is an INPUT option & must appear before -i to have any effect.
+      // / The connection timeout is documented in seconds & is converted to microseconds here.
+      $ffmpegCommand = 'ffmpeg -protocol_whitelist '.escapeshellarg('file,https,tcp,tls,crypto'.$httpString)
+        .' -rw_timeout '.((int)$StreamConnectionTimeout * 1000000)
+        .' -i '.escapeshellarg($pathname)
+        .' -c copy '.escapeshellarg($newPathname)
+        .' > /dev/null 2>&1 & echo $!';
+      $returnData = shell_exec($ffmpegCommand);
+      $StreamPID = (int)trim($returnData);
+      // / A PID of 0 means the process never started at all.
+      if ($StreamPID > 0) {
+        $ConversionSuccess = TRUE;
+        $WaitForStream = TRUE;
+        if ($Verbose) logEntry('FFMPEG launched in background as PID '.$StreamPID.' for '.$newPathname.'.'); }
+      else {
+        $ConversionErrors = TRUE;
+        errorEntry('The stream converter failed to launch!', 21000, FALSE); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $ffmpegCommand = $httpString = $AllStreamURIs = $SeenURLs = $HaltReason = $StreamBudgetExhausted = NULL;
-  unset($returnData, $ffmpegCommand, $httpString, $AllStreamURIs, $SeenURLs, $HaltReason, $StreamBudgetExhausted);
+  $returnData = $ffmpegCommand = $httpString = $allStreamURIs = $seenURLs = $haltReason = $streamBudgetExhausted = $inspectionFailed = $ffmpegVersionIsValid = $pathname = $newPathname = NULL;
+  unset($returnData, $ffmpegCommand, $httpString, $allStreamURIs, $seenURLs, $haltReason, $streamBudgetExhausted, $inspectionFailed, $ffmpegVersionIsValid, $pathname, $newPathname);
   return array($ConversionSuccess, $ConversionErrors, $WaitForStream, $StreamPID); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to convert audio formats.
 // / The bitrate check compares instead of assigning.
+// / The installed FFMPEG is verified against the general minimum, not the stream minimum.
+// / Audio conversions read a local file & never fetch anything remote, so the playlist
+// / protocol bypass affecting older builds cannot reach this operation.
 function convertAudio($pathname, $newPathname, $extension, $bitrate) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer;
-  $ConversionSuccess = $ConversionErrors = FALSE;
-  $returnData = $br = '';
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumFFMPEGVersion;
+  $ConversionSuccess = $ConversionErrors = $ffmpegVersionIsValid = FALSE;
+  $returnData = $br = $ext = '';
   $stopper = 0;
   $sleepTime = $SleepTimer;
   if ($extension === 'mkv') $extension = 'matroska';
@@ -2320,27 +2497,37 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
   if (!is_numeric($bitrate) or $bitrate === FALSE) $bitrate = 'auto';
   if ($bitrate === 'auto') $br = ' ';
   else $br = ' -b:a '.$bitrate.' ';
-  if ($Verbose) logEntry('Converting audio.');
-  // / This code will attempt the conversion up to $StopCounter number of times.
-  while (!file_exists($newPathname) && $stopper <= $StopCounter) {
-    // / If the last conversion attempt failed, wait a moment before trying again.
-    if ($stopper !== 0) sleep($sleepTime++);
-    // / Attempt the conversion.
-    $returnData = shell_exec('ffmpeg -y -i '.$pathname.$ext.$br.$newPathname);
-    // / Count the number of conversions to avoid infinite loops.
-    $stopper++;
-    // / Stop attempting the conversion after $StopCounter number of attempts.
-    if ($stopper === $StopCounter) {
-      $ConversionErrors = TRUE;
-      errorEntry('The audio converter timed out!', 12000, FALSE); } }
-  // / Log the output of the operation to the logfile, if it is not blank.
-  if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-  if (file_exists($newPathname)) $ConversionSuccess = TRUE;
+  // / Confirm the installed FFMPEG meets the minimum version HRConvert2 requires.
+  $ffmpegVersionIsValid = verifyFFMPEGVersion($MinimumFFMPEGVersion);
+  if (!$ffmpegVersionIsValid) {
+    $ConversionErrors = TRUE;
+    errorEntry('The installed FFMPEG version is missing, unidentifiable, or too old!', 12001, FALSE); }
+  else {
+    if ($Verbose) logEntry('Converting audio.');
+    // / This code will attempt the conversion up to $StopCounter number of times.
+    while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+      // / If the last conversion attempt failed, wait a moment before trying again.
+      if ($stopper !== 0) sleep($sleepTime++);
+      // / Attempt the conversion.
+      $returnData = shell_exec('ffmpeg -y -i '.$pathname.$ext.$br.$newPathname);
+      // / Count the number of conversions to avoid infinite loops.
+      $stopper++;
+      // / Stop attempting the conversion after $StopCounter number of attempts.
+      if ($stopper === $StopCounter) {
+        $ConversionErrors = TRUE;
+        errorEntry('The audio converter timed out!', 12000, FALSE); } }
+    // / Log the output of the operation to the logfile, if it is not blank.
+    if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+    // / The output file is the only verdict on whether the conversion produced anything.
+    // / This check must stay inside the version gate, or a stale output file from an earlier
+    // / attempt would report success for a conversion that was refused & never ran.
+    if (file_exists($newPathname)) $ConversionSuccess = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $newPathname = $ext = $br = $extension = $bitrate = $sleepTime = NULL;
-  unset($returnData, $stopper, $pathname, $newPathname, $ext, $br, $extension, $bitrate, $sleepTime);
+  $returnData = $stopper = $pathname = $newPathname = $ext = $br = $extension = $bitrate = $sleepTime = $ffmpegVersionIsValid = NULL;
+  unset($returnData, $stopper, $pathname, $newPathname, $ext, $br, $extension, $bitrate, $sleepTime, $ffmpegVersionIsValid);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
+
 
 // / -----------------------------------------------------------------------------------
 // / A function to convert archive & disk image formats.
@@ -2819,29 +3006,36 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
 // / A function to convert a selection of files.
 // / A backgrounded stream has no output file when this function returns.
 // / $WaitForStream tells us the conversion is still running & must not be judged by its output.
+// / Streams are routed explicitly rather than through the format family map.
+// / Every stream output format is also an ordinary audio or video format, so a family match
+// / on both extensions would send an ordinary mp3 to mp4 conversion through the stream inspector.
+// / Routing streams on the input extension alone makes that impossible & does not depend on map order.
 function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, $Width, $Rotate, $Bitrate) {
   // / Set variables.
-  global $Verbose, $VirusScan, $SpreadsheetArray, $PresentationInputArray, $XPSInputArray, $DocumentArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $SubtitleInputArray, $StreamArray, $MediaInputArray, $ArchiveArray, $Lol, $WaitForStream, $SCADArray;
-  $MainConversionSuccess = $MainConversionErrors = $virusFound = $skip = $isExtensionSupported = $fileIsVerified = $variableIsSanitized = $outputExists = FALSE;
+  global $Verbose, $VirusScan, $SpreadsheetArray, $PresentationInputArray, $XPSInputArray, $DocumentArray, $ImageArray, $ModelArray, $SCADArray, $DrawingArray, $VideoInputArray, $SubtitleInputArray, $StreamArray, $StreamOutputArray, $MediaInputArray, $ArchiveArray, $SupportedConversionTypes, $Lol, $WaitForStream;
+  $MainConversionSuccess = $MainConversionErrors = $virusFound = $skip = $isExtensionSupported = $fileIsVerified = $variableIsSanitized = $outputExists = $ConversionSuccess = $ConversionErrors = FALSE;
   $clean = $copy = TRUE;
-  $docarray =  array_merge($DocumentArray, $SpreadsheetArray, $PresentationInputArray, $XPSInputArray);
+  $docarray = array_merge($DocumentArray, $SpreadsheetArray, $PresentationInputArray, $XPSInputArray);
   $imgarray = $ImageArray;
   $modelarray = $ModelArray;
-  $drawingarray = $DrawingArray;
-  $videoarray =  $VideoInputArray;
-  $subtitleArray = $SubtitleInputArray;
-  $streamarray = $StreamArray;
-  $audioarray =  $MediaInputArray;
-  $archarray = $ArchiveArray;
   $scadarray = $SCADArray;
-  $arrayArray = array('Document' => $docarray, 'Image' => $imgarray, 'Model' => $modelarray, 'Scad' => $scadarray, 'Drawing' => $drawingarray, 'Video' => $videoarray, 'Subtitle' => $subtitleArray, 'Stream' => $streamarray, 'Audio' => $audioarray, 'Archive' => $archarray);
+  $drawingarray = $DrawingArray;
+  $videoarray = $VideoInputArray;
+  $subtitleArray = $SubtitleInputArray;
+  $audioarray = $MediaInputArray;
+  $archarray = $ArchiveArray;
+  // / The format family map. Streams are deliberately absent & are routed separately below.
+  $arrayArray = array('Document' => $docarray, 'Image' => $imgarray, 'Model' => $modelarray, 'Scad' => $scadarray, 'Drawing' => $drawingarray, 'Video' => $videoarray, 'Subtitle' => $subtitleArray, 'Audio' => $audioarray, 'Archive' => $archarray);
   $arrKey = 0;
   $file = '';
   // / Make sure the input files are formatted into an array.
   if (!is_array($ConvertSelected)) $ConvertSelected = array($ConvertSelected);
   // / Iterate through the array of input files.
   foreach ($ConvertSelected as $file) {
-    $MainConversionSuccess = $isExtensionSupported = FALSE;
+    $MainConversionSuccess = $isExtensionSupported = $ConversionSuccess = FALSE;
+    // / $WaitForStream is a global set inside convert() & must be cleared before every file.
+    // / A stale TRUE from an earlier stream would make the next file skip its output check.
+    $WaitForStream = FALSE;
     // / Make sure the file is sanitized before processing it.
     list ($file, $variableIsSanitized) = sanitize($file, TRUE);
     if (!$variableIsSanitized or !is_string($file) or $file === '' or $file === '.' or $file === '..' or $file === 'index.html') {
@@ -2866,9 +3060,19 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
       if (!$scanComplete) errorEntry('Could not perform a virus scan!', 5002, TRUE);
       if ($virusFound) errorEntry('Virus detected!', 5003, TRUE);
       if ($Verbose) logEntry('Virus scan complete.'); }
-// / Find the one format family that handles both the input & the output extension.
+    // / Streams route on the INPUT extension alone, because every stream output format is
+    // / also a normal audio or video format. Matching on both would send an ordinary
+    // / mp3 to mp4 conversion through the stream inspector.
+    if (in_array(strtolower($oldExtension), $StreamArray) && in_array(strtolower($UserExtension), $StreamOutputArray) && in_array('Stream', $SupportedConversionTypes)) {
+      $isExtensionSupported = TRUE;
+      list ($ConversionSuccess, $ConversionErrors) = convert('Stream', $pathname, $newPathname, $UserExtension, $Height, $Width, $Rotate, $Bitrate);
+      if ($ConversionErrors) {
+        $MainConversionErrors = TRUE;
+        logEntry('Stream conversion finished with errors.'); }
+      if ($Verbose) logEntry('Stream Conversion Complete.'); }
+    // / Every other family matches when both the input & the output extension belong to it.
     // / Only one family can ever match, so stop looking as soon as it is found.
-    foreach ($arrayArray as $arrKey => $arrArray) {
+    else foreach ($arrayArray as $arrKey => $arrArray) {
       if (!in_array(strtolower($oldExtension), $arrArray)) continue;
       if (!in_array(strtolower($UserExtension), $arrArray)) continue;
       $isExtensionSupported = TRUE;
@@ -2899,8 +3103,8 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
       $MainConversionErrors = TRUE;
       errorEntry('Could not create '.$newPathname.' from '.$oldPathname.'!', 5005, FALSE); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $pathname = $oldPathname = $oldExtension = $newPathname = $docarray = $imgarray = $audioarray = $videoarray = $subtitleArray = $streamarray = $modelarray = $drawingarray = $archarray = $scadarray = $arrayArray = $fileIsVerified = $scanComplete = $virusFound = $variableIsSanitized = $arrKey = $clean = $copy = $skip = $isExtensionSupported = $outputExists = NULL;
-  unset($file, $pathname, $oldPathname, $oldExtension, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $subtitleArray, $streamarray, $modelarray, $drawingarray, $archarray, $scadarray, $arrayArray, $fileIsVerified, $scanComplete, $virusFound, $variableIsSanitized, $arrKey, $clean, $copy, $skip, $isExtensionSupported, $outputExists);
+  $file = $pathname = $oldPathname = $oldExtension = $newPathname = $docarray = $imgarray = $audioarray = $videoarray = $subtitleArray = $modelarray = $scadarray = $drawingarray = $archarray = $arrayArray = $arrArray = $fileIsVerified = $scanComplete = $virusFound = $variableIsSanitized = $arrKey = $clean = $copy = $skip = $isExtensionSupported = $outputExists = $ConversionSuccess = $ConversionErrors = NULL;
+  unset($file, $pathname, $oldPathname, $oldExtension, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $subtitleArray, $modelarray, $scadarray, $drawingarray, $archarray, $arrayArray, $arrArray, $fileIsVerified, $scanComplete, $virusFound, $variableIsSanitized, $arrKey, $clean, $copy, $skip, $isExtensionSupported, $outputExists, $ConversionSuccess, $ConversionErrors);
   return array($MainConversionSuccess, $MainConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -3466,13 +3670,13 @@ list ($RequiredDirsExist, $RequiredDirs) = verifyRequiredDirs();
 if (!$RequiredDirsExist) errorEntry('Could not verify required directories!', 12, TRUE);
 else if ($Verbose) logEntry('Verified required directories.');
 
-// / The following code removes old files from the $ConvertTempLoc.
-list ($CleanedTempLoc, $TempLocDeepCleaned) = cleanTempLoc();
+// / The following code removes old files from the $ConvertTempDir.
+list ($CleanedTempLoc, $TempLocDeepCleaned) = cleanDataLoc($ConvertTempDir, 'ConvertTempDir');
 if (!$CleanedTempLoc) errorEntry('Could not clean the temporary location!', 13, TRUE);
 else if ($Verbose) logEntry('Cleaned temporary location.');
 
 // / The following code removes old files from the $ConvertLoc.
-list ($CleanedConvertLoc, $ConvertLocDeepCleaned) = cleanConvertLoc();
+list ($CleanedConvertLoc, $ConvertLocDeepCleaned) = cleanDataLoc($ConvertLoc, 'ConvertLoc');
 if (!$CleanedConvertLoc) errorEntry('Could not clean the convert location!', 14, TRUE);
 else if ($Verbose) logEntry('Cleaned convert location.');
 

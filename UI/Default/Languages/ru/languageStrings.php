@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 5/8/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/3/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.4.1.
+// / v3.5.4.
 // / This file contains language specific GUI related text for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -126,6 +126,12 @@ $Gui1Text29 = 'Продолжать ...';
 $Gui1Text30 = 'Может конвертировать потоковые форматы в видеоформаты.';
 // / 'Subtitle Formats'
 $Gui1Text31 = 'Форматы субтитров';
+// / 'OpenSCAD Formats'
+$Gui1Text32 = 'Форматы OpenSCAD';
+// / 'Renders OpenSCAD source into 3D model formats.'
+$Gui1Text33 = 'Преобразует исходный код OpenSCAD в форматы трёхмерных моделей.';
+// / 'File references inside uploaded sources are removed unless the server allows resolving them.'
+$Gui1Text34 = 'Ссылки на файлы внутри загруженных исходников удаляются, если на сервере не разрешено их подключение.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -284,6 +290,10 @@ $Gui2Text76 = 'Конвертировать субтитры';
 $Gui2Text77 = 'Преобразовать эту презентацию';
 // / 'Convert This XPS File'
 $Gui2Text78 = 'Преобразовать этот файл';
+// / 'Render This OpenSCAD Model'
+$Gui2Text79 = 'Собрать эту модель OpenSCAD';
+// / 'Render Model'
+$Gui2Text80 = 'Собрать модель';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

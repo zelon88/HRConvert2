@@ -870,28 +870,40 @@ function virusScan($path) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to create required directories if they do not exist.
+// / Maintenance folders are emptied by passing their children to cleanFiles().
+// / cleanFiles() refuses to operate on an approved root, so the root itself is never passed.
 function verifyRequiredDirs() {
   // /  Set variables.
   global $ConvertLoc, $RequiredDirs, $RequiredIndexes, $RequiredCleanupFolders, $Time, $LogFile, $Verbose, $PermissionLevels, $DirSep, $InstLoc;
-  $RequiredDirsExist = FALSE;
+  $RequiredDirsExist = TRUE;
+  $cleanupContents = array();
+  $requiredDir = $requiredIndex = $requiredCleanupFolder = $cleanupEntry = '';
   // / If the $ConvertLoc does not exist we stop execution rather than create one.
   if (!is_dir($ConvertLoc)) errorEntry('The specified Data Storage Directory does not exist at '.$ConvertLoc.'!', 1000, TRUE);
   // / Iterate through the array of required directories.
   foreach ($RequiredDirs as $requiredDir) {
-    // / Check that the currently selected directory exists.
-    if (!is_dir($requiredDir)) {
-      if ($Verbose) logEntry('Created a directory at '.$requiredDir.'.');
-      // / Try to create the currently selected directory.
-      @mkdir($requiredDir, $PermissionLevels); }
+    // / Try to create the currently selected directory if it does not already exist.
+    if (!is_dir($requiredDir)) @mkdir($requiredDir, $PermissionLevels);
     // / Re-check to see if our attempt to create the directory was successful & log the result.
-    if (is_dir($requiredDir)) $RequiredDirsExist = TRUE;
-    else errorEntry('Could not create a directory at '.$requiredDir.'!', 1001, TRUE); }
+    if (is_dir($requiredDir)) {
+      if ($Verbose) logEntry('Verified a directory at '.$requiredDir.'.'); }
+    else {
+      // / A single missing directory invalidates the whole check.
+      $RequiredDirsExist = FALSE;
+      errorEntry('Could not create a directory at '.$requiredDir.'!', 1001, TRUE); } }
   // / Make sure that each required directory has an index.html file for document root protection.
   foreach ($RequiredIndexes as $requiredIndex) @copy($InstLoc.$DirSep.'index.html', $requiredIndex.$DirSep.'index.html');
-  foreach ($RequiredCleanupFolders as $requiredCleanupFolder) if (file_exists($requiredCleanupFolder)) cleanFiles($requiredCleanupFolder);
+  // / Clear the contents of each maintenance folder without removing the folder itself.
+  foreach ($RequiredCleanupFolders as $requiredCleanupFolder) {
+    if (!is_dir($requiredCleanupFolder)) continue;
+    $cleanupContents = array_diff(scandir($requiredCleanupFolder), array('.', '..'));
+    foreach ($cleanupContents as $cleanupEntry) {
+      if (is_file($requiredCleanupFolder.$DirSep.$cleanupEntry)) @unlink($requiredCleanupFolder.$DirSep.$cleanupEntry);
+      elseif (is_dir($requiredCleanupFolder.$DirSep.$cleanupEntry)) cleanFiles($requiredCleanupFolder.$DirSep.$cleanupEntry); } 
+      @rmdir($requiredCleanupFolder); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $requiredDir = $requiredIndex = $requiredCleanupFolder = NULL;
-  unset($requiredDir, $requiredIndex, $requiredCleanupFolder); 
+  $requiredDir = $requiredIndex = $requiredCleanupFolder = $cleanupEntry = $cleanupContents = NULL;
+  unset($requiredDir, $requiredIndex, $requiredCleanupFolder, $cleanupEntry, $cleanupContents);
   return array($RequiredDirsExist, $RequiredDirs); }
 // / -----------------------------------------------------------------------------------
 

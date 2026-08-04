@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.5.4.
+// / v3.5.5.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -32,7 +32,13 @@
 
 
 // / ------------------------------
- 
+
+// /  --Config Version--
+// /   The version of HRConvert2 in which this config file last gained or lost a setting.
+// /   The core refuses to run against a config file that is missing settings it requires.
+// /   Do not change this value by hand. Replacing config.php with a newer one is the correct fix.
+$ConfigVersion = 'v3.5.5';
+
 // / ---Security Informations---
 // /
 // /  --Server URL--
@@ -234,18 +240,38 @@ $SCADConversionTimeout = 180;
 // /   Format is the OpenSCAD YYYY.MM release stamp.
 // /   Default is '2021.01'.
 $MinimumSCADVersion = '2021.01';
+// /  --Minimum FFMPEG Version--
+// /   Audio & video conversions read a local file & never fetch anything remote.
+// /   This minimum exists for feature & format support, not for security.
+// /   Format is major.minor.
+// /   Default is '4.0'.
+$MinimumFFMPEGVersion = '4.0';
+// /  --Minimum Stream FFMPEG Version--
+// /   FFMPEG v2.0 through v6.0 carry a severe vulnerability related to downloading stream files.
+// /   Those builds apply their own protocol whitelist to segments referenced inside a playlist.
+// /   The whitelist HRConvert2 supplies is therefore bypassed & stream inspection cannot protect you.
+// /   Stream conversions are refused entirely when the installed build does not meet this minimum.
+// /   A build that does not report a parseable version number is also refused.
+// /   This value must never be set below 6.1.
+// /   Format is major.minor.
+// /   Default is '6.1'.
+$MinimumStreamFFMPEGVersion = '6.1';
+// /  --Minimum LibreOffice Version--
+// /   LibreOffice is the engine behind every document, spreadsheet & presentation conversion.
+// /   This minimum exists for format support & conversion reliability, not for security.
+// /   LibreOffice changed versioning schemes in 2024, moving from 7.6 directly to 24.2.
+// /   The new scheme is year.month, so a major of 24 or higher is newer than a major of 7.
+// /   HRConvert2 compares these values numerically, so both schemes are ranked correctly.
+// /   Setting a minimum of 7.0 therefore accepts every modern build under either scheme.
+// /   Check the installed version by running 'libreoffice --version' in a terminal on the server.
+// /   Format is major.minor.
+// /   Default is '7.0'.
+$MinimumLibreOfficeVersion = '7.0';
 // / ------------------------------
 
 // / ------------------------------
 // / ---Directory Information---
 // / 
-// /  --Home Directory--
-// /   This is the Home directory for the web server user.
-// /   Do not include a trailing slash.
-// /   Do not use a path with whitespace.
-// /   Changing this value is not recommended.
-// /   Default is '/var/www'
-$HomeLoc = '/var/www';
 // /  --Installation Directory--
 // /   Install HRConvert2 files to the following directory.
 // /   Do not include a trailing slash.
@@ -279,6 +305,13 @@ $ConvertLoc = '/DATA/HRConvert2';
 // /   Do not use a path with whitespace.
 // /   Default is $ConvertLoc.'/Logs'
 $LogDir = $ConvertLoc.'/Logs';
+// /  --Home Directory--
+// /   This is the Home directory for the web server user.
+// /   Do not include a trailing slash.
+// /   Do not use a path with whitespace.
+// /   Changing this value is not recommended.
+// /   Default is $ConvertLoc.
+$HomeLoc = $ConvertLoc;
 // /  --Append Log Hash To Log Files--
 // /   This setting is used to append a 12 digit unique identifier to log file names.
 // /   This randomizes log file names across multiple installations & servers.

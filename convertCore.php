@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.5.3.
+// / v3.5.4.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -165,7 +165,7 @@ function generateInstallSecret() {
 // / This function verifies the installation environment.
 function verifyInstallation() {
   // / Set variables.
-  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $DefaultColor, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey;
+  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $DefaultColor, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray;
   $InstallationIsVerified = $secret = $secretFile = $secretFileContent = $createSecretFile = $SecretKey = $secretFailed = $loadSecretFile = $secretFileWriteComplete = $secretCheck = FALSE;
   $check1 = $check2 = TRUE;
   $bytesWritten = 0;
@@ -580,10 +580,10 @@ function verifyLanguage() {
 // / Converting here as well produced a fifteen hour watch timeout & a ten million second connect timeout.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray;
+  global $URL, $URLEcho, $HRConvertVersion, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $Version, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray;
   // / Application related variables.
   putenv('HOME='.$HomeLoc);
-  $HRConvertVersion = 'v3.5.3';
+  $HRConvertVersion = 'v3.5.4';
   $GlobalsAreVerified = FALSE;
   $CoreLoaded = TRUE;
   $SleepTimer = 0;
@@ -599,7 +599,7 @@ function verifyGlobals() {
   // / UI Related variables.
   $ConvertGuiCounter1 = 0;
   $File = $FCPlural = $FCPlural1 = $FCPlural2 = $FCPlural3 = $GreenButtonCode = $BlueButtonCode = $RedButtonCode = $DefaultButtonCode = '';
-  $HeaderDisplayed = $UIDisplayed = $FooterDisplayed = $LanguageStringsLoaded = $MediaOutputArray = $GUIDisplayed = $VideoOutputArray = FALSE;
+  $HeaderDisplayed = $UIDisplayed = $FooterDisplayed = $LanguageStringsLoaded = $GUIDisplayed = FALSE;
   $GUIDirection = 'ltr';
   $GUIAlignment = 'left';
   $Alert = 'Cannot convert this file! Try changing the name.';
@@ -626,7 +626,8 @@ function verifyGlobals() {
   $convertTempDir0 = sanitizeString($ConvertTemp.$DirSep.$SesHash, FALSE);
   $ConvertTempDir = sanitizeString($convertTempDir0.$DirSep.$SesHash2.$DirSep, FALSE);
   $StreamTemp = $ConvertDir.'StreamTemp';
-  $RequiredDirs = array($HomeLoc, $convertDir0, $ConvertDir, $ConvertTemp, $convertTempDir0, $ConvertTempDir, $StreamTemp, $LogDir);
+  $ScadTemp = $ConvertDir.'ScadTemp';
+  $RequiredDirs = array($HomeLoc, $convertDir0, $ConvertDir, $ConvertTemp, $convertTempDir0, $ConvertTempDir, $StreamTemp, $ScadTemp, $LogDir);
   $RequiredIndexes = array($ConvertTemp, $convertTempDir0, $ConvertTempDir);
   $RequiredCleanupFolders = array($InstLoc.$DirSep.'Logs', $InstLoc.$DirSep.'.cache', $InstLoc.$DirSep.'.config', $ProprietaryLoc.$DirSep.'.cache', $ProprietaryLoc.$DirSep.'.config');
   $PathToUnoconv = $InstLoc.$DirSep.'Resources'.$DirSep.'Unoconv'.$DirSep.'unoconv';
@@ -639,7 +640,7 @@ function verifyGlobals() {
   $ConsolidatedLogFileName = 'User_Consolidated_Virus_Scan_Report.txt';
   $ConsolidatedLogFile = $ConvertTempDir.$ConsolidatedLogFileName;
   // / Format related variables.
-  $ArchiveArray = $DearchiveArray = $DocumentArray = $SpreadsheetArray = $PresentationInputArray = $PresentationOutputArray = $XPSInputArray = $XPSOutputArray = $ImageArray = $MediaInputArray = $MediaOutputArray = $VideoInputArray = $VideoOutputArray = $StreamArray = $DrawingArray = $ModelArray = $SubtitleArray = $PDFWorkArr = $allArrays = array();
+  $ArchiveArray = $DearchiveArray = $DocumentArray = $SpreadsheetArray = $PresentationInputArray = $PresentationOutputArray = $XPSInputArray = $XPSOutputArray = $ImageArray = $MediaInputArray = $MediaOutputArray = $VideoInputArray = $VideoOutputArray = $StreamArray = $DrawingArray = $ModelArray = $SubtitleArray = $PDFWorkArr = $StreamOutputArray = $SCADArray = $SCADOutputArray = $allArrays = array();
   if (in_array('Archive', $SupportedConversionTypes)) $ArchiveArray = $UserArchiveArray;
   if (in_array('Archive', $SupportedConversionTypes)) $DearchiveArray = $UserDearchiveArray;
   if (in_array('Document', $SupportedConversionTypes)) $DocumentArray = $UserDocumentArray;
@@ -657,6 +658,8 @@ function verifyGlobals() {
   if (in_array('Stream', $SupportedConversionTypes) && in_array('Audio', $SupportedConversionTypes) && in_array('Video', $SupportedConversionTypes)) $StreamOutputArray = array_merge($UserMediaOutputArray, $UserVideoOutputArray);
   if (in_array('Drawing', $SupportedConversionTypes)) $DrawingArray = $UserDrawingArray;
   if (in_array('Model', $SupportedConversionTypes)) $ModelArray = $UserModelArray;
+  if (in_array('Scad', $SupportedConversionTypes)) $SCADArray = $UserSCADArray;
+  if (in_array('Scad', $SupportedConversionTypes)) $SCADOutputArray = array_diff($SCADArray, array('scad'));
   if (in_array('Subtitle', $SupportedConversionTypes)) $SubtitleInputArray = $UserSubtitleInputArray;
   if (in_array('Subtitle', $SupportedConversionTypes)) $SubtitleOutputArray = $UserSubtitleOutputArray;
   if (in_array('OCR', $SupportedConversionTypes) && in_array('Document', $SupportedConversionTypes)) $PDFWorkArr = $UserPDFWorkArr;
@@ -665,7 +668,7 @@ function verifyGlobals() {
     $PresentationInputArray, $PresentationOutputArray, $ImageArray,
     $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray,
     $StreamArray, $DrawingArray, $ModelArray, $SubtitleInputArray, $PDFWorkArr,
-    $XPSInputArray, $XPSOutputArray ];
+    $XPSInputArray, $XPSOutputArray, $SCADArray];
   $Allowed = array_unique(array_merge(...$allArrays));
   $SupportedFormatCount = count($Allowed);
   // / Perform a version integrity check.
@@ -1253,6 +1256,268 @@ function convertModels($pathname, $newPathname) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to resolve a single OpenSCAD file reference against the users uploaded files.
+// / OpenSCAD references frequently carry a directory structure that does not exist here.
+// / A reference like <../lib/threads.scad> is matched on its basename alone, threads.scad.
+// / Only files the user actually uploaded to this session are eligible for a match.
+// / The path returned points at the SANITIZED copy in ScadTemp, never at the users original.
+// / OpenSCAD resolves a relative include against the directory of the file it is reading.
+// / The sanitized copy lives in ScadTemp, so every reference it holds must point there too.
+// / Returns an empty string when nothing matched, & the caller must comment the reference out.
+function resolveSCADInclude($scadReference, $sessionFiles) {
+  // / Set variables.
+  global $ScadTemp, $DirSep;
+  $ResolvedFile = $sessionFile = '';
+  $referenceIsUsable = FALSE;
+  $referenceBase = strtolower(trim(basename(str_replace('\\', '/', trim($scadReference)))));
+  // / A reference with no usable filename can never resolve to anything.
+  // / Only .scad sources may ever be resolved as an include or a use.
+  if ($referenceBase !== '' && $referenceBase !== '.' && $referenceBase !== '..' && getExtension($referenceBase) === 'scad') $referenceIsUsable = TRUE;
+  if ($referenceIsUsable) {
+    foreach ($sessionFiles as $sessionFile) {
+      if (strtolower(basename($sessionFile)) === $referenceBase) {
+        $ResolvedFile = $ScadTemp.$DirSep.basename($sessionFile);
+        break; } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $referenceBase = $sessionFile = $referenceIsUsable = NULL;
+  unset($referenceBase, $sessionFile, $referenceIsUsable);
+  return $ResolvedFile; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to neutralize every file reading primitive in a block of OpenSCAD source.
+// / OpenSCAD reads arbitrary files by design & offers no sandbox of any kind.
+// / A hostile .scad can embed the contents of any file the web server user can read.
+// / This function is the only thing standing between an uploaded .scad & the filesystem.
+// / Every primitive below is neutralized, not just the two most commonly known ones.
+// / include <file> & use <file> read OpenSCAD source directly.
+// / import("file") reads STL, OFF, DXF, SVG, 3MF & AMF geometry.
+// / surface("file") reads a heightmap from a DAT or a PNG.
+// / import_stl(), import_dxf() & import_off() are deprecated aliases that still function.
+// / dxf_linear_extrude(), dxf_rotate_extrude(), dxf_dim() & dxf_cross() take a file= parameter.
+// / When $resolveIncludes is FALSE every reference is commented out unconditionally.
+// / When $resolveIncludes is TRUE an include or use may be rewritten to a sanitized copy.
+// / A reference that resolves to nothing is commented out either way.
+// / Only include & use are ever rewritten. Geometry & heightmap reads are always removed.
+// / This function performs no disk access at all. Source in, source out.
+function sanitizeSCAD($scadContents, $sessionFiles, $resolveIncludes) {
+  // / Set variables.
+  $SanitizedSCAD = '';
+  $ReferencesFound = $ReferencesResolved = $ReferencesRemoved = 0;
+  $scadLines = $lineMatches = array();
+  $scadLine = $trimmedLine = $reference = $resolvedPath = $marker = '';
+  $lineWasHandled = FALSE;
+  // / Matches include <file> & use <file>. These are the only two forms ever rewritten.
+  $includePattern = '/\b(include|use)\s*<([^>]*)>/i';
+  // / Matches every remaining primitive that reads a file. None of these are ever rewritten.
+  // / The file= forms are listed explicitly because a pattern written for the modern
+  // / import("file") syntax will walk straight past dxf_dim(file="secret").
+  $importPattern = '/\b(import|surface|import_stl|import_dxf|import_off)\s*\(/i';
+  $dxfFilePattern = '/\b(dxf_linear_extrude|dxf_rotate_extrude|dxf_dim|dxf_cross)\s*\(/i';
+  // / A file= parameter anywhere at all is treated as a read attempt.
+  $filePropertyPattern = '/\bfile\s*=/i';
+  // / Split on any line ending so a file authored on any platform is handled the same way.
+  $scadLines = preg_split('/\R/', $scadContents);
+  foreach ($scadLines as $scadLine) {
+    $lineWasHandled = FALSE;
+    $trimmedLine = trim($scadLine);
+    // / A line that is already a comment cannot read anything, so pass it through untouched.
+    if (strncmp($trimmedLine, '//', 2) === 0) {
+      $SanitizedSCAD .= $scadLine.PHP_EOL;
+      continue; }
+    // / Handle include & use. These are the only references eligible for resolution.
+    if (preg_match($includePattern, $scadLine, $lineMatches)) {
+      $ReferencesFound++;
+      $reference = $lineMatches[2];
+      $resolvedPath = '';
+      // / Only attempt resolution when config.php has explicitly enabled it.
+      if ($resolveIncludes) $resolvedPath = resolveSCADInclude($reference, $sessionFiles);
+      if ($resolvedPath !== '') {
+        // / Rewrite the reference to point at the sanitized copy we matched it to.
+        $ReferencesResolved++;
+        $SanitizedSCAD .= str_replace('<'.$reference.'>', '<'.$resolvedPath.'>', $scadLine).PHP_EOL; }
+      else {
+        // / Nothing matched, or resolution is disabled. Neutralize the line.
+        $ReferencesRemoved++;
+        $SanitizedSCAD .= '// HRC2-REMOVED-UNRESOLVED: '.$scadLine.PHP_EOL; }
+      $lineWasHandled = TRUE; }
+    // / Handle every remaining file reading primitive. None of these are ever resolved.
+    // / Geometry & heightmap reads have no legitimate use in a single file conversion here.
+    if (!$lineWasHandled) {
+      $marker = '';
+      if (preg_match($importPattern, $scadLine)) $marker = '// HRC2-REMOVED-IMPORT: ';
+      elseif (preg_match($dxfFilePattern, $scadLine)) $marker = '// HRC2-REMOVED-DXF: ';
+      elseif (preg_match($filePropertyPattern, $scadLine)) $marker = '// HRC2-REMOVED-FILEPARAM: ';
+      if ($marker !== '') {
+        $ReferencesFound++;
+        $ReferencesRemoved++;
+        $SanitizedSCAD .= $marker.$scadLine.PHP_EOL;
+        $lineWasHandled = TRUE; } }
+    // / Nothing on this line reads a file, so it passes through unchanged.
+    if (!$lineWasHandled) $SanitizedSCAD .= $scadLine.PHP_EOL; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $scadContents = $sessionFiles = $resolveIncludes = $scadLines = $scadLine = $trimmedLine = NULL;
+  $lineMatches = $reference = $resolvedPath = $marker = $lineWasHandled = NULL;
+  $includePattern = $importPattern = $dxfFilePattern = $filePropertyPattern = NULL;
+  unset($scadContents, $sessionFiles, $resolveIncludes, $scadLines, $scadLine, $trimmedLine);
+  unset($lineMatches, $reference, $resolvedPath, $marker, $lineWasHandled);
+  unset($includePattern, $importPattern, $dxfFilePattern, $filePropertyPattern);
+  return array($SanitizedSCAD, $ReferencesFound, $ReferencesResolved, $ReferencesRemoved); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to sanitize EVERY OpenSCAD source the user uploaded, in one flat pass.
+// / Nothing here follows a reference from one file to another.
+// / Following references would require cycle detection, because a.scad may include b.scad
+// / while b.scad includes a.scad, & both are legitimate files the user uploaded.
+// / Sanitizing the whole upload set instead means every file OpenSCAD can possibly reach
+// / has already been through the filter, & no traversal is ever performed.
+// / The set is closed & bounded by whatever the user was willing to upload, so no depth
+// / or width budget is required the way the stream inspector needs one.
+// / Every sanitized copy is written to ScadTemp & the users originals are never modified.
+function sanitizeAllSCADUploads() {
+  // / Set variables.
+  global $Verbose, $ConvertDir, $ScadTemp, $DirSep, $AllowSCADIncludeResolution;
+  $AllSanitized = TRUE;
+  $FilesSanitized = $ReferencesFound = $ReferencesResolved = $ReferencesRemoved = 0;
+  $fileFound = $fileResolved = $fileRemoved = $bytesWritten = 0;
+  $sessionFiles = array();
+  $sessionFile = $scadContents = $sanitizedSCAD = $sanitizedPath = '';
+  // / Gather every file the user uploaded to this session.
+  $sessionFiles = getFiles($ConvertDir);
+  foreach ($sessionFiles as $sessionFile) {
+    // / Only OpenSCAD sources are sanitized. Everything else is left alone entirely.
+    if (getExtension($sessionFile) !== 'scad') continue;
+    $scadContents = @file_get_contents($ConvertDir.$sessionFile);
+    if ($scadContents === FALSE) {
+      $AllSanitized = FALSE;
+      errorEntry('Could not read the OpenSCAD source file '.$sessionFile.'!', 27006, FALSE);
+      continue; }
+    // / Neutralize every file reading primitive in this source.
+    list ($sanitizedSCAD, $fileFound, $fileResolved, $fileRemoved) = sanitizeSCAD($scadContents, $sessionFiles, $AllowSCADIncludeResolution);
+    $ReferencesFound = $ReferencesFound + $fileFound;
+    $ReferencesResolved = $ReferencesResolved + $fileResolved;
+    $ReferencesRemoved = $ReferencesRemoved + $fileRemoved;
+    // / Write the sanitized copy under the same basename so a resolved reference finds it.
+    $sanitizedPath = $ScadTemp.$DirSep.basename($sessionFile);
+    $bytesWritten = file_put_contents($sanitizedPath, $sanitizedSCAD, LOCK_EX);
+    if ($bytesWritten === strlen($sanitizedSCAD)) $FilesSanitized++;
+    else {
+      $AllSanitized = FALSE;
+      errorEntry('Could not stage the sanitized OpenSCAD source '.$sessionFile.'!', 27001, FALSE); } }
+  if ($Verbose) logEntry('OpenSCAD Sanitization Result: Files Sanitized: '.$FilesSanitized.', References Found: '.$ReferencesFound.', Resolved: '.$ReferencesResolved.', Removed: '.$ReferencesRemoved.', Resolution Enabled: '.($AllowSCADIncludeResolution ? 'TRUE' : 'FALSE').'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $sessionFiles = $sessionFile = $scadContents = $sanitizedSCAD = $sanitizedPath = NULL;
+  $fileFound = $fileResolved = $fileRemoved = $bytesWritten = NULL;
+  unset($sessionFiles, $sessionFile, $scadContents, $sanitizedSCAD, $sanitizedPath);
+  unset($fileFound, $fileResolved, $fileRemoved, $bytesWritten);
+  return array($AllSanitized, $FilesSanitized, $ReferencesFound, $ReferencesResolved, $ReferencesRemoved); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to confirm the installed OpenSCAD meets the minimum version HRConvert2 requires.
+// / HRConvert2 does not probe for capabilities & does not accommodate older builds.
+// / A pinned minimum version means the export formats in config.php can be trusted as written.
+// / OpenSCAD reports its version as "OpenSCAD version YYYY.MM" on standard error, not standard output.
+function verifySCADVersion() {
+  // / Set variables.
+  global $Verbose, $MinimumSCADVersion;
+  $SCADVersionIsValid = FALSE;
+  $versionOutput = $versionMatches = array();
+  $versionExitCode = 1;
+  $detectedVersion = '';
+  // / OpenSCAD writes its version banner to standard error, so it must be redirected to be captured.
+  exec('openscad --version 2>&1', $versionOutput, $versionExitCode);
+  if ($versionExitCode === 0 && !empty($versionOutput)) {
+    // / Match the YYYY.MM release stamp anywhere in the banner.
+    if (preg_match('/(\d{4})\.(\d{2})/', implode(' ', $versionOutput), $versionMatches)) {
+      $detectedVersion = $versionMatches[1].'.'.$versionMatches[2];
+      // / A plain string comparison is correct here because the format is fixed width & zero padded.
+      if ($detectedVersion >= $MinimumSCADVersion) $SCADVersionIsValid = TRUE; } }
+  if ($Verbose) logEntry('OpenSCAD Version Check: '.($SCADVersionIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumSCADVersion.'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $versionOutput = $versionMatches = $versionExitCode = $detectedVersion = NULL;
+  unset($versionOutput, $versionMatches, $versionExitCode, $detectedVersion);
+  return $SCADVersionIsValid; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to convert OpenSCAD source files into a supported export format.
+// / The users uploaded .scad is never modified & never replaced.
+// / Every uploaded source is sanitized into ScadTemp before OpenSCAD is allowed to run.
+// / The whole upload set is sanitized rather than just the requested file, because a
+// / resolved include would otherwise hand OpenSCAD a source that was never filtered.
+// / Sanitized copies are never retained. If they are needed again they are regenerated.
+// / OpenSCAD has no execution bound of its own, so the render is killed by timeout.
+// / The render is niced so a runaway model yields to everything else on the server.
+// / OpenSCAD error output is deliberately NOT written to the log.
+// / A failed parse quotes the offending line, which would turn the log into an exfiltration channel.
+// / The installed OpenSCAD version is verified before any conversion is attempted.
+// / HRConvert2 does not accommodate builds older than the pinned minimum.
+function convertSCAD($pathname, $newPathname, $extension) {
+  // / Set variables.
+  global $Verbose, $DirSep, $SCADConversionTimeout, $ScadTemp;
+  // / The version check result is cached for the life of the request.
+  // / A bulk conversion of ten files would otherwise run ten identical version checks.
+  static $SCADVersionChecked = FALSE;
+  static $SCADVersionIsValid = FALSE;
+  $ConversionSuccess = $ConversionErrors = $AllSanitized = $readyToRender = FALSE;
+  $FilesSanitized = $ReferencesFound = $ReferencesResolved = $ReferencesRemoved = $openscadExitCode = 0;
+  $sanitizedPath = $openscadCommand = '';
+  $openscadOutput = array();
+  // / Confirm the installed OpenSCAD is new enough before anything else happens.
+  if (!$SCADVersionChecked) {
+    $SCADVersionIsValid = verifySCADVersion();
+    $SCADVersionChecked = TRUE; }
+  if (!$SCADVersionIsValid) {
+    $ConversionErrors = TRUE;
+    errorEntry('The installed OpenSCAD version is missing or too old for HRConvert2!', 27005, FALSE); }
+  else {
+    // / Sanitize every uploaded source, not just this one.
+    // / A resolved include points at a sanitized copy, so every copy must already exist.
+    list ($AllSanitized, $FilesSanitized, $ReferencesFound, $ReferencesResolved, $ReferencesRemoved) = sanitizeAllSCADUploads();
+    // / The sanitized copy of the requested file carries the same basename as the original.
+    $sanitizedPath = $ScadTemp.$DirSep.basename($pathname);
+    if ($AllSanitized && file_exists($sanitizedPath)) $readyToRender = TRUE;
+    else {
+      $ConversionErrors = TRUE;
+      errorEntry('Could not prepare the OpenSCAD sources for rendering!', 27000, FALSE); } }
+  // / Render only from the sanitized copy. The users original is never handed to OpenSCAD.
+  if ($readyToRender) {
+    if ($Verbose) logEntry('Converting OpenSCAD model to '.$extension.'.');
+    // / nice yields the render to everything else on the server.
+    // / A legitimate render competes with nothing, so it loses nothing by yielding.
+    // / A runaway render can no longer starve the rest of the server while it burns down its timeout.
+    // / timeout enforces a wall clock limit because OpenSCAD will not stop on its own.
+    // / Standard output & standard error are both discarded rather than captured.
+    $openscadCommand = 'nice -n 19 timeout '.(int)$SCADConversionTimeout
+      .' openscad -o '.escapeshellarg($newPathname)
+      .' '.escapeshellarg($sanitizedPath)
+      .' > /dev/null 2>&1';
+    exec($openscadCommand, $openscadOutput, $openscadExitCode);
+    // / An exit code of 124 is the timeout command reporting that it killed the render.
+    if ($openscadExitCode === 124) {
+      $ConversionErrors = TRUE;
+      errorEntry('The OpenSCAD converter timed out after '.(int)$SCADConversionTimeout.' seconds!', 27002, FALSE); }
+    else if ($openscadExitCode !== 0) {
+      $ConversionErrors = TRUE;
+      errorEntry('The OpenSCAD converter failed with exit code '.$openscadExitCode.'!', 27003, FALSE); }
+    // / Remove every sanitized copy immediately. None of them are retained for any reason.
+    // / ScadTemp holds nothing else, so the whole directory is cleared in one operation.
+    cleanFiles($ScadTemp);
+    if (!is_dir_empty($ScadTemp)) errorEntry('Could not remove the sanitized OpenSCAD sources!', 27004, FALSE); }
+  if (file_exists($newPathname)) $ConversionSuccess = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $sanitizedPath = $openscadCommand = $openscadOutput = $openscadExitCode = $readyToRender = NULL;
+  $AllSanitized = $FilesSanitized = $ReferencesFound = $ReferencesResolved = $ReferencesRemoved = NULL;
+  $pathname = $newPathname = $extension = NULL;
+  unset($sanitizedPath, $openscadCommand, $openscadOutput, $openscadExitCode, $readyToRender);
+  unset($AllSanitized, $FilesSanitized, $ReferencesFound, $ReferencesResolved, $ReferencesRemoved);
+  unset($pathname, $newPathname, $extension);
+  return array($ConversionSuccess, $ConversionErrors); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to convert 2D vector drawing formats.
 function convertDrawings($pathname, $newPathname) {
   // / Set variables.
@@ -1591,8 +1856,8 @@ function inspectStreamDomain($streamFileContents) {
 // / MPEG-TS is a fixed-size packet format: every packet is 188 bytes & begins with sync byte 0x47.
 // / Requiring the sync byte at EVERY expected boundary makes a coincidental match effectively impossible.
 // / Does NOT check the file extension. FFMPEG dispatches on content, so we must too.
-// / Note that $MaxStreamInspectionFileSize must stay above ($packetSize * $packetsToCheck) or
-// / every genuine segment will fail this check for the wrong reason.
+// / Note that $MaxStreamInspectionFileSize must stay above ($packetSize * $packetsToCheck).
+// / Otherwise every genuine segment will fail this check for the wrong reason.
 function inspectTSFile($fileContents) {
   // / Set variables.
   $packetSize = 188;
@@ -1603,15 +1868,15 @@ function inspectTSFile($fileContents) {
   $Check = FALSE;
   $bytesRequired = $packetSize * $packetsToCheck;
   // / A file too short to hold the packets we intend to check cannot be validated, so reject it.
-  // / Returning here also prevents the loop below from reading past the end of the string.
-  if (strlen($fileContents) < $bytesRequired) return $Check;
-  // / Walk the expected packet boundaries & confirm the sync byte appears at every one.
-  // / Assume success, then let any single missing sync byte disprove it & stop immediately.
-  $Check = TRUE;
-  for ($offset = 0; $offset < $bytesRequired; $offset += $packetSize) {
-    if ($fileContents[$offset] !== $syncByte) {
-      $Check = FALSE;
-      break; } }
+  // / This gate also prevents the loop below from reading past the end of the string.
+  if (strlen($fileContents) >= $bytesRequired) {
+    // / Assume success, then let any single missing sync byte disprove it & stop immediately.
+    $Check = TRUE;
+    // / Walk the expected packet boundaries & confirm the sync byte appears at every one.
+    for ($offset = 0; $offset < $bytesRequired; $offset += $packetSize) {
+      if ($fileContents[$offset] !== $syncByte) {
+        $Check = FALSE;
+        break; } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $packetSize = $packetsToCheck = $syncByte = $offset = $bytesRequired = $fileContents = NULL;
   unset($packetSize, $packetsToCheck, $syncByte, $offset, $bytesRequired, $fileContents);
@@ -2211,6 +2476,7 @@ function convert($type, $pathname, $newPathname, $extension, $height, $width, $r
     if ($type === 'Document') list ($ConversionSuccess, $ConversionErrors) = convertDocuments($pathname, $newPathname, $extension);
     if ($type === 'Image') list ($ConversionSuccess, $ConversionErrors) = convertImages($pathname, $newPathname, $height, $width, $rotate);
     if ($type === 'Model') list ($ConversionSuccess, $ConversionErrors) = convertModels($pathname, $newPathname);
+    if ($type === 'Scad') list ($ConversionSuccess, $ConversionErrors) = convertSCAD($pathname, $newPathname, $extension);
     if ($type === 'Drawing') list ($ConversionSuccess, $ConversionErrors) = convertDrawings($pathname, $newPathname);
     if ($type === 'Video') list ($ConversionSuccess, $ConversionErrors) = convertVideos($pathname, $newPathname);
     if ($type === 'Subtitle') list ($ConversionSuccess, $ConversionErrors) = convertSubtitles($pathname, $newPathname);
@@ -2224,28 +2490,6 @@ function convert($type, $pathname, $newPathname, $extension, $height, $width, $r
   $type = $pathname = $newPathname = $extension = $height = $width = $rotate = $bitrate = NULL;
   unset($type, $pathname, $newPathname, $extension, $height, $width, $rotate, $bitrate);
   return array($ConversionSuccess, $ConversionErrors); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to syncronize the users AppData between the $ConvertLoc and the $InstLoc.
-function syncLocations() {
-  // / Set variables.
-  global $ConvertDir, $ConvertTempDir, $DirSep, $PermissionLevels, $ApacheUser;
-  $LocationsSynced = TRUE;
-  // / Iterate through each file object in the $ConvertDir, skipping dots.
-  foreach ($iterator = new \RecursiveIteratorIterator (new \RecursiveDirectoryIterator ($ConvertDir, \RecursiveDirectoryIterator::SKIP_DOTS), \RecursiveIteratorIterator::SELF_FIRST) as $item) {
-    // / Verify the permissions on the file object.
-    @chown($item, $ApacheUser);
-    @chmod($item, $PermissionLevels);
-    // / If the file object is a directory, make a corresponding directory in the $ConvertTempDir.
-    if (is_dir($item)) {
-      if (!file_exists($ConvertTempDir.$DirSep.$iterator->getSubPathName())) @mkdir($ConvertTempDir.$DirSep.$iterator->getSubPathName(), $PermissionLevels); }
-    // / If the file object is a file that does not already exist in the $ConvertTempDir, create a symlink to it in the $ConvertTempDir.
-    else if (!is_link($ConvertTempDir.$DirSep.$iterator->getSubPathName()) or !file_exists($ConvertTempDir.$DirSep.$iterator->getSubPathName())) symlink($item, $ConvertTempDir.$DirSep.$iterator->getSubPathName()); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $iterator = $item = NULL;
-  unset($iterator, $item);
-  return $LocationsSynced; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -2299,7 +2543,7 @@ function buildGUI($guiType, $ButtonCode) {
   // / Set variables.
   // / The variables defined here will be usable in GUI elements, 
   // / Files like header, footer, styleCore, convertGui1, & convertGui2 have access to these variables.
-  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray;
+  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray;
   $guiUIFile = $GuiUI1File;
   $Files = array();
   $FileCount = 0;
@@ -2565,7 +2809,7 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
 // / $WaitForStream tells us the conversion is still running & must not be judged by its output.
 function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, $Width, $Rotate, $Bitrate) {
   // / Set variables.
-  global $Verbose, $VirusScan, $SpreadsheetArray, $PresentationInputArray, $XPSInputArray, $DocumentArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $SubtitleInputArray, $StreamArray, $MediaInputArray, $ArchiveArray, $Lol, $WaitForStream;
+  global $Verbose, $VirusScan, $SpreadsheetArray, $PresentationInputArray, $XPSInputArray, $DocumentArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $SubtitleInputArray, $StreamArray, $MediaInputArray, $ArchiveArray, $Lol, $WaitForStream, $SCADArray;
   $MainConversionSuccess = $MainConversionErrors = $virusFound = $skip = $isExtensionSupported = $fileIsVerified = $variableIsSanitized = $outputExists = FALSE;
   $clean = $copy = TRUE;
   $docarray =  array_merge($DocumentArray, $SpreadsheetArray, $PresentationInputArray, $XPSInputArray);
@@ -2577,7 +2821,8 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
   $streamarray = $StreamArray;
   $audioarray =  $MediaInputArray;
   $archarray = $ArchiveArray;
-  $arrayArray = array('Document' => $docarray, 'Image' => $imgarray, 'Model' => $modelarray, 'Drawing' => $drawingarray, 'Video' => $videoarray, 'Subtitle' => $subtitleArray, 'Stream' => $streamarray, 'Audio' => $audioarray, 'Archive' => $archarray);
+  $scadarray = $SCADArray;
+  $arrayArray = array('Document' => $docarray, 'Image' => $imgarray, 'Model' => $modelarray, 'Scad' => $scadarray, 'Drawing' => $drawingarray, 'Video' => $videoarray, 'Subtitle' => $subtitleArray, 'Stream' => $streamarray, 'Audio' => $audioarray, 'Archive' => $archarray);
   $arrKey = 0;
   $file = '';
   // / Make sure the input files are formatted into an array.
@@ -2642,8 +2887,8 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
       $MainConversionErrors = TRUE;
       errorEntry('Could not create '.$newPathname.' from '.$oldPathname.'!', 5005, FALSE); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $pathname = $oldPathname = $oldExtension = $newPathname = $docarray = $imgarray = $audioarray = $videoarray = $subtitleArray = $streamarray = $modelarray = $drawingarray = $archarray = $arrayArray = $fileIsVerified = $scanComplete = $virusFound = $variableIsSanitized = $arrKey = $clean = $copy = $skip = $isExtensionSupported = $outputExists = NULL;
-  unset($file, $pathname, $oldPathname, $oldExtension, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $subtitleArray, $streamarray, $modelarray, $drawingarray, $archarray, $arrayArray, $fileIsVerified, $scanComplete, $virusFound, $variableIsSanitized, $arrKey, $clean, $copy, $skip, $isExtensionSupported, $outputExists);
+  $file = $pathname = $oldPathname = $oldExtension = $newPathname = $docarray = $imgarray = $audioarray = $videoarray = $subtitleArray = $streamarray = $modelarray = $drawingarray = $archarray = $scadarray = $arrayArray = $fileIsVerified = $scanComplete = $virusFound = $variableIsSanitized = $arrKey = $clean = $copy = $skip = $isExtensionSupported = $outputExists = NULL;
+  unset($file, $pathname, $oldPathname, $oldExtension, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $subtitleArray, $streamarray, $modelarray, $drawingarray, $archarray, $scadarray, $arrayArray, $fileIsVerified, $scanComplete, $virusFound, $variableIsSanitized, $arrKey, $clean, $copy, $skip, $isExtensionSupported, $outputExists);
   return array($MainConversionSuccess, $MainConversionErrors); }
 // / -----------------------------------------------------------------------------------
 

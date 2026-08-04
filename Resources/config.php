@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.5.3.
+// / v3.5.4.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -194,6 +194,46 @@ $DefaultStreamInspectionForfeitAction = 'DENY';
 // /   --Stream Inspection Layers--  X  --StreamInspectionFilesPerLayer--  X  --MaxStreamInspectionFileSize--
 // /   Valid options are integers greater than 940.
 $MaxStreamInspectionFileSize = 8191;
+// /  --Allow SCAD Include Resolution--
+// /   OpenSCAD sources reference other sources with include <file> & use <file>.
+// /   A multi file assembly cannot render at all unless those references resolve to something.
+// /   If set to FALSE, every reference is commented out & multi file assemblies will not render.
+// /   If set to TRUE, an include or use may resolve to another source the SAME user uploaded.
+// /   Resolution matches on filename alone & ignores whatever directory the reference carried.
+// /   A reference that matches no uploaded file is commented out regardless of this setting.
+// /   This setting does NOT control whether OpenSCAD may read arbitrary files.
+// /   HRConvert2 removes every file reading primitive from every uploaded source unconditionally.
+// /   import(), surface(), the deprecated import_stl() family & every dxf file= form are always removed.
+// /   Those removals happen whether this setting is TRUE or FALSE & cannot be turned off.
+// /   Every uploaded source is sanitized into a temporary location before OpenSCAD runs.
+// /   A resolved reference points at a sanitized copy, never at the file the user uploaded.
+// /   Nothing outside the users own session directory can be reached at any point.
+// /   Enabling this therefore lets one uploaded file read another file the same user uploaded.
+// /   Both files came from the same person, in the same session, in the same directory.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$AllowSCADIncludeResolution = TRUE;
+// /  --SCAD Conversion Timeout--
+// /   Set the maximum number of seconds an OpenSCAD render is permitted to run.
+// /   OpenSCAD has no execution limit of its own & renders until it finishes or is killed.
+// /   A crafted model can pin a CPU core indefinitely through recursion or an extreme $fn value.
+// /   This value bounds an attackers cost, not just a users patience.
+// /   A stranger can upload a three line file that consumes a PHP worker for this entire duration.
+// /   Raising it multiplies the cost of the cheapest denial of service available against this server.
+// /   Renders are niced to the lowest priority so a runaway model yields to everything else.
+// /   A large real world assembly of roughly thirty sources renders well within the default.
+// /   This setting must be lower than the PHP execution timer set in php.ini.
+// /   Valid options are integers greater than 0.
+// /   Default is 180.
+$SCADConversionTimeout = 180;
+// /  --Minimum OpenSCAD Version--
+// /   HRConvert2 does not probe OpenSCAD for capabilities & does not accommodate older builds.
+// /   Pinning a minimum version means the export formats below can be trusted as written.
+// /   2021.01 is the last long standing stable release & is widely available in distribution packages.
+// /   Check the installed version by running 'openscad --version' in a terminal on the server.
+// /   Format is the OpenSCAD YYYY.MM release stamp.
+// /   Default is '2021.01'.
+$MinimumSCADVersion = '2021.01';
 // / ------------------------------
 
 // / ------------------------------
@@ -239,8 +279,6 @@ $ConvertLoc = '/DATA/HRConvert2';
 // /   Do not use a path with whitespace.
 // /   Default is $ConvertLoc.'/Logs'
 $LogDir = $ConvertLoc.'/Logs';
-
-
 // /  --Append Log Hash To Log Files--
 // /   This setting is used to append a 12 digit unique identifier to log file names.
 // /   This randomizes log file names across multiple installations & servers.
@@ -250,7 +288,6 @@ $LogDir = $ConvertLoc.'/Logs';
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
 $AppendLogHashToLogFiles = TRUE;
-
 // /  --Unique Daily Log Hash Rotation--
 // /   Log files are appended with t
 // /   Do not include a trailing slash.
@@ -338,7 +375,7 @@ $AllowUserShare = TRUE;
 // /   Note that FFMPEG v2.0 through v6.0 carry a severe vulnerability related to downloading stream files.
 // /   If you have FFMPEG v6.0 or earlier installed, disable Stream Conversions & remove m3u8 from the list of supported file formats.
 // /   Check FFMPEG version by opening a terminal on the server and running 'ffmpeg -v'
-$SupportedConversionTypes = array('Document', 'Image', 'Model', 'Drawing', 'Video', 'Subtitle', 'Audio', 'Archive', 'Stream', 'OCR');
+$SupportedConversionTypes = array('Document', 'Image', 'Model', 'Scad', 'Drawing', 'Video', 'Subtitle', 'Audio', 'Archive', 'Stream', 'OCR');
 // /  --File Deletion Age Theshold--
 // /   Age in minutes of files to be deleted.
 // /   Set to 0 to keep files forever.
@@ -483,6 +520,15 @@ $UserStreamArray = array('m3u8', 'ts');
 $UserDrawingArray = array('svg', 'dxf', 'vdx', 'fig', 'dia', 'wpg', 'png');
 // /  --Supported Model Formats--
 $UserModelArray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'gts', 'dxf', 'u3d', 'vrml', 'x3d');
+// /  --Supported OpenSCAD Formats--
+// /   The first entry must be scad, which is the only input format this converter accepts.
+// /   Every remaining entry is an export format OpenSCAD can produce from 3D geometry.
+// /   DXF & SVG are deliberately absent from this list.
+// /   OpenSCAD can only export those from 2D geometry such as square(), circle() or projection().
+// /   A model built from cube() cannot produce them & HRConvert2 cannot know which a source is.
+// /   Offering them would produce confusing failures for the overwhelming majority of uploads.
+// /   PNG is deliberately absent because a useful render would require camera & image size arguments.
+$UserSCADArray = array('scad', 'stl', 'off', 'amf', '3mf', 'csg');
 // /  --Supported Subtitle Input Formats--
 $UserSubtitleInputArray = array('sub', 'sbv', 'srt', 'stream_segment', 'ssegment', 'streamhash', 'sup', 'subtitles', 'ttml', 'uncodedframecrc', 'webvtt', 'wtv', 'oma', 'rso', 'rtp', 'rtsp', 'scc', 'sdl', 'sdl2', 'segment', 'sap', 'jacosub', 'kvag', 'microdvd', 'ffmetadata', 'fifo', 'fifo_test', 'fits', 'framecrc', 'framehash', 'framemd5', 'dash', 'crc', 'dvbsub', 'dvbtxt', 'gsm', 'ass', 'vobsub', 'mpl2', 'mpsub', 'pjs', 'realtext', 'sami', 'stl', 'subviewer', 'subviewer1', 'tedcaptions', 'txd', 'vtt', 'ssa', 'dvb', 'vplayer');
 // /  --Supported Subtitle Output Formats--

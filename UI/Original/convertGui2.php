@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/3/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/6/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,8 +12,12 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.5.4.
+// / v3.5.7.
+// / The files in this UI were submitted by Github user hernandito in Issue #85. Thank you!
+// / https://github.com/hernandito
 // / This file contains language specific GUI elements for performing file conversions.
+// / This file was created by Github user hernandito as part of his forked repo, available 
+// / at https://github.com/hernandito/HRConvert2/tree/master. Thank you, hernandito!
 // /
 // / HARDWARE REQUIREMENTS ...
 // / This application requires at least a Raspberry Pi Model B+ or greater.
@@ -22,7 +26,8 @@
 // / DEPENDENCY REQUIREMENTS ...
 // / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, bwrap,
 // / Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD,
-// / Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.// /
+// / Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
+// /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
 
@@ -444,7 +449,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                   document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text24; ?><i><?php echo $Gui2Text26; ?></i>';
                   document.getElementById('shareclipStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text27; ?><i><?php echo $Gui2Text28; ?></i>';
                   document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text29; ?><i><?php echo $FullURL.'/DATA/'.$SesHash3.'/'.$File; ?></i>';
-                  copy_share_link("<?php echo $FullURL.'/DATA/'.$SesHash3.'/'.$File; ?>");
+                  copy_share_link(share_file_url('<?php echo $FullURL.'/DATA/'.$SesHash3.'/'; ?>', '<?php echo $File; ?>'), '<?php echo $GuiFunctionsText1; ?>');
                   alert("<?php echo $Gui2Text73; ?>");
                   toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                   setTimeout(function() {

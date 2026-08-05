@@ -28,6 +28,23 @@ Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
 
 --------------------
 COMMIT 8/5/2026
+v3.5.7 - Isolate OpenSCAD renders at the operating system level. Replace the source filter with a stateful scanner. Add a warning log tier.
+
+-v3.5.7.
+-Added ? to sanitizeString() function.
+-Added 4 new language packs.
+  -Japanese - ja
+  -Indonesian - id
+  -Turkish - tr
+  -Vientamese - vi
+-Restructuring convertGui2 so it uses functions instead of a buch of repeating code statements.
+  -This work is about 50% complete. But the UI is currently in a functional state.
+-Update unoconv calls to specify character encoding.
+  -Update unoconv call in rc.local script to use the same character encoding.
+  -If you are updating from an existing version, replace the rc.local script currently installed on the system with the one from Documentation/Build. Then reboot the server.
+
+--------------------
+COMMIT 8/5/2026
 v3.5.6 - Isolate OpenSCAD renders at the operating system level. Replace the source filter with a stateful scanner. Add a warning log tier.
 
 -v3.5.6.

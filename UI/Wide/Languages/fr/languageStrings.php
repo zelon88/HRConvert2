@@ -22,7 +22,8 @@
 // / DEPENDENCY REQUIREMENTS ...
 // / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, bwrap,
 // / Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD,
-// / Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.// /
+// / Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
+// /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
 

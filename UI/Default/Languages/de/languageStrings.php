@@ -22,7 +22,8 @@
 // / DEPENDENCY REQUIREMENTS ...
 // / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, bwrap,
 // / Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD,
-// / Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.// /
+// / Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
+// /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
 
@@ -293,6 +294,15 @@ $Gui2Text78 = 'XPS-Datei Konvertieren';
 $Gui2Text79 = 'Dieses OpenSCAD-Modell Rendern';
 // / 'Render Model'
 $Gui2Text80 = 'Modell Rendern';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - HRC2-Functions.js Related Variables.
+// / These strings are used by the client side javascript library.
+// / That file is static javascript & cannot read a PHP variable, so every string it needs
+// / is passed to it as an argument by the PHP that calls it.
+// / 'Your browser does not support copying to the clipboard!'
+$GuiFunctionsText1 = 'Ihr Browser unterstützt das Kopieren in die Zwischenablage nicht.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

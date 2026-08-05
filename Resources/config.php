@@ -25,7 +25,8 @@
 // / DEPENDENCY REQUIREMENTS ... 
 // / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, bwrap,
 // / Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD,
-// / Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.// /
+// / Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
+// /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
 
@@ -369,8 +370,8 @@ $AllowUserSelectableGui = TRUE;
 // /   The list of languages that are supported by this application.
 // /   Before adding a supported language be sure to add the matching folder full of GUI files to /Languages.
 // /   Errors will occur if you add an element to this array without also adding a matching Language folder.
-// /   Default is 'en', 'fr', 'es', 'zh', 'hi', 'ar', 'ru', 'uk', 'bn', 'de', 'ko', 'it', 'pt'.
-$SupportedLanguages = array('en', 'fr', 'es', 'zh', 'hi', 'ar', 'ru', 'uk', 'bn', 'de', 'ko', 'it', 'pt');
+// /   Default is 'en', 'fr', 'es', 'zh', 'hi', 'ar', 'ru', 'uk', 'bn', 'de', 'ko', 'it', 'pt', 'vi', 'tr', 'ja', 'id'.
+$SupportedLanguages = array('en', 'fr', 'es', 'zh', 'hi', 'ar', 'ru', 'uk', 'bn', 'de', 'ko', 'it', 'pt', 'vi', 'tr', 'ja', 'id');
 // /  --Default Language--
 // /   The default language to use for GUI elements.
 // /   See README.md for the latest language support information.
@@ -420,7 +421,7 @@ $DeleteThreshold = 60;
 // /   If set to FALSE only errors & certain core events will be logged.
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
-$Verbose = FALSE;
+$Verbose = TRUE;
 // /  --Maximum Log File Size--
 // /   Set the number of bytes to store in each logfile before splitting to a new one.
 // /  Default is 1048576.

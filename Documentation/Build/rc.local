@@ -12,6 +12,6 @@
 
 # HRConvert2 Conversion Engine Startup Entry
 # You may need to manually locate the soffice binary and adjust the path accordingly.
-/usr/bin/soffice --headless --accept="socket,host=127.0.0.1,port=$soffice_port;urp;" --nofirststartwizard &
+LANG=C.UTF-8 LC_ALL=C.UTF-8 /usr/bin/soffice --headless --accept="socket,host=127.0.0.1,port=$soffice_port;urp;" --nofirststartwizard &
 
 exit 0

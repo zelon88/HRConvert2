@@ -22,7 +22,8 @@
 // / DEPENDENCY REQUIREMENTS ...
 // / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, bwrap,
 // / Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD,
-// / Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.// /
+// / Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
+// /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
 
@@ -290,6 +291,15 @@ $Gui2Text78 = 'C이 파일을 변환하세요';
 $Gui2Text79 = '이 OpenSCAD 모델 렌더링';
 // / 'Render Model'
 $Gui2Text80 = '모델 렌더링';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - HRC2-Functions.js Related Variables.
+// / These strings are used by the client side javascript library.
+// / That file is static javascript & cannot read a PHP variable, so every string it needs
+// / is passed to it as an argument by the PHP that calls it.
+// / 'Your browser does not support copying to the clipboard!'
+$GuiFunctionsText1 = '사용 중인 브라우저는 클립보드 복사를 지원하지 않습니다.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

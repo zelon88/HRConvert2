@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/5/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/6/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.5.6.
+// / v3.5.7.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -72,7 +72,7 @@ function timingProtect($opType) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to sanitize input strings with varying degrees of tolerance.
-// / Filters a given string of | \ ~ # [ ] ( ) { } ; : $ ! # ^ & % @ > * < " / ' ` chr(9) chr(10) chr(13) chr(0)
+// / Filters a given string of | \ ~ # [ ] ( ) { } ; : $ ! # ^ & % @ > * & < " / ' ` chr(9) chr(10) chr(13) chr(0)
 // / This function will replace any of the above specified charcters with NOTHING. No character at all. An empty string.
 // / This function will replace whitespace with the underscore character.
 // / This function will remove leading and traling dashes.
@@ -84,8 +84,8 @@ function sanitizeString($Variable, $strict) {
   $dangerFiles = array(NULL, '.js', '.php', '.html', '.css', '.phar', '..', 'index.php', 'index.html', '--');
   // / Check for dangerous files or escape conditions.
   foreach ($dangerFiles as $danFile) $Variable = str_replace($danFile, '', $Variable);
-  if ($strict) $Variable = trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split(',|\\~#[](){};:$!#^&%@>*<"\'/`'.chr(9).chr(10).chr(13).chr(0)), '', $Variable))))), '-');
-  if (!$strict) $Variable = trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split(',|\\~#[](){};:$!#^&%@>*<"\'`'.chr(9).chr(10).chr(13).chr(0)), '', $Variable))))), '-');
+  if ($strict) $Variable = trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split(',|\\~#[](){};:$!#^&%@>*?<"\'/`'.chr(9).chr(10).chr(13).chr(0)), '', $Variable))))), '-');
+  if (!$strict) $Variable = trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split(',|\\~#[](){};:$!#^&%@>*?<"\'`'.chr(9).chr(10).chr(13).chr(0)), '', $Variable))))), '-');
   // / Check for dangerous files or escape conditions one more time.
   foreach ($dangerFiles as $danFile) $Variable = str_replace($danFile, '', $Variable);
   // / Trim the variable one last time to avoid any crafted leading dashes or directory separators.
@@ -257,7 +257,7 @@ function verifyInstallation() {
   $missingConfigVars = array();
   $detectedConfigVersion = $requiredConfigVersion = $configFile = '';
   // / Define what version of HRConvert2 this core file represents.
-  $HRConvertVersion = 'v3.5.6';
+  $HRConvertVersion = 'v3.5.7';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
@@ -1317,7 +1317,7 @@ function verifyDocumentConversionEngine() {
     if ($okToStart) {
       // / Try to start the Document Conversion Engine.
       if ($Verbose) logEntry('Starting the Document Conversion Engine.');
-      $returnData = exec('python3 '.$PathToUnoconv.' -l --verbose --user-profile='.$HomeLoc.' > /dev/null 2>&1 &');
+      $returnData = exec('LANG=C.UTF-8 LC_ALL=C.UTF-8 python3 '.$PathToUnoconv.' -l --verbose --user-profile='.$HomeLoc.' > /dev/null 2>&1 &');
       sleep($DocumentEngineSleepTimer);
       if ($Verbose && trim($returnData) !== '') logEntry('The Document Conversion Engine returned the following: '.str_replace($Lol, '', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); }
     // / Re-check the PID after any attempt to start the listener.
@@ -1359,7 +1359,7 @@ function convertDocuments($pathname, $newPathname, $extension) {
       if ($stopper !== 0) sleep($sleepTime++);
       if (in_array(strtolower($oldExtension), $arrayxpsi)) $returnData = shell_exec('xpstopdf '.$pathname.' '.$newPathname);
       // / Attempt the conversion using Unoconv for all other files.
-      if (!in_array(strtolower($oldExtension), $arrayxpsi)) $returnData = shell_exec('python3 '.$PathToUnoconv.' --verbose --user-profile='.$HomeLoc.' -o '.$newPathname.' -f '.$extension.' '.$pathname);
+      if (!in_array(strtolower($oldExtension), $arrayxpsi)) $returnData = shell_exec('LANG=C.UTF-8 LC_ALL=C.UTF-8 python3 '.$PathToUnoconv.' --verbose --user-profile='.$HomeLoc.' -o '.$newPathname.' -f '.$extension.' '.$pathname);
       // / Count the number of conversions to avoid infinite loops.
       $stopper++;
       // / Stop attempting the conversion after $StopCounter number of attempts.
@@ -3423,7 +3423,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
               $OperationErrors = TRUE;
               errorEntry('Could not verify the Document Conversion Engine!', 15007, FALSE); }
             // / Perform the conversion using Unoconv.
-            $returnData = shell_exec('python3 '.$PathToUnoconv.' --verbose --user-profile='.$HomeLoc.' -o '.$newPathname.' -f pdf '.$pathname);
+            $returnData = shell_exec('LANG=C.UTF-8 LC_ALL=C.UTF-8 python3 '.$PathToUnoconv.' --verbose --user-profile='.$HomeLoc.' -o '.$newPathname.' -f pdf '.$pathname);
             // / Log the output of the operation to the logfile, if it is not blank.
             if ($Verbose && trim($returnData) !== '') logEntry('The converter (U-1) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); } }
         // / Code to convert an image to a PDF.
@@ -3443,7 +3443,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
               errorEntry('Could not verify the Document Conversion Engine!', 15008, FALSE); }
             if ($Verbose) logEntry('Performing OCR intermediate operation using method 0.');
             // / Perform the conversion using Unoconv.
-            $returnData = shell_exec('python3 '.$PathToUnoconv.' --verbose --user-profile='.$HomeLoc.' -o '.$pathnameTEMP3.' -f pdf '.$pathname);
+            $returnData = shell_exec('LANG=C.UTF-8 LC_ALL=C.UTF-8 python3 '.$PathToUnoconv.' --verbose --user-profile='.$HomeLoc.' -o '.$pathnameTEMP3.' -f pdf '.$pathname);
             // / Log the output of the operation to the logfile, if it is not blank.
                   if ($Verbose && trim($returnData) !== '') logEntry('The converter (U-2) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
             // / Perform the conversion using PDFTOTEXT.
@@ -3467,7 +3467,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
             $OperationErrors = TRUE;
             errorEntry('Could not verify the Document Conversion Engine!', 15010, FALSE); }
         // / Perform the conversion using Unoconv.
-        $returnData = shell_exec('python3 '.$PathToUnoconv.' --verbose --user-profile='.$HomeLoc.' -o '.$newPathname.' -f '.$UserExtension.' '.$pathnameTEMP);
+        $returnData = shell_exec('LANG=C.UTF-8 LC_ALL=C.UTF-8 python3 '.$PathToUnoconv.' --verbose --user-profile='.$HomeLoc.' -o '.$newPathname.' -f '.$UserExtension.' '.$pathnameTEMP);
         // / Log the output of the operation to the logfile, if it is not blank.
         if ($Verbose && trim($returnData) !== '') logEntry('The converter (U-3) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); }
       // / Error handler for if the output file does not exist.

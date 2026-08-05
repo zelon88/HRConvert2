@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.5.5.
+// / v3.5.6.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -21,9 +21,9 @@
 // / This application will run on just about any x86 or x64 computer.
 // /
 // / DEPENDENCY REQUIREMENTS ...
-// / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia,
-// / Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, Rar,
-// / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
+// / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, bwrap,
+// / Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD,
+// / Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -257,7 +257,7 @@ function verifyInstallation() {
   $missingConfigVars = array();
   $detectedConfigVersion = $requiredConfigVersion = $configFile = '';
   // / Define what version of HRConvert2 this core file represents.
-  $HRConvertVersion = 'v3.5.5';
+  $HRConvertVersion = 'v3.5.6';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
@@ -417,6 +417,19 @@ function verifyLogs() {
 
 // / -----------------------------------------------------------------------------------
 // / A function to format a log entry & write it to the logfile.
+// / A "Log Entry" starts with the word "OP-Act" which is intended to represent "Operational Activity".
+// / A log entry is considered something that the indicates specific execution paths are taking place within the core.
+// / A log entry represents normal operational activity of HRConvert2.
+// / A log entry carries no error number because it does not represent a failure of HRConvert2.
+// / A log can never halt execution of anything.
+// / Logs occur normally.
+// / With the Enhanced Logging Verbosity setting disabled you get a reasonable amount of log entries.
+// / With Enhanced Logging Verbosityenabled you get, arguably, way too log entries.
+// / Enhanced Logging Verbosity is probably not neccesary for most production or personal-use environments.
+// / When searching logs using find/replace or grep, use this guide to make life easier;
+// /   Op-Act - Reports normal activity. Will never halt execution. 
+// /   WARNING!!! - Reports administrator discretion advised. Will never halt execution.
+// /   ERROR!!! - Reports numbered errors. Calling code has the option to halt HRConvert2 execution.
 function logEntry($entry) {
   // / Set variables.
   global $Time, $LogFile, $SesHash3;
@@ -430,7 +443,46 @@ function logEntry($entry) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to format a warning entry & write it to the logfile.
+// / A "Warning Entry" starts with the word "WARNING!!!".
+// / A warning entry is written regardless of the Enhanced Logging Verbosity setting.
+// / A warning entry is considered something that the administrator should know is happening.
+// / A warning entry does not necessarily mean something needs to change.
+// / A warning entry carries no error number because it does not represent a failure of HRConvert2.
+// / A warning entry can never halt execution of anything.
+// / Warnings occur normally, but represent sensitive operations that should always be visible.
+// / A warning message means administrator discretion is advised.
+// / When searching logs using find/replace or grep, use this guide to make life easier;
+// /   Op-Act - Reports normal activity. Will never halt execution. 
+// /   WARNING!!! - Reports administrator discretion advised. Will never halt execution.
+// /   ERROR!!! - Reports numbered errors. Calling code has the option to halt HRConvert2 execution.
+function warningEntry($entry) {
+  // / Set variables.
+  global $Time, $LogFile, $SesHash3;
+  $LogWritten = FALSE;
+  // / Format the input string into a log entry & write it to the $LogFile.
+  $LogWritten = file_put_contents($LogFile, 'WARNING!!! '.$Time.', '.$SesHash3.': '.$entry.PHP_EOL, FILE_APPEND);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $entry = NULL;
+  unset($entry);
+  return $LogWritten; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to format an error entry & write it to the logfile.
+// / A "Error Entry" starts with the word "ERROR!!!".
+// / An error entry is written regardless of the Enhanced Logging Verbosity setting.
+// / An error entry is considered something that the administrator should investigate. Maybe take action.
+// / An error entry does means that HRConvert2 or one of it's operations outright failed.
+// / An error entry carries a documented error number because it represents a failure of HRConvert2.
+// / An error entry CAN HALT execution of HRConvert2, if the calling code requests it.
+// / Errors are not normal. Something is wrong that needs attention. HRConvert2 may be inoperable.
+// / All errors that are thrown will provide a unique error number.
+// / Each unique error that HRConvert2 produces is documented in the "ERROR_DESCRIPTIONS.txt" file.
+// / When searching logs using find/replace or grep, use this guide to make life easier;
+// /   Op-Act - Reports normal activity. Will never halt execution. 
+// /   WARNING!!! - Reports administrator discretion advised. Will never halt execution.
+// /   ERROR!!! - Reports numbered errors. Calling code has the option to halt HRConvert2 execution.
 function errorEntry($entry, $errorNumber, $die) {
   // / Set variables.
   global $Time, $LogFile, $SesHash3, $ApplicationName;
@@ -1422,80 +1474,223 @@ function resolveSCADInclude($scadReference, $sessionFiles) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to neutralize every file reading primitive in a block of OpenSCAD source.
-// / OpenSCAD reads arbitrary files by design & offers no sandbox of any kind.
-// / A hostile .scad can embed the contents of any file the web server user can read.
-// / This function is the only thing standing between an uploaded .scad & the filesystem.
-// / Every primitive below is neutralized, not just the two most commonly known ones.
-// / include <file> & use <file> read OpenSCAD source directly.
-// / import("file") reads STL, OFF, DXF, SVG, 3MF & AMF geometry.
-// / surface("file") reads a heightmap from a DAT or a PNG.
-// / import_stl(), import_dxf() & import_off() are deprecated aliases that still function.
-// / dxf_linear_extrude(), dxf_rotate_extrude(), dxf_dim() & dxf_cross() take a file= parameter.
-// / When $resolveIncludes is FALSE every reference is commented out unconditionally.
-// / When $resolveIncludes is TRUE an include or use may be rewritten to a sanitized copy.
-// / A reference that resolves to nothing is commented out either way.
-// / Only include & use are ever rewritten. Geometry & heightmap reads are always removed.
-// / This function performs no disk access at all. Source in, source out.
-function sanitizeSCAD($scadContents, $sessionFiles, $resolveIncludes) {
+// / A function to find every file reading call in a block of OpenSCAD source.
+// / The source is walked once, character by character, carrying comment & string state.
+// / One pass is required rather than two, because whichever delimiter appears first wins.
+// / A line comment containing the characters that open a block comment does NOT open one.
+// / A block comment containing the characters that open a line comment does NOT open one.
+// / Stripping one kind before the other gets both of those backwards & swallows real code.
+// / Comments & strings are removed because a keyword inside either is not a call.
+// / An angle bracket path is removed for the same reason. A directory name is not a call.
+// /
+// / A keyword is only counted as a call when BOTH of the following hold.
+// / The character before it must not be a letter, a digit or an underscore.
+// / That is what stops house_width & diffuser_height from counting as a use.
+// / The next meaningful character must be an opening bracket or an angle bracket.
+// / That is what stops include_lid from counting as an include.
+// /
+// / A COMMENT IS A TOKEN SEPARATOR TO OPENSCAD, NOT A TERMINATOR.
+// / The main loop below treats a comment as the end of live code, which is correct there.
+// / The lookahead treats a comment as whitespace, which is correct there & is NOT the same rule.
+// / An earlier version applied the main loop rule in the lookahead & concluded that
+// / surface/**/("file") was not a call. OpenSCAD reads that file. It was reported as a bypass.
+// / Whitespace & comments are therefore both skipped while looking for the bracket, & again
+// / while reading the reference, because a comment may also sit between the bracket & the quote.
+// /
+// / THIS FUNCTION IS NOT THE SECURITY BOUNDARY.
+// / The boundary is the operating system sandbox in convertSCAD() & nothing else.
+// / This function exists so ordinary files render predictably & so the user is told what
+// / was removed. It is expected to be incomplete & the sandbox does not depend on it.
+// /
+// / Returns one record per call found, carrying the keyword, the line it started on & the
+// / raw text of the reference where one could be read.
+function sanitizeSCAD($scadContents) {
   // / Set variables.
-  $SanitizedSCAD = '';
-  $ReferencesFound = $ReferencesResolved = $ReferencesRemoved = 0;
-  $scadLines = $lineMatches = array();
-  $scadLine = $trimmedLine = $reference = $resolvedPath = $marker = '';
-  $lineWasHandled = FALSE;
-  // / Matches include <file> & use <file>. These are the only two forms ever rewritten.
-  $includePattern = '/\b(include|use)\s*<([^>]*)>/i';
-  // / Matches every remaining primitive that reads a file. None of these are ever rewritten.
-  // / The file= forms are listed explicitly because a pattern written for the modern
-  // / import("file") syntax will walk straight past dxf_dim(file="secret").
-  $importPattern = '/\b(import|surface|import_stl|import_dxf|import_off)\s*\(/i';
-  $dxfFilePattern = '/\b(dxf_linear_extrude|dxf_rotate_extrude|dxf_dim|dxf_cross)\s*\(/i';
-  // / A file= parameter anywhere at all is treated as a read attempt.
-  $filePropertyPattern = '/\bfile\s*=/i';
-  // / Split on any line ending so a file authored on any platform is handled the same way.
-  $scadLines = preg_split('/\R/', $scadContents);
-  foreach ($scadLines as $scadLine) {
-    $lineWasHandled = FALSE;
-    $trimmedLine = trim($scadLine);
-    // / A line that is already a comment cannot read anything, so pass it through untouched.
-    if (strncmp($trimmedLine, '//', 2) === 0) {
-      $SanitizedSCAD .= $scadLine.PHP_EOL;
+  $ScadCalls = array();
+  $keywords = array();
+  $keyword = $currentChar = $nextChar = $priorChar = $lookaheadChar = $peekChar = $referenceText = '';
+  $sourceLength = $charIndex = $lineNumber = $keywordLength = $lookaheadIndex = $referenceStart = 0;
+  $inLineComment = $inBlockComment = $inString = $isCall = FALSE;
+  // / Every keyword that causes OpenSCAD to read a file.
+  // / The longest forms are listed first so a longer match is preferred over a shorter one.
+  // / import_stl would otherwise match as import & leave stl looking like an identifier.
+  $keywords = array('dxf_linear_extrude', 'dxf_rotate_extrude', 'import_stl', 'import_dxf', 'import_off', 'dxf_cross', 'surface', 'include', 'import', 'dxf_dim', 'use');
+  $sourceLength = strlen($scadContents);
+  $lineNumber = 1;
+  for ($charIndex = 0; $charIndex < $sourceLength; $charIndex++) {
+    $currentChar = $scadContents[$charIndex];
+    $nextChar = ($charIndex + 1 < $sourceLength) ? $scadContents[$charIndex + 1] : '';
+    // / Track the line number for every newline, wherever it appears.
+    // / The user has to be told which line a reference was on & a stream has no lines.
+    if ($currentChar === "\n") $lineNumber++;
+    // / A line comment runs to the end of the line & nothing inside it is code.
+    if ($inLineComment) {
+      if ($currentChar === "\n") $inLineComment = FALSE;
       continue; }
-    // / Handle include & use. These are the only references eligible for resolution.
-    if (preg_match($includePattern, $scadLine, $lineMatches)) {
-      $ReferencesFound++;
-      $reference = $lineMatches[2];
-      $resolvedPath = '';
-      // / Only attempt resolution when config.php has explicitly enabled it.
-      if ($resolveIncludes) $resolvedPath = resolveSCADInclude($reference, $sessionFiles);
-      if ($resolvedPath !== '') {
-        // / Rewrite the reference to point at the sanitized copy we matched it to.
-        $ReferencesResolved++;
-        $SanitizedSCAD .= str_replace('<'.$reference.'>', '<'.$resolvedPath.'>', $scadLine).PHP_EOL; }
+    // / A block comment runs to the first closing sequence & does not nest.
+    // / The character after that sequence is live code again, even on the same line.
+    // / That single property is what the reported block comment bypass depended on.
+    if ($inBlockComment) {
+      if ($currentChar === '*' && $nextChar === '/') {
+        $inBlockComment = FALSE;
+        $charIndex++; }
+      continue; }
+    // / A string literal may contain anything, including text that reads like a call.
+    if ($inString) {
+      if ($currentChar === '\\') {
+        $charIndex++;
+        continue; }
+      if ($currentChar === '"') $inString = FALSE;
+      continue; }
+    // / Not inside anything, so check whether this character opens something.
+    if ($currentChar === '/' && $nextChar === '/') {
+      $inLineComment = TRUE;
+      $charIndex++;
+      continue; }
+    if ($currentChar === '/' && $nextChar === '*') {
+      $inBlockComment = TRUE;
+      $charIndex++;
+      continue; }
+    if ($currentChar === '"') {
+      $inString = TRUE;
+      continue; }
+    // / Live code. Test every keyword at this position.
+    foreach ($keywords as $keyword) {
+      $keywordLength = strlen($keyword);
+      if (strtolower(substr($scadContents, $charIndex, $keywordLength)) !== $keyword) continue;
+      // / The character before the keyword must not make this part of a longer identifier.
+      $priorChar = ($charIndex > 0) ? $scadContents[$charIndex - 1] : ' ';
+      if (ctype_alnum($priorChar) or $priorChar === '_') continue;
+      // / Look for the bracket that would make this a call.
+      // / Whitespace is skipped. Comments are skipped, because OpenSCAD separates tokens with both.
+      // / A newline is whitespace here, so a call split across any number of lines is still found.
+      $isCall = FALSE;
+      $referenceText = '';
+      for ($lookaheadIndex = $charIndex + $keywordLength; $lookaheadIndex < $sourceLength; $lookaheadIndex++) {
+        $lookaheadChar = $scadContents[$lookaheadIndex];
+        if ($lookaheadChar === ' ' or $lookaheadChar === "\t" or $lookaheadChar === "\n" or $lookaheadChar === "\r") continue;
+        // / A comment sitting between the keyword & its bracket separates tokens.
+        // / It does not end the statement & must not end this search.
+        if ($lookaheadChar === '/' && ($lookaheadIndex + 1) < $sourceLength) {
+          $peekChar = $scadContents[$lookaheadIndex + 1];
+          if ($peekChar === '/') {
+            $lookaheadIndex = $lookaheadIndex + 2;
+            while ($lookaheadIndex < $sourceLength && $scadContents[$lookaheadIndex] !== "\n") $lookaheadIndex++;
+            continue; }
+          if ($peekChar === '*') {
+            $lookaheadIndex = $lookaheadIndex + 2;
+            while (($lookaheadIndex + 1) < $sourceLength && !($scadContents[$lookaheadIndex] === '*' && $scadContents[$lookaheadIndex + 1] === '/')) $lookaheadIndex++;
+            $lookaheadIndex = $lookaheadIndex + 1;
+            continue; } }
+        if ($lookaheadChar === '(' or $lookaheadChar === '<') $isCall = TRUE;
+        break; }
+      if (!$isCall) continue;
+      // / Read the reference itself so the caller can resolve or report it.
+      // / An angle bracket form runs to the closing bracket & cannot contain a comment.
+      // / OpenSCAD throws a parser error on include/**/<file>, so that form is a dead end.
+      $referenceStart = $lookaheadIndex;
+      if ($scadContents[$referenceStart] === '<') {
+        $lookaheadIndex++;
+        while ($lookaheadIndex < $sourceLength && $scadContents[$lookaheadIndex] !== '>') {
+          $referenceText .= $scadContents[$lookaheadIndex];
+          $lookaheadIndex++; } }
+      // / A bracket form may carry a comment between the bracket & the quote.
+      // / surface(/*x*/"file") is a live call & the quote must still be found.
       else {
-        // / Nothing matched, or resolution is disabled. Neutralize the line.
-        $ReferencesRemoved++;
-        $SanitizedSCAD .= '// HRC2-REMOVED-UNRESOLVED: '.$scadLine.PHP_EOL; }
-      $lineWasHandled = TRUE; }
-    // / Handle every remaining file reading primitive. None of these are ever resolved.
-    // / Geometry & heightmap reads have no legitimate use in a single file conversion here.
-    if (!$lineWasHandled) {
-      $marker = '';
-      if (preg_match($importPattern, $scadLine)) $marker = '// HRC2-REMOVED-IMPORT: ';
-      elseif (preg_match($dxfFilePattern, $scadLine)) $marker = '// HRC2-REMOVED-DXF: ';
-      elseif (preg_match($filePropertyPattern, $scadLine)) $marker = '// HRC2-REMOVED-FILEPARAM: ';
-      if ($marker !== '') {
-        $ReferencesFound++;
-        $ReferencesRemoved++;
-        $SanitizedSCAD .= $marker.$scadLine.PHP_EOL;
-        $lineWasHandled = TRUE; } }
-    // / Nothing on this line reads a file, so it passes through unchanged.
-    if (!$lineWasHandled) $SanitizedSCAD .= $scadLine.PHP_EOL; }
+        $lookaheadIndex++;
+        while ($lookaheadIndex < $sourceLength && $scadContents[$lookaheadIndex] !== '"' && $scadContents[$lookaheadIndex] !== ')') {
+          if ($scadContents[$lookaheadIndex] === '/' && ($lookaheadIndex + 1) < $sourceLength) {
+            $peekChar = $scadContents[$lookaheadIndex + 1];
+            if ($peekChar === '/') {
+              $lookaheadIndex = $lookaheadIndex + 2;
+              while ($lookaheadIndex < $sourceLength && $scadContents[$lookaheadIndex] !== "\n") $lookaheadIndex++;
+              continue; }
+            if ($peekChar === '*') {
+              $lookaheadIndex = $lookaheadIndex + 2;
+              while (($lookaheadIndex + 1) < $sourceLength && !($scadContents[$lookaheadIndex] === '*' && $scadContents[$lookaheadIndex + 1] === '/')) $lookaheadIndex++;
+              $lookaheadIndex = $lookaheadIndex + 2;
+              continue; } }
+          $lookaheadIndex++; }
+        if ($lookaheadIndex < $sourceLength && $scadContents[$lookaheadIndex] === '"') {
+          $lookaheadIndex++;
+          while ($lookaheadIndex < $sourceLength && $scadContents[$lookaheadIndex] !== '"') {
+            $referenceText .= $scadContents[$lookaheadIndex];
+            $lookaheadIndex++; } } }
+      // / One record per call found. The line number is where the KEYWORD started.
+      array_push($ScadCalls, array(
+        'Keyword'     => $keyword,
+        'Line'        => $lineNumber,
+        'Reference'   => trim($referenceText),
+        'IsAngleForm' => ($scadContents[$referenceStart] === '<')));
+      // / Advance past the keyword so its own text cannot match a shorter keyword inside it.
+      $charIndex = $charIndex + $keywordLength - 1;
+      break; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $scadContents = $sessionFiles = $resolveIncludes = $scadLines = $scadLine = $trimmedLine = $lineMatches = $reference = $resolvedPath = $marker = $lineWasHandled = $includePattern = $importPattern = $dxfFilePattern = $filePropertyPattern = NULL;
-  unset($scadContents, $sessionFiles, $resolveIncludes, $scadLines, $scadLine, $trimmedLine, $lineMatches, $reference, $resolvedPath, $marker, $lineWasHandled, $includePattern, $importPattern, $dxfFilePattern, $filePropertyPattern);
-  return array($SanitizedSCAD, $ReferencesFound, $ReferencesResolved, $ReferencesRemoved); }
+  $scadContents = $keywords = $keyword = $currentChar = $nextChar = $priorChar = $lookaheadChar = $peekChar = $referenceText = $sourceLength = $charIndex = $lineNumber = $keywordLength = $lookaheadIndex = $referenceStart = $inLineComment = $inBlockComment = $inString = $isCall = NULL;
+  unset($scadContents, $keywords, $keyword, $currentChar, $nextChar, $priorChar, $lookaheadChar, $peekChar, $referenceText, $sourceLength, $charIndex, $lineNumber, $keywordLength, $lookaheadIndex, $referenceStart, $inLineComment, $inBlockComment, $inString, $isCall);
+  return $ScadCalls; }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / A function to rewrite OpenSCAD source using what the Sanitizer found.
+// / The Sanitizer works on a stream & reports the line each call started on.
+// / This function works on lines, because the user has to read the result & understand it.
+// /
+// / A line carrying a call is commented out whole rather than edited in place.
+// / Editing in place would require reproducing OpenSCAD's idea of where a statement ends,
+// / which is the class of problem this design exists to avoid.
+// / Commenting the whole line is coarse & occasionally removes more than strictly necessary.
+// / It is also impossible to get subtly wrong, which is worth more than being precise here.
+// / A call split across several lines has every line it touches commented out.
+// /
+// / An include or use may instead be rewritten to point at another source the same user
+// / uploaded, when config.php enables that. Everything else is always removed.
+// / Geometry & heightmap reads are never resolved & never rewritten.
+function rectifySCAD($scadContents, $sessionFiles, $resolveIncludes) {
+  // / Set variables.
+  $RectifiedSCAD = '';
+  $ReferencesFound = $ReferencesResolved = $ReferencesRemoved = 0;
+  $scadCalls = $scadLines = $linesToComment = $callsByLine = array();
+  $scadCall = $scadLine = $resolvedPath = $marker = '';
+  $lineIndex = $lineNumber = $callLine = $callEndLine = 0;
+  // / Find every call in the source before touching a single line.
+  $scadCalls = sanitizeSCAD($scadContents);
+  $ReferencesFound = count($scadCalls);
+  $scadLines = preg_split('/\R/', $scadContents);
+  // / Decide what happens to each call & record which line carries the result.
+  foreach ($scadCalls as $scadCall) {
+    $callLine = (int)$scadCall['Line'];
+    $resolvedPath = '';
+    // / Only an angle bracket include or use is ever eligible for resolution.
+    // / A geometry or heightmap read is always removed, whatever config.php says.
+    if ($resolveIncludes && $scadCall['IsAngleForm'] && ($scadCall['Keyword'] === 'include' or $scadCall['Keyword'] === 'use')) $resolvedPath = resolveSCADInclude($scadCall['Reference'], $sessionFiles);
+    if ($resolvedPath !== '') {
+      $ReferencesResolved++;
+      $callsByLine[$callLine] = array('Action' => 'RESOLVE', 'Keyword' => $scadCall['Keyword'], 'Path' => $resolvedPath); }
+    else {
+      $ReferencesRemoved++;
+      $callsByLine[$callLine] = array('Action' => 'REMOVE', 'Keyword' => $scadCall['Keyword'], 'Path' => ''); } }
+  // / Rebuild the source one line at a time.
+  foreach ($scadLines as $lineIndex => $scadLine) {
+    $lineNumber = $lineIndex + 1;
+    // / A line with no call on it passes through completely untouched.
+    if (!array_key_exists($lineNumber, $callsByLine)) {
+      $RectifiedSCAD .= $scadLine.PHP_EOL;
+      continue; }
+    // / A resolved include is replaced outright with a reference to the staged copy.
+    // / The original line is preserved as a comment so the user can see what it was.
+    if ($callsByLine[$lineNumber]['Action'] === 'RESOLVE') {
+      $RectifiedSCAD .= '// HRC2-RESOLVED-FROM: '.$scadLine.PHP_EOL;
+      $RectifiedSCAD .= $callsByLine[$lineNumber]['Keyword'].' <'.$callsByLine[$lineNumber]['Path'].'>'.PHP_EOL;
+      continue; }
+    // / Everything else is commented out whole & labelled with what it was.
+    $marker = '// HRC2-REMOVED-'.strtoupper($callsByLine[$lineNumber]['Keyword']).': ';
+    $RectifiedSCAD .= $marker.$scadLine.PHP_EOL; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $scadContents = $sessionFiles = $resolveIncludes = $scadCalls = $scadCall = $scadLines = $scadLine = $linesToComment = $callsByLine = $resolvedPath = $marker = $lineIndex = $lineNumber = $callLine = $callEndLine = NULL;
+  unset($scadContents, $sessionFiles, $resolveIncludes, $scadCalls, $scadCall, $scadLines, $scadLine, $linesToComment, $callsByLine, $resolvedPath, $marker, $lineIndex, $lineNumber, $callLine, $callEndLine);
+  return array($RectifiedSCAD, $ReferencesFound, $ReferencesResolved, $ReferencesRemoved); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1527,7 +1722,7 @@ function sanitizeAllSCADUploads() {
       errorEntry('Could not read the OpenSCAD source file '.$sessionFile.'!', 27006, FALSE);
       continue; }
     // / Neutralize every file reading primitive in this source.
-    list ($sanitizedSCAD, $fileFound, $fileResolved, $fileRemoved) = sanitizeSCAD($scadContents, $sessionFiles, $AllowSCADIncludeResolution);
+    list ($sanitizedSCAD, $fileFound, $fileResolved, $fileRemoved) = rectifySCAD($scadContents, $sessionFiles, $AllowSCADIncludeResolution);
     $ReferencesFound = $ReferencesFound + $fileFound;
     $ReferencesResolved = $ReferencesResolved + $fileResolved;
     $ReferencesRemoved = $ReferencesRemoved + $fileRemoved;
@@ -1538,7 +1733,9 @@ function sanitizeAllSCADUploads() {
     else {
       $AllSanitized = FALSE;
       errorEntry('Could not stage the sanitized OpenSCAD source '.$sessionFile.'!', 27001, FALSE); } }
-  if ($Verbose) logEntry('OpenSCAD Sanitization Result: Files Sanitized: '.$FilesSanitized.', References Found: '.$ReferencesFound.', Resolved: '.$ReferencesResolved.', Removed: '.$ReferencesRemoved.', Resolution Enabled: '.($AllowSCADIncludeResolution ? 'TRUE' : 'FALSE').'.');
+  // / A reference removed from an uploaded source is worth an operator seeing at any verbosity.
+  if ($ReferencesRemoved > 0) warningEntry('OpenSCAD Sanitization removed '.$ReferencesRemoved.' file reference(s) across '.$FilesSanitized.' uploaded source file(s) in this session. Resolved: '.$ReferencesResolved.'.');
+  else if ($Verbose) logEntry('OpenSCAD Sanitization Result: Files Sanitized: '.$FilesSanitized.', References Found: '.$ReferencesFound.', Resolved: '.$ReferencesResolved.', Removed: '.$ReferencesRemoved.', Resolution Enabled: '.($AllowSCADIncludeResolution ? 'TRUE' : 'FALSE').'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $sessionFiles = $sessionFile = $scadContents = $sanitizedSCAD = $sanitizedPath = $fileFound = $fileResolved = $fileRemoved = $bytesWritten = NULL;
   unset($sessionFiles, $sessionFile, $scadContents, $sanitizedSCAD, $sanitizedPath, $fileFound, $fileResolved, $fileRemoved, $bytesWritten);
@@ -1629,9 +1826,11 @@ function convertSCAD($pathname, $newPathname, $extension) {
       $ConversionErrors = TRUE;
       errorEntry('The OpenSCAD converter failed with exit code '.$openscadExitCode.'!', 27003, FALSE); }
     // / Remove every sanitized copy immediately. None of them are retained for any reason.
-    // / ScadTemp holds nothing else, so the whole directory is cleared in one operation.
+    // / ScadTemp holds nothing else once the rendered model has been moved out.
+    // / cleanFiles() removes the emptied directory itself, so its absence is the success case.
+    // / verifyRequiredDirs() recreates it at the start of the next request.
     cleanFiles($ScadTemp);
-    if (!is_dir_empty($ScadTemp)) errorEntry('Could not remove the sanitized OpenSCAD sources!', 27004, FALSE); }
+    if (is_dir($ScadTemp) && !is_dir_empty($ScadTemp)) errorEntry('Could not remove the sanitized OpenSCAD sources!', 27004, FALSE); }
   // / The output file is the only verdict on whether the render actually produced anything.
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
@@ -2224,8 +2423,10 @@ function inspectStreamFile($StreamFile, $ParentURL, $CurrentLayer) {
   if ($StreamContainsLAN or $ContentMismatch or $ContentUnknown) $InspectionFailed = TRUE;
   // / A plain-http reference is only fatal when config.php has disabled it.
   if ($StreamContainsHTTP && !$AllowStreamOverHTTP) $InspectionFailed = TRUE;
-  // / Log the result of the inspection of this single file.
-  if ($Verbose) logEntry('Stream File Inspection Result: '.($InspectionFailed ? 'FAILED' : 'PASSED').', Layer: '.$CurrentLayer.', URIs Found: '.count($StreamURIs).', Domains: '.$DomainCount.', IPs: '.$IPCount.', Contains LAN: '.($StreamContainsLAN ? 'TRUE' : 'FALSE').', Contains IP: '.($StreamContainsIP ? 'TRUE' : 'FALSE').', Contains Domain: '.($StreamContainsDomain ? 'TRUE' : 'FALSE').', Contains HTTP: '.($StreamContainsHTTP ? 'TRUE' : 'FALSE').', Content Mismatch: '.($ContentMismatch ? 'TRUE' : 'FALSE').', Content Unknown: '.($ContentUnknown ? 'TRUE' : 'FALSE').'.');
+  // / A LAN reference in an uploaded stream file is always worth an operator seeing.
+  if ($StreamContainsLAN) warningEntry('Stream File '.$StreamFile.' references a private, reserved or loopback address.');
+  // / Content that disagrees with its own extension is the shape of a disguised file.
+  if ($ContentMismatch) warningEntry('Stream File '.$StreamFile.' content does not match its file extension.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $streamFileContents = $DomainMatches = $IPMatches = $streamLineMatches = $RawURI = $extensionAllowed = NULL;
   unset($streamFileContents, $DomainMatches, $IPMatches, $streamLineMatches, $RawURI, $extensionAllowed);
@@ -2255,7 +2456,11 @@ function streamFileWalker($StreamFile) {
   $TotalBudget = $StreamInspectionLayers * $StreamInspectionFilesPerLayer;
   // / Layer 0 is the user's uploaded file. It has no SourceURL because nobody fetched it.
   $currentLayerFiles[] = array('LocalPath' => $StreamFile, 'SourceURL' => '');
-  if ($Verbose) logEntry('Beginning Stream Walk on '.$StreamFile.'. Layer budget: '.$LayerBudget.', Files per layer: '.$StreamInspectionFilesPerLayer.', Total connection budget: '.$TotalBudget.'.');
+  // / A denied walk is always visible. A clean walk is only visible under verbose logging.
+  // / An operator needs to know a stream file was refused without turning verbose logging on.
+  // / The refusal is not a failure of HRConvert2 & may be an ordinary file with relative URIs.
+  if ($InspectionFailed) warningEntry('Stream Walk Result: DENIED, Layers Walked: '.$currentLayer.', Files Downloaded: '.$FileNumber.', URIs Examined: '.count($AllStreamURIs).', Unique URLs Seen: '.count($SeenURLs).', Budget Exhausted: '.($StreamBudgetExhausted ? 'TRUE' : 'FALSE').', Reason: '.($HaltReason === '' ? 'NONE' : $HaltReason).'.');
+  else if ($Verbose) logEntry('Stream Walk Result: ALLOWED, Layers Walked: '.$currentLayer.', Files Downloaded: '.$FileNumber.', URIs Examined: '.count($AllStreamURIs).', Unique URLs Seen: '.count($SeenURLs).'.');
   // / Walk one whole layer at a time until we run out of layers, work, or patience.
   while (!$Halt && !empty($currentLayerFiles) && $LayerBudget > 0) {
     $FileBudget = $StreamInspectionFilesPerLayer;

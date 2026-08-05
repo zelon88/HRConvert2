@@ -19,12 +19,135 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ... 
-This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia,
-Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, Rar,
-Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
-
+This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, bwrap,
+Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD,
+Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
 <3 Open-Source
 -----------------------------------------------------------------------------------
+
+
+--------------------
+COMMIT 8/5/2026
+v3.5.6 - Isolate OpenSCAD renders at the operating system level. Replace the source filter with a stateful scanner. Add a warning log tier.
+
+-v3.5.6.
+
+-Credit goes out to the following Github users for reporting security advisories regarding HRConvert2.
+
+
+  - L0stHeart  |  https://github.com/L0stHeart
+
+    -L0stHeart reported 4 separate vulnerabilities.
+      -GHSA-cwc2-f9j8-x8m2 - https://github.com/zelon88/HRConvert2/security/advisories/GHSA-cwc2-f9j8-x8m2
+      -GHSA-qj74-5h4j-f368 - https://github.com/zelon88/HRConvert2/security/advisories/GHSA-qj74-5h4j-f368
+      -GHSA-wg57-wvw2-9cj8 - https://github.com/zelon88/HRConvert2/security/advisories/GHSA-wg57-wvw2-9cj8
+      -GHSA-f74g-4wj8-j35h - https://github.com/zelon88/HRConvert2/security/advisories/GHSA-f74g-4wj8-j35h
+    -The vulnerabilities reported by L0stHeart resulted in improvements to the following areas;
+      -Token & SesHash generation, salt removal & secret implementation, cleanFiles bug fixes, log storage config changes.
+    -Thank you for putting time and effort into HRConvert2.
+    -These advisories were very comprehensive, and represent a significant amount of work across the entirety of the codebase.
+    -Sorry for coming off a little strong at first. I initially thought you were someone else.
+
+  - Saudadeeee  |  https://github.com/Saudadeeee
+
+    -Saudadeeee reported 4 separate vulnerabilities.
+    -GHSA-qcq3-837w-2c9c - https://github.com/zelon88/HRConvert2/security/advisories/GHSA-qcq3-837w-2c9c
+    -The vulnerabilities reported by Suadadeeee resulted in improvements to the following areas;
+      -OpenSCAD file conversions, SCAD sanitization, SCAD operation sandboxing, & bug fixes.
+    -Thank you for puttine time and effort into HRConvert2.
+    -Your advisory was especially well decribed and thorough. It also came through less than 24 hours after the code was released.
+
+-Hardened OpenSCAD sanitization routine.
+
+-Fix unauthenticated arbitrary file read through OpenSCAD conversions.
+  -Reported by Saudadeeee, with a working exploit against a live instance.
+  -OpenSCAD reads any file the web server user can read & provides no sandbox of its own.
+  -Unlike FFMPEG it cannot be given one through its arguments.
+  -HRConvert2 relied on filtering the uploaded source & documented that filter as the boundary.
+  -The filter read source one line at a time & held no lexer state.
+  -OpenSCAD carries state across lines, so the two disagreed about some input.
+  -A block comment closed part way through a line was inert to the filter & live code to OpenSCAD.
+  -A statement whose name & bracket sat on different lines matched no filter pattern at all.
+  -The filter did not register those cases as references at all, so no setting mitigated them.
+  -The reporter noted that patching only the comment case would leave three others open. Correct.
+  -The reporter recommended operating system isolation over a better filter. Also correct.
+-Add verifyBwrap().
+  -Launches a real minimal sandbox rather than checking that the bwrap binary exists.
+  -Bubblewrap can be installed & still non functional where user namespaces are restricted.
+  -A server that cannot isolate a render now refuses to render at all.
+  -There is deliberately no fallback to source filtering, because source filtering does not hold.
+-Rework convertSCAD() to render inside a bubblewrap namespace.
+  -The session ScadTemp directory is the only path from the data tree that exists inside it.
+  -Nothing else on the disk is visible, so nothing else can be read.
+  -The network namespace is unshared, closing any OpenSCAD build whose import() accepts a URL.
+  -The render writes inside the sandbox & the finished model is moved out afterwards.
+  -Renders remain niced to the lowest priority & remain bounded by the conversion timeout.
+-Replace the source filter with sanitizeSCAD(), a stateful character scanner.
+  -The source is walked once, carrying line comment, block comment & string state.
+  -One pass is required rather than two, because whichever delimiter appears first wins.
+  -A line comment containing block comment characters does not open a block comment.
+  -A block comment containing line comment characters does not open a line comment.
+  -A keyword counts as a call only when the character before it is not part of an identifier.
+  -That stops house_width, diffuser_height & include_lid from being reported as references.
+  -A keyword counts as a call only when the next meaningful character is ( or <.
+  -Whitespace & newlines are skipped, so a call split across any number of lines is found.
+  -There is no line pairing & no fixed window, so an attacker cannot escape by adding newlines.
+-Fix a fifth bypass reported against the new scanner before release.
+  -Reported by Saudadeeee, again with confirmed reads against OpenSCAD 2021.01.
+  -A comment placed between a keyword & its opening bracket slipped through.
+  -surface/**/("file") is a live call because OpenSCAD treats a comment as a token separator.
+  -The lookahead skipped spaces, tabs & newlines but stopped at the first character of a comment.
+  -A comment is a TERMINATOR in the main scan loop & a SEPARATOR in the lookahead.
+  -Those are different rules for the same construct & the earlier code applied only the first.
+  -Comments are now skipped in the lookahead & again while reading the reference itself.
+  -surface(/*x*/"file") is also handled, so a comment cannot hide the path from the resolver.
+  -The reporter also confirmed include/**/<file> is a parser error in OpenSCAD & not exploitable.
+-Rename the source rewriting function to rectifySCAD().
+  -The function rewrites source. It does not validate it & never did.
+  -sanitizeSCAD() now names the scanner, which is the function that actually inspects.
+  -Neither function is described as a security boundary anywhere in the codebase.
+  -The previous header claimed the filter was the only thing standing between an upload & the filesystem.
+  -That claim was false & has been replaced with a description of what the code actually does.
+-Rewrite whole lines rather than editing references in place.
+  -Editing in place would require reproducing where OpenSCAD considers a statement to end.
+  -That is the class of problem this design exists to avoid.
+  -A commented out line is coarser & is impossible to get subtly wrong.
+-Add warningEntry().
+  -A warning starts with WARNING!!! & is written regardless of Enhanced Logging Verbosity.
+  -A warning is something the administrator should know is happening.
+  -A warning does not necessarily mean anything needs to change.
+  -A warning carries no error number because it does not represent a failure of HRConvert2.
+  -A warning can never halt execution of anything.
+  -Op-Act reports normal activity. WARNING!!! reports discretion advised. ERROR!!! reports numbered errors.
+-Promote four events from verbose logging to warnings.
+  -An OpenSCAD source with file references removed.
+  -A stream walk that denied a file, including the reason it stopped.
+  -A stream file referencing a private, reserved or loopback address.
+  -A stream file whose content does not match its own extension.
+  -These were previously invisible on any server running with verbose logging disabled.
+  -An operator could not distinguish a blocked attack from an ordinary conversion failure.
+-Fix error 27004 firing on every successful conversion.
+  -The recursive delete routine removes an emptied directory along with its contents.
+  -The check that followed treated that absence as a failure rather than a success.
+-Add error 27007 for a missing or non functional sandbox.
+-Add error 27008 for a rendered model that could not be moved out of the sandbox.
+-Add bubblewrap to the dependency list.
+-Add an AppArmor profile & verification steps to INSTALLATION_INSTRUCTIONS.txt.
+  -Installing the package is not sufficient on releases that restrict user namespaces.
+  -A server may report kernel.unprivileged_userns_clone = 1 & still deny bubblewrap outright.
+  -The restriction is enforced by AppArmor & is separate from the kernel sysctls.
+-Tested sandbox isolation directly. Listing /etc from inside reports that /etc does not exist.
+-Tested with both originally reported payloads. Both DETECTED by the scanner & both refused by the sandbox.
+-Tested with the comment separator payloads. All four DETECTED after the lookahead fix.
+-Tested with a two file assembly using a relative include. Resolved correctly & rendered complete.
+-Tested with a thirty file real world assembly. Rendered successfully with no false positives.
+-Tested with keyword shaped identifiers. include_lid, house_width & diffuser_height are not reported.
+-Tested with keywords inside strings & inside both comment forms. Not reported, as intended.
+-Tested four concurrent uploads & conversions in one session. Handled correctly & independently.
+-Updated dependencies, added OpenSCAD & bwrap.
+-Update Installation_Instructions.txt to reflect the OpenSCAD & bubblewrap setup process.
+  -Update PHP install procedure.
+  -Update default PHP config settings.
 
 --------------------
 COMMIT 8/4/2026

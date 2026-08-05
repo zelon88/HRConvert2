@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/32026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/3/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.5.4.
+v3.5.6.
 This plain text file contains descriptions of all the native error messages contained in or produced by the HRConvert2 Diablo engine. 
 These descriptions should give administrators a starting point for debugging problems with HRConvert2 installations. 
 Each section in this file contains information about a different error message. The first one is an example to demonstrate the structure of this file.
@@ -21,10 +21,9 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ... 
-This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia,
-Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, Rar,
-Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
-
+This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, bwrap,
+Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD,
+Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
 ADDITIONAL INFORMATION
 HRConvert2 logs information about it's operational activity to the Logs subdirectory where HRConvert2 is installed by default.
 The default logging directory can be adjusted by modifying the --Log Storage Directory-- section of the config.php file. 
@@ -2457,7 +2456,6 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  NOTE. This message replaces the previous 21000 message, 'The stream converter timed out!'.
   Stream conversions are now launched in the background so the user can be served immediately.
   A backgrounded process cannot time out during the request, so that condition no longer exists here.
   A stream that runs too long is now terminated by the stream supervisor after --Stream Duration Timeout--.
@@ -2720,6 +2718,95 @@ ERROR DESCRIPTION
   One or more sources may have failed to read or failed to write, and those failures are reported separately.
   The ScadTemp directory inside the user session directory may be missing or may not be writable.
   Consult error 27001 and error 27006 in the log for the specific file that failed.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27003, <SESSION_IDENTIFIER>: The OpenSCAD converter failed with exit code <ADDITIONAL_DATA>!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  OpenSCAD ran but exited with a failure status and produced no usable output.
+  The source may contain a syntax error, or may reference a variable or module that does not exist.
+  The source may reference an include which HRConvert2 removed, leaving the remaining code unable to render.
+  The source may reference a file outside the sandbox, which does not exist from inside it.
+  A reference to any path on the server other than the session directory will fail this way & that is intended.
+  The requested export format may be one this OpenSCAD build was not compiled to support.
+  The source may produce two dimensional geometry, which cannot be exported to a three dimensional format.
+  OpenSCAD standard output and standard error are deliberately discarded and never written to the log.
+  A failed parse quotes the offending line, which would turn the log into a file exfiltration channel.
+  Only the exit code is recorded, because an exit code cannot carry the contents of a file.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27007, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so OpenSCAD renders cannot be isolated!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  HRConvert2 could not create the sandbox that every OpenSCAD render is required to run inside.
+  OpenSCAD reads any file the web server user can read & provides no sandbox of its own.
+  It also cannot be given one through its arguments, the way FFMPEG accepts a protocol whitelist.
+  HRConvert2 previously filtered the source instead & that approach was reported as bypassable.
+  A filter that inspects one line at a time cannot agree with a parser that carries state across lines.
+  A block comment closed part way through a line is inert to the filter & live code to OpenSCAD.
+  A statement whose name & opening bracket sit on different lines matches no filter pattern at all.
+  Both were confirmed working bypasses, so filtering is no longer treated as a boundary.
+  Scad conversions are now refused outright when the sandbox cannot be created.
+  There is deliberately no fallback to filtering alone, because filtering alone does not hold.
+  Install bubblewrap on the server with 'apt install bubblewrap' to resolve this error.
+  Bubblewrap may also be installed but non functional on this system.
+  Unprivileged user namespaces can be disabled at the kernel level on some hardened systems.
+  Check the setting by running 'sysctl kernel.unprivileged_userns_clone' on the server.
+  Some container runtimes also block the namespaces bubblewrap requires.
+  Running HRConvert2 inside Docker may require adding the SYS_ADMIN capability, or a seccomp profile that permits unshare.
+  Verify the sandbox works by running the following as the web server user, which must exit silently.
+  bwrap --unshare-all --ro-bind /usr /usr --proc /proc --dev /dev --tmpfs /tmp /usr/bin/true
+  Set the Allowed Conversion Types configuration entry to exclude Scad if this server cannot support the sandbox.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27008, <SESSION_IDENTIFIER>: Could not move the rendered OpenSCAD model out of the sandbox!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The render completed & produced a file, but that file could not be moved to its final location.
+  The sandbox cannot see the real output location, so every render writes inside the session ScadTemp directory first.
+  The finished model is then moved out from outside the sandbox, where the real location is visible.
+  The www-data:www-data user:group needs write access to the user session directory.
+  This may be the result of incorrect file permission levels on the data location.
+  The disk or the partition holding the data storage directory may be full.
+  A file may already exist at the destination & may be locked by another process.
+  The rendered model is left inside the ScadTemp directory when this happens.
+  It is removed by the sanitized source cleanup that runs immediately afterwards.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 

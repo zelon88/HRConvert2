@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.l
 // /
 // / FILE INFORMATION ...
-// / v3.5.5.
+// / v3.5.6.
 // / This file contains the current HRConvert2 version for update verification purposes.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -30,6 +30,6 @@
 
 // / -----------------------------------------------------------------------------------
 // / The version of this HRConvert2 installation.
-$Version = 'v3.5.5';
+$Version = 'v3.5.6';
 $Version = ltrim($Version, 'vV');
 // / -----------------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 5/17/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/5/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.4.4.
+v3.5.6.
 This file contains a walkthrough guide for installing HRConvert2.
 
 HARDWARE REQUIREMENTS ... 
@@ -19,10 +19,9 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ... 
-This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia,
-Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, Rar,
-Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
-
+This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, bwrap,
+Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD,
+Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
@@ -80,22 +79,27 @@ Then we will install and configure PHP and required plugins.
 
 1. Run  'sudo apt-get install featherpad'
 2. Run  'sudo apt-get install php libapache2-mod-php && sudo apt-get install php-all-dev'
-3. Run  'sudo apt-get install php8.0-zip && sudo apt-get install php8.0-gd'
-4. (Optional) To install the MySQL PHP plugin (to use with other applications) run 'sudo apt-get install php-mysql'
-5. Adjust the directory in the following command to reflect your version of PHP, then run  'sudo featherpad /etc/php/8.0/apache2/php.ini'
-6. Use Featherpad to search for the following lines in the  'php.ini'  file and adjust the values to match the ones displayed below.
-  max_execution_time = 90
+3. Run  'php -v'  and note the PHP version number reported, for example 8.3.
+  3a. Adjust every path listed below to match the PHP version you installed. For example 8.3.
+  3b. NOTE: Ubuntu 24.04 installs PHP 8.3. Ubuntu 22.04 installs PHP 8.1. Ubuntu 26.04 installs PHP 8.5.
+4. Run  'sudo apt-get install php8.3-zip && sudo apt-get install php8.3-gd'
+5. Run  'sudo featherpad /etc/php/8.3/apache2/php.ini'
+6. Use Featherpad to search for the following lines in the 'php.ini' file and adjust the values to match the ones displayed below.
+  max_execution_time = 1200
+    ;This must exceed the Stream Duration Timeout in config.php, which defaults to 15 minutes.
+    ;HRConvert2 holds a PHP worker for the full duration of a backgrounded stream conversion.
+    ;A value below that leaves FFMPEG running with nothing left to terminate it.
   max_input_time = 90
   memory_limit = 512M
     ;Use 256 - 384M for Raspberry Pis.
-  display_errors = On
-    ;Leave display errors = Off if you're not debugging HRConvert2 youself.
-  post_max_size = 3000M
-  upload_max_filesize = 3000M
+  display_errors = Off
+    ;Set display_errors = On only when debugging HRConvert2 yourself.
+  post_max_size = 5000M
+  upload_max_filesize = 5000M
   max_file_uploads = 100
   zlib.output_compression = On
-7. Save the modified 'php.ini' file and close Featherpad.
-8. Run  'sudo service apache2 restart'
+6. Save the modified 'php.ini' file and close Featherpad.
+7. Run  'sudo service apache2 restart'
 -----------------------------------------------------------------------------------
 
 
@@ -107,7 +111,7 @@ In this step we will install dependencies to enable most common file conversions
 3. Run  'sudo apt-get install clamav && sudo apt-get install unoconv && sudo apt-get install default-jre'
 4. Run  'sudo apt-get install rar && sudo apt-get install unrar && sudo apt-get install p7zip-rar'
 5. Run  'sudo apt-get install imagemagick && sudo apt-get install tesseract-ocr'
-6. Run  'sudo apt-get install meshlab && sudo apt-get install dia && sudo apt-get install pandoc && sudo apt-get install mkisofs'
+6. Run  'sudo apt-get install meshlab && sudo apt-get install dia && sudo apt-get install bubblewrap && sudo apt-get install pandoc && sudo apt-get install mkisofs'
 7. Run  'sudo apt-get install poppler-utils && sudo apt-get install nodejs && sudo apt-get install gnuplot && sudo apt-get install libgxps-utils && sudo apt-get install xvfb'
 8. Run  'sudo featherpad /etc/ImageMagick-6/policy.xml'
 9. Search for the following line in the  'policy.xml'  file and adjust the value to match the one displayed below.
@@ -130,7 +134,38 @@ In this step we will install dependencies to enable most common file conversions
 -----------------------------------------------------------------------------------
 
 
------STEP 4 - INSTALL ADVANCED FEATURE DEPENDENCIES-----
+-----STEP 4 - CONFIGURE THE OPENSCAD SANDBOX-----
+In this step we will permit HRConvert2 to isolate OpenSCAD renders from the rest of the server.
+OpenSCAD reads any file the web server user can read and provides no sandbox of its own.
+Unlike FFMPEG it cannot be given one through its arguments.
+HRConvert2 therefore renders every model inside a Bubblewrap namespace whose only visible
+path is that session's own working directory.
+Bubblewrap is required. There is no fallback and Scad conversions are refused without it.
+1. Run  'ls /etc/apparmor.d/abi/'  and note the highest numbered file present.
+2. Run  'sudo featherpad /etc/apparmor.d/bwrap'
+3. Enter the following into the file, replacing 4.0 with the number noted in step 1.
+  abi <abi/4.0>,
+
+  include <tunables/global>
+
+  profile bwrap /usr/bin/bwrap flags=(unconfined) {
+    userns,
+    include if exists <local/bwrap>
+  }
+4. Save the file and close Featherpad.
+5. Run  'sudo apparmor_parser -r /etc/apparmor.d/bwrap'
+  5a. No output means the profile loaded successfully. It will survive a reboot.
+6. Verify the sandbox works as the web server user by running the following on one line.
+  'sudo -u www-data bwrap --unshare-all --ro-bind /usr /usr --proc /proc --dev /dev --tmpfs /tmp /usr/bin/true ; echo "exit: $?"'
+  6a. An exit code of 0 with no other output means Scad conversions will work.
+  6b. Any other result means Scad conversions will be refused with error 27007.
+  6c. See ERROR_DESCRIPTIONS.txt for what to check next.
+7. To run HRConvert2 without OpenSCAD support, remove 'Scad' from the Allowed Conversion Types
+   entry in the 'config.php' file. Every other conversion type is unaffected.
+-----------------------------------------------------------------------------------
+
+
+-----STEP 5 - INSTALL ADVANCED FEATURE DEPENDENCIES-----
 In this step we will build dependencies from source to enable advanced file conversions.
 
 1. Run  'cd /home/USERNAME/Desktop/Temp/Documentation/Build'
@@ -140,7 +175,7 @@ In this step we will build dependencies from source to enable advanced file conv
 -----------------------------------------------------------------------------------
 
 
------STEP 5 - INSTALL HRCONVERT2-----
+-----STEP 6 - INSTALL HRCONVERT2-----
 In this step we will install the HRConvert2 files configured earlier.
 
 1. Run  'sudo mkdir /var/www/html/HRProprietary'
@@ -155,7 +190,7 @@ In this step we will install the HRConvert2 files configured earlier.
 -----------------------------------------------------------------------------------
 
 
------STEP 6 - VISIT YOUR CONVERTER!!!-----
+-----STEP 7 - VISIT YOUR CONVERTER!!!-----
 In this step we visit the converter using a browser for the first time.
 
 Go to 'http://YOUR-IP-OR-HOSTNAME/HRProprietary/HRConvert2/convertCore.php' to view your Converter! 
@@ -164,7 +199,7 @@ The server will only be available on LAN networks unless additional firewall, ro
 -----------------------------------------------------------------------------------
 
 
------STEP 7 - CONFIGURE STATIC IP, PORT FORWARDING, & FIREWALL EXCEPTIONS ON YOUR ROUTER-----
+-----STEP 8 - CONFIGURE STATIC IP, PORT FORWARDING, & FIREWALL EXCEPTIONS ON YOUR ROUTER-----
 In this step we will configure a router to route traffic to the HRConvert2 server.
 
 1. Maybe just one more cup of coffee.
@@ -194,5 +229,7 @@ In this step we will configure a router to route traffic to the HRConvert2 serve
   8a. Administrators are responsible for monitoring and maintaining locally installed dependencies for updates.
 9. HRConvert2 is designed to be run on a dedicated server.
 10. HRConvert2 will only be available on LAN networks unless a Static IP and port forwarding are configured.
-11. Psst... Hey... You look like you could use a cup of coffee.....
+11. When performing Stream Conversions, HRConvert2 must hold a PHP worker & an FFMPEG worker for the duration of a users stream.
+12. If your server needs to handle many concurrent streams at once, consider bumping the pm.max_children variable in php.ini.
+12. Psst... Hey... You look like you could use a cup of coffee.....
 -----------------------------------------------------------------------------------

@@ -23,10 +23,9 @@
 // / This application will run on just about any x86 or x64 computer.
 // /
 // / DEPENDENCY REQUIREMENTS ... 
-// / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia,
-// / Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, Rar,
-// / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
-// /
+// / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, bwrap,
+// / Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD,
+// / Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.// /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
 
@@ -421,7 +420,7 @@ $DeleteThreshold = 60;
 // /   If set to FALSE only errors & certain core events will be logged.
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
-$Verbose = TRUE;
+$Verbose = FALSE;
 // /  --Maximum Log File Size--
 // /   Set the number of bytes to store in each logfile before splitting to a new one.
 // /  Default is 1048576.

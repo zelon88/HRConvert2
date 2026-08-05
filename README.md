@@ -3,7 +3,7 @@
 -----------------------------------------------
 # HRConvert2
 
-### A self-hosted drag-and-drop file conversion server & file sharing tool that supports 445 file formats with highly customizable GUI & 13 end-user selectable languages. 
+### A self-hosted drag-and-drop file conversion server & file sharing tool that supports 445 file formats with highly customizable GUI & 17 end-user selectable languages. 
 
 ![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/new-webui.png)
 ![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/new-webui2.png)
@@ -19,7 +19,7 @@
 - Allows users to generate temporary links for sharing files.
 - Minimalistic drag & drop interface.
 - Each user gets their own temporary scratch space!
-- End users can switch between 13 languages by appending it to the URL like this: `?language=en`
+- End users can switch between 17 languages by appending it to the URL like this: `?language=en`
 - End users can switch between 3 GUI environments by appending it to the URL like this: `?gui=Original`
 - End users can switch between 4 color schemes (on supported GUIs) by appending it to the URL like this: `?color=green`
 - Safe enough for public facing environments (when properly implemented).
@@ -176,6 +176,10 @@ Developers can craft links or redirects to load the correct language for each us
 - Korean (ko)
 - Italian (it)
 - Portuguese (pt)
+- Japanese (ja)
+- Indonesian (id)
+- Turkish (tr)
+- Vietnamese (vi)
 
 ---
 # Screenshots

@@ -370,8 +370,8 @@ $AllowUserSelectableGui = TRUE;
 // /   The list of languages that are supported by this application.
 // /   Before adding a supported language be sure to add the matching folder full of GUI files to /Languages.
 // /   Errors will occur if you add an element to this array without also adding a matching Language folder.
-// /   Default is 'en', 'fr', 'es', 'zh', 'hi', 'ar', 'ru', 'uk', 'bn', 'de', 'ko', 'it', 'pt', 'vi', 'tr', 'ja', 'id'.
-$SupportedLanguages = array('en', 'fr', 'es', 'zh', 'hi', 'ar', 'ru', 'uk', 'bn', 'de', 'ko', 'it', 'pt', 'vi', 'tr', 'ja', 'id');
+// /   Default is 'en', 'fr', 'es', 'zh', 'hi', 'ar', 'ru', 'uk', 'bn', 'de', 'ko', 'it', 'pt', 'vi', 'tr', 'ja', 'id', 'pl', 'nl', 'sw', 'my', 'ur', 'fa', 'he', 'aii', 'arc'.
+$SupportedLanguages = array('en', 'fr', 'es', 'zh', 'hi', 'ar', 'ru', 'uk', 'bn', 'de', 'ko', 'it', 'pt', 'vi', 'tr', 'ja', 'id', 'pl', 'nl', 'sw', 'my', 'ur', 'fa', 'he', 'aii', 'arc');
 // /  --Default Language--
 // /   The default language to use for GUI elements.
 // /   See README.md for the latest language support information.
@@ -446,8 +446,8 @@ $AllowUserSelectableColor = TRUE;
 // /   The list of colors that are supported by this application.
 // /   Before adding a supported color be sure to add the matching $ButtonStyle code to styleCore.php for each insalled GUI.
 // /   Errors will occur if you add an element to this array without also adding code to each GUI to support the added color.
-// /   Default is 'red', 'green', 'blue', 'grey'.
-$SupportedColors = array('red', 'green', 'blue', 'grey');
+// /   Default is 'red', 'green', 'blue', 'grey', 'orange', 'purple', 'dark'.
+$SupportedColors = array('red', 'green', 'blue', 'grey', 'orange', 'purple', 'dark');
 // /  --Button Color--
 // /   Set the default color scheme to use for buttons.
 // /   Valid options are 'RED', 'GREEN', 'BLUE' or 'GREY'.

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/4/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/5/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.5.5.
+v3.5.8.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -25,6 +25,27 @@ Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+
+--------------------
+COMMIT 8/5/2026
+v3.5.8 - Add language packs, update GUI.
+
+-v3.5.8.
+-Added "Verified logging environment." success message to core.
+-Gate the "Closing Connection." log messages behind $Verbose.
+-Added 3 new color schemes to all 3 GUIs.
+  -Orange.
+  -Purple.
+  -Dark.
+-Added 8 language packs to all 3 GUIs.
+  -Polish (pl)
+  -Dutch (nl)
+  -Swahili (sw)
+  -Burmese (my)
+  -Hebrew (he)
+  -Aramaic (Classical/Standard, arc)
+  -Assyrian Neo-Aramaic / Modern Aramaic (aii)
+  -Persian / Farsi (fa)Urdu (ur)
 
 --------------------
 COMMIT 8/5/2026

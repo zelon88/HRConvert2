@@ -113,7 +113,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <option value='<?php echo $gui2ArchArr; ?>'><?php echo $gui2ArchArr; ?></option>
           <?php } ?>
         </select>
-        <input type='submit' id='archallSubmit' name='archallSubmit' class='info-button' value='<?php echo $Gui2Text19; ?>' onclick='toggle_visibility("loadingCommandDiv");'>';
+        <input type='submit' id='archallSubmit' name='archallSubmit' class='info-button' value='<?php echo $Gui2Text19; ?>' onclick='toggle_visibility("loadingCommandDiv");'>
         <script type='text/javascript'>
           $(document).ready(function () {
             $('#archallSubmit').click(function() {
@@ -430,8 +430,8 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <p style="max-width:500px;"></p>
           <p><strong><?php echo $Gui2Text23; ?></strong></p>
           <p id='sharelinkStatus<?php echo $ConvertGuiCounter1; ?>' name='sharelinkStatus<?php echo $ConvertGuiCounter1; ?>'><?php echo $Gui2Text24; ?><i><?php echo $Gui2Text25; ?></i></p>
-          <p id='shareclipStatus<?php echo $ConvertGuiCounter1; ?>' name='shareclipStatus<?php echo $ConvertGuiCounter1; ?>'>Clipboard Status: <i>Not Copied</i></p>
-          <p id='sharelinkURL<?php echo $ConvertGuiCounter1; ?>' name='sharelinkURL<?php echo $ConvertGuiCounter1; ?>'>File Link: <i>Not Generated</i></p>
+          <p id='shareclipStatus<?php echo $ConvertGuiCounter1; ?>' name='shareclipStatus<?php echo $ConvertGuiCounter1; ?>'><?php echo $Gui2Text27; ?><i><?php echo $Gui2Text25; ?></i></p>
+          <p id='sharelinkURL<?php echo $ConvertGuiCounter1; ?>' name='sharelinkURL<?php echo $ConvertGuiCounter1; ?>'><?php echo $Gui2Text29; ?><i><?php echo $Gui2Text25; ?></i></p>
           <input type="submit" id="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" name="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text32; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <input type="submit" id="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" name="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text33; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
@@ -1378,14 +1378,13 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                                 toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
                               alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
           </script>
+          </div>
         <?php } ?>
-      </div>
-    <div style="border-top: 1px solid #aaaaaa; "><div>
-    
-     
+
+        <div style="border-top: 1px solid #aaaaaa; "></div>
       <?php } ?>
     </div>
-</div>
+  </div>
     <?php
     // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
     $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2XpsArr = NULL;

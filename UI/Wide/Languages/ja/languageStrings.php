@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/3/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/6/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,17 +12,22 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.5.4.
+// / v3.5.7.
 // / This file contains language specific GUI related text for performing file conversions.
+// / This file contains the Japanese (ja) language strings.
+// / Japanese does not inflect nouns for number, so the plural helper strings are empty.
+// / This file must be saved as UTF-8 without a byte order mark.
+// / A byte order mark emits three bytes before any output & will break header delivery.
 // /
 // / HARDWARE REQUIREMENTS ...
 // / This application requires at least a Raspberry Pi Model B+ or greater.
 // / This application will run on just about any x86 or x64 computer.
 // /
 // / DEPENDENCY REQUIREMENTS ...
-// / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, bwrap,
-// / Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD,
-// / Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
+// / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia,
+// / Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, Rar,
+// / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, xvfb-run,
+// / OpenSCAD & Bubblewrap.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -35,7 +40,7 @@ $GUIDirection = 'ltr';
 // / Set the side of the page to float elements to.
 $GUIAlignment = 'left';
 // / Define an error message to display for if the core has not been loaded.
-$CoreError = 'ERROR!!! HRConvert2-2, 该文件无法处理您的请求！ 请将您的文件提交到convertCore.php！';
+$CoreError = 'ERROR!!! HRConvert2-2, このファイルはリクエストを処理できません。ファイルは convertCore.php に送信してください。';
 // / Check if the core is loaded.
 if (!isset($CoreLoaded)) die($CoreError);
 // / -----------------------------------------------------------------------------------
@@ -44,258 +49,272 @@ if (!isset($CoreLoaded)) die($CoreError);
 // / Check for required core variables.
 if (!isset($Font)) $Font = 'Arial';
 if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
-if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
-if (!isset($ApplicationTitle)) $ApplicationTitle = '转换任何东西！';
+if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2';
+if (!isset($ApplicationTitle)) $ApplicationTitle = 'なんでも変換！';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / Set GUI Related Logic.
-if (!is_numeric($FileCount)) $FileCount = '未知数量的';
+// / Japanese does not inflect nouns for number, so both plural helpers stay empty.
+// / The sentences that use them are written so they read correctly for any count.
+if (!is_numeric($FileCount)) $FileCount = '不明な数';
 $FCPlural1 = '';
+$FCPlural2 = '';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / Set GUI - Header Related Variables.
 // / 'Click, Tap, or Drop files here to upload.'
-$GuiHeaderText1 = '单击、点按或将文件拖放到此处即可上传。';
+$GuiHeaderText1 = 'クリック、タップ、またはファイルをここにドロップしてアップロードします。';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / Set GUI - 1 Related Variables.
-// / Online File Converter, Extractor, Compressor'
-$Gui1Text1 = '在线文件转换器、提取器、压缩器';
-// / $ApplicationName.' is based off the open-source web-app <a href=\'https://github.com/zelon88/HRConvert2\'>HRConvert2</a> by <a href=\'https://github.com/zelon88\'>Zelon88</a> that converts files without tracking users across the net or infringing on your intellectual property.'
-$Gui1Text2 = $ApplicationName.' 基于 <a href=\'https://github.com 开发的开源网络应用 <a href=\'https://github.com/zelon88/HRConvert2\'>HRConvert2</a> /zelon88\'>Zelon88</a> 转换文件时不会跟踪网络上的用户或侵犯您的知识产权。';
+// / 'Online File Converter, Extractor, Compressor'
+$Gui1Text1 = 'オンラインファイル変換・展開・圧縮ツール';
+// / $ApplicationName.' is based off the open-source web-app HRConvert2 by Zelon88 that converts files without tracking users across the net or infringing on your intellectual property.'
+$Gui1Text2 = $ApplicationName.' は、<a href=\'https://github.com/zelon88/HRConvert2\'>HRConvert2</a>（作者 <a href=\'https://github.com/zelon88\'>Zelon88</a>）をベースにしたオープンソースのウェブアプリです。ユーザーを追跡することも、知的財産を侵害することもなくファイルを変換します。';
 // / 'More Info ...'
-$Gui1Text3 = '更多信息 ...';
+$Gui1Text3 = '詳細を表示 ...';
 // / 'Less Info ...'
-$Gui1Text4 = '信息较少...';
+$Gui1Text4 = '詳細を隠す ...';
 // / 'All user-supplied data is erased automatically, so you don\'t need to worry about forfeiting your personal information or property while using our services.'
-$Gui1Text5 = '所有用户提供的数据都会自动删除，因此您在使用我们的服务时无需担心丢失您的个人信息或财产。';
+$Gui1Text5 = 'ユーザーが送信したデータはすべて自動的に削除されます。本サービスの利用にあたり、個人情報や所有物を手放す心配はありません。';
 // / 'Currently '.$ApplicationName.' supports '.$SupportedFormatCount.' different file formats, including documents, spreadsheets, images, media, 3D models, CAD drawings, vector files, archives, disk images, & more.'
-$Gui1Text6 = '当前为“.$ApplicationName”。 支持“.$SupportedFormatCount”。 不同的文件格式，包括文档、电子表格、图像、媒体、3D 模型、CAD 绘图、矢量文件、档案、磁盘映像等。';
+$Gui1Text6 = '現在 '.$ApplicationName.' は '.$SupportedFormatCount.' 種類のファイル形式に対応しています。文書、表計算、画像、メディア、3D モデル、CAD 図面、ベクター、アーカイブ、ディスクイメージなどが含まれます。';
 // / 'View Supported Formats ...'
-$Gui1Text7 = '查看支持的格式...';
+$Gui1Text7 = '対応形式を表示 ...';
 // / 'Hide Supported Formats ...'
-$Gui1Text8 = '隐藏支持的格式...';
+$Gui1Text8 = '対応形式を隠す ...';
 // / 'Supported Formats'
-$Gui1Text9 = '支持的格式';
+$Gui1Text9 = '対応形式';
 // / 'Audio Formats'
-$Gui1Text10 = '音频格式';
+$Gui1Text10 = '音声形式';
 // / 'Supports specific bitrate.'
-$Gui1Text11 = '支持特定比特率。';
+$Gui1Text11 = 'ビットレートの指定に対応しています。';
 // / 'Video Formats'
-$Gui1Text12 = '视频格式';
+$Gui1Text12 = '動画形式';
 // / 'Stream Formats'
-$Gui1Text13 = '流格式';
+$Gui1Text13 = 'ストリーム形式';
 // / 'Document Formats'
-$Gui1Text14 = '文档格式';
+$Gui1Text14 = '文書形式';
 // / 'Spreadsheet Formats'
-$Gui1Text15 = '电子表格格式';
+$Gui1Text15 = '表計算形式';
 // / 'Presentation Formats'
-$Gui1Text16 = '演示格式';
+$Gui1Text16 = 'プレゼンテーション形式';
 // / 'Archive Formats'
-$Gui1Text17 = 'Archive Formats';
-// / 'Can convert between archive formats & disk image formats.'
-$Gui1Text18 = '可以在选择的存档格式和磁盘映像格式之间进行转换。';
+$Gui1Text17 = 'アーカイブ形式';
+// / 'Can convert between select archive formats & disk image formats.'
+$Gui1Text18 = '一部のアーカイブ形式とディスクイメージ形式の間で変換できます。';
 // / 'Image Formats'
-$Gui1Text19 = '图像格式';
+$Gui1Text19 = '画像形式';
 // / 'Can convert pictures of documents to document formats.'
-$Gui1Text20 = '可以将文档图片转换为文档格式。';
+$Gui1Text20 = '文書を撮影した画像を文書形式に変換できます。';
 // / 'Supports resize & rotate.'
-$Gui1Text21 = '支持调整大小和旋转。';
+$Gui1Text21 = 'サイズ変更と回転に対応しています。';
 // / '3D Model Formats'
-$Gui1Text22 = '3D 模型格式';
+$Gui1Text22 = '3D モデル形式';
 // / 'Drawing Formats'
-$Gui1Text23 = '绘图格式';
-// / 'Can convert drawing files to image formats.'
-$Gui1Text24 = '可以将绘图格式转换为图像格式。';
+$Gui1Text23 = '図面形式';
+// / 'Can convert drawing formats to image formats.'
+$Gui1Text24 = '図面形式を画像形式に変換できます。';
 // / 'OCR Support'
-$Gui1Text25 = '光学字符识别支持';
+$Gui1Text25 = 'OCR 対応';
 // / 'OCR Operations support the following input formats...'
-$Gui1Text26 = 'OCR 操作支持以下输入格式...';
+$Gui1Text26 = 'OCR 処理は以下の入力形式に対応しています ...';
 // / 'OCR Operations support the following output formats...'
-$Gui1Text27 = 'OCR 操作支持以下输出格式...';
+$Gui1Text27 = 'OCR 処理は以下の出力形式に対応しています ...';
 // / 'Select files by clicking, tapping, or dropping them into the box below.'
-$Gui1Text28 = '通过单击、点击或将文件放入下面的框中来选择文件。';
+$Gui1Text28 = '下のボックスをクリックまたはタップするか、ファイルをドロップして選択してください。';
 // / 'Continue ...'
-$Gui1Text29 = '继续 ...';
+$Gui1Text29 = '続ける ...';
 // / 'Can convert stream formats to video formats.'
-$Gui1Text30 = '可以将流格式转换为视频格式。';
+$Gui1Text30 = 'ストリーム形式を動画形式に変換できます。';
 // / 'Subtitle Formats'
-$Gui1Text31 = '字幕格式';
+$Gui1Text31 = '字幕形式';
 // / 'OpenSCAD Formats'
-$Gui1Text32 = 'OpenSCAD 格式';
+$Gui1Text32 = 'OpenSCAD 形式';
 // / 'Renders OpenSCAD source into 3D model formats.'
-$Gui1Text33 = '将 OpenSCAD 源代码转换为三维模型格式。';
+$Gui1Text33 = 'OpenSCAD のソースコードを 3D モデル形式に変換します。';
 // / 'File references inside uploaded sources are removed unless the server allows resolving them.'
-$Gui1Text34 = '除非服务器允许解析，否则已上传源文件中的文件引用将被移除。';
+$Gui1Text34 = 'サーバーが許可しない限り、アップロードされたソース内のファイル参照は削除されます。';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / Set GUI - 2 Related Variables.
 // / 'File Conversion Options'
-$Gui2Text1 = '文件转换选项';
+$Gui2Text1 = 'ファイル変換オプション';
 // / 'Bulk File Options'
-$Gui2Text2 = '批量文件选项';
+$Gui2Text2 = '一括ファイル操作';
 // / 'Scan All Files For Viruses'
-$Gui2Text3 = '扫描所有文件是否存在病毒';
+$Gui2Text3 = 'すべてのファイルをウイルススキャン';
 // / 'Compress & Download All Files'
-$Gui2Text4 = '压缩并下载所有文件';
+$Gui2Text4 = 'すべてのファイルを圧縮してダウンロード';
 // / 'Download'
-$Gui2Text5 = '下载';
+$Gui2Text5 = 'ダウンロード';
 // / 'Share'
-$Gui2Text6 = '分享';
+$Gui2Text6 = '共有';
 // / 'Close Share Options'
-$Gui2Text7 = '关闭股票期权';
+$Gui2Text7 = '共有オプションを閉じる';
 // / 'Virus Scan'
-$Gui2Text8 = 'Virus Scan';
+$Gui2Text8 = 'ウイルススキャン';
 // / 'Close Virus Scan Options'
-$Gui2Text9 = '关闭病毒扫描选项';
+$Gui2Text9 = 'ウイルススキャンオプションを閉じる';
 // / 'Archive'
-$Gui2Text10 = '档案';
+$Gui2Text10 = 'アーカイブ';
 // / 'Close Archive Options'
-$Gui2Text11 = '关闭存档选项';
+$Gui2Text11 = 'アーカイブオプションを閉じる';
 // / 'OCR'
-$Gui2Text12 = '光学字符识别';
+$Gui2Text12 = 'OCR';
 // / 'Close OCR Options'
-$Gui2Text13 = '关闭 OCR 选项';
+$Gui2Text13 = 'OCR オプションを閉じる';
 // / 'Convert'
-$Gui2Text14 = '转变';
+$Gui2Text14 = '変換';
 // / 'Close Convert Options'
-$Gui2Text15 = '关闭转换选项';
+$Gui2Text15 = '変換オプションを閉じる';
 // / 'Archive This File'
-$Gui2Text16 = '存档此文件';
+$Gui2Text16 = 'このファイルをアーカイブ';
 // / 'Specify Filename: '
-$Gui2Text17 = '指定文件名： ';
+$Gui2Text17 = 'ファイル名を指定： ';
 // / 'Format'
-$Gui2Text18 = '格式';
+$Gui2Text18 = '形式';
 // / 'Compress & Download'
-$Gui2Text19 = '压缩并下载';
+$Gui2Text19 = '圧縮してダウンロード';
 // / 'Scan with ClamAV: '
-$Gui2Text20 = '使用 ClamAV 扫描： ';
+$Gui2Text20 = 'ClamAV でスキャン： ';
 // / 'Scan with ScanCore: '
-$Gui2Text21 = '使用 ScanCore 扫描： ';
+$Gui2Text21 = 'ScanCore でスキャン： ';
 // / 'Scan All'
-$Gui2Text22 = '扫描全部';
+$Gui2Text22 = 'すべてスキャン';
 // / 'Share This File'
-$Gui2Text23 = '分享此文件';
+$Gui2Text23 = 'このファイルを共有';
 // / 'Link Status: '
-$Gui2Text24 = '链接状态： ';
+$Gui2Text24 = 'リンクの状態： ';
 // / 'Not Generated'
 $Gui2Text25 = '未生成';
 // / 'Generated'
-$Gui2Text26 = '生成';
+$Gui2Text26 = '生成済み';
 // / 'Clipboard Status: '
-$Gui2Text27 = '剪贴板状态： ';
+$Gui2Text27 = 'クリップボードの状態： ';
 // / 'Copied'
-$Gui2Text28 = '已复制';
+$Gui2Text28 = 'コピー済み';
 // / 'File Link: '
-$Gui2Text29 = '文件链接： ';
+$Gui2Text29 = 'ファイルリンク： ';
 // / 'You have uploaded '.$FileCount.' valid file'.$FCPlural1.' to '.$ApplicationName.'.'
-$Gui2Text30 = '您已上传 '.$FileCount.' 个有效文件至 '.$ApplicationName;
+$Gui2Text30 = $FileCount.' 個の有効なファイルを '.$ApplicationName.' にアップロードしました。'.$FCPlural1;
 // / 'Your file'.$FCPlural2.' now ready to convert using the options below.'
-$Gui2Text31 = '您的文件现在可以使用以下选项进行转换。';
+$Gui2Text31 = '以下のオプションを使用してファイルを変換できます。'.$FCPlural2;
 // / 'Generate Link & Copy to Clipboard'
-$Gui2Text32 = '生成链接并复制到剪贴板';
+$Gui2Text32 = 'リンクを生成してクリップボードにコピー';
 // / 'Generate Link'
-$Gui2Text33 = '生成链接';
+$Gui2Text33 = 'リンクを生成';
 // / 'Scan This File For Viruses'
-$Gui2Text34 = '扫描此文件是否有病毒';
+$Gui2Text34 = 'このファイルをウイルススキャン';
 // / 'Scan File With ScanCore'
-$Gui2Text35 = '使用 ScanCore 扫描文件';
+$Gui2Text35 = 'ScanCore でファイルをスキャン';
 // / 'Scan File With ClamAV'
-$Gui2Text36 = '使用 ClamAV 扫描文件';
+$Gui2Text36 = 'ClamAV でファイルをスキャン';
 // / 'Scan File With ScanCore & ClamAV'
-$Gui2Text37 = '使用 ScanCore 和 ClamAV 扫描文件';
+$Gui2Text37 = 'ScanCore と ClamAV でファイルをスキャン';
 // / 'Perform Optical Character Recognition On This File'
-$Gui2Text38 = '对此文件执行光学字符识别';
+$Gui2Text38 = 'このファイルに光学文字認識を実行';
 // / 'Method'
-$Gui2Text39 = '方法';
+$Gui2Text39 = '方式';
 // / 'Simple'
-$Gui2Text40 = '简单的';
+$Gui2Text40 = 'シンプル';
 // / 'Advanced'
-$Gui2Text41 = '先进的';
+$Gui2Text41 = '詳細';
 // / 'Convert This Archive'
-$Gui2Text42 = '转换此存档';
+$Gui2Text42 = 'このアーカイブを変換';
 // / 'Convert This Document'
-$Gui2Text43 = '转换此文档';
+$Gui2Text43 = 'この文書を変換';
 // / 'Convert This Spreadsheet'
-$Gui2Text44 = '转换此电子表格';
+$Gui2Text44 = 'この表計算ファイルを変換';
 // / 'Convert This Audio'
-$Gui2Text45 = '转换此音频';
+$Gui2Text45 = 'この音声ファイルを変換';
 // / 'Convert This Video'
-$Gui2Text46 = '转换该视频';
+$Gui2Text46 = 'この動画を変換';
 // / 'Convert This Stream'
-$Gui2Text47 = '转换此流';
-// / Convert This 3D Model'
-$Gui2Text48 = '转换此 3D 模型';
+$Gui2Text47 = 'このストリームを変換';
+// / 'Convert This 3D Model'
+$Gui2Text48 = 'この 3D モデルを変換';
 // / 'Convert This Technical Drawing Or Vector File'
-$Gui2Text49 = '转换此技术绘图或矢量文件';
+$Gui2Text49 = 'この技術図面またはベクターファイルを変換';
 // / 'Convert This Image'
-$Gui2Text50 = '转换此图像';
+$Gui2Text50 = 'この画像を変換';
 // / 'Archive File'
-$Gui2Text51 = '存档文件';
+$Gui2Text51 = 'ファイルをアーカイブ';
 // / 'Convert Into Document'
-$Gui2Text52 = '转换为文档';
+$Gui2Text52 = '文書に変換';
 // / 'Archive Files'
-$Gui2Text53 = '存档文件';
+$Gui2Text53 = 'ファイルをアーカイブ';
 // / 'Convert Document'
-$Gui2Text54 = '转换文档';
+$Gui2Text54 = '文書を変換';
 // / 'Convert Spreadsheet'
-$Gui2Text55 = '转换电子表格';
+$Gui2Text55 = '表計算ファイルを変換';
 // / 'Convert Presentation'
-$Gui2Text56 = '转换演示文稿';
+$Gui2Text56 = 'プレゼンテーションを変換';
 // / 'Convert Audio'
-$Gui2Text57 = '转换音频';
+$Gui2Text57 = '音声を変換';
 // / 'Convert Video'
-$Gui2Text58 = '转换视频';
+$Gui2Text58 = '動画を変換';
 // / 'Convert Stream'
-$Gui2Text59 = '转换流';
+$Gui2Text59 = 'ストリームを変換';
 // / 'Convert Model'
-$Gui2Text60 = '转换型号';
+$Gui2Text60 = 'モデルを変換';
 // / 'Convert Drawing'
-$Gui2Text61 = '转换绘图';
+$Gui2Text61 = '図面を変換';
 // / 'Convert Image'
-$Gui2Text62 = '转换图像';
-// / 'Width & Height'
-$Gui2Text64 = '宽度和高度： ';
+$Gui2Text62 = '画像を変換';
+// / NOTE. There is no $Gui2Text63 in any language pack. The gap exists in the English
+// / original & is preserved here deliberately so every pack stays index compatible.
+// / 'Width & Height: '
+$Gui2Text64 = '幅と高さ： ';
 // / 'Rotate: '
-$Gui2Text65 = '旋转： ';
+$Gui2Text65 = '回転： ';
 // / 'Bitrate: '
-$Gui2Text66 = '比特率： ';
+$Gui2Text66 = 'ビットレート： ';
 // / 'Delete'
-$Gui2Text67 = '删除';
+$Gui2Text67 = '削除';
 // / 'Close Delete Options'
-$Gui2Text68 = '关闭删除选项';
+$Gui2Text68 = '削除オプションを閉じる';
 // / 'Delete This File'
-$Gui2Text69 = '删除该文件';
+$Gui2Text69 = 'このファイルを削除';
 // / 'Confirm Delete'
-$Gui2Text70 = '确认删除';
+$Gui2Text70 = '削除を確認';
 // / 'Cannot convert this file! Try changing the name.'
-$Gui2Text71 = '无法转换此文件！ 尝试更改名称。';
+$Gui2Text71 = 'このファイルは変換できません。ファイル名を変更してお試しください。';
 // / 'Cannot perform a virus scan on this file!'
-$Gui2Text72 = '无法对此文件执行病毒扫描！';
+$Gui2Text72 = 'このファイルはウイルススキャンできません。';
 // / 'File Link Copied to Clipboard!'
-$Gui2Text73 = '文件链接已复制到剪贴板！';
+$Gui2Text73 = 'ファイルリンクをクリップボードにコピーしました。';
 // / 'Operation Failed!'
-$Gui2Text74 = '手术失败！';
+$Gui2Text74 = '処理に失敗しました。';
 // / 'Convert These Subtitles'
-$Gui2Text75 = '转换这些字幕';
+$Gui2Text75 = 'この字幕を変換';
 // / 'Convert Subtitles'
-$Gui2Text76 = '转换字幕';
+$Gui2Text76 = '字幕を変換';
 // / 'Convert This Presentation'
-$Gui2Text77 = '转换此演示文稿';
+$Gui2Text77 = 'このプレゼンテーションを変換';
 // / 'Convert This XPS File'
-$Gui2Text78 = '转换此文件';
+$Gui2Text78 = 'この XPS ファイルを変換';
 // / 'Render This OpenSCAD Model'
-$Gui2Text79 = '渲染此 OpenSCAD 模型';
+$Gui2Text79 = 'この OpenSCAD モデルをレンダリング';
 // / 'Render Model'
-$Gui2Text80 = '渲染模型';
+$Gui2Text80 = 'モデルをレンダリング';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - HRC2-Functions.js Related Variables.
+// / These strings are used by the client side javascript library.
+// / That file is static javascript & cannot read a PHP variable, so every string it needs
+// / is passed to it as an argument by the PHP that calls it.
+// / 'Your browser does not support copying to the clipboard!'
+$GuiFunctionsText1 = 'お使いのブラウザはクリップボードへのコピーに対応していません。';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / Set GUI - Footer Related Variables.
-// / 'Check out our <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Terms of Service</a> and <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Privacy Policy'
-$GuiFooterText1 = '<a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>利用規約</a>と<a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>プライバシーポリシー';
+// / 'Check out our Terms of Service and Privacy Policy'
+$GuiFooterText1 = '<a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>利用規約</a>と<a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>プライバシーポリシー</a>をご確認ください';
 // / -----------------------------------------------------------------------------------

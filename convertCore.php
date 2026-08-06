@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.5.7.
+// / v3.5.8.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -257,12 +257,12 @@ function verifyInstallation() {
   $missingConfigVars = array();
   $detectedConfigVersion = $requiredConfigVersion = $configFile = '';
   // / Define what version of HRConvert2 this core file represents.
-  $HRConvertVersion = 'v3.5.7';
+  $HRConvertVersion = 'v3.5.8';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
   // / A release that changes no settings leaves this alone, so existing config files keep working.
-  $requiredConfigVersion = 'v3.5.5';
+  $requiredConfigVersion = 'v3.5.8';
   $requiredConfigVersion = ltrim($requiredConfigVersion, 'vV');
   // / Define absolute paths for files that we only have relative paths for.
   $configFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'config.php');
@@ -353,7 +353,7 @@ function verifySesHash($Token1) {
   if (!empty($SecretKey) && strlen($SecretKey) === 64 && !empty($Token1) && ctype_digit((string)$Token1) && strlen((string)$Token1) === 18) $inputsAreUsable = TRUE;
   if ($inputsAreUsable) {
     // / The daily context. Server name is included only for domain separation between vhosts
-    // / sharing one installation. It contributes no secrecy & is not relied on for any.
+    // / sharing one installation. It contributes no secrecy & is not relied on for entropy.
     $dailyContext = 'HRC2-DAILY|'.$Date.'|'.($_SERVER['SERVER_NAME'] ?? '');
     // / Per-server-per-day parent directory.
     $SesHash = substr(hash_hmac('sha256', $dailyContext, $SecretKey), -18);
@@ -610,12 +610,12 @@ function verifyInputs() {
 // / A function to set the styles to use for the session.
 function verifyColors($ButtonStyle) {
   // / Set variables.
-  global $ButtonStyle, $Color, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode;
+  global $ButtonStyle, $Color, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $OrangeButtonCode, $PurpleButtonCode, $DarkButtonCode, $DefaultButtonCode;
   $ColorsAreSet = FALSE;
   $ColorToUse = 'blue';
   $ButtonStyle = strtolower($ButtonStyle);
   $ButtonCode = $DefaultButtonCode;
-  $validColors = array('green', 'blue', 'red', 'grey');
+  $validColors = array('green', 'blue', 'red', 'grey', 'orange', 'purple', 'dark');
   // / Make sure $SupportedColors is valid.
   if (!isset($SupportedColors) or !is_array($SupportedColors)) $SupportedColors = $validColors;
   // / Make sure the Default Color is valid.
@@ -633,6 +633,9 @@ function verifyColors($ButtonStyle) {
     if ($ColorToUse === 'green') $ButtonCode = $GreenButtonCode;
     if ($ColorToUse === 'blue') $ButtonCode = $BlueButtonCode;
     if ($ColorToUse === 'red') $ButtonCode = $RedButtonCode;
+    if ($ColorToUse === 'orange') $ButtonCode = $OrangeButtonCode;
+    if ($ColorToUse === 'purple') $ButtonCode = $PurpleButtonCode;
+    if ($ColorToUse === 'dark') $ButtonCode = $DarkButtonCode; 
     if ($ColorToUse === 'grey') $ButtonCode = $DefaultButtonCode; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $validColors = NULL;
@@ -644,7 +647,7 @@ function verifyColors($ButtonStyle) {
 // / A function to set the GUI to use for the session.
 function verifyGui() {
   // / Set variables.
-  global $GUI, $DefaultGui, $SupportedGuis, $AllowUserSelectableGui, $GuiFiles, $GuiDir, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $Font;
+  global $GUI, $DefaultGui, $SupportedGuis, $AllowUserSelectableGui, $GuiFiles, $GuiDir, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $OrangeButtonCode, $PurpleButtonCode, $DarkButtonCode, $DefaultButtonCode, $Font;
   $defaultGui = $reqFile =  $variableIsSanitized = FALSE;
   $GuiIsSet = TRUE;
   $GuiToUse = 'Default';
@@ -685,6 +688,9 @@ function verifyGui() {
     $GreenButtonCode = $greenButtonCode; 
     $BlueButtonCode = $blueButtonCode;
     $RedButtonCode = $redButtonCode; 
+    $OrangeButtonCode = $orangeButtonCode;
+    $PurpleButtonCode = $purpleButtonCode;
+    $DarkButtonCode = $darkButtonCode;
     $DefaultButtonCode = $defaultButtonCode; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $defaultGuis = $reqFile = $guiFiles = $greenButtonCode = $blueButtonCode = $redButtonCode = $defaultButtonCode = NULL;
@@ -736,7 +742,7 @@ function verifyLanguage() {
 // / Converting here as well produced a fifteen hour watch timeout & a ten million second connect timeout.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $MinimumFFMPEGVersion, $ProtectedRootDirs;
+  global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $MinimumFFMPEGVersion, $ProtectedRootDirs;
   // / Application related variables.
   putenv('HOME='.$HomeLoc);
   $GlobalsAreVerified = $sanitizeGlobalCheck = $sanitizeGlobalCheckA = $sanitizeGlobalCheckB = $sanitizeGlobalCheckC = $sanitizeGlobalCheckD = $sanitizeGlobalCheckE = FALSE;
@@ -753,7 +759,7 @@ function verifyGlobals() {
   $PathExt = PATHINFO_EXTENSION;
   // / UI Related variables.
   $ConvertGuiCounter1 = 0;
-  $File = $FCPlural = $FCPlural1 = $FCPlural2 = $FCPlural3 = $GreenButtonCode = $BlueButtonCode = $RedButtonCode = $DefaultButtonCode = '';
+  $File = $FCPlural = $FCPlural1 = $FCPlural2 = $FCPlural3 = $GreenButtonCode = $BlueButtonCode = $RedButtonCode = $PurpleButtonCode = $OrangeButtonCode = $DarkButtonCode = $DefaultButtonCode = '';
   $HeaderDisplayed = $UIDisplayed = $FooterDisplayed = $LanguageStringsLoaded = $GUIDisplayed = FALSE;
   $GUIDirection = 'ltr';
   $GUIAlignment = 'left';
@@ -3859,6 +3865,7 @@ if (!$SesHashIsVerified) die('ERROR!!! '.$Time.': '.$ApplicationName.'-8: Could 
 // / The following code verifies the logging environment.
 list ($LogFileExists, $LogFile, $ClamLogFile) = verifyLogs();
 if (!$LogFileExists) die('ERROR!!! '.$Time.', '.$ApplicationName.'-9, '.$SesHash3.': Could not verify logging environment!');
+if ($Verbose) logEntry('Verified logging environment.');
 
 // / The following code tries to verify that the session is encrypted, if possible.
 list ($EncryptionVerified, $URLEcho) = verifyEncryption();
@@ -3915,7 +3922,7 @@ else if ($Verbose) logEntry('Skipping display GUI procedure.');
 // / Close the web server connection when the supplied tokens could not be verified.
 if (!$TokensAreValid) {
   if ($Verbose) logEntry('Could not verify tokens. Token1: '.$Token1.' Token2: '.$Token2.'.');
-  logEntry('Closing connection.');
+  if ($Verbose) logEntry('Closing connection.');
   closeHRC2Connection();
   die(); }
 
@@ -3982,7 +3989,7 @@ if ($TokensAreValid) {
     if ($Verbose) logEntry('User Virus Scan Complete.'); }
 
   // / Close the web server connection after all required content has been served.
-  logEntry('Closing connection.');
+  if ($Verbose) logEntry('Closing connection.');
   closeHRC2Connection();
 
   // / Nothing below this point may produce any output.

@@ -297,6 +297,15 @@ $Gui2Text80 = 'Genera Modello';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / Set GUI - HRC2-Functions.js Related Variables.
+// / These strings are used by the client side javascript library.
+// / That file is static javascript & cannot read a PHP variable, so every string it needs
+// / is passed to it as an argument by the PHP that calls it.
+// / 'Your browser does not support copying to the clipboard!'
+$GuiFunctionsText1 = 'Il tuo browser non supporta la copia negli appunti.';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / Set GUI - Footer Related Variables.
 // / 'Check out our <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Terms of Service</a> and <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Privacy Policy'
 $GuiFooterText1 = 'Consulta i nostri <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Termini di servizio</a> e i <a href=\ \''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Informativa sulla privacy';

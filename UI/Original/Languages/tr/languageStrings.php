@@ -312,6 +312,15 @@ $Gui2Text80 = 'Modeli İşle';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / Set GUI - HRC2-Functions.js Related Variables.
+// / These strings are used by the client side javascript library.
+// / That file is static javascript & cannot read a PHP variable, so every string it needs
+// / is passed to it as an argument by the PHP that calls it.
+// / 'Your browser does not support copying to the clipboard!'
+$GuiFunctionsText1 = 'Tarayıcınız panoya kopyalamayı desteklemiyor.';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / Set GUI - Footer Related Variables.
 // / The closing anchor tag for this string lives in footer.php & must NOT be repeated here.
 // / 'Check out our Terms of Service and Privacy Policy'

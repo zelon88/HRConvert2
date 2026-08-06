@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 5/12/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/5/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.4.3.
+// / v3.5.8.
 // / This file contains the dynamic stylesheets for HRConvert2.
 // /
 // / HARDWARE REQUIREMENTS ... 
@@ -58,7 +58,7 @@ $defaultButtonCode = '.info-button {
   text-shadow:0px 1px 0px #bcbcbc;
   min-width:100px; 
   width:250px;
-  max-width:2000px; }
+  max-width:1000px; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #bcbcbc), color-stop(1, #eeeeee));
   background:-moz-linear-gradient(top, #bcbcbc 5%, #eeeeee 100%);
@@ -104,7 +104,7 @@ $greenButtonCode = '.info-button {
   text-shadow:0px 1px 0px #1e9409;
   min-width:100px; 
   width:250px;
-  max-width:2000px; }
+  max-width:1000px; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #298040), color-stop(1, #50c20e));
   background:-moz-linear-gradient(top, #298040 5%, #50c20e 100%);
@@ -150,7 +150,7 @@ $blueButtonCode = '.info-button {
   text-shadow:0px 1px 0px #16537e;
   min-width:100px; 
   width:250px;
-  max-width:2000px; }
+  max-width:1000px; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #295680), color-stop(1, #2d60b2));
   background:-moz-linear-gradient(top, #295680 5%, #2d60b2 100%);
@@ -196,7 +196,7 @@ $redButtonCode = '.info-button {
   text-shadow:0px 1px 0px #660000;
   min-width:100px; 
   width:250px;
-  max-width:2000px; }
+  max-width:1000px; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #9b443b), color-stop(1, #c20e0e));
   background:-moz-linear-gradient(top, #9b443b 5%, #c20e0e 100%);
@@ -213,4 +213,145 @@ select {
   background: url("'.$GuiImageDir.'darrowred.png") 96% / 15% no-repeat #eee; }
 body { 
   background-color: #FFE9E1; }';
+
+// / Orange color scheme.
+$orangeButtonCode = '.info-button {
+  -moz-box-shadow: 3px 4px 0px 0px #ffdcb3;
+  -webkit-box-shadow: 3px 4px 0px 0px #ffdcb3;
+  box-shadow: 3px 4px 0px 0px #ffdcb3;
+  background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #ff9900), color-stop(1, #b35900));
+  background:-moz-linear-gradient(top, #ff9900 5%, #b35900 100%);
+  background:-webkit-linear-gradient(top, #ff9900 5%, #b35900 100%);
+  background:-o-linear-gradient(top, #ff9900 5%, #b35900 100%);
+  background:-ms-linear-gradient(top, #ff9900 5%, #b35900 100%);
+  background:linear-gradient(to bottom, #ff9900 5%, #b35900 100%);
+  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#ff9900\', endColorstr=\'#b35900\',GradientType=0);
+  background-color:#ff9900;
+  -moz-border-radius:5px;
+  -webkit-border-radius:5px;
+  border-radius:5px;
+  border:1px solid #803300;
+  display:inline-block;
+  cursor:pointer;
+  color:#ffffff;
+  font-family:'.$Font.';
+  font-size:17px;
+  font-weight:bold;
+  padding:12px 44px;
+  text-decoration:none;
+  text-shadow:0px 1px 0px #803300;
+  min-width:100px; 
+  width:250px;
+  max-width:1000px; }
+.info-button:hover {
+  background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #b35900), color-stop(1, #ff9900));
+  background:-moz-linear-gradient(top, #b35900 5%, #ff9900 100%);
+  background:-webkit-linear-gradient(top, #b35900 5%, #ff9900 100%);
+  background:-o-linear-gradient(top, #b35900 5%, #ff9900 100%);
+  background:-ms-linear-gradient(top, #b35900 5%, #ff9900 100%);
+  background:linear-gradient(to bottom, #b35900 5%, #ff9900 100%);
+  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#b35900\', endColorstr=\'#ff9900\',GradientType=0);
+  background-color:#b35900; }
+.info-button:active {
+  position:relative;
+  top:1px; }
+select {
+  background: url("'.$GuiImageDir.'darroworange.png") 96% / 15% no-repeat #eee; }
+body { 
+  background-color: #fff4e6; }';
+
+// / Purple color scheme.
+$purpleButtonCode = '.info-button {
+  -moz-box-shadow: 3px 4px 0px 0px #e1cfea;
+  -webkit-box-shadow: 3px 4px 0px 0px #e1cfea;
+  box-shadow: 3px 4px 0px 0px #e1cfea;
+  background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #8e44ad), color-stop(1, #5b2c6f));
+  background:-moz-linear-gradient(top, #8e44ad 5%, #5b2c6f 100%);
+  background:-webkit-linear-gradient(top, #8e44ad 5%, #5b2c6f 100%);
+  background:-o-linear-gradient(top, #8e44ad 5%, #5b2c6f 100%);
+  background:-ms-linear-gradient(top, #8e44ad 5%, #5b2c6f 100%);
+  background:linear-gradient(to bottom, #8e44ad 5%, #5b2c6f 100%);
+  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#8e44ad\', endColorstr=\'#5b2c6f\',GradientType=0);
+  background-color:#8e44ad;
+  -moz-border-radius:5px;
+  -webkit-border-radius:5px;
+  border-radius:5px;
+  border:1px solid #4a235a;
+  display:inline-block;
+  cursor:pointer;
+  color:#ffffff;
+  font-family:'.$Font.';
+  font-size:17px;
+  font-weight:bold;
+  padding:12px 44px;
+  text-decoration:none;
+  text-shadow:0px 1px 0px #4a235a;
+  min-width:100px; 
+  width:250px;
+  max-width:1000px; }
+.info-button:hover {
+  background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #5b2c6f), color-stop(1, #8e44ad));
+  background:-moz-linear-gradient(top, #5b2c6f 5%, #8e44ad 100%);
+  background:-webkit-linear-gradient(top, #5b2c6f 5%, #8e44ad 100%);
+  background:-o-linear-gradient(top, #5b2c6f 5%, #8e44ad 100%);
+  background:-ms-linear-gradient(top, #5b2c6f 5%, #8e44ad 100%);
+  background:linear-gradient(to bottom, #5b2c6f 5%, #8e44ad 100%);
+  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#5b2c6f\', endColorstr=\'#8e44ad\',GradientType=0);
+  background-color:#5b2c6f; }
+.info-button:active {
+  position:relative;
+  top:1px; }
+select {
+  background: url("'.$GuiImageDir.'darrowpurple.png") 96% / 15% no-repeat #eee; }
+body { 
+  background-color: #f5eef8; }';
+
+// / Dark / Night mode color scheme.
+$darkButtonCode = '.info-button {
+  -moz-box-shadow: 3px 4px 0px 0px #1a1a1a;
+  -webkit-box-shadow: 3px 4px 0px 0px #1a1a1a;
+  box-shadow: 3px 4px 0px 0px #1a1a1a;
+  background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #454545), color-stop(1, #262626));
+  background:-moz-linear-gradient(top, #454545 5%, #262626 100%);
+  background:-webkit-linear-gradient(top, #454545 5%, #262626 100%);
+  background:-o-linear-gradient(top, #454545 5%, #262626 100%);
+  background:-ms-linear-gradient(top, #454545 5%, #262626 100%);
+  background:linear-gradient(to bottom, #454545 5%, #262626 100%);
+  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#454545\', endColorstr=\'#262626\',GradientType=0);
+  background-color:#454545;
+  -moz-border-radius:5px;
+  -webkit-border-radius:5px;
+  border-radius:5px;
+  border:1px solid #111111;
+  display:inline-block;
+  cursor:pointer;
+  color:#ffffff;
+  font-family:'.$Font.';
+  font-size:17px;
+  font-weight:bold;
+  padding:12px 44px;
+  text-decoration:none;
+  text-shadow:0px 1px 0px #111111;
+  min-width:100px; 
+  width:250px;
+  max-width:1000px; }
+.info-button:hover {
+  background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #262626), color-stop(1, #454545));
+  background:-moz-linear-gradient(top, #262626 5%, #454545 100%);
+  background:-webkit-linear-gradient(top, #262626 5%, #454545 100%);
+  background:-o-linear-gradient(top, #262626 5%, #454545 100%);
+  background:-ms-linear-gradient(top, #262626 5%, #454545 100%);
+  background:linear-gradient(to bottom, #262626 5%, #454545 100%);
+  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#262626\', endColorstr=\'#454545\',GradientType=0);
+  background-color:#262626; }
+.info-button:active {
+  position:relative;
+  top:1px; }
+select {
+  background: url("'.$GuiImageDir.'darrowdark.png") 96% / 15% no-repeat #333;
+  color: #ffffff;
+  border: 1px solid #555; }
+body { 
+  background-color: #222222; 
+  color: #ffffff; }';
 // / -----------------------------------------------------------------------------------

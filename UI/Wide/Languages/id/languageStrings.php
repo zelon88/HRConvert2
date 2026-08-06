@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/5/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/6/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.5.6.
+// / v3.5.7.
 // / This file contains language specific GUI related text for performing file conversions.
 // / This file contains the Indonesian (id) language strings.
 // / Indonesian does not inflect nouns for number, so the plural helper strings are empty.
@@ -304,6 +304,15 @@ $Gui2Text78 = 'Konversi Berkas XPS Ini';
 $Gui2Text79 = 'Render Model OpenSCAD Ini';
 // / 'Render Model'
 $Gui2Text80 = 'Render Model';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - HRC2-Functions.js Related Variables.
+// / These strings are used by the client side javascript library.
+// / That file is static javascript & cannot read a PHP variable, so every string it needs
+// / is passed to it as an argument by the PHP that calls it.
+// / 'Your browser does not support copying to the clipboard!'
+$GuiFunctionsText1 = 'Peramban Anda tidak mendukung penyalinan ke papan klip.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

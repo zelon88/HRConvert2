@@ -371,7 +371,25 @@ $AllowUserSelectableGui = TRUE;
 // /   Before adding a supported language be sure to add the matching folder full of GUI files to /Languages.
 // /   Errors will occur if you add an element to this array without also adding a matching Language folder.
 // /   Default is 'en', 'fr', 'es', 'zh', 'hi', 'ar', 'ru', 'uk', 'bn', 'de', 'ko', 'it', 'pt', 'vi', 'tr', 'ja', 'id', 'pl', 'nl', 'sw', 'my', 'ur', 'fa', 'he', 'aii', 'arc'.
-$SupportedLanguages = array('en', 'fr', 'es', 'zh', 'hi', 'ar', 'ru', 'uk', 'bn', 'de', 'ko', 'it', 'pt', 'vi', 'tr', 'ja', 'id', 'pl', 'nl', 'sw', 'my', 'ur', 'fa', 'he', 'aii', 'arc');
+// /  --Supported Languages--
+// /   The list of languages that are supported by this application.
+// /   The key is the ISO 639-1 code & is the name of the folder inside /Languages.
+// /   The value is the endonym, which is the name of the language in that language itself.
+// /   The endonym is used for alt text & for the title of each flag button in the UI.
+// /   A user who has landed on a language they cannot read still recognizes their own.
+// /   Before adding a supported language be sure to add the matching folder to /Languages.
+// /   Errors will occur if you add an element to this array without also adding a matching folder.
+// /   Aramaic has no ISO 639-1 code, so aii & arc use their ISO 639-3 codes instead.
+$SupportedLanguages = array(
+  'en' => 'English',   'fr' => 'Français',    'es' => 'Español',
+  'zh' => '中文',      'hi' => 'हिन्दी',        'ar' => 'العربية',
+  'ru' => 'Русский',   'uk' => 'Українська',  'bn' => 'বাংলা',
+  'de' => 'Deutsch',   'ko' => '한국어',        'it' => 'Italiano',
+  'pt' => 'Português', 'vi' => 'Tiếng Việt',  'tr' => 'Türkçe',
+  'ja' => '日本語',     'id' => 'Bahasa Indonesia',
+  'pl' => 'Polski',    'nl' => 'Nederlands',  'sw' => 'Kiswahili',
+  'my' => 'မြန်မာ',      'ur' => 'اردو',         'fa' => 'فارسی',
+  'he' => 'עברית',     'aii' => 'ܣܘܪܝܝܐ',     'arc' => 'ܐܪܡܝܐ');
 // /  --Default Language--
 // /   The default language to use for GUI elements.
 // /   See README.md for the latest language support information.
@@ -403,12 +421,8 @@ $AllowUserShare = TRUE;
 // /   The list of supported conversion types.
 // /   Only conversion types contained in this list will be processed.
 // /   If a conversion type is disabled, options for processing that conversion will not be displayed by the UI.
-// /   Default is 'Document', 'Image', 'Model', 'Drawing', 'Video', 'Subtitle', 'Audio', 'Archive', 'Stream', 'OCR'.
-// /   The 'Stream' option requires FFMPEG v6.0 or later. 
-// /   Note that FFMPEG v2.0 through v6.0 carry a severe vulnerability related to downloading stream files.
-// /   If you have FFMPEG v6.0 or earlier installed, disable Stream Conversions & remove m3u8 from the list of supported file formats.
-// /   Check FFMPEG version by opening a terminal on the server and running 'ffmpeg -v'
-$SupportedConversionTypes = array('Document', 'Image', 'Model', 'Scad', 'Drawing', 'Video', 'Subtitle', 'Audio', 'Archive', 'Stream', 'OCR');
+// /   Default is 'Document', 'Image', 'Model', 'Scad', 'Drawing', 'SVG', 'Video', 'Subtitle', 'Audio', 'Archive', 'Stream', 'OCR'.
+$SupportedConversionTypes = array('Document', 'Image', 'Model', 'Scad', 'Drawing', 'SVG', 'Video', 'Subtitle', 'Audio', 'Archive', 'Stream', 'OCR');
 // /  --File Deletion Age Theshold--
 // /   Age in minutes of files to be deleted.
 // /   Set to 0 to keep files forever.
@@ -550,7 +564,11 @@ $UserVideoOutputArray = array('3gp', 'mkv', 'avi', 'mp4', 'mpeg', 'wmv', 'mov', 
 // /  --Supported Stream Formats--
 $UserStreamArray = array('m3u8', 'ts');
 // /  --Supported Drawing Formats--
-$UserDrawingArray = array('svg', 'dxf', 'vdx', 'fig', 'dia', 'wpg', 'png');
+$UserDrawingArray = array('dxf', 'vdx', 'fig', 'dia', 'wpg');
+// /  --Supported SVG Input Formats--
+$UserSVGInputArray = array('svg', 'plain-svg');
+// /  --Supported SVG Output Formats--
+$UserSVGOutputArray = array('png', 'pdf', 'ps', 'eps', 'emf', 'wmf');
 // /  --Supported Model Formats--
 $UserModelArray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'gts', 'dxf', 'u3d', 'vrml', 'x3d');
 // /  --Supported OpenSCAD Formats--

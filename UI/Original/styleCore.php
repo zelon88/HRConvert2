@@ -31,7 +31,28 @@
 // / Set dynamic CSS related variables.
 
 // / Grey color scheme (default).
-$defaultButtonCode = '.info-button {
+$defaultButtonCode = '
+#uiSelectorOptions { width: 300px; }
+#uiSelectorOptions p { margin: 2px 0; }
+#uiSelectorOptions strong { font-size: 11px; text-transform: uppercase; color: #777; }
+#uiSelectorOptions button {
+  display: inline-block !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  padding: 1px !important;
+  margin: 1px !important;
+  background: none !important;
+  border: 1px solid #ccc !important;
+  border-radius: 2px !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  line-height: 0; }
+#uiSelectorOptions button[aria-current] { border: 2px solid #000 !important; }
+#uiSelectorOptions img { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .swatch { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .txtbtn { line-height: 1.4; padding: 1px 5px !important; font-size: 11px; }
+.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #f3f6f4;
   -webkit-box-shadow: 3px 4px 0px 0px #f3f6f4;
   box-shadow: 3px 4px 0px 0px #f3f6f4;
@@ -77,7 +98,28 @@ body {
   background-color: #F8F8F8; }';
 
 // / Green color scheme.
-$greenButtonCode = '.info-button {
+$greenButtonCode = '
+#uiSelectorOptions { width: 300px; }
+#uiSelectorOptions p { margin: 2px 0; }
+#uiSelectorOptions strong { font-size: 11px; text-transform: uppercase; color: #777; }
+#uiSelectorOptions button {
+  display: inline-block !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  padding: 1px !important;
+  margin: 1px !important;
+  background: none !important;
+  border: 1px solid #ccc !important;
+  border-radius: 2px !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  line-height: 0; }
+#uiSelectorOptions button[aria-current] { border: 2px solid #000 !important; }
+#uiSelectorOptions img { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .swatch { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .txtbtn { line-height: 1.4; padding: 1px 5px !important; font-size: 11px; }
+.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #b9ccb3;
   -webkit-box-shadow: 3px 4px 0px 0px #b9ccb3;
   box-shadow: 3px 4px 0px 0px #b9ccb3;
@@ -123,7 +165,28 @@ body {
   background-color: #E8FFE1; }';
 
 // / Blue color scheme.
-$blueButtonCode = '.info-button {
+$blueButtonCode = '
+#uiSelectorOptions { width: 300px; }
+#uiSelectorOptions p { margin: 2px 0; }
+#uiSelectorOptions strong { font-size: 11px; text-transform: uppercase; color: #777; }
+#uiSelectorOptions button {
+  display: inline-block !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  padding: 1px !important;
+  margin: 1px !important;
+  background: none !important;
+  border: 1px solid #ccc !important;
+  border-radius: 2px !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  line-height: 0; }
+#uiSelectorOptions button[aria-current] { border: 2px solid #000 !important; }
+#uiSelectorOptions img { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .swatch { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .txtbtn { line-height: 1.4; padding: 1px 5px !important; font-size: 11px; }
+.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #cfe2f3;
   -webkit-box-shadow: 3px 4px 0px 0px #cfe2f3;
   box-shadow: 3px 4px 0px 0px #cfe2f3;
@@ -169,7 +232,28 @@ body {
   background-color: #E1F7FF; }';
 
 // / Red color scheme.
-$redButtonCode = '.info-button {
+$redButtonCode = '
+#uiSelectorOptions { width: 300px; }
+#uiSelectorOptions p { margin: 2px 0; }
+#uiSelectorOptions strong { font-size: 11px; text-transform: uppercase; color: #777; }
+#uiSelectorOptions button {
+  display: inline-block !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  padding: 1px !important;
+  margin: 1px !important;
+  background: none !important;
+  border: 1px solid #ccc !important;
+  border-radius: 2px !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  line-height: 0; }
+#uiSelectorOptions button[aria-current] { border: 2px solid #000 !important; }
+#uiSelectorOptions img { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .swatch { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .txtbtn { line-height: 1.4; padding: 1px 5px !important; font-size: 11px; }
+.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #bcbcbc;
   -webkit-box-shadow: 3px 4px 0px 0px #bcbcbc;
   box-shadow: 3px 4px 0px 0px #bcbcbc;
@@ -215,7 +299,28 @@ body {
   background-color: #FFE9E1; }';
 
 // / Orange color scheme.
-$orangeButtonCode = '.info-button {
+$orangeButtonCode = '
+#uiSelectorOptions { width: 300px; }
+#uiSelectorOptions p { margin: 2px 0; }
+#uiSelectorOptions strong { font-size: 11px; text-transform: uppercase; color: #777; }
+#uiSelectorOptions button {
+  display: inline-block !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  padding: 1px !important;
+  margin: 1px !important;
+  background: none !important;
+  border: 1px solid #ccc !important;
+  border-radius: 2px !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  line-height: 0; }
+#uiSelectorOptions button[aria-current] { border: 2px solid #000 !important; }
+#uiSelectorOptions img { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .swatch { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .txtbtn { line-height: 1.4; padding: 1px 5px !important; font-size: 11px; }
+.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #ffdcb3;
   -webkit-box-shadow: 3px 4px 0px 0px #ffdcb3;
   box-shadow: 3px 4px 0px 0px #ffdcb3;
@@ -261,7 +366,28 @@ body {
   background-color: #fff4e6; }';
 
 // / Purple color scheme.
-$purpleButtonCode = '.info-button {
+$purpleButtonCode = '
+#uiSelectorOptions { width: 300px; }
+#uiSelectorOptions p { margin: 2px 0; }
+#uiSelectorOptions strong { font-size: 11px; text-transform: uppercase; color: #777; }
+#uiSelectorOptions button {
+  display: inline-block !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  padding: 1px !important;
+  margin: 1px !important;
+  background: none !important;
+  border: 1px solid #ccc !important;
+  border-radius: 2px !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  line-height: 0; }
+#uiSelectorOptions button[aria-current] { border: 2px solid #000 !important; }
+#uiSelectorOptions img { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .swatch { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .txtbtn { line-height: 1.4; padding: 1px 5px !important; font-size: 11px; }
+.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #e1cfea;
   -webkit-box-shadow: 3px 4px 0px 0px #e1cfea;
   box-shadow: 3px 4px 0px 0px #e1cfea;
@@ -307,7 +433,28 @@ body {
   background-color: #f5eef8; }';
 
 // / Dark / Night mode color scheme.
-$darkButtonCode = '.info-button {
+$darkButtonCode = '
+#uiSelectorOptions { width: 300px; }
+#uiSelectorOptions p { margin: 2px 0; }
+#uiSelectorOptions strong { font-size: 11px; text-transform: uppercase; color: #777; }
+#uiSelectorOptions button {
+  display: inline-block !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  padding: 1px !important;
+  margin: 1px !important;
+  background: none !important;
+  border: 1px solid #ccc !important;
+  border-radius: 2px !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  line-height: 0; }
+#uiSelectorOptions button[aria-current] { border: 2px solid #000 !important; }
+#uiSelectorOptions img { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .swatch { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .txtbtn { line-height: 1.4; padding: 1px 5px !important; font-size: 11px; }
+.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #1a1a1a;
   -webkit-box-shadow: 3px 4px 0px 0px #1a1a1a;
   box-shadow: 3px 4px 0px 0px #1a1a1a;

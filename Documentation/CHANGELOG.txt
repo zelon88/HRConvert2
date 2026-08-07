@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.5.8.
+v3.5.9.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -25,6 +25,16 @@ Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+
+--------------------
+COMMIT 8/6/2026
+v3.5.9 - Update GUI, FFMPEG conversions, Stream conversions, add SVG conversions.
+
+-v3.5.9.
+-Add convertSVG() function with Inkscape as dependency.
+-Update FFMPEG calls to improve reliabiltiy.
+-Work on adding a hamburger icon to GUI with buttons for switching interface, color, & language.
+-Move SVG operations from convertDrawings() to it's own routine.
 
 --------------------
 COMMIT 8/5/2026

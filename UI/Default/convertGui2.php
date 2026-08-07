@@ -347,6 +347,15 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
            onclick='toggle_visibility("drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("drawingButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("drawingXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
           <?php } 
 
+          if (in_array($extension, $SVGInputArray) && in_array('SVG', $SupportedConversionTypes)) { ?>
+          <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
+
+          <img id='svgButton<?php echo $ConvertGuiCounter1; ?>' name='svgButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>convert.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
+           onclick='toggle_visibility("svgOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("svgButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("svgXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+          <img id='svgXButton<?php echo $ConvertGuiCounter1; ?>' name='svgXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
+           onclick='toggle_visibility("svgOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("svgButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("svgXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+          <?php } 
+
           if (in_array($extension, $ModelArray) && in_array('Model', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
@@ -1316,6 +1325,68 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
         </div>
         <?php } 
 
+        if (in_array($extension, $SVGInputArray) && in_array('SVG', $SupportedConversionTypes)) {
+        ?>
+        <div id='svgOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='svgOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+          <p style="max-width:500px;"></p>
+          <p><strong><?php echo $Gui2Text49; ?></strong></p>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='svgfilename<?php echo $ConvertGuiCounter1; ?>' name='usersvgfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <select id='svgextension<?php echo $ConvertGuiCounter1; ?>' name='svgextension<?php echo $ConvertGuiCounter1; ?>'>
+            <option value="png"><?php echo $Gui2Text18; ?></option>
+            <?php foreach ($SVGOutputArray as $gui2SvgArr) { ?>
+            <option value="<?php echo $gui2SvgArr; ?>"><?php echo $gui2SvgArr; ?></option>
+            <?php } ?>
+          </select></p>
+          <p><?php echo $Gui2Text64; ?></p>
+          <p><input type="number" size="4" value="0" id='width<?php echo $ConvertGuiCounter1; ?>' name='width<?php echo $ConvertGuiCounter1; ?>' min="0" max="10000"> X <input type="number" size="4" value="0" id="height<?php echo $ConvertGuiCounter1; ?>" name="height<?php echo $ConvertGuiCounter1; ?>" min="0"  max="10000"></p> 
+          <input type="submit" id="svgconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="svgconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text61; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">     
+          <script type="text/javascript">
+            $(document).ready(function () {
+              $('#svgconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
+                $.ajax({
+                  type: 'POST',
+                  url: 'convertCore.php',
+                  data: {
+                    Token1:'<?php echo $Token1; ?>',
+                    Token2:'<?php echo $Token2; ?>',
+                    convertSelected:'<?php echo $File; ?>',
+                    width:$('#width<?php echo $ConvertGuiCounter1; ?>').val(),
+                    height:$('#height<?php echo $ConvertGuiCounter1; ?>').val(),
+                    extension:document.getElementById('svgextension<?php echo $ConvertGuiCounter1; ?>').value,
+                    userconvertfilename:document.getElementById('svgfilename<?php echo $ConvertGuiCounter1; ?>').value },
+                    success: function(ReturnData) {
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                      const ReturnDataArray = ReturnData.split(/\r?\n/);
+                      ReturnDataArray.slice(1).forEach((line, index) => {
+                        if (line.includes('ERROR!!!')) { 
+                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                          setTimeout(function() {
+                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                          alert(line); }
+                        else if (line !== '') {
+                          $.ajax({
+                            type: 'POST',
+                            url: 'convertCore.php',
+                            data: { 
+                              Token1:'<?php echo $Token1; ?>',
+                              Token2:'<?php echo $Token2; ?>',
+                              download:line },
+                            success: function(ReturnData) {
+                              if (ReturnData !== '') {
+                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
+                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                                setTimeout(function() {
+                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                                } },
+                            error: function(ReturnData) {
+                              toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                              setTimeout(function() {
+                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+          </script>
+        </div>
+        <?php } 
+
         if (in_array($extension, $ImageArray) && in_array('Image', $SupportedConversionTypes)) {
         ?>
         <div id='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width: 450px; display: block; padding-left: 10px; background-color: #edf9ff; padding-top: 10px;padding-bottom: 10px; margin-bottom: 10px;margin-left: 10px;border: 1px solid #bfbfbf; border-radius: 7px; margin-top: 3px; display:none;">
@@ -1387,5 +1458,5 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
   </div>
     <?php
     // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-    $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2XpsArr = NULL;
+    $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2SvgArr = $gui2OcrArr = $gui2XpsArr = NULL;
     unset($gui2AudArr, $gui2VidArr, $gui2StreamArr, $gui2DocArr, $gui2SpreadArr, $gui2PresArr, $gui2ArchArr, $gui2ImaArr, $gui2ModArr, $gui2SubArr, $gui2DraArr, $gui2OcrArr, $gui2XpsArr);

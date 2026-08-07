@@ -38,9 +38,51 @@ $UIDisplayed = TRUE;
 if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
 // / Assign temporary variables.
 $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2XpsArr = $gui2ScadArr = array();
+$selectorBase = 'convertCore.php?';
 // / -----------------------------------------------------------------------------------
 ?>
   <body>
+    <?php if ($AllowUserSelectableLanguage) { ?>
+    <p style='margin:4px 0;'><strong>Language</strong></p>
+    <p style='margin:4px 0;'>
+      <?php foreach ($SupportedLanguages as $selectorLang => $selectorLabel) { ?>
+      <button type='submit' lang='<?php echo $selectorLang; ?>'
+      style='margin:2px; padding:2px; <?php if ($selectorLang === $LanguageToUse) echo 'outline:2px solid #000;'; ?>'
+      formaction='<?php echo $selectorBase.'language='.$selectorLang.'&color='.$ColorToUse.'&gui='.$GuiToUse; ?>'
+      title='<?php echo $selectorLabel; ?>'
+      <?php if ($selectorLang === $LanguageToUse) echo "aria-current='true'"; ?>><img src='<?php echo $GuiDir.'Languages/'.$selectorLang.'/flag.png'; ?>' alt='<?php echo $selectorLabel; ?>' style='height:16px; display:block;'/></button>
+      <?php } ?>
+    </p>
+    <?php } ?>
+    <?php if ($AllowUserSelectableColor) { ?>
+    <p style='margin:4px 0;'><strong>Color</strong></p>
+    <p style='margin:4px 0;'>
+    <?php foreach ($SupportedColors as $selectorColor) {
+      $selectorSwatch = isset($selectorSwatches[$selectorColor]) ? $selectorSwatches[$selectorColor] : '#cccccc';
+      $selectorCurrent = (strtolower($selectorColor) === strtolower($ColorToUse));
+      $selectorURL = htmlspecialchars($selectorBase.'color='.$selectorColor.'&language='.$LanguageToUse.'&gui='.$GuiToUse, ENT_QUOTES, 'UTF-8'); ?>
+      <button type='submit' 
+        style='margin:2px; min-width:32px; height:24px; background-color:<?php echo $selectorSwatch; ?>; <?php if ($selectorCurrent) echo 'outline:2px solid #000;'; ?>'
+        formaction='<?php echo $selectorURL; ?>'
+        title='<?php echo ucfirst($selectorColor); ?>' aria-label='<?php echo ucfirst($selectorColor); ?>'
+        <?php if ($selectorCurrent) echo "aria-current='true'"; ?>><span class='swatch' style='background-color:<?php echo $selectorSwatch; ?>;'></span></button>
+      <?php } ?>
+    </p>
+    <?php } ?>
+    <?php if ($AllowUserSelectableGui) { ?>
+    <p style='margin:4px 0;'><strong>Interface</strong></p>
+    <p style='margin:4px 0;'>
+    <?php foreach ($SupportedGuis as $selectorGui) {
+      $selectorCurrent = ($selectorGui === $GuiToUse);
+      $selectorURL = htmlspecialchars($selectorBase.'gui='.$selectorGui.'&language='.$LanguageToUse.'&color='.$ColorToUse, ENT_QUOTES, 'UTF-8'); ?>
+      <button type='submit' class='txtbtn'
+        style='margin:2px; <?php if ($selectorCurrent) echo 'font-weight:700; text-decoration:underline;'; ?>'
+        formaction='<?php echo $selectorURL; ?>'
+        title='<?php echo $selectorGui; ?>' aria-label='<?php echo $selectorGui; ?>'
+        <?php if ($selectorCurrent) echo "aria-current='true'"; ?>><?php echo $selectorGui; ?></button>
+      <?php } ?>
+    </p>
+    <?php } ?>
     <script type='text/javascript' src='<?php echo $JqueryPath; ?>'></script>
     <div id='header-text' style='max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;'>
       <?php if (!isset($_GET['noGui'])) { ?><h1><?php echo $ApplicationName; ?></h1>
@@ -1442,5 +1484,5 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
     </div>
     <?php
     // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-    $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2XpsArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2ScadArr = NULL;
-    unset($gui2AudArr, $gui2VidArr, $gui2StreamArr, $gui2DocArr, $gui2SpreadArr, $gui2XpsArr, $gui2PresArr, $gui2ArchArr, $gui2ImaArr, $gui2ModArr, $gui2SubArr, $gui2DraArr, $gui2OcrArr, $gui2ScadArr);
+    $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2XpsArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2ScadArr = $selectorBase = $selectorSide = $selectorSwatches = $selectorLang = $selectorLabel = $selectorCurrent = $selectorColor = $selectorSwatch = $selectorGui = $selectorURL = NULL;
+    unset($gui2AudArr, $gui2VidArr, $gui2StreamArr, $gui2DocArr, $gui2SpreadArr, $gui2XpsArr, $gui2PresArr, $gui2ArchArr, $gui2ImaArr, $gui2ModArr, $gui2SubArr, $gui2DraArr, $gui2OcrArr, $gui2ScadArr, $selectorBase, $selectorSide, $selectorSwatches, $selectorLang, $selectorLabel, $selectorCurrent, $selectorColor, $selectorSwatch, $selectorGui, $selectorURL);

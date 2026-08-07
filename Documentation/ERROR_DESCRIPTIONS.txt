@@ -21,9 +21,9 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ... 
-This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, bwrap,
-Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD,
-Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
+This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
+Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
+Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap & xvfb-run.
 ADDITIONAL INFORMATION
 HRConvert2 logs information about it's operational activity to the Logs subdirectory where HRConvert2 is installed by default.
 The default logging directory can be adjusted by modifying the --Log Storage Directory-- section of the config.php file. 
@@ -1196,7 +1196,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5006, <SESSION_IDENTIFIER>: File extension <FILE_EXTENSION> is not supported!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5006, <SESSION_IDENTIFIER>: The conversion <FILE_EXTENSION> to <FILE_EXTENSION> is not supported!
 
 FILE
   convertCore.php
@@ -3018,6 +3018,63 @@ ERROR DESCRIPTION
   Because this error takes place before the logging environment is initialized; this error will not be logged.
   Because this error takes place before the time environment is initialized; this error will not contain a timestamp.
   Because this error takes place before the configuration file has been processed; the Application Name configuration entry will not be used.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-25000, <SESSION_IDENTIFIER>: The SVG converter timed out!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Inkscape is not responding.
+  The conversion operation was attempted 5 times but no output file could be created.
+  The user submitted a request to convert a file that does not exist.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+  The user has requested to convert a file that was deleted for exceededing the --File Deletion Age Theshold-- specified in config.php.
+  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
+  The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
+  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs to have read & write access to the Data directory.
+  This may be the result of incorrect file permission levels on the directory where the application is installed.
+  This may be the result of incorrect file permission levels on the directory where Data is stored.
+  This may be the result of incorrect user or group associations for the www-data user or group.
+  The device where data is stored has an insufficient amount of storage space available.
+  The request contained character types or encoded data that are not supported.
+  One of the $_POST or $_GET variables submitted was empty after sanitization.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-25001, <SESSION_IDENTIFIER>: The installed Inkscape version is missing, unidentifiable, or too old!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The Inkscape dependency required to convert SVG files could not be verified.
+  Inkscape may not be installed, or may not be reachable on the system path used by the web server user.
+  The installed Inkscape may be older than the --Minimum Inkscape Version-- setting in config.php.
+  The installed Inkscape may be a development or git build which does not report a parseable version number.
+  HRConvert2 refuses any build it cannot positively identify, because an unknown build cannot be cleared.
+  Verify the installed version by running 'inkscape -version' as the web server user.
+  This minimum exists for feature and format support and is not a security control.
+  SVG conversions read a local file and never fetch anything remote.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/5/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/7/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.5.9.
+v3.6.0
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -19,15 +19,43 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ... 
-This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, bwrap,
-Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD,
-Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
+This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
+Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
+Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap & xvfb-run.
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
 
 --------------------
 COMMIT 8/6/2026
+v3.6.0 - Update GUI, FFMPEG conversions, Stream conversions, add SVG conversions.
+
+-v3.6.0.
+-Work on SVG, FFMPEG operations.
+ -Update FFMPEG arguments 
+-Add proper input/output filtering to convertFiles().
+-Update ERROR 5006 to say "The conversion from EXTENSION to EXTENSION is not supported" which is more helpful.
+-Refactor input / output format filtering.
+-Updated language & logic behind ERROR 5006.
+-Added ERROR 25000 & 25001 for Inkscape / SVG related operations.
+-Update convertGui2, all GUIs, to stop sending garbled PHP errors into the address bar on download syntax failures.
+  -Makes my life hell.
+  -Refactor download AJAX to accomplish this. 
+  -Update HRC2-Functions.js, download_link JS function.
+  -Only throw download_link when there is an actual URL to download.
+-Updated Installation_Instructions.txt & file header dependency section with Inkscape reference.
+-Currently the "Original" gui is unusable, as it has non-functional buttons that I'm working on.
+  -This is going to go behind a settings button once it is ready.
+  -These buttons will allow end-users to easily switch interface, color, & language.
+  -The design is about 50% complete.
+  -If you use the Original language pack, and want to keep using it on this version of HRConvert2...
+    -Delete the Original folder from /UI.
+    -Copy and paste the Wide folder into /UI again, rename it to Original.
+    -Open UI/Original/convertGui1.php and UI/Original/convertGui2.php in a text editor.
+    -Use the Find / Replace feature of your text editor to find all references to 2000px and replace with 1000px.
+
+--------------------
+COMMIT 8/7/2026
 v3.5.9 - Update GUI, FFMPEG conversions, Stream conversions, add SVG conversions.
 
 -v3.5.9.
@@ -41,7 +69,7 @@ COMMIT 8/5/2026
 v3.5.8 - Add language packs, update GUI.
 
 -v3.5.8.
--Added "Verified logging environment." success message to core.
+-Added "Verified logging environment." psuccess message to core.
 -Gate the "Closing Connection." log messages behind $Verbose.
 -Added 3 new color schemes to all 3 GUIs.
   -Orange.

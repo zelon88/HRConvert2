@@ -1,210 +1,210 @@
------------------------------------------------
-**[Installation Instructions](https://github.com/zelon88/HRConvert2/blob/master/Documentation/INSTALLATION_INSTRUCTIONS.txt)**
------------------------------------------------
-# HRConvert2
+<p align="center">
+  <img src="https://github.com/zelon88/HRConvert2/blob/master/UI/Default/Resources/Image/logo.png" alt="HRConvert2" width="200"/>
+</p>
 
-### A self-hosted drag-and-drop file conversion server & file sharing tool that supports 445 file formats with highly customizable GUI & 17 end-user selectable languages. 
+<h1 align="center">HRConvert2</h1>
 
-![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/new-webui.png)
-![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/new-webui2.png)
+<p align="center">
+  <strong>A self-hosted, drag-and-drop file conversion server.</strong><br>
+  No database. No cookies. No accounts. No tracking. Nothing leaves your server.
+</p>
 
----
-### Features
-- Converts 445 different file formats.
-- Self hosted. Installs on a home server!
-- All conversions are performed locally on your server.
-- Performs Optical Character Recognition (OCR) on PDFs & images.
-- Can scan files for viruses automatically in the background with ClamAV.
-- Allows users to scan files for viruses on-demand using ClamAV or [zelon88/scanCore](https://github.com/zelon88/scanCore).
-- Allows users to generate temporary links for sharing files.
-- Minimalistic drag & drop interface.
-- Each user gets their own temporary scratch space!
-- End users can switch between 17 languages by appending it to the URL like this: `?language=en`
-- End users can switch between 3 GUI environments by appending it to the URL like this: `?gui=Original`
-- End users can switch between 4 color schemes (on supported GUIs) by appending it to the URL like this: `?color=green`
-- Safe enough for public facing environments (when properly implemented).
-- No databases. No cookies. No cache files. 
-- Installs cleanly alongside other popular software (like WordPress).
-- Does not make external connections.
-- All JS is locally installed. No bulky frameworks. No analytics. No Google Fonts.
-- No tracking capabilities whatsoever.
-- Comes with 4 color schemes set in config.php.
-- Secure, performant, & compact codebase that's been open-source for years.
+<p align="center">
+  <a href="https://github.com/zelon88/HRConvert2/blob/master/Documentation/INSTALLATION_INSTRUCTIONS.txt"><strong>Installation Instructions</strong></a> ·
+  <a href="https://github.com/zelon88/HRConvert2/tree/master/Documentation">Documentation</a> ·
+  <a href="https://hub.docker.com/r/zelon88/hrconvert2">Docker Image</a>
+</p>
+
+<p align="center">
+  <img src="https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/new-webui.png" alt="The HRConvert2 upload interface"/>
+</p>
 
 ---
-### Here Is A Sample Of Just Some Supported Formats
-#### Audio Formats
-Supports specific bitrate through the API.
-- Mp2
-- Mp3
-- Aac
-- Avi
-- Flac
-- Ogg
-- Wav
-- Wma
-- M4a
-- M4p
-#### Video Formats
-- 3gp
-- Mkv
-- Avi
-- Mp4
-- Flv
-- Mpeg
-- Wmv
-- Mov
-- M4v
-#### Stream Formats
-- M3u8
-#### Document Formats
-- Doc
-- Docx
-- Txt
-- Rtf
-- Odt
-- Pdf
-#### Spreadsheet Formats
-- Csv
-- Xls
-- Xlsx
-- Ods
-#### Presentation Formats
-- Pages
-- Pptx
-- Ppt
-- Xps
-- Pot
-- Potx
-- Potm
-- Ppa
-- Ppt
-- Pptx
-- Odp
-#### Archive Formats
-Can convert between archive formats & disk image formats.
-- Zip
-- Rar
-- Tar
-- Bz
-- Gz
-- Bz2
-- 7z
-- Iso
-- Vhd
-- Vdi
-- Tar.bz2
-- Tar.gz
-#### Image Formats
-Can convert pictures of documents to document formats.
-Supports resize & rotate.
-- Jpg
-- Jpeg
-- Png
-- Bmp
-- Pdf
-- Gif
-- Webp
-- Cin
-- Dds
-- Dib
-- Flif
-- Avif
-- Gplt
-- Sct
-- Xcf
-- Heic
-- Ico
-#### 3D Model Formats
-- 3ds
-- Obj
-- Collada
-- Off
-- Ply
-- Stl
-- Gts
-- Ptx
-- Dxf
-- U3d
-- X3d
-- Vrml
-#### Subtitle Formats
-- Vtt
-- Ssa
-- Ass
-- Srt
-- Dvb
-#### Drawing Files
-Can convert drawing files to image formats.
-- Svg
-- Dxf
-- Fig
-- Vdx
-- Dia
-- Wpg
-#### OCR Support
-OCR Operations support the following input formats...
-- Jpg
-- Jpeg
-- Png
-- Bmp
-- Pdf
-- Gif
-OCR Operations support the following output formats...
-- Doc
-- Docx
-- Txt
-- Rtf
-- Odt
-- Pdf
+
+## Why HRConvert2
+
+Every free online file converter is a data collection business. You upload a contract, a
+medical scan, a CAD drawing of something you have not patented yet, and you have handed it
+to a stranger with an ad network.
+
+HRConvert2 is the same convenience without the transaction. It runs on hardware you control,
+converts files locally, and deletes them on a timer you set. Users need no account and leave
+no trace. It will run on a Raspberry Pi.
+
+- **Nothing is transmitted anywhere.** Conversions happen on your machine using local tools.
+- **No accounts, no sessions, no cookies, no database.** A user is a temporary directory.
+- **No tracking of any kind.** No analytics, no telemetry, no external fonts, no CDN.
+- **Files are deleted automatically** once they pass the age threshold you configure.
+- **Every user gets isolated scratch space.** Nobody can see anybody else's files.
+- **Drag, drop, convert, download.** That is the entire workflow.
 
 ---
-# Supported Languages
-Languages can be forced via policy or dynamically selected by the user by appending `?language=en` to the server URL.
-No need install additional language packs to switch languages. Translations are built-in. 
-Developers can craft links or redirects to load the correct language for each user or set the language once & forget it.
-- English (en)
-- French (fr)
-- Spanish (es)
-- Chinese, Simplified (zh)
-- Hindi (hi)
-- Arabic (ar)
-- Russian (ru)
-- Ukranian (uk)
-- Bengali (bn)
-- German (de)
-- Korean (ko)
-- Italian (it)
-- Portuguese (pt)
-- Japanese (ja)
-- Indonesian (id)
-- Turkish (tr)
-- Vietnamese (vi)
+
+## Features
+
+**447 file formats** across documents, spreadsheets, presentations, images, audio, video,
+streams, 3D models, CAD drawings, vector graphics, subtitles & archives.
+
+- Optical Character Recognition on PDFs & images.
+- OpenSCAD rendering, with every render isolated in an operating system sandbox.
+- Live stream capture from `.m3u8` playlists, with full SSRF inspection before any fetch.
+- On-demand virus scanning with ClamAV or [scanCore](https://github.com/zelon88/scanCore).
+- Automatic background virus scanning of every upload, if you want it.
+- Temporary share links that expire with the file.
+- **26 languages**, switchable by the user, built in. No language packs to install.
+- **3 interfaces & 7 color schemes**, switchable by the user.
+- Right-to-left layout support for Arabic, Hebrew, Persian, Urdu & Syriac.
+- Installs cleanly alongside WordPress & other software on the same server.
+- Every dependency version-checked at runtime, so a broken install says so instead of failing quietly.
 
 ---
-# Screenshots
-![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/new-webui.png)
 
-![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/new-webui2.png)
+## Built To Be Exposed
 
-![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/HRConvert2-1.png)
+HRConvert2 is designed for public-facing deployment, which means it is built to be attacked.
 
-![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/HRConvert2-10.png)
+- **Uploads are sanitized** before any dependency touches them.
+- **OpenSCAD renders run inside a bubblewrap namespace** that can see nothing but the one
+  session directory. OpenSCAD reads arbitrary files by design & cannot be given a sandbox
+  through its own arguments, so the operating system provides one. A server that cannot
+  create that sandbox refuses OpenSCAD conversions rather than falling back.
+- **Stream files are fully inspected before FFMPEG sees them.** Every referenced host is
+  resolved without following redirects, checked against private & reserved address ranges,
+  and pinned by IP so no dependency can be redirected to your internal network.
+- **Session identifiers are derived from a per-install secret**, generated with a CSPRNG at
+  install time & never transmitted.
+- **Every dependency is version-pinned** against known-vulnerable releases.
+- **Errors are documented.** Every numbered error has an entry explaining the cause &
+  the fix in [ERROR_DESCRIPTIONS.txt](https://github.com/zelon88/HRConvert2/blob/master/Documentation/ERROR_DESCRIPTIONS.txt).
 
-![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/HRConvert2-11.png)
-
-![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/HRConvert2-12.png)
-
-![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/HRConvert2-13.png)
-
-![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/HRConvert2-14.png)
-
-![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/HRConvert2-15.png)
-
-![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/HRConvert2-16.png)
-
-![HRConvert2](https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/HRConvert2-17.png)
+Security reports are welcome & are taken seriously. Several of the protections above exist
+because somebody took the time to find & report a real flaw.
 
 ---
-# License
-This project is licensed under the [GNU General Public License v3.0 License](https://github.com/zelon88/HRConvert2/blob/master/Documentation/LICENSE). See the [Official Documentation](https://github.com/zelon88/HRConvert2/tree/master/Documentation) for more information.
+
+## Requirements
+
+Debian or Ubuntu Linux, Apache 2.4 & PHP 8 or later. Everything else is a package install.
+
+A Raspberry Pi Model B+ is enough to run it. Anything x86 or x64 will be comfortable.
+
+Full dependency list & a step-by-step walkthrough are in the
+[Installation Instructions](https://github.com/zelon88/HRConvert2/blob/master/Documentation/INSTALLATION_INSTRUCTIONS.txt).
+A [Docker image](https://hub.docker.com/r/zelon88/hrconvert2) is also available.
+
+---
+
+## Languages
+
+Users switch languages from the interface, or you can force one in `config.php`, or pass it
+in the URL with `?language=de`. Every translation ships with the application.
+
+| | | | |
+|---|---|---|---|
+| English `en` | Français `fr` | Español `es` | 中文 `zh` |
+| हिन्दी `hi` | العربية `ar` | Русский `ru` | Українська `uk` |
+| বাংলা `bn` | Deutsch `de` | 한국어 `ko` | Italiano `it` |
+| Português `pt` | Tiếng Việt `vi` | Türkçe `tr` | 日本語 `ja` |
+| Bahasa Indonesia `id` | Polski `pl` | Nederlands `nl` | Kiswahili `sw` |
+| မြန်မာ `my` | اردو `ur` | فارسی `fa` | עברית `he` |
+| ܣܘܪܝܝܐ `aii` | ܐܪܡܝܐ `arc` | | |
+
+Adding a language means adding one folder. The application is built so that communities can
+translate it for themselves without touching a single line of application code.
+
+---
+
+## Interface & Appearance
+
+Three interfaces ship with the application: **Default**, **Wide** & **Original**. Seven color
+schemes: red, green, blue, grey, orange, purple & dark.
+
+Users pick their own from the interface. Administrators can lock any of it down in
+`config.php`. Every interface lives in its own folder under `/UI` & can be forked without
+touching the core, so a deployment can carry its own branding.
+
+---
+
+<details>
+<summary><strong>Supports 457 Formats</strong> — click to expand
+</summary>
+
+#### Audio
+Mp3, Mp2, Aac, Flac, Ogg, Opus, Wav, Wma, M4a, M4p, Aiff, Ac3, Ac4, Eac3, Alac, Ape, Amr,
+Au, Caf, Dts, Gsm, Mlp, Oga, Spx, Tak, Tta, Voc, W64, Wv, G722, G726, Aptx, Adx, Shn, Sox
+& hundreds more.
+Output bitrate is selectable.
+
+#### Video
+Mp4, Mkv, Avi, Mov, Wmv, Flv, Mpeg, M4v, 3gp, 3g2, Webm, Ogv, Asf, Vob, Rm, Swf, Dv, Av1,
+H261, H263, H264, Hevc, Dnxhd, Mpegts, Mxf, Nsv, Ivf, R3d, Apng, Cdg, Yuv4mpegpipe
+& hundreds more.
+
+#### Streams
+M3u8. Captures a live stream & converts it into any supported video or audio format.
+
+#### Documents
+Doc, Docx, Txt, Rtf, Odt, Pdf.
+
+#### Spreadsheets
+Csv, Xls, Xlsx, Ods.
+
+#### Presentations
+Pptx, Ppt, Pot, Potx, Potm, Ppa, Odp, Xps, Oxps.
+
+#### Archives & Disk Images
+Zip, Rar, Tar, 7z, Bz, Gz, Bz2, Tar.bz2, Tar.gz, Iso, Vhd, Vdi, Cbr, Cbz.
+Converts between archive formats & disk image formats.
+
+#### Images
+Jpg, Jpeg, Jpe, Png, Bmp, Gif, Webp, Heic, Ico, Avif, Flif, Cin, Dds, Dib, Gplt, Sct, Xcf.
+Supports resize & rotate. Photographs of documents can be converted into documents.
+
+#### 3D Models
+3ds, Obj, Collada, Off, Ply, Stl, Gts, Ptx, Dxf, U3d, X3d, Vrml.
+
+#### OpenSCAD
+Renders `.scad` source into Stl, Off, Amf, 3mf & Csg. Multi-file assemblies are supported.
+
+#### Vector Graphics
+Svg, converted with Inkscape. Supports export sizing.
+
+#### Technical Drawings
+Dxf, Fig, Vdx, Dia, Wpg. Converts drawings into image formats.
+
+#### Subtitles
+Srt, Vtt, WebVTT, Ass, Ssa, Sub, Sbv, Sup, Ttml, Scc, Sami, Vobsub, Mpl2, Mpsub, Pjs,
+Realtext, Subviewer, Jacosub, Microdvd, Vplayer, Tedcaptions, Dvb & many more.
+
+#### OCR
+Reads Jpg, Jpeg, Png, Bmp, Pdf & Gif. Writes Doc, Docx, Txt, Rtf, Odt & Pdf.
+
+</details>
+
+---
+
+## Screenshots
+
+<p align="center">
+  <img src="https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/new-webui2.png" alt="The HRConvert2 conversion options interface"/>
+</p>
+
+More screenshots are in [Documentation/Screenshots](https://github.com/zelon88/HRConvert2/tree/master/Documentation/Screenshots).
+
+---
+
+## Contributing
+
+Translations, interface themes & bug reports are all welcome. The application is deliberately
+modular: a language is a folder, an interface is a folder, & neither requires touching the core.
+
+If you find a security issue, please open an issue. Reports that include a reproduction are
+worth their weight & have directly shaped this project.
+
+---
+
+## License
+
+[GNU General Public License v3.0](https://github.com/zelon88/HRConvert2/blob/master/Documentation/LICENSE).
+
+Free to use, free to modify, free to self-host. If you improve it, send it back.

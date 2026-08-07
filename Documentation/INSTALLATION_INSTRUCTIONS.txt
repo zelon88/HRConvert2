@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/5/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/7/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.5.6.
+v3.6.0.
 This file contains a walkthrough guide for installing HRConvert2.
 
 HARDWARE REQUIREMENTS ... 
@@ -19,9 +19,9 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ... 
-This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, bwrap,
-Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD,
-Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
+This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
+Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
+Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap & xvfb-run.
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
@@ -110,7 +110,7 @@ In this step we will install dependencies to enable most common file conversions
 2. Run  'sudo apt-get install libreoffice-common && sudo apt-get install libreoffice-java-common && sudo apt-get install tar'
 3. Run  'sudo apt-get install clamav && sudo apt-get install unoconv && sudo apt-get install default-jre'
 4. Run  'sudo apt-get install rar && sudo apt-get install unrar && sudo apt-get install p7zip-rar'
-5. Run  'sudo apt-get install imagemagick && sudo apt-get install tesseract-ocr'
+5. Run  'sudo apt-get install imagemagick && sudo apt-get install tesseract-ocr && sudo apt-get install inkscape'
 6. Run  'sudo apt-get install meshlab && sudo apt-get install dia && sudo apt-get install bubblewrap && sudo apt-get install pandoc && sudo apt-get install mkisofs'
 7. Run  'sudo apt-get install poppler-utils && sudo apt-get install nodejs && sudo apt-get install gnuplot && sudo apt-get install libgxps-utils && sudo apt-get install xvfb'
 8. Run  'sudo featherpad /etc/ImageMagick-6/policy.xml'

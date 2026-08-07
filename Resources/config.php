@@ -23,9 +23,9 @@
 // / This application will run on just about any x86 or x64 computer.
 // /
 // / DEPENDENCY REQUIREMENTS ... 
-// / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, bwrap,
-// / Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD,
-// / Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
+// / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
+// / Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
+// / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap & xvfb-run.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -232,6 +232,16 @@ $AllowSCADIncludeResolution = TRUE;
 // /   Valid options are integers greater than 0.
 // /   Default is 180.
 $SCADConversionTimeout = 180;
+// /  --Minimum Inkscape Version--
+// /   Inkscape is the engine behind every SVG conversion.
+// /   This minimum exists for command line compatibility, not for security.
+// /   Inkscape replaced its entire command line interface at version 1.0.
+// /   The 0.92 flags such as --export-png were removed rather than deprecated.
+// /   1.2 is pinned because it is the interface HRConvert2 builds its commands against.
+// /   Check the installed version by running 'inkscape --version' in a terminal on the server.
+// /   Format is major.minor.
+// /   Default is '1.2'.
+$MinimumInkscapeVersion = '1.2';
 // /  --Minimum OpenSCAD Version--
 // /   HRConvert2 does not probe OpenSCAD for capabilities & does not accommodate older builds.
 // /   Pinning a minimum version means the export formats below can be trusted as written.

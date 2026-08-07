@@ -20,9 +20,9 @@
 // / This application will run on just about any x86 or x64 computer.
 // /
 // / DEPENDENCY REQUIREMENTS ...
-// / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, bwrap,
-// / Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD,
-// / Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
+// / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
+// / Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
+// / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap & xvfb-run.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -85,12 +85,17 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
                       download:'<?php echo $ConsolidatedLogFileName; ?>' },
-                    success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
-                      toggle_visibility('victoryCommandDiv');
-                      setTimeout(function() {
-                        toggle_visibility('victoryCommandDiv'); }, 5000);
-                      download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>'); } }); },
+                    success: function(ReturnData) {
+                      if (ReturnData.includes('ERROR!!!')) {
+                        toggle_visibility('loadingCommandDiv');
+                        alert(ReturnData); }
+                      else {
+                        toggle_visibility('loadingCommandDiv');
+                        toggle_visibility('victoryCommandDiv');
+                        setTimeout(function() {
+                          toggle_visibility('victoryCommandDiv'); }, 5000);
+                        download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
+                        } }); },
                     error: function(ReturnData) {
                       toggle_visibility('loadingCommandDiv');
 
@@ -132,12 +137,20 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('userarchallfilename').value+'.'+extension },
-                    success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
-                      toggle_visibility('victoryCommandDiv');
-                      setTimeout(function() {
-                        toggle_visibility('victoryCommandDiv'); }, 5000);
-                      download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', document.getElementById('userarchallfilename').value+'.'+extension); } }); },
+                    success: function(ReturnData) {
+                      if (ReturnData.includes('ERROR!!!')) {
+                        toggle_visibility('loadingCommandDiv');
+                        toggle_visibility('failureCommandDiv');
+                        setTimeout(function() {
+                          toggle_visibility('failureCommandDiv'); }, 5000);
+                        alert(ReturnData); }
+                      else {
+                        toggle_visibility('loadingCommandDiv');
+                        toggle_visibility('victoryCommandDiv');
+                        setTimeout(function() {
+                          toggle_visibility('victoryCommandDiv'); }, 5000);
+                        download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', document.getElementById('userarchallfilename').value+'.'+extension);
+                        } }); },
                     error: function(ReturnData) {
                       toggle_visibility('loadingCommandDiv');
                       toggle_visibility('failureCommandDiv');
@@ -198,12 +211,19 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                   Token1:'<?php echo $Token1; ?>',
                   Token2:'<?php echo $Token2; ?>',
                   download:'<?php echo $File; ?>' },
-                success: function(returnFile) {
+                success: function(ReturnData) {
                   toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  setTimeout(function() {
-                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                  download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $File; ?>'); },
+                  if (ReturnData.includes('ERROR!!!')) {
+                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() {
+                      toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                    alert(ReturnData); }
+                  else {
+                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() {
+                      toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                    download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $File; ?>');
+                    } },
                 error: function(ReturnData) {
                   toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                   toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
@@ -412,7 +432,12 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                               Token2:'<?php echo $Token2; ?>',
                               download:line },
                             success: function(ReturnData) {
-                              if (ReturnData !== '') {
+                              if (ReturnData.includes('ERROR!!!')) {
+                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                                setTimeout(function() {
+                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                                alert(ReturnData); }
+                              else if (ReturnData !== '') {
                                 download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
                                 toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                                 setTimeout(function() {
@@ -535,12 +560,19 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                         Token1:'<?php echo $Token1; ?>',
                         Token2:'<?php echo $Token2; ?>',
                         download:'<?php echo $ConsolidatedLogFileName; ?>' },
-                      success: function(returnFile) {
-                        toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                        setTimeout(function() {
-                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                        download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>'); } }); },
+                success: function(ReturnData) {
+                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                  if (ReturnData.includes('ERROR!!!')) {
+                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() {
+                      toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                    alert(ReturnData); }
+                  else {
+                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() {
+                      toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                    download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
+                    } },
                     error: function(ReturnData) {
                       toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
@@ -564,12 +596,19 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                         Token1:'<?php echo $Token1; ?>',
                         Token2:'<?php echo $Token2; ?>',
                         download:'<?php echo $ConsolidatedLogFileName; ?>' },
-                      success: function(returnFile) {
-                        toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                        setTimeout(function() {
-                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                        download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>'); } }); },
+                success: function(ReturnData) {
+                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                  if (ReturnData.includes('ERROR!!!')) {
+                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() {
+                      toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                    alert(ReturnData); }
+                  else {
+                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() {
+                      toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                    download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
+                    } },
                     error: function(ReturnData) {
                       toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
@@ -593,12 +632,19 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                         Token1:'<?php echo $Token1; ?>',
                         Token2:'<?php echo $Token2; ?>',
                         download:'<?php echo $ConsolidatedLogFileName; ?>' },
-                      success: function(returnFile) {
-                        toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                        setTimeout(function() {
-                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                        download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>'); } }); },
+                success: function(ReturnData) {
+                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                  if (ReturnData.includes('ERROR!!!')) {
+                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() {
+                      toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                    alert(ReturnData); }
+                  else {
+                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() {
+                      toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                    download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
+                    } },
                     error: function(ReturnData) {
                       toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
@@ -658,7 +704,12 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                               Token2:'<?php echo $Token2; ?>',
                               download:line },
                             success: function(ReturnData) {
-                              if (ReturnData !== '') {
+                              if (ReturnData.includes('ERROR!!!')) {
+                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                                setTimeout(function() {
+                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                                alert(ReturnData); }
+                              else if (ReturnData !== '') {
                                 download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
                                 toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                                 setTimeout(function() {
@@ -716,7 +767,12 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                               Token2:'<?php echo $Token2; ?>',
                               download:line },
                             success: function(ReturnData) {
-                              if (ReturnData !== '') {
+                              if (ReturnData.includes('ERROR!!!')) {
+                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                                setTimeout(function() {
+                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                                alert(ReturnData); }
+                              else if (ReturnData !== '') {
                                 download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
                                 toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                                 setTimeout(function() {
@@ -774,7 +830,12 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                               Token2:'<?php echo $Token2; ?>',
                               download:line },
                             success: function(ReturnData) {
-                              if (ReturnData !== '') {
+                              if (ReturnData.includes('ERROR!!!')) {
+                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                                setTimeout(function() {
+                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                                alert(ReturnData); }
+                              else if (ReturnData !== '') {
                                 download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
                                 toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                                 setTimeout(function() {
@@ -832,7 +893,12 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                               Token2:'<?php echo $Token2; ?>',
                               download:line },
                             success: function(ReturnData) {
-                              if (ReturnData !== '') {
+                              if (ReturnData.includes('ERROR!!!')) {
+                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                                setTimeout(function() {
+                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                                alert(ReturnData); }
+                              else if (ReturnData !== '') {
                                 download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
                                 toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                                 setTimeout(function() {
@@ -890,7 +956,12 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                               Token2:'<?php echo $Token2; ?>',
                               download:line },
                             success: function(ReturnData) {
-                              if (ReturnData !== '') {
+                              if (ReturnData.includes('ERROR!!!')) {
+                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                                setTimeout(function() {
+                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                                alert(ReturnData); }
+                              else if (ReturnData !== '') {
                                 download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
                                 toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                                 setTimeout(function() {
@@ -948,7 +1019,12 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                               Token2:'<?php echo $Token2; ?>',
                               download:line },
                             success: function(ReturnData) {
-                              if (ReturnData !== '') {
+                              if (ReturnData.includes('ERROR!!!')) {
+                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                                setTimeout(function() {
+                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                                alert(ReturnData); }
+                              else if (ReturnData !== '') {
                                 download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
                                 toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                                 setTimeout(function() {
@@ -1008,7 +1084,12 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                               Token2:'<?php echo $Token2; ?>',
                               download:line },
                             success: function(ReturnData) {
-                              if (ReturnData !== '') {
+                              if (ReturnData.includes('ERROR!!!')) {
+                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                                setTimeout(function() {
+                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                                alert(ReturnData); }
+                              else if (ReturnData !== '') {
                                 download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
                                 toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                                 setTimeout(function() {
@@ -1066,7 +1147,12 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                               Token2:'<?php echo $Token2; ?>',
                               download:line },
                             success: function(ReturnData) {
-                              if (ReturnData !== '') {
+                              if (ReturnData.includes('ERROR!!!')) {
+                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                                setTimeout(function() {
+                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                                alert(ReturnData); }
+                              else if (ReturnData !== '') {
                                 download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
                                 toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                                 setTimeout(function() {
@@ -1124,7 +1210,12 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                               Token2:'<?php echo $Token2; ?>',
                               download:line },
                             success: function(ReturnData) {
-                              if (ReturnData !== '') {
+                              if (ReturnData.includes('ERROR!!!')) {
+                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                                setTimeout(function() {
+                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                                alert(ReturnData); }
+                              else if (ReturnData !== '') {
                                 download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
                                 toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                                 setTimeout(function() {
@@ -1182,7 +1273,12 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                               Token2:'<?php echo $Token2; ?>',
                               download:line },
                             success: function(ReturnData) {
-                              if (ReturnData !== '') {
+                              if (ReturnData.includes('ERROR!!!')) {
+                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                                setTimeout(function() {
+                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                                alert(ReturnData); }
+                              else if (ReturnData !== '') {
                                 download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
                                 toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                                 setTimeout(function() {
@@ -1299,7 +1395,12 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                               Token2:'<?php echo $Token2; ?>',
                               download:line },
                             success: function(ReturnData) {
-                              if (ReturnData !== '') {
+                              if (ReturnData.includes('ERROR!!!')) {
+                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                                setTimeout(function() {
+                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                                alert(ReturnData); }
+                              else if (ReturnData !== '') {
                                 download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
                                 toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                                 setTimeout(function() {
@@ -1357,7 +1458,12 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                               Token2:'<?php echo $Token2; ?>',
                               download:line },
                             success: function(ReturnData) {
-                              if (ReturnData !== '') {
+                              if (ReturnData.includes('ERROR!!!')) {
+                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                                setTimeout(function() {
+                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                                alert(ReturnData); }
+                              else if (ReturnData !== '') {
                                 download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
                                 toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                                 setTimeout(function() {
@@ -1421,7 +1527,12 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                               Token2:'<?php echo $Token2; ?>',
                               download:line },
                             success: function(ReturnData) {
-                              if (ReturnData !== '') {
+                              if (ReturnData.includes('ERROR!!!')) {
+                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                                setTimeout(function() {
+                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                                alert(ReturnData); }
+                              else if (ReturnData !== '') {
                                 download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
                                 toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                                 setTimeout(function() {

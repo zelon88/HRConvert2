@@ -21,9 +21,9 @@
 // / This application will run on just about any x86 or x64 computer.
 // /
 // / DEPENDENCY REQUIREMENTS ...
-// / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, bwrap,
-// / Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD,
-// / Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
+// / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
+// / Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
+// / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap & xvfb-run.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -55,20 +55,14 @@ function copy_share_link(url, unsupportedMessage) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to point the hidden download anchor at a file & trigger it.
-// / The core guarantees a filename free of HTML & shell metacharacters, but NOT free of
-// / URL metacharacters. The characters + and = both survive sanitizeString() because both
-// / are legitimate in a filename, & a + is decoded as a space by some servers & proxies.
-// / Non ASCII filenames have the same problem for a different reason. They are valid on
-// / disk but are not valid in a URI path until they are percent encoded. Most browsers
-// / encode them automatically, & encoding here means never depending on that.
-// / Encoding belongs in this function because this is the only place that knows a URL is
-// / being built. The same filename may be displayed as HTML text elsewhere, where a
-// / completely different escape is required & this one would be wrong.
-// / The basePath must already end with a separator & is never encoded, because it carries
-// / the session path separators that a URI is required to keep literal.
+// / The filename is encoded because ? + and = all survive the core sanitizer.
+// / The basePath carries the session separators & is never encoded.
+// / A core error arrives with an HTTP 200, so a failed download reaches this function
+// / carrying the error text. Refusing it here stops that text becoming a URL.
 function download_file(basePath, fileName) {
   var e = document.getElementById('downloadTarget');
   if (!e) return false;
+  if (!fileName || fileName.indexOf('ERROR!!!') !== -1 || fileName.indexOf('\n') !== -1) return false;
   e.href = basePath + encodeURIComponent(fileName);
   e.click();
   return true; }

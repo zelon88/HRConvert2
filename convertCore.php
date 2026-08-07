@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/6/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/7/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.5.9.
+// / v3.6.0.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -21,9 +21,9 @@
 // / This application will run on just about any x86 or x64 computer.
 // /
 // / DEPENDENCY REQUIREMENTS ...
-// / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, bwrap,
-// / Mkisofs, 7zip, LibreOffice, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD,
-// / Unrar, Rar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick & xvfb-run.
+// / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
+// / Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
+// / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap & xvfb-run.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -56,18 +56,6 @@ function verifyTime() {
   $tzAbbreviations = $tzList = $zoneList = $zone = $item = NULL;
   unset($tzAbbreviations, $tzList, $zoneList, $zone, $item);
   return array($TimeIsSet, $Date, $Time); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// A function to thwart any potential blind attacks that utilize time as an exfiltration mechanism.
-// Introduces arbitrary noise in the form of random delay timers.
-// This function introduces entropy into the duration of every HRConvert2 operation.
-// Set $opType to one of the following options; sanitize, filework, or core.
-// When $opType is set to ''
-function timingProtect($opType) {
-
-
-}
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -208,7 +196,7 @@ function verifyConfigVersion($RequiredConfigVersion) {
     'DefaultStreamInspectionForfeitAction', 'MaxStreamInspectionFileSize',
     'AllowSCADIncludeResolution', 'SCADConversionTimeout',
     'MinimumSCADVersion', 'MinimumFFMPEGVersion', 'MinimumStreamFFMPEGVersion',
-    'MinimumLibreOfficeVersion');
+    'MinimumLibreOfficeVersion', 'MinimumInkscapeVersion');
   // / Check that every required setting actually exists in the global scope.
   // / config.php is required at global scope, so every setting it defines lands in $GLOBALS.
   // / isset() is deliberately not used because a setting legitimately set to NULL still exists.
@@ -250,19 +238,19 @@ function verifyConfigVersion($RequiredConfigVersion) {
 // / This function runs before verifyLogs(), so every failure here dies rather than logging.
 function verifyInstallation() {
   // / Set variables.
-  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation;
+  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion;
   $InstallationIsVerified = $secret = $secretFile = $secretFileContent = $createSecretFile = $SecretKey = $secretFailed = $loadSecretFile = $secretFileWriteComplete = $secretCheck = $appVersionCheck = $configIsValid = FALSE;
   $check1 = $check2 = TRUE;
   $bytesWritten = 0;
   $missingConfigVars = array();
   $detectedConfigVersion = $requiredConfigVersion = $configFile = '';
   // / Define what version of HRConvert2 this core file represents.
-  $HRConvertVersion = 'v3.5.9';
+  $HRConvertVersion = 'v3.6.0';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
   // / A release that changes no settings leaves this alone, so existing config files keep working.
-  $requiredConfigVersion = 'v3.5.9';
+  $requiredConfigVersion = 'v3.6.0';
   $requiredConfigVersion = ltrim($requiredConfigVersion, 'vV');
   // / Define absolute paths for files that we only have relative paths for.
   $configFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'config.php');
@@ -1882,11 +1870,54 @@ function convertDrawings($pathname, $newPathname) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to confirm the installed Inkscape meets the minimum version HRConvert2 requires.
+// / Inkscape replaced its entire command line interface at version 1.0.
+// / The 0.92 flags such as --export-png were removed rather than deprecated, so a command
+// / written for the current interface fails outright on an older build.
+// / Inkscape reports its version as "Inkscape 1.2.2 (b0a8486541, 2022-12-01)".
+// / The version is written to standard output, unlike OpenSCAD which writes to standard error.
+// / A build that reports no parseable version is refused, because an unknown build cannot be cleared.
+// / Inkscape requires a writable HOME directory & will fail to start without one.
+// / The core sets HOME to the configured home location during verifyGlobals().
+function verifySVGVersion($MinimumVersion) {
+  // / Set variables.
+  global $Verbose;
+  $SVGVersionIsValid = FALSE;
+  $versionOutput = $versionMatches = $minimumParts = array();
+  $versionExitCode = 1;
+  $detectedVersion = '';
+  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
+  // / Inkscape writes its version banner to standard output.
+  // / Standard error is redirected anyway, because a headless launch emits harmless warnings.
+  exec('inkscape --version 2>&1', $versionOutput, $versionExitCode);
+  if ($versionExitCode === 0 && !empty($versionOutput)) {
+    // / Match a major.minor pair immediately following the product name.
+    // / Anchoring on the name prevents a match against the commit date later in the banner.
+    if (preg_match('/Inkscape\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
+      $detectedMajor = (int)$versionMatches[1];
+      $detectedMinor = (int)$versionMatches[2];
+      $detectedVersion = $detectedMajor.'.'.$detectedMinor;
+      // / Split the supplied minimum into the same two parts.
+      $minimumParts = explode('.', $MinimumVersion);
+      $minimumMajor = (int)($minimumParts[0] ?? 0);
+      $minimumMinor = (int)($minimumParts[1] ?? 0);
+      // / Compare numerically, never as strings.
+      // / A string comparison would rank version 1.10 below version 1.2.
+      if ($detectedMajor > $minimumMajor) $SVGVersionIsValid = TRUE;
+      elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $SVGVersionIsValid = TRUE; } }
+  if ($Verbose) logEntry('Inkscape Version Check: '.($SVGVersionIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $versionOutput = $versionMatches = $versionExitCode = $detectedVersion = $minimumParts = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumVersion = NULL;
+  unset($versionOutput, $versionMatches, $versionExitCode, $detectedVersion, $minimumParts, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
+  return $SVGVersionIsValid; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to convert SVG vector drawing formats.
 function convertSVG($pathname, $newPathname, $height, $width) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer;
-  $ConversionSuccess = $ConversionErrors = FALSE;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumInkscapeVersion;
+  $ConversionSuccess = $ConversionErrors = $svgVersionIsValid = FALSE;
   $returnData = $argEcho = '';
   $stopper = 0;
   $sleepTime = $SleepTimer;
@@ -1894,25 +1925,31 @@ function convertSVG($pathname, $newPathname, $height, $width) {
   $heightEcho = '--export-height='.$height;
   if (!empty($width) && $width > 0) $argEcho = $widthEcho;
   if (!empty($height) && $height > 0) $argEcho = $heightEcho;
+  if ((!empty($height)  && $height > 0) && (!empty($width) && $width > 0)) $argEcho = $widthEcho.' '.$heightEcho;
   if ($Verbose) logEntry('Converting SVG.');
-  // / This code will attempt the conversion up to $StopCounter number of times.
-  while (!file_exists($newPathname) && $stopper <= $StopCounter) {
-    // / If the last conversion attempt failed, wait a moment before trying again.
-    if ($stopper !== 0) sleep($sleepTime++);
-    // / Attempt the conversion.
-    $returnData = shell_exec('inkscape '.$argEcho.' --export-filename='.$newPathname.' '.$pathname);
-    // / Count the number of conversions to avoid infinite loops.
-    $stopper++;
-    // / Stop attempting the conversion after $StopCounter number of attempts.
-    if ($stopper === $StopCounter) { 
-      $ConversionErrors = TRUE;
-      errorEntry('The SVG converter timed out!', 25000, FALSE); } }
+  $svgVersionIsValid = verifySVGVersion($MinimumInkscapeVersion);
+  if (!$svgVersionIsValid) {
+    $ConversionErrors = TRUE;
+    errorEntry('The installed Inkscape version is missing, unidentifiable, or too old!', 25001, FALSE); }
+  else {
+    // / This code will attempt the conversion up to $StopCounter number of times.
+    while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+      // / If the last conversion attempt failed, wait a moment before trying again.
+      if ($stopper !== 0) sleep($sleepTime++);
+      // / Attempt the conversion.
+      $returnData = shell_exec('inkscape '.$argEcho.' --export-filename='.$newPathname.' '.$pathname);
+      // / Count the number of conversions to avoid infinite loops.
+      $stopper++;
+      // / Stop attempting the conversion after $StopCounter number of attempts.
+      if ($stopper === $StopCounter) { 
+        $ConversionErrors = TRUE;
+        errorEntry('The SVG converter timed out!', 25000, FALSE); } } }
   // / Log the output of the operation to the logfile, if it is not blank.
   if ($Verbose && trim($returnData) !== '') logEntry('Inkscape returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $newPathname = $sleepTime = $heightEcho = $widthEcho = $argEcho = NULL;
-  unset($returnData, $stopper, $pathname, $newPathname, $sleepTime, $heightEcho, $widthEcho, $argEcho);
+  $returnData = $stopper = $pathname = $newPathname = $sleepTime = $heightEcho = $widthEcho = $argEcho = $svgVersionIsValid = NULL;
+  unset($returnData, $stopper, $pathname, $newPathname, $sleepTime, $heightEcho, $widthEcho, $argEcho, $svgVersionIsValid);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -2743,7 +2780,6 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
   $br = ' ';
   $stopper = 0;
   $sleepTime = $SleepTimer;
-  if ($extension === 'mkv') $extension = 'matroska';
   // / Determine if the bitrate is being set.
   if (empty($bitrate) or $bitrate = '') $bitrate = 'auto';
   if ($bitrate === 'auto') $br = ' ';
@@ -2778,7 +2814,6 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
   unset($returnData, $stopper, $pathname, $newPathname, $br, $extension, $bitrate, $sleepTime, $ffmpegVersionIsValid);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to convert archive & disk image formats.
@@ -3258,9 +3293,12 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
 // / $WaitForStream tells us the conversion is still running & must not be judged by its output.
 function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, $Width, $Rotate, $Bitrate) {
   // / Set variables.
-  global $Verbose, $VirusScan, $SpreadsheetArray, $PresentationInputArray, $XPSInputArray, $DocumentArray, $ImageArray, $ModelArray, $SCADArray, $DrawingArray, $SVGInputArray, $SVGOutputArray, $VideoInputArray, $SubtitleInputArray, $StreamArray, $StreamOutputArray, $MediaInputArray, $ArchiveArray, $SupportedConversionTypes, $Lol, $WaitForStream;
-  $MainConversionSuccess = $MainConversionErrors = $virusFound = $skip = $isExtensionSupported = $fileIsVerified = $variableIsSanitized = $outputExists = $ConversionSuccess = $ConversionErrors = $fileConversionSuccess = $anyStreamStarted = FALSE;
+  global $Verbose, $VirusScan, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $DocumentArray, $ImageArray, $ModelArray, $SCADArray, $DrawingArray, $SVGInputArray, $SVGOutputArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $StreamOutputArray, $MediaInputArray, $MediaOutputArray, $ArchiveArray, $SupportedConversionTypes, $Lol, $WaitForStream;
+  $MainConversionSuccess = $MainConversionErrors = $virusFound = $skip = $isExtensionSupported = $fileIsVerified = $variableIsSanitized = $outputExists = $ConversionSuccess = $ConversionErrors = $fileConversionSuccess = $anyStreamStarted = $scanComplete = FALSE;
   $clean = $copy = TRUE;
+  $pathname = $oldPathname = $oldExtension = $newPathname = $file = '';
+  $arrKey = 0;
+  // / This is for input file filtering.
   $docarray = array_merge($DocumentArray, $SpreadsheetArray, $PresentationInputArray, $XPSInputArray);
   $imgarray = $ImageArray;
   $modelarray = $ModelArray;
@@ -3279,7 +3317,19 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
   // / Every stream output format is also an ordinary audio or video format, so an mp3 to
   // / aac conversion belongs to Audio & to Stream both. The first family to match wins,
   // / so Stream sits last & only ever claims a file no earlier family recognized.
-  $arrayArray = array('Document' => $docarray, 'Image' => $imgarray, 'Model' => $modelarray, 'Scad' => $scadarray, 'Drawing' => $drawingarray, 'SVG' => $svgarray, 'Video' => $videoarray, 'Subtitle' => $subtitleArray, 'Audio' => $audioarray, 'Archive' => $archarray, 'Stream' => $streamarray);
+  $arrayArray = array('Document' => $docarray, 'Image' => $imgarray, 'Model' => $modelarray, 'Scad' => $scadarray, 'SVG' => $svgarray, 'Video' => $videoarray, 'Subtitle' => $subtitleArray, 'Audio' => $audioarray, 'Archive' => $archarray, 'Drawing' => $drawingarray, 'Stream' => $streamarray);
+  // /  This is for output file filtering.
+  $docarrayout = array_merge($DocumentArray, $SpreadsheetArray, $PresentationOutputArray, $XPSOutputArray);
+  $imgarrayout = $ImageArray;
+  $modelarrayout = $ModelArray;
+  $scadarrayout = $SCADArray;
+  $drawingarrayout = $DrawingArray;
+  $svgarrayout = $SVGOutputArray;
+  $videoarrayout = $VideoOutputArray;
+  $subtitleArrayout = $SubtitleOutputArray;
+  $audioarrayout = $MediaOutputArray;
+  $archarrayout = $ArchiveArray;
+  $arrayArrayOut = array('Document' => $docarrayout, 'Image' => $imgarrayout, 'Model' => $modelarrayout, 'Scad' => $scadarrayout, 'SVG' => $svgarrayout, 'Video' => $videoarrayout, 'Subtitle' => $subtitleArrayout, 'Audio' => $audioarrayout, 'Archive' => $archarrayout, 'Drawing' => $drawingarrayout, 'Stream' => $streamarray);
   $arrKey = 0;
   $file = '';
   // / Make sure the input files are formatted into an array.
@@ -3316,8 +3366,8 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
       if ($Verbose) logEntry('Virus scan complete.'); }
     // / Loop through the array of supported formats & only call the converter if both input & output files are supported.
     foreach ($arrayArray as $arrKey => $arrArray) {
-      if (!in_array(strtolower($oldExtension), $arrArray)) continue;
-      if (!in_array(strtolower($UserExtension), $arrArray)) continue;
+      if (!in_array(strtolower($oldExtension), $arrArray)) continue; 
+      if (!in_array(strtolower($UserExtension), $arrayArrayOut[$arrKey])) continue; 
       $isExtensionSupported = TRUE;
       list ($ConversionSuccess, $ConversionErrors) = convert($arrKey, $pathname, $newPathname, $UserExtension, $Height, $Width, $Rotate, $Bitrate);
       if ($ConversionErrors) {
@@ -3328,7 +3378,7 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
     // / An unsupported combination never reached a converter at all.
     if (!$isExtensionSupported) {
       $MainConversionErrors = TRUE;
-      errorEntry('File extension '.$oldExtension.' is not supported!', 5006, FALSE);
+      errorEntry('The conversion '.$oldExtension.' to '.$UserExtension.' is not supported!', 5006, FALSE); 
       continue; }
     // / Record that at least one file in this request launched a stream.
     // / $WaitForStream is reset on every iteration, so without this the core would only
@@ -3355,8 +3405,8 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
   // / Restore the aggregate so the core can supervise a stream started by ANY file.
   $WaitForStream = $anyStreamStarted;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $pathname = $oldPathname = $oldExtension = $newPathname = $docarray = $imgarray = $audioarray = $videoarray = $subtitleArray = $modelarray = $scadarray = $drawingarray = $archarray = $streamarray = $arrayArray = $arrArray = $fileIsVerified = $scanComplete = $virusFound = $variableIsSanitized = $arrKey = $clean = $copy = $skip = $isExtensionSupported = $outputExists = $ConversionSuccess = $ConversionErrors = $fileConversionSuccess = $anyStreamStarted = NULL;
-  unset($file, $pathname, $oldPathname, $oldExtension, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $subtitleArray, $modelarray, $scadarray, $drawingarray, $archarray, $streamarray, $arrayArray, $arrArray, $fileIsVerified, $scanComplete, $virusFound, $variableIsSanitized, $arrKey, $clean, $copy, $skip, $isExtensionSupported, $outputExists, $ConversionSuccess, $ConversionErrors, $fileConversionSuccess, $anyStreamStarted);
+  $file = $pathname = $oldPathname = $oldExtension = $newPathname = $docarray = $imgarray = $audioarray = $videoarray = $subtitleArray = $modelarray = $scadarray = $drawingarray = $archarray = $streamarray = $arrayArray = $arrArray = $fileIsVerified = $scanComplete = $virusFound = $variableIsSanitized = $arrKey = $clean = $copy = $skip = $isExtensionSupported = $outputExists = $ConversionSuccess = $ConversionErrors = $fileConversionSuccess = $anyStreamStarted = $arrayArrayOut = NULL;
+  unset($file, $pathname, $oldPathname, $oldExtension, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $subtitleArray, $modelarray, $scadarray, $drawingarray, $archarray, $streamarray, $arrayArray, $arrArray, $fileIsVerified, $scanComplete, $virusFound, $variableIsSanitized, $arrKey, $clean, $copy, $skip, $isExtensionSupported, $outputExists, $ConversionSuccess, $ConversionErrors, $fileConversionSuccess, $anyStreamStarted, $arrayArrayOut);
   return array($MainConversionSuccess, $MainConversionErrors); }
 // / -----------------------------------------------------------------------------------
 

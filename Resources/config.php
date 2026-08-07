@@ -138,7 +138,6 @@ $DeleteDevelopmentDocumentation = FALSE;
 $StreamWatchTimeout = 15;
 // /  --Stream Connection Timeout--
 // /   Set the minimum amount of time in seconds that FFMPEG will wait after attempting to make a connection to a remote stream provider.
-// /   This is used as a "blind SSRF" protection feature by introducing a minimum execution duration into specific FFMPEG operations.
 // /   Valid options are integers between 3 and 10.
 // /   This option MUST be set higher than 2.
 // /   Default is 10.

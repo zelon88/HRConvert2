@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.6.0
+v3.6.1
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -27,7 +27,15 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap & xvfb-run.
 
 
 --------------------
-COMMIT 8/6/2026
+COMMIT 8/7/2026
+v3.6.1 - Fix bugs in Scad on Default GUI, fix bugs in all GUIS with downloads.
+
+-v3.6.1.
+-Fix recently introduced AJAX bugs with recently update download routines.
+-Add missing SCAD options from default GUI.
+
+--------------------
+COMMIT 8/7/2026
 v3.6.0 - Update GUI, FFMPEG conversions, Stream conversions, add SVG conversions.
 
 -v3.6.0.

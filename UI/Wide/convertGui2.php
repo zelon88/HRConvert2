@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/6/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/7/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.5.7.
+// / v3.6.1.
 // / This is the original (wide) UI from 2016, kept up-to-date with the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -94,8 +94,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                         toggle_visibility('victoryCommandDiv');
                         setTimeout(function() {
                           toggle_visibility('victoryCommandDiv'); }, 5000);
-                        download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
-                        } }); },
+                        download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>'); } } }); },
                     error: function(ReturnData) {
                       toggle_visibility('loadingCommandDiv');
 
@@ -149,8 +148,7 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                         toggle_visibility('victoryCommandDiv');
                         setTimeout(function() {
                           toggle_visibility('victoryCommandDiv'); }, 5000);
-                        download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', document.getElementById('userarchallfilename').value+'.'+extension);
-                        } }); },
+                        download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', document.getElementById('userarchallfilename').value+'.'+extension); } } }); },
                     error: function(ReturnData) {
                       toggle_visibility('loadingCommandDiv');
                       toggle_visibility('failureCommandDiv');

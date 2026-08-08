@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/7/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/8/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.6.1
+v3.6.2
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -25,6 +25,22 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap & xvfb-run.
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+
+--------------------
+COMMIT 8/8/2026
+v3.6.2 - Keep working on latest UI features (Original GUI, convertGui2.php is test platform).
+
+-v3.6.2.
+-Prototype buttons for selecting the language, gui, & color are available for testing in the Original Gui.
+-Add missing language packs from Original and Wide GUIs.
+-Need to do...
+  -Move RTL buttons to LTR (or RTL, whatever gui currently set to) so all buttons align properly.
+  -Add missing colors to color buttons.
+  -Add missing styles to all buttons.
+  -Add a hamburger icon to hide the buttons.
+  -Add the button rows to convertGui1.php.
+  -Language strings variables for the rows of buttons.
+-Update README.md to make the project more appealing.
 
 --------------------
 COMMIT 8/7/2026

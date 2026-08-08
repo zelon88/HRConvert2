@@ -42,51 +42,61 @@ $selectorBase = 'convertCore.php?';
 // / -----------------------------------------------------------------------------------
 ?>
   <body>
-    <?php if ($AllowUserSelectableLanguage) { ?>
-    <p style='margin:4px 0;'><strong>Language</strong></p>
-    <p style='margin:4px 0;'>
-      <?php foreach ($SupportedLanguages as $selectorLang => $selectorLabel) { ?>
-      <button type='submit' lang='<?php echo $selectorLang; ?>'
-      style='margin:2px; padding:2px; <?php if ($selectorLang === $LanguageToUse) echo 'outline:2px solid #000;'; ?>'
-      formaction='<?php echo $selectorBase.'language='.$selectorLang.'&color='.$ColorToUse.'&gui='.$GuiToUse; ?>'
-      title='<?php echo $selectorLabel; ?>'
-      <?php if ($selectorLang === $LanguageToUse) echo "aria-current='true'"; ?>><img src='<?php echo $GuiDir.'Languages/'.$selectorLang.'/flag.png'; ?>' alt='<?php echo $selectorLabel; ?>' style='height:16px; display:block;'/></button>
-      <?php } ?>
-    </p>
-    <?php } ?>
-    <?php if ($AllowUserSelectableColor) { ?>
-    <p style='margin:4px 0;'><strong>Color</strong></p>
-    <p style='margin:4px 0;'>
-    <?php foreach ($SupportedColors as $selectorColor) {
-      $selectorSwatch = isset($selectorSwatches[$selectorColor]) ? $selectorSwatches[$selectorColor] : '#cccccc';
-      $selectorCurrent = (strtolower($selectorColor) === strtolower($ColorToUse));
-      $selectorURL = htmlspecialchars($selectorBase.'color='.$selectorColor.'&language='.$LanguageToUse.'&gui='.$GuiToUse, ENT_QUOTES, 'UTF-8'); ?>
-      <button type='submit' 
-        style='margin:2px; min-width:32px; height:24px; background-color:<?php echo $selectorSwatch; ?>; <?php if ($selectorCurrent) echo 'outline:2px solid #000;'; ?>'
-        formaction='<?php echo $selectorURL; ?>'
-        title='<?php echo ucfirst($selectorColor); ?>' aria-label='<?php echo ucfirst($selectorColor); ?>'
-        <?php if ($selectorCurrent) echo "aria-current='true'"; ?>><span class='swatch' style='background-color:<?php echo $selectorSwatch; ?>;'></span></button>
-      <?php } ?>
-    </p>
-    <?php } ?>
-    <?php if ($AllowUserSelectableGui) { ?>
-    <p style='margin:4px 0;'><strong>Interface</strong></p>
-    <p style='margin:4px 0;'>
-    <?php foreach ($SupportedGuis as $selectorGui) {
-      $selectorCurrent = ($selectorGui === $GuiToUse);
-      $selectorURL = htmlspecialchars($selectorBase.'gui='.$selectorGui.'&language='.$LanguageToUse.'&color='.$ColorToUse, ENT_QUOTES, 'UTF-8'); ?>
-      <button type='submit' class='txtbtn'
-        style='margin:2px; <?php if ($selectorCurrent) echo 'font-weight:700; text-decoration:underline;'; ?>'
-        formaction='<?php echo $selectorURL; ?>'
-        title='<?php echo $selectorGui; ?>' aria-label='<?php echo $selectorGui; ?>'
-        <?php if ($selectorCurrent) echo "aria-current='true'"; ?>><?php echo $selectorGui; ?></button>
-      <?php } ?>
-    </p>
-    <?php } ?>
     <script type='text/javascript' src='<?php echo $JqueryPath; ?>'></script>
-    <div id='header-text' style='max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;'>
+
+    <div id='header-text' style='max-width:2000px; margin-left:auto; margin-right:auto; text-align:center;'>
       <?php if (!isset($_GET['noGui'])) { ?><h1><?php echo $ApplicationName; ?></h1>
       <hr /><?php } ?>
+    </div>
+
+    </div>
+    <form id='uiSelectorForm' name='uiSelectorForm' method='post' action='<?php echo htmlspecialchars($selectorBase, ENT_QUOTES, 'UTF-8'); ?>'>
+      <input type='hidden' name='Token1' value='<?php echo $Token1; ?>'>
+      <input type='hidden' name='Token2' value='<?php echo $Token2; ?>'>
+      <?php if ($AllowUserSelectableLanguage) { ?>
+      <p style='margin:4px 0;'><strong>Language</strong></p>
+      <p style='margin:4px 0;'>
+        <?php foreach ($SupportedLanguages as $selectorLang => $selectorLabel) {
+          $selectorCurrent = ($selectorLang === $LanguageToUse);
+          $selectorURL = htmlspecialchars($selectorBase.'language='.$selectorLang.'&color='.$ColorToUse.'&gui='.$GuiToUse.'&showFiles=1', ENT_QUOTES, 'UTF-8'); ?>
+        <button type='submit' lang='<?php echo $selectorLang; ?>'
+          style='margin:2px; padding:2px; <?php if ($selectorCurrent) echo 'outline:2px solid #000;'; ?>'
+          formaction='<?php echo $selectorURL; ?>'
+          title='<?php echo $selectorLabel; ?>'
+          <?php if ($selectorCurrent) echo "aria-current='true'"; ?>><img src='<?php echo $GuiDir.'Languages/'.$selectorLang.'/flag.png'; ?>' alt='<?php echo $selectorLabel; ?>' style='height:16px; display:block;'/></button>
+        <?php } ?>
+      </p>
+      <?php } if ($AllowUserSelectableColor) { ?>
+      <p style='margin:4px 0;'><strong>Color</strong></p>
+      <p style='margin:4px 0;'>
+        <?php foreach ($SupportedColors as $selectorColor) {
+          $selectorSwatch = isset($selectorSwatches[$selectorColor]) ? $selectorSwatches[$selectorColor] : '#cccccc';
+          $selectorCurrent = (strtolower($selectorColor) === strtolower($ColorToUse));
+          $selectorURL = htmlspecialchars($selectorBase.'language='.$selectorLang.'&color='.$ColorToUse.'&gui='.$GuiToUse.'&showFiles=1', ENT_QUOTES, 'UTF-8'); ?>
+        <button type='submit'
+          style='margin:2px; padding:2px; <?php if ($selectorCurrent) echo 'outline:2px solid #000;'; ?>'
+          formaction='<?php echo $selectorURL; ?>'
+          title='<?php echo ucfirst($selectorColor); ?>' aria-label='<?php echo ucfirst($selectorColor); ?>'
+          <?php if ($selectorCurrent) echo "aria-current='true'"; ?>><span class='swatch' style='background-color:<?php echo $selectorSwatch; ?>; width:24px; height:16px; display:block;'></span></button>
+        <?php } ?>
+      </p>
+      <?php } if ($AllowUserSelectableGui) { ?>
+      <p style='margin:4px 0;'><strong>Interface</strong></p>
+      <p style='margin:4px 0;'>
+        <?php foreach ($SupportedGuis as $selectorGui) {
+          $selectorCurrent = ($selectorGui === $GuiToUse);
+          $selectorURL = htmlspecialchars($selectorBase.'language='.$selectorLang.'&color='.$ColorToUse.'&gui='.$GuiToUse.'&showFiles=1', ENT_QUOTES, 'UTF-8'); ?>
+        <button type='submit' class='txtbtn'
+          style='margin:2px; <?php if ($selectorCurrent) echo 'font-weight:700; text-decoration:underline;'; ?>'
+          formaction='<?php echo $selectorURL; ?>'
+          title='<?php echo $selectorGui; ?>' aria-label='<?php echo $selectorGui; ?>'
+          <?php if ($selectorCurrent) echo "aria-current='true'"; ?>><?php echo $selectorGui; ?></button>
+        <?php } ?>
+      </p>
+      <?php } ?>
+    </form>
+
+    <div id='header-text' style='max-width:2000px; margin-left:auto; margin-right:auto; text-align:center;'>
       <h3><?php echo $Gui2Text1; ?></h3>
       <p><?php echo $Gui2Text30; ?></p>
       <p><?php echo $Gui2Text31; ?></p>

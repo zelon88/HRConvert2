@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/7/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/8/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.6.1.
+// / v3.6.2.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -245,7 +245,7 @@ function verifyInstallation() {
   $missingConfigVars = array();
   $detectedConfigVersion = $requiredConfigVersion = $configFile = '';
   // / Define what version of HRConvert2 this core file represents.
-  $HRConvertVersion = 'v3.6.1';
+  $HRConvertVersion = 'v3.6.2';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
@@ -695,7 +695,16 @@ function verifyLanguage() {
   $LanguageIsSet = TRUE;
   $LanguageToUse = 'en';
   $LanguageFiles = $languageFiles = array();
-$defaultLanguages = array('en' => 'English', 'fr' => 'Français', 'es' => 'Español', 'zh' => '中文', 'hi' => 'हिन्दी', 'ar' => 'العربية', 'ru' => 'Русский', 'uk' => 'Українська', 'bn' => 'বাংলা', 'de' => 'Deutsch', 'ko' => '한국어', 'it' => 'Italiano', 'pt' => 'Português');
+  $defaultLanguages = array(
+  'en' => 'English',   'fr' => 'Français',    'es' => 'Español',
+  'zh' => '中文',      'hi' => 'हिन्दी',        'ar' => 'العربية',
+  'ru' => 'Русский',   'uk' => 'Українська',  'bn' => 'বাংলা',
+  'de' => 'Deutsch',   'ko' => '한국어',        'it' => 'Italiano',
+  'pt' => 'Português', 'vi' => 'Tiếng Việt',  'tr' => 'Türkçe',
+  'ja' => '日本語',     'id' => 'Bahasa Indonesia',
+  'pl' => 'Polski',    'nl' => 'Nederlands',  'sw' => 'Kiswahili',
+  'my' => 'မြန်မာ',      'ur' => 'اردو',         'fa' => 'فارسی',
+  'he' => 'עברית',     'aii' => 'ܣܘܪܝܝܐ',     'arc' => 'ܐܪܡܝܐ');
   // / Make sure $SupportedLanguages is valid.
   if (!isset($SupportedLanguages) or !is_array($SupportedLanguages)) $SupportedLanguages = $defaultLanguages;
   // / Make sure the Default Language is valid.

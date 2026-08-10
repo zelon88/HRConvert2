@@ -27,6 +27,65 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap & xvfb-run.
 
 
 --------------------
+COMMIT 8/10/2026
+v3.6.3 - Update UI, add selector buttons, add UI & language pack compatibility checking.
+
+-v3.6.3.
+-Continue UI Selector bar work.
+  -Make a gear icon to put the options behind.
+-Use map icons from.....
+  -https://github.com/lipis/flag-icons/blob/main/flags/4x3/it.svg
+  -Thank you lipis!
+  -Updated ICON_CREDITS.txt with Lipis' information.
+-Map of languages to countries used.
+  -en→us or gb   fr→fr   es→es   zh→cn   hi→in   ar→sa
+  -ru→ru   uk→ua   bn→bd   de→de   ko→kr   it→it
+  -pt→pt or br   vi→vn   tr→tr   ja→jp   id→id   pl→pl
+  -nl→nl   sw→tz or ke   my→mm   ur→pk   fa→ir   he→il
+-Add GUI version checking to the core.
+  -The core now checks the version of the GUI for compatibility.
+  -If an installed, configured, and selected GUI does not meed the minimum version requirements of the core, the GUI will not be loaded.
+  -When the GUI cannot be loaded due to version discrepency, existing ERROR 25 is thrown.
+  -Added the following lines to ERROR 25 description in ERROR_DESCRIPTIONS.txt.....
+    -The version of the GUI that was loaded did not meet the Minimum Required Version that the core can accept.
+    -An update did not complete successfully, or a recently installed GUI is corrupt or not compatible with the core.
+  -This helps me keep track of UIs during development.
+    -Sometimes I will make changes to one GUI, and forget to change the others.
+    -After a GUI gets several commits behind it is hard to remember what that GUI needs done to it.
+    -By having version enforcement, I am essentially saving myself from screwing the GUI up beyond recognition.
+    -Bonus: If I DO screw up the GUI version levels, the GUI will tell me what the last version was.
+    -This should also cut down on un-updated UIs showing PHP errors or corrupted page content when versions don't match.
+  -Note that this update affects the verifyGui() procedure mostly.
+  -Note that the version check is blind to actual version.
+    -In other words, the version checks for a specific version ONLY.
+    -The version check DOES NOT check for a range of versions that are acceptable.
+    -This differs from config.php file checking, which is accepted if the version is greater than a set minimum.
+    -With UI and LanguagePacks, there are forward / reverse compatibility concerns.
+    -The core will specify exactly which version of UI is usable, as anything newer or older may not render correctly.
+    -This functionality may change in the future.
+    -Right now there's only one version of UI that would work anyway, as older versions lack the version variable required for version checking.
+-Add language pack version checking to the core.
+  -The version string goes into languageStrings.php.
+  -The check logic goes into buildGui() as that is where languageString.php is loaded.
+  -Update ERROR 17 in ERROR_DESCRIPTIONS.txt.....
+    -The version of the language pack that was loaded did not meet the Minimum Required Version that the core can accept.
+    -An update did not complete successfully, or a recently installed GUI or language pack is corrupt or not compatible with the core.
+    -The application has become corrupt.
+  -Note that the version check is blind to actual version.
+    -In other words, the version checks for a specific version ONLY.
+    -The version check DOES NOT check for a range of versions that are acceptable.
+    -This differs from config.php file checking, which is accepted if the version is greater than a set minimum.
+    -With UI and LanguagePacks, there are forward / reverse compatibility concerns.
+    -The core will specify exactly which version of UI is usable, as anything newer or older may not render correctly.
+    -This functionality may change in the future.
+    -Right now there's only one version of UI that would work anyway, as older versions lack the version variable required for version checking.
+
+
+    ADD BUTTONS
+      -DEFAULT, 1 , 2
+      -WIDE - 1 , 2
+
+--------------------
 COMMIT 8/8/2026
 v3.6.2 - Keep working on latest UI features (Original GUI, convertGui2.php is test platform).
 

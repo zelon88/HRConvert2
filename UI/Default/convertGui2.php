@@ -37,7 +37,15 @@ $UIDisplayed = TRUE;
 // / Check if the core is loaded.
 if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
 // / Assign temporary variables.
-$gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2XpsArr = $gui2ScadArr = array();
+$gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2XpsArr = $gui2ScadArr = $gui2SvgArr = array();
+$selectorBase = 'convertCore.php?';
+$selectorSide = ($GUIAlignment === 'left') ? 'right' : 'left';
+$selectorSwatches = array(
+  'red' => '#c0392b',  'green' => '#27ae60',  'blue' => '#3d71b3',  'grey' => '#7f8c8d',
+  'orange' => '#e67e22', 'purple' => '#8e44ad', 'dark' => '#2c3e50');
+// / Carry the page state so a selection returns to the page the user was already on.
+if (isset($_GET['showFiles'])) $selectorBase .= 'showFiles=1&';
+if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
 // / -----------------------------------------------------------------------------------
 ?>
   <body>
@@ -51,14 +59,62 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
       <?php echo $Gui2Text31; ?><p>
    
 
-    <div id='compressAll' name='compressAll' style='max-width:500px; margin-left:auto; margin-right: auto; text-align:center; '>
+    <div id='compressAll' name='compressAll' style='max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;'>
       <button id='backButton' name='backButton' style='width:50px;' class='info-button' onclick='window.history.back();'>&#x2190;</button>
+      <button id='userConfigButton' name='userConfigButton' style='width:50px;' class='info-button' onclick='toggle_visibility("uiSelector");'>&#9965;</button>
       <button id='refreshButton' name='refreshButton' style='width:50px;' class='info-button' onclick='javascript:location.reload(true);'>&#x21BB;</button>
+      <div id='uiSelector' name='uiSelector' style='display:none;'>
+        <form id='uiSelectorForm' name='uiSelectorForm' method='post' action='<?php echo htmlspecialchars($selectorBase, ENT_QUOTES, 'UTF-8'); ?>'>
+          <input type='hidden' name='Token1' value='<?php echo $Token1; ?>'>
+          <input type='hidden' name='Token2' value='<?php echo $Token2; ?>'>
+          <?php if ($AllowUserSelectableLanguage) { ?>
+          <p style='margin:4px 0;'><strong>Language</strong></p>
+          <p style='margin:4px 0;'>
+            <?php foreach ($SupportedLanguages as $selectorLang => $selectorLabel) {
+              $selectorCurrent = ($selectorLang === $LanguageToUse);
+              $selectorURL = htmlspecialchars($selectorBase.'language='.$selectorLang.'&color='.$ColorToUse.'&gui='.$GuiToUse, ENT_QUOTES, 'UTF-8'); ?>
+            <button type='submit' lang='<?php echo $selectorLang; ?>'
+              style='margin:2px; padding:2px; <?php if ($selectorCurrent) echo 'outline:2px solid #000;'; ?>'
+              formaction='<?php echo $selectorURL; ?>'
+              title='<?php echo $selectorLabel; ?>'
+              <?php if ($selectorCurrent) echo "aria-current='true'"; ?>><img src='<?php echo $GuiDir.'Languages/'.$selectorLang.'/flag.png'; ?>' alt='<?php echo $selectorLabel; ?>' style='height:16px; display:block;'/></button>
+            <?php } ?>
+          </p>
+          <?php } if ($AllowUserSelectableColor) { ?>
+          <p style='margin:4px 0;'><strong>Color</strong></p>
+          <p style='margin:4px 0;'>
+            <?php foreach ($SupportedColors as $selectorColor) {
+              $selectorSwatch = isset($selectorSwatches[$selectorColor]) ? $selectorSwatches[$selectorColor] : '#cccccc';
+              $selectorCurrent = (strtolower($selectorColor) === strtolower($ColorToUse));
+              $selectorURL = htmlspecialchars($selectorBase.'color='.$selectorColor.'&language='.$LanguageToUse.'&gui='.$GuiToUse, ENT_QUOTES, 'UTF-8'); ?>
+            <button type='submit'
+              style='margin:2px; padding:2px; <?php if ($selectorCurrent) echo 'outline:2px solid #000;'; ?>'
+              formaction='<?php echo $selectorURL; ?>'
+              title='<?php echo ucfirst($selectorColor); ?>' aria-label='<?php echo ucfirst($selectorColor); ?>'
+              <?php if ($selectorCurrent) echo "aria-current='true'"; ?>><span class='swatch' style='background-color:<?php echo $selectorSwatch; ?>; width:24px; height:16px; display:block;'></span></button>
+            <?php } ?>
+          </p>
+          <?php } if ($AllowUserSelectableGui) { ?>
+          <p style='margin:4px 0;'><strong>Interface</strong></p>
+          <p style='margin:4px 0;'>
+            <?php foreach ($SupportedGuis as $selectorGui) {
+              $selectorCurrent = ($selectorGui === $GuiToUse);
+              $selectorURL = htmlspecialchars($selectorBase.'gui='.$selectorGui.'&language='.$LanguageToUse.'&color='.$ColorToUse, ENT_QUOTES, 'UTF-8'); ?>
+            <button type='submit' class='txtbtn'
+              style='margin:2px; <?php if ($selectorCurrent) echo 'font-weight:700; text-decoration:underline;'; ?>'
+              formaction='<?php echo $selectorURL; ?>'
+              title='<?php echo $selectorGui; ?>' aria-label='<?php echo $selectorGui; ?>'
+              <?php if ($selectorCurrent) echo "aria-current='true'"; ?>><?php echo $selectorGui; ?></button>
+            <?php } ?>
+          </p>
+          <?php } ?>
+        </form>
+      </div>
       <br /> <br />
       <button id='scandocMoreOptionsButton' name='scandocMoreOptionsButton' class='info-button' onclick='toggle_visibility("compressAllOptions");'><?php echo $Gui2Text2; ?></button>
       <div id='compressAllOptions' name='compressAllOptions' align='center' style='display:none;'>
         <?php if ($AllowUserVirusScan) { ?>
-        <hr style="border: 1px solid #eeeeee;"/>
+        <hr style='width: 50%;'/>
         <p><strong><?php echo $Gui2Text3; ?></strong></p>
         <p><?php echo $Gui2Text20; ?><input type='checkbox' id='clamscanall' value='clamscanall' name='clamScan' checked></p>
         <p><?php echo $Gui2Text21; ?><input type='checkbox' id='scancoreall' value='scancoreall' name='phpavScan' checked></p>
@@ -90,24 +146,19 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
                       download:'<?php echo $ConsolidatedLogFileName; ?>' },
-                    success: function(ReturnData) {
-                      if (ReturnData.includes('ERROR!!!')) {
-                        toggle_visibility('loadingCommandDiv');
-                        alert(ReturnData); }
-                      else {
-                        toggle_visibility('loadingCommandDiv');
-                        toggle_visibility('victoryCommandDiv');
-                        setTimeout(function() {
-                          toggle_visibility('victoryCommandDiv'); }, 5000);
-                        download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
-                        } } }); },
+                    success: function(returnFile) {
+                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('victoryCommandDiv');
+                      setTimeout(function() {
+                        toggle_visibility('victoryCommandDiv'); }, 5000);
+                      download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>'); } }); },
                     error: function(ReturnData) {
                       toggle_visibility('loadingCommandDiv');
 
                       alert('<?php echo $Gui2Text72; ?>'); } }); }); });
         </script>
       <?php } ?>
-        <hr style='width: 50%;border: 1px solid #eee;'/>
+        <hr style='width: 50%;'/>
         <?php if (in_array('Archive', $SupportedConversionTypes)) { ?>
         <p><strong><?php echo $Gui2Text4; ?></strong></p>
         <p><?php echo $Gui2Text17; ?><input type='text' id='userarchallfilename' name='userarchallfilename' value='<?php echo $ApplicationName; ?>_Files-<?php echo $Date; ?>'></p>
@@ -142,20 +193,12 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('userarchallfilename').value+'.'+extension },
-                    success: function(ReturnData) {
-                      if (ReturnData.includes('ERROR!!!')) {
-                        toggle_visibility('loadingCommandDiv');
-                        toggle_visibility('failureCommandDiv');
-                        setTimeout(function() {
-                          toggle_visibility('failureCommandDiv'); }, 5000);
-                        alert(ReturnData); }
-                      else {
-                        toggle_visibility('loadingCommandDiv');
-                        toggle_visibility('victoryCommandDiv');
-                        setTimeout(function() {
-                          toggle_visibility('victoryCommandDiv'); }, 5000);
-                        download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', document.getElementById('userarchallfilename').value+'.'+extension);
-                        } } }); },
+                    success: function(returnFile) {
+                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('victoryCommandDiv');
+                      setTimeout(function() {
+                        toggle_visibility('victoryCommandDiv'); }, 5000);
+                      download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', document.getElementById('userarchallfilename').value+'.'+extension); } }); },
                     error: function(ReturnData) {
                       toggle_visibility('loadingCommandDiv');
                       toggle_visibility('failureCommandDiv');
@@ -164,7 +207,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                       alert('<?php echo $Gui2Text71; ?>'); } }); }); });
         </script>
         <?php } ?>
-        <hr style='width: 50%;border: 1px solid #eee;'/>
+        <hr style='width: 50%;'/>
       </div>
     </div>
     <div id='utilityupper' align='center'>

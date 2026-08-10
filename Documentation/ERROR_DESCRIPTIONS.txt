@@ -447,7 +447,13 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  The convertCore.php file has become corrupt.
+  The version of the language pack that was loaded did not meet the Minimum Required Version that the core can accept.
+  An update did not complete successfully, or a recently installed GUI or language pack is corrupt or not compatible with the core.
+  The application has become corrupt.
+  The UI/[SELECTED_GUI]/Languages/[SELECTED_LANGUAGE]/languageStrings.php file is missing or unreadable.
+  The UI/[SELECTED_GUI]/Languages/[SELECTED_LANGUAGE]/flag.php file is missing or unreadable.
+  This may be the result of incorrect file permission levels on the Languages or UI subdirectory.
+  This may be the result of incorrect user or group associations for the www-data user or group.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -3092,11 +3098,13 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
+  The version of the GUI that was loaded did not meet the Minimum Required Version that the core can accept.
+  An update did not complete successfully, or a recently installed GUI is corrupt or not compatible with the core.
   The path to the UI subdirectory of the installation directory does not exist or cannot be accessed.
   The requested GUI has become corrupt.
-  The requested GUI is missing one or more of the following files; header.php, footer.php, convertGui1.php, convertGui2.php.
+  The requested GUI is missing one or more of the following files; header.php, footer.php, convertGui1.php, convertGui2.php, styleCore.php, uiVersionInfo.php, Languages/[SELECTED_LANGUAGE]/languageStrings.php.
   The requested GUI is incomplete, malformed, or missing critical components.
-  This may be the result of incorrect file permission levels on the UI subdirectory.
+  This may be the result of incorrect file permission levels on the UI or Languages subdirectory.
   This may be the result of incorrect user or group associations for the www-data user or group.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 

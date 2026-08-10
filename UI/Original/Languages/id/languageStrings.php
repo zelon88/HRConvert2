@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/6/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/8/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.5.7.
+// / v3.6.2.
 // / This file contains language specific GUI related text for performing file conversions.
 // / This file contains the Indonesian (id) language strings.
 // / Indonesian does not inflect nouns for number, so the plural helper strings are empty.
@@ -37,6 +37,10 @@
 // / -----------------------------------------------------------------------------------
 // / Set a flag to tell that the UI has been displayed.
 $LanguageStringsLoaded = TRUE;
+// / The version of this language pack for compatibility checking.
+// / Compatibility check takes place in convertCore.php, buildGui() function.
+$LanguageVersion = 'v3.6.2';
+$LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
 // / Set the side of the page to float elements to.

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/8/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/10/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.6.2
+v3.6.4
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -25,6 +25,71 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap & xvfb-run.
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+
+--------------------
+COMMIT 8/10/2026
+v3.6.4 - Add version checking & fallback chains for GUIs & language packs. Finish Selctor Bar.
+
+-v3.6.4.
+-Add a UI selector bar to convertGui1.php & convertGui2.php in all three UIs.
+  -Users can switch language, color & interface without editing a URL.
+  -Collapsed behind a gear so it never displaces the upload dropzone.
+  -Floats opposite $GUIAlignment, so it sits on the trailing edge in both reading directions.
+  -Tokens are POSTed & never placed in a query string, because $SesHash derives from Token1.
+  -A selector that dropped the tokens would discard the users uploaded files.
+  -A selector that put them in a URL would leak them into history & access logs.
+  -Each button overrides the form target with formaction & carries the two settings it is
+   not changing at their current value.
+  -showFiles & noGui are carried through so a selection returns to the page the user was on.
+-Make $SupportedLanguages multidimensional.
+  -The key is the ISO 639-1 code & the folder name. The value is the endonym.
+  -The endonym is the name of the language in that language itself.
+  -A user who has landed on a language they cannot read still recognizes their own.
+  -verifyLanguage() now tests membership with array_key_exists() rather than in_array().
+-Finalize flag icons in every GUI & every language pack.
+  -Icons from https://github.com/lipis/flag-icons by lipis. Thanks again!
+  -aii, arc & sw have no country & therefore no flag.
+    -Assyrian & Aramaic have no state. Swahili spans Tanzania & Kenya with no single claim.
+    -A national flag would also be a political statement in exactly the communities that
+     motivated adding those languages in the first place.
+    -Those three use a letterform instead. The first letter of the endonym, on a solid ground.
+  -Flags were rendered from SVG to 24x18 PNG using HRConvert2's own new SVG converter.
+-Improve GUI version checking to verifyGui().
+  -uiVersionInfo.php carries $GuiVersion. The core carries $RequiredGuiVersion.
+  -The check is an EXACT match, not a minimum.
+    -A UI newer or older than the core expects may render incorrectly in either direction.
+    -This differs from config.php, which is accepted at or above a minimum.
+  -This exists mostly to catch my own mistakes during development.
+    -Changing one GUI & forgetting the other two is easy & the result is hard to diagnose.
+-Improve language pack version checking to buildGUI().
+  -languageStrings.php carries $LanguageVersion.
+  -The core carries $RequiredLanguageVersion.
+  -The check lives in buildGUI() because that is where the pack is required.
+  -The version is inside the file, so the file must be loaded before it can be read.
+-Add fallback chains to verifyGui(), verifyLanguage(), verifyColors() & buildGUI().
+  -A broken, missing or version incompatible GUI now falls back to the default GUI.
+  -A broken or version incompatible language pack now falls back to the default pack.
+  -An invalid color falls back to blue.
+  -Every fallback writes a warning naming what failed & what replaced it.
+  -Errors 15, 16, 17 & 25 now fire ONLY when the DEFAULT is also broken.
+    -At that point nothing is left to render & they remain fatal, which is correct.
+    -Previously they fired on any failure & said nothing about what was actually wrong.
+  -verifyGui() builds a candidate list & loops it, so the path variables are built once.
+  -buildGUI() loads the default pack OVER a bad one, because a pack is only assignments.
+    -A UI file prints HTML & cannot be replaced the same way, which is why the GUI check
+     happens in verifyGui() before anything is required.
+-Fix $DefaultLanguage & $DefaultGui being trusted without validation.
+  -Both were validated on the user-selectable path & assigned unchecked on the other.
+  -An administrator typo plus selection disabled produced a directory that does not exist.
+-Add $GuiSelectorText1 through $GuiSelectorText4 to all languageStrings.php files for the selector bar.
+-Fix userScanCore operations erroneously always returning 'Infected'.
+-Fix OCR multi-page jpg detection using stripos incorrectly.
+-Review all use of strpos & stripos for accuracy.
+-Switch from if ($Verbose) logEntry(); for infected files to warningEntry() which fires without $Verbose.
+
+-NEED TO UPDATE ERROR_DESCRIPTIONS.txt for ERROR # 25.
+-NEED TO UPDATE CREATING_LANGUAGE_PACKS.txt & CREATING_GUIS.txt.
+-Need to condense / refactor CODING_CONVENTIONS.txt.
 
 --------------------
 COMMIT 8/10/2026

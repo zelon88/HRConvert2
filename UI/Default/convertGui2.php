@@ -58,7 +58,6 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
      <?php echo $Gui2Text30; ?>
       <?php echo $Gui2Text31; ?><p>
    
-
     <div id='compressAll' name='compressAll' style='max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;'>
       <button id='backButton' name='backButton' style='width:50px;' class='info-button' onclick='window.history.back();'>&#x2190;</button>
       <button id='userConfigButton' name='userConfigButton' style='width:50px;' class='info-button' onclick='toggle_visibility("uiSelector");'>&#9965;</button>

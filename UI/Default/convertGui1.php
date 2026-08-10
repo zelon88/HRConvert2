@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 5/12/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/10/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.4.3.
+// / v3.4.4.
 // / The files in this UI were submitted by Github user hernandito in Issue #85. Thank you!
 // / https://github.com/hernandito
 // / This file contains language specific GUI elements for accepting file uploads.
@@ -37,16 +37,71 @@ $UIDisplayed = TRUE;
 // / Check if the core is loaded.
 if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
 // / Assign temporary variables.
-$gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2XpsArr = array();
+$oppositeAlignment = (strtolower($GUIAlignment) === 'left') ? 'right' : 'left';
+$gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2XpsArr = $gui2ScadArr = $gui2SvgArr = array();
+$selectorBase = 'convertCore.php?';
+$selectorSide = ($GUIAlignment === 'left') ? 'right' : 'left';
+$selectorSwatches = array(
+  'red' => '#c0392b',  'green' => '#27ae60',  'blue' => '#3d71b3',  'grey' => '#7f8c8d',
+  'orange' => '#e67e22', 'purple' => '#8e44ad', 'dark' => '#2c3e50');
+// / Carry the page state so a selection returns to the page the user was already on.
+if (isset($_GET['showFiles'])) $selectorBase .= 'showFiles=1&';
+if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
 // / -----------------------------------------------------------------------------------
 ?>
   <body>
+    <div style= "background-color: #fff; margin: 20px; width: 500px; color: #777777; margin-left:auto; margin-right:auto; padding: 20px; border-radius: 12px; -webkit-box-shadow: 1px 1px 5px 1px rgba(0,0,0,.2);box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);">
+      <button id='userConfigButton' name='userConfigButton' class='info-button' onclick='toggle_visibility("uiSelector");' style='width:25px; text-align:<?php $oppositeAlignment = (strtolower($GUIAlignment) === 'left') ? 'right' : 'left'; ?> display:block; margin-left:auto; margin-right:auto;'>&#9965;</button>
+      <div id='uiSelector' name='uiSelector' style='display:none; margin-left:auto; margin-right:auto; text-align:<?php echo $GuiDirection; ?>'>
+        <form id='uiSelectorForm' name='uiSelectorForm' method='post' action='<?php echo htmlspecialchars($selectorBase, ENT_QUOTES, 'UTF-8'); ?>'>
+          <input type='hidden' name='Token1' value='<?php echo $Token1; ?>'>
+          <input type='hidden' name='Token2' value='<?php echo $Token2; ?>'>
+          <?php if ($AllowUserSelectableLanguage) { ?>
+          <p style='margin:4px 0;'><strong>Language</strong></p>
+          <p style='margin:4px 0;'>
+            <?php foreach ($SupportedLanguages as $selectorLang => $selectorLabel) {
+              $selectorCurrent = ($selectorLang === $LanguageToUse);
+              $selectorURL = htmlspecialchars($selectorBase.'language='.$selectorLang.'&color='.$ColorToUse.'&gui='.$GuiToUse, ENT_QUOTES, 'UTF-8'); ?>
+            <button type='submit' lang='<?php echo $selectorLang; ?>'
+              style='margin:2px; padding:2px; <?php if ($selectorCurrent) echo 'outline:2px solid #000;'; ?>'
+              formaction='<?php echo $selectorURL; ?>'
+              title='<?php echo $selectorLabel; ?>'
+              <?php if ($selectorCurrent) echo "aria-current='true'"; ?>><img src='<?php echo $GuiDir.'Languages/'.$selectorLang.'/flag.png'; ?>' alt='<?php echo $selectorLabel; ?>' style='height:16px; display:block;'/></button>
+            <?php } ?>
+          </p>
+          <?php } if ($AllowUserSelectableColor) { ?>
+          <p style='margin:4px 0;'><strong>Color</strong></p>
+          <p style='margin:4px 0;'>
+            <?php foreach ($SupportedColors as $selectorColor) {
+              $selectorSwatch = isset($selectorSwatches[$selectorColor]) ? $selectorSwatches[$selectorColor] : '#cccccc';
+              $selectorCurrent = (strtolower($selectorColor) === strtolower($ColorToUse));
+              $selectorURL = htmlspecialchars($selectorBase.'color='.$selectorColor.'&language='.$LanguageToUse.'&gui='.$GuiToUse, ENT_QUOTES, 'UTF-8'); ?>
+            <button type='submit'
+              style='margin:2px; padding:2px; <?php if ($selectorCurrent) echo 'outline:2px solid #000;'; ?>'
+              formaction='<?php echo $selectorURL; ?>'
+              title='<?php echo ucfirst($selectorColor); ?>' aria-label='<?php echo ucfirst($selectorColor); ?>'
+              <?php if ($selectorCurrent) echo "aria-current='true'"; ?>><span class='swatch' style='background-color:<?php echo $selectorSwatch; ?>; width:24px; height:16px; display:block;'></span></button>
+            <?php } ?>
+          </p>
+          <?php } if ($AllowUserSelectableGui) { ?>
+          <p style='margin:4px 0;'><strong>Interface</strong></p>
+          <p style='margin:4px 0;'>
+            <?php foreach ($SupportedGuis as $selectorGui) {
+              $selectorCurrent = ($selectorGui === $GuiToUse);
+              $selectorURL = htmlspecialchars($selectorBase.'gui='.$selectorGui.'&language='.$LanguageToUse.'&color='.$ColorToUse, ENT_QUOTES, 'UTF-8'); ?>
+            <button type='submit' class='txtbtn'
+              style='margin:2px; <?php if ($selectorCurrent) echo 'font-weight:700; text-decoration:underline;'; ?>'
+              formaction='<?php echo $selectorURL; ?>'
+              title='<?php echo $selectorGui; ?>' aria-label='<?php echo $selectorGui; ?>'
+              <?php if ($selectorCurrent) echo "aria-current='true'"; ?>><?php echo $selectorGui; ?></button>
+            <?php } ?>
+          </p>
+          <?php } ?>
+        </form>
+      </div>
+
     <?php
     if (!isset($_GET['noGui'])) { ?>
-	
-<div style= "background-color: #fff; margin: 20px; width: 500px; color: #777777; margin-left:auto; margin-right:auto; padding: 20px; border-radius: 12px; -webkit-box-shadow: 1px 1px 5px 1px rgba(0,0,0,.2);
-box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);">
-	
     <div id='header-text' style='max-width:500px; margin-left:auto; margin-right:auto; text-align:left;'>
       <h1><img src='<?php echo $GuiImageDir; ?>convert-banner.png' style='max-height:72px; margin-right: 10px;'/><?php //echo $ApplicationName; ?></h1>
       <h3><?php echo $Gui1Text1; ?></h3>
@@ -58,7 +113,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);">
         <button id='more-info-button' class='info-button' onclick='toggle_visibility("more-info"); toggle_visibility("more-info-button"); toggle_visibility("supported-formats-show-button"); toggle_visibility("less-info-button");' style='text-align:center; display:block; margin-left:auto; margin-right:auto;'><?php echo $Gui1Text3; ?></button>
         <button id='less-info-button' class='info-button' onclick='toggle_visibility("more-info"); toggle_visibility("more-info-button"); toggle_visibility("supported-formats-show-button"); toggle_visibility("less-info-button");' style='text-align:center; display:none; margin-left:auto; margin-right:auto;'><?php echo $Gui1Text4; ?></button>
         <div id='more-info' style='display:none;'>
-      <hr style="border: 1px solid #eeeeee;"/>
+          <hr style="border: 1px solid #eeeeee;"/>
           <p><?php echo $Gui1Text5; ?></p>
           <p><?php echo $Gui1Text6; ?></p>
           <button id='supported-formats-show-button' class='info-button' onclick='toggle_visibility("supported-formats"); toggle_visibility("supported-formats-show-button"); toggle_visibility("supported-formats-hide-button");' style='text-align:center; display:none; margin-left:auto; margin-right:auto;'><?php echo $Gui1Text7; ?></button>
@@ -188,38 +243,37 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);">
         </div>
         <hr style="border: 1px solid #eeeeee;"/>
       </div>
-      <?php } ?>
-      <div align='center'>
-        <div id='call-to-action1' title='' style='max-width:1000px; text-align:center;'>
-          <p><?php echo $Gui1Text28; ?></p>
-        </div>
+    </div>
+    <?php } ?>
+    <div align='center'>
+      <div id='call-to-action1' title='' style='max-width:1000px; text-align:center;'>
+        <p><?php echo $Gui1Text28; ?></p>
       </div>
-      <div align='center'>
-        <div id='dropzone' style='max-height:800px; max-width:1000px; margin:25px;'>
-          <form action='convertCore.php' class='dropzone' id='filesToUpload' name='filesToUpload' method='post' enctype='multipart/form-data'>
+    </div>
+    <div align='center'>
+      <div id='dropzone' style='max-height:800px; max-width:1000px; margin:25px;'>
+        <form action='convertCore.php' class='dropzone' id='filesToUpload' name='filesToUpload' method='post' enctype='multipart/form-data'>
+        <input type='hidden' id='token1' name='Token1' value='<?php echo $Token1; ?>'>
+        <input type='hidden' id='token2' name='Token2' value='<?php echo $Token2; ?>'>
+        </form>
+      </div>
+    </div>
+    <div align='center'>
+      <div id='continue' style='max-width:500px; text-align:center;'>
+        <form action='convertCore.php?showFiles=1<?php if (isset($_GET['noGui'])) echo '&noGui=TRUE'; if (isset($_GET['language'])) echo '&gui='.$_GET['gui']; if (isset($_GET['language'])) echo '&language='.$_GET['language']; if (isset($_GET['color'])) echo '&color='.$_GET['color']; ?>' method='post'>
           <input type='hidden' id='token1' name='Token1' value='<?php echo $Token1; ?>'>
           <input type='hidden' id='token2' name='Token2' value='<?php echo $Token2; ?>'>
-          </form>
-        </div>
+          <input type='submit' id='continue-button' class='info-button' value='<?php echo $Gui1Text29; ?>'>
+        </form>
+        <br />
+        <?php if (!isset($_GET['noGui'])) { ?>
+		    <hr style="border: 1px solid #eeeeee;"/>
+        <?php } ?>
       </div>
-      <div align='center'>
-        <div id='continue' style='max-width:500px; text-align:center;'>
-          <form action='convertCore.php?showFiles=1<?php if (isset($_GET['noGui'])) echo '&noGui=TRUE'; if (isset($_GET['language'])) echo '&gui='.$_GET['gui']; if (isset($_GET['language'])) echo '&language='.$_GET['language']; if (isset($_GET['color'])) echo '&color='.$_GET['color']; ?>' method='post'>
-            <input type='hidden' id='token1' name='Token1' value='<?php echo $Token1; ?>'>
-            <input type='hidden' id='token2' name='Token2' value='<?php echo $Token2; ?>'>
-            <input type='submit' id='continue-button' class='info-button' value='<?php echo $Gui1Text29; ?>'>
-          </form>
-          <br />
-          <?php if (!isset($_GET['noGui'])) { ?>
-			<hr style="border: 1px solid #eeeeee;"/>
-          <?php } ?>
-        </div>
-      </div>
-
-    <?php if (!isset($_GET['noGui'])) { ?>
     </div>
-<div>	
-    <?php }
+  </div>
+
+    <?php
     // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-    $gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui1PresArr = $gui1ArchArr = $gui1ImaArr = $gui1ModArr = $gui2SubArr = $gui1DraArr = $gui2XpsArr = NULL;
-    unset($gui1AudArr, $gui1VidArr, $gui1StreamArr, $gui1DocArr, $gui1SpreadArr, $gui1PresArr, $gui1ArchArr, $gui1ImaArr, $gui1ModArr, $gui2SubArr, $gui1DraArr, $gui2XpsArr);
+    $oppositeAlignment = $gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui1PresArr = $gui1ArchArr = $gui1ImaArr = $gui1ModArr = $gui2SubArr = $gui1DraArr = $gui2XpsArr = NULL;
+    unset($oppositeAlignment, $gui1AudArr, $gui1VidArr, $gui1StreamArr, $gui1DocArr, $gui1SpreadArr, $gui1PresArr, $gui1ArchArr, $gui1ImaArr, $gui1ModArr, $gui2SubArr, $gui1DraArr, $gui2XpsArr);

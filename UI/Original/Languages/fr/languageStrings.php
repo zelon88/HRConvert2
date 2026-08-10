@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/8/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/10/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -32,7 +32,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.6.2';
+$LanguageVersion = 'v3.6.4';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -63,6 +63,19 @@ if ($FileCount == 1) $FCPlural1 = '';
 // / Set GUI - Header Related Variables.
 // / 'Click, Tap, or Drop files here to upload.'
 $GuiHeaderText1 = 'Cliquez, Appuyez Ou Déposez Les Fichiers Ici Pour Les Télécharger.';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - UI Selector Bar Related Variables.
+// / These strings appear in the selector bar, which is present on both GUI1 & GUI2.
+// / 'Language'
+$GuiSelectorText1 = 'Langue';
+// / 'Color'
+$GuiSelectorText2 = 'Couleur';
+// / 'Interface'
+$GuiSelectorText3 = 'Interface';
+// / 'Display language, color and interface options'
+$GuiSelectorText4 = 'Afficher les options de langue, de couleur et d\'interface';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

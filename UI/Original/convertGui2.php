@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/8/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/10/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.6.3.
+// / v3.6.4.
 // / The files in this UI were submitted by Github user hernandito in Issue #85. Thank you!
 // / https://github.com/hernandito
 // / This file contains language specific GUI elements for performing file conversions.
@@ -61,14 +61,14 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
 
     <div id='compressAll' name='compressAll' style='max-width:1000px; margin-left:auto; margin-right: auto; text-align:center;'>
       <button id='backButton' name='backButton' style='width:50px;' class='info-button' onclick='window.history.back();'>&#x2190;</button>
-      <button id='userConfigButton' name='userConfigButton' style='width:50px;' class='info-button' onclick='toggle_visibility("uiSelector");'>&#9965;</button>
+      <button id='userConfigButton' name='userConfigButton' title='<?php echo $GuiSelectorText4; ?>' style='width:50px;' class='info-button' onclick='toggle_visibility("uiSelector");'>&#9965;</button>
       <button id='refreshButton' name='refreshButton' style='width:50px;' class='info-button' onclick='javascript:location.reload(true);'>&#x21BB;</button>
       <div id='uiSelector' name='uiSelector' style='display:none;'>
         <form id='uiSelectorForm' name='uiSelectorForm' method='post' action='<?php echo htmlspecialchars($selectorBase, ENT_QUOTES, 'UTF-8'); ?>'>
           <input type='hidden' name='Token1' value='<?php echo $Token1; ?>'>
           <input type='hidden' name='Token2' value='<?php echo $Token2; ?>'>
           <?php if ($AllowUserSelectableLanguage) { ?>
-          <p style='margin:4px 0;'><strong>Language</strong></p>
+          <p style='margin:4px 0;'><strong><?php echo $GuiSelectorText1; ?></strong></p>
           <p style='margin:4px 0;'>
             <?php foreach ($SupportedLanguages as $selectorLang => $selectorLabel) {
               $selectorCurrent = ($selectorLang === $LanguageToUse);
@@ -81,7 +81,7 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
             <?php } ?>
           </p>
           <?php } if ($AllowUserSelectableColor) { ?>
-          <p style='margin:4px 0;'><strong>Color</strong></p>
+          <p style='margin:4px 0;'><strong><?php echo $GuiSelectorText2; ?></strong></p>
           <p style='margin:4px 0;'>
             <?php foreach ($SupportedColors as $selectorColor) {
               $selectorSwatch = isset($selectorSwatches[$selectorColor]) ? $selectorSwatches[$selectorColor] : '#cccccc';
@@ -95,7 +95,7 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
             <?php } ?>
           </p>
           <?php } if ($AllowUserSelectableGui) { ?>
-          <p style='margin:4px 0;'><strong>Interface</strong></p>
+          <p style='margin:4px 0;'><strong><?php echo $GuiSelectorText3; ?></strong></p>
           <p style='margin:4px 0;'>
             <?php foreach ($SupportedGuis as $selectorGui) {
               $selectorCurrent = ($selectorGui === $GuiToUse);
@@ -591,117 +591,127 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
           <input type="submit" id="scancorebutton<?php echo $ConvertGuiCounter1; ?>" name="scancorebutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text35; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <input type="submit" id="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" name="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text36; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <input type="submit" id="scanallbutton<?php echo $ConvertGuiCounter1; ?>" name="scanallbutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text37; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#scancorebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    scantype:'scancore',
-                    filesToScan:'<?php echo $File; ?>' },
-                    success: function(ReturnData) {
-                      $.ajax({
-                      type: 'POST',
-                      url: 'convertCore.php',
-                      data: { 
-                        Token1:'<?php echo $Token1; ?>',
-                        Token2:'<?php echo $Token2; ?>',
-                        download:'<?php echo $ConsolidatedLogFileName; ?>' },
+        <script type="text/javascript">
+          $(document).ready(function () {
+            // 1. ScanCore Button
+            $('#scancorebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
+              $.ajax({
+                type: 'POST',
+                url: 'convertCore.php',
+                data: {
+                  Token1: '<?php echo $Token1; ?>',
+                  Token2: '<?php echo $Token2; ?>',
+                  scantype: 'scancore',
+                  filesToScan: '<?php echo $File; ?>' 
+                },
                 success: function(ReturnData) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  if (ReturnData.includes('ERROR!!!')) {
-                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() {
-                      toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                    alert(ReturnData); }
-                  else {
-                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() {
-                      toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                    download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
-                    } },
+                  $.ajax({
+                    type: 'POST',
+                    url: 'convertCore.php',
+                    data: { 
+                      Token1: '<?php echo $Token1; ?>',
+                      Token2: '<?php echo $Token2; ?>',
+                      download: '<?php echo $ConsolidatedLogFileName; ?>' 
+                    },
+                    success: function(ReturnData) {
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                      if (ReturnData.includes('ERROR!!!')) {
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        alert(ReturnData); 
+                      } else {
+                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
+                      } 
+                    },
                     error: function(ReturnData) {
                       toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      setTimeout(function() {
-                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                      alert("<?php echo $Gui2Text72; ?>"); } }); });
-              $('#clamscanbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    scantype:'clamav',
-                    filesToScan:'<?php echo $File; ?>' },
-                    success: function(ReturnData) {
-                      $.ajax({
-                      type: 'POST',
-                      url: 'convertCore.php',
-                      data: { 
-                        Token1:'<?php echo $Token1; ?>',
-                        Token2:'<?php echo $Token2; ?>',
-                        download:'<?php echo $ConsolidatedLogFileName; ?>' },
+                      setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                      alert("<?php echo $Gui2Text72; ?>"); 
+                    } 
+                  }); } }); });
+            // 2. ClamScan Button
+            $('#clamscanbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
+              $.ajax({
+                type: 'POST',
+                url: 'convertCore.php',
+                data: {
+                  Token1: '<?php echo $Token1; ?>',
+                  Token2: '<?php echo $Token2; ?>',
+                  scantype: 'clamav',
+                  filesToScan: '<?php echo $File; ?>' 
+                },
                 success: function(ReturnData) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  if (ReturnData.includes('ERROR!!!')) {
-                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() {
-                      toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                    alert(ReturnData); }
-                  else {
-                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() {
-                      toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                    download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
-                    } },
+                  $.ajax({
+                    type: 'POST',
+                    url: 'convertCore.php',
+                    data: { 
+                      Token1: '<?php echo $Token1; ?>',
+                      Token2: '<?php echo $Token2; ?>',
+                      download: '<?php echo $ConsolidatedLogFileName; ?>' 
+                    },
+                    success: function(ReturnData) {
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                      if (ReturnData.includes('ERROR!!!')) {
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        alert(ReturnData); 
+                      } else {
+                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
+                      } 
+                    },
                     error: function(ReturnData) {
                       toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      setTimeout(function() {
-                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                      alert("<?php echo $Gui2Text72; ?>"); } }); });
-              $('#scanallbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    scantype:'all',
-                    filesToScan:'<?php echo $File; ?>' },
-                    success: function(ReturnData) {
-                      $.ajax({
-                      type: 'POST',
-                      url: 'convertCore.php',
-                      data: { 
-                        Token1:'<?php echo $Token1; ?>',
-                        Token2:'<?php echo $Token2; ?>',
-                        download:'<?php echo $ConsolidatedLogFileName; ?>' },
+                      setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                      alert("<?php echo $Gui2Text72; ?>"); 
+                    } 
+                  }); } }); });
+            // 3. Scan All Button
+            $('#scanallbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
+              $.ajax({
+                type: 'POST',
+                url: 'convertCore.php',
+                data: {
+                  Token1: '<?php echo $Token1; ?>',
+                  Token2: '<?php echo $Token2; ?>',
+                  scantype: 'all',
+                  filesToScan: '<?php echo $File; ?>' 
+                },
                 success: function(ReturnData) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  if (ReturnData.includes('ERROR!!!')) {
-                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() {
-                      toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                    alert(ReturnData); }
-                  else {
-                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() {
-                      toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                    download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
-                    } },
+                  $.ajax({
+                    type: 'POST',
+                    url: 'convertCore.php',
+                    data: { 
+                      Token1: '<?php echo $Token1; ?>',
+                      Token2: '<?php echo $Token2; ?>',
+                      download: '<?php echo $ConsolidatedLogFileName; ?>' 
+                    },
+                    success: function(ReturnData) {
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                      if (ReturnData.includes('ERROR!!!')) {
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        alert(ReturnData); 
+                      } else {
+                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
+                      } 
+                    },
                     error: function(ReturnData) {
                       toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      setTimeout(function() {
-                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                      alert("<?php echo $Gui2Text72; ?>"); } }); }); });
-          </script>
+                      setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                      alert("<?php echo $Gui2Text72; ?>"); 
+                    } 
+                  }); } }); });
+          });
+        </script>
         </div>
         <?php }
 

@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/5/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/10/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.5.8.
+// / v3.6.4.
 // / This file contains language specific GUI related text for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -30,6 +30,10 @@
 // / -----------------------------------------------------------------------------------
 // / Set a flag to tell that the UI has been displayed.
 $LanguageStringsLoaded = TRUE;
+// / The version of this language pack for compatibility checking.
+// / Compatibility check takes place in convertCore.php, buildGui() function.
+$LanguageVersion = 'v3.6.4';
+$LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
 // / Set the side of the page to float elements to.
@@ -62,6 +66,19 @@ if ($FileCount == 1) {
 // / Set GUI - Header Related Variables.
 // / 'Click, Tap, or Drop files here to upload.'
 $GuiHeaderText1 = 'Bofya, Gusa, au Angusha faili hapa ili kupakia.';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - UI Selector Bar Related Variables.
+// / These strings appear in the selector bar, which is present on both GUI1 & GUI2.
+// / 'Language'
+$GuiSelectorText1 = 'Lugha';
+// / 'Color'
+$GuiSelectorText2 = 'Rangi';
+// / 'Interface'
+$GuiSelectorText3 = 'Kiolesura';
+// / 'Display language, color and interface options'
+$GuiSelectorText4 = 'Onyesha chaguo za lugha, rangi na kiolesura';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 18" width="24" height="18">
-  <rect width="24" height="18" fill="#f4f1ea"/>
-  <rect x="0.5" y="0.5" width="23" height="17" fill="none" stroke="#8a8578" stroke-width="1"/>
-  <text x="12" y="13.5" font-family="Noto Sans Syriac, Estrangelo Edessa, Serto Jerusalem, East Syriac Adiabene, serif" font-size="13" fill="#2b2b2b" text-anchor="middle">&#1827;</text>
+  <rect width="24" height="18" fill="#7a1f2b"/>
+  <text x="12" y="15" font-family="Noto Sans Syriac, Estrangelo Edessa, Serto Jerusalem, East Syriac Adiabene, serif" font-size="17" fill="#ffffff" text-anchor="middle">&#1827;</text>
 </svg>

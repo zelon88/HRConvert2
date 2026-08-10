@@ -186,7 +186,15 @@ Reads Jpg, Jpeg, Png, Bmp, Pdf & Gif. Writes Doc, Docx, Txt, Rtf, Odt & Pdf.
 ## Screenshots
 
 <p align="center">
-  <img src="https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/new-webui2.png" alt="The HRConvert2 conversion options interface"/>
+  <img src="https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/new-selectorbar.png" alt="The HRConvert2 upload options menu"/>
+</p>
+
+<p align="center">
+  <img src="https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/new-selectorbar2.png" alt="The HRConvert2 interface options menu"/>
+</p>
+
+<p align="center">
+  <img src="https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/new-webui2.png" alt="The HRConvert2 conversion options menu"/>
 </p>
 
 More screenshots are in [Documentation/Screenshots](https://github.com/zelon88/HRConvert2/tree/master/Documentation/Screenshots).

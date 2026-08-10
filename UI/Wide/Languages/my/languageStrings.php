@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/5/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/10/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.5.8.
+// / v3.6.4.
 // / This file contains language specific GUI related text for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -30,37 +30,10 @@
 // / -----------------------------------------------------------------------------------
 // / Set a flag to tell that the UI has been displayed.
 $LanguageStringsLoaded = TRUE;
-// / Set the reading direction for text on the page.
-$GUIDirection = 'ltr';
-// / Set the side of the page to float elements to.
-$GUIAlignment = 'left';
-// / Define an error message to display for if the core has not been loaded.
-$CoreError = 'အမှား!!! HRConvert2-2, ဤဖိုင်သည် သင်တောင်းဆိုချက်ကို မလုပ်ဆောင်နိုင်ပါ။ သင်၏ဖိုင်ကို convertCore.php သို့ အစားထိုးပေးပို့ပါ!';
-// / Check if the core is loaded.
-if (!isset($CoreLoaded)) die($CoreError);
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / Check for required core variables.
-if (!isset($Font)) $Font = 'Arial';
-if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
-if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
-if (!isset($ApplicationTitle)) $ApplicationTitle = 'မည်သည့်အရာကိုမဆို ပြောင်းလဲပါ!';
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / Set GUI Related Logic.
-if (!is_numeric($FileCount)) $FileCount = 'အရေအတွက်မသိရသော';
-$FCPlural1 = ' ခု';
-$FCPlural2 = 'များ';
-if ($FileCount == 1) {
-  $FCPlural1 = ' ခု';
-  $FCPlural2 = ''; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / Set a flag to tell that the UI has been displayed.
-$LanguageStringsLoaded = TRUE;
+// / The version of this language pack for compatibility checking.
+// / Compatibility check takes place in convertCore.php, buildGui() function.
+$LanguageVersion = 'v3.6.4';
+$LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
 // / Set the side of the page to float elements to.
@@ -93,6 +66,19 @@ if ($FileCount == 1) {
 // / Set GUI - Header Related Variables.
 // / 'Click, Tap, or Drop files here to upload.'
 $GuiHeaderText1 = 'တင်ယူရန် ဖိုင်များကို ဤနေရာတွင် နှိပ်ပါ၊ ထိပါ သို့မဟုတ် ဆွဲချပါ။';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - UI Selector Bar Related Variables.
+// / These strings appear in the selector bar, which is present on both GUI1 & GUI2.
+// / 'Language'
+$GuiSelectorText1 = 'ဘာသာစကား';
+// / 'Color'
+$GuiSelectorText2 = 'အရောင်';
+// / 'Interface'
+$GuiSelectorText3 = 'အင်တာဖေ့စ်';
+// / 'Display language, color and interface options'
+$GuiSelectorText4 = 'ဘာသာစကား၊ အရောင်နှင့် အင်တာဖေ့စ် ရွေးချယ်စရာများကို ပြပါ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 5/12/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/10/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.4.3.
+v3.6.4.
 This file contains detailed information about the coding & quality conventions in-use 
 in the HRConvert2 codebase.
 
@@ -28,6 +28,7 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap & xvfb-run.
 
 
 -----BUILD PROCESS-----
+
 HRConvert2 is maintained by Zelon88 with help from an amazing & dedicated community on Github.
 Github is the source control management platform where all HRConvert2 development takes place.
 Docker repositorsies are updated less often than Github, but offer much easier installation.
@@ -41,6 +42,7 @@ Devel
 
 
 -----CODING CONVENTIONS-----
+
 HRConvert2 is built using strict coding & quality conventions to promote quality and 
 consistency within the codebase. Those conventions are detailed here so they can be
 developed in the open, alongside the code they are designed to safeguard.
@@ -96,4 +98,155 @@ developed in the open, alongside the code they are designed to safeguard.
   in the ERROR_DESCRIPTIONS.txt file.
 
 17. No cookies. No databases. No third party connections. No analytics. No exceptions.
+-----------------------------------------------------------------------------------
+
+
+-----DETAILED CODEBASE STANDARDS & GUIDANCE-----
+
+-----ESCAPING & ENCODING-----
+
+Escaping belongs at the point of use, never in the core.
+
+The core guarantees CONTENT is safe. Each output context handles its own ENCODING.
+The core cannot know whether a value is about to become a URL, HTML text, a shell
+argument or a JSON value, so it must not guess.
+
+  Context                        Function                Applies to
+  URL path segment, in PHP       rawurlencode()          filenames going into a link
+  URL path segment, in JS        encodeURIComponent()    filenames built at runtime
+  Text going into HTML           htmlspecialchars()      anything echoed into markup
+  Shell argument                 escapeshellarg()        anything reaching a command
+
+These are NOT interchangeable. rawurlencode() encodes / as %2F, so it must never be
+applied to a path containing separators. htmlspecialchars() does not make a value URL
+safe. escapeshellarg() does not make a value HTML safe.
+
+A raw & in an HTML attribute is invalid & must be &amp;. Build the URL in PHP, escape it
+once with htmlspecialchars(), then echo the result.
+
+Never encode the same value twice. A filename echoed into a JS string literal is encoded
+by the JS helper at runtime & must NOT also be rawurlencode()d in PHP. Double encoding
+turns a space into %2520.
+
+sanitizeString() deliberately permits ? + and = because all three are legitimate in a
+filename. It is not a URL sanitizer & must not become one.
+
+-----FALLBACK & FAILURE-----
+
+A subsystem that can fall back MUST fall back before it errors.
+
+The pattern is: try the requested thing, warn if it fails, try the default, warn again,
+and only then return failure. The numbered error fires only when the DEFAULT has also
+failed, at which point it remains fatal because nothing is left to do.
+
+A user who cannot read the page cannot report the problem. Falling back to a working
+default & logging loudly is better than a blank page & a number.
+
+Never validate a value on one path & trust it on another. If $DefaultLanguage is checked
+before use in one branch, it must be checked in every branch.
+
+Initialize a local fallback that cannot be overwritten by configuration. A lowercase
+$defaultGui alongside the global $DefaultGui gives the function something to fall back to
+when the administrator's value is invalid.
+
+Something that can be replaced by loading a second file may be checked AFTER loading.
+Something that prints output must be checked BEFORE loading. A language pack is only
+variable assignments & can be replaced. A UI file prints HTML & cannot.
+
+-----LOGGING TIERS-----
+
+  logEntry()        Op-Act        Normal activity. Suppressed when $Verbose is FALSE.
+  warningEntry()    WARNING!!!    Always written. Carries no error number.
+  errorEntry()      ERROR!!!      Always written. Carries a documented error number.
+
+A warning is something the administrator should know is happening. It does not
+necessarily mean anything needs to change. It can never halt execution.
+
+Anything an attacker caused that HRConvert2 handled correctly is a warning, not an error.
+A blocked SSRF attempt, a removed file reference & a refused stream are all warnings.
+
+An operator running with $Verbose disabled must still be able to tell a blocked attack
+from an ordinary conversion failure. That is what the warning tier is for.
+
+-----VERSION CHECKING-----
+
+  config.php        MINIMUM match. A newer config carrying every required setting is fine.
+  UI folders        EXACT match. Newer or older may render incorrectly in either direction.
+  Language packs    EXACT match. Same reasoning.
+  Dependencies      MINIMUM match, compared NUMERICALLY, never as strings.
+
+Compare version numbers numerically. A string comparison ranks 24.2 below 7.6 & ranks
+3.10 below 3.9. Split on the dot, cast each part to an integer, compare major then minor.
+
+Strip a leading v before comparing. Casting 'v3' to an integer yields 0, which silently
+reduces a three part comparison to a two part one.
+
+A build that reports no parseable version is REFUSED. An unknown build cannot be cleared.
+
+Two minimums may exist for one dependency when one is a feature floor & the other is a
+security floor. FFMPEG has both. Name them separately in config.php & say which is which.
+
+-----SECURITY BOUNDARIES-----
+
+sanitize() and sanitizeString() are an RCE boundary. Any user-controlled value the core 
+touches passes through one of them, and what survives cannot inject into a shell, into 
+HTML, or into a path. They are deliberately not URL sanitizers — + and = are legitimate 
+in a filename and are encoded at the point a filename becomes a URL, not stripped at the 
+point it enters the system.
+
+The SCAD scanner is a convenience layer, not a defence. It exists to resolve include
+statements reliably & to tell the user which references were removed. It is expected to
+be incomplete & nothing depends on it being right.
+
+file_get_contents() is only as dangerous as the sink it feeds. The read never executes
+code as RCE. Danger lives in the file path & what happens to the bytes afterwards.
+
+-----FUNCTION STRUCTURE-----
+
+Single exit. One return at the end of every function.
+
+UPPERCASE first letter for anything returned or global. lowercase for locals.
+
+Every local is set to NULL & unset() before the return. A variable created inside a loop
+or a branch still needs cleaning. A variable that is initialized but never used should be
+removed rather than cleaned.
+
+Initialize every variable the function uses before the first branch, including ones only
+assigned inside a conditional. An undefined variable reaching a comparison is a warning in
+PHP 8, & a warning printed into an AJAX response corrupts it.
+
+Pass a configurable value as a PARAMETER rather than reading it as a global when more than
+one caller needs a different value. verifyFFMPEGVersion() takes its minimum as an argument
+because streams & audio require different ones.
+
+Do not declare a variable global AND accept it as a parameter. The global wins & the
+parameter is silently discarded.
+
+-----REPETITION-----
+
+A pattern repeated more than twice belongs in a function or a template.
+
+The cost is not the typing. It is that a fix gets applied N-1 times. Every bug found in a
+repeated block in this codebase was present in some copies & absent in others.
+
+When a repeated block cannot be collapsed, verify the count mechanically after editing it.
+Count the call sites before & after. A silent miss is the failure mode.
+
+-----LANGUAGE PACKS-----
+
+A language pack is required from inside buildGUI(), so every string is a function local.
+Nothing outside that call can read them. This is deliberate & is what stops a stray string
+leaking into an unrelated part of the core.
+
+Simple logic is permitted in a language pack where localization requires it. Plural
+selection is the common case. Languages that do not inflect for number leave the plural
+helpers empty & write the sentence so it reads correctly for any count.
+
+A language name in a language selector appears as an ENDONYM, untranslated. A user who has
+landed on a language they cannot read must still recognize their own.
+
+Language packs must be UTF-8 with NO byte order mark. A BOM emits three bytes before any
+output & breaks header delivery.
+
+Never repeat a closing HTML tag that footer.php already supplies.
 -----------------------------------------------------------------------------------

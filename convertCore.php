@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/8/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/10/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.6.3.
+// / v3.6.4.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -247,7 +247,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
-  $HRConvertVersion = 'v3.6.3';
+  $HRConvertVersion = 'v3.6.4';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
@@ -259,13 +259,13 @@ function verifyInstallation() {
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / Gui version that do not exactly match the version listed below are not considered acceptable.
   // / This is because Guis are not always guaranteed to be forward or reverse compatible.
-  $RequiredGuiVersion = 'v3.6.2';
+  $RequiredGuiVersion = 'v3.6.4';
   $RequiredGuiVersion = ltrim($RequiredGuiVersion, 'vV');
   // / Define the minimum acceptable Language Pack version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / Language version that do not exactly match the version listed below are not considered acceptable.
   // / This is because Language Packs are not always guaranteed to be forward or reverse compatible.
-  $RequiredLanguageVersion = 'v3.6.2';
+  $RequiredLanguageVersion = 'v3.6.4';
   $RequiredLanguageVersion = ltrim($RequiredLanguageVersion, 'vV');
   // / Define absolute paths for files that we only have relative paths for.
   $configFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'config.php');
@@ -556,14 +556,20 @@ function verifyTokens($Token1, $Token2) {
 // / A function to verify that all required POST & GET inputs are properly sanitized.
 function verifyInputs() {
   // / Set variables.
+  global $ShowGUI;
   $var = FALSE;
   $InputsAreVerified = TRUE;
   $GUI = $Color = $Language = $Token1 = $Token2 = $Height = $Width = $Rotate = $Bitrate = $Method = $Download = $UserFilename = $UserExtension = $Archive = $UserScanType = $ScanAll = $UserClamScan = $UserScanCoreScan = $var = '';
   $variableIsSanitized = $ConvertSelected = $PDFWorkSelected = $FilesToArchive = $FilesToScan = $FilesToDelete = array();
   $key = 0;
   $ScanType = 'all';
+  // / Determine whether or not to display a full GUI or a minimalized GUI.
+  // / The default action is set in config.php. The user can opt for less than the default, but never more.
+  // / The user can only disable the full GUI and fall back to a minimal one. 
+  // / The user can never force enable a full GUI if $ShowGUI is set to FALSE in config.php  
+  if (isset($_GET['noGui'])) $ShowGUI = FALSE;
+  if (!$ShowGUI) $_GET['noGui'] = TRUE;
   // / Sanitize each variable as needed & build a list of error check results.
-  if (isset($_POST['noGui'])) $_POST['noGui'] = $_GET['noGui'] = TRUE;
   if (isset($_POST['filesToDelete'])) list ($FilesToDelete, $variableIsSanitized[$key++]) = sanitize($_POST['filesToDelete'], TRUE);
   if (isset($_POST['language'])) list ($Language, $variableIsSanitized[$key++]) = sanitize($_POST['language'], TRUE);
   if (isset($_GET['language'])) list ($_GET['language'], $variableIsSanitized[$key++]) = sanitize($_GET['language'], TRUE);
@@ -606,7 +612,7 @@ function verifyInputs() {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $variableIsSanitized = $key = $var = NULL;
   unset($variableIsSanitized, $key, $var);
-  return array($InputsAreVerified, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType); }
+  return array($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -651,8 +657,8 @@ function verifyColors($ButtonStyle) {
 function verifyGui() {
   // / Set variables.
   global $GUI, $DefaultGui, $SupportedGuis, $AllowUserSelectableGui, $GuiFiles, $GuiDir, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $OrangeButtonCode, $PurpleButtonCode, $DarkButtonCode, $DefaultButtonCode, $Font, $GuiVersion, $RequiredGuiVersion;
-  $defaultGui = $reqFile =  $variableIsSanitized = $GuiIsSet = FALSE;
-  $GuiToUse = 'Default';
+  $reqFile = $GuiIsSet = FALSE;
+  $GuiToUse = $defaultGui = 'Default';
   $GuiFiles = $guiFiles = array();
   $defaultGuis = array('Default', 'Original', 'Wide');
   // / Make sure $SupportedGuis is valid.
@@ -663,45 +669,59 @@ function verifyGui() {
   if (isset($AllowUserSelectableGui)) {
     if ($AllowUserSelectableGui) if (isset($GUI)) if (in_array($GUI, $SupportedGuis)) {
       $GuiToUse = $GUI; }
-    if (!$AllowUserSelectableGui) $GuiToUse = $DefaultGui; }
+    if (!$AllowUserSelectableGui) {
+      $GuiToUse = $defaultGui;
+      if (in_array($DefaultGui, $SupportedGuis)) $GuiToUse = $DefaultGui; } }
+  // / Build the list of candidate GUIs to try, in order of preference.
+  // / The default is appended so a broken or version incompatible GUI has somewhere to fall
+  // / back to. A user cannot choose their way out of a broken GUI, so the fallback is silent
+  // / to them & noisy in the log.
+  $candidateGuis = array($GuiToUse);
+  if ($GuiToUse !== $defaultGui) array_push($candidateGuis, $defaultGui);
+  foreach ($candidateGuis as $candidateGui) {
+    // / Set the variables to a URL safe relative path to required UI files.
+    $GuiToUse = $candidateGui;
+    $GuiDir = 'UI/'.$GuiToUse.'/';
+    $StyleCoreFile = $GuiDir.'styleCore.php';
+    $GuiHeaderFile = $GuiDir.'header.php';
+    $GuiFooterFile = $GuiDir.'footer.php';
+    $GuiUI1File = $GuiDir.'convertGui1.php';
+    $GuiUI2File = $GuiDir.'convertGui2.php';
+    $GuiVersionFile = $GuiDir.'uiVersionInfo.php';
+    $GuiResourcesDir = $GuiDir.'Resources/';
+    $GuiImageDir = $GuiResourcesDir.'Image/';
+    $GuiCSSDir = $GuiResourcesDir.'CSS/';
+    $GuiJSDir = $GuiResourcesDir.'JS/';
+    $guiFiles = array($GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $StyleCoreFile, $GuiVersionFile);
+    $GuiFiles = array();
+    // / Verify that the required GUI folder & every required file exists.
+    if (is_dir($GuiDir)) {
+      foreach ($guiFiles as $reqFile) if (file_exists($reqFile)) array_push($GuiFiles, $reqFile);
+      // / uiVersionInfo.php only assigns variables, so a failed GUI can still be replaced here.
+      // / Nothing has printed yet, unlike the language pack case in buildGUI().
+      if (count($guiFiles) === count($GuiFiles)) {
+        require($GuiVersionFile);
+        if ($GuiVersion === $RequiredGuiVersion) $GuiIsSet = TRUE;
+        else warningEntry('GUI '.$GuiToUse.' reports version '.$GuiVersion.' but this core requires '.$RequiredGuiVersion.'.'); }
+      else warningEntry('GUI '.$GuiToUse.' is missing one or more required files.'); }
+    else warningEntry('GUI '.$GuiToUse.' does not exist at '.$GuiDir.'.');
+    // / A usable GUI has been found, so stop looking.
+    if ($GuiIsSet) break; }
   // / Set the $GUI variable to whatever the current GUI is so the next page will use the same one.
   $_GET['gui'] = $GuiToUse;
-  // / Set the variables to a URL safe relative path to required UI files.
-  $GuiDir = 'UI/'.$GuiToUse.'/';
-  $StyleCoreFile = $GuiDir.'styleCore.php';
-  $GuiHeaderFile = $GuiDir.'header.php';
-  $GuiFooterFile = $GuiDir.'footer.php';
-  $GuiUI1File = $GuiDir.'convertGui1.php';
-  $GuiUI2File = $GuiDir.'convertGui2.php';
-  $GuiVersionFile = $GuiDir.'uiVersionInfo.php';
-  $GuiResourcesDir = $GuiDir.'Resources/';
-  $GuiImageDir = $GuiResourcesDir.'Image/';
-  $GuiCSSDir = $GuiResourcesDir.'CSS/';
-  $GuiJSDir = $GuiResourcesDir.'JS/';
-  $guiFiles = array($GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $StyleCoreFile, $GuiVersionFile);
-  // / Verify that the required GUI folder exists.
-  if (is_dir($GuiDir)) $GuiIsSet = TRUE;
-  // / Verify that required GUI files exist.
-  foreach ($guiFiles as $reqFile) if (file_exists($reqFile)) array_push($GuiFiles, $reqFile);
-  // / Make sure that all required files exist.
-  if (count($GuiFiles) > 0) if (count($guiFiles) === count($GuiFiles)) {
-    // / Once all required file are verified, load the uiVersionInfo.php file to check for compatibility.
-    require_once($GuiVersionFile);
-    if ($GuiVersion === $RequiredGuiVersion) {
-      $GuiIsSet = TRUE;
-      // / Load the styleCore.php file.
-      require_once($StyleCoreFile);
-      // / Set the variables for required color data.
-      $GreenButtonCode = $greenButtonCode; 
-      $BlueButtonCode = $blueButtonCode;
-      $RedButtonCode = $redButtonCode; 
-      $OrangeButtonCode = $orangeButtonCode;
-      $PurpleButtonCode = $purpleButtonCode;
-      $DarkButtonCode = $darkButtonCode;
-      $DefaultButtonCode = $defaultButtonCode; } }
+  // / Load the style data once a compatible GUI has been settled on.
+  if ($GuiIsSet) {
+    require_once($StyleCoreFile);
+    $GreenButtonCode = $greenButtonCode;
+    $BlueButtonCode = $blueButtonCode;
+    $RedButtonCode = $redButtonCode;
+    $OrangeButtonCode = $orangeButtonCode;
+    $PurpleButtonCode = $purpleButtonCode;
+    $DarkButtonCode = $darkButtonCode;
+    $DefaultButtonCode = $defaultButtonCode; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $defaultGuis = $reqFile = $guiFiles = $greenButtonCode = $blueButtonCode = $redButtonCode = $defaultButtonCode = NULL;
-  unset($defaultGuis, $reqFile, $guiFiles, $greenButtonCode, $blueButtonCode, $redButtonCode, $defaultButtonCode);
+$defaultGuis = $defaultGui = $candidateGuis = $candidateGui = $reqFile = $guiFiles = $StyleCoreFile = $GuiVersionFile = $greenButtonCode = $blueButtonCode = $redButtonCode = $orangeButtonCode = $purpleButtonCode = $darkButtonCode = $defaultButtonCode = NULL;
+  unset($defaultGuis, $defaultGui, $candidateGuis, $candidateGui, $reqFile, $guiFiles, $StyleCoreFile, $GuiVersionFile, $greenButtonCode, $blueButtonCode, $redButtonCode, $orangeButtonCode, $purpleButtonCode, $darkButtonCode, $defaultButtonCode);
   return array($GuiIsSet, $GuiToUse, $GuiDir, $GuiFiles); }
 // / -----------------------------------------------------------------------------------
 
@@ -709,9 +729,9 @@ function verifyGui() {
 // / A function to set the language to use for the session.
 function verifyLanguage() {
   // / Set variables.
-  global $Language, $DefaultLanguage, $SupportedLanguages, $AllowUserSelectableLanguage, $LanguageFiles, $GuiDir, $LanguageDir, $LanguageStringsFile, $Language, $LanguageFlagFile;
-  $defaultLanguages = $reqFile = $variableIsSanitized = $LanguageIsSet = FALSE;
-  $LanguageToUse = 'en';
+  global $Language, $DefaultLanguage, $SupportedLanguages, $AllowUserSelectableLanguage, $LanguageFiles, $GuiDir, $LanguageDir, $LanguageStringsFile, $LanguageFlagFile;
+  $reqFile = $LanguageIsSet = FALSE;
+  $LanguageToUse = $defaultLanguage = 'en';
   $LanguageFiles = $languageFiles = array();
   $defaultLanguages = array(
   'en' => 'English',   'fr' => 'Français',    'es' => 'Español',
@@ -733,7 +753,9 @@ function verifyLanguage() {
   if (isset($AllowUserSelectableLanguage)) {
     if ($AllowUserSelectableLanguage) if (isset($Language)) if (array_key_exists($Language, $SupportedLanguages)) {
       $LanguageToUse = $Language; }
-    if (!$AllowUserSelectableLanguage) $LanguageToUse = $DefaultLanguage; }
+    if (!$AllowUserSelectableLanguage) {
+      $LanguageToUse = $defaultLanguage;
+      if (array_key_exists($DefaultLanguage, $SupportedLanguages)) $LanguageToUse = $DefaultLanguage; } }
   // / Set the $Language variable to whatever the current language is so the next page will use the same one.
   $_GET['language'] = $LanguageToUse;
   // / Set the variables to required UI files.
@@ -743,13 +765,14 @@ function verifyLanguage() {
   $languageFiles = array($LanguageStringsFile, $LanguageFlagFile);
   // / Verify that the required langauge folder exists.
   if (!is_dir($LanguageDir)) $LanguageIsSet = FALSE;
-  // / Verify that required language files exist.
-  if (file_exists($LanguageStringsFile)) {
-    foreach ($languageFiles as $reqFile) if (file_exists($reqFile)) array_push($LanguageFiles, $reqFile);
-    if (count($LanguageFiles) > 0) if (count($languageFiles) === count($LanguageFiles)) $LanguageIsSet = TRUE; }
+  else {
+    // / Verify that required language files exist.
+    if (file_exists($LanguageStringsFile)) {
+      foreach ($languageFiles as $reqFile) if (file_exists($reqFile)) array_push($LanguageFiles, $reqFile);
+      if (count($LanguageFiles) > 0) if (count($languageFiles) === count($LanguageFiles)) $LanguageIsSet = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $defaultLanguages = $reqFile = $variableIsSanitized = $languageFiles = NULL;
-  unset($defaultLanguages, $reqFile, $variableIsSanitized, $languageFiles);
+  $defaultLanguages = $reqFile = $languageFiles = $defaultLanguage = NULL;
+  unset($defaultLanguages, $reqFile, $languageFiles, $defaultLanguage);
   return array($LanguageIsSet, $LanguageToUse, $LanguageDir, $LanguageFiles); }
 // / -----------------------------------------------------------------------------------
 
@@ -1047,7 +1070,7 @@ function virusScan($path) {
   $returnData = shell_exec(str_replace('  ', ' ', str_replace('  ', ' ', 'clamscan -r '.$path.' | grep FOUND >> '.$ClamLogFile)));
   $clamLogFileDATA = @file_get_contents($ClamLogFile);
   // / Check if ClamAV found an infection in the specified file.
-  if (stripos($clamLogFileDATA, 'Virus Detected') !== FALSE or strpos($clamLogFileDATA, 'FOUND') !== FALSE) {
+  if (strpos($clamLogFileDATA, 'Virus Detected') !== FALSE or strpos($clamLogFileDATA, 'FOUND') !== FALSE) {
     $ScanComplete = $virusFound = TRUE;
     // / If the specified file exists, is infected, is not a directory, & $AllowUserVirusScan is set to FALSE then delete the infected file. 
     if (file_exists($path)) if (is_file($path) && !is_dir($path) && !$AllowUserVirusScan) @unlink($path);
@@ -3051,20 +3074,26 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to build the GUI.
-function buildGUI($guiType, $ButtonCode) {
+// / A function to build & display the GUI.
+// / The variables declared here will be usable in GUI elements.
+// / Files like header, footer, styleCore, convertGui1 & convertGui2 have access to them.
+// / Every language string is a function local rather than a global, because the language
+// / pack is required from inside this function. Nothing outside this call can read them.
+function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   // / Set variables.
-  // / The variables defined here will be usable in GUI elements, 
-  // / Files like header, footer, styleCore, convertGui1, & convertGui2 have access to these variables.
-  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion;
+  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage;
   $GUIDisplayed = FALSE;
   $guiUIFile = $GuiUI1File;
+  $fallbackStringsFile = '';
   $Files = array();
   $FileCount = 0;
   // / Make sure the $guiType is valid.
-  if (!is_numeric($guiType)) {
-    if ($guiType < 0) $guiType = 0;
-    if ($guiType > 0) $guiType = 1; }
+  // / A non numeric type cannot be compared against a range, so it is replaced outright.
+  // / Only two GUI types exist, so anything outside that range is clamped into it.
+  if (!is_numeric($guiType)) $guiType = 1;
+  $guiType = (int)$guiType;
+  if ($guiType < 1) $guiType = 1;
+  if ($guiType > 2) $guiType = 2;
   // / Determine which loading indicator to use.
   $PacmanLoc = $GuiImageDir.'pacman'.$SpinnerStyle.strtolower($SpinnerColor).'.gif';
   if (!file_exists($PacmanLoc)) $PacmanLoc = $GuiImageDir.'pacman1grey.gif';
@@ -3075,6 +3104,28 @@ function buildGUI($guiType, $ButtonCode) {
   // / Load language specific GUI elements, if there are any.
   if (in_array($LanguageStringsFile, $LanguageFiles)) require_once($LanguageStringsFile);
   // / Check to ensure that the selected language is compatible with the rest of the GUI.
+  // / The version lives inside the pack, so the pack has already been loaded by the time
+  // / this can be tested. A mismatched pack cannot be trusted to define every string the
+  // / UI reads, so the default pack is loaded over the top of it instead of failing.
+  // / A language pack is only variable assignments, so a second load simply overwrites
+  // / whatever the first one set, & that includes $LanguageVersion itself.
+  // / A user who cannot read the page cannot report the problem, so this warns & continues.
+  if ($LanguageVersion !== $RequiredLanguageVersion) {
+    warningEntry('Language pack '.$LanguageToUse.' reports version '.$LanguageVersion.' but this core requires '.$RequiredLanguageVersion.'.');
+    // / Falling back to a pack that is already loaded would achieve nothing.
+    if ($LanguageToUse !== $DefaultLanguage) {
+      $fallbackStringsFile = $GuiDir.'Languages/'.$DefaultLanguage.'/languageStrings.php';
+      if (file_exists($fallbackStringsFile)) {
+        warningEntry('Falling back to language pack '.$DefaultLanguage.'.');
+        $LanguageToUse = $DefaultLanguage;
+        $LanguageDir = $GuiDir.'Languages/'.$DefaultLanguage.'/';
+        $LanguageStringsFile = $fallbackStringsFile;
+        $LanguageFlagFile = $LanguageDir.'flag.png';
+        // / require rather than require_once, because this second load is deliberate.
+        require($fallbackStringsFile); } } }
+  // / Only build the GUI once a compatible language pack is loaded.
+  // / If the default pack is ALSO out of date then nothing is left to fall back to, & the
+  // / GUI is deliberately not built. The warnings above name both packs that failed.
   if ($LanguageVersion === $RequiredLanguageVersion) {
     // / Load the header.
     if (in_array($GuiHeaderFile, $GuiFiles)) require_once($GuiHeaderFile);
@@ -3088,8 +3139,8 @@ function buildGUI($guiType, $ButtonCode) {
     // / Check if the required GUI elements were loaded.
     if ($HeaderDisplayed && $UIDisplayed && $FooterDisplayed && $LanguageStringsLoaded) $GUIDisplayed = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $guiType = $languageUIFile = NULL; 
-  unset($guiType, $languageUIFile); 
+  $guiType = $guiUIFile = $fallbackStringsFile = $ButtonCode = NULL;
+  unset($guiType, $guiUIFile, $fallbackStringsFile, $ButtonCode);
   return $GUIDisplayed; }
 // / -----------------------------------------------------------------------------------
 
@@ -3099,12 +3150,10 @@ function showGUI($ShowGUI, $ButtonCode) {
   // / Set variables.
   global $ButtonCode;
   $GUIDisplayed = FALSE;
-  // / Determine whether to show a full or minimal GUI.
-  if (isset($ShowGUI)) if (!$ShowGUI) $_GET['noGui'] = TRUE;
   // / Call the GUI from the selected language pack after files have been uploaded.
-  if (isset($_GET['showFiles'])) $GUIDisplayed = buildGUI(2, $ButtonCode);
+  if (isset($_GET['showFiles'])) $GUIDisplayed = buildGUI(2, $ShowGUI, $ButtonCode);
   // / Call the GUI from the selected language pack before files have been uploaded.
-  if (!isset($_GET['showFiles'])) $GUIDisplayed = buildGUI(1, $ButtonCode);
+  if (!isset($_GET['showFiles'])) $GUIDisplayed = buildGUI(1, $ShowGUI, $ButtonCode);
   return $GUIDisplayed; }
 // / -----------------------------------------------------------------------------------
 
@@ -3511,9 +3560,9 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
                 $pagedFilesArrRAW = scandir($ConvertTempDir);
                 foreach ($pagedFilesArrRAW as $pagedFile) {
                   $filename = pathinfo($pathname, PATHINFO_FILENAME);
-                  // / Look for files with the same filename but in .jpg format. Skip the rest.
-                  if (stripos($pagedFile, $filename) !== TRUE) continue;
-                  if (stripos($pagedFile, '.jpg') !== TRUE) continue;
+                  // Look for files with the same filename but in .jpg format. Skip the rest.
+                  if (stripos($pagedFile, $filename) === FALSE) continue;
+                  if (stripos($pagedFile, '.jpg') === FALSE) continue;
                   if ($pagedFile == '.' or $pagedFile == '..' or $pagedFile == '.AppData' or $pagedFile == 'index.html') continue;
                   // / Set page specific variables.
                   $pathnameTEMP1 = str_replace('..', '', str_replace('.'.$oldExtension, '.jpg' , $pathname));
@@ -3715,8 +3764,8 @@ function userClamScan($FilesToScan) {
     // / Check the contents of the User Clam Log File for virus detections.
     if (strpos($clamLogFileDATA, 'FOUND') !== FALSE or strpos($clamLogFileDATA, 'FOUND') === TRUE) {
       $UserVirusFound = TRUE;
-      $txt = 'WARNING!!! Potentially infected file detected at '.$file.'!';
-      if ($Verbose) logEntry($txt);
+      $txt = 'Potentially infected file detected at '.$file.'!';
+      warningEntry($txt);
       userVirusLogEntry($txt, 'clamav'); }
       // / Write the results of the scan to both log files.
     else {
@@ -3796,17 +3845,18 @@ function userScanCoreScan($FilesToScan) {
     if ($Verbose) logEntry('ScanCore returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
     // / Load the contents of the User ScanCore Log File for processing because it has been sanitized of unnecessary data & whitespace.
     $scanCoreLogFileDATA = @file_get_contents($UserScanCoreLogFile);
-    // / Check the contents of the User ScanCore Log File for virus detections.
-    if (stripos($scanCoreLogFileDATA, 'Infected') !== FALSE or stripos($scanCoreLogFileDATA, 'Infected') === TRUE) {
+    // Check the contents of the User ScanCore Log File for virus detections.
+    if (strpos($scanCoreLogFileDATA, 'Infected: ') !== FALSE) {
       $UserVirusFound = TRUE;
-      $txt = 'WARNING!!! Potentially infected file detected at '.$file.'!';
-      if ($Verbose) logEntry($txt);
+      $txt = 'Potentially infected file detected at '.$file.'!';
+      warningEntry($txt);
       userVirusLogEntry($txt, 'scancore'); }
     // / Write the results of the scan to both log files.
     else {
       $txt = 'No infection detected in '.$file.'.';
       if ($Verbose) logEntry($txt);
       userVirusLogEntry($txt, 'scancore'); } }
+  // / Write the completion of the scan to the log files.
   $txt = 'ScanCore Virus Scan Complete.';
   if ($Verbose) logEntry($txt);
   userVirusLogEntry($txt, 'scancore');
@@ -3970,7 +4020,7 @@ list ($InstallationIsVerified, $ConfigFile, $Version) = verifyInstallation();
 if (!$InstallationIsVerified) die('ERROR!!! '.$Time.', HRConvert2-5: Could not verify installation!');
 
 // / The following code verifies that string inputs to the core are properly sanitized.
-list ($InputsAreVerified, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType) = verifyInputs();
+list ($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType) = verifyInputs();
 if (!$InputsAreVerified) die('ERROR!!! '.$Time.', '.$ApplicationName.'-6: Could not verify inputs!');
 
 // / The following code verifies enough user information to generate a unique session identifier.
@@ -4005,6 +4055,11 @@ list ($RequiredDirsExist, $RequiredDirs) = verifyRequiredDirs();
 if (!$RequiredDirsExist) errorEntry('Could not verify required directories!', 12, TRUE);
 else if ($Verbose) logEntry('Verified required directories.');
 
+// / The following code removes the build & development environments if config.php asks for it.
+list ($BuildEnvCleaned, $BuildEnvDeleted, $DevDocsDeleted) = cleanBuildEnvironment();
+if (!$BuildEnvCleaned) errorEntry('Could not clean the build environment!', 26, TRUE);
+else if ($Verbose) logEntry('Verified the build environment.');
+
 // / The following code removes old files from the $ConvertTempDir.
 list ($CleanedTempLoc, $TempLocDeepCleaned) = cleanDataLoc($ConvertTempDir, 'ConvertTempDir');
 if (!$CleanedTempLoc) errorEntry('Could not clean the temporary location!', 13, TRUE);
@@ -4015,28 +4070,24 @@ list ($CleanedConvertLoc, $ConvertLocDeepCleaned) = cleanDataLoc($ConvertLoc, 'C
 if (!$CleanedConvertLoc) errorEntry('Could not clean the convert location!', 14, TRUE);
 else if ($Verbose) logEntry('Cleaned convert location.');
 
-// / The following code removes the build & development environments if config.php asks for it.
-list ($BuildEnvCleaned, $BuildEnvDeleted, $DevDocsDeleted) = cleanBuildEnvironment();
-if (!$BuildEnvCleaned) errorEntry('Could not clean the build environment!', 26, TRUE);
-else if ($Verbose) logEntry('Verified the build environment.');
-
-// / The following code sets the GUI for the session.
-list ($GuiIsSet, $GuiToUse, $GuiDir, $GuiFiles) = verifyGui();
-if (!$GuiIsSet) errorEntry('Could not verify GUI! GUI set to '.$GuiToUse.'!', 25, TRUE);
-else if ($Verbose) logEntry('Verified GUI. GUI set to '.$GuiToUse.'.');
-
-// / The following code sets the color scheme for the session.
-list ($ColorsAreSet, $ButtonCode) = verifyColors($ButtonStyle);
-if (!$ColorsAreSet) errorEntry('Could not verify color scheme! Color set to '.$ButtonStyle.'!', 15, TRUE);
-else if ($Verbose) logEntry('Verified color scheme. Color set to '.$ButtonStyle.'.');
-
-// / The following code sets the language for the session.
-list ($LanguageIsSet, $LanguageToUse, $LanguageDir, $LanguageFiles) = verifyLanguage();
-if (!$LanguageIsSet) errorEntry('Could not verify language! Language set to '.$LanguageToUse.'!', 16, TRUE);
-else if ($Verbose) logEntry('Verified language. Language set to '.$LanguageToUse.'.');
-
 // / The following code displays the appropriate GUI for the session.
 if (!isset($_POST['filesToArchive']) && !isset($_POST['convertSelected']) && !isset($_POST['pdfworkSelected']) && !isset($_POST['download']) && !isset($_POST['upload']) && !isset($_POST['filesToScan'])) {
+
+  // / The following code sets the GUI for the session.
+  list ($GuiIsSet, $GuiToUse, $GuiDir, $GuiFiles) = verifyGui();
+  if (!$GuiIsSet) errorEntry('Could not verify GUI! GUI set to '.$GuiToUse.'!', 25, TRUE);
+  else if ($Verbose) logEntry('Verified GUI. GUI set to '.$GuiToUse.'.');
+
+  // / The following code sets the color scheme for the session.
+  list ($ColorsAreSet, $ButtonCode) = verifyColors($ButtonStyle);
+  if (!$ColorsAreSet) errorEntry('Could not verify color scheme! Color set to '.$ButtonStyle.'!', 15, TRUE);
+  else if ($Verbose) logEntry('Verified color scheme. Color set to '.$ButtonStyle.'.');
+
+  // / The following code sets the language for the session.
+  list ($LanguageIsSet, $LanguageToUse, $LanguageDir, $LanguageFiles) = verifyLanguage();
+  if (!$LanguageIsSet) errorEntry('Could not verify language! Language set to '.$LanguageToUse.'!', 16, TRUE);
+  else if ($Verbose) logEntry('Verified language. Language set to '.$LanguageToUse.'.');
+
   $GUIDisplayed = showGUI($ShowGUI, $ButtonCode);
   if (!$GUIDisplayed) errorEntry('Could not display GUI!', 17, TRUE);
   else if ($Verbose) logEntry('Displaying the GUI.'); }

@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/7/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/10/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.6.1.
+// / v3.6.4.
 // / This is the original (wide) UI from 2016, kept up-to-date with the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -33,11 +33,20 @@ $UIDisplayed = TRUE;
 // / Check if the core is loaded.
 if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
 // / Assign temporary variables.
-$gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2XpsArr = $gui2ScadArr = array();
+$gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2XpsArr = $gui2ScadArr = $gui2SvgArr = array();
+$selectorBase = 'convertCore.php?';
+$selectorSide = ($GUIAlignment === 'left') ? 'right' : 'left';
+$selectorSwatches = array(
+  'red' => '#c0392b',  'green' => '#27ae60',  'blue' => '#3d71b3',  'grey' => '#7f8c8d',
+  'orange' => '#e67e22', 'purple' => '#8e44ad', 'dark' => '#2c3e50');
+// / Carry the page state so a selection returns to the page the user was already on.
+if (isset($_GET['showFiles'])) $selectorBase .= 'showFiles=1&';
+if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
 // / -----------------------------------------------------------------------------------
 ?>
   <body>
     <script type='text/javascript' src='<?php echo $JqueryPath; ?>'></script>
+
     <div id='header-text' style='max-width:2000px; margin-left:auto; margin-right:auto; text-align:center;'>
       <?php if (!isset($_GET['noGui'])) { ?><h1><?php echo $ApplicationName; ?></h1>
       <hr /><?php } ?>
@@ -48,7 +57,55 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
 
     <div id='compressAll' name='compressAll' style='max-width:2000px; margin-left:auto; margin-right: auto; text-align:center;'>
       <button id='backButton' name='backButton' style='width:50px;' class='info-button' onclick='window.history.back();'>&#x2190;</button>
+      <button id='userConfigButton' name='userConfigButton' title='<?php echo $GuiSelectorText4; ?>' style='width:50px;' class='info-button' onclick='toggle_visibility("uiSelector");'>&#9965;</button>
       <button id='refreshButton' name='refreshButton' style='width:50px;' class='info-button' onclick='javascript:location.reload(true);'>&#x21BB;</button>
+      <div id='uiSelector' name='uiSelector' style='display:none;'>
+        <form id='uiSelectorForm' name='uiSelectorForm' method='post' action='<?php echo htmlspecialchars($selectorBase, ENT_QUOTES, 'UTF-8'); ?>'>
+          <input type='hidden' name='Token1' value='<?php echo $Token1; ?>'>
+          <input type='hidden' name='Token2' value='<?php echo $Token2; ?>'>
+          <?php if ($AllowUserSelectableLanguage) { ?>
+          <p style='margin:4px 0;'><strong><?php echo $GuiSelectorText1; ?></strong></p>
+          <p style='margin:4px 0;'>
+            <?php foreach ($SupportedLanguages as $selectorLang => $selectorLabel) {
+              $selectorCurrent = ($selectorLang === $LanguageToUse);
+              $selectorURL = htmlspecialchars($selectorBase.'language='.$selectorLang.'&color='.$ColorToUse.'&gui='.$GuiToUse, ENT_QUOTES, 'UTF-8'); ?>
+            <button type='submit' lang='<?php echo $selectorLang; ?>'
+              style='margin:2px; padding:2px; <?php if ($selectorCurrent) echo 'outline:2px solid #000;'; ?>'
+              formaction='<?php echo $selectorURL; ?>'
+              title='<?php echo $selectorLabel; ?>'
+              <?php if ($selectorCurrent) echo "aria-current='true'"; ?>><img src='<?php echo $GuiDir.'Languages/'.$selectorLang.'/flag.png'; ?>' alt='<?php echo $selectorLabel; ?>' style='height:16px; display:block;'/></button>
+            <?php } ?>
+          </p>
+          <?php } if ($AllowUserSelectableColor) { ?>
+          <p style='margin:4px 0;'><strong><?php echo $GuiSelectorText2; ?></strong></p>
+          <p style='margin:4px 0;'>
+            <?php foreach ($SupportedColors as $selectorColor) {
+              $selectorSwatch = isset($selectorSwatches[$selectorColor]) ? $selectorSwatches[$selectorColor] : '#cccccc';
+              $selectorCurrent = (strtolower($selectorColor) === strtolower($ColorToUse));
+              $selectorURL = htmlspecialchars($selectorBase.'color='.$selectorColor.'&language='.$LanguageToUse.'&gui='.$GuiToUse, ENT_QUOTES, 'UTF-8'); ?>
+            <button type='submit'
+              style='margin:2px; padding:2px; <?php if ($selectorCurrent) echo 'outline:2px solid #000;'; ?>'
+              formaction='<?php echo $selectorURL; ?>'
+              title='<?php echo ucfirst($selectorColor); ?>' aria-label='<?php echo ucfirst($selectorColor); ?>'
+              <?php if ($selectorCurrent) echo "aria-current='true'"; ?>><span class='swatch' style='background-color:<?php echo $selectorSwatch; ?>; width:24px; height:16px; display:block;'></span></button>
+            <?php } ?>
+          </p>
+          <?php } if ($AllowUserSelectableGui) { ?>
+          <p style='margin:4px 0;'><strong><?php echo $GuiSelectorText3; ?></strong></p>
+          <p style='margin:4px 0;'>
+            <?php foreach ($SupportedGuis as $selectorGui) {
+              $selectorCurrent = ($selectorGui === $GuiToUse);
+              $selectorURL = htmlspecialchars($selectorBase.'gui='.$selectorGui.'&language='.$LanguageToUse.'&color='.$ColorToUse, ENT_QUOTES, 'UTF-8'); ?>
+            <button type='submit' class='txtbtn'
+              style='margin:2px; <?php if ($selectorCurrent) echo 'font-weight:700; text-decoration:underline;'; ?>'
+              formaction='<?php echo $selectorURL; ?>'
+              title='<?php echo $selectorGui; ?>' aria-label='<?php echo $selectorGui; ?>'
+              <?php if ($selectorCurrent) echo "aria-current='true'"; ?>><?php echo $selectorGui; ?></button>
+            <?php } ?>
+          </p>
+          <?php } ?>
+        </form>
+      </div>
       <br /> <br />
       <button id='scandocMoreOptionsButton' name='scandocMoreOptionsButton' class='info-button' onclick='toggle_visibility("compressAllOptions");'><?php echo $Gui2Text2; ?></button>
       <div id='compressAllOptions' name='compressAllOptions' align='center' style='display:none;'>
@@ -85,16 +142,12 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
                       download:'<?php echo $ConsolidatedLogFileName; ?>' },
-                    success: function(ReturnData) {
-                      if (ReturnData.includes('ERROR!!!')) {
-                        toggle_visibility('loadingCommandDiv');
-                        alert(ReturnData); }
-                      else {
-                        toggle_visibility('loadingCommandDiv');
-                        toggle_visibility('victoryCommandDiv');
-                        setTimeout(function() {
-                          toggle_visibility('victoryCommandDiv'); }, 5000);
-                        download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>'); } } }); },
+                    success: function(returnFile) {
+                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('victoryCommandDiv');
+                      setTimeout(function() {
+                        toggle_visibility('victoryCommandDiv'); }, 5000);
+                      download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>'); } }); },
                     error: function(ReturnData) {
                       toggle_visibility('loadingCommandDiv');
 
@@ -136,19 +189,12 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                       Token1:'<?php echo $Token1; ?>',
                       Token2:'<?php echo $Token2; ?>',
                       download:document.getElementById('userarchallfilename').value+'.'+extension },
-                    success: function(ReturnData) {
-                      if (ReturnData.includes('ERROR!!!')) {
-                        toggle_visibility('loadingCommandDiv');
-                        toggle_visibility('failureCommandDiv');
-                        setTimeout(function() {
-                          toggle_visibility('failureCommandDiv'); }, 5000);
-                        alert(ReturnData); }
-                      else {
-                        toggle_visibility('loadingCommandDiv');
-                        toggle_visibility('victoryCommandDiv');
-                        setTimeout(function() {
-                          toggle_visibility('victoryCommandDiv'); }, 5000);
-                        download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', document.getElementById('userarchallfilename').value+'.'+extension); } } }); },
+                    success: function(returnFile) {
+                      toggle_visibility('loadingCommandDiv');
+                      toggle_visibility('victoryCommandDiv');
+                      setTimeout(function() {
+                        toggle_visibility('victoryCommandDiv'); }, 5000);
+                      download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', document.getElementById('userarchallfilename').value+'.'+extension); } }); },
                     error: function(ReturnData) {
                       toggle_visibility('loadingCommandDiv');
                       toggle_visibility('failureCommandDiv');
@@ -209,19 +255,12 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
                   Token1:'<?php echo $Token1; ?>',
                   Token2:'<?php echo $Token2; ?>',
                   download:'<?php echo $File; ?>' },
-                success: function(ReturnData) {
+                success: function(returnFile) {
                   toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  if (ReturnData.includes('ERROR!!!')) {
-                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() {
-                      toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                    alert(ReturnData); }
-                  else {
-                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() {
-                      toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                    download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $File; ?>');
-                    } },
+                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                  setTimeout(function() {
+                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                  download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $File; ?>'); },
                 error: function(ReturnData) {
                   toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                   toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
@@ -355,6 +394,15 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
            onclick='toggle_visibility("drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("drawingButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("drawingXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
           <img id='drawingXButton<?php echo $ConvertGuiCounter1; ?>' name='drawingXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
            onclick='toggle_visibility("drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("drawingButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("drawingXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+          <?php } 
+
+          if (in_array($extension, $SVGInputArray) && in_array('SVG', $SupportedConversionTypes)) { ?>
+          <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
+
+          <img id='svgButton<?php echo $ConvertGuiCounter1; ?>' name='svgButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>convert.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
+           onclick='toggle_visibility("svgOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("svgButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("svgXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+          <img id='svgXButton<?php echo $ConvertGuiCounter1; ?>' name='svgXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
+           onclick='toggle_visibility("svgOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("svgButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("svgXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
           <?php } 
 
           if (in_array($extension, $ModelArray) && in_array('Model', $SupportedConversionTypes)) { ?>
@@ -539,117 +587,127 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
           <input type="submit" id="scancorebutton<?php echo $ConvertGuiCounter1; ?>" name="scancorebutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text35; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <input type="submit" id="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" name="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text36; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <input type="submit" id="scanallbutton<?php echo $ConvertGuiCounter1; ?>" name="scanallbutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text37; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#scancorebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    scantype:'scancore',
-                    filesToScan:'<?php echo $File; ?>' },
-                    success: function(ReturnData) {
-                      $.ajax({
-                      type: 'POST',
-                      url: 'convertCore.php',
-                      data: { 
-                        Token1:'<?php echo $Token1; ?>',
-                        Token2:'<?php echo $Token2; ?>',
-                        download:'<?php echo $ConsolidatedLogFileName; ?>' },
+        <script type="text/javascript">
+          $(document).ready(function () {
+            // 1. ScanCore Button
+            $('#scancorebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
+              $.ajax({
+                type: 'POST',
+                url: 'convertCore.php',
+                data: {
+                  Token1: '<?php echo $Token1; ?>',
+                  Token2: '<?php echo $Token2; ?>',
+                  scantype: 'scancore',
+                  filesToScan: '<?php echo $File; ?>' 
+                },
                 success: function(ReturnData) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  if (ReturnData.includes('ERROR!!!')) {
-                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() {
-                      toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                    alert(ReturnData); }
-                  else {
-                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() {
-                      toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                    download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
-                    } },
+                  $.ajax({
+                    type: 'POST',
+                    url: 'convertCore.php',
+                    data: { 
+                      Token1: '<?php echo $Token1; ?>',
+                      Token2: '<?php echo $Token2; ?>',
+                      download: '<?php echo $ConsolidatedLogFileName; ?>' 
+                    },
+                    success: function(ReturnData) {
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                      if (ReturnData.includes('ERROR!!!')) {
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        alert(ReturnData); 
+                      } else {
+                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
+                      } 
+                    },
                     error: function(ReturnData) {
                       toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      setTimeout(function() {
-                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                      alert("<?php echo $Gui2Text72; ?>"); } }); });
-              $('#clamscanbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    scantype:'clamav',
-                    filesToScan:'<?php echo $File; ?>' },
-                    success: function(ReturnData) {
-                      $.ajax({
-                      type: 'POST',
-                      url: 'convertCore.php',
-                      data: { 
-                        Token1:'<?php echo $Token1; ?>',
-                        Token2:'<?php echo $Token2; ?>',
-                        download:'<?php echo $ConsolidatedLogFileName; ?>' },
+                      setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                      alert("<?php echo $Gui2Text72; ?>"); 
+                    } 
+                  }); } }); });
+            // 2. ClamScan Button
+            $('#clamscanbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
+              $.ajax({
+                type: 'POST',
+                url: 'convertCore.php',
+                data: {
+                  Token1: '<?php echo $Token1; ?>',
+                  Token2: '<?php echo $Token2; ?>',
+                  scantype: 'clamav',
+                  filesToScan: '<?php echo $File; ?>' 
+                },
                 success: function(ReturnData) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  if (ReturnData.includes('ERROR!!!')) {
-                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() {
-                      toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                    alert(ReturnData); }
-                  else {
-                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() {
-                      toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                    download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
-                    } },
+                  $.ajax({
+                    type: 'POST',
+                    url: 'convertCore.php',
+                    data: { 
+                      Token1: '<?php echo $Token1; ?>',
+                      Token2: '<?php echo $Token2; ?>',
+                      download: '<?php echo $ConsolidatedLogFileName; ?>' 
+                    },
+                    success: function(ReturnData) {
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                      if (ReturnData.includes('ERROR!!!')) {
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        alert(ReturnData); 
+                      } else {
+                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
+                      } 
+                    },
                     error: function(ReturnData) {
                       toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      setTimeout(function() {
-                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                      alert("<?php echo $Gui2Text72; ?>"); } }); });
-              $('#scanallbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    scantype:'all',
-                    filesToScan:'<?php echo $File; ?>' },
-                    success: function(ReturnData) {
-                      $.ajax({
-                      type: 'POST',
-                      url: 'convertCore.php',
-                      data: { 
-                        Token1:'<?php echo $Token1; ?>',
-                        Token2:'<?php echo $Token2; ?>',
-                        download:'<?php echo $ConsolidatedLogFileName; ?>' },
+                      setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                      alert("<?php echo $Gui2Text72; ?>"); 
+                    } 
+                  }); } }); });
+            // 3. Scan All Button
+            $('#scanallbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
+              $.ajax({
+                type: 'POST',
+                url: 'convertCore.php',
+                data: {
+                  Token1: '<?php echo $Token1; ?>',
+                  Token2: '<?php echo $Token2; ?>',
+                  scantype: 'all',
+                  filesToScan: '<?php echo $File; ?>' 
+                },
                 success: function(ReturnData) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  if (ReturnData.includes('ERROR!!!')) {
-                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() {
-                      toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                    alert(ReturnData); }
-                  else {
-                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() {
-                      toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                    download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
-                    } },
+                  $.ajax({
+                    type: 'POST',
+                    url: 'convertCore.php',
+                    data: { 
+                      Token1: '<?php echo $Token1; ?>',
+                      Token2: '<?php echo $Token2; ?>',
+                      download: '<?php echo $ConsolidatedLogFileName; ?>' 
+                    },
+                    success: function(ReturnData) {
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                      if (ReturnData.includes('ERROR!!!')) {
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        alert(ReturnData); 
+                      } else {
+                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
+                      } 
+                    },
                     error: function(ReturnData) {
                       toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                       toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      setTimeout(function() {
-                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                      alert("<?php echo $Gui2Text72; ?>"); } }); }); });
-          </script>
+                      setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                      alert("<?php echo $Gui2Text72; ?>"); 
+                    } 
+                  }); } }); });
+          });
+        </script>
         </div>
         <?php }
 
@@ -1290,7 +1348,6 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
 
           </script>
         </div>
-
         <?php } 
 
         if ($extension === 'scad' && in_array('Scad', $SupportedConversionTypes)) {
@@ -1476,6 +1533,73 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
         </div>
         <?php } 
 
+        if (in_array($extension, $SVGInputArray) && in_array('SVG', $SupportedConversionTypes)) {
+        ?>
+        <div id='svgOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='svgOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+          <p style="max-width:500px;"></p>
+          <p><strong><?php echo $Gui2Text49; ?></strong></p>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='svgfilename<?php echo $ConvertGuiCounter1; ?>' name='usersvgfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <select id='svgextension<?php echo $ConvertGuiCounter1; ?>' name='svgextension<?php echo $ConvertGuiCounter1; ?>'>
+            <option value="png"><?php echo $Gui2Text18; ?></option>
+            <?php foreach ($SVGOutputArray as $gui2SvgArr) { ?>
+            <option value="<?php echo $gui2SvgArr; ?>"><?php echo $gui2SvgArr; ?></option>
+            <?php } ?>
+          </select></p>
+          <p><?php echo $Gui2Text64; ?></p>
+          <p><input type="number" size="4" value="0" id='width<?php echo $ConvertGuiCounter1; ?>' name='width<?php echo $ConvertGuiCounter1; ?>' min="0" max="10000"> X <input type="number" size="4" value="0" id="height<?php echo $ConvertGuiCounter1; ?>" name="height<?php echo $ConvertGuiCounter1; ?>" min="0"  max="10000"></p> 
+          <input type="submit" id="svgconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="svgconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text61; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">     
+          <script type="text/javascript">
+            $(document).ready(function () {
+              $('#svgconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
+                $.ajax({
+                  type: 'POST',
+                  url: 'convertCore.php',
+                  data: {
+                    Token1:'<?php echo $Token1; ?>',
+                    Token2:'<?php echo $Token2; ?>',
+                    convertSelected:'<?php echo $File; ?>',
+                    width:$('#width<?php echo $ConvertGuiCounter1; ?>').val(),
+                    height:$('#height<?php echo $ConvertGuiCounter1; ?>').val(),
+                    extension:document.getElementById('svgextension<?php echo $ConvertGuiCounter1; ?>').value,
+                    userconvertfilename:document.getElementById('svgfilename<?php echo $ConvertGuiCounter1; ?>').value },
+                    success: function(ReturnData) {
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                      const ReturnDataArray = ReturnData.split(/\r?\n/);
+                      ReturnDataArray.slice(1).forEach((line, index) => {
+                        if (line.includes('ERROR!!!')) { 
+                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                          setTimeout(function() {
+                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                          alert(line); }
+                        else if (line !== '') {
+                          $.ajax({
+                            type: 'POST',
+                            url: 'convertCore.php',
+                            data: { 
+                              Token1:'<?php echo $Token1; ?>',
+                              Token2:'<?php echo $Token2; ?>',
+                              download:line },
+                            success: function(ReturnData) {
+                              if (ReturnData.includes('ERROR!!!')) {
+                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                                setTimeout(function() {
+                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                                alert(ReturnData); }
+                              else if (ReturnData !== '') {
+                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
+                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                                setTimeout(function() {
+                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                                } },
+                            error: function(ReturnData) {
+                              toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                              setTimeout(function() {
+                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+          </script>
+        </div>
+        <?php }
+
         if (in_array($extension, $ImageArray) && in_array('Image', $SupportedConversionTypes)) {
         ?>
         <div id='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
@@ -1549,5 +1673,5 @@ $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui
     </div>
     <?php
     // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-    $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2XpsArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2ScadArr = NULL;
-    unset($gui2AudArr, $gui2VidArr, $gui2StreamArr, $gui2DocArr, $gui2SpreadArr, $gui2XpsArr, $gui2PresArr, $gui2ArchArr, $gui2ImaArr, $gui2ModArr, $gui2SubArr, $gui2DraArr, $gui2OcrArr, $gui2ScadArr);
+    $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2XpsArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2ScadArr = $selectorBase = $selectorSide = $selectorSwatches = $selectorLang = $selectorLabel = $selectorCurrent = $selectorColor = $selectorSwatch = $selectorGui = $selectorURL = $gui2SvgArr = NULL;
+    unset($gui2AudArr, $gui2VidArr, $gui2StreamArr, $gui2DocArr, $gui2SpreadArr, $gui2XpsArr, $gui2PresArr, $gui2ArchArr, $gui2ImaArr, $gui2ModArr, $gui2SubArr, $gui2DraArr, $gui2OcrArr, $gui2ScadArr, $gui2SvgArr, $selectorBase, $selectorSide, $selectorSwatches, $selectorLang, $selectorLabel, $selectorCurrent, $selectorColor, $selectorSwatch, $selectorGui, $selectorURL);

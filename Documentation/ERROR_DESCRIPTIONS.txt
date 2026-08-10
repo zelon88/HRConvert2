@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/3/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/10/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.5.6.
+v3.6.4.
 This plain text file contains descriptions of all the native error messages contained in or produced by the HRConvert2 Diablo engine. 
 These descriptions should give administrators a starting point for debugging problems with HRConvert2 installations. 
 Each section in this file contains information about a different error message. The first one is an example to demonstrate the structure of this file.
@@ -395,7 +395,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15, <SESSION_IDENTIFIER>: Could not verify color scheme! Color set to <SELECTED_COLOR>!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -404,9 +404,16 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  The --Button Colors-- section of the config.php file contains a value that is not valid.
-  The --Button Colors-- section of the config.php file contains a color that is not supported.
-  The styleCore.php file has become corrupt.
+  A color scheme could not be established for this session.
+  NOTE. An invalid color does NOT cause this error. verifyColors() falls back to blue.
+  A color named in the --Supported Colors-- config entry that HRConvert2 does not implement
+  is ignored & the fallback is used instead.
+  This error fires only when even the fallback could not be resolved.
+  The styleCore.php file for the selected GUI is missing, unreadable or corrupt.
+  The styleCore.php file does not define every button color variable the core expects.
+  The www-data:www-data user:group needs read access to the UI subdirectory.
+  This may be the result of incorrect file permission levels on the UI subdirectory.
+  Consult the WARNING entries immediately preceding this error for the color that failed.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -415,7 +422,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16, <SESSION_IDENTIFIER>: Could not verify language! Language set to <SELECTED_LANGUAGE>!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -424,12 +431,17 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  The path to the Languages subdirectory of the installation directory does not exist or cannot be accessed.
-  The requested Language Pack has become corrupt.
-  The requested Language Pack is missing one or more of the following files; languageStrings.php.
-  The requested Language Pack is incomplete, malformed, or missing critical components.
+  A language pack could not be established for this session.
+  NOTE. A missing or invalid language does NOT cause this error on its own.
+  verifyLanguage() falls back to the --Default Language-- & then to English.
+  This error fires only when the fallback language pack ALSO could not be verified.
+  The UI/<SELECTED_GUI>/Languages/ directory does not exist or cannot be read.
+  The UI/<SELECTED_GUI>/Languages/<SELECTED_LANGUAGE>/languageStrings.php file is missing.
+  The UI/<SELECTED_GUI>/Languages/<SELECTED_LANGUAGE>/flag.png file is missing.
+  A language pack requires BOTH files. A pack missing either one is not loaded.
+  The www-data:www-data user:group needs read access to the Languages subdirectory.
   This may be the result of incorrect file permission levels on the Languages subdirectory.
-  This may be the result of incorrect user or group associations for the www-data user or group.
+  Consult the WARNING entries immediately preceding this error for the packs that failed.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -438,7 +450,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-17, <SESSION_IDENTIFIER>: Could not display the GUI!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -447,13 +459,19 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  The version of the language pack that was loaded did not meet the Minimum Required Version that the core can accept.
-  An update did not complete successfully, or a recently installed GUI or language pack is corrupt or not compatible with the core.
-  The application has become corrupt.
-  The UI/[SELECTED_GUI]/Languages/[SELECTED_LANGUAGE]/languageStrings.php file is missing or unreadable.
-  The UI/[SELECTED_GUI]/Languages/[SELECTED_LANGUAGE]/flag.php file is missing or unreadable.
-  This may be the result of incorrect file permission levels on the Languages or UI subdirectory.
-  This may be the result of incorrect user or group associations for the www-data user or group.
+  The GUI was assembled but did not complete.
+  This error has two distinct causes & the WARNING entries above it identify which.
+  FIRST CAUSE. No language pack met the version the core requires.
+  The version check is an EXACT match, not a minimum, because a pack newer or older than
+  the core expects may be missing strings the interface reads.
+  buildGUI() loads the default pack over a mismatched one, so this fires only when the
+  default pack is ALSO the wrong version. That means every pack in the installation is stale.
+  An update did not complete successfully, or a language pack was installed by hand.
+  SECOND CAUSE. One of the four interface files did not set its display flag.
+  header.php, convertGui1.php or convertGui2.php, & footer.php must each report success.
+  A file that is present but did not execute to completion produces this.
+  The www-data:www-data user:group needs read access to the UI subdirectory.
+  This may be the result of incorrect file permission levels on the UI subdirectory.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -3102,7 +3120,7 @@ ERROR DESCRIPTION
   An update did not complete successfully, or a recently installed GUI is corrupt or not compatible with the core.
   The path to the UI subdirectory of the installation directory does not exist or cannot be accessed.
   The requested GUI has become corrupt.
-  The requested GUI is missing one or more of the following files; header.php, footer.php, convertGui1.php, convertGui2.php, styleCore.php, uiVersionInfo.php, Languages/[SELECTED_LANGUAGE]/languageStrings.php.
+  The requested GUI is missing one or more of the following files; header.php, footer.php, convertGui1.php, convertGui2.php, styleCore.php, uiVersionInfo.php, Languages/<SELECTED_LANGUAGE>/languageStrings.php.
   The requested GUI is incomplete, malformed, or missing critical components.
   This may be the result of incorrect file permission levels on the UI or Languages subdirectory.
   This may be the result of incorrect user or group associations for the www-data user or group.

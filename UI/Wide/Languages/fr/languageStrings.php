@@ -169,11 +169,11 @@ $Gui2Text7 = 'Fermer Les Options De Partage';
 // / 'Virus Scan'
 $Gui2Text8 = 'Scan De Virus';
 // / 'Close Virus Scan Options'
-$Gui2Text9 = 'Fermer Les Options D\'Analyse Antivirus';
+$Gui2Text9 = 'Fermer Les Options D’Analyse Antivirus';
 // / 'Archive'
 $Gui2Text10 = 'Archive';
 // / 'Close Archive Options'
-$Gui2Text11 = 'Fermer Les Options D\'Archivage';
+$Gui2Text11 = 'Fermer Les Options D’Archivage';
 // / 'OCR'
 $Gui2Text12 = 'Reconnaissance Optique De Caractères';
 // / 'Close OCR Options'
@@ -253,11 +253,11 @@ $Gui2Text49 = 'Convertissez Ce Dessin Technique Ou Ce Fichier Vectoriel';
 // / 'Convert This Image'
 $Gui2Text50 = 'Convertir Cette Image';
 // / 'Archive File'
-$Gui2Text51 = 'Fichier D\'Archive';
+$Gui2Text51 = 'Fichier D’Archive';
 // / 'Convert Into Document'
 $Gui2Text52 = 'Convertir En Document';
 // / 'Archive Files'
-$Gui2Text53 = 'Fichiers D\'Archives';
+$Gui2Text53 = 'Fichiers D’Archives';
 // / 'Convert Document'
 $Gui2Text54 = 'Convertir Le Document';
 // / 'Convert Spreadsheet'
@@ -265,7 +265,7 @@ $Gui2Text55 = 'Convertir Une Feuille De Calcul';
 // / 'Convert Presentation'
 $Gui2Text56 = 'Convertir La Présentation';
 // / 'Convert Audio'
-$Gui2Text57 = 'Convertir L\'Audio';
+$Gui2Text57 = 'Convertir L’Audio';
 // / 'Convert Video'
 $Gui2Text58 = 'Convertir La Vidéo';
 // / 'Convert Stream'
@@ -275,7 +275,7 @@ $Gui2Text60 = 'Convertir Le Modèle';
 // / 'Convert Drawing'
 $Gui2Text61 = 'Convertir Le Dessin';
 // / 'Convert Image'
-$Gui2Text62 = 'Convertir L\'Image';
+$Gui2Text62 = 'Convertir L’Image';
 // / 'Width & Height'
 $Gui2Text64 = 'Largeur Et Hauteur: ';
 // / 'Rotate: '
@@ -293,11 +293,11 @@ $Gui2Text70 = 'Confirmation De La Suppression';
 // / 'Cannot convert this file! Try changing the name.'
 $Gui2Text71 = 'Impossible de convertir ce fichier ! Essayez de changer le nom.';
 // / 'Cannot perform a virus scan on this file!'
-$Gui2Text72 = 'Impossible d\'effectuer une analyse antivirus sur ce fichier !';
+$Gui2Text72 = 'Impossible d’effectuer une analyse antivirus sur ce fichier !';
 // / 'File Link Copied to Clipboard!'
 $Gui2Text73 = 'Lien De Fichier Copié Dans Le Presse-Papier!';
 // / 'Operation Failed!'
-$Gui2Text74 = 'L\'Opération A Échoué!';
+$Gui2Text74 = 'L’Opération A Échoué!';
 // / 'Convert These Subtitles'
 $Gui2Text75 = 'Convertir Ces Sous-Titres';
 // / 'Convert Subtitles'

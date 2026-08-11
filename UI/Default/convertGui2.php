@@ -123,39 +123,51 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
             $('#scanAllButton').click(function() {
               var scanfiles = <?php echo json_encode($Files); ?>;
               var scanType = 'all';
-              if($('input#clamscanall').is(':checked')) {
-                var scanType = 'clamav'; }
-              if($('input#scancoreall').is(':checked')) {
-                var scanType = 'scancore'; }
-              if($('input#clamscanall').is(':checked') && $('input#scancoreall').is(':checked')) {
-                var scanType = 'all'; }
+              
+              if($('input#clamscanall').is(':checked')) { scanType = 'clamav'; }
+              if($('input#scancoreall').is(':checked')) { scanType = 'scancore'; }
+              if($('input#clamscanall').is(':checked') && $('input#scancoreall').is(':checked')) { scanType = 'all'; }
+              
               $.ajax({
                 type: 'POST',
                 url: 'convertCore.php',
                 data: {
-                  Token1:'<?php echo $Token1; ?>',
-                  Token2:'<?php echo $Token2; ?>',
-                  scantype:scanType,
-                  filesToScan:scanfiles },
-                  success: function(ReturnData) {
-                    $.ajax({
+                  Token1: '<?php echo $Token1; ?>',
+                  Token2: '<?php echo $Token2; ?>',
+                  scantype: scanType,
+                  filesToScan: scanfiles 
+                },
+                success: function(ReturnData) {
+                  $.ajax({
                     type: 'POST',
                     url: 'convertCore.php',
                     data: {
-                      Token1:'<?php echo $Token1; ?>',
-                      Token2:'<?php echo $Token2; ?>',
-                      download:'<?php echo $ConsolidatedLogFileName; ?>' },
+                      Token1: '<?php echo $Token1; ?>',
+                      Token2: '<?php echo $Token2; ?>',
+                      download: '<?php echo $ConsolidatedLogFileName; ?>' 
+                    },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
                       toggle_visibility('victoryCommandDiv');
-                      setTimeout(function() {
-                        toggle_visibility('victoryCommandDiv'); }, 5000);
-                      download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>'); } }); },
-                    error: function(ReturnData) {
+                      setTimeout(function() { toggle_visibility('victoryCommandDiv'); }, 5000);
+                      download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>'); 
+                    },
+                    error: function() {
                       toggle_visibility('loadingCommandDiv');
-
-                      alert('<?php echo $Gui2Text72; ?>'); } }); }); });
+                      alert('<?php echo $Gui2Text72; ?>');
+                    } 
+                  });
+                },
+                error: function() {
+                  toggle_visibility('loadingCommandDiv');
+                  alert('<?php echo $Gui2Text72; ?>');
+                }
+              });
+            });
+          });
         </script>
+
+
       <?php } ?>
         <hr style='width: 50%;'/>
         <?php if (in_array('Archive', $SupportedConversionTypes)) { ?>
@@ -172,39 +184,43 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           $(document).ready(function () {
             $('#archallSubmit').click(function() {
               var extension = document.getElementById('archallextension').value;
-              if (extension === '') {
-                extension = 'zip'; }
+              if (extension === '') { extension = 'zip'; }
+              
               $.ajax({
                 type: 'POST',
                 url: 'convertCore.php',
                 data: {
-                  Token1:'<?php echo $Token1; ?>',
-                  Token2:'<?php echo $Token2; ?>',
-                  archive:'1',
-                  filesToArchive:<?php echo json_encode($Files); ?>,
-                  archextension:extension,
-                  userfilename:document.getElementById('userarchallfilename').value },
-                  success: function(ReturnData) {
-                    $.ajax({
+                  Token1: '<?php echo $Token1; ?>',
+                  Token2: '<?php echo $Token2; ?>',
+                  archive: '1',
+                  filesToArchive: <?php echo json_encode($Files); ?>,
+                  archextension: extension,
+                  userfilename: document.getElementById('userarchallfilename').value 
+                },
+                success: function(ReturnData) {
+                  $.ajax({
                     type: 'POST',
                     url: 'convertCore.php',
                     data: {
-                      Token1:'<?php echo $Token1; ?>',
-                      Token2:'<?php echo $Token2; ?>',
-                      download:document.getElementById('userarchallfilename').value+'.'+extension },
+                      Token1: '<?php echo $Token1; ?>',
+                      Token2: '<?php echo $Token2; ?>',
+                      download: document.getElementById('userarchallfilename').value + '.' + extension 
+                    },
                     success: function(returnFile) {
                       toggle_visibility('loadingCommandDiv');
                       toggle_visibility('victoryCommandDiv');
-                      setTimeout(function() {
-                        toggle_visibility('victoryCommandDiv'); }, 5000);
-                      download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', document.getElementById('userarchallfilename').value+'.'+extension); } }); },
-                    error: function(ReturnData) {
+                      setTimeout(function() { toggle_visibility('victoryCommandDiv'); }, 5000);
+                      download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', document.getElementById('userarchallfilename').value + '.' + extension); 
+                    },
+                    error: function() {
                       toggle_visibility('loadingCommandDiv');
                       toggle_visibility('failureCommandDiv');
-                      setTimeout(function() {
-                        toggle_visibility('failureCommandDiv'); }, 5000);
-                      alert('<?php echo $Gui2Text71; ?>'); } }); }); });
+                      setTimeout(function() { toggle_visibility('failureCommandDiv'); }, 5000);
+                      alert('<?php echo $Gui2Text71; ?>');
+                    }
+                  }); } }); }); });
         </script>
+
         <?php } ?>
         <hr style='width: 50%;'/>
       </div>
@@ -456,7 +472,6 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           </select></p>
           
           <input type='submit' id='archfileSubmit<?php echo $ConvertGuiCounter1; ?>' name='archfileSubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo $Gui2Text51; ?>' onclick='toggle_visibility("loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>");'>
-          
           <script type='text/javascript'>
             $(document).ready(function () {
               $('#archfileSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -464,41 +479,52 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                   type: 'POST',
                   url: 'convertCore.php',
                   data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    archive:'<?php echo $File; ?>',
-                    filesToArchive:'<?php echo $File; ?>',
-                    archextension:document.getElementById('archfileextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userfilename:document.getElementById('userarchfilefilename<?php echo $ConvertGuiCounter1; ?>').value },
+                    Token1: '<?php echo $Token1; ?>',
+                    Token2: '<?php echo $Token2; ?>',
+                    archive: '<?php echo $File; ?>',
+                    filesToArchive: '<?php echo $File; ?>',
+                    archextension: document.getElementById('archfileextension<?php echo $ConvertGuiCounter1; ?>').value,
+                    userfilename: document.getElementById('userarchfilefilename<?php echo $ConvertGuiCounter1; ?>').value 
+                  },
                   success: function(ReturnData) {
                     toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
                     const ReturnDataArray = ReturnData.split(/\r?\n/);
+                    
                     ReturnDataArray.slice(1).forEach((line, index) => {
-                    if (line.includes('ERROR!!!')) { 
-                      toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      setTimeout(function() {
-                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                      alert(line); }
-                      else if (line !== '') {
+                      if (line.includes('ERROR!!!')) { 
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        alert(line); 
+                      } else if (line !== '') {
                         $.ajax({
                           type: 'POST',
                           url: 'convertCore.php',
                           data: { 
-                            Token1:'<?php echo $Token1; ?>',
-                            Token2:'<?php echo $Token2; ?>',
-                            download:line },
+                            Token1: '<?php echo $Token1; ?>',
+                            Token2: '<?php echo $Token2; ?>',
+                            download: line 
+                          },
                           success: function(ReturnData) {
                             if (ReturnData !== '') {
                               download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
                               toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              } },
+                              setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            } 
+                          },
                           error: function(ReturnData) {
                             toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                            setTimeout(function() {
-                              toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                            alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+                            setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            alert("<?php echo $Gui2Text71; ?>"); 
+                          } 
+                        }); } }); 
+                  },
+                  error: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                    alert("<?php echo $Gui2Text71; ?>");
+                  }
+                }); }); });
           </script>
         </div>
 
@@ -513,52 +539,60 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <input type="submit" id="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" name="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text33; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
             $(document).ready(function () {
+              // 1. Share Generate Button
               $('#sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
                 $.ajax({
-                type: 'POST',
-                url: 'convertCore.php',
-                data: { 
-                  Token1:'<?php echo $Token1; ?>',
-                  Token2:'<?php echo $Token2; ?>',
-                  download:'<?php echo $File; ?>' },
-                success: function(ReturnData) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text24; ?><i><?php echo $Gui2Text26; ?></i>';
-                  document.getElementById('shareclipStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text27; ?><i><?php echo $Gui2Text28; ?></i>';
-                  document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text29; ?><i>' + share_file_url('<?php echo $FullURL.'/DATA/'.$SesHash3.'/'; ?>', '<?php echo $File; ?>') + '</i>';
-                  copy_share_link(share_file_url('<?php echo $FullURL.'/DATA/'.$SesHash3.'/'; ?>', '<?php echo $File; ?>'), '<?php echo $GuiFunctionsText1; ?>');
-                  alert("<?php echo $Gui2Text73; ?>");
-                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  setTimeout(function() {
-                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); },
-                error: function(ReturnData) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  setTimeout(function() {
-                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); 
-                  alert("<?php echo $Gui2Text74; ?>"); } }); });
+                  type: 'POST',
+                  url: 'convertCore.php',
+                  data: { 
+                    Token1: '<?php echo $Token1; ?>',
+                    Token2: '<?php echo $Token2; ?>',
+                    download: '<?php echo $File; ?>' 
+                  },
+                  success: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text24; ?><i><?php echo $Gui2Text26; ?></i>';
+                    document.getElementById('shareclipStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text27; ?><i><?php echo $Gui2Text28; ?></i>';
+                    document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text29; ?><i>' + share_file_url('<?php echo $FullURL.'/DATA/'.$SesHash3.'/'; ?>', '<?php echo $File; ?>') + '</i>';
+                    copy_share_link(share_file_url('<?php echo $FullURL.'/DATA/'.$SesHash3.'/'; ?>', '<?php echo $File; ?>'), '<?php echo $GuiFunctionsText1; ?>');
+                    alert("<?php echo $Gui2Text73; ?>");
+                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); 
+                  },
+                  error: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); 
+                    alert("<?php echo $Gui2Text74; ?>"); 
+                  } 
+                }); });
+              // 2. Share Copy Button
               $('#sharecopybutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
                 $.ajax({
-                type: 'POST',
-                url: 'convertCore.php',
-                data: { 
-                  Token1:'<?php echo $Token1; ?>',
-                  Token2:'<?php echo $Token2; ?>',
-                  download:'<?php echo $File; ?>' },
-                success: function(ReturnData) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  setTimeout(function() {
-                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); 
-                  document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text24; ?><i><?php echo $Gui2Text26; ?></i>';
-                  document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text29; ?><i>' + share_file_url('<?php echo $FullURL.'/DATA/'.$SesHash3.'/'; ?>', '<?php echo $File; ?>') + '</i>'; },
-                error: function(ReturnData) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  setTimeout(function() {
-                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); 
-                  alert("<?php echo $Gui2Text74; ?>");} }); }); });
+                  type: 'POST',
+                  url: 'convertCore.php',
+                  data: { 
+                    Token1: '<?php echo $Token1; ?>',
+                    Token2: '<?php echo $Token2; ?>',
+                    download: '<?php echo $File; ?>' 
+                  },
+                  success: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); 
+                    document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text24; ?><i><?php echo $Gui2Text26; ?></i>';
+                    document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text29; ?><i>' + share_file_url('<?php echo $FullURL.'/DATA/'.$SesHash3.'/'; ?>', '<?php echo $File; ?>') + '</i>'; 
+                  },
+                  error: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); 
+                    alert("<?php echo $Gui2Text74; ?>");
+                  } 
+                }); });
+            });
           </script>
+
         </div>
         <?php } ?>
 
@@ -594,115 +628,130 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <input type="submit" id="scanallbutton<?php echo $ConvertGuiCounter1; ?>" name="scanallbutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text37; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
             $(document).ready(function () {
+
+              // 1. ScanCore Button
               $('#scancorebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
                 $.ajax({
                   type: 'POST',
                   url: 'convertCore.php',
                   data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    scantype:'scancore',
-                    filesToScan:'<?php echo $File; ?>' },
-                    success: function(ReturnData) {
-                      $.ajax({
+                    Token1: '<?php echo $Token1; ?>',
+                    Token2: '<?php echo $Token2; ?>',
+                    scantype: 'scancore',
+                    filesToScan: '<?php echo $File; ?>' 
+                  },
+                  success: function(ReturnData) {
+                    $.ajax({
                       type: 'POST',
                       url: 'convertCore.php',
                       data: { 
-                        Token1:'<?php echo $Token1; ?>',
-                        Token2:'<?php echo $Token2; ?>',
-                        download:'<?php echo $ConsolidatedLogFileName; ?>' },
-                success: function(ReturnData) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  if (ReturnData.includes('ERROR!!!')) {
-                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() {
-                      toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                    alert(ReturnData); }
-                  else {
-                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() {
-                      toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                    download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
-                    } },
-                    error: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      setTimeout(function() {
-                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                      alert("<?php echo $Gui2Text72; ?>"); } }); });
+                        Token1: '<?php echo $Token1; ?>',
+                        Token2: '<?php echo $Token2; ?>',
+                        download: '<?php echo $ConsolidatedLogFileName; ?>' 
+                      },
+                      success: function(ReturnData) {
+                        toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        if (ReturnData.includes('ERROR!!!')) {
+                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                          setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                          alert(ReturnData); 
+                        } else {
+                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                          setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                          download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
+                        } 
+                      },
+                      error: function(ReturnData) {
+                        toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        alert("<?php echo $Gui2Text72; ?>"); 
+                      } 
+                    }); } }); });
+
+              // 2. ClamScan Button
               $('#clamscanbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
                 $.ajax({
                   type: 'POST',
                   url: 'convertCore.php',
                   data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    scantype:'clamav',
-                    filesToScan:'<?php echo $File; ?>' },
-                    success: function(ReturnData) {
-                      $.ajax({
+                    Token1: '<?php echo $Token1; ?>',
+                    Token2: '<?php echo $Token2; ?>',
+                    scantype: 'clamav',
+                    filesToScan: '<?php echo $File; ?>' 
+                  },
+                  success: function(ReturnData) {
+                    $.ajax({
                       type: 'POST',
                       url: 'convertCore.php',
                       data: { 
-                        Token1:'<?php echo $Token1; ?>',
-                        Token2:'<?php echo $Token2; ?>',
-                        download:'<?php echo $ConsolidatedLogFileName; ?>' },
-                success: function(ReturnData) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  if (ReturnData.includes('ERROR!!!')) {
-                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() {
-                      toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                    alert(ReturnData); }
-                  else {
-                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() {
-                      toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                    download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
-                    } },
-                    error: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      setTimeout(function() {
-                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                      alert("<?php echo $Gui2Text72; ?>"); } }); });
+                        Token1: '<?php echo $Token1; ?>',
+                        Token2: '<?php echo $Token2; ?>',
+                        download: '<?php echo $ConsolidatedLogFileName; ?>' 
+                      },
+                      success: function(ReturnData) {
+                        toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        if (ReturnData.includes('ERROR!!!')) {
+                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                          setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                          alert(ReturnData); 
+                        } else {
+                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                          setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                          download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
+                        } 
+                      },
+                      error: function(ReturnData) {
+                        toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        alert("<?php echo $Gui2Text72; ?>"); 
+                      } 
+                    }); } }); });
+
+              // 3. Scan All Button
               $('#scanallbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
                 $.ajax({
                   type: 'POST',
                   url: 'convertCore.php',
                   data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    scantype:'all',
-                    filesToScan:'<?php echo $File; ?>' },
-                    success: function(ReturnData) {
-                      $.ajax({
+                    Token1: '<?php echo $Token1; ?>',
+                    Token2: '<?php echo $Token2; ?>',
+                    scantype: 'all',
+                    filesToScan: '<?php echo $File; ?>' 
+                  },
+                  success: function(ReturnData) {
+                    $.ajax({
                       type: 'POST',
                       url: 'convertCore.php',
                       data: { 
-                        Token1:'<?php echo $Token1; ?>',
-                        Token2:'<?php echo $Token2; ?>',
-                        download:'<?php echo $ConsolidatedLogFileName; ?>' },
-                success: function(ReturnData) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  if (ReturnData.includes('ERROR!!!')) {
-                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() {
-                      toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                    alert(ReturnData); }
-                  else {
-                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() {
-                      toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                    download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
-                    } },
-                    error: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      setTimeout(function() {
-                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                      alert("<?php echo $Gui2Text72; ?>"); } }); }); });
+                        Token1: '<?php echo $Token1; ?>',
+                        Token2: '<?php echo $Token2; ?>',
+                        download: '<?php echo $ConsolidatedLogFileName; ?>' 
+                      },
+                      success: function(ReturnData) {
+                        toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        if (ReturnData.includes('ERROR!!!')) {
+                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                          setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                          alert(ReturnData); 
+                        } else {
+                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                          setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                          download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
+                        } 
+                      },
+                      error: function(ReturnData) {
+                        toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        alert("<?php echo $Gui2Text72; ?>"); 
+                      } 
+                    }); } }); });
+
+            });
           </script>
+
         </div>
         <?php }
 
@@ -795,46 +844,57 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                   type: 'POST',
                   url: 'convertCore.php',
                   data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    extension:document.getElementById('archiveextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('userarchivefilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) { 
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: { 
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
+                    Token1: '<?php echo $Token1; ?>',
+                    Token2: '<?php echo $Token2; ?>',
+                    convertSelected: '<?php echo $File; ?>',
+                    extension: document.getElementById('archiveextension<?php echo $ConvertGuiCounter1; ?>').value,
+                    userconvertfilename: document.getElementById('userarchivefilename<?php echo $ConvertGuiCounter1; ?>').value 
+                  },
+                  success: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    const ReturnDataArray = ReturnData.split(/\r?\n/);
+                    
+                    ReturnDataArray.slice(1).forEach((line, index) => {
+                      if (line.includes('ERROR!!!')) { 
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        alert(line); 
+                      } else if (line !== '') {
+                        $.ajax({
+                          type: 'POST',
+                          url: 'convertCore.php',
+                          data: { 
+                            Token1: '<?php echo $Token1; ?>',
+                            Token2: '<?php echo $Token2; ?>',
+                            download: line 
+                          },
+                          success: function(ReturnData) {
+                            if (ReturnData.includes('ERROR!!!')) {
                               toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+                              setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                              alert(ReturnData); 
+                            } else if (ReturnData !== '') {
+                              download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
+                              toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                              setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            } 
+                          },
+                          error: function(ReturnData) {
+                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                            setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            alert("<?php echo $Gui2Text71; ?>"); 
+                          } 
+                        }); } }); 
+                  },
+                  error: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                    alert("<?php echo $Gui2Text71; ?>");
+                  }
+                }); }); });
           </script>
+
         </div>
         <?php } 
 
@@ -921,42 +981,53 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                   type: 'POST',
                   url: 'convertCore.php',
                   data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    extension:document.getElementById('spreadextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('userspreadfilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) { 
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: { 
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData !== '') {
-
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
-                              toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+                    Token1: '<?php echo $Token1; ?>',
+                    Token2: '<?php echo $Token2; ?>',
+                    convertSelected: '<?php echo $File; ?>',
+                    extension: document.getElementById('spreadextension<?php echo $ConvertGuiCounter1; ?>').value,
+                    userconvertfilename: document.getElementById('userspreadfilename<?php echo $ConvertGuiCounter1; ?>').value 
+                  },
+                  success: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    const ReturnDataArray = ReturnData.split(/\r?\n/);
+                    
+                    ReturnDataArray.slice(1).forEach((line, index) => {
+                      if (line.includes('ERROR!!!')) { 
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        alert(line); 
+                      } else if (line !== '') {
+                        $.ajax({
+                          type: 'POST',
+                          url: 'convertCore.php',
+                          data: { 
+                            Token1: '<?php echo $Token1; ?>',
+                            Token2: '<?php echo $Token2; ?>',
+                            download: line 
+                          },
+                          success: function(ReturnData) {
+                            if (ReturnData !== '') {
+                              download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
+                              toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                              setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            } 
+                          },
+                          error: function(ReturnData) {
+                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                            setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            alert("<?php echo $Gui2Text71; ?>"); 
+                          } 
+                        }); } }); 
+                  },
+                  error: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                    alert("<?php echo $Gui2Text71; ?>");
+                  }
+                }); }); });
           </script>
+
         </div>
         <?php }
 
@@ -980,46 +1051,57 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                   type: 'POST',
                   url: 'convertCore.php',
                   data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    extension:document.getElementById('xpsextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('userxpsfilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) { 
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: { 
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
+                    Token1: '<?php echo $Token1; ?>',
+                    Token2: '<?php echo $Token2; ?>',
+                    convertSelected: '<?php echo $File; ?>',
+                    extension: document.getElementById('xpsextension<?php echo $ConvertGuiCounter1; ?>').value,
+                    userconvertfilename: document.getElementById('userxpsfilename<?php echo $ConvertGuiCounter1; ?>').value 
+                  },
+                  success: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    const ReturnDataArray = ReturnData.split(/\r?\n/);
+                    
+                    ReturnDataArray.slice(1).forEach((line, index) => {
+                      if (line.includes('ERROR!!!')) { 
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        alert(line); 
+                      } else if (line !== '') {
+                        $.ajax({
+                          type: 'POST',
+                          url: 'convertCore.php',
+                          data: { 
+                            Token1: '<?php echo $Token1; ?>',
+                            Token2: '<?php echo $Token2; ?>',
+                            download: line 
+                          },
+                          success: function(ReturnData) {
+                            if (ReturnData.includes('ERROR!!!')) {
                               toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+                              setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                              alert(ReturnData); 
+                            } else if (ReturnData !== '') {
+                              download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
+                              toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                              setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            } 
+                          },
+                          error: function(ReturnData) {
+                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                            setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            alert("<?php echo $Gui2Text71; ?>"); 
+                          } 
+                        }); } }); 
+                  },
+                  error: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                    alert("<?php echo $Gui2Text71; ?>");
+                  }
+                }); }); });
           </script>
+
         </div>
         <?php }
         if (in_array($extension, $PresentationInputArray) && in_array('Document', $SupportedConversionTypes)) {
@@ -1042,46 +1124,57 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                   type: 'POST',
                   url: 'convertCore.php',
                   data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    extension:document.getElementById('presentationextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('userpresentationfilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) { 
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: { 
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
+                    Token1: '<?php echo $Token1; ?>',
+                    Token2: '<?php echo $Token2; ?>',
+                    convertSelected: '<?php echo $File; ?>',
+                    extension: document.getElementById('presentationextension<?php echo $ConvertGuiCounter1; ?>').value,
+                    userconvertfilename: document.getElementById('userpresentationfilename<?php echo $ConvertGuiCounter1; ?>').value 
+                  },
+                  success: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    const ReturnDataArray = ReturnData.split(/\r?\n/);
+                    
+                    ReturnDataArray.slice(1).forEach((line, index) => {
+                      if (line.includes('ERROR!!!')) { 
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        alert(line); 
+                      } else if (line !== '') {
+                        $.ajax({
+                          type: 'POST',
+                          url: 'convertCore.php',
+                          data: { 
+                            Token1: '<?php echo $Token1; ?>',
+                            Token2: '<?php echo $Token2; ?>',
+                            download: line 
+                          },
+                          success: function(ReturnData) {
+                            if (ReturnData.includes('ERROR!!!')) {
                               toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+                              setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                              alert(ReturnData); 
+                            } else if (ReturnData !== '') {
+                              download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
+                              toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                              setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            } 
+                          },
+                          error: function(ReturnData) {
+                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                            setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            alert("<?php echo $Gui2Text71; ?>"); 
+                          } 
+                        }); } }); 
+                  },
+                  error: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                    alert("<?php echo $Gui2Text71; ?>");
+                  }
+                }); }); });
           </script>
+
         </div>
         <?php }
 
@@ -1106,47 +1199,58 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                   type: 'POST',
                   url: 'convertCore.php',
                   data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    bitrate:$('#bitrate<?php echo $ConvertGuiCounter1; ?>').val(),
-                    convertSelected:'<?php echo $File; ?>',
-                    extension:document.getElementById('audioextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('useraudiofilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) { 
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: { 
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
+                    Token1: '<?php echo $Token1; ?>',
+                    Token2: '<?php echo $Token2; ?>',
+                    bitrate: $('#bitrate<?php echo $ConvertGuiCounter1; ?>').val(),
+                    convertSelected: '<?php echo $File; ?>',
+                    extension: document.getElementById('audioextension<?php echo $ConvertGuiCounter1; ?>').value,
+                    userconvertfilename: document.getElementById('useraudiofilename<?php echo $ConvertGuiCounter1; ?>').value 
+                  },
+                  success: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    const ReturnDataArray = ReturnData.split(/\r?\n/);
+                    
+                    ReturnDataArray.slice(1).forEach((line, index) => {
+                      if (line.includes('ERROR!!!')) { 
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        alert(line); 
+                      } else if (line !== '') {
+                        $.ajax({
+                          type: 'POST',
+                          url: 'convertCore.php',
+                          data: { 
+                            Token1: '<?php echo $Token1; ?>',
+                            Token2: '<?php echo $Token2; ?>',
+                            download: line 
+                          },
+                          success: function(ReturnData) {
+                            if (ReturnData.includes('ERROR!!!')) {
                               toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+                              setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                              alert(ReturnData); 
+                            } else if (ReturnData !== '') {
+                              download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
+                              toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                              setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            } 
+                          },
+                          error: function(ReturnData) {
+                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                            setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            alert("<?php echo $Gui2Text71; ?>"); 
+                          } 
+                        }); } }); 
+                  },
+                  error: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                    alert("<?php echo $Gui2Text71; ?>");
+                  }
+                }); }); });
           </script>
+
         </div>
         <?php } 
 
@@ -1170,46 +1274,57 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                   type: 'POST',
                   url: 'convertCore.php',
                   data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    extension:document.getElementById('videoextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('uservideofilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) { 
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: { 
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
+                    Token1: '<?php echo $Token1; ?>',
+                    Token2: '<?php echo $Token2; ?>',
+                    convertSelected: '<?php echo $File; ?>',
+                    extension: document.getElementById('videoextension<?php echo $ConvertGuiCounter1; ?>').value,
+                    userconvertfilename: document.getElementById('uservideofilename<?php echo $ConvertGuiCounter1; ?>').value 
+                  },
+                  success: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    const ReturnDataArray = ReturnData.split(/\r?\n/);
+                    
+                    ReturnDataArray.slice(1).forEach((line, index) => {
+                      if (line.includes('ERROR!!!')) { 
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        alert(line); 
+                      } else if (line !== '') {
+                        $.ajax({
+                          type: 'POST',
+                          url: 'convertCore.php',
+                          data: { 
+                            Token1: '<?php echo $Token1; ?>',
+                            Token2: '<?php echo $Token2; ?>',
+                            download: line 
+                          },
+                          success: function(ReturnData) {
+                            if (ReturnData.includes('ERROR!!!')) {
                               toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+                              setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                              alert(ReturnData); 
+                            } else if (ReturnData !== '') {
+                              download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
+                              toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                              setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            } 
+                          },
+                          error: function(ReturnData) {
+                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                            setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            alert("<?php echo $Gui2Text71; ?>"); 
+                          } 
+                        }); } }); 
+                  },
+                  error: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                    alert("<?php echo $Gui2Text71; ?>");
+                  }
+                }); }); });
           </script>
+
         </div>
         <?php } 
 
@@ -1233,46 +1348,57 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                   type: 'POST',
                   url: 'convertCore.php',
                   data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    extension:document.getElementById('streamextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('userstreamfilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) { 
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: { 
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
+                    Token1: '<?php echo $Token1; ?>',
+                    Token2: '<?php echo $Token2; ?>',
+                    convertSelected: '<?php echo $File; ?>',
+                    extension: document.getElementById('streamextension<?php echo $ConvertGuiCounter1; ?>').value,
+                    userconvertfilename: document.getElementById('userstreamfilename<?php echo $ConvertGuiCounter1; ?>').value 
+                  },
+                  success: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    const ReturnDataArray = ReturnData.split(/\r?\n/);
+                    
+                    ReturnDataArray.slice(1).forEach((line, index) => {
+                      if (line.includes('ERROR!!!')) { 
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        alert(line); 
+                      } else if (line !== '') {
+                        $.ajax({
+                          type: 'POST',
+                          url: 'convertCore.php',
+                          data: { 
+                            Token1: '<?php echo $Token1; ?>',
+                            Token2: '<?php echo $Token2; ?>',
+                            download: line 
+                          },
+                          success: function(ReturnData) {
+                            if (ReturnData.includes('ERROR!!!')) {
                               toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+                              setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                              alert(ReturnData); 
+                            } else if (ReturnData !== '') {
+                              download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
+                              toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                              setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            } 
+                          },
+                          error: function(ReturnData) {
+                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                            setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            alert("<?php echo $Gui2Text71; ?>"); 
+                          } 
+                        }); } }); 
+                  },
+                  error: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                    alert("<?php echo $Gui2Text71; ?>");
+                  }
+                }); }); });
           </script>
+
         </div>
         <?php } 
 
@@ -1296,47 +1422,57 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                   type: 'POST',
                   url: 'convertCore.php',
                   data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    extension:document.getElementById('modelextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('usermodelfilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) { 
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: { 
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
+                    Token1: '<?php echo $Token1; ?>',
+                    Token2: '<?php echo $Token2; ?>',
+                    convertSelected: '<?php echo $File; ?>',
+                    extension: document.getElementById('modelextension<?php echo $ConvertGuiCounter1; ?>').value,
+                    userconvertfilename: document.getElementById('usermodelfilename<?php echo $ConvertGuiCounter1; ?>').value 
+                  },
+                  success: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    const ReturnDataArray = ReturnData.split(/\r?\n/);
+                    
+                    ReturnDataArray.slice(1).forEach((line, index) => {
+                      if (line.includes('ERROR!!!')) { 
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        alert(line); 
+                      } else if (line !== '') {
+                        $.ajax({
+                          type: 'POST',
+                          url: 'convertCore.php',
+                          data: { 
+                            Token1: '<?php echo $Token1; ?>',
+                            Token2: '<?php echo $Token2; ?>',
+                            download: line 
+                          },
+                          success: function(ReturnData) {
+                            if (ReturnData.includes('ERROR!!!')) {
                               toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
-
+                              setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                              alert(ReturnData); 
+                            } else if (ReturnData !== '') {
+                              download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
+                              toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                              setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            } 
+                          },
+                          error: function(ReturnData) {
+                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                            setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            alert("<?php echo $Gui2Text71; ?>"); 
+                          } 
+                        }); } }); 
+                  },
+                  error: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                    alert("<?php echo $Gui2Text71; ?>");
+                  }
+                }); }); });
           </script>
+
         </div>
         <?php } 
 
@@ -1360,40 +1496,53 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                   type: 'POST',
                   url: 'convertCore.php',
                   data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    extension:document.getElementById('scadextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('userscadfilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) {
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: {
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); } },
-                            error: function(ReturnData) {
-                              toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+                    Token1: '<?php echo $Token1; ?>',
+                    Token2: '<?php echo $Token2; ?>',
+                    convertSelected: '<?php echo $File; ?>',
+                    extension: document.getElementById('scadextension<?php echo $ConvertGuiCounter1; ?>').value,
+                    userconvertfilename: document.getElementById('userscadfilename<?php echo $ConvertGuiCounter1; ?>').value 
+                  },
+                  success: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    const ReturnDataArray = ReturnData.split(/\r?\n/);
+                    
+                    ReturnDataArray.slice(1).forEach((line, index) => {
+                      if (line.includes('ERROR!!!')) { 
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        alert(line); 
+                      } else if (line !== '') {
+                        $.ajax({
+                          type: 'POST',
+                          url: 'convertCore.php',
+                          data: { 
+                            Token1: '<?php echo $Token1; ?>',
+                            Token2: '<?php echo $Token2; ?>',
+                            download: line 
+                          },
+                          success: function(ReturnData) {
+                            if (ReturnData !== '') {
+                              download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
+                              toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                              setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            } 
+                          },
+                          error: function(ReturnData) {
+                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                            setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            alert("<?php echo $Gui2Text71; ?>"); 
+                          } 
+                        }); } }); 
+                  },
+                  error: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                    alert("<?php echo $Gui2Text71; ?>");
+                  }
+                }); }); });
           </script>
+
         </div>
         <?php }
 
@@ -1417,46 +1566,57 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                   type: 'POST',
                   url: 'convertCore.php',
                   data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    extension:document.getElementById('subtitleextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('usersubtitlefilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) { 
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: { 
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
+                    Token1: '<?php echo $Token1; ?>',
+                    Token2: '<?php echo $Token2; ?>',
+                    convertSelected: '<?php echo $File; ?>',
+                    extension: document.getElementById('subtitleextension<?php echo $ConvertGuiCounter1; ?>').value,
+                    userconvertfilename: document.getElementById('usersubtitlefilename<?php echo $ConvertGuiCounter1; ?>').value 
+                  },
+                  success: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    const ReturnDataArray = ReturnData.split(/\r?\n/);
+                    
+                    ReturnDataArray.slice(1).forEach((line, index) => {
+                      if (line.includes('ERROR!!!')) { 
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        alert(line); 
+                      } else if (line !== '') {
+                        $.ajax({
+                          type: 'POST',
+                          url: 'convertCore.php',
+                          data: { 
+                            Token1: '<?php echo $Token1; ?>',
+                            Token2: '<?php echo $Token2; ?>',
+                            download: line 
+                          },
+                          success: function(ReturnData) {
+                            if (ReturnData.includes('ERROR!!!')) {
                               toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+                              setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                              alert(ReturnData); 
+                            } else if (ReturnData !== '') {
+                              download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
+                              toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                              setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            } 
+                          },
+                          error: function(ReturnData) {
+                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                            setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            alert("<?php echo $Gui2Text71; ?>"); 
+                          } 
+                        }); } }); 
+                  },
+                  error: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                    alert("<?php echo $Gui2Text71; ?>");
+                  }
+                }); }); });
           </script>
+
         </div>
         <?php } 
 
@@ -1480,46 +1640,57 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                   type: 'POST',
                   url: 'convertCore.php',
                   data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    extension:document.getElementById('drawingextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('userdrawingfilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) { 
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: { 
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
+                    Token1: '<?php echo $Token1; ?>',
+                    Token2: '<?php echo $Token2; ?>',
+                    convertSelected: '<?php echo $File; ?>',
+                    extension: document.getElementById('drawingextension<?php echo $ConvertGuiCounter1; ?>').value,
+                    userconvertfilename: document.getElementById('userdrawingfilename<?php echo $ConvertGuiCounter1; ?>').value 
+                  },
+                  success: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    const ReturnDataArray = ReturnData.split(/\r?\n/);
+                    
+                    ReturnDataArray.slice(1).forEach((line, index) => {
+                      if (line.includes('ERROR!!!')) { 
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        alert(line); 
+                      } else if (line !== '') {
+                        $.ajax({
+                          type: 'POST',
+                          url: 'convertCore.php',
+                          data: { 
+                            Token1: '<?php echo $Token1; ?>',
+                            Token2: '<?php echo $Token2; ?>',
+                            download: line 
+                          },
+                          success: function(ReturnData) {
+                            if (ReturnData.includes('ERROR!!!')) {
                               toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+                              setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                              alert(ReturnData); 
+                            } else if (ReturnData !== '') {
+                              download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
+                              toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                              setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            } 
+                          },
+                          error: function(ReturnData) {
+                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                            setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            alert("<?php echo $Gui2Text71; ?>"); 
+                          } 
+                        }); } }); 
+                  },
+                  error: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                    alert("<?php echo $Gui2Text71; ?>");
+                  }
+                }); }); });
           </script>
+
         </div>
         <?php } 
 
@@ -1545,48 +1716,59 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                   type: 'POST',
                   url: 'convertCore.php',
                   data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    width:$('#width<?php echo $ConvertGuiCounter1; ?>').val(),
-                    height:$('#height<?php echo $ConvertGuiCounter1; ?>').val(),
-                    extension:document.getElementById('svgextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('svgfilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) { 
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: { 
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
+                    Token1: '<?php echo $Token1; ?>',
+                    Token2: '<?php echo $Token2; ?>',
+                    convertSelected: '<?php echo $File; ?>',
+                    width: $('#width<?php echo $ConvertGuiCounter1; ?>').val(),
+                    height: $('#height<?php echo $ConvertGuiCounter1; ?>').val(),
+                    extension: document.getElementById('svgextension<?php echo $ConvertGuiCounter1; ?>').value,
+                    userconvertfilename: document.getElementById('svgfilename<?php echo $ConvertGuiCounter1; ?>').value 
+                  },
+                  success: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    const ReturnDataArray = ReturnData.split(/\r?\n/);
+                    
+                    ReturnDataArray.slice(1).forEach((line, index) => {
+                      if (line.includes('ERROR!!!')) { 
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        alert(line); 
+                      } else if (line !== '') {
+                        $.ajax({
+                          type: 'POST',
+                          url: 'convertCore.php',
+                          data: { 
+                            Token1: '<?php echo $Token1; ?>',
+                            Token2: '<?php echo $Token2; ?>',
+                            download: line 
+                          },
+                          success: function(ReturnData) {
+                            if (ReturnData.includes('ERROR!!!')) {
                               toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+                              setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                              alert(ReturnData); 
+                            } else if (ReturnData !== '') {
+                              download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
+                              toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                              setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            } 
+                          },
+                          error: function(ReturnData) {
+                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                            setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            alert("<?php echo $Gui2Text71; ?>"); 
+                          } 
+                        }); } }); 
+                  },
+                  error: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                    alert("<?php echo $Gui2Text71; ?>");
+                  }
+                }); }); });
           </script>
+
         </div>
         <?php } 
 
@@ -1606,7 +1788,6 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <p><input type="number" size="4" value="0" id='width<?php echo $ConvertGuiCounter1; ?>' name='width<?php echo $ConvertGuiCounter1; ?>' min="0" max="10000"> X <input type="number" size="4" value="0" id="height<?php echo $ConvertGuiCounter1; ?>" name="height<?php echo $ConvertGuiCounter1; ?>" min="0"  max="10000"></p> 
           <p><?php echo $Gui2Text65; ?><input type="number" size="3" id='rotate<?php echo $ConvertGuiCounter1; ?>' name='rotate<?php echo $ConvertGuiCounter1; ?>' value="0" min="0" max="359"></p>
           <input type="submit" id='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' name='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo $Gui2Text62; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-     
           <script type="text/javascript">
             $(document).ready(function () {
               $('#convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
@@ -1614,49 +1795,60 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
                   type: 'POST',
                   url: 'convertCore.php',
                   data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    rotate:$('#rotate<?php echo $ConvertGuiCounter1; ?>').val(),
-                    width:$('#width<?php echo $ConvertGuiCounter1; ?>').val(),
-                    height:$('#height<?php echo $ConvertGuiCounter1; ?>').val(),
-                    extension:document.getElementById('photoextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('userphotofilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) { 
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: { 
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
+                    Token1: '<?php echo $Token1; ?>',
+                    Token2: '<?php echo $Token2; ?>',
+                    convertSelected: '<?php echo $File; ?>',
+                    rotate: $('#rotate<?php echo $ConvertGuiCounter1; ?>').val(),
+                    width: $('#width<?php echo $ConvertGuiCounter1; ?>').val(),
+                    height: $('#height<?php echo $ConvertGuiCounter1; ?>').val(),
+                    extension: document.getElementById('photoextension<?php echo $ConvertGuiCounter1; ?>').value,
+                    userconvertfilename: document.getElementById('userphotofilename<?php echo $ConvertGuiCounter1; ?>').value 
+                  },
+                  success: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    const ReturnDataArray = ReturnData.split(/\r?\n/);
+                    
+                    ReturnDataArray.slice(1).forEach((line, index) => {
+                      if (line.includes('ERROR!!!')) { 
+                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                        alert(line); 
+                      } else if (line !== '') {
+                        $.ajax({
+                          type: 'POST',
+                          url: 'convertCore.php',
+                          data: { 
+                            Token1: '<?php echo $Token1; ?>',
+                            Token2: '<?php echo $Token2; ?>',
+                            download: line 
+                          },
+                          success: function(ReturnData) {
+                            if (ReturnData.includes('ERROR!!!')) {
                               toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+                              setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                              alert(ReturnData); 
+                            } else if (ReturnData !== '') {
+                              download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
+                              toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                              setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            } 
+                          },
+                          error: function(ReturnData) {
+                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                            setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                            alert("<?php echo $Gui2Text71; ?>"); 
+                          } 
+                        }); } }); 
+                  },
+                  error: function(ReturnData) {
+                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                    setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                    alert("<?php echo $Gui2Text71; ?>");
+                  }
+                }); }); });
           </script>
+
           </div>
         <?php } ?>
 

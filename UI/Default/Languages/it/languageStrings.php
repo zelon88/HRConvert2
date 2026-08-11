@@ -84,13 +84,13 @@ $GuiSelectorText4 = 'Mostra le opzioni di lingua, colore e interfaccia';
 // / Online File Converter, Extractor, Compressor'
 $Gui1Text1 = 'Convertitore di file online, estrattore, compressore';
 // / $ApplicationName.' is based off the open-source web-app <a href=\'https://github.com/zelon88/HRConvert2\'>HRConvert2</a> by <a href=\'https://github.com/zelon88\'>Zelon88</a> that converts files without tracking users across the net or infringing on your intellectual property.'
-$Gui1Text2 = $ApplicationName.' si basa sull\'app web open source <a href=\'https://github.com/zelon88/HRConvert2\'>HRConvert2</a> di <a href=\'https://github.com/ zelon88\'>Zelon88</a> che converte i file senza tracciare gli utenti attraverso la rete o violare la tua proprietà intellettuale.';
+$Gui1Text2 = $ApplicationName.' si basa sull’app web open source <a href=\'https://github.com/zelon88/HRConvert2\'>HRConvert2</a> di <a href=\'https://github.com/ zelon88\'>Zelon88</a> che converte i file senza tracciare gli utenti attraverso la rete o violare la tua proprietà intellettuale.';
 // / 'More Info ...'
 $Gui1Text3 = 'Ulteriori Informazioni...';
 // / 'Less Info ...'
 $Gui1Text4 = 'Meno Informazioni...';
 // / 'All user-supplied data is erased automatically, so you don\'t need to worry about forfeiting your personal information or property while using our services.'
-$Gui1Text5 = 'Tutti i dati forniti dall\'utente vengono cancellati automaticamente, quindi non devi preoccuparti di perdere le tue informazioni personali o proprietà durante l\'utilizzo dei nostri servizi.';
+$Gui1Text5 = 'Tutti i dati forniti dall’utente vengono cancellati automaticamente, quindi non devi preoccuparti di perdere le tue informazioni personali o proprietà durante l’utilizzo dei nostri servizi.';
 // / 'Currently '.$ApplicationName.' supports '.$SupportedFormatCount.' different file formats, including documents, spreadsheets, images, media, 3D models, CAD drawings, vector files, archives, disk images, & more.'
 $Gui1Text6 = 'Attualmente '.$ApplicationName.' supporta '.$SupportedFormatCount.' diversi formati di file, inclusi documenti, fogli di calcolo, immagini, media, modelli 3D, disegni CAD, file vettoriali, archivi, immagini disco e altro.';
 // / 'View Supported Formats ...'

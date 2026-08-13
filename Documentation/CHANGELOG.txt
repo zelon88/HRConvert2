@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/10/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/11/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.6.4
+v3.6.5
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -25,6 +25,44 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap & xvfb-run.
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+
+--------------------
+COMMIT 8/11/2026
+v3.6.5 - Add Multi-Stage Meshlab->Assimp Conversion Pipeline for 3D Models.
+
+-v3.6.5.
+-Expand 3D Model Support, reliability, consistency, & performance.
+  -Add support for using PyMeshLab instead of MeshlabServer (which is deprecated & not coming back).
+  -Instead of adding dependencies, I forked & bundled PyMeshLab, as it is GPLv3.
+  -https://pypi.org/project/pymeshlab/
+  -https://github.com/cnr-isti-vclab/PyMeshLab
+  -https://github.com/cnr-isti-vclab/PyMeshLab/blob/main/LICENSE
+  -Add verifyModelVersions() function for verifying meshlab & assimp.
+    -Add ERROR!!! 9001, One of the 3D Model Converters version is missing, unidentifiable, or too old!
+  -Use multi-stage conversion pipeline with Meshlab & Assimp.
+  -The Route 2 Direct Intercept:
+    -Formats like .fbx, .gltf, and .blend are routed directly to Assimp. 
+    -This saves CPU cycles by bypassing MeshLab entirely.
+    -Also prevents animation bone structures or nested scene materials from being accidentally stripped or flattened.
+  -The Route 1 Double Stage Buffer: 
+    -Formats like .stl, .ply are corrected via meshlabserver, converted to intermediate .obj format, & exported through Assimp.
+  -An Anonymous Catch-All Block:
+    -If a user uploads an unclassified 3D format, default to running a classic single-stage MeshLab execution directly to the final destination.
+-Note that the config.php has been bumped to v3.6.5
+  -Added min versions for imagemagick, meshlab, & assimp.
+  -Added toggle for $UsePyMeshLab which tells HRConvert2 to use the bundled PyMeshLab for 3D model conversions instead of MeshlabServer.
+  -Supported 3D formats have been expanded and now include..... 
+    -'stl', 'ply', 'off', '3ds', 'obj', 'fbx', 'dae', 'gltf', 'glb', 'obj', '3mf', 'x3d', 'dxf' 
+-Update CREATING_GUIS.txt & CREATING_LANGUAGE_PACKS.txt.
+-Added missing pacman spinners (1 through 6) for orange, purple, & dark color schemes.
+  -https://icons8.com/preloaders/en/circular#
+  -Thanks, icons8.com!
+-Improve convertImages() function to target jpgs for transperancy handling via alpha channel filtering.
+  -Update from convert system call to calling /usr/bin/magick directly.
+  -The function now requires imagemagick v7.
+  -Add a build script for downloading, compiling, and installing imagemagick v7 in /tmp.
+  -Add verifyImageVersion() function for ensuring imagemagick compatibility.
+  -Add ERROR!!! 8001, The installed ImageMagick version is missing, unidentifiable, or too old!
 
 --------------------
 COMMIT 8/10/2026

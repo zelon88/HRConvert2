@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 5/8/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/10/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.4.1.
+v3.6.5.
 This plain text file describes the process for creating, formatting, and installing additional language packs into HRConvert2.
 
 HARDWARE REQUIREMENTS ... 
@@ -27,13 +27,14 @@ The default language used by HRConvrt2 can be selected by adjusting the --Defaul
 Administrators can prevent user language selection by adjusting the --Allow User Selectable Language-- section of config.php.
 If --Allow User Selectable Language-- is set to TRUE in config.php, users can adjust language output using a 'language' GET request.
 To send a GET request, append the following string to the end of the HRConvert2 URL (without quotes):  '?language=<LANGUAGE_CODE>'
-Substitute <LANGUAGE_CODE> in the string above for the 2 digit ISO 639-1 language code for the desired language.
+Substitute <LANGUAGE_CODE> for the code of an installed language as listed in the --Supported Languages-- section of config.php.
+Most languages are rep two letter ISO 639-1 codes. Aramaic has no ISO 639-1 code, so aii & arc use ISO 639-3 codes instead.
 If a user submits an unsupported language the default will be used instead.
-It a supported language is missing required files a fatal error will occur.
+If a supported language is missing required files, or reports a version the core does not accept, HRConvert2 falls back to the Default Language & logs a warning.
+A fatal error occurs only when the Default Language is not available as a fallback.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -44,14 +45,27 @@ This document will teach administrator and developers how languages are handled 
 In this document when we refer to a GUI, we refer to a set of files required to render HRConvert2.
 In this document when we refer to a language pack, we refer to the files required to localize a GUI into a specific language.
 
-An HRConvert2 Language Pack is made up of 2 components. Each component serves a specific function. The 2 components of a Language Pack are;
+An HRConvert2 Language Pack is made up of 3 components. Each component serves a specific function. The 2 components of a Language Pack are;
 
   1. languageStrings.php
-  2. index.html
+  2. flag.png
+  3. index.html
 
-These components are stored in a folder named after the ISO 639-1 language code for the language.
-The ISO-639-1 named folder is then placed inside the 'UI\<GUI>\Languages' subdirectory of the installation location.
-The supported ISO 639-1 language code must also be added to the --Supported Languages-- section of config.php or it will be ignored.
+NOTE. verifyLanguage() requires languageStrings.php & flag.png. A pack missing either one is not loaded.
+index.html is required by the document root protection mechanism rather than by the language subsystem, but every folder needs one.
+
+These components are stored in a folder named after the language code.
+Most are two letter ISO 639-1 codes. 
+The 'aii' & 'arc' languages have no ISO 639-1 codes, so ISO 639-3 codes are used insead.
+The ISO named folder is then placed inside the 'UI\<GUI>\Languages' subdirectory of the installation location.
+The language code must also be added to the --Supported Languages-- section of config.php or it will be ignored.
+The $SupportedLanguages variable is a keyed array of language code & endonym. 
+The KEY is the language code & the folder name.
+The VALUE is the endonym, which is the name of the language written in that language itself.
+The endonym is used as the alt text & title of the flag button in the selector bar.
+A user who has landed on a language they cannot read still recognizes their own.
+Adding an entry as a flat list value rather than as a key will break language verification.
+
 If --Allow User Selectable Language-- is enabled, users will be able to select this language pack by sendiing a GET request.
 Users should not access the GUI directly. All requests should be directed to convertCore.php which will construct the GUI on-demand.
 
@@ -61,7 +75,7 @@ During operation, HRConvert2 initializes the language using the following proces
   2. Build an array of languages that are included with HRConvert2.
   3. Check if the $SupportedLanguages variable from config.php is set properly.
     3a. If not, use the included array of default languages instead.
-  4. If a language was specified via GET input, sanitize it.
+  4. If a language was specified via GET or POST input, sanitize it.
   5. Check if the $DefaultLanguage variable from config.php is set & supported.
     5a. If not, use english instead.
   6. Check if the $AllowUserSelectableLanguage variable from config.php is set.
@@ -73,16 +87,21 @@ During operation, HRConvert2 initializes the language using the following proces
   9. If all checks have passed and the specified language is supported, set the language to use to the one specified via GET request.
   10. Reset the language GET variable to the currently specified language so future requests will continue using the same language.
   11. Define all required language related files & folders.
-  12. Check for the existence of all required language related files & folders.
-    12a. If not, terminate the application.
+  12. Check for the existence of languageStrings.php & flag.png.
+    12a. If either is missing, fall back to the Default Language & warn.
+  13. Load languageStrings.php.
+  14. Compare $LanguageVersion to $RequiredLanguageVersion.
+    14a. If they do not match, load the Default Language pack over the top & warn.
+  15. If the Default Language pack also fails, terminate with error 17.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Administration Tips--
 
 Language Packs are contained within GUIs. GUIs typically contain multiple language packs.
-Errors will occur if an installed GUI does not support every language listed in the --Supported Languages-- section of the config.php file.
-Errors will occur if an installed GUI does not support the following colors: Red, Green, Blue, Grey.
+A GUI missing a language pack that config.php lists falls back to the Default Language & writes a warning.
+An error occurs only if the Default Language pack is also missing from that GUI.
+Errors will occur if an installed GUI does not support the following colors: Red, Green, Blue, Grey, Orange, Purple, Dark.
 Server administrators can; 
   Enable or disable language packs by modifying the --Supported Languages-- section of the config.php file.
   Add or remove language packs to a GUI by creating a folder in the 'Languages' subdirectory of each enabled GUI folder.
@@ -120,6 +139,33 @@ This file is loaded whenever a GUI is displayed.
 This file exists to make the other GUI files more universal.
 All translated text or text elements should be placed in this file & called by variable reference.
 Using this file to contain localized text elements improves the maintainability of multiple language packs.
+This file must declare $LanguageVersion as a string.
+The core carries $RequiredLanguageVersion & compares the two after loading.
+The comparison is an EXACT match, not a minimum, because a pack newer or older than the core expects may be missing strings the interface reads.
+The check happens after the file is loaded, because the version is inside it.
+A pack that fails is replaced by loading the Default Language pack over the top.
+This works because a language pack contains only variable assignments.
+Simple logic is permitted where localization requires it.
+Plural selection is the common case. $FCPlural1 & $FCPlural2 exist for languages that inflect nouns for number.
+Languages that do not inflect leave both empty & write the sentence so it reads correctly for any count.
+Do not repeat a closing HTML tag that footer.php already supplies. $GuiFooterText1 ends without its final closing anchor tag for this reason.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About flag.png--
+
+Every language pack must contain a flag.png.
+The image is 24 pixels wide by 18 pixels tall, which is the 4:3 ratio used by the flag set.
+It appears as the face of that language's button in the selector bar.
+The endonym from $SupportedLanguages is used as the alt text & title, so the image never
+carries meaning on its own.
+The stock flags are from https://github.com/lipis/flag-icons by lipis, under the MIT
+license. See ICON_CREDITS.txt.
+A flag is a country, not a language, & several languages have no country to point at.
+Where no honest flag exists, the stock packs use a letterform on a solid ground instead.
+aii & arc use the first letter of their endonym in Syriac script. sw uses SW, because
+Swahili spans Tanzania & Kenya with no single claim.
+A pack missing flag.png will not load.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -1464,6 +1464,34 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-8001, <SESSION_IDENTIFIER>: The installed ImageMagick version is missing, unidentifiable, or too old!
+
+FILE
+  /convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  ImageMagick is the engine behind every raster image, canvas adjustment, & vector rasterization conversion.
+  The Image Conversion Engine passes work to it, so no image conversion can succeed without it.
+  ImageMagick may not be installed, or may not be reachable on the system path used by the web server user.
+  The installed ImageMagick may be older than the Minimum ImageMagick Version setting in config.php.
+  This minimum exists for unified command parameter ordering & alpha channel preservation & is not a security control.
+  ImageMagick changed its core syntax rules at version 7.0, unifying legacy binaries under the single magick tool.
+  The modern scheme strictly requires setting parameters after input declarations to prevent canvas flattening.
+  HRConvert2 compares these values numerically down to the third patch depth, so all releases are ranked correctly.
+  HRConvert2 refuses any build it cannot positively identify, because an unknown build cannot be cleared.
+  Check the installed version by running '/usr/bin/magick --version' as the web server user.
+  The conversion sequence is aborted to protect the processing pipeline from invalid command syntax errors.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9000, <SESSION_IDENTIFIER>: The model converter timed out!
 
 FILE
@@ -1491,6 +1519,34 @@ ERROR DESCRIPTION
   The device where data is stored has an insufficient amount of storage space available.
   The request contained character types or encoded data that are not supported.
   One of the $_POST or $_GET variables submitted was empty after sanitization.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9001, <SESSION_IDENTIFIER>: One of the 3D Model Converters version is missing, unidentifiable, or too old!
+
+FILE
+  /convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  MeshLab and Assimp are the engines behind every 3D model geometry optimization, rectification, & format conversion.
+  The Model Conversion Engine passes work to them, so no model conversion can succeed without them.
+  MeshLab or Assimp may not be installed, or may not be reachable on the system path used by the web server user.
+  The installed binaries may be older than the Minimum MeshLab Version or Minimum Assimp Version settings in config.php.
+  This minimum exists for broad format export array coverage & topological mesh cleaning stabilization & is not a security control.
+  MeshLab changed execution schemes over time, shifting from headless meshlabserver binaries toward virtual frame buffer runners.
+  Assimp requires strict command syntax arrays to correctly isolate and translate skeletal animation data rigs.
+  HRConvert2 compares these values numerically down to the minor release branch depth, so all releases are ranked correctly.
+  HRConvert2 refuses any build it cannot positively identify, because an unknown build cannot be cleared.
+  Check the installed versions by running 'assimp version' and 'meshlabserver --help' as the web server user.
+  The conversion sequence is aborted to protect the processing pipeline from invalid command parameters or missing dependencies.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 

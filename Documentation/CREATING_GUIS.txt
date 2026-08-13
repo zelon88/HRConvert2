@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 5/8/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/10/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.4.1.
+v3.6.5.
 This plain text file describes the process for creating, formatting, and installing additional GUIs into HRConvert2.
 
 HARDWARE REQUIREMENTS ... 
@@ -29,11 +29,11 @@ If --Allow User Selectable GUI-- is set to TRUE in config.php, users can adjust 
 To send a GET request, append the following string to the end of the HRConvert2 URL (without quotes):  '?gui=<GUI_CODE>'
 Substitute <GUI_CODE> in the string above for the name of the GUI defined by the name of the folder where it's files are contained.
 If a user submits an unsupported GUI the default will be used instead.
-It a supported GUI is missing required files a fatal error will occur.
+If a supported GUI is missing required files, or reports a version the core does not accept, HRConvert2 falls back to the Default GUI & logs a warning.
+A fatal error occurs only when the Default GUI is not available as a fallback.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -45,7 +45,7 @@ This document will teach administrator and developers how GUIs are handled and s
 In this document when we refer to a GUI, we refer to a set of files required to render HRConvert2.
 In this document when we refer to a language pack, we refer to the files required to localize a GUI into a specific language.
 
-An HRConvert2 GUI is made up of 7 components. Each component serves a specific function. The 7 components of a GUI are;
+An HRConvert2 GUI is made up of 8 components. Each component serves a specific function. The 7 components of a GUI are;
 
   1. header.php
   2. convertGui1.php
@@ -54,41 +54,45 @@ An HRConvert2 GUI is made up of 7 components. Each component serves a specific f
   5. styleCore.php
   6. index.html
   7. A 'Languages' folder with at least one ISO 639-1 supported Language Pack.
+  8. uiVersionInfo.php
 
-These components are stored in a folder named after the ISO 639-1 language code for the language.
-The ISO-639-1 named folder is then placed inside the 'Languages' subdirectory of the installation location.
-The supported ISO 639-1 language code must also be added to the --Supported Languages-- section of config.php or it will be ignored.
-If --Allow User Selectable Language-- is enabled, users will be able to select this language pack by sendiing a GET request.
+These components are stored in a folder named after the GUI.
+That folder is placed inside the 'UI' subdirectory of the installation location.
+The GUI name must also be added to the --Supported GUIs-- section of config.php or it will be ignored.
+If --Allow User Selectable GUI-- is enabled, users can select this GUI with a GET request or from the selector bar in the interface.
 Users should not access the GUI directly. All requests should be directed to convertCore.php which will construct the GUI on-demand.
 
-During operation, HRConvert2 initializes the language using the following process;
+During operation, HRConvert2 initializes the GUI using the following process;
 
-  1. Initialize the language to english.
-  2. Build an array of languages that are included with HRConvert2.
-  3. Check if the $SupportedLanguages variable from config.php is set properly.
-    3a. If not, use the included array of default languages instead.
-  4. If a language was specified via GET input, sanitize it.
-  5. Check if the $DefaultLanguage variable from config.php is set & supported.
-    5a. If not, use english instead.
-  6. Check if the $AllowUserSelectableLanguage variable from config.php is set.
-    6a. If not, use $DefaultLanguage instead.
-  7. Check if a language was specified via GET input.
-    7a. If not, use $DefaultLanguage instead.
-  8. Check if the specified language is supported.
-    8a. If not, use $DefaultLanguage instead.
-  9. If all checks have passed and the specified language is supported, set the language to use to the one specified via GET request.
-  10. Reset the language GET variable to the currently specified language so future requests will continue using the same language.
-  11. Define all required language related files & folders.
-  12. Check for the existence of all required language related files & folders.
-    12a. If not, terminate the application.
+  1. Initialize the GUI to Default.
+  2. Build an array of GUIs that are included with HRConvert2.
+  3. Check if the $SupportedGuis variable from config.php is set properly.
+    3a. If not, use the included array of default GUIs instead.
+  4. Check if the $DefaultGui variable from config.php is set & supported.
+    4a. If not, use Default instead.
+  5. Check if the $AllowUserSelectableGui variable from config.php is set.
+    5a. If not, use $DefaultGui instead.
+  6. Check if a GUI was specified via GET or POST input & is supported.
+    6a. If so, use it. If not, use $DefaultGui instead.
+  7. Build a candidate list containing the selected GUI, then the Default GUI.
+  8. For each candidate in turn;
+    8a. Define all required GUI files & folders.
+    8b. Check that the GUI folder exists.
+    8c. Check that every required GUI file exists.
+    8d. Load uiVersionInfo.php & compare $GuiVersion to $RequiredGuiVersion.
+    8e. If every check passes, stop. Otherwise write a warning & try the next candidate.
+  9. Reset the gui GET variable to the GUI that actually loaded.
+  10. Load styleCore.php & read the colour codes from it.
+  11. If no candidate succeeded, terminate the application with error 25.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Administration Tips--
 
 Language Packs are contained within GUIs. GUIs typically contain multiple language packs.
-Errors will occur if an installed GUI does not support every language listed in the --Supported Languages-- section of the config.php file.
-Errors will occur if an installed GUI does not support the following colors: Red, Green, Blue, Grey.
+A GUI missing a language pack that config.php lists will fall back to the Default Language for that GUI & write a warning. 
+An error occurs only if the Default Language pack is also missing from that GUI.
+Errors will occur if an installed GUI does not support the following colors: Red, Green, Blue, Grey, Orange, Purple, Dark.
 Server administrators can; 
   Enable or disable GUIs by modifying the --Supported GUIs-- section of the config.php file.
   Add or remove language packs to a GUI by creating a folder in the 'Languages' subdirectory of each enabled GUI folder.
@@ -157,6 +161,22 @@ Insert code here that should run at the end of every page that HRConvert2 render
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About uiVersionInfo.php--
+
+This file declares the version of the GUI it belongs to.
+This file must define one variable, $GuiVersion, as a string.
+The core carries $RequiredGuiVersion & compares the two before loading anything else.
+The comparison is an EXACT match, not a minimum.
+A GUI newer or older than the core expects may render incorrectly in either direction,
+so a range of acceptable versions is not offered.
+A GUI that fails this check is not loaded & the core falls back to the Default GUI.
+When creating a new GUI, set $GuiVersion to match the $RequiredGuiVersion of the core it
+is being built against.
+This file is loaded before styleCore.php & before any file that produces output, so a
+failed check can be recovered from without a partial page being sent to the user.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About index.html--
 
 This file serves to act as reliable and predictable document root protection for the server.
@@ -196,11 +216,18 @@ The HRConvert2 core will define the following variables which map to subdirector
 This GUI only has access to certain variables. Variables that are available to the GUI include;
   $GuiFiles, $LanguageFiles, $LanguageStringsFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, 
   $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, 
-  $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoArray, $SubtitleArray, $StreamArray, $MediaArray, $PresentationArray, 
-  $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, 
+  $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $StreamArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, 
+  $SubtitleOutputArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $GuiCSSDir, 
+  $StreamOutputArray, $SCADArray, $SCADOutputArray, $SVGInputArray, $SVGOutputArray, $ImageArray, $AllowUserSelectableColor, $AllowUserSelectableGui, 
+  $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $LanguageFlagFile, 
+  $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, 
+  $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, 
   $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, 
   $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, 
-  $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir
+  $GuiJSDir, $GuiImageDir
+Every language string is a function local of buildGUI(), not a global.
+The GUI files can read Language Strings because the Language Strings file is required from inside the buildGui() that calls all other GUI elements.
+Nothing outside the buildGui() call can read Language Strings variables. This is deliberate.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -209,17 +236,36 @@ This GUI only has access to certain variables. Variables that are available to t
 The GUI gets color specific styles from the $ButtonCode variable.
 The $ButtonCode variable contains the color specific CSS for the GUI.
 The $ButtonCode variable is set by the UI/<SELECTED_GUI>/styleCore.php file.
-There are 4 supported colors, and the code for each color is contained in styleCore.php.
+There are 7 supported colors; red, green, blue, grey, orange, purple & dark. 
+The code for each color is contained in styleCore.php.
 The loading spinner will change color as well. There is one spinner .gif file for each style & supported color.
+A GUI must define a button code variable for every supported colour in styleCore.php.
+The core reads $greenButtonCode, $blueButtonCode, $redButtonCode, $orangeButtonCode, $purpleButtonCode, $darkButtonCode & $defaultButtonCode.
+A GUI that omits any of them will fail colour verification.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About Loading Spinners--
 
 There are 6 loading spinners to choose from that can be set in config.php.
-Each spinner is available in 4 colors.
+Each spinner is available in all 7 colors, blue, green, grey, red, orange, purple, & dark.
 The color of the spinner can be adjusted separately from the color of the rest of the GUI.
 The $PacmanLoc variable contains the relative path to use for the selected spinner.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Selector Bar--
+
+The selector bar lets a user change language, colour & interface from within the page.
+It appears in both convertGui1.php & convertGui2.php & is collapsed behind a toggle.
+It floats opposite $GUIAlignment so it sits on the trailing edge in both reading directions.
+Token1 & Token2 are carried as hidden POST inputs & are never placed in the query string,
+because $SesHash derives from Token1. A selector that dropped them would discard the
+users uploaded files, & one that put them in a URL would leak them into history & logs.
+Each button overrides the form target with formaction & carries the two settings it is
+not changing at their current value.
+showFiles & noGui are carried through so a selection returns the user to the page they
+were already on.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -277,15 +323,17 @@ The following is a list of supported GET inputs with description & supported val
   language
       GUI Operation
       Select the language to use.
-      Can be enabled/disabled in config.php to.
+      Can be enabled/disabled in config.php.
       Supported languages can be added/removed in config.php.
-      Set this input to the nane of an installed ISO 639-1 language defined in config.php.
-      This input can also be specified by POST request, but GET will always take precedence.
+      Set this input to the code of an installed language.
+      Languages are listed in the --Supported Languages-- section of config.php.
+      Most languages are represented by two letter ISO 639-1 codes.
+      Aramaic has no ISO 639-1 code, so 'aii' & 'arc' use ISO 639-3 codes instead.
   
   color
       GUI Operation
       Select the color to use.
-      Can be enabled/disabled in config.php to.
+      Can be enabled/disabled in config.php.
       Supported colors can be added/removed in config.php.
       Set this input to a supported color scheme defined in config.php.
       This input can also be specified by POST request, but GET will always take precedence.

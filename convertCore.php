@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/10/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/11/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.6.4.
+// / v3.6.5.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -196,7 +196,8 @@ function verifyConfigVersion($RequiredConfigVersion) {
     'DefaultStreamInspectionForfeitAction', 'MaxStreamInspectionFileSize',
     'AllowSCADIncludeResolution', 'SCADConversionTimeout',
     'MinimumSCADVersion', 'MinimumFFMPEGVersion', 'MinimumStreamFFMPEGVersion',
-    'MinimumLibreOfficeVersion', 'MinimumInkscapeVersion');
+    'MinimumLibreOfficeVersion', 'MinimumInkscapeVersion', 'MinimumImageVersion',
+    'MinimumAssimpVersion', 'MinimumMeshlabVersion', 'UsePyMeshLab');
   // / Check that every required setting actually exists in the global scope.
   // / config.php is required at global scope, so every setting it defines lands in $GLOBALS.
   // / isset() is deliberately not used because a setting legitimately set to NULL still exists.
@@ -238,7 +239,7 @@ function verifyConfigVersion($RequiredConfigVersion) {
 // / This function runs before verifyLogs(), so every failure here dies rather than logging.
 function verifyInstallation() {
   // / Set variables.
-  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion, $RequiredGuiVersion, $RequiredLanguageVersion;
+  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumImageVersion, $UsePyMeshLab, $MinimumMeshlabVersion, $MinimumAssimpVersion;
   $InstallationIsVerified = $secret = $secretFile = $secretFileContent = $createSecretFile = $SecretKey = $secretFailed = $loadSecretFile = $secretFileWriteComplete = $secretCheck = $appVersionCheck = $configIsValid = FALSE;
   $check1 = $check2 = TRUE;
   $bytesWritten = 0;
@@ -247,7 +248,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
-  $HRConvertVersion = 'v3.6.4';
+  $HRConvertVersion = 'v3.6.5';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
@@ -1426,28 +1427,83 @@ function convertDocuments($pathname, $newPathname, $extension) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to confirm the installed ImageMagick meets the minimum version HRConvert2 requires.
+// / ImageMagick replaced its entire command line interface scheme at version 7.0.
+// / Legacy commands such as convert were unified into the single magick binary launcher tool,
+// / which alters argument ordering rules and causes older deployments to fail completely.
+// / ImageMagick reports its version via standard output as "Version: ImageMagick 7.1.1-29".
+// / Standard error redirection ensures warning messages do not break standard buffer processing.
+// / A deployment that reports no parseable version sequence is strictly refused by the core.
+function verifyImageVersion() {
+  // / Set variables.
+  global $Verbose, $MinimumImageVersion;
+  $ImageVersionIsValid = FALSE;
+  $versionOutput = $versionMatches = $minimumParts = array();
+  $versionExitCode = 1;
+  $detectedVersion = '';
+  $detectedMajor = $detectedMinor = $detectedPatch = $minimumMajor = $minimumMinor = $minimumPatch = 0;
+  // / Execute the modern ImageMagick binary checking utility directly using standard output pipes.
+  exec('/usr/bin/magick --version 2>&1', $versionOutput, $versionExitCode);
+  if ($versionExitCode === 0 && !empty($versionOutput)) {
+    // / Match the major, minor, and patch numeric sequence immediately following the product label.
+    // / The third patch group is made optional to maintain backward compatibility with two-digit strings.
+    if (preg_match('/ImageMagick\s+(\d+)\.(\d+)(?:\.(\d+))?/i', implode(' ', $versionOutput), $versionMatches)) {
+      $detectedMajor = (int)$versionMatches[1];
+      $detectedMinor = (int)$versionMatches[2];
+      $detectedPatch = (int)($versionMatches[3] ?? 0);
+      $detectedVersion = $detectedMajor.'.'.$detectedMinor.'.'.$detectedPatch;
+      // / Split the supplied minimum string constraint into its component parts.
+      $minimumParts = explode('.', $MinimumVersion);
+      $minimumMajor = (int)($minimumParts[0] ?? 0);
+      $minimumMinor = (int)($minimumParts[1] ?? 0);
+      $minimumPatch = (int)($minimumParts[2] ?? 0);
+      // / Compare boundaries numerically down to the third patch depth level to prevent string sort errors.
+      if ($detectedMajor > $minimumMajor) $ImageVersionIsValid = TRUE;
+      elseif ($detectedMajor === $minimumMajor) {
+        if ($detectedMinor > $minimumMinor) $ImageVersionIsValid = TRUE;
+        elseif ($detectedMinor === $minimumMinor && $detectedPatch >= $minimumPatch) $ImageVersionIsValid = TRUE; } } }
+  if ($Verbose) logEntry('ImageMagick Version Check: '.($ImageVersionIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $versionOutput = $versionMatches = $versionExitCode = $detectedVersion = $minimumParts = $detectedMajor = $detectedMinor = $detectedPatch = $minimumMajor = $minimumMinor = $minimumPatch = $MinimumVersion = NULL;
+  unset($versionOutput, $versionMatches, $versionExitCode, $detectedVersion, $minimumParts, $detectedMajor, $detectedMinor, $detectedPatch, $minimumMajor, $minimumMinor, $minimumPatch, $MinimumVersion);
+  return $ImageVersionIsValid; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to convert image formats.
 function convertImages($pathname, $newPathname, $height, $width, $rotate) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumImageVersion;
   $ConversionSuccess = $ConversionErrors = $imgMethod = FALSE;
-  $returnData = $wh = '';
+  $returnData = $wh = $bgSwitch = '';
   $stopper = $whx = 0;
   $sleepTime = $SleepTimer;
+  // / Verify the system meets the minimum ImageMagick version boundary before processing.
+  // / ImageMagick v7 is required for modern parameter ordering and the unified magick utility binary.
+  if (!verifyImageVersion($MinimumImageVersion)) {
+    errorEntry('The installed ImageMagick version is missing, unidentifiable, or too old!', 8001, FALSE);
+    $ConversionErrors = TRUE;
+    return array($ConversionSuccess, $ConversionErrors); }
   // / Validate the height, width, & rotate arguments.
   if (!is_numeric($height) or $height === FALSE) $height = 0;
   if (!is_numeric($width) or $width === FALSE) $width = 0;
-  if (!is_numeric($rotate) or $rotate === FALSE) '-rotate '.$rotate;
+  if (!is_numeric($rotate) or $rotate === FALSE) $rotate = '';
+  else $rotate = '-rotate '.$rotate.' ';
   $wxh = $width.'x'.$height;
   if ($wxh == '0x0' or $wxh =='x0' or $wxh == '0x' or $wxh == '0' or $wxh == '00' or $wxh == '' or $wxh == ' ') $wh = '';
   else $wh = '-resize '.$wxh.' ';
+  // / Isolate the output file extension to determine if it lacks native alpha channel support.
+  $outputExt = strtolower(pathinfo($newPathname, PATHINFO_EXTENSION));
+  // / Force transparent pixels to flatten safely against a solid white background if exporting to JPEG.
+  if ($outputExt === 'jpg' or $outputExt === 'jpeg') $bgSwitch = '-background white -alpha remove ';
+  else $bgSwitch = '-background none ';
   if ($Verbose) logEntry('Converting image.');
   // / This code will attempt the conversion up to $StopCounter number of times.
   while (!file_exists($newPathname) && $stopper <= $StopCounter) {
     // / If the last conversion attempt failed, wait a moment before trying again.
     if ($stopper !== 0) sleep($sleepTime++);
-    // / Attempt the conversion.
-    $returnData = shell_exec('convert -background none '.$wh.$rotate.' '.$pathname.' '.$newPathname);
+    // / Attempt the conversion using the unified ImageMagick v7 magick command layout.
+    $returnData = shell_exec('/usr/bin/magick '.$bgSwitch.escapeshellarg($pathname).' '.$wh.$rotate.escapeshellarg($newPathname));
     // / Count the number of conversions to avoid infinite loops.
     $stopper++;
     // / Stop attempting the conversion after $StopCounter number of attempts.
@@ -1458,27 +1514,138 @@ function convertImages($pathname, $newPathname, $height, $width, $rotate) {
   if ($Verbose && trim($returnData) !== '') logEntry('ImageMagick returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $newPathname = $height = $width = $extension = $wxh = $rotate = $imgMethod = $wh = $sleepTime = NULL;
-  unset($returnData, $stopper, $pathname, $newPathname, $height, $width, $extension, $wxh, $rotate, $imgMethod, $wh, $sleepTime);
+  $returnData = $stopper = $pathname = $newPathname = $height = $width = $extension = $wxh = $rotate = $imgMethod = $wh = $sleepTime = $outputExt = $bgSwitch = NULL;
+  unset($returnData, $stopper, $pathname, $newPathname, $height, $width, $extension, $wxh, $rotate, $imgMethod, $wh, $sleepTime, $outputExt, $bgSwitch);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to confirm both MeshLab and Assimp match the minimum required target branches.
+// / Combining the verification checks into a single module helps to protect the double-stage
+// / pipeline by ensuring that neither the repair layer nor the export engine fail due to version limits.
+// / Assimp writes details like "assimp 5.4.3" to standard output when using its version argument.
+// / Legacy MeshLab configurations write build definitions natively to standard error pipes.
+// / If either binary is missing or fails to report a readable pattern, verification fails.
+function verifyModelVersions($AssimpMinVersion, $MeshlabMinVersion) {
+  // / Set variables.
+  global $Verbose;
+  $ModelsValid = $AssimpValid = $MeshlabValid = FALSE;
+  $assimpOut = $meshlabOut = $assimpMatch = $meshlabMatch = $assimpMinParts = $meshlabMinParts = array();
+  $assimpCode = $meshlabCode = 1;
+  $assimpDet = $meshlabDet = '';
+  $aDetMaj = $aDetMin = $aMinMaj = $aMinMin = 0;
+  $mDetMaj = $mDetMin = $mMinMaj = $mMinMin = 0;
+  // / Phase 1: Query the standalone Assimp command line tool version metadata block.
+  // / Redirect standard error to standard output to force PHP to capture the token stream.
+  exec('/usr/bin/assimp version 2>&1', $assimpOut, $assimpCode);
+  if (!empty($assimpOut)) {
+    // / Parse the major and minor numerical components out of the standard version string.
+    // / The match pattern securely looks for standalone version integers inside the banner arrays.
+    if (preg_match('/Version\s+(\d+)\.(\d+)/i', implode(' ', $assimpOut), $assimpMatch)) {
+      $aDetMaj = (int)$assimpMatch[1];
+      $aDetMin = (int)$assimpMatch[2];
+      $assimpDet = $aDetMaj.'.'.$aDetMin;
+      $assimpMinParts = explode('.', $AssimpMinVersion);
+      $aMinMaj = (int)($assimpMinParts[0] ?? 0);
+      $aMinMin = (int)($assimpMinParts[1] ?? 0);
+      // / Compare boundaries numerically to accurately rank newer releases over baseline branches.
+      if ($aDetMaj > $aMinMaj) $AssimpValid = TRUE;
+      elseif ($aDetMaj === $aMinMaj && $aDetMin >= $aMinMin) $AssimpValid = TRUE; } }
+  // / Phase 2: Query the headless MeshLab server processor build metadata strings.
+  // / MeshLab releases typically expose code signatures like "MeshLabServer v2020.09" or similar tags.
+  exec('xvfb-run -a /usr/bin/meshlabserver --help 2>&1', $meshlabOut, $meshlabCode);
+  if (!empty($meshlabOut)) {
+    // / Isolate the first chronological sequence matching structural year or version decimals.
+    // / The match block handles both prefix strings and clean colon metadata properties smoothly.
+    if (preg_match('/MeshLab(?:Server)?\s*(?:v|version)?:?\s*(\d+)\.(\d+)/i', implode(' ', $meshlabOut), $meshlabMatch)) {
+      $mDetMaj = (int)$meshlabMatch[1];
+      $mDetMin = (int)$meshlabMatch[2];
+      $meshlabDet = $mDetMaj.'.'.$mDetMin;
+      $meshlabMinParts = explode('.', $MeshlabMinVersion);
+      $mMinMaj = (int)($meshlabMinParts[0] ?? 0);
+      $mMinMin = (int)($meshlabMinParts[1] ?? 0);
+      // / Establish validation checkpoints matching your core configuration patterns.
+      if ($mDetMaj > $mMinMaj) $MeshlabValid = TRUE;
+      elseif ($mDetMaj === $mMinMaj && $mDetMin >= $mMinMin) $MeshlabValid = TRUE; } }
+  // / The model subsystem passes verification only if both individual platforms match conditions.
+  if ($AssimpValid && $MeshlabValid) $ModelsValid = TRUE;
+  if ($Verbose) {
+    logEntry('Assimp Subsystem Check: '.($AssimpValid ? 'PASSED' : 'FAILED').', Detected: '.($assimpDet === '' ? 'NONE' : $assimpDet).', Required: '.$AssimpMinVersion.' or later.');
+    logEntry('MeshLab Subsystem Check: '.($MeshlabValid ? 'PASSED' : 'FAILED').', Detected: '.($meshlabDet === '' ? 'NONE' : $meshlabDet).', Required: '.$MeshlabMinVersion.' or later.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $assimpOut = $meshlabOut = $assimpMatch = $meshlabMatch = $assimpMinParts = $meshlabMinParts = NULL;
+  $assimpCode = $meshlabCode = $assimpDet = $meshlabDet = $AssimpMinVersion = $MeshlabMinVersion = NULL;
+  $aDetMaj = $aDetMin = $aMinMaj = $aMinMin = $mDetMaj = $mDetMin = $mMinMaj = $mMinMin = $AssimpValid = $MeshlabValid = NULL;
+  unset($assimpOut, $meshlabOut, $assimpMatch, $meshlabMatch, $assimpMinParts, $meshlabMinParts);
+  unset($assimpCode, $meshlabCode, $assimpDet, $meshlabDet, $AssimpMinVersion, $MeshlabMinVersion);
+  unset($aDetMaj, $aDetMin, $aMinMaj, $aMinMin, $mDetMaj, $mDetMin, $mMinMaj, $mMinMin, $AssimpValid, $MeshlabValid);
+  return $ModelsValid; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to convert 3D model formats.
+// / The model conversion engine is designed as a hybrid, multi-stage processing pipeline to maximize reliability and output format coverage.
+// / 3D assets vary wildly in their structural integrity; engineering and CAD formats frequently suffer from open boundaries and non-manifold bugs.
+// / Conversely, modern web and runtime formats contain complex material systems, explicit node transformations, and deep skeletal rigging hierarchies.
+// / Passing rigged animations through a traditional mesh processor strips critical bone datasets and flattens scene nodes into basic geometric elements.
+// / To solve this, HRConvert2 bifurcates incoming assets into separate logical execution pathways based on their specific file extension parameters.
+// /
+// / Route 1 acts as a dual-stage processing buffer built specifically for raw geometry, laser scans, and 3D printing formats like STL and PLY.
+// / The asset is first passed through a localized MeshLab optimization pass to rectify inverted face normals, fix vertex indexes, and weld open gaps.
+// / This pass standardizes the asset, generating a normalized, clean intermediate OBJ file template completely free of topological anomalies.
+// / This clean baseline is then handed off to the Open Asset Import Library (Assimp) to handle the export compilation into the requested format.
+// / If the primary MeshLab cleaning pass hits a severe geometry structural boundary and crashes, the core transparently catches the failure state.
+// / It rewrites its internal file pointers to fallback instantly, passing the original upload file directly to the Assimp export array.
+// /
+// / Route 2 acts as a high-speed direct intercept path built to protect complex scene charts and animated assets like FBX and GLTF containers.
+// / These file configurations completely bypass the MeshLab structural step, avoiding destructive data truncation or structural flattening loops.
+// / The assets land directly inside Assimp's tokenization matrices, keeping bones, vertex weights, and physical material sets intact.
+// /
+// / The engine natively scales its processing environment to adapt smoothly to individual server deployment architecture requirements.
+// / When standard mode is deployed, headless execution runs via the classic binary and relies on virtual display frame buffers (xvfb-run).
+// / When modern mode is toggled, it calls an inline Python routine that inserts bundled compiled resources folders straight into system paths.
+// / This allows HRConvert2 to operate headlessly inside system memory arrays without using external package managers or global system binaries.
 function convertModels($pathname, $newPathname) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumAssimpVersion, $MinimumMeshlabVersion, $UsePyMeshLab, $InstLoc, $DirSep;
   $ConversionSuccess = $ConversionErrors = FALSE;
-  $returnData = '';
+  $returnData = $assimpData = '';
   $stopper = 0;
   $sleepTime = $SleepTimer;
+  // / Verify system parameters before execution unless PyMeshLab is bypassing the binary check entirely.
+  if (!$UsePyMeshLab && !verifyModelVersions($MinimumAssimpVersion, $MinimumMeshlabVersion)) {
+    errorEntry('Model conversion aborted because a required 3D dependency version requirement check failed!', 9001, FALSE);
+    $ConversionErrors = TRUE;
+    return array($ConversionSuccess, $ConversionErrors); }
   if ($Verbose) logEntry('Converting model.');
+  // / Isolate the input file extension to route the model through the proper utility array pathway.
+  $inputExt = strtolower(pathinfo($pathname, PATHINFO_EXTENSION));
+  // / Engineering and CAD interchange assets that require structural triangulation or manifold normalization.
+  $meshlabOnly = array('stl', 'ply', 'off', '3ds');
+  // / Complex skeletal scene graphs or niche data arrays that Assimp can process directly or expand into web assets.
+  $assimpSupported = array('fbx', 'gltf', 'glb', 'obj', 'dae', '3mf', 'x3d', 'dxf', 'bvh', 'ase');
+  // / Establish the custom bundled resources include path for the isolated internal PyMeshLab workspace modules.
+  $pyMeshLabDir = $InstLoc.$DirSep.'Resources'.$DirSep.'PyMeshLab';
+  // / Define an intermediate workspace path to bridge the two command line utilities when using the dual stage workflow.
+  $intermediatePathname = dirname($newPathname).'/rectified_'.basename($newPathname).'.obj';
   // / This code will attempt the conversion up to $StopCounter number of times.
   while (!file_exists($newPathname) && $stopper <= $StopCounter) {
     // / If the last conversion attempt failed, wait a moment before trying again.
     if ($stopper !== 0) sleep($sleepTime++);
-    // / Attempt the conversion.
-    $returnData = shell_exec('xvfb-run -a /usr/bin/meshlabserver -i '.$pathname.' -o '.$newPathname);
+    // / Route 1 handles formats that benefit immensely from MeshLab processing before hitting Assimp.
+    if (in_array($inputExt, $meshlabOnly)) {
+      // / Select between custom inline python workspace definitions or legacy xvfb-run binary paths.
+      if ($UsePyMeshLab) $returnData = shell_exec('python3 -c "import sys; sys.path.insert(0, '.escapeshellarg($pyMeshLabDir).'); import pymeshlab; ms = pymeshlab.MeshSet(); ms.load_new_mesh('.escapeshellarg($pathname).'); ms.save_current_mesh('.escapeshellarg($intermediatePathname).');"');
+      else $returnData = shell_exec('xvfb-run -a /usr/bin/meshlabserver -i '.escapeshellarg($pathname).' -o '.escapeshellarg($intermediatePathname));
+      $assimpInput = file_exists($intermediatePathname) ? $intermediatePathname : $pathname;
+      $assimpData = shell_exec('/usr/bin/assimp export '.escapeshellarg($assimpInput).' '.escapeshellarg($newPathname)); }
+    // / Route 2 allows Assimp to directly intercept complex rig animation formats and bypass MeshLab entirely.
+    elseif (in_array($inputExt, $assimpSupported)) {
+      $assimpData = shell_exec('/usr/bin/assimp export '.escapeshellarg($pathname).' '.escapeshellarg($newPathname)); }
+    // / Catch-all safety fallback block attempts standard MeshLab conversion if an anonymous extension is parsed.
+    else {
+      if ($UsePyMeshLab) $returnData = shell_exec('python3 -c "import sys; sys.path.insert(0, '.escapeshellarg($pyMeshLabDir).'); import pymeshlab; ms = pymeshlab.MeshSet(); ms.load_new_mesh('.escapeshellarg($pathname).'); ms.save_current_mesh('.escapeshellarg($newPathname).');"');
+      else $returnData = shell_exec('xvfb-run -a /usr/bin/meshlabserver -i '.escapeshellarg($pathname).' -o '.escapeshellarg($newPathname)); }
     // / Count the number of conversions to avoid infinite loops.
     $stopper++;
     // / Stop attempting the conversion after $StopCounter number of attempts.
@@ -1486,11 +1653,14 @@ function convertModels($pathname, $newPathname) {
       $ConversionErrors = TRUE;
       errorEntry('The model converter timed out!', 9000, FALSE); } }
   // / Log the output of the operation to the logfile, if it is not blank.
-  if ($Verbose && trim($returnData) !== '') logEntry('Meshlab returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+  if ($Verbose && trim($returnData) !== '') logEntry('Meshlab processing engine returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+  if ($Verbose && trim($assimpData) !== '') logEntry('Assimp returned the following: '.$Lol.'  '.str_replace($Lol, $Lolol, str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($assimpData)))));
+  // / Erase the temporary asset generated by Stage 1 to prevent storage exhaustion.
+  if (file_exists($intermediatePathname)) unlink($intermediatePathname);
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $newPathname = NULL;
-  unset($returnData, $stopper, $pathname, $newPathname);
+  $returnData = $assimpData = $stopper = $pathname = $newPathname = $intermediatePathname = $assimpInput = $inputExt = $meshlabOnly = $assimpSupported = $pyMeshLabDir = NULL;
+  unset($returnData, $assimpData, $stopper, $pathname, $newPathname, $intermediatePathname, $assimpInput, $inputExt, $meshlabOnly, $assimpSupported, $pyMeshLabDir);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 

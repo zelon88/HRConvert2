@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/7/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/11/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.6.0.
+// / v3.6.5.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -37,7 +37,7 @@
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. Replacing config.php with a newer one is the correct fix.
-$ConfigVersion = 'v3.6.0';
+$ConfigVersion = 'v3.6.5';
 
 // / ---Security Informations---
 // /
@@ -231,6 +231,37 @@ $AllowSCADIncludeResolution = TRUE;
 // /   Valid options are integers greater than 0.
 // /   Default is 180.
 $SCADConversionTimeout = 180;
+// /  --Minimum Assimp Version--
+// /   Assimp is the engine behind 3D skeletal scene graphs and modern format exports.
+// /   This minimum exists for command line reliability, not for security.
+// /   Assimp 5.0 introduced essential stability updates for modern web models.
+// /   Versions prior to 5.0 feature an erratic CLI parameter processing loop.
+// /   5.0 is pinned because it is the interface HRConvert2 builds its commands against.
+// /   Check the installed version by running 'assimp version' in a terminal on the server.
+// /   Format is major.minor.
+// /   Default is '5.0'.
+$MinimumAssimpVersion = '5.0';
+// /  --Minimum MeshLab Version--
+// /   MeshLab is the engine behind 3D geometry optimization and manifold rectification.
+// /   This minimum exists for headless server parity, not for security.
+// /   MeshLab changed its numbering system away from legacy version branches.
+// /   The 2020.09 build is the last stable release maintaining meshlabserver.
+// /   2020.09 is pinned because it is the interface HRConvert2 builds its commands against.
+// /   Check the installed version by running 'meshlabserver --help' in a terminal on the server.
+// /   Format is year.month.
+// /   Default is '2020.09'.
+$MinimumMeshlabVersion = '2020.09';
+// /  --Minimum ImageMagick Version--
+// /   ImageMagick is the engine behind most image conversions.
+// /   This minimum exists for command line compatibility, not for security.
+// /   ImageMagick command line syntax changed significantly between v6 & v7.
+// /   ImageMagick v6 is what you get when you install ImageMagick using apt-get commands.
+// /   ImageMagick v7 can be built from source using the included build script.
+// /   The included ImageMagick v7 build script is located in the Documentation/Build folder.
+// /   Check the installed version by running 'convert --version' or 'magick --version' in a terminal on the server.
+// /   Format is major.minor.patch.
+// /   Default is '7.1'.
+$MinimumImageVersion = '7.1';
 // /  --Minimum Inkscape Version--
 // /   Inkscape is the engine behind every SVG conversion.
 // /   This minimum exists for command line compatibility, not for security.
@@ -579,7 +610,7 @@ $UserSVGInputArray = array('svg', 'plain-svg');
 // /  --Supported SVG Output Formats--
 $UserSVGOutputArray = array('png', 'pdf', 'ps', 'eps', 'emf', 'wmf');
 // /  --Supported Model Formats--
-$UserModelArray = array('3ds', 'obj', 'collada', 'off', 'ply', 'stl', 'gts', 'dxf', 'u3d', 'vrml', 'x3d');
+$UserModelArray = array('stl', 'ply', 'off', '3ds', 'obj', 'fbx', 'dae', 'gltf', 'glb', 'obj', '3mf', 'x3d', 'dxf');
 // /  --Supported OpenSCAD Formats--
 // /   The first entry must be scad, which is the only input format this converter accepts.
 // /   Every remaining entry is an export format OpenSCAD can produce from 3D geometry.

@@ -114,8 +114,7 @@ In this step we will install dependencies to enable most common file conversions
 6. Run  'sudo apt-get install meshlab && sudo apt-get install dia && sudo apt-get install bubblewrap && sudo apt-get install pandoc && sudo apt-get install mkisofs'
 7. Run  'sudo apt-get install poppler-utils && sudo apt-get install nodejs && sudo apt-get install gnuplot && sudo apt-get install libgxps-utils && sudo apt-get install xvfb'
 8. Run  'sudo featherpad /etc/ImageMagick-6/policy.xml'
-9. Search for the following line in the  'policy.xml'  file and adjust the value to match the one displayed below.
-  <policy domain="coder" rights="read|write" pattern="PDF" />
+9. Run 'sudo cp /var/www/html/HRProprietary/HRConvert2/Documentation/Build/policy.xml /etc/ImageMagick-7/policy.xml'
 10. Open a file explorer and navigate to  '/etc/'
 11. If you DO NOT have a file named  'rc.local'  located in the  '/etc/'  directory, or the  'rc.local'  file is blank:
   11a. Extract the  'rc.local'  file contained in the root of the HRConvert2 repository to your Desktop.
@@ -154,14 +153,7 @@ Bubblewrap is required. There is no fallback and Scad conversions are refused wi
   }
 4. Save the file and close Featherpad.
 5. Run  'sudo apparmor_parser -r /etc/apparmor.d/bwrap'
-  5a. No output means the profile loaded successfully. It will survive a reboot.
-6. Verify the sandbox works as the web server user by running the following on one line.
-  'sudo -u www-data bwrap --unshare-all --ro-bind /usr /usr --proc /proc --dev /dev --tmpfs /tmp /usr/bin/true ; echo "exit: $?"'
-  6a. An exit code of 0 with no other output means Scad conversions will work.
-  6b. Any other result means Scad conversions will be refused with error 27007.
-  6c. See ERROR_DESCRIPTIONS.txt for what to check next.
-7. To run HRConvert2 without OpenSCAD support, remove 'Scad' from the Allowed Conversion Types
-   entry in the 'config.php' file. Every other conversion type is unaffected.
+  5a. No output means the profile loaded successfully.
 -----------------------------------------------------------------------------------
 
 
@@ -169,9 +161,12 @@ Bubblewrap is required. There is no fallback and Scad conversions are refused wi
 In this step we will build dependencies from source to enable advanced file conversions.
 
 1. Run  'cd /home/USERNAME/Desktop/Temp/Documentation/Build'
-2. Run  './ffmpeg-build.sh'  then follow the instructions to download & build FFMPEG from source.
-3. Run  'rm -r ffmpeg-build'  to delete the FFMPEG build environment.
-4. Completely reboot the computer.
+2. Run  'chmod +x ffmpeg-build.sh'
+3. Run  './ffmpeg-build.sh'  then follow the instructions to download & build FFMPEG from source.
+4. Run  'rm -r ffmpeg-build'  to delete the FFMPEG build environment.
+5. Run  'chmod +x build-imagemagick-v7.sh'
+6. Run  'sudo ./build-imagemagick-v7.sh'
+7. Completely reboot the computer.
 -----------------------------------------------------------------------------------
 
 

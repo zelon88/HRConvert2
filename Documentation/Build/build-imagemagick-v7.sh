@@ -17,7 +17,8 @@ cd /tmp
 rm -f ImageMagick.tar.gz
 rm -rf ImageMagick-7*
 
-wget https://imagemagick.org
+# / Route directly to the verified rolling archive repository link location.
+wget https://download.imagemagick.org/archive/ImageMagick.tar.gz
 tar -xf ImageMagick.tar.gz
 cd ImageMagick-7*
 

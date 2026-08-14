@@ -48,8 +48,9 @@ RUN mkdir /DATA && \
 #RUN rm -vf /var/lib/apt/lists/*
 RUN apt update
 
-# Install git.
-RUN apt install -y git sed
+# Install git and compilation tools.
+RUN apt install -y git sed libtool autoconf automake
+
 
 # Set the working directory in the container.
 WORKDIR /var/www/html/HRProprietary

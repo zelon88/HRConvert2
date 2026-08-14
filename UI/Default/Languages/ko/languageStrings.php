@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/10/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/14/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.6.4.
+// / v3.6.7.
 // / This file contains language specific GUI related text for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -81,7 +81,7 @@ $GuiSelectorText4 = '언어, 색상 및 인터페이스 옵션 표시';
 // / Online File Converter, Extractor, Compressor'
 $Gui1Text1 = '온라인 파일 변환기, 추출기, 압축기';
 // / $ApplicationName.' is based off the open-source web-app <a href=\'https://github.com/zelon88/HRConvert2\'>HRConvert2</a> by <a href=\'https://github.com/zelon88\'>Zelon88</a> that converts files without tracking users across the net or infringing on your intellectual property.'
-$Gui1Text2 = $ApplicationName.' <a href=\'https://github.com의 오픈 소스 웹 앱 <a href=\'https://github.com/zelon88/HRConvert2\'>HRConvert2</a>를 기반으로 합니다. /zelon88\'>Zelon88</a>은 네트워크를 통해 사용자를 추적하거나 지적 재산권을 침해하지 않고 파일을 변환합니다.';
+$Gui1Text2 = $ApplicationName.' <a href=\'https://github.com/zelon88\'>Zelon88</a>의 오픈 소스 웹 앱 <a href=\'https://github.com/zelon88/HRConvert2\'>HRConvert2</a>를 기반으로 합니다. 네트워크를 통해 사용자를 추적하거나 지적 재산권을 침해하지 않고 파일을 변환합니다.';
 // / 'More Info ...'
 $Gui1Text3 = '더 많은 정보 ...';
 // / 'Less Info ...'

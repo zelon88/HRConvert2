@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/11/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/14/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.6.5
+v3.6.7
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -27,7 +27,44 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap & xvfb-run.
 
 
 --------------------
-COMMIT 8/11/2026
+COMMIT 8/14/2026
+v3.6.7 - Fix typo in Vietnamese + Chinese. Add CLI arguments.
+
+-v3.6.7.
+-Update Chinese & Korean languageStrings.php files to fix typos (improperly escaped html tags in convertGui1.php).
+  -Note: The version number at the header of the file (commented out seciton) changed to v3.6.7 to signal when this file was updated most recently.
+  -Note: The version number contained in the version variable remains at it's original v3.6.4.
+  -Note: The UI version also remains unchanged.
+  -The reasoning behind updang the cannonical version number and not the logical one is that the logical structure of the file did not change.
+    -No variable names were altered, the functionality of the file did not change.
+    -We only fixed a typo.
+    -Logical version numbers should only change if there is a technical reason why the language pack will not work with the UI anymore.
+    -Typo changes, or grammer modifications to singlular language packs constitute a bump in cannonical version, but not logical version.
+    -Logical versions of language packs MUST ALWAYS AND ONLY be updated all at once. All or nothing. All language packs must match, broken ones will not be used.
+-verifySCADVersion() now accepts $MinimumSCADVersion by function call instead of as a global.
+  -This is more consistent with the way the other dependency version verification checks are done.
+-Add command line parsing.
+  -Currently focusing on implementing comprehensive Dependency Version Reporting / Checking, Help text, and Automatic Application Updates.
+  -I am NOT currently focusing on turning HRConvert2 into a CLI file converter.
+    -File conversions ARE NOT currently being worked on for CLI deployment.
+    -Only CLI version checking, diagnostics, and automatic updates are being developed currently.
+  -parseCommandLine() parses the command line arguments that were supplied.
+  -If any CLI arguments were supplied, the WebUI and all conversion logic is disabled.
+  -The application will terminate immediately after parsing the requested command line operation.
+  -File conversions ARE NOT supported via command line argument. Currently. Maybe someday.
+-Add support for  -v  and  --version  command line (CLI) arguments.
+  -Performs a comprehensive dependency check to ensure all version pinned dependency requirements are met.
+  -Performs a comprehensive check on all bundled GUI packs, language packs, and config files.
+-Add support for  -h  and  --help  command line (CLI) arguments.
+  -Dispalys help information that would be useful to an administrator during debugging or troubleshooting.
+  -Refers to specific files in the Documentation folder that could help with specific problems.
+-Fix regression that removed bwrap from OpenSCAD conversions.
+  -Add verifyBwrap() funtion to prevent this kind of thing from happening again.
+-Fixed .github folder cleanup at runtime.
+-Add permissions enforcement to required folder cleanup process.
+
+--------------------
+COMMIT 8/13/2026
 v3.6.6 - Update Docker release process. Utilize Github Actions.
 
 -v3.6.6.

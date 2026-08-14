@@ -1,8 +1,7 @@
-<!DOCTYPE HTML>
-<?php
+<?php if (php_sapi_name() !== 'cli') print('<!DOCTYPE HTML>'.PHP_EOL);
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/13/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/14/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,8 +11,8 @@
 // / This application is designed to provide a web-interface for converting file formats
 // / on a server for users of any web browser without authentication.
 // /
-// / FILE INFORMATION ...
-// / v3.6.6.
+// / FILEINFORMATION ...
+// / v3.6.7.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -249,7 +248,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
-  $HRConvertVersion = 'v3.6.6';
+  $HRConvertVersion = 'v3.6.7';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
@@ -842,7 +841,7 @@ function verifyGlobals() {
   $ScadTemp = $ConvertDir.'ScadTemp';
   $RequiredDirs = array($HomeLoc, $convertDir0, $ConvertDir, $ConvertTemp, $convertTempDir0, $ConvertTempDir, $StreamTemp, $ScadTemp, $LogDir);
   $RequiredIndexes = array($ConvertTemp, $convertTempDir0, $ConvertTempDir);
-  $RequiredCleanupFolders = array($webRoot.$DirSep.'.cache', $webRoot.$DirSep.'.config', $InstLoc.$DirSep.'Logs', $InstLoc.$DirSep.'.cache', $InstLoc.$DirSep.'.config', $ProprietaryLoc.$DirSep.'.cache', $ProprietaryLoc.$DirSep.'.config', $webRoot.$DirSep.'.github.'.$DirSep.'workflows', $webRoot.$DirSep.'.github.');
+  $RequiredCleanupFolders = array($webRoot.$DirSep.'.cache', $webRoot.$DirSep.'.config', $InstLoc.$DirSep.'Logs', $InstLoc.$DirSep.'.cache', $InstLoc.$DirSep.'.config', $ProprietaryLoc.$DirSep.'.cache', $ProprietaryLoc.$DirSep.'.config', $InstLoc.$DirSep.'.github'.$DirSep.'workflows', $InstLoc.$DirSep.'.github');
   $PathToUnoconv = $InstLoc.$DirSep.'Resources'.$DirSep.'Unoconv'.$DirSep.'unoconv';
   if (!$UsePatchedDocumentEngine) $PathToUnoconv = $DirSep.'usr'.$DirSep.'bin'.$DirSep.'unoconv';
   // / A/V related variables.
@@ -893,6 +892,478 @@ function verifyGlobals() {
   $convertDir0 = $convertTempDir0 = $subDir = $partURL = $allArrays = $webRoot = $sanitizeGlobalCheck = $sanitizeGlobalCheckA = $sanitizeGlobalCheckB = $sanitizeGlobalCheckC = $sanitizeGlobalCheckD = $sanitizeGlobalCheckE = NULL;
   unset($convertDir0, $convertTempDir0, $subDir, $partURL, $allArrays, $webRoot, $sanitizeGlobalCheck, $sanitizeGlobalCheckA, $sanitizeGlobalCheckB, $sanitizeGlobalCheckC, $sanitizeGlobalCheckD, $sanitizeGlobalCheckE);
   return array($GlobalsAreVerified, $CoreLoaded); }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / A function to confirm the installed FFMPEG meets a minimum version.
+// / The minimum arrives as an argument so different operations can require different builds.
+// / Audio & video conversions read a local file & never fetch anything remote.
+// / Stream conversions do fetch, & FFMPEG v2.0 through v6.0 bypass the protocol whitelist.
+// / Those builds apply their own whitelist to segments referenced inside a playlist.
+// / A build that reports no parseable version is refused, because an unknown build cannot be cleared.
+// / FFMPEG reports its version in three different shapes depending on how it was built.
+// / A release build reports something like "ffmpeg version 6.1.1".
+// / A distribution build reports something like "ffmpeg version 7.1-1ubuntu1".
+// / A git build reports something like "ffmpeg version N-109534-g1b2c3d4" & carries no usable number.
+function verifyFFMPEGVersion($MinimumVersion) {
+  // / Set variables.
+  global $Verbose;
+  $FFMPEGVersionIsValid = FALSE;
+  $versionOutput = $versionMatches = $minimumParts = array();
+  $versionExitCode = 1;
+  $detectedVersion = '';
+  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
+  // / FFMPEG writes its version banner to standard error, so it must be redirected to be captured.
+  exec('ffmpeg -version 2>&1', $versionOutput, $versionExitCode);
+  if ($versionExitCode === 0 && !empty($versionOutput)) {
+    // / Match a major.minor pair immediately following the word version.
+    // / Anchoring on that word prevents a match against a library version further down the banner.
+    if (preg_match('/ffmpeg version n?(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
+      $detectedMajor = (int)$versionMatches[1];
+      $detectedMinor = (int)$versionMatches[2];
+      $detectedVersion = $detectedMajor.'.'.$detectedMinor;
+      // / Split the supplied minimum into the same two parts.
+      $minimumParts = explode('.', $MinimumVersion);
+      $minimumMajor = (int)($minimumParts[0] ?? 0);
+      $minimumMinor = (int)($minimumParts[1] ?? 0);
+      // / Compare numerically, never as strings.
+      // / A string comparison would rank version 10.0 below version 6.0.
+      if ($detectedMajor > $minimumMajor) $FFMPEGVersionIsValid = TRUE;
+      elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $FFMPEGVersionIsValid = TRUE; } }
+  if ($Verbose) logEntry('FFMPEG Version Check: '.($FFMPEGVersionIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $versionOutput = $versionMatches = $versionExitCode = $detectedVersion = $minimumParts = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumVersion = NULL;
+  unset($versionOutput, $versionMatches, $versionExitCode, $detectedVersion, $minimumParts, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
+  return $FFMPEGVersionIsValid; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to confirm the installed LibreOffice meets a minimum version.
+// / The minimum arrives as an argument so different operations can require different builds.
+// / LibreOffice reports its version as "LibreOffice 7.4.7.2 40(Build:2)" on standard output.
+// / LibreOffice changed versioning schemes in 2024, moving from 7.6 directly to 24.2.
+// / The new scheme is year.month, so a major of 24 or higher is NEWER than a major of 7.
+// / Comparing numerically rather than as strings is what makes that transition work correctly.
+// / Some distributions ship only the soffice binary, so that name is tried as a fallback.
+// / A build that reports no parseable version is refused, because an unknown build cannot be cleared.
+// / LibreOffice requires a writable HOME directory & will fail to start without one.
+// / The core sets HOME to the configured home location during verifyGlobals().
+function verifyLibreOfficeVersion($MinimumVersion) {
+  // / Set variables.
+  global $Verbose;
+  $LibreOfficeVersionIsValid = FALSE;
+  $versionOutput = $versionMatches = $minimumParts = array();
+  $versionExitCode = 1;
+  $detectedVersion = '';
+  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
+  // / Try the primary binary name first.
+  exec('libreoffice --version 2>&1', $versionOutput, $versionExitCode);
+  // / Some distributions ship only soffice, so try that name when the first attempt fails.
+  if ($versionExitCode !== 0) {
+    $versionOutput = array();
+    exec('soffice --version 2>&1', $versionOutput, $versionExitCode); }
+  if ($versionExitCode === 0 && !empty($versionOutput)) {
+    // / Match a major.minor pair immediately following the product name.
+    // / Anchoring on the name prevents a match against the build number later in the banner.
+    if (preg_match('/LibreOffice\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
+      $detectedMajor = (int)$versionMatches[1];
+      $detectedMinor = (int)$versionMatches[2];
+      $detectedVersion = $detectedMajor.'.'.$detectedMinor;
+      // / Split the supplied minimum into the same two parts.
+      $minimumParts = explode('.', $MinimumVersion);
+      $minimumMajor = (int)($minimumParts[0] ?? 0);
+      $minimumMinor = (int)($minimumParts[1] ?? 0);
+      // / Compare numerically, never as strings.
+      // / A string comparison would rank version 24.2 below version 7.6.
+      if ($detectedMajor > $minimumMajor) $LibreOfficeVersionIsValid = TRUE;
+      elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $LibreOfficeVersionIsValid = TRUE; } }
+  if ($Verbose) logEntry('LibreOffice Version Check: '.($LibreOfficeVersionIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $versionOutput = $versionMatches = $versionExitCode = $detectedVersion = $minimumParts = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumVersion = NULL;
+  unset($versionOutput, $versionMatches, $versionExitCode, $detectedVersion, $minimumParts, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
+  return $LibreOfficeVersionIsValid; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to confirm the installed ImageMagick meets the minimum version HRConvert2 requires.
+// / ImageMagick replaced its entire command line interface scheme at version 7.0.
+// / Legacy commands such as convert were unified into the single magick binary launcher tool,
+// / which alters argument ordering rules and causes older deployments to fail completely.
+// / ImageMagick reports its version via standard output as "Version: ImageMagick 7.1.1-29".
+// / Standard error redirection ensures warning messages do not break standard buffer processing.
+// / A deployment that reports no parseable version sequence is strictly refused by the core.
+function verifyImageVersion($MinimumImageVersion) {
+  // / Set variables.
+  global $Verbose;
+  $ImageVersionIsValid = FALSE;
+  $versionOutput = $versionMatches = $minimumParts = array();
+  $versionExitCode = 1;
+  $detectedVersion = '';
+  $detectedMajor = $detectedMinor = $detectedPatch = $minimumMajor = $minimumMinor = $minimumPatch = 0;
+  $minimumImageVersion = $MinimumImageVersion;
+  // / Execute the modern ImageMagick binary checking utility directly using standard output pipes.
+  exec('/usr/local/bin/magick --version 2>&1', $versionOutput, $versionExitCode);
+  if ($versionExitCode === 0 && !empty($versionOutput)) {
+    // / Match the major, minor, and patch numeric sequence immediately following the product label.
+    // / The third patch group is made optional to maintain backward compatibility with two-digit strings.
+    if (preg_match('/ImageMagick\s+(\d+)\.(\d+)(?:\.(\d+))?/i', implode(' ', $versionOutput), $versionMatches)) {
+      $detectedMajor = (int)$versionMatches[1];
+      $detectedMinor = (int)$versionMatches[2];
+      $detectedPatch = (int)($versionMatches[3] ?? 0);
+      $detectedVersion = $detectedMajor.'.'.$detectedMinor.'.'.$detectedPatch;
+      // / Split the supplied minimum string constraint into its component parts.
+      $minimumParts = explode('.', $minimumImageVersion);
+      $minimumMajor = (int)($minimumParts[0] ?? 0);
+      $minimumMinor = (int)($minimumParts[1] ?? 0);
+      $minimumPatch = (int)($minimumParts[2] ?? 0);
+      // / Compare boundaries numerically down to the third patch depth level to prevent string sort errors.
+      if ($detectedMajor > $minimumMajor) $ImageVersionIsValid = TRUE;
+      elseif ($detectedMajor === $minimumMajor) {
+        if ($detectedMinor > $minimumMinor) $ImageVersionIsValid = TRUE;
+        elseif ($detectedMinor === $minimumMinor && $detectedPatch >= $minimumPatch) $ImageVersionIsValid = TRUE; } } }
+  if ($Verbose) logEntry('ImageMagick Version Check: '.($ImageVersionIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$minimumImageVersion.' or later.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $versionOutput = $versionMatches = $versionExitCode = $detectedVersion = $minimumParts = $detectedMajor = $detectedMinor = $detectedPatch = $minimumMajor = $minimumMinor = $minimumPatch = $minimumImageVersion = NULL;
+  unset($versionOutput, $versionMatches, $versionExitCode, $detectedVersion, $minimumParts, $detectedMajor, $detectedMinor, $detectedPatch, $minimumMajor, $minimumMinor, $minimumPatch, $minimumImageVersion);
+  return $ImageVersionIsValid; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to confirm both MeshLab and Assimp match the minimum required target branches.
+// / Combining the verification checks into a single module helps to protect the double-stage
+// / pipeline by ensuring that neither the repair layer nor the export engine fail due to version limits.
+// / Assimp writes details like "assimp 5.4.3" to standard output when using its version argument.
+// / Legacy MeshLab configurations write build definitions natively to standard error pipes.
+// / If either binary is missing or fails to report a readable pattern, verification fails.
+function verifyModelVersions($AssimpMinVersion, $MeshlabMinVersion) {
+  // / Set variables.
+  global $Verbose;
+  $ModelsValid = $AssimpValid = $MeshlabValid = FALSE;
+  $assimpOut = $meshlabOut = $assimpMatch = $meshlabMatch = $assimpMinParts = $meshlabMinParts = array();
+  $assimpCode = $meshlabCode = 1;
+  $assimpDet = $meshlabDet = '';
+  $aDetMaj = $aDetMin = $aMinMaj = $aMinMin = 0;
+  $mDetMaj = $mDetMin = $mMinMaj = $mMinMin = 0;
+  // / Phase 1: Query the standalone Assimp command line tool version metadata block.
+  // / Redirect standard error to standard output to force PHP to capture the token stream.
+  exec('/usr/bin/assimp version 2>&1', $assimpOut, $assimpCode);
+  if (!empty($assimpOut)) {
+    // / Parse the major and minor numerical components out of the standard version string.
+    // / The match pattern securely looks for standalone version integers inside the banner arrays.
+    if (preg_match('/Version\s+(\d+)\.(\d+)/i', implode(' ', $assimpOut), $assimpMatch)) {
+      $aDetMaj = (int)$assimpMatch[1];
+      $aDetMin = (int)$assimpMatch[2];
+      $assimpDet = $aDetMaj.'.'.$aDetMin;
+      $assimpMinParts = explode('.', $AssimpMinVersion);
+      $aMinMaj = (int)($assimpMinParts[0] ?? 0);
+      $aMinMin = (int)($assimpMinParts[1] ?? 0);
+      // / Compare boundaries numerically to accurately rank newer releases over baseline branches.
+      if ($aDetMaj > $aMinMaj) $AssimpValid = TRUE;
+      elseif ($aDetMaj === $aMinMaj && $aDetMin >= $aMinMin) $AssimpValid = TRUE; } }
+  // / Phase 2: Query the headless MeshLab server processor build metadata strings.
+  // / MeshLab releases typically expose code signatures like "MeshLabServer v2020.09" or similar tags.
+  exec('xvfb-run -a /usr/bin/meshlabserver --help 2>&1', $meshlabOut, $meshlabCode);
+  if (!empty($meshlabOut)) {
+    // / Isolate the first chronological sequence matching structural year or version decimals.
+    // / The match block handles both prefix strings and clean colon metadata properties smoothly.
+    if (preg_match('/MeshLab(?:Server)?\s*(?:v|version)?:?\s*(\d+)\.(\d+)/i', implode(' ', $meshlabOut), $meshlabMatch)) {
+      $mDetMaj = (int)$meshlabMatch[1];
+      $mDetMin = (int)$meshlabMatch[2];
+      $meshlabDet = $mDetMaj.'.'.$mDetMin;
+      $meshlabMinParts = explode('.', $MeshlabMinVersion);
+      $mMinMaj = (int)($meshlabMinParts[0] ?? 0);
+      $mMinMin = (int)($meshlabMinParts[1] ?? 0);
+      // / Establish validation checkpoints matching your core configuration patterns.
+      if ($mDetMaj > $mMinMaj) $MeshlabValid = TRUE;
+      elseif ($mDetMaj === $mMinMaj && $mDetMin >= $mMinMin) $MeshlabValid = TRUE; } }
+  // / The model subsystem passes verification only if both individual platforms match conditions.
+  if ($AssimpValid && $MeshlabValid) $ModelsValid = TRUE;
+  if ($Verbose) {
+    logEntry('Assimp Subsystem Check: '.($AssimpValid ? 'PASSED' : 'FAILED').', Detected: '.($assimpDet === '' ? 'NONE' : $assimpDet).', Required: '.$AssimpMinVersion.' or later.');
+    logEntry('MeshLab Subsystem Check: '.($MeshlabValid ? 'PASSED' : 'FAILED').', Detected: '.($meshlabDet === '' ? 'NONE' : $meshlabDet).', Required: '.$MeshlabMinVersion.' or later.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $assimpOut = $meshlabOut = $assimpMatch = $meshlabMatch = $assimpMinParts = $meshlabMinParts = NULL;
+  $assimpCode = $meshlabCode = $assimpDet = $meshlabDet = $AssimpMinVersion = $MeshlabMinVersion = NULL;
+  $aDetMaj = $aDetMin = $aMinMaj = $aMinMin = $mDetMaj = $mDetMin = $mMinMaj = $mMinMin = $AssimpValid = $MeshlabValid = NULL;
+  unset($assimpOut, $meshlabOut, $assimpMatch, $meshlabMatch, $assimpMinParts, $meshlabMinParts);
+  unset($assimpCode, $meshlabCode, $assimpDet, $meshlabDet, $AssimpMinVersion, $MeshlabMinVersion);
+  unset($aDetMaj, $aDetMin, $aMinMaj, $aMinMin, $mDetMaj, $mDetMin, $mMinMaj, $mMinMin, $AssimpValid, $MeshlabValid);
+  return $ModelsValid; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to confirm the installed OpenSCAD meets the minimum version HRConvert2 requires.
+// / HRConvert2 does not probe for capabilities & does not accommodate older builds.
+// / A pinned minimum version means the export formats in config.php can be trusted as written.
+// / OpenSCAD reports its version as "OpenSCAD version YYYY.MM" on standard error, not standard output.
+function verifySCADVersion($MinimumSCADVersion) {
+  // / Set variables.
+  global $Verbose;
+  $SCADVersionIsValid = FALSE;
+  $versionOutput = $versionMatches = array();
+  $versionExitCode = 1;
+  $detectedVersion = '';
+  // / OpenSCAD writes its version banner to standard error, so it must be redirected to be captured.
+  exec('openscad --version 2>&1', $versionOutput, $versionExitCode);
+  if ($versionExitCode === 0 && !empty($versionOutput)) {
+    // / Match the YYYY.MM release stamp anywhere in the banner.
+    if (preg_match('/(\d{4})\.(\d{2})/', implode(' ', $versionOutput), $versionMatches)) {
+      $detectedVersion = $versionMatches[1].'.'.$versionMatches[2];
+      // / A plain string comparison is correct here because the format is fixed width & zero padded.
+      if ($detectedVersion >= $MinimumSCADVersion) $SCADVersionIsValid = TRUE; } }
+  if ($Verbose) logEntry('OpenSCAD Version Check: '.($SCADVersionIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumSCADVersion.'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $versionOutput = $versionMatches = $versionExitCode = $detectedVersion = NULL;
+  unset($versionOutput, $versionMatches, $versionExitCode, $detectedVersion);
+  return $SCADVersionIsValid; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to confirm the installed Inkscape meets the minimum version HRConvert2 requires.
+// / Inkscape replaced its entire command line interface at version 1.0.
+// / The 0.92 flags such as --export-png were removed rather than deprecated, so a command
+// / written for the current interface fails outright on an older build.
+// / Inkscape reports its version as "Inkscape 1.2.2 (b0a8486541, 2022-12-01)".
+// / The version is written to standard output, unlike OpenSCAD which writes to standard error.
+// / A build that reports no parseable version is refused, because an unknown build cannot be cleared.
+// / Inkscape requires a writable HOME directory & will fail to start without one.
+// / The core sets HOME to the configured home location during verifyGlobals().
+function verifySVGVersion($MinimumVersion) {
+  // / Set variables.
+  global $Verbose;
+  $SVGVersionIsValid = FALSE;
+  $versionOutput = $versionMatches = $minimumParts = array();
+  $versionExitCode = 1;
+  $detectedVersion = '';
+  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
+  // / Inkscape writes its version banner to standard output.
+  // / Standard error is redirected anyway, because a headless launch emits harmless warnings.
+  exec('inkscape --version 2>&1', $versionOutput, $versionExitCode);
+  if ($versionExitCode === 0 && !empty($versionOutput)) {
+    // / Match a major.minor pair immediately following the product name.
+    // / Anchoring on the name prevents a match against the commit date later in the banner.
+    if (preg_match('/Inkscape\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
+      $detectedMajor = (int)$versionMatches[1];
+      $detectedMinor = (int)$versionMatches[2];
+      $detectedVersion = $detectedMajor.'.'.$detectedMinor;
+      // / Split the supplied minimum into the same two parts.
+      $minimumParts = explode('.', $MinimumVersion);
+      $minimumMajor = (int)($minimumParts[0] ?? 0);
+      $minimumMinor = (int)($minimumParts[1] ?? 0);
+      // / Compare numerically, never as strings.
+      // / A string comparison would rank version 1.10 below version 1.2.
+      if ($detectedMajor > $minimumMajor) $SVGVersionIsValid = TRUE;
+      elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $SVGVersionIsValid = TRUE; } }
+  if ($Verbose) logEntry('Inkscape Version Check: '.($SVGVersionIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $versionOutput = $versionMatches = $versionExitCode = $detectedVersion = $minimumParts = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumVersion = NULL;
+  unset($versionOutput, $versionMatches, $versionExitCode, $detectedVersion, $minimumParts, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
+  return $SVGVersionIsValid; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to confirm this server can actually isolate an OpenSCAD render.
+// / OpenSCAD reads any file the web server user can read & has no sandbox of its own.
+// / It also cannot be given one through its arguments, the way FFMPEG accepts a protocol
+// / whitelist, so the boundary is enforced by the operating system using bubblewrap.
+// / Filtering the source cannot be the boundary, because a filter that inspects one line
+// / at a time cannot agree with a parser that carries state across lines & across
+// / statements. That approach was reported as bypassable in four independent ways.
+// / bwrap may be installed but non functional, because unprivileged user namespaces can
+// / be disabled at the kernel level, restricted by AppArmor, or blocked by a container
+// / runtime. Testing that the binary exists is therefore not enough, so a real minimal
+// / sandbox is launched here instead.
+// / A server that cannot isolate a render must refuse to render at all.
+function verifyBwrap() {
+  // / Set variables.
+  global $Verbose;
+  $BwrapIsUsable = FALSE;
+  $bwrapOutput = array();
+  $bwrapExitCode = 1;
+  $bwrapCommand = '';
+  // / Launch the smallest possible sandbox & run a command that does nothing but exit.
+  // / This proves the kernel will actually grant the namespaces the real render depends on.
+  // / The ro-bind-try entries are optional & are skipped on systems that do not have them.
+  $bwrapCommand = 'timeout 10 bwrap'
+    .' --unshare-all'
+    .' --die-with-parent'
+    .' --ro-bind /usr /usr'
+    .' --ro-bind-try /lib /lib'
+    .' --ro-bind-try /lib64 /lib64'
+    .' --ro-bind-try /bin /bin'
+    .' --proc /proc'
+    .' --dev /dev'
+    .' --tmpfs /tmp'
+    .' /usr/bin/true > /dev/null 2>&1';
+  exec($bwrapCommand, $bwrapOutput, $bwrapExitCode);
+  if ($bwrapExitCode === 0) $BwrapIsUsable = TRUE;
+  if ($Verbose) logEntry('Bubblewrap Sandbox Check: '.($BwrapIsUsable ? 'PASSED' : 'FAILED').', Exit code: '.$bwrapExitCode.'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $bwrapOutput = $bwrapExitCode = $bwrapCommand = NULL;
+  unset($bwrapOutput, $bwrapExitCode, $bwrapCommand);
+  return $BwrapIsUsable; }
+// / -----------------------------------------------------------------------------------
+
+ // / -----------------------------------------------------------------------------------
+// / A function to display version information about this installation.
+// / Called by the -v & --version command line arguments.
+// / Reports the version of every component that carries one, & the state of every
+// / dependency that HRConvert2 enforces a minimum version against.
+// / A dependency check that fails here is the same check the converter performs, so this
+// / answers whether an installation will actually work rather than what is configured.
+// / -----------------------------------------------------------------------------------
+function showVersionInfo() {
+  // / Set variables.
+  global $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $MinimumInkscapeVersion, $MinimumSCADVersion, $MinimumImageVersion, $MinimumAssimpVersion, $MinimumMeshlabVersion, $ApplicationName, $eol, $SupportedConversionTypes;
+  $VersionInfoDisplayed = FALSE;
+  $ffmpegIsValid = $streamFfmpegIsValid = $libreOfficeIsValid = $inkscapeIsValid = $scadIsValid = $imageIsValid = $modelIsValid = $bwrapIsValid = FALSE;
+  $eol = PHP_EOL;
+  // / Run each dependency check so this reports what WORKS, not what is configured.
+  // / Each of these is the identical check the matching converter performs.
+  $ffmpegIsValid = verifyFFMPEGVersion($MinimumFFMPEGVersion);
+  $streamFfmpegIsValid = verifyFFMPEGVersion($MinimumStreamFFMPEGVersion);
+  $libreOfficeIsValid = verifyLibreOfficeVersion($MinimumLibreOfficeVersion);
+  $inkscapeIsValid = verifySVGVersion($MinimumInkscapeVersion);
+  $scadIsValid = verifySCADVersion($MinimumSCADVersion);
+  $imageIsValid = verifyImageVersion($MinimumImageVersion);
+  $modelIsValid = verifyModelVersions($MinimumAssimpVersion, $MinimumMeshlabVersion);
+  $bwrapIsValid = verifyBwrap();
+  // / Report the versions of every component that carries one.
+  print($eol);
+  print($ApplicationName.$eol);
+  print('  Core version                '.$HRConvertVersion.$eol);
+  print('  Config version              '.$ConfigVersion.$eol);
+  print('  Config version required     '.$RequiredConfigVersion.' or later'.$eol);
+  print('  GUI version required        '.$RequiredGuiVersion.' exactly'.$eol);
+  print('  Language version required   '.$RequiredLanguageVersion.' exactly'.$eol);
+  print($eol);
+  // / Report the state of every dependency HRConvert2 enforces a minimum against.
+  print('Dependencies'.$eol);
+  print('  FFMPEG, audio & video       '.($ffmpegIsValid ? 'OK' : 'FAILED').', requires '.$MinimumFFMPEGVersion.' or later'.$eol);
+  print('  FFMPEG, streams             '.($streamFfmpegIsValid ? 'OK' : 'FAILED').', requires '.$MinimumStreamFFMPEGVersion.' or later'.$eol);
+  print('  LibreOffice                 '.($libreOfficeIsValid ? 'OK' : 'FAILED').', requires '.$MinimumLibreOfficeVersion.' or later'.$eol);
+  print('  Inkscape                    '.($inkscapeIsValid ? 'OK' : 'FAILED').', requires '.$MinimumInkscapeVersion.' or later'.$eol);
+  print('  OpenSCAD                    '.($scadIsValid ? 'OK' : 'FAILED').', requires '.$MinimumSCADVersion.' or later'.$eol);
+  print('  ImageMagick                 '.($imageIsValid ? 'OK' : 'FAILED').', requires '.$MinimumImageVersion.' or later'.$eol);
+  print('  Assimp                      '.($modelIsValid ? 'OK' : 'FAILED').', requires '.$MinimumAssimpVersion.' or later'.$eol);
+  print('  Bubblewrap sandbox          '.($bwrapIsValid ? 'OK' : 'FAILED').', required protecting sensitive operations'.$eol);
+  print($eol);
+  // / Report which conversion types config.php has enabled.
+  print('Enabled conversion types'.$eol);
+  print('  '.implode(', ', $SupportedConversionTypes).$eol);
+  print($eol);
+  // / A dependency that reports FAILED is either missing, unidentifiable, or older than
+  // / the minimum. The converter that depends on it will refuse rather than fail oddly.
+  print('A FAILED dependency is missing, unidentifiable, or older than the minimum.'.$eol);
+  print('The conversion type that depends on it will refuse to run.'.$eol);
+  print('See Documentation/ERROR_DESCRIPTIONS.txt for the error each one produces.'.$eol);
+  print($eol);
+  $VersionInfoDisplayed = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $ffmpegIsValid = $streamFfmpegIsValid = $libreOfficeIsValid = $inkscapeIsValid = $scadIsValid = $modelIsValid = $imageIsValid = $bwrapIsValid = $eol = NULL;
+  unset($ffmpegIsValid, $streamFfmpegIsValid, $libreOfficeIsValid, $inkscapeIsValid, $scadIsValid, $modelIsValid, $imageIsValid, $bwrapIsValid, $eol);
+  return $VersionInfoDisplayed; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to display the list of supported command line arguments.
+// / Called by the -h & --help command line arguments, & by any unrecognized argument.
+// / This is a summary & deliberately not a manual. Everything HRConvert2 does is
+// / documented at length in the Documentation folder, & this points there rather than
+// / attempting to reproduce it.
+// / -----------------------------------------------------------------------------------
+function showHelpInfo() {
+  // / Set variables.
+  global $ApplicationName, $HRConvertVersion;
+  $eol = PHP_EOL;
+  $HelpInfoDisplayed = FALSE;
+  print($eol);
+  print($ApplicationName.' '.$HRConvertVersion.$eol);
+  print('A self hosted file conversion server.'.$eol);
+  print($eol);
+  print('Usage'.$eol);
+  print('  php convertCore.php [argument]'.$eol);
+  print($eol);
+  print('Arguments'.$eol);
+  print('  -v, --version               Display version & dependency information.'.$eol);
+  print('  -h, --help                  Display this message.'.$eol);
+  print($eol);
+  print('Notes'.$eol);
+  print('  Command line & web requests are mutually exclusive.'.$eol);
+  print('  An argument supplied on the command line prevents the web interface entirely.'.$eol);
+  print('  No session is created & no user data is touched by a command line invocation.'.$eol);
+  print($eol);
+  print('Documentation'.$eol);
+  print('  Documentation/INSTALLATION_INSTRUCTIONS.txt  Installing & configuring a server.'.$eol);
+  print('  Documentation/ERROR_DESCRIPTIONS.txt         Every numbered error, its cause & its fix.'.$eol);
+  print('  Documentation/CREATING_GUIS.txt              Building & installing an interface.'.$eol);
+  print('  Documentation/CREATING_LANGUAGE_PACKS.txt    Translating the interface.'.$eol);
+  print('  Documentation/CODING_CONVENTIONS.txt         Conventions this codebase follows.'.$eol);
+  print('  Documentation/DOCKER_BUILD_INSTRUCTIONS.txt  Building the container image.'.$eol);
+  print('  Documentation/CHANGELOG.txt                  What changed & when.'.$eol);
+  print($eol);
+  print('  https://github.com/zelon88/HRConvert2'.$eol);
+  print($eol);
+  $HelpInfoDisplayed = TRUE;
+  $eol = NULL;
+  unset($eol);
+  return $HelpInfoDisplayed; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to handle a command line invocation of HRConvert2.
+// / This function returns TRUE when it has handled an invocation.
+// / This function returns FALSE only when there is no command line
+// / If this function fires, the core should immediately stop afterward..
+// / php_sapi_name() is the most reliable test for CLI arguments.
+// / Checking $argv alone can be populated by a query string in some cases.
+// / All command line arguments must be run as the web server user.
+// / To run as the web server user, use command  'sudo -u www-data php convertCore.php '
+function parseCommandLine() {
+  // / Set variables.
+  global $Verbose, $Lol;
+  $CommandLineHandled = FALSE;
+  $cliArguments = array();
+  $cliArgument = $cliCommand = '';
+  $cliArgumentCount = 0;
+  // / A web request has no command line & must return immediately.
+  // / This is the ONLY path that returns FALSE. Every other path handles & stops.
+  if (php_sapi_name() !== 'cli') $CommandLineHandled = FALSE;
+    else {
+    // / Gather the arguments. The first is always the script name & is discarded.
+    $cliArguments = isset($_SERVER['argv']) ? $_SERVER['argv'] : array();
+    array_shift($cliArguments);
+    $cliArgumentCount = count($cliArguments);
+    // / A command line invocation with no argument is a request for help.
+    // / Running the web logic from a terminal would emit HTML to a shell & create a session
+    // / for a user that does not exist, so it is never the right answer.
+    if ($cliArgumentCount < 1) {
+      logEntry('Command line invocation with no argument. Displaying help.');
+      showHelpInfo();
+      $CommandLineHandled = TRUE; }
+    else {
+      $cliCommand = strtolower(trim($cliArguments[0]));
+      // / Dispatch on the first argument only. Later arguments belong to that command.
+      if ($cliCommand === '-v' or $cliCommand === '--version') {
+        logEntry('Command line invocation. Displaying version information.');
+        showVersionInfo();
+        $CommandLineHandled = TRUE; }
+      else if ($cliCommand === '-h' or $cliCommand === '--help') {
+        logEntry('Command line invocation. Displaying help.');
+        showHelpInfo();
+        $CommandLineHandled = TRUE; }
+      // / An unrecognized argument is a mistake, not a web request.
+      // / Falling through to the web logic would be the worst possible response.
+      else {
+        warningEntry('Command line invocation with an unrecognized argument.');
+        print($Lol.'Unrecognized argument.'.$Lol);
+        showHelpInfo();
+        $CommandLineHandled = TRUE; } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $cliArguments = $cliArgument = $cliCommand = $cliArgumentCount = NULL;
+  unset($cliArguments, $cliArgument, $cliCommand, $cliArgumentCount);
+  return $CommandLineHandled; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1085,45 +1556,6 @@ function virusScan($path) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to create required directories if they do not exist.
-// / Maintenance folders are emptied by passing their children to cleanFiles().
-// / cleanFiles() refuses to operate on an approved root, so the root itself is never passed.
-function verifyRequiredDirs() {
-  // /  Set variables.
-  global $ConvertLoc, $RequiredDirs, $RequiredIndexes, $RequiredCleanupFolders, $Time, $LogFile, $Verbose, $PermissionLevels, $DirSep, $InstLoc;
-  $RequiredDirsExist = TRUE;
-  $cleanupContents = array();
-  $requiredDir = $requiredIndex = $requiredCleanupFolder = $cleanupEntry = '';
-  // / If the $ConvertLoc does not exist we stop execution rather than create one.
-  if (!is_dir($ConvertLoc)) errorEntry('The specified Data Storage Directory does not exist at '.$ConvertLoc.'!', 1000, TRUE);
-  // / Iterate through the array of required directories.
-  foreach ($RequiredDirs as $requiredDir) {
-    // / Try to create the currently selected directory if it does not already exist.
-    if (!is_dir($requiredDir)) @mkdir($requiredDir, $PermissionLevels);
-    // / Re-check to see if our attempt to create the directory was successful & log the result.
-    if (is_dir($requiredDir)) {
-      if ($Verbose) logEntry('Verified a directory at '.$requiredDir.'.'); }
-    else {
-      // / A single missing directory invalidates the whole check.
-      $RequiredDirsExist = FALSE;
-      errorEntry('Could not create a directory at '.$requiredDir.'!', 1001, TRUE); } }
-  // / Make sure that each required directory has an index.html file for document root protection.
-  foreach ($RequiredIndexes as $requiredIndex) @copy($InstLoc.$DirSep.'index.html', $requiredIndex.$DirSep.'index.html');
-  // / Clear the contents of each maintenance folder without removing the folder itself.
-  foreach ($RequiredCleanupFolders as $requiredCleanupFolder) {
-    if (!is_dir($requiredCleanupFolder)) continue;
-    $cleanupContents = array_diff(scandir($requiredCleanupFolder), array('.', '..'));
-    foreach ($cleanupContents as $cleanupEntry) {
-      if (is_file($requiredCleanupFolder.$DirSep.$cleanupEntry)) @unlink($requiredCleanupFolder.$DirSep.$cleanupEntry);
-      elseif (is_dir($requiredCleanupFolder.$DirSep.$cleanupEntry)) cleanFiles($requiredCleanupFolder.$DirSep.$cleanupEntry); } 
-      @rmdir($requiredCleanupFolder); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $requiredDir = $requiredIndex = $requiredCleanupFolder = $cleanupEntry = $cleanupContents = NULL;
-  unset($requiredDir, $requiredIndex, $requiredCleanupFolder, $cleanupEntry, $cleanupContents);
-  return array($RequiredDirsExist, $RequiredDirs); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
 // / A function to remove a session directory once nothing of the user's remains in it.
 // / Protected file objects such as the enforced index.html are removed only at this point.
 function removeEmptiedSessionDir($sessionPath) {
@@ -1255,7 +1687,7 @@ function cleanDataLoc($dataLoc, $locationName) {
         // / See if this individual session is due for deletion.
         if ($now - fileTime($sessionPath) > ($DeleteThreshold * 60)) {
           $LocationDeepCleaned = TRUE;
-          @chmod ($sessionPath, $PermissionLevels);
+          @chmod($sessionPath, $PermissionLevels);
           $loopCheck = cleanFiles($sessionPath);
           // / Remove the session shell, including any protected file objects still in it.
           removeEmptiedSessionDir($sessionPath); }
@@ -1274,50 +1706,46 @@ function cleanDataLoc($dataLoc, $locationName) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to confirm the installed LibreOffice meets a minimum version.
-// / The minimum arrives as an argument so different operations can require different builds.
-// / LibreOffice reports its version as "LibreOffice 7.4.7.2 40(Build:2)" on standard output.
-// / LibreOffice changed versioning schemes in 2024, moving from 7.6 directly to 24.2.
-// / The new scheme is year.month, so a major of 24 or higher is NEWER than a major of 7.
-// / Comparing numerically rather than as strings is what makes that transition work correctly.
-// / Some distributions ship only the soffice binary, so that name is tried as a fallback.
-// / A build that reports no parseable version is refused, because an unknown build cannot be cleared.
-// / LibreOffice requires a writable HOME directory & will fail to start without one.
-// / The core sets HOME to the configured home location during verifyGlobals().
-function verifyLibreOfficeVersion($MinimumVersion) {
-  // / Set variables.
-  global $Verbose;
-  $LibreOfficeVersionIsValid = FALSE;
-  $versionOutput = $versionMatches = $minimumParts = array();
-  $versionExitCode = 1;
-  $detectedVersion = '';
-  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
-  // / Try the primary binary name first.
-  exec('libreoffice --version 2>&1', $versionOutput, $versionExitCode);
-  // / Some distributions ship only soffice, so try that name when the first attempt fails.
-  if ($versionExitCode !== 0) {
-    $versionOutput = array();
-    exec('soffice --version 2>&1', $versionOutput, $versionExitCode); }
-  if ($versionExitCode === 0 && !empty($versionOutput)) {
-    // / Match a major.minor pair immediately following the product name.
-    // / Anchoring on the name prevents a match against the build number later in the banner.
-    if (preg_match('/LibreOffice\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
-      $detectedMajor = (int)$versionMatches[1];
-      $detectedMinor = (int)$versionMatches[2];
-      $detectedVersion = $detectedMajor.'.'.$detectedMinor;
-      // / Split the supplied minimum into the same two parts.
-      $minimumParts = explode('.', $MinimumVersion);
-      $minimumMajor = (int)($minimumParts[0] ?? 0);
-      $minimumMinor = (int)($minimumParts[1] ?? 0);
-      // / Compare numerically, never as strings.
-      // / A string comparison would rank version 24.2 below version 7.6.
-      if ($detectedMajor > $minimumMajor) $LibreOfficeVersionIsValid = TRUE;
-      elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $LibreOfficeVersionIsValid = TRUE; } }
-  if ($Verbose) logEntry('LibreOffice Version Check: '.($LibreOfficeVersionIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later.');
+// / A function to create required directories if they do not exist.
+// / Maintenance folders are emptied by passing their children to cleanFiles().
+// / cleanFiles() refuses to operate on an approved root, so the root itself is never passed.
+function verifyRequiredDirs() {
+  // /  Set variables.
+  global $ConvertLoc, $RequiredDirs, $RequiredIndexes, $RequiredCleanupFolders, $Time, $LogFile, $Verbose, $PermissionLevels, $ApacheUser, $DirSep, $InstLoc;
+  $RequiredDirsExist = TRUE;
+  $cleanupContents = array();
+  $requiredDir = $requiredIndex = $requiredCleanupFolder = $cleanupEntry = '';
+  // / If the $ConvertLoc does not exist we stop execution rather than create one.
+  if (!is_dir($ConvertLoc)) errorEntry('The specified Data Storage Directory does not exist at '.$ConvertLoc.'!', 1000, TRUE);
+  // / Iterate through the array of required directories.
+  foreach ($RequiredDirs as $requiredDir) {
+    // / Try to create the currently selected directory if it does not already exist.
+    if (!is_dir($requiredDir)) @mkdir($requiredDir, $PermissionLevels);
+    // / Re-check to see if our attempt to create the directory was successful & log the result.
+    if (is_dir($requiredDir)) {
+      if ($Verbose) logEntry('Verified a directory at '.$requiredDir.'.'); }
+    else {
+      // / A single missing directory invalidates the whole check.
+      $RequiredDirsExist = FALSE;
+      errorEntry('Could not create a directory at '.$requiredDir.'!', 1001, TRUE); } }
+  // / Make sure that each required directory has an index.html file for document root protection.
+  foreach ($RequiredIndexes as $requiredIndex) @copy($InstLoc.$DirSep.'index.html', $requiredIndex.$DirSep.'index.html');
+  // / Clear the contents of each maintenance folder without removing the folder itself.
+  foreach ($RequiredCleanupFolders as $requiredCleanupFolder) {
+    if (!is_dir($requiredCleanupFolder)) continue;
+    $cleanupContents = array_diff(scandir($requiredCleanupFolder), array('.', '..'));
+    @chmod($requiredCleanupFolder, $PermissionLevels);
+    @chown($requiredCleanupFolder, $ApacheUser);
+    foreach ($cleanupContents as $cleanupEntry) {
+      @chmod($requiredCleanupFolder.$DirSep.$cleanupEntry, $PermissionLevels);
+      @chown($requiredCleanupFolder.$DirSep.$cleanupEntry, $ApacheUser);
+      if (is_file($requiredCleanupFolder.$DirSep.$cleanupEntry)) unlink($requiredCleanupFolder.$DirSep.$cleanupEntry);
+      elseif (is_dir($requiredCleanupFolder.$DirSep.$cleanupEntry)) cleanFiles($requiredCleanupFolder.$DirSep.$cleanupEntry); } 
+      rmdir($requiredCleanupFolder); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $versionOutput = $versionMatches = $versionExitCode = $detectedVersion = $minimumParts = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumVersion = NULL;
-  unset($versionOutput, $versionMatches, $versionExitCode, $detectedVersion, $minimumParts, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
-  return $LibreOfficeVersionIsValid; }
+  $requiredDir = $requiredIndex = $requiredCleanupFolder = $cleanupEntry = $cleanupContents = NULL;
+  unset($requiredDir, $requiredIndex, $requiredCleanupFolder, $cleanupEntry, $cleanupContents);
+  return array($RequiredDirsExist, $RequiredDirs); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1428,49 +1856,6 @@ function convertDocuments($pathname, $newPathname, $extension) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to confirm the installed ImageMagick meets the minimum version HRConvert2 requires.
-// / ImageMagick replaced its entire command line interface scheme at version 7.0.
-// / Legacy commands such as convert were unified into the single magick binary launcher tool,
-// / which alters argument ordering rules and causes older deployments to fail completely.
-// / ImageMagick reports its version via standard output as "Version: ImageMagick 7.1.1-29".
-// / Standard error redirection ensures warning messages do not break standard buffer processing.
-// / A deployment that reports no parseable version sequence is strictly refused by the core.
-function verifyImageVersion() {
-  // / Set variables.
-  global $Verbose, $MinimumImageVersion;
-  $ImageVersionIsValid = FALSE;
-  $versionOutput = $versionMatches = $minimumParts = array();
-  $versionExitCode = 1;
-  $detectedVersion = '';
-  $detectedMajor = $detectedMinor = $detectedPatch = $minimumMajor = $minimumMinor = $minimumPatch = 0;
-  // / Execute the modern ImageMagick binary checking utility directly using standard output pipes.
-  exec('/usr/bin/magick --version 2>&1', $versionOutput, $versionExitCode);
-  if ($versionExitCode === 0 && !empty($versionOutput)) {
-    // / Match the major, minor, and patch numeric sequence immediately following the product label.
-    // / The third patch group is made optional to maintain backward compatibility with two-digit strings.
-    if (preg_match('/ImageMagick\s+(\d+)\.(\d+)(?:\.(\d+))?/i', implode(' ', $versionOutput), $versionMatches)) {
-      $detectedMajor = (int)$versionMatches[1];
-      $detectedMinor = (int)$versionMatches[2];
-      $detectedPatch = (int)($versionMatches[3] ?? 0);
-      $detectedVersion = $detectedMajor.'.'.$detectedMinor.'.'.$detectedPatch;
-      // / Split the supplied minimum string constraint into its component parts.
-      $minimumParts = explode('.', $MinimumVersion);
-      $minimumMajor = (int)($minimumParts[0] ?? 0);
-      $minimumMinor = (int)($minimumParts[1] ?? 0);
-      $minimumPatch = (int)($minimumParts[2] ?? 0);
-      // / Compare boundaries numerically down to the third patch depth level to prevent string sort errors.
-      if ($detectedMajor > $minimumMajor) $ImageVersionIsValid = TRUE;
-      elseif ($detectedMajor === $minimumMajor) {
-        if ($detectedMinor > $minimumMinor) $ImageVersionIsValid = TRUE;
-        elseif ($detectedMinor === $minimumMinor && $detectedPatch >= $minimumPatch) $ImageVersionIsValid = TRUE; } } }
-  if ($Verbose) logEntry('ImageMagick Version Check: '.($ImageVersionIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later.');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $versionOutput = $versionMatches = $versionExitCode = $detectedVersion = $minimumParts = $detectedMajor = $detectedMinor = $detectedPatch = $minimumMajor = $minimumMinor = $minimumPatch = $MinimumVersion = NULL;
-  unset($versionOutput, $versionMatches, $versionExitCode, $detectedVersion, $minimumParts, $detectedMajor, $detectedMinor, $detectedPatch, $minimumMajor, $minimumMinor, $minimumPatch, $MinimumVersion);
-  return $ImageVersionIsValid; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
 // / A function to convert image formats.
 function convertImages($pathname, $newPathname, $height, $width, $rotate) {
   // / Set variables.
@@ -1518,69 +1903,6 @@ function convertImages($pathname, $newPathname, $height, $width, $rotate) {
   $returnData = $stopper = $pathname = $newPathname = $height = $width = $extension = $wxh = $rotate = $imgMethod = $wh = $sleepTime = $outputExt = $bgSwitch = NULL;
   unset($returnData, $stopper, $pathname, $newPathname, $height, $width, $extension, $wxh, $rotate, $imgMethod, $wh, $sleepTime, $outputExt, $bgSwitch);
   return array($ConversionSuccess, $ConversionErrors); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to confirm both MeshLab and Assimp match the minimum required target branches.
-// / Combining the verification checks into a single module helps to protect the double-stage
-// / pipeline by ensuring that neither the repair layer nor the export engine fail due to version limits.
-// / Assimp writes details like "assimp 5.4.3" to standard output when using its version argument.
-// / Legacy MeshLab configurations write build definitions natively to standard error pipes.
-// / If either binary is missing or fails to report a readable pattern, verification fails.
-function verifyModelVersions($AssimpMinVersion, $MeshlabMinVersion) {
-  // / Set variables.
-  global $Verbose;
-  $ModelsValid = $AssimpValid = $MeshlabValid = FALSE;
-  $assimpOut = $meshlabOut = $assimpMatch = $meshlabMatch = $assimpMinParts = $meshlabMinParts = array();
-  $assimpCode = $meshlabCode = 1;
-  $assimpDet = $meshlabDet = '';
-  $aDetMaj = $aDetMin = $aMinMaj = $aMinMin = 0;
-  $mDetMaj = $mDetMin = $mMinMaj = $mMinMin = 0;
-  // / Phase 1: Query the standalone Assimp command line tool version metadata block.
-  // / Redirect standard error to standard output to force PHP to capture the token stream.
-  exec('/usr/bin/assimp version 2>&1', $assimpOut, $assimpCode);
-  if (!empty($assimpOut)) {
-    // / Parse the major and minor numerical components out of the standard version string.
-    // / The match pattern securely looks for standalone version integers inside the banner arrays.
-    if (preg_match('/Version\s+(\d+)\.(\d+)/i', implode(' ', $assimpOut), $assimpMatch)) {
-      $aDetMaj = (int)$assimpMatch[1];
-      $aDetMin = (int)$assimpMatch[2];
-      $assimpDet = $aDetMaj.'.'.$aDetMin;
-      $assimpMinParts = explode('.', $AssimpMinVersion);
-      $aMinMaj = (int)($assimpMinParts[0] ?? 0);
-      $aMinMin = (int)($assimpMinParts[1] ?? 0);
-      // / Compare boundaries numerically to accurately rank newer releases over baseline branches.
-      if ($aDetMaj > $aMinMaj) $AssimpValid = TRUE;
-      elseif ($aDetMaj === $aMinMaj && $aDetMin >= $aMinMin) $AssimpValid = TRUE; } }
-  // / Phase 2: Query the headless MeshLab server processor build metadata strings.
-  // / MeshLab releases typically expose code signatures like "MeshLabServer v2020.09" or similar tags.
-  exec('xvfb-run -a /usr/bin/meshlabserver --help 2>&1', $meshlabOut, $meshlabCode);
-  if (!empty($meshlabOut)) {
-    // / Isolate the first chronological sequence matching structural year or version decimals.
-    // / The match block handles both prefix strings and clean colon metadata properties smoothly.
-    if (preg_match('/MeshLab(?:Server)?\s*(?:v|version)?:?\s*(\d+)\.(\d+)/i', implode(' ', $meshlabOut), $meshlabMatch)) {
-      $mDetMaj = (int)$meshlabMatch[1];
-      $mDetMin = (int)$meshlabMatch[2];
-      $meshlabDet = $mDetMaj.'.'.$mDetMin;
-      $meshlabMinParts = explode('.', $MeshlabMinVersion);
-      $mMinMaj = (int)($meshlabMinParts[0] ?? 0);
-      $mMinMin = (int)($meshlabMinParts[1] ?? 0);
-      // / Establish validation checkpoints matching your core configuration patterns.
-      if ($mDetMaj > $mMinMaj) $MeshlabValid = TRUE;
-      elseif ($mDetMaj === $mMinMaj && $mDetMin >= $mMinMin) $MeshlabValid = TRUE; } }
-  // / The model subsystem passes verification only if both individual platforms match conditions.
-  if ($AssimpValid && $MeshlabValid) $ModelsValid = TRUE;
-  if ($Verbose) {
-    logEntry('Assimp Subsystem Check: '.($AssimpValid ? 'PASSED' : 'FAILED').', Detected: '.($assimpDet === '' ? 'NONE' : $assimpDet).', Required: '.$AssimpMinVersion.' or later.');
-    logEntry('MeshLab Subsystem Check: '.($MeshlabValid ? 'PASSED' : 'FAILED').', Detected: '.($meshlabDet === '' ? 'NONE' : $meshlabDet).', Required: '.$MeshlabMinVersion.' or later.'); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $assimpOut = $meshlabOut = $assimpMatch = $meshlabMatch = $assimpMinParts = $meshlabMinParts = NULL;
-  $assimpCode = $meshlabCode = $assimpDet = $meshlabDet = $AssimpMinVersion = $MeshlabMinVersion = NULL;
-  $aDetMaj = $aDetMin = $aMinMaj = $aMinMin = $mDetMaj = $mDetMin = $mMinMaj = $mMinMin = $AssimpValid = $MeshlabValid = NULL;
-  unset($assimpOut, $meshlabOut, $assimpMatch, $meshlabMatch, $assimpMinParts, $meshlabMinParts);
-  unset($assimpCode, $meshlabCode, $assimpDet, $meshlabDet, $AssimpMinVersion, $MeshlabMinVersion);
-  unset($aDetMaj, $aDetMin, $aMinMaj, $aMinMin, $mDetMaj, $mDetMin, $mMinMaj, $mMinMin, $AssimpValid, $MeshlabValid);
-  return $ModelsValid; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1852,7 +2174,6 @@ function sanitizeSCAD($scadContents) {
   return $ScadCalls; }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to rewrite OpenSCAD source using what the Sanitizer found.
 // / The Sanitizer works on a stream & reports the line each call started on.
@@ -1964,40 +2285,26 @@ function sanitizeAllSCADUploads() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to confirm the installed OpenSCAD meets the minimum version HRConvert2 requires.
-// / HRConvert2 does not probe for capabilities & does not accommodate older builds.
-// / A pinned minimum version means the export formats in config.php can be trusted as written.
-// / OpenSCAD reports its version as "OpenSCAD version YYYY.MM" on standard error, not standard output.
-function verifySCADVersion() {
-  // / Set variables.
-  global $Verbose, $MinimumSCADVersion;
-  $SCADVersionIsValid = FALSE;
-  $versionOutput = $versionMatches = array();
-  $versionExitCode = 1;
-  $detectedVersion = '';
-  // / OpenSCAD writes its version banner to standard error, so it must be redirected to be captured.
-  exec('openscad --version 2>&1', $versionOutput, $versionExitCode);
-  if ($versionExitCode === 0 && !empty($versionOutput)) {
-    // / Match the YYYY.MM release stamp anywhere in the banner.
-    if (preg_match('/(\d{4})\.(\d{2})/', implode(' ', $versionOutput), $versionMatches)) {
-      $detectedVersion = $versionMatches[1].'.'.$versionMatches[2];
-      // / A plain string comparison is correct here because the format is fixed width & zero padded.
-      if ($detectedVersion >= $MinimumSCADVersion) $SCADVersionIsValid = TRUE; } }
-  if ($Verbose) logEntry('OpenSCAD Version Check: '.($SCADVersionIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumSCADVersion.'.');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $versionOutput = $versionMatches = $versionExitCode = $detectedVersion = NULL;
-  unset($versionOutput, $versionMatches, $versionExitCode, $detectedVersion);
-  return $SCADVersionIsValid; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
 // / A function to convert OpenSCAD source files into a supported export format.
 // / The users uploaded .scad is never modified & never replaced.
 // / Every uploaded source is sanitized into ScadTemp before OpenSCAD is allowed to run.
 // / The whole upload set is sanitized rather than just the requested file, because a
 // / resolved include would otherwise hand OpenSCAD a source that was never filtered.
 // / Sanitized copies are never retained. If they are needed again they are regenerated.
-// / OpenSCAD has no execution bound of its own, so the render is killed by timeout.
+// /
+// / SANITIZATION IS NOT THE SECURITY BOUNDARY & MUST NEVER BE TREATED AS ONE.
+// / A filter over a closed character set can be a boundary, because that question has a
+// / complete answer. A filter that must interpret a grammar cannot be, because it can only
+// / approximate another program's parser & every disagreement is a bypass.
+// / The SCAD scanner is the second kind. Four bypasses were reported against the line
+// / oriented version, & a fifth against the stateful rewrite that replaced it.
+// / The boundary is the operating system sandbox below & nothing else.
+// /
+// / OpenSCAD reads any file the web server user can read & cannot be given a sandbox
+// / through its own arguments, so bubblewrap provides one. The render can see nothing but
+// / the session ScadTemp directory. A server that cannot create that sandbox refuses to
+// / render at all. There is deliberately no fallback to filtering alone.
+// / OpenSCAD has no execution bound of its own, so the render is also killed by timeout.
 // / The render is niced so a runaway model yields to everything else on the server.
 // / OpenSCAD error output is deliberately NOT written to the log.
 // / A failed parse quotes the offending line, which would turn the log into an exfiltration channel.
@@ -2005,38 +2312,71 @@ function verifySCADVersion() {
 // / HRConvert2 does not accommodate builds older than the pinned minimum.
 function convertSCAD($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $DirSep, $SCADConversionTimeout, $ScadTemp;
+  global $Verbose, $DirSep, $SCADConversionTimeout, $ScadTemp, $MinimumSCADVersion;
   $ConversionSuccess = $ConversionErrors = FALSE;
-  $allSanitized = $readyToRender = $scadVersionIsValid = FALSE;
+  $allSanitized = $readyToRender = $scadVersionIsValid = $bwrapIsUsable = FALSE;
   $filesSanitized = $referencesFound = $referencesResolved = $referencesRemoved = $openscadExitCode = 0;
-  $sanitizedPath = $openscadCommand = '';
+  $sanitizedPath = $openscadCommand = $sandboxOutputName = $sandboxOutputPath = '';
   $openscadOutput = array();
-  // / Confirm the installed OpenSCAD is new enough before anything else happens.
-  $scadVersionIsValid = verifySCADVersion();
-  if (!$scadVersionIsValid) {
+  // / Confirm this server can isolate a render before anything else happens.
+  // / A server that cannot isolate a render must refuse to render at all.
+  $bwrapIsUsable = verifyBwrap();
+  if (!$bwrapIsUsable) {
     $ConversionErrors = TRUE;
-    errorEntry('The installed OpenSCAD version is missing or too old!', 27005, FALSE); }
+    errorEntry('Bubblewrap is missing or non functional, so OpenSCAD renders cannot be isolated!', 27007, FALSE); }
   else {
-    // / Sanitize every uploaded source, not just this one.
-    // / A resolved include points at a sanitized copy, so every copy must already exist.
-    list ($allSanitized, $filesSanitized, $referencesFound, $referencesResolved, $referencesRemoved) = sanitizeAllSCADUploads();
-    // / The sanitized copy of the requested file carries the same basename as the original.
-    $sanitizedPath = $ScadTemp.$DirSep.basename($pathname);
-    if ($allSanitized && file_exists($sanitizedPath)) $readyToRender = TRUE;
-    else {
+    // / Confirm the installed OpenSCAD is new enough before anything else happens.
+    $scadVersionIsValid = verifySCADVersion($MinimumSCADVersion);
+    if (!$scadVersionIsValid) {
       $ConversionErrors = TRUE;
-      errorEntry('Could not prepare the OpenSCAD sources for rendering!', 27000, FALSE); } }
-  // / Render only from the sanitized copy. The users original is never handed to OpenSCAD.
+      errorEntry('The installed OpenSCAD version is missing or too old!', 27005, FALSE); }
+    else {
+      // / Sanitize every uploaded source, not just this one.
+      // / A resolved include points at a sanitized copy, so every copy must already exist.
+      list ($allSanitized, $filesSanitized, $referencesFound, $referencesResolved, $referencesRemoved) = sanitizeAllSCADUploads();
+      // / The sanitized copy of the requested file carries the same basename as the original.
+      $sanitizedPath = $ScadTemp.$DirSep.basename($pathname);
+      if ($allSanitized && file_exists($sanitizedPath)) $readyToRender = TRUE;
+      else {
+        $ConversionErrors = TRUE;
+        errorEntry('Could not prepare the OpenSCAD sources for rendering!', 27000, FALSE); } } }
+  // / Render only from the sanitized copy, & only from inside the sandbox.
+  // / The users original is never handed to OpenSCAD.
   if ($readyToRender) {
     if ($Verbose) logEntry('Converting OpenSCAD model to '.$extension.'.');
+    // / The sandbox cannot see the real output location, so the render writes inside it.
+    // / The finished model is moved out afterwards, from outside the namespace.
+    $sandboxOutputName = basename($newPathname);
+    $sandboxOutputPath = $ScadTemp.$DirSep.$sandboxOutputName;
+    // / --unshare-all removes every namespace this render has no business holding.
+    // / That includes the network, which closes any OpenSCAD build whose import() takes a URL.
+    // / --die-with-parent guarantees the render cannot outlive the PHP process that started it.
+    // / --new-session prevents the render from injecting into the controlling terminal.
+    // / The ro-bind-try entries are optional & are skipped on systems that lack them.
+    // / /work is the ONLY writable path & the ONLY path from the data location that exists.
+    // / Nothing else on the disk is visible from inside, so nothing else can be read.
     // / nice yields the render to everything else on the server.
-    // / A legitimate render competes with nothing, so it loses nothing by yielding.
-    // / A runaway render can no longer starve the rest of the server while it burns down its timeout.
     // / timeout enforces a wall clock limit because OpenSCAD will not stop on its own.
     // / Standard output & standard error are both discarded rather than captured.
     $openscadCommand = 'nice -n 19 timeout '.(int)$SCADConversionTimeout
-      .' openscad -o '.escapeshellarg($newPathname)
-      .' '.escapeshellarg($sanitizedPath)
+      .' bwrap'
+      .' --unshare-all'
+      .' --die-with-parent'
+      .' --new-session'
+      .' --ro-bind /usr /usr'
+      .' --ro-bind-try /lib /lib'
+      .' --ro-bind-try /lib64 /lib64'
+      .' --ro-bind-try /bin /bin'
+      .' --ro-bind-try /etc/fonts /etc/fonts'
+      .' --ro-bind-try /etc/ld.so.cache /etc/ld.so.cache'
+      .' --proc /proc'
+      .' --dev /dev'
+      .' --tmpfs /tmp'
+      .' --setenv HOME /tmp'
+      .' --bind '.escapeshellarg($ScadTemp).' /work'
+      .' --chdir /work'
+      .' openscad -o '.escapeshellarg('/work/'.$sandboxOutputName)
+      .' '.escapeshellarg('/work/'.basename($sanitizedPath))
       .' > /dev/null 2>&1';
     exec($openscadCommand, $openscadOutput, $openscadExitCode);
     // / An exit code of 124 is the timeout command reporting that it killed the render.
@@ -2046,8 +2386,13 @@ function convertSCAD($pathname, $newPathname, $extension) {
     else if ($openscadExitCode !== 0) {
       $ConversionErrors = TRUE;
       errorEntry('The OpenSCAD converter failed with exit code '.$openscadExitCode.'!', 27003, FALSE); }
+    // / Move the rendered model out of the sandbox directory to where the core expects it.
+    // / This happens BEFORE the cleanup, or the cleanup would delete the model.
+    if (file_exists($sandboxOutputPath)) {
+      if (!@rename($sandboxOutputPath, $newPathname)) {
+        $ConversionErrors = TRUE;
+        errorEntry('Could not move the rendered OpenSCAD model out of the sandbox!', 27008, FALSE); } }
     // / Remove every sanitized copy immediately. None of them are retained for any reason.
-    // / ScadTemp holds nothing else once the rendered model has been moved out.
     // / cleanFiles() removes the emptied directory itself, so its absence is the success case.
     // / verifyRequiredDirs() recreates it at the start of the next request.
     cleanFiles($ScadTemp);
@@ -2055,8 +2400,8 @@ function convertSCAD($pathname, $newPathname, $extension) {
   // / The output file is the only verdict on whether the render actually produced anything.
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $sanitizedPath = $openscadCommand = $openscadOutput = $openscadExitCode = $readyToRender = $scadVersionIsValid = $allSanitized = $filesSanitized = $referencesFound = $referencesResolved = $referencesRemoved = $pathname = $newPathname = $extension = NULL;
-  unset($sanitizedPath, $openscadCommand, $openscadOutput, $openscadExitCode, $readyToRender, $scadVersionIsValid, $allSanitized, $filesSanitized, $referencesFound, $referencesResolved, $referencesRemoved, $pathname, $newPathname, $extension);
+  $sanitizedPath = $openscadCommand = $openscadOutput = $openscadExitCode = $readyToRender = $scadVersionIsValid = $bwrapIsUsable = $allSanitized = $filesSanitized = $referencesFound = $referencesResolved = $referencesRemoved = $sandboxOutputName = $sandboxOutputPath = $pathname = $newPathname = $extension = NULL;
+  unset($sanitizedPath, $openscadCommand, $openscadOutput, $openscadExitCode, $readyToRender, $scadVersionIsValid, $bwrapIsUsable, $allSanitized, $filesSanitized, $referencesFound, $referencesResolved, $referencesRemoved, $sandboxOutputName, $sandboxOutputPath, $pathname, $newPathname, $extension);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -2090,49 +2435,6 @@ function convertDrawings($pathname, $newPathname) {
   $returnData = $stopper = $pathname = $newPathname = $sleepTime = NULL;
   unset($returnData, $stopper, $pathname, $newPathname, $sleepTime);
   return array($ConversionSuccess, $ConversionErrors); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to confirm the installed Inkscape meets the minimum version HRConvert2 requires.
-// / Inkscape replaced its entire command line interface at version 1.0.
-// / The 0.92 flags such as --export-png were removed rather than deprecated, so a command
-// / written for the current interface fails outright on an older build.
-// / Inkscape reports its version as "Inkscape 1.2.2 (b0a8486541, 2022-12-01)".
-// / The version is written to standard output, unlike OpenSCAD which writes to standard error.
-// / A build that reports no parseable version is refused, because an unknown build cannot be cleared.
-// / Inkscape requires a writable HOME directory & will fail to start without one.
-// / The core sets HOME to the configured home location during verifyGlobals().
-function verifySVGVersion($MinimumVersion) {
-  // / Set variables.
-  global $Verbose;
-  $SVGVersionIsValid = FALSE;
-  $versionOutput = $versionMatches = $minimumParts = array();
-  $versionExitCode = 1;
-  $detectedVersion = '';
-  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
-  // / Inkscape writes its version banner to standard output.
-  // / Standard error is redirected anyway, because a headless launch emits harmless warnings.
-  exec('inkscape --version 2>&1', $versionOutput, $versionExitCode);
-  if ($versionExitCode === 0 && !empty($versionOutput)) {
-    // / Match a major.minor pair immediately following the product name.
-    // / Anchoring on the name prevents a match against the commit date later in the banner.
-    if (preg_match('/Inkscape\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
-      $detectedMajor = (int)$versionMatches[1];
-      $detectedMinor = (int)$versionMatches[2];
-      $detectedVersion = $detectedMajor.'.'.$detectedMinor;
-      // / Split the supplied minimum into the same two parts.
-      $minimumParts = explode('.', $MinimumVersion);
-      $minimumMajor = (int)($minimumParts[0] ?? 0);
-      $minimumMinor = (int)($minimumParts[1] ?? 0);
-      // / Compare numerically, never as strings.
-      // / A string comparison would rank version 1.10 below version 1.2.
-      if ($detectedMajor > $minimumMajor) $SVGVersionIsValid = TRUE;
-      elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $SVGVersionIsValid = TRUE; } }
-  if ($Verbose) logEntry('Inkscape Version Check: '.($SVGVersionIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later.');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $versionOutput = $versionMatches = $versionExitCode = $detectedVersion = $minimumParts = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumVersion = NULL;
-  unset($versionOutput, $versionMatches, $versionExitCode, $detectedVersion, $minimumParts, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
-  return $SVGVersionIsValid; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -2175,49 +2477,6 @@ function convertSVG($pathname, $newPathname, $height, $width) {
   unset($returnData, $stopper, $pathname, $newPathname, $sleepTime, $heightEcho, $widthEcho, $argEcho, $svgVersionIsValid);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to confirm the installed FFMPEG meets a minimum version.
-// / The minimum arrives as an argument so different operations can require different builds.
-// / Audio & video conversions read a local file & never fetch anything remote.
-// / Stream conversions do fetch, & FFMPEG v2.0 through v6.0 bypass the protocol whitelist.
-// / Those builds apply their own whitelist to segments referenced inside a playlist.
-// / A build that reports no parseable version is refused, because an unknown build cannot be cleared.
-// / FFMPEG reports its version in three different shapes depending on how it was built.
-// / A release build reports something like "ffmpeg version 6.1.1".
-// / A distribution build reports something like "ffmpeg version 7.1-1ubuntu1".
-// / A git build reports something like "ffmpeg version N-109534-g1b2c3d4" & carries no usable number.
-function verifyFFMPEGVersion($MinimumVersion) {
-  // / Set variables.
-  global $Verbose;
-  $FFMPEGVersionIsValid = FALSE;
-  $versionOutput = $versionMatches = $minimumParts = array();
-  $versionExitCode = 1;
-  $detectedVersion = '';
-  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
-  // / FFMPEG writes its version banner to standard error, so it must be redirected to be captured.
-  exec('ffmpeg -version 2>&1', $versionOutput, $versionExitCode);
-  if ($versionExitCode === 0 && !empty($versionOutput)) {
-    // / Match a major.minor pair immediately following the word version.
-    // / Anchoring on that word prevents a match against a library version further down the banner.
-    if (preg_match('/ffmpeg version n?(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
-      $detectedMajor = (int)$versionMatches[1];
-      $detectedMinor = (int)$versionMatches[2];
-      $detectedVersion = $detectedMajor.'.'.$detectedMinor;
-      // / Split the supplied minimum into the same two parts.
-      $minimumParts = explode('.', $MinimumVersion);
-      $minimumMajor = (int)($minimumParts[0] ?? 0);
-      $minimumMinor = (int)($minimumParts[1] ?? 0);
-      // / Compare numerically, never as strings.
-      // / A string comparison would rank version 10.0 below version 6.0.
-      if ($detectedMajor > $minimumMajor) $FFMPEGVersionIsValid = TRUE;
-      elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $FFMPEGVersionIsValid = TRUE; } }
-  if ($Verbose) logEntry('FFMPEG Version Check: '.($FFMPEGVersionIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later.');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $versionOutput = $versionMatches = $versionExitCode = $detectedVersion = $minimumParts = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumVersion = NULL;
-  unset($versionOutput, $versionMatches, $versionExitCode, $detectedVersion, $minimumParts, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
-  return $FFMPEGVersionIsValid; }
-// / ----------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to convert video formats.
@@ -4210,6 +4469,13 @@ if (!$SesHashIsVerified) die('ERROR!!! '.$Time.': '.$ApplicationName.'-8: Could 
 list ($LogFileExists, $LogFile, $ClamLogFile) = verifyLogs();
 if (!$LogFileExists) die('ERROR!!! '.$Time.', '.$ApplicationName.'-9, '.$SesHash3.': Could not verify logging environment!');
 if ($Verbose) logEntry('Verified logging environment.');
+
+// / Handle a command line invocation.
+$CommandLineHandled = parseCommandLine();
+if ($CommandLineHandled) {
+  if ($Verbose) logEntry('Command Line Detected. Closing connection.');
+  closeHRC2Connection();
+  die(); }
 
 // / The following code tries to verify that the session is encrypted, if possible.
 list ($EncryptionVerified, $URLEcho) = verifyEncryption();

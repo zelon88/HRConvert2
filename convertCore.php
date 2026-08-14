@@ -2,7 +2,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/11/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/13/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.6.5.
+// / v3.6.6.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -69,7 +69,7 @@ function sanitizeString($Variable, $strict) {
   // / Set variables.
   // / Note that this function does not use the global $DangerousFiles. 
   // / Instead this function defines & destroys it's own array every time it is called.
-  $dangerFiles = array(NULL, '.js', '.php', '.html', '.css', '.phar', '..', 'index.php', 'index.html', '--');
+  $dangerFiles = array('.js', '.php', '.html', '.css', '.phar', '..', 'index.php', 'index.html', '--');
   // / Check for dangerous files or escape conditions.
   foreach ($dangerFiles as $danFile) $Variable = str_replace($danFile, '', $Variable);
   if ($strict) $Variable = trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split(',|\\~#[](){};:$!#^&%@>*?<"\'/`'.chr(9).chr(10).chr(13).chr(0)), '', $Variable))))), '-');
@@ -92,19 +92,20 @@ function sanitizeString($Variable, $strict) {
 // / Set $strict to TRUE to also filter out backslash characters as well. Example:  /
 function sanitize($Variable, $strict) {
   // / Set variables.
-  $VariableIsSanitized = TRUE;
+  $VariableIsSanitized = FALSE;
   $var = '';
   $key = 0;
   if (!is_bool($strict)) $strict = TRUE;
   // / Only continue if the input variable is a type that we can properly sanitize.
-  if (!is_string($Variable) && !is_numeric($Variable) && !is_array($Variable)) $VariableIsSanitized = FALSE;
-  else {
+  if (is_string($Variable) or is_numeric($Variable) or is_array($Variable)) {
     // / Sanitize array inputs.
     // / Note that when $strict is TRUE this also filters out backslashes.
     if (is_array($Variable)) foreach ($Variable as $key => $var) $Variable[$key] = sanitizeString($Variable[$key], $strict);
     // / Sanitize string & numeric inputs.
     // / Note that when $strict is TRUE this also filters out backslashes.
-    if (is_string($Variable) or is_numeric($Variable)) $Variable = sanitizeString($Variable, $strict); }
+    if (is_string($Variable) or is_numeric($Variable)) $Variable = sanitizeString($Variable, $strict);
+    // / Only set the Sanitized flag to TRUE if we have taken action on this variable.
+    $VariableIsSanitized = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $strict = $key = $var = NULL;
   unset($strict, $key, $var);
@@ -248,7 +249,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
-  $HRConvertVersion = 'v3.6.5';
+  $HRConvertVersion = 'v3.6.6';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
@@ -841,7 +842,7 @@ function verifyGlobals() {
   $ScadTemp = $ConvertDir.'ScadTemp';
   $RequiredDirs = array($HomeLoc, $convertDir0, $ConvertDir, $ConvertTemp, $convertTempDir0, $ConvertTempDir, $StreamTemp, $ScadTemp, $LogDir);
   $RequiredIndexes = array($ConvertTemp, $convertTempDir0, $ConvertTempDir);
-  $RequiredCleanupFolders = array($webRoot.$DirSep.'.cache', $webRoot.$DirSep.'.config', $InstLoc.$DirSep.'Logs', $InstLoc.$DirSep.'.cache', $InstLoc.$DirSep.'.config', $ProprietaryLoc.$DirSep.'.cache', $ProprietaryLoc.$DirSep.'.config');
+  $RequiredCleanupFolders = array($webRoot.$DirSep.'.cache', $webRoot.$DirSep.'.config', $InstLoc.$DirSep.'Logs', $InstLoc.$DirSep.'.cache', $InstLoc.$DirSep.'.config', $ProprietaryLoc.$DirSep.'.cache', $ProprietaryLoc.$DirSep.'.config', $webRoot.$DirSep.'.github.'.$DirSep.'workflows', $webRoot.$DirSep.'.github.');
   $PathToUnoconv = $InstLoc.$DirSep.'Resources'.$DirSep.'Unoconv'.$DirSep.'unoconv';
   if (!$UsePatchedDocumentEngine) $PathToUnoconv = $DirSep.'usr'.$DirSep.'bin'.$DirSep.'unoconv';
   // / A/V related variables.

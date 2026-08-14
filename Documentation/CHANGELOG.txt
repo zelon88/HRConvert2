@@ -28,6 +28,27 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap & xvfb-run.
 
 --------------------
 COMMIT 8/11/2026
+v3.6.6 - Update Docker release process. Utilize Github Actions.
+
+-v3.6.6.
+-Improve Docker build process using Github Actions.
+  -Now the Docker build updates automatically on Tagged releases.
+  -This will enable me to use Tagged releases more often & more effectively.
+  -Now, whenever a micro-project is complete and the core is stable; I can release a tag.
+  -Before the cost of preparing the Docker was immense, and I would rather just do project code instead.
+  -This takes the burden (and resource usage) of constantly building Docker images (which compiles FFMPEG & ImageMagick from source).
+-Add the .github folder to the web root, but it is deleted on first run of HRC2.
+  -The .github folder has the docker-build.yml file required for the Github Actions build process.
+  -This folder is required for Github Actions to work.
+  -The folder contains index.html files for default document root protection.
+  -The folder is removed as part of the $RequiredCleanupFolders routine.
+  -Note that this is not part of the "--Delete Development Environment--" setting.
+  -Any user who wants to use Github Actions would need to completely regenerate this file anyway.
+  -Therefore, it is not considered part of "The Build Environment."
+  -It is a part of --MY-- build environment.
+
+--------------------
+COMMIT 8/11/2026
 v3.6.5 - Add Multi-Stage Meshlab->Assimp Conversion Pipeline for 3D Models.
 
 -v3.6.5.

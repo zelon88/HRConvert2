@@ -4,12 +4,12 @@
 set -e
 
 echo "=== Removing old ImageMagick versions ==="
-sudo apt-get purge -y imagemagick php-imagick
-sudo apt-get autoremove -y
+apt-get purge -y imagemagick php-imagick
+apt-get autoremove -y
 
 echo "=== Installing development tools and image libraries ==="
-sudo apt-get update
-sudo apt-get install -y build-essential libpng-dev libjpeg-dev libtiff-dev libwebp-dev libgif-dev wget
+apt-get update
+apt-get install -y build-essential libpng-dev libjpeg-dev libtiff-dev libwebp-dev libgif-dev wget
 
 echo "=== Downloading ImageMagick v7 source ==="
 cd /tmp
@@ -27,10 +27,10 @@ echo "=== Configuring and compiling ImageMagick v7 ==="
 make -j$(nproc)
 
 echo "=== Installing to system ==="
-sudo make install
+make install
 
 echo "=== Configuring library links ==="
-sudo ldconfig /usr/local/lib
+ldconfig /usr/local/lib
 
 echo "=== Verification ==="
 magick --version

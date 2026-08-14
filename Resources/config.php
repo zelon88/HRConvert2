@@ -241,6 +241,15 @@ $SCADConversionTimeout = 180;
 // /   Format is major.minor.
 // /   Default is '5.0'.
 $MinimumAssimpVersion = '5.0';
+// /  --Use PyMeshLab Python Bindings--
+// /   MeshLab replaced its legacy server application with a Python library package.
+// /   Enabling this toggle forces the core to pass geometry repairs to a local Python script.
+// /   This bypasses the need for an active X11 virtual frame display buffer on your host.
+// /   When enabled, it completely bypasses the legacy binary year-month version validation check.
+// /   Requires 'python3' and the 'pymeshlab' package to be manually installed via pip on the server.
+// /   True runs the modern Python script route, False defaults to the standard meshlabserver binary.
+// /   Default is FALSE.
+$UsePyMeshLab = FALSE;
 // /  --Minimum MeshLab Version--
 // /   MeshLab is the engine behind 3D geometry optimization and manifold rectification.
 // /   This minimum exists for headless server parity, not for security.

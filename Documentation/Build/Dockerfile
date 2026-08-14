@@ -1,10 +1,10 @@
 # -----------------------------------------------------------------------------------
 # COPYRIGHT INFORMATION ...
-# HRConvert2, Copyright on 8/13/2026 by Justin Grimes, www.github.com/zelon88
+# HRConvert2, Copyright on 8/13/2026 by Justin Grimes, https://github.com
 # 
 # LICENSE INFORMATION ...
 # This project is protected by the GNU GPLv3 Open-Source license.
-# https://www.gnu.org/licenses/gpl-3.0.html
+# https://gnu.org
 # 
 # APPLICATION INFORMATION ...
 # This application is designed to provide a web-interface for converting file formats
@@ -89,18 +89,24 @@ RUN apt install -y openscad
 RUN apt install -y inkscape
 RUN apt install -y bubblewrap
 RUN apt install -y tesseract-ocr tar libgxps-utils
+
 # FIX: If building for ARM64, bypass source compilation entirely and use apt to prevent 3+ hour emulator crashes
-RUN ARCH="$(dpkg --print-architecture)"; \
-    if [ "${ARCH}" = "arm64" ]; then \
-        echo "ARM64 detected: Skipping source build to prevent QEMU timeout. Installing native package."; \
-        apt-get update && apt-get install -y ffmpeg; \
-        sed -i 's|/bin/bash.*ffmpeg-build2.sh|echo "Skipped source build"|g' /var/www/html/HRProprietary/HRConvert2/Documentation/Build/Dockerfile || true; \
-    else \
-        /bin/bash HRConvert2/Documentation/Build/ffmpeg-build2.sh --build --enable-gpl-and-non-free; \
-    fi
-# FIX: Strip out all 'sudo ' commands from the downloaded script
+# ARG TARGETPLATFORM is automatically populated by Docker Buildx
+ARG TARGETPLATFORM
+
+RUN case "${TARGETPLATFORM}" in \
+      "linux/arm64") \
+        echo "ARM64 Core Target: Installing optimized native apt package..." && \
+        apt-get update && apt-get install -y ffmpeg ;; \
+      *) \
+        echo "AMD64 Core Target: Compiling optimized binaries from source..." && \
+        /bin/bash HRConvert2/Documentation/Build/ffmpeg-build2.sh --build --enable-gpl-and-non-free ;; \
+    esac
+
+# FIX: Strip out all 'sudo ' commands from the downloaded script and build ImageMagick v7 from source on all targets
 RUN sed -i 's/sudo //g' HRConvert2/Documentation/Build/build-imagemagick-v7.sh
 RUN /bin/bash HRConvert2/Documentation/Build/build-imagemagick-v7.sh
+
 # This needs to take place AFTER all other zlib related packages are installed.
 RUN docker-php-ext-install gd zip
 RUN apt install -y default-jre
@@ -149,7 +155,7 @@ RUN chmod -R 0755 /DATA && \
 
 # Expose the ports Apache & Unoconv listens on to the host.
 # Set these to whatever ports suits your needs.
-EXPOSE 80
+# EXPOSE 80
 EXPOSE 443
 
 # Copy the startup script into the container

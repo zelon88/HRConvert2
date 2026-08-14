@@ -51,7 +51,6 @@ RUN apt update
 # Install git and compilation tools.
 RUN apt install -y git sed libtool autoconf automake
 
-
 # Set the working directory in the container.
 WORKDIR /var/www/html/HRProprietary
 
@@ -90,7 +89,15 @@ RUN apt install -y openscad
 RUN apt install -y inkscape
 RUN apt install -y bubblewrap
 RUN apt install -y tesseract-ocr tar libgxps-utils
-RUN /bin/bash HRConvert2/Documentation/Build/ffmpeg-build2.sh --build --enable-gpl-and-non-free
+# FIX: If building for ARM64, bypass source compilation entirely and use apt to prevent 3+ hour emulator crashes
+RUN ARCH="$(dpkg --print-architecture)"; \
+    if [ "${ARCH}" = "arm64" ]; then \
+        echo "ARM64 detected: Skipping source build to prevent QEMU timeout. Installing native package."; \
+        apt-get update && apt-get install -y ffmpeg; \
+        sed -i 's|/bin/bash.*ffmpeg-build2.sh|echo "Skipped source build"|g' /var/www/html/HRProprietary/HRConvert2/Documentation/Build/Dockerfile || true; \
+    else \
+        /bin/bash HRConvert2/Documentation/Build/ffmpeg-build2.sh --build --enable-gpl-and-non-free; \
+    fi
 # FIX: Strip out all 'sudo ' commands from the downloaded script
 RUN sed -i 's/sudo //g' HRConvert2/Documentation/Build/build-imagemagick-v7.sh
 RUN /bin/bash HRConvert2/Documentation/Build/build-imagemagick-v7.sh

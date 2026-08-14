@@ -107,8 +107,8 @@ RUN apt install -y default-jre
 # I understand that the following line will probably uninstall some previous version of LibreOffice, 
 #  but this seems to be the only way to get soffice.bin to work. I can't explain it.
 RUN apt install -y libreoffice
-RUN rm -r packages
-RUN rm -r workspace
+RUN rm -rf packages
+RUN rm -rf workspace
 
 ## arm64 rar install hack (rar CLI only available for x86/x64 from rar labs)
 RUN DPKG_ARCH="$(dpkg --print-architecture)"; \

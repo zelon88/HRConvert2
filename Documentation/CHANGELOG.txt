@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.6.7
+v3.6.8.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -25,6 +25,45 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap & xvfb-run.
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+
+--------------------
+COMMIT 8/14/2026
+v3.6.8 - Add auto update via CLI. Add root detection. Improve core logic ordering.
+
+-v3.6.8.
+-Add running as root detection / context awareness to verifyRequiredDirs() & verifyLogs().
+  -This is required now that we expect convertCore.php to properly parse command line arguments.
+-Update ImageMagick v7 build script to add a 5 try retry loop to the download to avoid failures at the Docker build stage.
+-Improve verifyRequiredDirs().
+  -The checks now enforce permissions that survive for web users even if other root or non-root users touch the application via CLI.
+  -This improves usability & prevents confusing errors.
+  -Also improved code comments to explain engineering intent behind some of the decisions that are being made.
+-Reorder the core a bit. Clean up core logic section at the bottom to make it more legible and even.
+-Add ERROR 27!!! - 'Could not verify user type!
+  -This tries to see if the user is running via CLI or Apache+PHP.
+-Add ERROR 28!!! - 'The application is being run in an unsupported security context!'
+  -This checks to ensure that the script is not being used to run file operations as the root user.
+-The checks behind errors 27 & 28 and are related in nature.
+  -They protect against similar types of potential file corruption.
+  -These checks enforce that the correct users are used, CLI is only for updates & diagnostics, and webUI is only for apache+PHP.
+-Added auto updates.
+  -Run the updater from a command line with   'sudo php /var/www/html/HRProprietary/HRConvert2/convertCore.php -u'
+  -Check the versiona afterwards from a command line with   'sudo php /var/www/html/HRProprietary/HRConvert2/convertCore.php -v'
+  -The -v or --version checks are extremely comprehensive. They validate every HRConvert2 component & every major dependency.
+  -It is more of a diagnostic evaluation than a simple "echo version" like most other applications.
+  -Admins with access to root CLI can now update the application.
+  -The update process preserves existing config.php files, evaluates their compatibility, and tells you what changed.
+  -The update process validates the versions of the components it installs.
+  -The update process keeps a backup copy of the old installation for restoration or reference.
+  -Default backup location is $ConvertDir/Last-Installed-Version.
+  -The Last-Installed-Version folder is removed automatically after the $DeleteThreshold.
+  -There are config.php entries for max update filesize, enable/disable auto updates, target repo, and more.
+  -This should make maintaining a bare-metal or VM install of HRConvert2 much more practical.
+  -Updates are performed by staging the new code in an offline location, and then swapping it in instantly.
+  -Sessions are not broken, nobody gets 404 pages, and there is zero downtime.
+    -Literally, a user spamming the refresh button would not even notice.
+    -One page would load at v3.6.8, and the next would load at v3.6.9. 
+    -Users in the middle of converting files during the update do not lose their files or sessions.
 
 --------------------
 COMMIT 8/14/2026

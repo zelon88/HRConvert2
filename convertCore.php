@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILEINFORMATION ...
-// / v3.6.7.
+// / v3.6.8.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -173,7 +173,7 @@ function verifyConfigVersion($RequiredConfigVersion) {
     'ConfigVersion',
     'URL', 'InstLoc', 'ServerRootDir', 'ConvertLoc', 'LogDir', 'HomeLoc', 'ProprietaryLoc',
     'ApplicationName', 'ApplicationTitle', 'Verbose', 'MaxLogSize', 'DeleteThreshold',
-    'UniqueDailyLogHash', 'AppendLogHashToLogFiles',
+    'BackupLoc', 'UniqueDailyLogHash', 'AppendLogHashToLogFiles',
     'VirusScan', 'AllowUserVirusScan', 'ScanCoreMemoryLimit', 'ScanCoreChunkSize',
     'ScanCoreDebug', 'ScanCoreVerbose',
     'SupportedLanguages', 'DefaultLanguage', 'AllowUserSelectableLanguage',
@@ -197,7 +197,8 @@ function verifyConfigVersion($RequiredConfigVersion) {
     'AllowSCADIncludeResolution', 'SCADConversionTimeout',
     'MinimumSCADVersion', 'MinimumFFMPEGVersion', 'MinimumStreamFFMPEGVersion',
     'MinimumLibreOfficeVersion', 'MinimumInkscapeVersion', 'MinimumImageVersion',
-    'MinimumAssimpVersion', 'MinimumMeshlabVersion', 'UsePyMeshLab');
+    'MinimumAssimpVersion', 'MinimumMeshlabVersion', 'UsePyMeshLab', 'EnableAutoUpdates', 
+    'AutoUpdateTargetVersion', 'UpdateSourceRepository', 'MaxUpdatePackageSize', 'UpdateConnectionTimeout');
   // / Check that every required setting actually exists in the global scope.
   // / config.php is required at global scope, so every setting it defines lands in $GLOBALS.
   // / isset() is deliberately not used because a setting legitimately set to NULL still exists.
@@ -239,23 +240,23 @@ function verifyConfigVersion($RequiredConfigVersion) {
 // / This function runs before verifyLogs(), so every failure here dies rather than logging.
 function verifyInstallation() {
   // / Set variables.
-  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumImageVersion, $UsePyMeshLab, $MinimumMeshlabVersion, $MinimumAssimpVersion;
+  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumImageVersion, $UsePyMeshLab, $MinimumMeshlabVersion, $MinimumAssimpVersion, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc;
   $InstallationIsVerified = $secret = $secretFile = $secretFileContent = $createSecretFile = $SecretKey = $secretFailed = $loadSecretFile = $secretFileWriteComplete = $secretCheck = $appVersionCheck = $configIsValid = FALSE;
   $check1 = $check2 = TRUE;
   $bytesWritten = 0;
   $missingConfigVars = array();
-  $detectedConfigVersion = $requiredConfigVersion = $configFile = '';
+  $detectedConfigVersion = $configFile = '';
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
-  $HRConvertVersion = 'v3.6.7';
+  $HRConvertVersion = 'v3.6.8';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
   // / A release that changes no settings leaves this alone, so existing config files keep working.
   // / Any config.php version that is greater (newer) than the version listed below is considered acceptable.
-  $requiredConfigVersion = 'v3.6.0';
-  $requiredConfigVersion = ltrim($requiredConfigVersion, 'vV');
+  $RequiredConfigVersion = 'v3.6.8';
+  $RequiredConfigVersion = ltrim($RequiredConfigVersion, 'vV');
   // / Define the minimum acceptable GUI version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / Gui version that do not exactly match the version listed below are not considered acceptable.
@@ -283,8 +284,8 @@ function verifyInstallation() {
   else die ('ERROR!!! HRConvert2-28001: The core file reports version v'.$HRConvertVersion.' but the version information file reports version v'.$Version.'. This installation is incomplete or was updated incorrectly.'.PHP_EOL.'<br />');
   // / Confirm the config file carries every setting this core requires.
   // / An undefined setting reads as NULL, which silently becomes FALSE or zero at every point of use.
-  list ($configIsValid, $missingConfigVars, $detectedConfigVersion) = verifyConfigVersion($requiredConfigVersion);
-  if (!$configIsValid) die ('ERROR!!! HRConvert2-28000: The config.php file is missing '.count($missingConfigVars).' required setting(s). Config version detected: v'.$detectedConfigVersion.'. Config version required: v'.$requiredConfigVersion.'. Missing Variables: '.implode(', ', $missingConfigVars).PHP_EOL.'<br />');
+  list ($configIsValid, $missingConfigVars, $detectedConfigVersion) = verifyConfigVersion($RequiredConfigVersion);
+  if (!$configIsValid) die ('ERROR!!! HRConvert2-28000: The config.php file is missing '.count($missingConfigVars).' required setting(s). Config version detected: v'.$detectedConfigVersion.'. Config version required: v'.$RequiredConfigVersion.'. Missing Variables: '.implode(', ', $missingConfigVars).PHP_EOL.'<br />');
   // / Define the location of the per install secret file.
   $secretFile = $ConvertLoc.DIRECTORY_SEPARATOR.'secret.php';
   // / If a secret file does not exist, create one.
@@ -315,8 +316,8 @@ function verifyInstallation() {
   if ($check1 && $check2 && $appVersionCheck && $configIsValid) $InstallationIsVerified = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $SecretKey is deliberately NOT cleared here because the rest of the core needs it.
-  $secret = $secretCheck = $secretFile = $secretFileContent = $secretFileWriteComplete = $createSecretFile = $loadSecretFile = $secretFailed = $bytesWritten = $check1 = $check2 = $appVersionCheck = $configIsValid = $missingConfigVars = $detectedConfigVersion = $requiredConfigVersion = NULL;
-  unset($secret, $secretCheck, $secretFile, $secretFileContent, $secretFileWriteComplete, $createSecretFile, $loadSecretFile, $secretFailed, $bytesWritten, $check1, $check2, $appVersionCheck, $configIsValid, $missingConfigVars, $detectedConfigVersion, $requiredConfigVersion);
+  $secret = $secretCheck = $secretFile = $secretFileContent = $secretFileWriteComplete = $createSecretFile = $loadSecretFile = $secretFailed = $bytesWritten = $check1 = $check2 = $appVersionCheck = $configIsValid = $missingConfigVars = $detectedConfigVersion = NULL;
+  unset($secret, $secretCheck, $secretFile, $secretFileContent, $secretFileWriteComplete, $createSecretFile, $loadSecretFile, $secretFailed, $bytesWritten, $check1, $check2, $appVersionCheck, $configIsValid, $missingConfigVars, $detectedConfigVersion);
   return array($InstallationIsVerified, $configFile, $Version); }
 // / -----------------------------------------------------------------------------------
 
@@ -386,7 +387,7 @@ function verifySesHash($Token1) {
 // / The rotation condition compares the file size directly against the configured maximum.
 function verifyLogs() {
   // / Set variables.
-  global $LogDir, $LogFile, $MaxLogSize, $InstLoc, $SesHash, $SesHash4, $DefaultLogDir, $DefaultLogSize, $Time, $Date, $LogInc, $LogInc2, $VirusScan, $ApplicationName, $PermissionLevels, $ConvertLoc, $AppendLogHashToLogFiles;
+  global $LogDir, $LogFile, $MaxLogSize, $InstLoc, $SesHash, $SesHash4, $DefaultLogDir, $DefaultLogSize, $Time, $Date, $LogInc, $LogInc2, $VirusScan, $ApplicationName, $ConvertLoc, $AppendLogHashToLogFiles;
   $LogExists = $logWritten = FALSE;
   $logHashAppend = '';
   $LogInc = $LogInc2 = 0;
@@ -397,9 +398,31 @@ function verifyLogs() {
   $ClamLogFile = str_replace('..', '', $LogDir.'/ClamLog_'.$LogInc2.'_'.$Date.$logHashAppend.'.txt');
   $LogFile = str_replace('..', '', $LogDir.'/'.$ApplicationName.'_'.$LogInc.'_'.$Date.$logHashAppend.'.txt');
   if (!is_numeric($MaxLogSize)) $MaxLogSize = $DefaultLogSize;
-  if (!is_dir($LogDir)) @mkdir($LogDir, $PermissionLevels);
-  if (!is_dir($LogDir)) $LogDir = $DefaultLogDir;
-  if (!is_dir($LogDir)) die('ERROR!!! '.$Time.': '.$ApplicationName.'-3, The log directory does not exist at '.$LogDir.'.');
+  // / The permissions in this function are hard-coded deliberately.
+  // / This function runs before verifyGlobals(), so $ApacheUser & $PermissionLevels aren't available yet.
+  // / If running as root (such as after updating or installing fresh) the Log dir needs to be writable to www-data.
+  // / If running as a regular user, the user will either possess or lack the permissions needed to leave the $LogDir in proper condition.
+  // / So a regular user fails silent here (and is caught further down), but they also don't do anything to the filesystem on failure.
+  // / A root user or a web user will always leave a valid $LogDir for a web user.
+  if (!is_dir($LogDir)) {
+    @mkdir($LogDir, 0755);
+    @chown($LogDir, 'www-data');
+    @chgrp($LogDir, 'www-data'); }
+  // / If the $LogDir still doesn't exist after we tried to create it, fallback to trying to create one in the $ConvertLoc instead.
+  if (!is_dir($LogDir)) {
+    $LogDir = $DefaultLogDir;
+    $ClamLogFile = str_replace('..', '', $LogDir.'/ClamLog_'.$LogInc2.'_'.$Date.$logHashAppend.'.txt');
+    $LogFile = str_replace('..', '', $LogDir.'/'.$ApplicationName.'_'.$LogInc.'_'.$Date.$logHashAppend.'.txt'); }
+  // / Check if the fallback $LogDir exists already before trying to create a new one.
+  if (!is_dir($LogDir)) {
+    @mkdir($LogDir, 0755);
+    @chown($LogDir, 'www-data');
+    @chgrp($LogDir, 'www-data'); }
+  // / If the $LogDir still doesn't exist after we tried the fallback, consider the operation to have failed.
+  // / The core will die when this function returns.
+  // / An error will be printed to the screen for CLI users, or to the page for web users.
+  if (!is_dir($LogDir)) $LogExists = FALSE;
+  // / Regardless of whether or not a $LogDir exists, we will silently try to drop an index.html into it anyway as document root protection.
   if (!file_exists($LogDir.'/index.html')) @copy('index.html', $LogDir.'/index.html');
   // / Advance to a new log file whenever the current one has reached the maximum size.
   while (file_exists($LogFile) && filesize($LogFile) > $MaxLogSize) {
@@ -785,15 +808,25 @@ function verifyLanguage() {
 // / Converting here as well produced a fifteen hour watch timeout & a ten million second connect timeout.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $MinimumFFMPEGVersion, $ProtectedRootDirs;
+  global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $MinimumFFMPEGVersion, $ProtectedRootDirs, $RunningAsRoot;
   // / Application related variables.
   putenv('HOME='.$HomeLoc);
-  $GlobalsAreVerified = $sanitizeGlobalCheck = $sanitizeGlobalCheckA = $sanitizeGlobalCheckB = $sanitizeGlobalCheckC = $sanitizeGlobalCheckD = $sanitizeGlobalCheckE = FALSE;
+  $GlobalsAreVerified = $sanitizeGlobalCheck = $sanitizeGlobalCheckA = $sanitizeGlobalCheckB = $sanitizeGlobalCheckC = $sanitizeGlobalCheckD = $sanitizeGlobalCheckE = $RunningAsRoot = FALSE;
   $CoreLoaded = TRUE;
   $SleepTimer = 0;
   $StopCounter = $RetryCount;
   $PermissionLevels = 0755;
   $ApacheUser = 'www-data';
+  $CurrentUser = '';
+  // / Determine the user who is currently executing the script.
+  // / If convertCore.php is called by the web server to serve a web client this should be www-data.
+  // / If someone is running convertCore.php from a CLI tool as a non-root user, this will be that users username.
+  // / If someone is running convertCore.php from a CLI tool as root user, this will be root.
+  // / Some systems have posix extensions that make checking the current username very fast.
+  if (function_exists('posix_getpwuid') && function_exists('posix_geteuid')) $CurrentUser = posix_getpwuid(posix_geteuid())['name'];
+  // / Some systems do not have posix extensions, so we have to use shell_exec to get the username instead.
+  else $CurrentUser = trim(shell_exec('whoami'));
+  if ($CurrentUser === 'root') $RunningAsRoot = TRUE;
   // / Convinience variables.
   $DirSep = DIRECTORY_SEPARATOR;
   $Lol = PHP_EOL;
@@ -816,7 +849,7 @@ function verifyGlobals() {
   // / Directories at the root of a data location that are never sessions & must never be swept.
   // / The LibreOffice profile lives here because HOME resolves to the data location.
   // / Rebuilding that profile is expensive, so it is deliberately preserved between requests.
-  $ProtectedRootDirs = array('.cache', '.config', 'Logs', 'ScadTemp', 'StreamTemp', 'lost+found');
+  $ProtectedRootDirs = array('.cache', '.config', 'Logs', 'ScadTemp', 'StreamTemp', 'lost+found', 'Last-Installed-Version');
   // / Stream related variables.
   // / The two stream timeouts are deliberately left in their documented units here.
   // / Do not convert them in this function.
@@ -841,7 +874,9 @@ function verifyGlobals() {
   $ScadTemp = $ConvertDir.'ScadTemp';
   $RequiredDirs = array($HomeLoc, $convertDir0, $ConvertDir, $ConvertTemp, $convertTempDir0, $ConvertTempDir, $StreamTemp, $ScadTemp, $LogDir);
   $RequiredIndexes = array($ConvertTemp, $convertTempDir0, $ConvertTempDir);
-  $RequiredCleanupFolders = array($webRoot.$DirSep.'.cache', $webRoot.$DirSep.'.config', $InstLoc.$DirSep.'Logs', $InstLoc.$DirSep.'.cache', $InstLoc.$DirSep.'.config', $ProprietaryLoc.$DirSep.'.cache', $ProprietaryLoc.$DirSep.'.config', $InstLoc.$DirSep.'.github'.$DirSep.'workflows', $InstLoc.$DirSep.'.github');
+  // / Create a list of directories that will be emptied & remove if found.
+  // / These folders are artifacts specifically from previous versions of HRConvert2 that are no longer required.
+  $RequiredCleanupFolders = array($webRoot.$DirSep.'.cache', $webRoot.$DirSep.'.config', $InstLoc.$DirSep.'Logs', $InstLoc.$DirSep.'.cache', $InstLoc.$DirSep.'.config', $ProprietaryLoc.$DirSep.'.cache', $ProprietaryLoc.$DirSep.'.config', $InstLoc.$DirSep.'.github'.$DirSep.'workflows', $InstLoc.$DirSep.'.github', $InstLoc.$DirSep.'.git');
   $PathToUnoconv = $InstLoc.$DirSep.'Resources'.$DirSep.'Unoconv'.$DirSep.'unoconv';
   if (!$UsePatchedDocumentEngine) $PathToUnoconv = $DirSep.'usr'.$DirSep.'bin'.$DirSep.'unoconv';
   // / A/V related variables.
@@ -1212,7 +1247,6 @@ function verifyBwrap() {
 // / dependency that HRConvert2 enforces a minimum version against.
 // / A dependency check that fails here is the same check the converter performs, so this
 // / answers whether an installation will actually work rather than what is configured.
-// / -----------------------------------------------------------------------------------
 function showVersionInfo() {
   // / Set variables.
   global $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $MinimumInkscapeVersion, $MinimumSCADVersion, $MinimumImageVersion, $MinimumAssimpVersion, $MinimumMeshlabVersion, $ApplicationName, $eol, $SupportedConversionTypes;
@@ -1247,7 +1281,7 @@ function showVersionInfo() {
   print('  OpenSCAD                    '.($scadIsValid ? 'OK' : 'FAILED').', requires '.$MinimumSCADVersion.' or later'.$eol);
   print('  ImageMagick                 '.($imageIsValid ? 'OK' : 'FAILED').', requires '.$MinimumImageVersion.' or later'.$eol);
   print('  Assimp                      '.($modelIsValid ? 'OK' : 'FAILED').', requires '.$MinimumAssimpVersion.' or later'.$eol);
-  print('  Bubblewrap sandbox          '.($bwrapIsValid ? 'OK' : 'FAILED').', required protecting sensitive operations'.$eol);
+  print('  Bubblewrap sandbox          '.($bwrapIsValid ? 'OK' : 'FAILED').', '.($bwrapIsValid ? 'Fully Functional' : 'NOT Functional - OpenSCAD conversions disabled').$eol);
   print($eol);
   // / Report which conversion types config.php has enabled.
   print('Enabled conversion types'.$eol);
@@ -1255,8 +1289,7 @@ function showVersionInfo() {
   print($eol);
   // / A dependency that reports FAILED is either missing, unidentifiable, or older than
   // / the minimum. The converter that depends on it will refuse rather than fail oddly.
-  print('A FAILED dependency is missing, unidentifiable, or older than the minimum.'.$eol);
-  print('The conversion type that depends on it will refuse to run.'.$eol);
+  print('If a dependency is unavailable, the conversion type which rely on it will fail with errors.'.$eol);
   print('See Documentation/ERROR_DESCRIPTIONS.txt for the error each one produces.'.$eol);
   print($eol);
   $VersionInfoDisplayed = TRUE;
@@ -1272,7 +1305,6 @@ function showVersionInfo() {
 // / This is a summary & deliberately not a manual. Everything HRConvert2 does is
 // / documented at length in the Documentation folder, & this points there rather than
 // / attempting to reproduce it.
-// / -----------------------------------------------------------------------------------
 function showHelpInfo() {
   // / Set variables.
   global $ApplicationName, $HRConvertVersion;
@@ -1313,8 +1345,8 @@ function showHelpInfo() {
 
 // / -----------------------------------------------------------------------------------
 // / A function to handle a command line invocation of HRConvert2.
-// / This function returns TRUE when it has handled an invocation.
-// / This function returns FALSE only when there is no command line
+// / This function returns TRUE, 'cli' when it has handled an invocation.
+// / This function returns FALSE, 'web' only when there is no command line
 // / If this function fires, the core should immediately stop afterward..
 // / php_sapi_name() is the most reliable test for CLI arguments.
 // / Checking $argv alone can be populated by a query string in some cases.
@@ -1324,9 +1356,10 @@ function parseCommandLine() {
   // / Set variables.
   global $Verbose, $Lol;
   $CommandLineHandled = FALSE;
+  $UserType = 'web';
+  $cliArgumentCount = 0;
   $cliArguments = array();
   $cliArgument = $cliCommand = '';
-  $cliArgumentCount = 0;
   // / A web request has no command line & must return immediately.
   // / This is the ONLY path that returns FALSE. Every other path handles & stops.
   if (php_sapi_name() !== 'cli') $CommandLineHandled = FALSE;
@@ -1343,15 +1376,26 @@ function parseCommandLine() {
       showHelpInfo();
       $CommandLineHandled = TRUE; }
     else {
-      $cliCommand = strtolower(trim($cliArguments[0]));
       // / Dispatch on the first argument only. Later arguments belong to that command.
+      $cliCommand = strtolower(trim($cliArguments[0]));
+      // / Handle the -v or --version arguments.
+      // / Performs a comprehensive version analysis including all components & major dependencies.
       if ($cliCommand === '-v' or $cliCommand === '--version') {
         logEntry('Command line invocation. Displaying version information.');
         showVersionInfo();
         $CommandLineHandled = TRUE; }
+      // / Handle the -h or --help arguments.
+      // / Dislays information about the application & included documentation.
       else if ($cliCommand === '-h' or $cliCommand === '--help') {
         logEntry('Command line invocation. Displaying help.');
         showHelpInfo();
+        $CommandLineHandled = TRUE; }
+      // / Handle the -u or --update arguments.
+      // / Performs a comprehensive update on the HRConvert2 application & all bundled components.
+      else if ($cliCommand === '-u' or $cliCommand === '--update') {
+        logEntry('Command line invocation. Performing an application update.');
+        $cliTarget = isset($cliArguments[1]) ? strtolower(trim($cliArguments[1])) : '';
+        updateApplication($cliTarget);
         $CommandLineHandled = TRUE; }
       // / An unrecognized argument is a mistake, not a web request.
       // / Falling through to the web logic would be the worst possible response.
@@ -1360,10 +1404,12 @@ function parseCommandLine() {
         print($Lol.'Unrecognized argument.'.$Lol);
         showHelpInfo();
         $CommandLineHandled = TRUE; } } }
+  // / Determine if the user is using the application via command line (CLI) or Apache+PHP through a web browser.
+  if ($CommandLineHandled === TRUE) $UserType = 'cli';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $cliArguments = $cliArgument = $cliCommand = $cliArgumentCount = NULL;
   unset($cliArguments, $cliArgument, $cliCommand, $cliArgumentCount);
-  return $CommandLineHandled; }
+  return array($CommandLineHandled, $UserType); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1709,43 +1755,379 @@ function cleanDataLoc($dataLoc, $locationName) {
 // / A function to create required directories if they do not exist.
 // / Maintenance folders are emptied by passing their children to cleanFiles().
 // / cleanFiles() refuses to operate on an approved root, so the root itself is never passed.
+// / Ownership is corrected only when running as root, because a directory created by a
+// / root command line invocation would otherwise be one the web server user can neither
+// / write into nor sweep. chown fails silently for any other user, so the guard is what
+// / keeps a normal web request from attempting something it cannot do.
 function verifyRequiredDirs() {
   // /  Set variables.
-  global $ConvertLoc, $RequiredDirs, $RequiredIndexes, $RequiredCleanupFolders, $Time, $LogFile, $Verbose, $PermissionLevels, $ApacheUser, $DirSep, $InstLoc;
+  global $ConvertLoc, $RequiredDirs, $RequiredIndexes, $RequiredCleanupFolders, $Verbose, $PermissionLevels, $ApacheUser, $DirSep, $InstLoc, $RunningAsRoot;
   $RequiredDirsExist = TRUE;
   $cleanupContents = array();
-  $requiredDir = $requiredIndex = $requiredCleanupFolder = $cleanupEntry = '';
+  $requiredDir = $requiredIndex = $requiredCleanupFolder = $cleanupEntry = $cleanupPath = '';
   // / If the $ConvertLoc does not exist we stop execution rather than create one.
   if (!is_dir($ConvertLoc)) errorEntry('The specified Data Storage Directory does not exist at '.$ConvertLoc.'!', 1000, TRUE);
   // / Iterate through the array of required directories.
   foreach ($RequiredDirs as $requiredDir) {
     // / Try to create the currently selected directory if it does not already exist.
-    if (!is_dir($requiredDir)) @mkdir($requiredDir, $PermissionLevels);
-    // / Re-check to see if our attempt to create the directory was successful & log the result.
+    if (!is_dir($requiredDir)) {
+      @mkdir($requiredDir, $PermissionLevels);
+      if ($Verbose) logEntry('Created a directory at '.$requiredDir.'.'); }
+    // / Re-check to see if our attempt to create the directory was successful.
     if (is_dir($requiredDir)) {
+      if ($RunningAsRoot) {
+        @chmod($requiredDir, $PermissionLevels);
+        @chown($requiredDir, $ApacheUser);
+        @chgrp($requiredDir, $ApacheUser); }
       if ($Verbose) logEntry('Verified a directory at '.$requiredDir.'.'); }
+    // / A single missing directory invalidates the whole check.
     else {
-      // / A single missing directory invalidates the whole check.
       $RequiredDirsExist = FALSE;
       errorEntry('Could not create a directory at '.$requiredDir.'!', 1001, TRUE); } }
   // / Make sure that each required directory has an index.html file for document root protection.
   foreach ($RequiredIndexes as $requiredIndex) @copy($InstLoc.$DirSep.'index.html', $requiredIndex.$DirSep.'index.html');
-  // / Clear the contents of each maintenance folder without removing the folder itself.
+  // / Clear the contents of each maintenance folder, then delete the folder itself.
   foreach ($RequiredCleanupFolders as $requiredCleanupFolder) {
     if (!is_dir($requiredCleanupFolder)) continue;
     $cleanupContents = array_diff(scandir($requiredCleanupFolder), array('.', '..'));
-    @chmod($requiredCleanupFolder, $PermissionLevels);
-    @chown($requiredCleanupFolder, $ApacheUser);
+    // / A folder owned by root cannot be emptied by anyone else, so ownership is corrected
+    // / before the contents are removed rather than after.
+    if ($RunningAsRoot) {
+      @chmod($requiredCleanupFolder, $PermissionLevels);
+      @chown($requiredCleanupFolder, $ApacheUser);
+      @chgrp($requiredCleanupFolder, $ApacheUser); }
     foreach ($cleanupContents as $cleanupEntry) {
-      @chmod($requiredCleanupFolder.$DirSep.$cleanupEntry, $PermissionLevels);
-      @chown($requiredCleanupFolder.$DirSep.$cleanupEntry, $ApacheUser);
-      if (is_file($requiredCleanupFolder.$DirSep.$cleanupEntry)) unlink($requiredCleanupFolder.$DirSep.$cleanupEntry);
-      elseif (is_dir($requiredCleanupFolder.$DirSep.$cleanupEntry)) cleanFiles($requiredCleanupFolder.$DirSep.$cleanupEntry); } 
-      rmdir($requiredCleanupFolder); }
+      $cleanupPath = $requiredCleanupFolder.$DirSep.$cleanupEntry;
+      @chmod($cleanupPath, $PermissionLevels);
+      if (is_file($cleanupPath)) @unlink($cleanupPath);
+      elseif (is_dir($cleanupPath)) cleanFiles($cleanupPath); }
+    // / The folder itself is removed only once its contents are gone.
+    @rmdir($requiredCleanupFolder); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $requiredDir = $requiredIndex = $requiredCleanupFolder = $cleanupEntry = $cleanupContents = NULL;
-  unset($requiredDir, $requiredIndex, $requiredCleanupFolder, $cleanupEntry, $cleanupContents);
+  $requiredDir = $requiredIndex = $requiredCleanupFolder = $cleanupEntry = $cleanupPath = $cleanupContents = NULL;
+  unset($requiredDir, $requiredIndex, $requiredCleanupFolder, $cleanupEntry, $cleanupPath, $cleanupContents);
   return array($RequiredDirsExist, $RequiredDirs); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to work out which release to fetch & the URL that will deliver it.
+// / Three targets are supported & each resolves to a different kind of URL.
+// /   A version such as v3.6.8 resolves to that tag's tarball directly. A tag that does
+// /   not exist produces a 404 at download time, which is the correct failure.
+// /   latest asks the GitHub API which tag is newest, then resolves to that tag.
+// /   edge resolves to the current state of the master branch. A branch tarball carries
+// /   whatever version stamp master happens to hold, which may match no release at all.
+// / The API call is the only network request this function makes & is only made for latest.
+function resolveUpdateTarget($requestedVersion) {
+  // / Set variables.
+  global $Verbose, $UpdateSourceRepository;
+  $TargetResolved = FALSE;
+  $TargetVersion = $TargetURL = $apiURL = $apiResponse = $apiMatches = '';
+  $curlCommand = $curlOutput = '';
+  $curlExitCode = 1;
+  $requestedVersion = strtolower(trim($requestedVersion));
+  // / The current state of the master branch. No tag & no version guarantee.
+  if ($requestedVersion === 'edge') {
+    $TargetVersion = 'edge';
+    $TargetURL = 'https://github.com/'.$UpdateSourceRepository.'/archive/refs/heads/master.tar.gz';
+    $TargetResolved = TRUE; }
+  // / The newest tag, whatever it currently is. One API call resolves the name.
+  else if ($requestedVersion === 'latest') {
+    $apiURL = 'https://api.github.com/repos/'.$UpdateSourceRepository.'/releases/latest';
+    // / A user agent is mandatory. The GitHub API refuses a request without one.
+    // / -L follows the redirect chain, which is what a plain wget could not do.
+    $curlCommand = 'curl -L -s --max-time 30 --max-filesize 1048576'
+      .' -H '.escapeshellarg('User-Agent: HRConvert2-Updater')
+      .' -H '.escapeshellarg('Accept: application/vnd.github+json')
+      .' '.escapeshellarg($apiURL).' 2>/dev/null';
+    $apiResponse = shell_exec($curlCommand);
+    // / Read the tag name out of the response without parsing the whole document.
+    // / json_decode would also work. This avoids depending on the shape of the rest of it.
+    if (is_string($apiResponse) && preg_match('/"tag_name"\s*:\s*"([^"]+)"/', $apiResponse, $apiMatches)) {
+      $TargetVersion = $apiMatches[1];
+      $TargetURL = 'https://github.com/'.$UpdateSourceRepository.'/archive/refs/tags/'.$TargetVersion.'.tar.gz';
+      $TargetResolved = TRUE; }
+    else errorEntry('Could not determine the latest release from the update source!', 29000, FALSE); }
+  // / An explicit tag. Anything that is not edge or latest is treated as one.
+  // / The tag is used in a URL, so it is checked against a strict pattern first.
+  else {
+    if (preg_match('/^v?[0-9]+\.[0-9]+\.[0-9]+$/', $requestedVersion)) {
+      $TargetVersion = (strpos($requestedVersion, 'v') === 0) ? $requestedVersion : 'v'.$requestedVersion;
+      $TargetURL = 'https://github.com/'.$UpdateSourceRepository.'/archive/refs/tags/'.$TargetVersion.'.tar.gz';
+      $TargetResolved = TRUE; }
+    else errorEntry('The requested update target is not a recognized version!', 29001, FALSE); }
+  if ($Verbose && $TargetResolved) logEntry('Update target resolved to '.$TargetVersion.'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $apiURL = $apiResponse = $apiMatches = $curlCommand = $curlOutput = $curlExitCode = $requestedVersion = NULL;
+  unset($apiURL, $apiResponse, $apiMatches, $curlCommand, $curlOutput, $curlExitCode, $requestedVersion);
+  return array($TargetResolved, $TargetVersion, $TargetURL); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to download an update package to a temporary location.
+// / curl is used rather than wget because GitHub redirects a tarball request twice, first
+// / to codeload.github.com & then to object storage. curl -L follows the chain. A wget
+// / based updater was attempted previously & was defeated by exactly this.
+// / The download is bounded by size & by time so a hostile or broken source cannot fill
+// / the disk or hold the process open indefinitely.
+function downloadUpdatePackage($targetURL, $downloadPath) {
+  // / Set variables.
+  global $Verbose, $MaxUpdatePackageSize, $UpdateConnectionTimeout;
+  $PackageDownloaded = FALSE;
+  $curlCommand = '';
+  $curlOutput = array();
+  $curlExitCode = 1;
+  if ($Verbose) logEntry('Downloading update package.');
+  // / -L follows redirects. -f fails on an HTTP error rather than writing the error page.
+  // / --max-filesize refuses a package larger than the configured ceiling.
+  // / --max-time bounds the whole transfer, not just the connection.
+  $curlCommand = 'curl -L -f -s'
+    .' --max-time '.(int)$UpdateConnectionTimeout
+    .' --max-filesize '.(int)$MaxUpdatePackageSize
+    .' -H '.escapeshellarg('User-Agent: HRConvert2-Updater')
+    .' -o '.escapeshellarg($downloadPath)
+    .' '.escapeshellarg($targetURL).' 2>/dev/null';
+  exec($curlCommand, $curlOutput, $curlExitCode);
+  // / curl exits 22 on an HTTP error, which for a tag means the tag does not exist.
+  if ($curlExitCode === 22) errorEntry('The requested update version does not exist at the update source!', 29002, FALSE);
+  else if ($curlExitCode === 63) errorEntry('The update package is larger than the configured maximum!', 29003, FALSE);
+  else if ($curlExitCode !== 0) errorEntry('Could not download the update package! Curl exited with code '.$curlExitCode.'.', 29004, FALSE);
+  else if (!file_exists($downloadPath) or filesize($downloadPath) < 1024) errorEntry('The downloaded update package is empty or too small to be valid!', 29005, FALSE);
+  else $PackageDownloaded = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $curlCommand = $curlOutput = $curlExitCode = $targetURL = $downloadPath = NULL;
+  unset($curlCommand, $curlOutput, $curlExitCode, $targetURL, $downloadPath);
+  return $PackageDownloaded; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to merge the live configuration into a freshly downloaded one.
+// / The NEW file provides the structure, the comments & the set of settings that exist.
+// / The OLD file provides the values, for every setting that exists in both.
+// / A setting that is new in this release keeps the new default.
+// / A setting that was removed in this release is discarded with the old file.
+// / A setting whose name was corrected is treated as a removal & an addition. No attempt
+// / is made to guess that two differently spelled names mean the same thing.
+// /
+// / ARRAYS ARE NOT MERGED. The new default is kept & the difference is reported.
+// / A scalar can be substituted into the new file safely. An array cannot be rewritten
+// / without reformatting it, which would destroy the alignment & comments in the new file,
+// / & a partial merge of a two hundred element format list is worse than either version.
+// / The administrator is told which arrays differed so an intentional change can be
+// / reapplied by hand.
+function mergeConfigFile($oldConfigPath, $newConfigPath) {
+  // / Set variables.
+  global $Verbose;
+  $ConfigMerged = FALSE;
+  $ChangedArrays = $PreservedSettings = array();
+  $oldValues = $newContents = $mergedContents = $matches = array();
+  $settingName = $settingValue = $exportedValue = '';
+  $bytesWritten = 0;
+  // / Read every scalar assignment out of the OLD file without executing it.
+  // / The old file is trusted PHP, but reading it by pattern avoids any side effect &
+  // / avoids polluting this scope with seventy variables.
+  $oldContents = @file_get_contents($oldConfigPath);
+  $newContents = @file_get_contents($newConfigPath);
+  if ($oldContents === FALSE or $newContents === FALSE) errorEntry('Could not read a configuration file during the merge!', 29006, FALSE);
+  else {
+    // / Collect every assignment in the old file. Arrays are captured but not substituted.
+    if (preg_match_all('/^\$([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+?);\s*$/m', $oldContents, $matches, PREG_SET_ORDER)) {
+      foreach ($matches as $match) $oldValues[$match[1]] = trim($match[2]); }
+    // / Walk the NEW file & substitute the old value wherever both files define a setting.
+    $mergedContents = preg_replace_callback(
+      '/^\$([A-Za-z_][A-Za-z0-9_]*)(\s*=\s*)(.+?);\s*$/m',
+      function ($match) use ($oldValues, &$ChangedArrays, &$PreservedSettings) {
+        $settingName = $match[1];
+        $newValue = trim($match[3]);
+        // / A setting that does not exist in the old file keeps the new default.
+        if (!isset($oldValues[$settingName])) return $match[0];
+        $oldValue = $oldValues[$settingName];
+        // / An array keeps the new default. Report it only if the old value differed.
+        if (stripos($newValue, 'array(') === 0 or stripos($oldValue, 'array(') === 0 or strpos($newValue, '[') === 0) {
+          if ($oldValue !== $newValue) array_push($ChangedArrays, $settingName);
+          return $match[0]; }
+        // / A scalar takes the old value. Nothing else on the line is touched, so every
+        // / comment & every alignment in the new file survives.
+        if ($oldValue !== $newValue) array_push($PreservedSettings, $settingName);
+        return '$'.$settingName.$match[2].$oldValue.';'; },
+      $newContents);
+    if (!is_string($mergedContents)) errorEntry('Could not merge the configuration file!', 29007, FALSE);
+    else {
+      $bytesWritten = @file_put_contents($newConfigPath, $mergedContents, LOCK_EX);
+      if ($bytesWritten === strlen($mergedContents)) $ConfigMerged = TRUE;
+      else errorEntry('Could not write the merged configuration file!', 29008, FALSE); } }
+  if ($Verbose && $ConfigMerged) logEntry('Configuration merged. '.count($PreservedSettings).' setting(s) carried over. '.count($ChangedArrays).' array(s) reset to the new default.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $oldContents = $newContents = $mergedContents = $matches = $oldValues = $settingName = $settingValue = $exportedValue = $bytesWritten = $oldConfigPath = $newConfigPath = NULL;
+  unset($oldContents, $newContents, $mergedContents, $matches, $oldValues, $settingName, $settingValue, $exportedValue, $bytesWritten, $oldConfigPath, $newConfigPath);
+  return array($ConfigMerged, $PreservedSettings, $ChangedArrays); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to prove that an installation actually runs.
+// / Called after the swap. The new installation is asked to report its own version as a
+// / separate process. A core that cannot parse, cannot load its config, & cannot reach
+// / the command line branch will not answer, & that is the condition worth catching.
+// / A file count or a directory listing proves nothing about whether the code executes.
+function validateInstallation($installPath) {
+  // / Set variables.
+  global $Verbose;
+  $InstallationIsValid = FALSE;
+  $validateCommand = '';
+  $validateOutput = array();
+  $validateExitCode = 1;
+  $validateCommand = 'php '.escapeshellarg($installPath.'/convertCore.php').' -v 2>&1';
+  exec($validateCommand, $validateOutput, $validateExitCode);
+  // / The exit code proves it ran. The marker proves it ran far enough to report.
+  if ($validateExitCode === 0 && is_array($validateOutput)) {
+    if (strpos(implode(' ', $validateOutput), 'Core version') !== FALSE) $InstallationIsValid = TRUE; }
+  if ($Verbose) logEntry('Installation validation: '.($InstallationIsValid ? 'PASSED' : 'FAILED').', exit code '.$validateExitCode.'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $validateCommand = $validateOutput = $validateExitCode = $installPath = NULL;
+  unset($validateCommand, $validateOutput, $validateExitCode, $installPath);
+  return $InstallationIsValid; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to update the application in place.
+// / Called by the -u & --update command line arguments. NEVER reachable from the web.
+// / Replacing application code requires write access to the installation directory, which
+// / is the correct authorization for this operation & is what shell access already implies.
+// / An HTTP endpoint protected by a secret would turn that into one guessable string.
+// /
+// / THE SEQUENCE IS STAGE, SWAP, VALIDATE, ROLLBACK ON FAILURE.
+// / Nothing touches the live installation until a complete & correct replacement exists.
+// / The previous installation is retained until the NEXT update runs, so an administrator
+// / who discovers a problem an hour later still has something to restore by hand.
+function updateApplication($requestedVersion) {
+  // / Set variables.
+  global $Verbose, $InstLoc, $ProprietaryLoc, $DirSep, $HRConvertVersion, $AutoUpdateTargetVersion, $EnableAutoUpdates, $BackupLoc, $RunningAsRoot, $ApacheUser, $PermissionLevels, $ConvertDir;
+  $UpdateSucceeded = $targetResolved = $packageDownloaded = $configMerged = $installationIsValid = FALSE;
+  $swapCompleted = $rolledBack = FALSE;
+  $targetVersion = $targetURL = $workDir = $downloadPath = $extractedDir = $stagedDir = $oldDir = $backupOutput = '';
+  $preservedSettings = $changedArrays = $extractOutput = $extractedRoots = array();
+  $extractExitCode = $backupExitCode = 1;
+  $eol = PHP_EOL;
+  // / An update must be explicitly enabled. A server that does not want this cannot get it.
+  if (!$EnableAutoUpdates) {
+    errorEntry('Automatic updates are disabled in config.php!', 29009, FALSE);
+    print($eol.'Automatic updates are disabled. Set $EnableAutoUpdates to TRUE in config.php.'.$eol.$eol); }
+  else {
+    // / The command line argument overrides the configured default when one is supplied.
+    if ($requestedVersion === '') $requestedVersion = $AutoUpdateTargetVersion;
+    list ($targetResolved, $targetVersion, $targetURL) = resolveUpdateTarget($requestedVersion);
+    // / Refuse to reinstall the version that is already running.
+    // / edge is always fetched, because master moves without the version stamp changing.
+    if ($targetResolved && $targetVersion !== 'edge' && ltrim($targetVersion, 'vV') === ltrim($HRConvertVersion, 'vV')) {
+      $targetResolved = FALSE;
+      print($eol.'Version '.$targetVersion.' is already installed. Nothing to do.'.$eol.$eol);
+      logEntry('Update requested but '.$targetVersion.' is already installed.'); } }
+  // / Download & stage the release.
+  if ($targetResolved) {
+    $workDir = $ConvertDir.$DirSep.'temp'.$DirSep.'hrc2update-'.bin2hex(random_bytes(8));
+    $downloadPath = $workDir.$DirSep.'package.tar.gz';
+    $stagedDir = $workDir.$DirSep.'staged';
+    if (!@mkdir($workDir, $PermissionLevels, TRUE)) errorEntry('Could not create a working directory for the update!', 29010, FALSE);
+    else {
+      print($eol.'Downloading '.$targetVersion.' ...'.$eol);
+      $packageDownloaded = downloadUpdatePackage($targetURL, $downloadPath); } }
+  // / Extract the package & locate the single directory GitHub wraps every archive in.
+  if ($packageDownloaded) {
+    @mkdir($stagedDir, $PermissionLevels, TRUE);
+    exec('tar -xzf '.escapeshellarg($downloadPath).' -C '.escapeshellarg($stagedDir).' 2>&1', $extractOutput, $extractExitCode);
+    if ($extractExitCode !== 0) errorEntry('Could not extract the update package!', 29011, FALSE);
+    else {
+      // / A GitHub tarball contains exactly one top level directory named for the ref.
+      $extractedRoots = array_diff(scandir($stagedDir), array('.', '..'));
+      if (count($extractedRoots) !== 1) errorEntry('The update package does not have the expected structure!', 29012, FALSE);
+      else {
+        $extractedDir = $stagedDir.$DirSep.reset($extractedRoots);
+        // / A release that does not contain a core is not a release.
+        if (!file_exists($extractedDir.$DirSep.'convertCore.php')) errorEntry('The update package does not contain convertCore.php!', 29013, FALSE);
+        else {
+          print('Merging configuration ...'.$eol);
+          list ($configMerged, $preservedSettings, $changedArrays) = mergeConfigFile(
+            $InstLoc.$DirSep.'Resources'.$DirSep.'config.php',
+            $extractedDir.$DirSep.'Resources'.$DirSep.'config.php'); } } } }
+// / Carry the live data directory across & perform the swap.
+  if ($configMerged) {
+    $oldDir = $InstLoc.'.old';
+    // / A previous update should not have left this behind, but a crashed one might have.
+    if (is_dir($oldDir)) exec('rm -rf '.escapeshellarg($oldDir).' 2>&1');
+    // / The staged copy must be on the same filesystem as the installation, or rename()
+    // / is not atomic & may not work at all. It is moved beside the installation first.
+    $stagedDir = $ProprietaryLoc.$DirSep.'HRConvert2.new';
+    if (is_dir($stagedDir)) exec('rm -rf '.escapeshellarg($stagedDir).' 2>&1');
+    if (!@rename($extractedDir, $stagedDir)) {
+      // / rename() across filesystems fails, so fall back to a copy.
+      exec('cp -a '.escapeshellarg($extractedDir).' '.escapeshellarg($stagedDir).' 2>&1'); }
+    if (!is_dir($stagedDir)) errorEntry('Could not stage the update beside the installation!', 29014, FALSE);
+    else {
+      // / DATA holds live user sessions & is moved rather than copied.
+      if (is_dir($InstLoc.$DirSep.'DATA')) @rename($InstLoc.$DirSep.'DATA', $stagedDir.$DirSep.'DATA');
+      // / Match the ownership & permissions the installation is expected to carry.
+      if ($RunningAsRoot) {
+        exec('chown -R '.escapeshellarg($ApacheUser).':'.escapeshellarg($ApacheUser).' '.escapeshellarg($stagedDir).' 2>&1'); }
+      exec('chmod -R 0755 '.escapeshellarg($stagedDir).' 2>&1');
+      print('Swapping installation ...'.$eol);
+      // / Two atomic renames. There is no moment where the installation is incomplete.
+      if (!@rename($InstLoc, $oldDir)) errorEntry('Could not move the existing installation aside!', 29015, FALSE);
+      else if (!@rename($stagedDir, $InstLoc)) {
+        // / The installation is currently absent. Put it back immediately.
+        @rename($oldDir, $InstLoc);
+        errorEntry('Could not move the update into place! The previous installation was restored.', 29016, FALSE); }
+      else $swapCompleted = TRUE; } }
+  // / Validate the swapped installation & roll back if it cannot run.
+  if ($swapCompleted) {
+    print('Validating ...'.$eol);
+    $installationIsValid = validateInstallation($InstLoc);
+    if (!$installationIsValid) {
+      warningEntry('The updated installation failed validation. Rolling back.');
+      // / Return the data directory to the installation being restored.
+      if (is_dir($InstLoc.$DirSep.'DATA')) @rename($InstLoc.$DirSep.'DATA', $oldDir.$DirSep.'DATA');
+      exec('rm -rf '.escapeshellarg($InstLoc).' 2>&1');
+      // / Rollback is a single rename because the previous installation never left the
+      // / filesystem it lived on. This is the reason .old exists at all.
+      if (@rename($oldDir, $InstLoc)) {
+        $rolledBack = TRUE;
+        errorEntry('The updated installation failed validation & was rolled back!', 29017, FALSE); }
+      else errorEntry('The updated installation failed validation & COULD NOT be rolled back!', 29018, TRUE); }
+    else $UpdateSucceeded = TRUE; }
+  // / Preserve the previous installation outside the web root, then remove it from inside it.
+  // / .old sits in $ProprietaryLoc because rename() is only atomic within one filesystem,
+  // / & $ProprietaryLoc is served by Apache. A stale convertCore.php left there would be
+  // / a second, older copy of the application answering requests over HTTP.
+  // / The backup location is inside the non hosted data location & is never served.
+  // / DATA is excluded. It holds live user sessions, it has already been moved into the
+  // / new installation, & a copy of it would be swept on the delete threshold anyway.
+  if ($UpdateSucceeded && is_dir($oldDir)) {
+    if (is_dir($BackupLoc)) exec('rm -rf '.escapeshellarg($BackupLoc).' 2>&1');
+    exec('cp -a '.escapeshellarg($oldDir).' '.escapeshellarg($BackupLoc).' 2>&1', $backupOutput, $backupExitCode);
+    if ($backupExitCode === 0 && is_dir($BackupLoc)) {
+      if (is_dir($BackupLoc.$DirSep.'DATA')) exec('rm -rf '.escapeshellarg($BackupLoc.$DirSep.'DATA').' 2>&1');
+      if ($RunningAsRoot) exec('chown -R '.escapeshellarg($ApacheUser).':'.escapeshellarg($ApacheUser).' '.escapeshellarg($BackupLoc).' 2>&1');
+      logEntry('Previous installation preserved at '.$BackupLoc.'.'); }
+    else warningEntry('Could not preserve the previous installation at '.$BackupLoc.'. It will be discarded.');
+    // / The previous installation must not remain inside the web root under any outcome.
+    exec('rm -rf '.escapeshellarg($oldDir).' 2>&1'); }
+  // / Report the outcome.
+  if ($UpdateSucceeded) {
+    logEntry('Application updated to '.$targetVersion.' from '.$HRConvertVersion.'.');
+    print($eol.'Updated to '.$targetVersion.'.'.$eol);
+    print('The previous installation is preserved at '.$BackupLoc.'.'.$eol);
+    if (count($preservedSettings) > 0) print($eol.count($preservedSettings).' configuration setting(s) were carried over.'.$eol);
+    if (count($changedArrays) > 0) {
+      print($eol.'The following array settings were RESET to the new defaults.'.$eol);
+      print('Reapply any intentional changes by hand.'.$eol);
+      foreach ($changedArrays as $changedArray) print('  $'.$changedArray.$eol); }
+    print($eol.'Run  php convertCore.php -v  to confirm the new installation.'.$eol.$eol); }
+  else if ($rolledBack) print($eol.'The update failed validation & was rolled back. The previous version is running.'.$eol.$eol);
+  // / Remove the temporary working directory whatever the outcome.
+  if ($workDir !== '' && is_dir($workDir)) exec('rm -rf '.escapeshellarg($workDir).' 2>&1');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $targetResolved = $packageDownloaded = $configMerged = $installationIsValid = $swapCompleted = $rolledBack = $targetVersion = $targetURL = $workDir = $downloadPath = $extractedDir = $stagedDir = $oldDir = $preservedSettings = $changedArrays = $extractOutput = $extractedRoots = $extractExitCode = $eol = $requestedVersion = NULL;
+  unset($targetResolved, $packageDownloaded, $configMerged, $installationIsValid, $swapCompleted, $rolledBack, $targetVersion, $targetURL, $workDir, $downloadPath, $extractedDir, $stagedDir, $oldDir, $preservedSettings, $changedArrays, $extractOutput, $extractedRoots, $extractExitCode, $eol, $requestedVersion);
+  return $UpdateSucceeded; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -4470,149 +4852,158 @@ list ($LogFileExists, $LogFile, $ClamLogFile) = verifyLogs();
 if (!$LogFileExists) die('ERROR!!! '.$Time.', '.$ApplicationName.'-9, '.$SesHash3.': Could not verify logging environment!');
 if ($Verbose) logEntry('Verified logging environment.');
 
-// / Handle a command line invocation.
-$CommandLineHandled = parseCommandLine();
-if ($CommandLineHandled) {
-  if ($Verbose) logEntry('Command Line Detected. Closing connection.');
-  closeHRC2Connection();
-  die(); }
+// / The following code decides if the security context being attempted matches a valid CLI or web request.
+list($CommandLineHandled, $UserType) = parseCommandLine();
+if ($CommandLineHandled && $UserType === 'web') errorEntry('Could not verify user type!', 27, TRUE);
+if ($CommandLineHandled && $UserType === 'cli') warningEntry('CLI user detected. Conversion operations are disabled.');
 
-// / The following code tries to verify that the session is encrypted, if possible.
-list ($EncryptionVerified, $URLEcho) = verifyEncryption();
-if (!$EncryptionVerified) errorEntry('Could not verify connection!', 10, TRUE);
-else if ($Verbose) logEntry('Verified inbound connection.');
+// / Only enable file operations for web users, when the script is being run with Apache+PHP.
+if (!$CommandLineHandled && $UserType === 'web') {
+  if ($Verbose) logEntry('Web user detected. Conversion operations are enabled.');
 
-// / The following code verifies & sanitizes global variables for the session.
-list ($GlobalsAreVerified, $CoreLoaded) = verifyGlobals();
-if (!$GlobalsAreVerified) errorEntry('Could not verify globals!', 11, TRUE);
-else if ($Verbose) logEntry('Verified globals.');
+  // / The following code tries to verify that the session is encrypted, if possible.
+  list ($EncryptionVerified, $URLEcho) = verifyEncryption();
+  if (!$EncryptionVerified) errorEntry('Could not verify connection!', 10, TRUE);
+  else if ($Verbose) logEntry('Verified inbound connection.');
 
-// / The following code verifies that required directories exist & creates them where needed.
-list ($RequiredDirsExist, $RequiredDirs) = verifyRequiredDirs();
-if (!$RequiredDirsExist) errorEntry('Could not verify required directories!', 12, TRUE);
-else if ($Verbose) logEntry('Verified required directories.');
+  // / The following code verifies & sanitizes global variables for the session.
+  list ($GlobalsAreVerified, $CoreLoaded) = verifyGlobals();
+  if (!$GlobalsAreVerified) errorEntry('Could not verify globals!', 11, TRUE);
+  else if ($Verbose) logEntry('Verified globals.');
 
-// / The following code removes the build & development environments if config.php asks for it.
-list ($BuildEnvCleaned, $BuildEnvDeleted, $DevDocsDeleted) = cleanBuildEnvironment();
-if (!$BuildEnvCleaned) errorEntry('Could not clean the build environment!', 26, TRUE);
-else if ($Verbose) logEntry('Verified the build environment.');
+  // / The following code ensures that the application cannot accidentally or maliciously be run as the root or standard user beyond this point.
+  if ($RunningAsRoot or $CurrentUser !== $ApacheUser) errorEntry('The application is being run in an unsupported security context!', 28, TRUE);
+  else logEntry('Verified security context. Currently running as the '.$CurrentUser.' user.');
 
-// / The following code removes old files from the $ConvertTempDir.
-list ($CleanedTempLoc, $TempLocDeepCleaned) = cleanDataLoc($ConvertTempDir, 'ConvertTempDir');
-if (!$CleanedTempLoc) errorEntry('Could not clean the temporary location!', 13, TRUE);
-else if ($Verbose) logEntry('Cleaned temporary location.');
+  // / Only enable file operations for web users if the current user is the expected www-data user.
+  if ($CurrentUser === $ApacheUser) {
 
-// / The following code removes old files from the $ConvertLoc.
-list ($CleanedConvertLoc, $ConvertLocDeepCleaned) = cleanDataLoc($ConvertLoc, 'ConvertLoc');
-if (!$CleanedConvertLoc) errorEntry('Could not clean the convert location!', 14, TRUE);
-else if ($Verbose) logEntry('Cleaned convert location.');
+    // / The following code verifies that required directories exist & creates them where needed.
+    list ($RequiredDirsExist, $RequiredDirs) = verifyRequiredDirs();
+    if (!$RequiredDirsExist) errorEntry('Could not verify required directories!', 12, TRUE);
+    else if ($Verbose) logEntry('Verified required directories.');
 
-// / The following code displays the appropriate GUI for the session.
-if (!isset($_POST['filesToArchive']) && !isset($_POST['convertSelected']) && !isset($_POST['pdfworkSelected']) && !isset($_POST['download']) && !isset($_POST['upload']) && !isset($_POST['filesToScan'])) {
+    // / The following code removes the build & development environments if config.php asks for it.
+    list ($BuildEnvCleaned, $BuildEnvDeleted, $DevDocsDeleted) = cleanBuildEnvironment();
+    if (!$BuildEnvCleaned) errorEntry('Could not clean the build environment!', 26, TRUE);
+    else if ($Verbose) logEntry('Verified the build environment.');
 
-  // / The following code sets the GUI for the session.
-  list ($GuiIsSet, $GuiToUse, $GuiDir, $GuiFiles) = verifyGui();
-  if (!$GuiIsSet) errorEntry('Could not verify GUI! GUI set to '.$GuiToUse.'!', 25, TRUE);
-  else if ($Verbose) logEntry('Verified GUI. GUI set to '.$GuiToUse.'.');
+    // / The following code removes old files from the $ConvertTempDir.
+    list ($CleanedTempLoc, $TempLocDeepCleaned) = cleanDataLoc($ConvertTempDir, 'ConvertTempDir');
+    if (!$CleanedTempLoc) errorEntry('Could not clean the temporary location!', 13, TRUE);
+    else if ($Verbose) logEntry('Cleaned temporary location.');
 
-  // / The following code sets the color scheme for the session.
-  list ($ColorsAreSet, $ButtonCode) = verifyColors($ButtonStyle);
-  if (!$ColorsAreSet) errorEntry('Could not verify color scheme! Color set to '.$ButtonStyle.'!', 15, TRUE);
-  else if ($Verbose) logEntry('Verified color scheme. Color set to '.$ButtonStyle.'.');
+    // / The following code removes old files from the $ConvertLoc.
+    list ($CleanedConvertLoc, $ConvertLocDeepCleaned) = cleanDataLoc($ConvertLoc, 'ConvertLoc');
+    if (!$CleanedConvertLoc) errorEntry('Could not clean the convert location!', 14, TRUE);
+    else if ($Verbose) logEntry('Cleaned convert location.');
 
-  // / The following code sets the language for the session.
-  list ($LanguageIsSet, $LanguageToUse, $LanguageDir, $LanguageFiles) = verifyLanguage();
-  if (!$LanguageIsSet) errorEntry('Could not verify language! Language set to '.$LanguageToUse.'!', 16, TRUE);
-  else if ($Verbose) logEntry('Verified language. Language set to '.$LanguageToUse.'.');
+    // / The following code displays the appropriate GUI for the session.
+    if (!isset($_POST['filesToArchive']) && !isset($_POST['convertSelected']) && !isset($_POST['pdfworkSelected']) && !isset($_POST['download']) && !isset($_POST['upload']) && !isset($_POST['filesToScan'])) {
 
-  $GUIDisplayed = showGUI($ShowGUI, $ButtonCode);
-  if (!$GUIDisplayed) errorEntry('Could not display GUI!', 17, TRUE);
-  else if ($Verbose) logEntry('Displaying the GUI.'); }
-else if ($Verbose) logEntry('Skipping display GUI procedure.');
+      // / The following code sets the GUI for the session.
+      list ($GuiIsSet, $GuiToUse, $GuiDir, $GuiFiles) = verifyGui();
+      if (!$GuiIsSet) errorEntry('Could not verify GUI! GUI set to '.$GuiToUse.'!', 25, TRUE);
+      else if ($Verbose) logEntry('Verified GUI. GUI set to '.$GuiToUse.'.');
 
-// / Close the web server connection when the supplied tokens could not be verified.
-if (!$TokensAreValid) {
-  if ($Verbose) logEntry('Could not verify tokens. Token1: '.$Token1.' Token2: '.$Token2.'.');
-  if ($Verbose) logEntry('Closing connection.');
-  closeHRC2Connection();
-  die(); }
+      // / The following code sets the color scheme for the session.
+      list ($ColorsAreSet, $ButtonCode) = verifyColors($ButtonStyle);
+      if (!$ColorsAreSet) errorEntry('Could not verify color scheme! Color set to '.$ButtonStyle.'!', 15, TRUE);
+      else if ($Verbose) logEntry('Verified color scheme. Color set to '.$ButtonStyle.'.');
 
-// / Only enable file related operations if valid tokens have been supplied.
-if ($TokensAreValid) {
-  if ($Verbose) logEntry('Verified tokens. Token1: '.$Token1.' Token2: '.$Token2.'.');
+      // / The following code sets the language for the session.
+      list ($LanguageIsSet, $LanguageToUse, $LanguageDir, $LanguageFiles) = verifyLanguage();
+      if (!$LanguageIsSet) errorEntry('Could not verify language! Language set to '.$LanguageToUse.'!', 16, TRUE);
+      else if ($Verbose) logEntry('Verified language. Language set to '.$LanguageToUse.'.');
 
-  // / The following code is performed when a user initiates a file upload.
-  if (!empty($_FILES)) {
-    logEntry('Initiating Uploader.');
-    list ($UploadComplete, $UploadErrors) = uploadFiles();
-    if (!$UploadComplete) errorEntry('Upload Failed!', 18, TRUE);
-    if ($UploadErrors) logEntry('Upload finished with errors.');
-    if ($Verbose) logEntry('Upload Complete.'); }
+      // / The following code actually builds & renders the GUI.
+      $GUIDisplayed = showGUI($ShowGUI, $ButtonCode);
+      if (!$GUIDisplayed) errorEntry('Could not display GUI!', 17, TRUE);
+      else if ($Verbose) logEntry('Displaying the GUI.'); }
 
-  // / The following code is performed when a user downloads a selection of files.
-  if (isset($_POST['download'])) {
-    logEntry('Initiating Downloader.');
-    list ($DownloadComplete, $DownloadErrors) = downloadFiles($Download);
-    if (!$DownloadComplete) errorEntry('Download Failed!', 19, TRUE);
-    if ($DownloadErrors) logEntry('Download finished with errors.');
-    if ($Verbose) logEntry('Download Complete.'); }
+      // / Check if we're providing the user with tokens generated during this session, & write that information to the log.
+      // / In no other code path do we generate a new token that gets provided to the user.
+      if (!$TokensAreValid) if ($Verbose) logEntry('Providing user with tokens: '.$Token1.' Token2: '.$Token2.'.');
 
-  // / The following code is performed when a user deletes a selection of files.
-  if (isset($_POST['filesToDelete'])) {
-    logEntry('Initiating Deletor.');
-    list ($DeleteComplete, $DeleteErrors) = deleteFiles($FilesToDelete);
-    if (!$DeleteComplete) errorEntry('Delete Failed!', 24, TRUE);
-    if ($DeleteErrors) logEntry('Delete finished with errors.');
-    if ($Verbose) logEntry('Delete Complete.'); }
+    // / If this is an API call with a simple output, continue without having displayed any GUI at all.
+    else if ($Verbose) logEntry('Skipping display GUI procedure.');
 
-  // / The following code is performed when a user archives a selection of files.
-  if (isset($_POST['filesToArchive'])) {
-    logEntry('Initiating Archiver.');
-    list ($ArchiveComplete, $ArchiveErrors) = archiveFiles($FilesToArchive, $UserFilename, $UserExtension);
-    if (!$ArchiveComplete) errorEntry('Archive Failed!', 20, TRUE);
-    if ($ArchiveErrors) logEntry('Archive finished with errors.');
-    if ($Verbose) logEntry('Archive Complete.'); }
+    // / Only enable file related operations if valid tokens were been supplied by the user.
+    if ($TokensAreValid) {
+        if ($Verbose) logEntry('Verified supplied tokens. Token1: '.$Token1.' Token2: '.$Token2.'.');
 
-  // / The following code is performed when a user converts a selection of files.
-  if (isset($_POST['convertSelected'])) {
-    logEntry('Initiating Converter.');
-    list ($ConversionComplete, $ConversionErrors) = convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, $Width, $Rotate, $Bitrate);
-    if (!$ConversionComplete) errorEntry('Conversion Failed!', 21, TRUE);
-    if ($ConversionErrors) logEntry('Conversion finished with errors.');
-    if ($Verbose) logEntry('Conversion Complete.'); }
+      // / The following code is performed when a user initiates a file upload.
+      if (!empty($_FILES)) {
+        logEntry('Initiating Uploader.');
+        list ($UploadComplete, $UploadErrors) = uploadFiles();
+        if (!$UploadComplete) errorEntry('Upload Failed!', 18, TRUE);
+        if ($UploadErrors) logEntry('Upload finished with errors.');
+        if ($Verbose) logEntry('Upload Complete.'); }
 
-  // / The following code is performed when a user performs OCR on a selection of files.
-  if (isset($_POST['pdfworkSelected'])) {
-    logEntry('Initiating Converter.');
-    list ($ConversionComplete, $ConversionErrors) = ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method);
-    if (!$ConversionComplete) errorEntry('OCR Operation Failed!', 22, TRUE);
-    if ($ConversionErrors) logEntry('OCR Operation finished with errors.');
-    if ($Verbose) logEntry('Conversion Complete.'); }
+      // / The following code is performed when a user downloads a selection of files.
+      if (isset($_POST['download'])) {
+        logEntry('Initiating Downloader.');
+        list ($DownloadComplete, $DownloadErrors) = downloadFiles($Download);
+        if (!$DownloadComplete) errorEntry('Download Failed!', 19, TRUE);
+        if ($DownloadErrors) logEntry('Download finished with errors.');
+        if ($Verbose) logEntry('Download Complete.'); }
 
-  // / The following code is performed when a user performs a virus scan on a selection of files.
-  if (isset($_POST['filesToScan']) && $AllowUserVirusScan) {
-    logEntry('Initiating User Virus Scannner.');
-    list ($ScanComplete, $ScanErrors, $UserVirusFound) = userVirusScan($FilesToScan, $UserScanType);
-    if (!$ScanComplete) errorEntry('User Virus Scan Failed!', 23, TRUE);
-    if ($UserVirusFound) logEntry('The User Virus Scan detected infected files.');
-    if (!$UserVirusFound) logEntry('The User Virus Scan did not detect any infected files.');
-    if ($ScanErrors) logEntry('User Virus Scan finished with errors.');
-    if ($Verbose) logEntry('User Virus Scan Complete.'); }
+      // / The following code is performed when a user deletes a selection of files.
+      if (isset($_POST['filesToDelete'])) {
+        logEntry('Initiating Deletor.');
+        list ($DeleteComplete, $DeleteErrors) = deleteFiles($FilesToDelete);
+        if (!$DeleteComplete) errorEntry('Delete Failed!', 24, TRUE);
+        if ($DeleteErrors) logEntry('Delete finished with errors.');
+        if ($Verbose) logEntry('Delete Complete.'); }
 
-  // / Close the web server connection after all required content has been served.
-  if ($Verbose) logEntry('Closing connection.');
-  closeHRC2Connection();
+      // / The following code is performed when a user archives a selection of files.
+      if (isset($_POST['filesToArchive'])) {
+        logEntry('Initiating Archiver.');
+        list ($ArchiveComplete, $ArchiveErrors) = archiveFiles($FilesToArchive, $UserFilename, $UserExtension);
+        if (!$ArchiveComplete) errorEntry('Archive Failed!', 20, TRUE);
+        if ($ArchiveErrors) logEntry('Archive finished with errors.');
+        if ($Verbose) logEntry('Archive Complete.'); }
 
-  // / Nothing below this point may produce any output.
-  // / The user has already been served & the connection is already closed.
-  // / If a user still has a pending stream open, keep running to monitor the FFMPEG process.
-  if ($WaitForStream && $StreamPID > 0) {
-    logEntry('Waiting up to '.$StreamWatchTimeout.' minutes for the user to watch the stream.');
-    list ($StreamCompleted, $StreamKilled, $ElapsedSeconds) = waitForStream($StreamPID, $StreamOutputPath);
-    if ($StreamKilled) logEntry('The users stream was killed.');
-    if ($StreamCompleted) logEntry('The users stream has completed after '.$ElapsedSeconds.' seconds.'); }
+      // / The following code is performed when a user converts a selection of files.
+      if (isset($_POST['convertSelected'])) {
+        logEntry('Initiating Converter.');
+        list ($ConversionComplete, $ConversionErrors) = convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, $Width, $Rotate, $Bitrate);
+        if (!$ConversionComplete) errorEntry('Conversion Failed!', 21, TRUE);
+        if ($ConversionErrors) logEntry('Conversion finished with errors.');
+        if ($Verbose) logEntry('Conversion Complete.'); }
 
-  // / Stop execution of the application.
-  die(); }
+      // / The following code is performed when a user performs OCR on a selection of files.
+      if (isset($_POST['pdfworkSelected'])) {
+        logEntry('Initiating Converter.');
+        list ($ConversionComplete, $ConversionErrors) = ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method);
+        if (!$ConversionComplete) errorEntry('OCR Operation Failed!', 22, TRUE);
+        if ($ConversionErrors) logEntry('OCR Operation finished with errors.');
+        if ($Verbose) logEntry('Conversion Complete.'); }
+
+      // / The following code is performed when a user performs a virus scan on a selection of files.
+      if (isset($_POST['filesToScan']) && $AllowUserVirusScan) {
+        logEntry('Initiating User Virus Scannner.');
+        list ($ScanComplete, $ScanErrors, $UserVirusFound) = userVirusScan($FilesToScan, $UserScanType);
+        if (!$ScanComplete) errorEntry('User Virus Scan Failed!', 23, TRUE);
+        if ($UserVirusFound) logEntry('The User Virus Scan detected infected files.');
+        if (!$UserVirusFound) logEntry('The User Virus Scan did not detect any infected files.');
+        if ($ScanErrors) logEntry('User Virus Scan finished with errors.');
+        if ($Verbose) logEntry('User Virus Scan Complete.'); }
+
+      // / Close the web server connection after all required content has been served.
+      if ($Verbose) logEntry('Closing connection.');
+      closeHRC2Connection();
+
+      // / Nothing below this point may produce any output.
+      // / The user has already been served & the connection is already closed.
+      // / If a user still has a pending stream open, keep running to monitor the FFMPEG process.
+      if ($WaitForStream && $StreamPID > 0) {
+        logEntry('Waiting up to '.$StreamWatchTimeout.' minutes for the user to watch the stream.');
+        list ($StreamCompleted, $StreamKilled, $ElapsedSeconds) = waitForStream($StreamPID, $StreamOutputPath);
+        if ($StreamKilled) logEntry('The users stream was killed.');
+        if ($StreamCompleted) logEntry('The users stream has completed after '.$ElapsedSeconds.' seconds.'); } } } }
+
+// / Stop execution of the application.
+die();
 // / -----------------------------------------------------------------------------------
 ?>

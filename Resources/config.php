@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/11/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/14/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.6.5.
+// / v3.6.8.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -37,7 +37,7 @@
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. Replacing config.php with a newer one is the correct fix.
-$ConfigVersion = 'v3.6.5';
+$ConfigVersion = 'v3.6.8';
 
 // / ---Security Informations---
 // /
@@ -361,6 +361,22 @@ $LogDir = $ConvertLoc.'/Logs';
 // /   Changing this value is not recommended.
 // /   Default is $ConvertLoc.
 $HomeLoc = $ConvertLoc;
+// /  --Backup Location--
+// /   Where the previous installation is preserved after a successful update.
+// /   The update process moves the old installation aside inside the installation
+// /   directory first, because rename() is only atomic within one filesystem & that is
+// /   what makes a rollback instant. That location is served by Apache, so the old
+// /   installation is copied here & removed from there as soon as the update succeeds.
+// /   A stale convertCore.php left inside the web root would be a second, older copy of
+// /   the application answering requests over HTTP.
+// /   This location must NOT be inside the web root & must NOT be inside the installation
+// /   directory. It holds exactly one previous version & is replaced on every update.
+// /   The DATA directory is excluded from the backup, because it holds live user sessions
+// /   that have already been carried into the new installation.
+// /   Do not include a trailing slash.
+// /   Do not use a path with whitespace.
+// /   Default is $ConvertLoc.'/Last-Installed-Version'
+$BackupLoc = $ConvertLoc.'/Last-Installed-Version';
 // /  --Append Log Hash To Log Files--
 // /   This setting is used to append a 12 digit unique identifier to log file names.
 // /   This randomizes log file names across multiple installations & servers.
@@ -391,6 +407,38 @@ $ApplicationName = 'HRConvert2';
 // /   You can change this to make it fit with other services your organization provides.
 // /   Default is Convert Anything!
 $ApplicationTitle = 'Convert Anything!';
+// /  --Enable Automatic Updates--
+// /   Allow HRConvert2 to replace its own application code from the command line.
+// /   It is not possible to perform an update via the web interface.
+// /   If set to TRUE, an administrator may run  php convertCore.php -u  to update.
+// /   If set to FALSE, that command refuses & the application may only be updated by hand.
+// /   Valid options are TRUE or FALSE.
+// /   Default is FALSE.
+$EnableAutoUpdates = TRUE;
+// /  --Automatic Update Target Version--
+// /   Which release an update installs when no version is supplied on the command line.
+// /   If set to 'latest', the newest tagged release is installed.
+// /   If set to 'edge', the current state of the master branch is installed.
+// /   If set to a version such as 'v3.6.8', exactly that tag is installed.
+// /   An update to a tag that does not exist fails rather than installing something else.
+// /   A version supplied on the command line always overrides this setting.
+// /   Default is 'latest'.
+$AutoUpdateTargetVersion = 'latest';
+// /  --Update Source Repository--
+// /   The GitHub repository an update is fetched from, as owner/name.
+// /   Change this only if you maintain your own fork & want updates to come from it.
+// /   Default is 'zelon88/HRConvert2'.
+$UpdateSourceRepository = 'zelon88/HRConvert2';
+// /  --Maximum Update Package Size--
+// /   The largest update package that will be accepted, in bytes.
+// /   A source that serves something larger is refused rather than filling the disk.
+// /   Default is 524288000, which is 500 megabytes.
+$MaxUpdatePackageSize = 524288000;
+// /  --Update Connection Timeout--
+// /   The maximum number of seconds an update download may take in total.
+// /   This bounds the whole transfer, not just the time taken to connect.
+// /   Default is 1000.
+$UpdateConnectionTimeout = 1000;
 // /  --Supported Guis--
 // /   The list of GUIs that are supported by this application.
 // /   Before adding a supported GUI be sure to add the matching folder full of GUI files to /UI.

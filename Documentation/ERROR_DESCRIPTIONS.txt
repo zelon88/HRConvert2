@@ -23,7 +23,7 @@ This application will run on just about any x86 or x64 computer.
 DEPENDENCY REQUIREMENTS ... 
 This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
 Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
-Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap & xvfb-run.
+Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia & xvfb-run.
 ADDITIONAL INFORMATION
 HRConvert2 logs information about it's operational activity to the Logs subdirectory where HRConvert2 is installed by default.
 The default logging directory can be adjusted by modifying the --Log Storage Directory-- section of the config.php file. 
@@ -1492,6 +1492,37 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-8002, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this image conversion cannot be isolated!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  An image conversion was refused because the server could not build a sandbox for it.
+  ImageMagick parses untrusted image files & has a long history of memory corruption bugs.
+  The delegate system invokes other programs by design, which is what ImageTragick abused.
+  policy.xml restricts that natively, but a policy file is a blocklist & has been bypassed.
+  HRConvert2 therefore runs the conversion inside a bubblewrap namespace that can see only
+  the two directories the conversion needs, & refuses rather than running without one.
+  Bubblewrap requires unprivileged user namespaces, which several situations prevent.
+  The bubblewrap package may not be installed.
+  Debian 12 & Ubuntu 24.04 set kernel.apparmor_restrict_unprivileged_userns to 1, which
+  blocks bubblewrap until an AppArmor profile is installed for it.
+  A container blocks the required syscalls unless it was started with the correct options.
+  See --Require Sandbox-- & --Require Sandbox On Docker-- in config.php.
+  Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
+  See INSTALLATION_INSTRUCTIONS.txt for the AppArmor profile this requires.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9000, <SESSION_IDENTIFIER>: The model converter timed out!
 
 FILE
@@ -1545,6 +1576,58 @@ ERROR DESCRIPTION
   HRConvert2 refuses any build it cannot positively identify, because an unknown build cannot be cleared.
   Check the installed versions by running 'assimp version' as the web server user.
   The conversion sequence is aborted to protect the processing pipeline from invalid command parameters or missing dependencies.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9002, <SESSION_IDENTIFIER>: The installed MeshLab version is missing, unidentifiable, or too old!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  MeshLab normalizes mesh formats before Assimp writes the output & could not be verified.
+  Install it with  sudo apt install meshlab
+  The minimum is set by --Minimum Meshlab Version-- in config.php.
+  MeshLab uses date style version numbers such as 2020.09, so the minor part is compared
+  numerically & a build reporting 2020.9 satisfies a minimum of 2020.09.
+  A build that reports no parseable version is refused, because an unknown build cannot be
+  cleared against a minimum.
+  This check is SKIPPED when --Use PyMeshLab-- is TRUE, because the bundled python module
+  is used instead of the meshlabserver binary & has no version to interrogate.
+  Assimp is checked separately as error 9001, because every model route uses Assimp while
+  only the mesh routes use MeshLab.
+  Run  php convertCore.php -v  to see the detected version.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9003, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this model conversion cannot be isolated!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A 3D model conversion was refused because the server could not build a sandbox for it.
+  Assimp & MeshLab both parse complex binary scene formats & both carry CVE histories.
+  Neither offers a native restriction on what it may read, so the sandbox is the only
+  boundary available & the conversion is refused rather than run without one.
+  See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
+  Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -1610,6 +1693,30 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-10001, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this drawing conversion cannot be isolated!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A technical drawing conversion was refused because a sandbox could not be built for it.
+  Dia parses diagram formats & offers no native restriction on what it may read.
+  See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
+  NOTE. Dia is a GTK application. If a drawing conversion fails INSIDE a working sandbox
+  rather than being refused by this error, the cause is usually a display requirement.
+  The sandbox provides a private /tmp, so an X socket outside it is not visible.
+  Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-11000, <SESSION_IDENTIFIER>: The video converter timed out!
 
 FILE
@@ -1668,6 +1775,29 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-11002, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this video conversion cannot be isolated!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A video conversion was refused because the server could not build a sandbox for it.
+  FFMPEG parses untrusted container & codec data, which is among the largest attack
+  surfaces in the application, & its decoders have a long CVE history.
+  A video conversion needs no network access, so the sandbox unshares it entirely.
+  See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
+  Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-12000, <SESSION_IDENTIFIER>: The audio converter timed out!
 
 FILE
@@ -1721,6 +1851,28 @@ ERROR DESCRIPTION
   This minimum exists for feature and format support and is not a security control.
   Audio conversions read a local file and never fetch anything remote.
   The stream playlist protocol bypass affecting older builds cannot reach this operation.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-12002, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this audio conversion cannot be isolated!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  An audio conversion was refused because the server could not build a sandbox for it.
+  FFMPEG parses untrusted container & codec data & its decoders have a long CVE history.
+  An audio conversion needs no network access, so the sandbox unshares it entirely.
+  See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
+  Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -1898,7 +2050,8 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Ffmpeg is not responding.
+  One of the archive dependencies is not responding.
+  This is contained in the convertArchive() function.
   The conversion operation was attempted 5 times but no output file could be created.
   The user submitted a request to convert a file that does not exist.
   The user submitted a request that was incorrect, malformed, or corrupt.
@@ -1915,6 +2068,248 @@ ERROR DESCRIPTION
   One of the $_POST or $_GET variables submitted was empty after sanitization.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13006, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this archive operation cannot be isolated!
+ 
+FILE
+  /convertCore.php
+ 
+FATAL
+  NO
+ 
+LOGGED
+  YES
+ 
+ERROR DESCRIPTION
+  An archive operation was refused because the server could not build a sandbox for it.
+  This error covers three separate operations.
+  Extracting a source archive during a format conversion.
+  Re-archiving the extracted files into the requested output format.
+  Archiving a single file the user selected, which is a different operation entirely.
+  An archive utility parses attacker supplied structure & has historically been a source of
+  path traversal, decompression bomb & memory corruption issues.
+  See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
+  Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13007, <SESSION_IDENTIFIER>: The extractor produced no files from the source archive!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The source archive was opened but nothing came out of it, so there is nothing to convert.
+  The archive may be empty, corrupt, encrypted, or in a format 7-Zip cannot decompress even
+  though it can read the container.
+  THE MOST COMMON CAUSE IS A MISSING CODEC RATHER THAN A BROKEN ARCHIVE.
+  On Debian & Ubuntu, rar extraction requires the p7zip-rar package IN ADDITION to p7zip-full.
+  Without it, 7-Zip reads the archive headers perfectly, reports Unsupported Method for every
+  member, & extracts nothing. Install it with  sudo apt install p7zip-rar
+  Confirm the codec is present by running  7z i  & looking for rar in the list.
+  The version check cannot detect a missing codec, because the version reported is correct.
+  This check exists because an empty extraction used to be re-archived silently. The
+  archiver packaged the empty staging folder, the output file existed, & the conversion
+  reported success while producing an archive containing nothing.
+  The extractor output is written to the log immediately above this error & names the
+  specific reason for each member it could not extract.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13008, <SESSION_IDENTIFIER>: The installed 7-Zip version is missing, unidentifiable, or too old!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  7-Zip could not be verified. It is used in three places & this error covers all of them.
+  It is the ONLY extractor, so every archive INPUT format depends on it regardless of what
+  the output format is. A conversion cannot begin without it.
+  It creates 7z, cbz & cbr archives during a format conversion.
+  It creates 7z, tar, tar.gz & tar.bz2 archives when a single file is archived.
+  NOTE. Those two lists differ. A format conversion uses the tar utility for the tar family
+  & 7-Zip for 7z, while a single file archive uses 7-Zip for both. This is a historical
+  inconsistency rather than a deliberate design & is worth being aware of when diagnosing a
+  format that works in one path & not the other.
+  Install it with  sudo apt install p7zip-full p7zip-rar
+  The minimum is set by --Minimum 7-Zip Version-- in config.php.
+  Check the installed version by running  7z  with no arguments in a terminal.
+  A build that reports no parseable version is refused, because an unknown build cannot be
+  cleared against a minimum.
+  NOTE. This check verifies the VERSION & cannot verify the CODECS. A correctly versioned
+  7-Zip with no rar codec passes this check & then silently fails to extract rar archives.
+  See error 13007 for that case.
+  NOTE. 7-Zip cannot create rar archives. See error 13012.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13009, <SESSION_IDENTIFIER>: Mkisofs is missing, unidentifiable, or too old!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Mkisofs could not be verified, so disk image formats cannot be created.
+  This affects OUTPUT only, both when converting an archive & when archiving a single file.
+  A format conversion can produce iso, vhd & vdi. A single file archive can produce iso.
+  Those formats can still be READ as input, because 7-Zip performs every extraction.
+  The command may be provided by cdrtools or by the genisoimage fork. Either is accepted.
+  Install it with  sudo apt install genisoimage
+  The minimum is set by --Minimum Mkisofs Version-- in config.php & is deliberately low,
+  because the two implementations use unrelated version numbers.
+  Check the installed version by running  mkisofs --version  in a terminal.
+  Remove iso, vhd & vdi from --User Archive Array-- in config.php if this server does not
+  need to create disk images, & the formats will not be offered to users at all.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13010, <SESSION_IDENTIFIER>: Zip is missing, unidentifiable, or too old!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Zip could not be verified, so zip archives cannot be created.
+  This affects OUTPUT only, both when converting an archive & when archiving a single file.
+  Zip archives can still be READ as input, because 7-Zip performs every extraction.
+  Install it with  sudo apt install zip
+  The minimum is set by --Minimum Zip Version-- in config.php.
+  Check the installed version by running  zip -v  in a terminal.
+  The zip format has been stable for a very long time, so this minimum exists for
+  consistency with the other dependency checks rather than because any known version is
+  unsuitable. A failure here almost always means the utility is not installed at all.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13011, <SESSION_IDENTIFIER>: Tar is missing, unidentifiable, or too old!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Tar could not be verified, so tar archives cannot be created.
+  This affects tar, tar.gz & tar.bz2 OUTPUT only. Those formats can still be read as input,
+  because 7-Zip performs every extraction.
+  Tar is part of the base system on every supported distribution, so a failure here usually
+  means something is wrong with the installation rather than that a package is missing.
+  The minimum is set by --Minimum Tar Version-- in config.php.
+  Check the installed version by running  tar --version  in a terminal.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13012, <SESSION_IDENTIFIER>: The archiver timed out!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  One of the archive dependencies is not responding.
+  This is contained in the archiveFiles() function.
+  The conversion operation was attempted 5 times but no output file could be created.
+  The user submitted a request to convert a file that does not exist.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+  The user has requested to convert a file that was deleted for exceededing the --File Deletion Age Theshold-- specified in config.php.
+  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
+  The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
+  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs to have read & write access to the Data directory.
+  This may be the result of incorrect file permission levels on the directory where the application is installed.
+  This may be the result of incorrect file permission levels on the directory where Data is stored.
+  This may be the result of incorrect user or group associations for the www-data user or group.
+  The device where data is stored has an insufficient amount of storage space available.
+  The request contained character types or encoded data that are not supported.
+  One of the $_POST or $_GET variables submitted was empty after sanitization.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13013, <SESSION_IDENTIFIER>: Rar output requires the rar utility, which is missing or too old!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A rar archive was requested & this server cannot create one.
+  THERE IS NO FALLBACK FOR THIS FORMAT & THERE CANNOT BE ONE.
+  RAR compression is proprietary. 7-Zip can READ a rar archive but has never been able to
+  WRITE one, so every other archive format in HRConvert2 has an alternative & this one does
+  not. An earlier version attempted to fall back to 7-Zip here, which produced an error
+  rather than an archive.
+  Rar INPUT is unaffected. 7-Zip extracts rar archives normally, provided the rar codec is
+  present. See error 13007 for that case.
+  The rar utility is a commercial product from RARLAB & is not packaged by Debian or Ubuntu.
+  The binary that is commonly installed is a trial copy which prints a registration notice
+  into the log on every archive it creates. That notice is harmless & is not an error.
+  Install it from https://www.rarlab.com/download.htm
+  The minimum is set by --Minimum Rar Version-- in config.php.
+  Check the installed version by running  rar  with no arguments in a terminal.
+  Run  php convertCore.php -v  to see whether this server has a usable rar utility.
+  Remove rar from --User Archive Array-- in config.php if this server cannot create rar
+  archives, & the format will no longer be offered to users at all. That is the correct
+  resolution on a server that will never have the utility installed.
+  NOTE. HRConvert2 passes -ma4 when creating a rar archive, which selects the older RAR4
+  format. RAR 7.00 defaults to a compression method that older extractors report as
+  unsupported, & without -ma4 this application produced archives it could not itself
+  extract on the very next request.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2083,6 +2478,35 @@ ERROR DESCRIPTION
   One of the $_POST or $_GET variables submitted was empty after sanitization.
   The user has requested to convert a file that was deleted for exceededing the --File Deletion Age Theshold-- specified in config.php.
   This error is not fatal but the file that causes it will be skipped.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15012, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  An OCR operation was refused because the server could not build a sandbox for it.
+  This error covers pdftotext & Tesseract. Neither offers a native restriction on what it
+  may read, so the sandbox is the only boundary available.
+  A PDF is a container format that can reference external resources & embed fonts, scripts
+  and images, so a PDF parser is a considerably larger attack surface than it appears.
+  See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
+  NOTE. The ImageMagick step of the advanced OCR method does NOT produce this error.
+  ImageMagick has policy.xml, so an unavailable sandbox is a downgrade to a weaker control
+  rather than to no control, & that step continues with a warning instead.
+  NOTE. The document conversion engine is not sandboxed at all & is unaffected by this.
+  It is a persistent listener rather than a process launched per conversion.
+  Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -2659,6 +3083,28 @@ ERROR DESCRIPTION
   The device where data is stored has an insufficient amount of storage space available.
   The request contained character types or encoded data that are not supported.
   One of the $_POST or $_GET variables submitted was empty after sanitization.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-22001, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this subtitle conversion cannot be isolated!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A subtitle conversion was refused because the server could not build a sandbox for it.
+  FFMPEG performs subtitle conversions & parses untrusted text & binary subtitle formats.
+  A subtitle conversion needs no network access, so the sandbox unshares it entirely.
+  See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
+  Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -3670,6 +4116,30 @@ ERROR DESCRIPTION
   Verify the installed version by running 'inkscape -version' as the web server user.
   This minimum exists for feature and format support and is not a security control.
   SVG conversions read a local file and never fetch anything remote.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-25002, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this SVG conversion cannot be isolated!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  An SVG conversion was refused because the server could not build a sandbox for it.
+  Inkscape parses SVG, which is XML & can reference external entities, remote images &
+  embedded scripts. An SVG parser is a considerably larger attack surface than it appears.
+  Inkscape offers no native restriction on what it may read, so the sandbox is the only
+  boundary available & the conversion is refused rather than run without one.
+  See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
+  Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 

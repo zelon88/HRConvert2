@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 5/8/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/152026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.4.1.
+v3.7.0.
 This file contains a walkthrough guide for building an HRConvert2 Docker Image from source.
 
 HARDWARE REQUIREMENTS ... 
@@ -21,18 +21,9 @@ This application will run on just about any x86 or x64 computer.
 DEPENDENCY REQUIREMENTS ... 
 This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
 Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
-Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap & xvfb-run.
+Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia & xvfb-run.
+
 <3 Open-Source
------------------------------------------------------------------------------------
-
-
-
------PREFACE-----
-For this guide, it is assumed that the user is installing HRConvert2 on a PC which meets the above conditions.
-This document contains instructions for building an HRConvert2 Docker Image on a fresh deployment of Lubuntu 21.04 LTS with no dependencies. 
-
-For a walkthrough of installing a Ubuntu distro, visit:
-  https://www.ubuntu.com/download/desktop/install-ubuntu-desktop
 -----------------------------------------------------------------------------------
 
 
@@ -60,61 +51,141 @@ If you truly want to build your own Docker Image from source this document will 
 -----------------------------------------------------------------------------------
 
 
+-----STEP 0 - ARE YOU IN THE RIGHT PLACE?-----
+In this step we will make sure your use case aligns with the purpose of this document.
+It is not necessary to perform the steps in this document to simply install and use the official HRConvert2 Docker Image.
+This document is intended to be used for development purposes by HRConvert2 maintainers.
 
------STEP 1 - PREPARE THE FILES-----
+If you simply want to download and run HRConvert2, you can download the official pre-built docker image at the following URL.
+  https://hub.docker.com/r/zelon88/hrconvert2
+
+Usually people who want to run the official Docker image are people who;
+  1. Want to use HRConvert2 for personal, industrial, educational, non-profit, or commercial use on a small number of servers.
+  2. Want to run the most stable, secure, & up-to-date version of HRConvert2 that is available.
+  3. Just want to convert files.
+  4. Are not planning on contributing to development.
+  5. Are not planning on modifying the code or dependencies.
+
+Usually people who want to build their own Docker Image from source are people who;
+  1. Have modified the code or dependencies, and want to share the changes or deploy them on many servers.
+  2. Have a custom configuration that needs to be deployed on many servers.
+  3. Are contributing to a branch of HRConvert2 for distribution.
+
+If you truly want to build your own Docker Image from source this document will guide you through the Docker Image Build Instructions.
+-----------------------------------------------------------------------------------
+
+
+-----STEP 1 - PUBLISHING A RELEASE-----
+Publishing the official image is automatic. Pushing a version tag is the entire procedure.
+
+1. Make sure every version stamp in the source matches the version you are about to tag.
+  1a. $HRConvertVersion in convertCore.php.
+  1b. $ConfigVersion in Resources/config.php.
+  1c. $GuiVersion in every UI/<GUI>/uiVersionInfo.php, if the interfaces changed.
+  1d. $LanguageVersion in every language pack, if the strings changed.
+  1e. Run  'php convertCore.php -v'  to confirm every component reports what you expect.
+  1f. A tag that does not match the source produces an image whose core refuses its own config.
+2. Commit and push everything to the repository.
+3. Tag the release and push the tag.
+  3a. Run  'git tag v#.#.#'
+  3b. Run  'git push origin v#.#.#'
+4. The workflow at .github/workflows/docker-build.yml takes over from there. It will;
+  4a. Build for linux/amd64 and linux/arm64.
+  4b. Publish to Docker Hub as v#.#.#, #.#, # and latest.
+  4c. Publish the same tags to GHCR.
+  4d. Start the resulting container and confirm it serves a page before calling it good.
+5. Watch the run in the Actions tab of the repository.
+  5a. A cold build takes a long time. The arm64 half is emulated and is the slow part.
+  5b. A build where only later layers changed reuses the cache and finishes much faster.
+6. If the workflow fails, nothing is published. Fix the cause, delete the tag, and tag again.
+  6a. Run  'git tag -d v#.#.#'
+  6b. Run  'git push --delete origin v#.#.#'
+
+NOTE. Pushing to master does NOT publish anything. Only a version tag does.
+NOTE. A pull request builds the image without publishing it, which catches a broken
+      Dockerfile before it is merged rather than after it is tagged.
+NOTE. The workflow can also be started by hand from the Actions tab using workflow_dispatch.
+-----------------------------------------------------------------------------------
+
+
+-----STEP 2 - BUILDING BY HAND-----
+Everything below is for building an image locally. This is not how the official image is
+published. Build by hand when you are testing a Dockerfile change, when you maintain a fork,
+or when you need an image the workflow will not produce.
+
 1. Grab a cup of coffee.
-2. Make sure you have Docker installed. Run  'sudo apt-get install docker.io'
-3. Update the Dockerfile located at /var/www/html/HRProprietary/HRConvert2/Documentation/Build/Dockerfile.
-4. Complete the source code update of HRConvert2 and upload it to the Github repo.
-  4a. Note that the repo is the official source code location for the Dockerfile.
-  4b. The source you copy over with the docker file is for reference only, and IS NOT USED to generate the image.
-  4c. The source code used to generate the image comes from the Github repo specified in the Dockerfile.
-5. Navigate to /var/www/html/HRProprietary/HRConvert2 and copy all folders EXCEPT Logs and DATA.
-6. Paste the folders onto into a folder on the Desktop.
-  6a. Note that the source code contained in these files is mostly unused. 
-  6b. The Dockerfile creates a container that downloads the source code from the Github repo.
+2. Make sure you have Docker and the tools a multi platform build needs.
+  2a. Run  'sudo apt install docker.io docker-buildx qemu-user-static binfmt-support'
+  2b. Run  'docker run --privileged --rm tonistiigi/binfmt --install all'
+  2c. qemu-user-static is what allows an amd64 machine to build the arm64 image.
+3. Before building, ALWAYS restart the Docker service. Doing so resolves countless errors.
+  3a. Run  'sudo service docker restart'
+  3b. Run  'sudo /etc/init.d/docker restart'
+  3c. Run  'sudo snap restart docker'
+4. Create a builder. The default builder cannot perform a multi platform build.
+  4a. Run  'docker buildx create --name hrc2builder --use --bootstrap'
+5. Build from the repository root, NOT from the Documentation/Build folder.
+  5a. The COPY instructions in the Dockerfile are relative to the build context.
+  5b. For one platform, run;
+      docker buildx build --file Documentation/Build/Dockerfile --platform linux/amd64 --tag hrconvert2:test --progress=plain --load .
+  5c. For both platforms, run;
+      docker buildx build --file Documentation/Build/Dockerfile --platform linux/amd64,linux/arm64 --tag hrconvert2:test --progress=plain .
+  5d. For a clean build that reuses nothing, add  '--no-cache'
+6. Grab another cup of coffee. The build process will take some time.
+  6a. FFMPEG is compiled from source and is the majority of the build time.
+  6b. FFMPEG is compiled rather than installed because it is built with -nonfree.
+      A -nonfree build cannot be redistributed, so the packaged FFMPEG cannot be used.
+  6c. On a 16 core machine a clean single platform build takes roughly 25 minutes.
+  6d. The arm64 half is emulated and takes considerably longer than the amd64 half.
 -----------------------------------------------------------------------------------
 
 
------STEP 2 - BUILD THE DOCKER IMAGE-----
-1. Before building, ALWAYS restart the Docker service. Doing so resolves countless errors.
-  1a. Run  'sudo service docker restart'
-  1b. Run  'sudo /etc/init.d/docker restart'
-  1c. Run  'sudo snap restart docker'
-2. Before building, make sure you've updated the Github repo specified in the Dockerfile.
-  2a. If you don't update the Github repo, you will build old source code.
-3. Next, select one of the build commands below based on your specific use case.
-  3a. To run a full, clean build; Navigate to the Desktop/HRConvert2 folder, then adjust the version & run  'docker build --no-cache -t zelon88/hrconvert2:v#.#.# .'
-  3b. To run an build from the last successful step; Navigate to the Desktop/HRConvert2 folder, then adjust the version & run  'docker build -t zelon88/hrconvert2:v#.#.# .'
-  3c. To regenerate the sources.list file, uncomment the dockerfile line '#RUN rm -vf /var/lib/apt/lists/*', then run  'docker build -t hrconvert2 .'
-4. Grab another cup of coffee. The build process will take some time. 
-  4a. For my 16C, 64GB server it takes about 1,500 seconds (25 minutes) to build the Docker Image from scratch.
------------------------------------------------------------------------------------
-
-
------STEP 3 - TEST THE DOCKER IMAGE-----
-
-1. Run  'docker run -d -p 8080:80 -p 8443:443 -t zelon88/hrconvert2:v#.#.# -t zelon88/hrconvert2:latest -t ghcr.io/zelon88/hrconvert2:v#.#.# -t ghcr.io/zelon88/hrconvert2:latest'
+-----STEP 3 - TEST THE IMAGE-----
+1. Run  'docker run -d --name hrc2test -p 8080:80 -p 8443:443 --security-opt seccomp=unconfined hrconvert2:test'
 2. Open a browser and navigate to 'http://localhost:8080' to test the converter.
+3. Run  'docker exec hrc2test php /var/www/html/HRProprietary/HRConvert2/convertCore.php -v'
+  3a. This reports every component version and every dependency, and is faster than
+      testing each conversion type by hand.
+  3b. Every dependency should report OK. Anything reporting FAILED is missing from the image.
+4. Run  'docker logs hrc2test'  to see anything the container printed on startup.
+5. Run  'docker stop hrc2test && docker rm hrc2test'  when finished.
+
+NOTE ON THE SECCOMP OPTION.
+  bwrap needs an unprivileged user namespace to sandbox an OpenSCAD render.
+  Docker's default seccomp profile blocks the syscall that requires.
+  A container started without  '--security-opt seccomp=unconfined'  will refuse OpenSCAD
+  conversions with error 27007, which is the correct and deliberate behaviour rather than
+  a silent downgrade to rendering without a sandbox.
+  Every other conversion type works normally without the option.
+  This belongs in the Docker Hub description so operators know to add it.
 -----------------------------------------------------------------------------------
 
 
------STEP 4 - PUSH THE DOCKER IMAGE TO DOCKER HUB & GHCR-----
+-----STEP 4 - PUSHING A HAND BUILT IMAGE-----
+Only necessary when you built by hand. The workflow pushes its own images.
 
-1. On a computer with Docker Hub account linked, modify the version number in the following command, then run  'docker push zelon88/hrconvert2:v#.#.#'
-2. On a computer with Docker Hub account linked, modify the version number in the following command, then run  'docker push zelon88/hrconvert2:latest'
-3. On a computer with GHCR account linked, modify the version number in the following command, then run  'docker push ghcr.io/zelon88/hrconvert2:v#.#.#'
-4. On a computer with GHCR account linked, modify the version number in the following command, then run  'docker push ghcr.io/zelon88/hrconvert2:latest'
+1. On a computer with Docker Hub account linked, run  'docker push zelon88/hrconvert2:v#.#.#'
+2. On a computer with Docker Hub account linked, run  'docker push zelon88/hrconvert2:latest'
+3. On a computer with GHCR account linked, run  'docker push ghcr.io/zelon88/hrconvert2:v#.#.#'
+4. On a computer with GHCR account linked, run  'docker push ghcr.io/zelon88/hrconvert2:latest'
 -----------------------------------------------------------------------------------
 
 
 -----NOTES-----
-
 1. If you forget to tag your release, don't re-build it! Use the following procedure to add the missing tags.
   1a. Run  'docker images'
   1b. Copy the Image ID of the Docker Image you want to tag.
   1c. Add a new tag to the existing image by running  'docker tag ########### zelon88/hrconvert2:v#.#.#'  where ##### is the Image ID and v#.#.# is the version being tagged.
   1d. To remove a tag, run  'docker rmi zelon88/hrconvert2:v#.#.#'
 2. Adding the  'latest'  tag is helpful to users.
-3. Building the Docker Image from source will take at least 25 minutes on a high performance server.
+3. The workflow needs two repository secrets to publish to Docker Hub.
+  3a. DOCKERHUB_USERNAME
+  3b. DOCKERHUB_TOKEN
+  3c. GHCR uses the built in GITHUB_TOKEN and needs no secret.
+4. A Docker container is disposable. A Docker user updates by pulling a new image, not by
+   running the built in updater. The updater exists for bare metal installations.
+5. Everything a container must keep across a replacement lives outside the image.
+  5a. The data location, which holds every session and secret.php.
+  5b. Resources/config.php.
+  5c. Confirm both are on a volume before telling anyone to pull a new image.
 -----------------------------------------------------------------------------------

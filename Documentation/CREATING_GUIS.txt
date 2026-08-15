@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.6.8.
+v3.7.0.
 This plain text file describes the process for creating, formatting, and installing additional GUIs into HRConvert2.
 
 HARDWARE REQUIREMENTS ... 
@@ -20,7 +20,7 @@ This application will run on just about any x86 or x64 computer.
 DEPENDENCY REQUIREMENTS ... 
 This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
 Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
-Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap & xvfb-run.
+Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia & xvfb-run.
 ADDITIONAL INFORMATION
 HRConvert2 has one default GUI set in config.php and additional GUIs can be installed by administrators and selected by the user at runtime.
 The default GUI used by HRConvrt2 can be selected by adjusting the --Default GUI-- section of config.php.
@@ -120,6 +120,58 @@ Limited scope variables should be manually nulled & unset after they are no long
 
 The 'Languages\<LANGUAGE_CODE>\languageStrings.php' file should be used to contain all localization specific code.
 By placing localization specific code into 'Languages\<LANGUAGE_CODE>\languageStrings.php', GUI updates can be easily applied from one language pack to another.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About GUI Versions--
+
+Every GUI declares its own version in uiVersionInfo.php as $GuiVersion.
+The core carries the version it is built against as $RequiredGuiVersion.
+A GUI whose version does not match the core is not loaded.
+
+The comparison is an EXACT match. It is not a minimum.
+This differs from config.php, which is accepted at or above a minimum version.
+A configuration file that is newer than the core still contains every setting the core
+looks for, so it can be used. A GUI does not work that way in either direction.
+A GUI newer than the core may reference language strings, arrays or helper functions that
+the core does not provide. A GUI older than the core may omit elements the core expects to
+find, or may still call functions the core has removed.
+Neither produces a clean failure. Both produce a partially rendered page, a PHP notice
+printed into the middle of an AJAX response, or a silently missing control.
+Refusing to load is the only outcome that fails visibly.
+
+The version is checked in verifyGui(), BEFORE any file that produces output is loaded.
+Only uiVersionInfo.php is read to perform the check, & that file only assigns a variable.
+This ordering is deliberate. A GUI cannot be replaced once header.php has begun printing,
+so the decision has to be made while replacing it is still possible.
+
+A GUI that fails the check falls back to the Default GUI & writes a warning to the log.
+A user cannot choose their way out of a broken GUI, so the fallback is silent to them.
+Error 25 is thrown only when the Default GUI ALSO fails, at which point nothing is left to
+render & the application stops.
+
+When building a new GUI, set $GuiVersion to match the $RequiredGuiVersion of the core it
+is being built against. Check the current value by running  php convertCore.php -v
+
+WHEN TO CHANGE A GUI VERSION.
+  Change it when the GUI will no longer work correctly with the previous core.
+  A new language string the GUI reads.
+  A new array or variable the GUI expects the core to provide.
+  A changed function signature the GUI calls.
+  A structural change to the markup that the core or the stylesheet depends on.
+
+WHEN NOT TO CHANGE A GUI VERSION.
+  Do not change it for a typo, a colour, a margin, or a corrected comment.
+  Those changes do not affect whether the GUI works with the core.
+  The commented version stamp at the top of the file may still be updated to record when
+  the file was last touched. That stamp is documentation. $GuiVersion is a compatibility
+  contract & means something different.
+
+ALL GUIS MUST BE UPDATED TOGETHER.
+  A version bump applies to every GUI in the installation at once. All or nothing.
+  A GUI left behind is a GUI the core will refuse to load.
+  This is deliberate & exists to catch exactly that mistake. Changing one GUI & forgetting
+  the others is easy, & the resulting breakage is hard to diagnose without this check.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.6.8.
+v3.7.0.
 This plain text file describes the process for creating, formatting, and installing additional language packs into HRConvert2.
 
 HARDWARE REQUIREMENTS ... 
@@ -20,7 +20,7 @@ This application will run on just about any x86 or x64 computer.
 DEPENDENCY REQUIREMENTS ... 
 This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
 Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
-Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap & xvfb-run.
+Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia & xvfb-run.
 ADDITIONAL INFORMATION
 HRConvert2 has one default language set in config.php and multiple languages that can be selected by the user at runtime.
 The default language used by HRConvrt2 can be selected by adjusting the --Default Language-- section of config.php.
@@ -129,6 +129,63 @@ Limited scope variables should be manually nulled & unset after they are no long
 
 The 'Languages\<LANGUAGE_CODE>\languageStrings.php' file should be used to contain all localization specific code.
 By placing localization specific code into 'Languages\<LANGUAGE_CODE>\languageStrings.php', GUI updates can be easily applied from one language pack to another.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Language Pack Versions--
+
+Every language pack declares its own version in languageStrings.php as $LanguageVersion.
+The core carries the version it is built against as $RequiredLanguageVersion.
+A pack whose version does not match the core is not used.
+
+The comparison is an EXACT match. It is not a minimum.
+A pack newer than the core is no safer than one that is older. A GUI reads a fixed set of
+string variables, & a pack that does not define every one of them leaves blanks in the
+interface. In PHP 8 an undefined variable also emits a warning, & a warning printed into
+an AJAX response corrupts it, because the GUI treats every line of that response as a
+filename. A missing string is therefore not a cosmetic problem.
+
+The version is checked in buildGUI(), AFTER the pack has been loaded.
+It has to be, because the version is declared inside the file being checked.
+This is the opposite of how a GUI is checked, & the difference is deliberate.
+A language pack contains nothing but variable assignments, so a bad one can be corrected
+by loading the default pack over the top of it. A later assignment wins, & every string
+the default defines replaces the one the bad pack set. A GUI prints HTML & cannot be
+replaced that way, which is why a GUI is checked before it is loaded & a pack after.
+
+A pack that fails the check is replaced by the Default Language pack & a warning is written.
+Error 17 is thrown only when the default pack ALSO fails the check, which means every pack
+in the installation is stale rather than just one.
+
+When building a new language pack, set $LanguageVersion to match the $RequiredLanguageVersion
+of the core it is being built against. Check the current value by running
+  php convertCore.php -v
+That command also reports how many packs in each GUI currently pass, & names the ones that
+do not.
+
+WHEN TO CHANGE A LANGUAGE PACK VERSION.
+  Change it when the LOGICAL structure of the pack has changed.
+  A new string variable the GUI reads.
+  A removed string variable.
+  A renamed string variable.
+  A change to the plural helpers or to any logic the pack contains.
+
+WHEN NOT TO CHANGE A LANGUAGE PACK VERSION.
+  Do not change it for a typo, a grammar correction, or a better word choice.
+  No variable name changed & no functionality changed, so the pack still works with the core.
+  The commented version stamp at the top of the file SHOULD be updated to record when the
+  file was last touched. That stamp is documentation & is per file.
+  $LanguageVersion is a compatibility contract & is shared by every pack.
+
+ALL LANGUAGE PACKS MUST BE UPDATED TOGETHER.
+  A version bump applies to every pack in every GUI at once. All or nothing.
+  Twenty six packs across three GUIs is seventy eight files, & every one of them must carry
+  the same $LanguageVersion.
+  A pack left behind is a pack the core will refuse to use.
+  This is the single most common mistake when adding a string. Add the string to one pack,
+  bump its version, & the other twenty five stop working. Add the string to all twenty six
+  & bump none, & the core loads packs that are missing it.
+  Add the string everywhere first. Bump the version everywhere last.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

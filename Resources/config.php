@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.6.9.
+// / v3.7.0.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -25,7 +25,7 @@
 // / DEPENDENCY REQUIREMENTS ... 
 // / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
 // / Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
-// / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap & xvfb-run.
+// / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap Dia & xvfb-run.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -37,7 +37,7 @@
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. Replacing config.php with a newer one is the correct fix.
-$ConfigVersion = 'v3.6.9';
+$ConfigVersion = 'v3.7.0';
 
 // / ---Security Informations---
 // /
@@ -126,6 +126,58 @@ $DeleteBuildEnvironment = FALSE;
 // /   Valid options are TRUE or FALSE.
 // /   Default is FALSE.
 $DeleteDevelopmentDocumentation = FALSE;
+// /  --Require Sandbox--
+// /   Whether a conversion that cannot be isolated is refused or run unprotected.
+// /   A conversion dependency parses an untrusted file & most of them have a history of
+// /   memory corruption bugs. Bubblewrap bounds what a successful exploit can reach.
+// /   If set to TRUE, a server without a working sandbox refuses every conversion that
+// /   depends on one. That is every type except documents.
+// /   If set to FALSE, those conversions run unprotected & every one writes a warning.
+// /   Bubblewrap needs unprivileged user namespaces, which a container blocks by default.
+// /   A container must be started with --security-opt seccomp=unconfined & on some hosts
+// /   also --security-opt apparmor=unconfined, or this must be set to FALSE.
+// /   Run  php convertCore.php -v  to see whether this server has a working sandbox.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$RequireSandbox = TRUE;
+// /  --Require Sandbox On Docker--
+// /   Whether a conversion that cannot be isolated is refused when running in a container.
+// /   This is the container equivalent of --Require Sandbox-- & exists because a container
+// /   cannot build a sandbox at all unless it was started with the correct options.
+// /   Bubblewrap builds its sandbox from unprivileged user namespaces, & the default
+// /   container seccomp & AppArmor profiles both block the syscalls that requires.
+// /   A container started normally therefore has NO working sandbox, & requiring one would
+// /   mean refusing every conversion except documents.
+// /   If set to FALSE, a container without a working sandbox runs conversions unprotected.
+// /   Every one of them writes a warning unless --Throw Sandbox Warning-- is disabled.
+// /   If set to TRUE, a container without a working sandbox refuses those conversions,
+// /   which matches the behaviour of a bare metal installation.
+// /   A container that CAN build a sandbox always gets one. This setting only decides what
+// /   happens when it cannot.
+// /   To give a container a working sandbox, start it with the following options.
+// /     --security-opt seccomp=unconfined
+// /     --security-opt apparmor=unconfined
+// /   Some hardened hosts block unprivileged user namespaces at the kernel level, & no
+// /   container option overrides that. Those hosts need a host side change instead.
+// /   Run  php convertCore.php -v  inside the container to see whether a sandbox works.
+// /   The container is detected automatically & only when two independent signals agree,
+// /   because a false positive would relax this control on a bare metal server.
+// /   Valid options are TRUE or FALSE.
+// /   Default is FALSE.
+$RequireSandboxOnDocker = FALSE;
+// /  --Throw Sandbox Warning--
+// /   Whether an unprotected conversion writes a warning to the log.
+// /   A conversion runs unprotected only when bubblewrap is unavailable & --Require Sandbox--
+// /   is FALSE, which is a state the administrator chose deliberately.
+// /   If set to TRUE, every such conversion writes a warning. A busy server on which the
+// /   sandbox is permanently unavailable will produce one per conversion.
+// /   If set to FALSE, those warnings are suppressed. The state is still reported by
+// /   php convertCore.php -v & is still recorded once at startup.
+// /   This does NOT suppress the refusal that occurs when --Require Sandbox-- is TRUE.
+// /   A refusal is a failure & is always reported.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$ThrowSandboxWarning = TRUE;
 // /  --Stream Duration Timeout--
 // /   Set the maximum amount of time in minutes that FFMPEG will stream a file from a streaming provider for a user.
 // /   This setting must be lower than the PHP execution timer set in php.ini.
@@ -316,6 +368,52 @@ $MinimumStreamFFMPEGVersion = '6.1';
 // /   Format is major.minor.
 // /   Default is '7.0'.
 $MinimumLibreOfficeVersion = '7.0';
+// /  --Minimum 7-Zip Version--
+// /   7-Zip is the ONLY extractor HRConvert2 uses. Every archive input format depends on it.
+// /   23.01 is pinned as the oldest version known to work with every format HRConvert2
+// /   accepts, including rar archives produced by RAR 7.00.
+// /   NOTE. rar extraction ALSO requires the p7zip-rar package on Debian & Ubuntu. Without
+// /   it, 7z reads the container, reports Unsupported Method for every member & extracts
+// /   nothing. The version check cannot detect a missing codec, so verify with
+// /   '7z i' & confirm rar appears in the codec list.
+// /   Check the installed version by running '7z' with no arguments in a terminal.
+// /   Format is major.minor.
+// /   Default is '23.01'.
+$Minimum7zVersion = '23.01';
+// /  --Minimum Rar Version--
+// /   rar creates rar archives & is OPTIONAL. It is a commercial product & the packaged
+// /   binary is a trial copy that prints a registration notice into the log.
+// /   When rar is absent or older than this minimum, 7z creates rar archives instead.
+// /   See --RAR Archive Method-- for that selection.
+// /   NOTE. RAR 7.00 defaults to a compression method that older 7-Zip builds cannot read.
+// /   HRConvert2 passes -ma4 so the archives it creates are readable by any extractor.
+// /   Check the installed version by running 'rar' with no arguments in a terminal.
+// /   Format is major.minor.
+// /   Default is '5.0'.
+$MinimumRarVersion = '5.0';
+// /  --Minimum Zip Version--
+// /   zip creates zip archives. The format has been stable for a very long time & this
+// /   minimum exists for consistency rather than because any known version is unsuitable.
+// /   Check the installed version by running 'zip -v' in a terminal.
+// /   Format is major.minor.
+// /   Default is '3.0'.
+$MinimumZipVersion = '3.0';
+// /  --Minimum Tar Version--
+// /   tar creates tar, tar.gz & tar.bz2 archives.
+// /   The format has been stable for a very long time & this minimum exists for consistency.
+// /   Check the installed version by running 'tar --version' in a terminal.
+// /   Format is major.minor.
+// /   Default is '1.30'.
+$MinimumTarVersion = '1.30';
+// /  --Minimum Mkisofs Version--
+// /   mkisofs creates iso, vhd & vdi disk images.
+// /   The command may be provided by cdrtools or by the genisoimage fork. Either is accepted.
+// /   Their version numbers are unrelated to one another, so this minimum is deliberately
+// /   low enough that both satisfy it.
+// /   Check the installed version by running 'mkisofs --version' in a terminal.
+// /   Format is major.minor.
+// /   Default is '1.1'.
+$MinimumMkisofsVersion = '1.1';
 // / ------------------------------
 
 // / ------------------------------

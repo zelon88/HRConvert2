@@ -42,18 +42,21 @@ no trace. It will run on a Raspberry Pi.
 
 ## Features
 
-**447 file formats** across documents, spreadsheets, presentations, images, audio, video,
+**457 file formats** across documents, spreadsheets, presentations, images, audio, video,
 streams, 3D models, CAD drawings, vector graphics, subtitles & archives.
 
+- **Every conversion runs inside its own operating system sandbox.** Not just the risky ones.
 - Optical Character Recognition on PDFs & images.
-- OpenSCAD rendering, with every render isolated in an operating system sandbox.
+- OpenSCAD rendering, sandboxed, with multi-file assemblies supported.
 - Live stream capture from `.m3u8` playlists, with full SSRF inspection before any fetch.
 - On-demand virus scanning with ClamAV or [scanCore](https://github.com/zelon88/scanCore).
 - Automatic background virus scanning of every upload, if you want it.
 - Temporary share links that expire with the file.
 - **26 languages**, switchable by the user, built in. No language packs to install.
-- **3 interfaces & 7 color schemes**, switchable by the user.
+- **3 interfaces & 7 color schemes**, switchable from within the page.
 - Right-to-left layout support for Arabic, Hebrew, Persian, Urdu & Syriac.
+- **A command line interface** for diagnostics, maintenance & self-updating.
+- **Self-updating from the command line**, with automatic rollback if the update will not run.
 - Installs cleanly alongside WordPress & other software on the same server.
 - Every dependency version-checked at runtime, so a broken install says so instead of failing quietly.
 
@@ -63,22 +66,63 @@ streams, 3D models, CAD drawings, vector graphics, subtitles & archives.
 
 HRConvert2 is designed for public-facing deployment, which means it is built to be attacked.
 
+**Every conversion dependency runs inside a bubblewrap namespace.** ImageMagick, FFMPEG,
+Inkscape, Dia, Assimp, MeshLab, 7-Zip, Tesseract, pdftotext, OpenSCAD & every archive
+utility. Each conversion sees exactly two directories — the one holding its input, mounted
+read only, and the one receiving its output. Nothing else on the disk exists inside the
+namespace. The network is unshared, which closes every URL handler in every dependency at
+once. A server that cannot build a sandbox **refuses the conversion** rather than quietly
+running without one.
+
 - **Uploads are sanitized** before any dependency touches them.
-- **OpenSCAD renders run inside a bubblewrap namespace** that can see nothing but the one
-  session directory. OpenSCAD reads arbitrary files by design & cannot be given a sandbox
-  through its own arguments, so the operating system provides one. A server that cannot
-  create that sandbox refuses OpenSCAD conversions rather than falling back.
+- **OpenSCAD reads arbitrary files by design** & cannot be given a sandbox through its own
+  arguments, so the operating system provides one. Filtering the source is a convenience
+  layer, not a boundary — four bypasses were reported against the line-oriented filter & a
+  fifth against the stateful rewrite that replaced it. The sandbox is the boundary.
 - **Stream files are fully inspected before FFMPEG sees them.** Every referenced host is
   resolved without following redirects, checked against private & reserved address ranges,
   and pinned by IP so no dependency can be redirected to your internal network.
 - **Session identifiers are derived from a per-install secret**, generated with a CSPRNG at
   install time & never transmitted.
-- **Every dependency is version-pinned** against known-vulnerable releases.
+- **Every dependency is version-pinned** & the pin is verified at runtime, not at install
+  time. `php convertCore.php -v` reports whether every one of them actually satisfies it.
+- **Updates are never reachable over HTTP.** Replacing application code requires shell
+  access, which is the correct authorization for the operation. An endpoint protected by a
+  secret would reduce that to one guessable string.
 - **Errors are documented.** Every numbered error has an entry explaining the cause &
   the fix in [ERROR_DESCRIPTIONS.txt](https://github.com/zelon88/HRConvert2/blob/master/Documentation/ERROR_DESCRIPTIONS.txt).
 
 Security reports are welcome & are taken seriously. Several of the protections above exist
 because somebody took the time to find & report a real flaw.
+
+---
+
+## Command Line
+
+HRConvert2 answers to the command line as well as to a browser. The two are mutually
+exclusive — an argument supplied on the command line disables the web interface entirely for
+that invocation, creates no session & touches no user data.
+
+```
+php convertCore.php -v          Report every component version & every dependency.
+php convertCore.php -h          Display help & point at the relevant documentation.
+php convertCore.php -c          Sweep expired sessions from both data locations.
+php convertCore.php -c=now      Sweep every session regardless of age.
+php convertCore.php -u          Update the application from the configured source.
+php convertCore.php -u=v3.6.7   Update to exactly that release.
+```
+
+`-v` is the useful one. It is not an echo of a version number — it runs every dependency
+check the converters run, enumerates every installed interface & language pack, & reports
+which of them actually work. One command answers *will this install convert anything*, which
+is a different question from *what is configured*.
+
+`-u` downloads a release, merges your existing configuration into the new one, swaps the
+installation atomically, then asks the new core to report its own version. An installation
+that cannot answer is rolled back automatically & the previous version is preserved.
+
+Full details in
+[USING_COMMAND_LINE.txt](https://github.com/zelon88/HRConvert2/blob/master/Documentation/USING_COMMAND_LINE.txt).
 
 ---
 
@@ -88,9 +132,11 @@ Debian or Ubuntu Linux, Apache 2.4 & PHP 8 or later. Everything else is a packag
 
 A Raspberry Pi Model B+ is enough to run it. Anything x86 or x64 will be comfortable.
 
-Full dependency list & a step-by-step walkthrough are in the
-[Installation Instructions](https://github.com/zelon88/HRConvert2/blob/master/Documentation/INSTALLATION_INSTRUCTIONS.txt).
-A [Docker image](https://hub.docker.com/r/zelon88/hrconvert2) is also available.
+**Bubblewrap is required.** Debian 12 & Ubuntu 24.04 restrict unprivileged user namespaces
+by default, so a fresh installation needs an AppArmor profile before conversions will run.
+The [Installation Instructions](https://github.com/zelon88/HRConvert2/blob/master/Documentation/INSTALLATION_INSTRUCTIONS.txt)
+cover it. A [Docker image](https://hub.docker.com/r/zelon88/hrconvert2) is also available &
+has its own sandbox considerations, documented on Docker Hub.
 
 ---
 
@@ -119,9 +165,13 @@ translate it for themselves without touching a single line of application code.
 Three interfaces ship with the application: **Default**, **Wide** & **Original**. Seven color
 schemes: red, green, blue, grey, orange, purple & dark.
 
-Users pick their own from the interface. Administrators can lock any of it down in
-`config.php`. Every interface lives in its own folder under `/UI` & can be forked without
-touching the core, so a deployment can carry its own branding.
+Users pick their own from a selector inside the page — language by flag, colour by swatch,
+interface by name. Administrators can lock any of it down in `config.php`. Every interface
+lives in its own folder under `/UI` & can be forked without touching the core, so a
+deployment can carry its own branding.
+
+Interfaces & language packs are version-checked against the core. One that does not match is
+not loaded, & the default is used instead rather than rendering a broken page.
 
 ---
 

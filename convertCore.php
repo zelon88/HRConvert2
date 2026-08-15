@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILEINFORMATION ...
-// / v3.6.9.
+// / v3.7.0.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -22,7 +22,7 @@
 // / DEPENDENCY REQUIREMENTS ...
 // / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
 // / Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
-// / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap & xvfb-run.
+// / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap Dia & xvfb-run.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -193,12 +193,13 @@ function verifyConfigVersion($RequiredConfigVersion) {
     'UserSCADArray', 'UserSubtitleInputArray', 'UserSubtitleOutputArray', 'UserPDFWorkArr',
     'AllowStreamOverHTTP', 'StreamWatchTimeout', 'StreamConnectionTimeout',
     'StreamInspectionLayers', 'StreamInspectionFilesPerLayer',
-    'DefaultStreamInspectionForfeitAction', 'MaxStreamInspectionFileSize',
-    'AllowSCADIncludeResolution', 'SCADConversionTimeout',
+    'DefaultStreamInspectionForfeitAction', 'MaxStreamInspectionFileSize', 'RequireSandboxOnDocker',
+    'AllowSCADIncludeResolution', 'SCADConversionTimeout', 'RequireSandbox', 'ThrowSandboxWarning',
     'MinimumSCADVersion', 'MinimumFFMPEGVersion', 'MinimumStreamFFMPEGVersion',
     'MinimumLibreOfficeVersion', 'MinimumInkscapeVersion', 'MinimumImageVersion',
     'MinimumAssimpVersion', 'MinimumMeshlabVersion', 'UsePyMeshLab', 'EnableAutoUpdates', 
-    'AutoUpdateTargetVersion', 'UpdateSourceRepository', 'MaxUpdatePackageSize', 'UpdateConnectionTimeout');
+    'AutoUpdateTargetVersion', 'UpdateSourceRepository', 'MaxUpdatePackageSize', 'UpdateConnectionTimeout',
+    'Minimum7zVersion', 'MinimumZipVersion', 'MinimumRarVersion', 'MinimumTarVersion', 'MinimumMkisofsVersion');
   // / Check that every required setting actually exists in the global scope.
   // / config.php is required at global scope, so every setting it defines lands in $GLOBALS.
   // / isset() is deliberately not used because a setting legitimately set to NULL still exists.
@@ -240,7 +241,7 @@ function verifyConfigVersion($RequiredConfigVersion) {
 // / This function runs before verifyLogs(), so every failure here dies rather than logging.
 function verifyInstallation() {
   // / Set variables.
-  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumImageVersion, $UsePyMeshLab, $MinimumMeshlabVersion, $MinimumAssimpVersion, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc;
+  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumImageVersion, $UsePyMeshLab, $MinimumMeshlabVersion, $MinimumAssimpVersion, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $Minimum7zVersion, $MinimumZipVersion, $MinimumRarVersion, $MinimumTarVersion, $MinimumMkisofsVersion;
   $InstallationIsVerified = $secret = $secretFile = $secretFileContent = $createSecretFile = $SecretKey = $secretFailed = $loadSecretFile = $secretFileWriteComplete = $secretCheck = $appVersionCheck = $configIsValid = FALSE;
   $check1 = $check2 = TRUE;
   $bytesWritten = 0;
@@ -249,13 +250,13 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
-  $HRConvertVersion = 'v3.6.9';
+  $HRConvertVersion = 'v3.7.0';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
   // / A release that changes no settings leaves this alone, so existing config files keep working.
   // / Any config.php version that is greater (newer) than the version listed below is considered acceptable.
-  $RequiredConfigVersion = 'v3.6.8';
+  $RequiredConfigVersion = 'v3.7.0';
   $RequiredConfigVersion = ltrim($RequiredConfigVersion, 'vV');
   // / Define the minimum acceptable GUI version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
@@ -801,6 +802,31 @@ function verifyLanguage() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to detect whether this installation is running inside a container.
+// / Returns TRUE only when two independent signals agree, because a false positive would
+// / silently relax the sandbox requirement on a bare metal server.
+// / A false negative is preferable. It refuses conversions in a container, which is
+// / visible & correctable, rather than running unprotected on hardware, which is neither.
+function verifyContainerEnvironment() {
+  // / Set variables.
+  $RunningInContainer = FALSE;
+  $dockerEnvExists = $cgroupIndicatesContainer = FALSE;
+  $cgroupContents = '';
+  // / Docker creates this file in every container it starts.
+  if (file_exists('/.dockerenv')) $dockerEnvExists = TRUE;
+  // / The init process of a container reports a container runtime in its cgroup path.
+  $cgroupContents = @file_get_contents('/proc/1/cgroup');
+  if (is_string($cgroupContents)) {
+    if (strpos($cgroupContents, 'docker') !== FALSE or strpos($cgroupContents, 'containerd') !== FALSE or strpos($cgroupContents, 'kubepods') !== FALSE) $cgroupIndicatesContainer = TRUE; }
+  // / Both signals must agree. Either one alone is not enough to relax a security control.
+  if ($dockerEnvExists && $cgroupIndicatesContainer) $RunningInContainer = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $dockerEnvExists = $cgroupIndicatesContainer = $cgroupContents = NULL;
+  unset($dockerEnvExists, $cgroupIndicatesContainer, $cgroupContents);
+  return $RunningInContainer; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to set the global variables for the session.
 // / The stream timeouts are left in the units config.php documents them in.
 // / $StreamWatchTimeout is stated in minutes & $StreamConnectionTimeout is stated in seconds.
@@ -808,7 +834,7 @@ function verifyLanguage() {
 // / Converting here as well produced a fifteen hour watch timeout & a ten million second connect timeout.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $MinimumFFMPEGVersion, $ProtectedRootDirs, $RunningAsRoot;
+  global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $MinimumFFMPEGVersion, $ProtectedRootDirs, $RunningAsRoot, $RunningInContainer;
   // / Application related variables.
   putenv('HOME='.$HomeLoc);
   $GlobalsAreVerified = $sanitizeGlobalCheck = $sanitizeGlobalCheckA = $sanitizeGlobalCheckB = $sanitizeGlobalCheckC = $sanitizeGlobalCheckD = $sanitizeGlobalCheckE = $RunningAsRoot = FALSE;
@@ -818,6 +844,7 @@ function verifyGlobals() {
   $PermissionLevels = 0755;
   $ApacheUser = 'www-data';
   $CurrentUser = '';
+  $RunningInContainer = verifyContainerEnvironment();
   // / Determine the user who is currently executing the script.
   // / If convertCore.php is called by the web server to serve a web client this should be www-data.
   // / If someone is running convertCore.php from a CLI tool as a non-root user, this will be that users username.
@@ -1193,6 +1220,111 @@ function verifySVGVersion($MinimumVersion) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to verify every archive utility HRConvert2 depends on.
+// / Accepts the minimum version of each utility, in the order they are returned.
+// / Returns an overall boolean followed by one boolean per utility.
+// / Returns TRUE overall only when every utility REQUIRED for the enabled formats is valid.
+// / A utility that is missing entirely returns FALSE for itself rather than throwing.
+// / 7z is the only extractor & is therefore required for every archive INPUT format.
+// / rar, zip, tar & mkisofs are creators & each is required only for its own OUTPUT format.
+// / rar is optional. When it is absent or too old, 7z creates rar archives instead, which
+// / is what --RAR Archive Method-- selects between.
+// / mkisofs may be provided by cdrtools or by genisoimage, & either satisfies the check.
+// / Version numbers are compared numerically, never as strings, because a string
+// / comparison ranks 7-Zip 23.01 above 7-Zip 24.05.
+function verifyArchiveVersions($Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion) {
+  // / Set variables.
+  global $Verbose;
+  $ArchiveToolsAreValid = $SevenZipIsValid = $RarIsValid = $ZipIsValid = $TarIsValid = $MkisofsIsValid = FALSE;
+  $toolOutput = $toolMatches = $minimumParts = array();
+  $toolExitCode = 1;
+  $detected7z = $detectedRar = $detectedZip = $detectedTar = $detectedMkisofs = '';
+  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
+  // / 7z prints its banner when invoked with no arguments & exits non zero doing so, so the
+  // / exit code cannot be trusted here. The banner itself is the only reliable signal.
+  $toolOutput = array();
+  exec('7z 2>&1', $toolOutput, $toolExitCode);
+  if (!empty($toolOutput)) {
+    if (preg_match('/7-Zip[^\d]*(\d+)\.(\d+)/i', implode(' ', $toolOutput), $toolMatches)) {
+      $detectedMajor = (int)$toolMatches[1];
+      $detectedMinor = (int)$toolMatches[2];
+      $detected7z = $detectedMajor.'.'.$toolMatches[2];
+      $minimumParts = explode('.', $Minimum7zVersion);
+      $minimumMajor = (int)($minimumParts[0] ?? 0);
+      $minimumMinor = (int)($minimumParts[1] ?? 0);
+      if ($detectedMajor > $minimumMajor) $SevenZipIsValid = TRUE;
+      elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $SevenZipIsValid = TRUE; } }
+  // / rar prints its banner when invoked with no arguments & also exits non zero.
+  // / rar is optional. Its absence is not a failure, it only removes the rar output method.
+  $toolOutput = array();
+  exec('rar 2>&1', $toolOutput, $toolExitCode);
+  if (!empty($toolOutput)) {
+    if (preg_match('/RAR\s+(\d+)\.(\d+)/i', implode(' ', $toolOutput), $toolMatches)) {
+      $detectedMajor = (int)$toolMatches[1];
+      $detectedMinor = (int)$toolMatches[2];
+      $detectedRar = $detectedMajor.'.'.$toolMatches[2];
+      $minimumParts = explode('.', $MinimumRarVersion);
+      $minimumMajor = (int)($minimumParts[0] ?? 0);
+      $minimumMinor = (int)($minimumParts[1] ?? 0);
+      if ($detectedMajor > $minimumMajor) $RarIsValid = TRUE;
+      elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $RarIsValid = TRUE; } }
+  // / zip reports its version on the first line of its help banner.
+  $toolOutput = array();
+  exec('zip -v 2>&1', $toolOutput, $toolExitCode);
+  if (!empty($toolOutput)) {
+    if (preg_match('/Zip\s+(\d+)\.(\d+)/i', implode(' ', $toolOutput), $toolMatches)) {
+      $detectedMajor = (int)$toolMatches[1];
+      $detectedMinor = (int)$toolMatches[2];
+      $detectedZip = $detectedMajor.'.'.$toolMatches[2];
+      $minimumParts = explode('.', $MinimumZipVersion);
+      $minimumMajor = (int)($minimumParts[0] ?? 0);
+      $minimumMinor = (int)($minimumParts[1] ?? 0);
+      if ($detectedMajor > $minimumMajor) $ZipIsValid = TRUE;
+      elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $ZipIsValid = TRUE; } }
+  // / tar reports GNU tar followed by the version.
+  $toolOutput = array();
+  exec('tar --version 2>&1', $toolOutput, $toolExitCode);
+  if ($toolExitCode === 0 && !empty($toolOutput)) {
+    if (preg_match('/tar[^\d]*(\d+)\.(\d+)/i', implode(' ', $toolOutput), $toolMatches)) {
+      $detectedMajor = (int)$toolMatches[1];
+      $detectedMinor = (int)$toolMatches[2];
+      $detectedTar = $detectedMajor.'.'.$toolMatches[2];
+      $minimumParts = explode('.', $MinimumTarVersion);
+      $minimumMajor = (int)($minimumParts[0] ?? 0);
+      $minimumMinor = (int)($minimumParts[1] ?? 0);
+      if ($detectedMajor > $minimumMajor) $TarIsValid = TRUE;
+      elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $TarIsValid = TRUE; } }
+  // / mkisofs may be cdrtools mkisofs or the genisoimage fork wearing the same name.
+  // / Both are accepted, so the product name is not anchored on.
+  $toolOutput = array();
+  exec('mkisofs --version 2>&1', $toolOutput, $toolExitCode);
+  if (!empty($toolOutput)) {
+    if (preg_match('/(?:mkisofs|genisoimage)[^\d]*(\d+)\.(\d+)/i', implode(' ', $toolOutput), $toolMatches)) {
+      $detectedMajor = (int)$toolMatches[1];
+      $detectedMinor = (int)$toolMatches[2];
+      $detectedMkisofs = $detectedMajor.'.'.$toolMatches[2];
+      $minimumParts = explode('.', $MinimumMkisofsVersion);
+      $minimumMajor = (int)($minimumParts[0] ?? 0);
+      $minimumMinor = (int)($minimumParts[1] ?? 0);
+      if ($detectedMajor > $minimumMajor) $MkisofsIsValid = TRUE;
+      elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $MkisofsIsValid = TRUE; } }
+  // / 7z is the only extractor, so no archive operation of any kind works without it.
+  // / rar is deliberately excluded from the overall verdict, because 7z creates rar
+  // / archives when rar is unavailable & the application remains fully functional.
+  if ($SevenZipIsValid && $ZipIsValid && $TarIsValid && $MkisofsIsValid) $ArchiveToolsAreValid = TRUE;
+  if ($Verbose) {
+    logEntry('7-Zip Check: '.($SevenZipIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detected7z === '' ? 'NONE' : $detected7z).', Required: '.$Minimum7zVersion.' or later.');
+    logEntry('Rar Check: '.($RarIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedRar === '' ? 'NONE' : $detectedRar).', Required: '.$MinimumRarVersion.' or later.');
+    logEntry('Zip Check: '.($ZipIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedZip === '' ? 'NONE' : $detectedZip).', Required: '.$MinimumZipVersion.' or later.');
+    logEntry('Tar Check: '.($TarIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedTar === '' ? 'NONE' : $detectedTar).', Required: '.$MinimumTarVersion.' or later.');
+    logEntry('Mkisofs Check: '.($MkisofsIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedMkisofs === '' ? 'NONE' : $detectedMkisofs).', Required: '.$MinimumMkisofsVersion.' or later.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $toolOutput = $toolMatches = $toolExitCode = $minimumParts = $detected7z = $detectedRar = $detectedZip = $detectedTar = $detectedMkisofs = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $Minimum7zVersion = $MinimumRarVersion = $MinimumZipVersion = $MinimumTarVersion = $MinimumMkisofsVersion = NULL;
+  unset($toolOutput, $toolMatches, $toolExitCode, $minimumParts, $detected7z, $detectedRar, $detectedZip, $detectedTar, $detectedMkisofs, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion);
+  return array($ArchiveToolsAreValid, $SevenZipIsValid, $RarIsValid, $ZipIsValid, $TarIsValid, $MkisofsIsValid); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to confirm this server can actually isolate an OpenSCAD render.
 // / OpenSCAD reads any file the web server user can read & has no sandbox of its own.
 // / It also cannot be given one through its arguments, the way FFMPEG accepts a protocol
@@ -1244,8 +1376,8 @@ function verifyBwrap() {
 // / answers whether an installation will actually work rather than what is configured.
 function showVersionInfo() {
   // / Set variables.
-  global $InstLoc, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $MinimumInkscapeVersion, $MinimumSCADVersion, $MinimumImageVersion, $MinimumAssimpVersion, $MinimumMeshlabVersion, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol;
-  $VersionInfoDisplayed = $assimpIsValid = $meshlabIsValid = $ffmpegIsValid = $streamFfmpegIsValid = $libreOfficeIsValid = $inkscapeIsValid = $scadIsValid = $imageIsValid = $modelIsValid = $bwrapIsValid = FALSE;
+  global $InstLoc, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $MinimumInkscapeVersion, $MinimumSCADVersion, $MinimumImageVersion, $MinimumAssimpVersion, $MinimumMeshlabVersion, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion;
+  $VersionInfoDisplayed = $assimpIsValid = $meshlabIsValid = $ffmpegIsValid = $streamFfmpegIsValid = $libreOfficeIsValid = $inkscapeIsValid = $scadIsValid = $imageIsValid = $modelIsValid = $bwrapIsValid = $archiveToolsAreValid = $sevenZipIsValid = $rarIsValid = $zipIsValid = $tarIsValid = $mkisofsIsValid = FALSE;
   $installedGui = $installedLang = $checkDir = $checkFile = $foundVersion = $langLine = '';
   $guiMatches = $langMatches = array();
   $langOk = $langTotal = 0;
@@ -1258,6 +1390,7 @@ function showVersionInfo() {
   $scadIsValid = verifySCADVersion($MinimumSCADVersion);
   $imageIsValid = verifyImageVersion($MinimumImageVersion);
   list($modelIsValid, $assimpIsValid, $meshlabIsValid) = verifyModelVersions($MinimumAssimpVersion, $MinimumMeshlabVersion);
+  list ($archiveToolsAreValid, $sevenZipIsValid, $rarIsValid, $zipIsValid, $tarIsValid, $mkisofsIsValid) = verifyArchiveVersions($Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion);
   $bwrapIsValid = verifyBwrap();
   // / Report the versions of every component that carries one.
   print($Lol);
@@ -1278,7 +1411,12 @@ function showVersionInfo() {
   print('  ImageMagick                 '.($imageIsValid ? 'OK' : 'FAILED').', requires '.$MinimumImageVersion.' or later'.$Lol);
   print('  Assimp                      '.($assimpIsValid ? 'OK' : 'FAILED').', requires '.$MinimumAssimpVersion.' or later'.$Lol);
   print('  Meshlab                     '.($meshlabIsValid ? 'OK' : 'FAILED').', requires '.$MinimumMeshlabVersion.' or later'.$Lol);
-  print('  Bubblewrap sandbox          '.($bwrapIsValid ? 'OK' : 'FAILED').', '.($bwrapIsValid ? 'fully functional' : 'NOT functional, OpenSCAD conversions are disabled').$Lol);
+  print('  7-Zip, all extraction       '.($sevenZipIsValid ? 'OK' : 'FAILED').', requires '.$Minimum7zVersion.' or later'.$Lol);
+  print('  Rar                         '.($rarIsValid ? 'OK' : 'FAILED').', requires '.$MinimumRarVersion.' or later'.$Lol);
+  print('  Zip                         '.($zipIsValid ? 'OK' : 'FAILED').', requires '.$MinimumZipVersion.' or later'.$Lol);
+  print('  Tar                         '.($tarIsValid ? 'OK' : 'FAILED').', requires '.$MinimumTarVersion.' or later'.$Lol);
+  print('  Mkisofs                     '.($mkisofsIsValid ? 'OK' : 'FAILED').', requires '.$MinimumMkisofsVersion.' or later'.$Lol);
+  print('  Bubblewrap Sandbox          '.($bwrapIsValid ? 'OK' : 'FAILED').', '.($bwrapIsValid ? 'fully functional' : 'NOT functional, OpenSCAD conversions are disabled').$Lol);
   print($Lol);
   // / Report every installed GUI & whether it matches the version the core requires.
   // / The version is read from uiVersionInfo.php by pattern rather than by loading the
@@ -1325,8 +1463,8 @@ function showVersionInfo() {
   print($Lol);
   $VersionInfoDisplayed = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $ffmpegIsValid = $streamFfmpegIsValid = $libreOfficeIsValid = $inkscapeIsValid = $scadIsValid = $modelIsValid = $imageIsValid = $bwrapIsValid = $installedGui = $installedLang = $installedEndonym = $checkDir = $checkFile = $foundVersion = $langLine = $guiMatches = $langMatches = $langOk = $langTotal = $meshlabIsValid = $assimpIsValid = NULL;
-  unset($ffmpegIsValid, $streamFfmpegIsValid, $libreOfficeIsValid, $inkscapeIsValid, $scadIsValid, $modelIsValid, $imageIsValid, $bwrapIsValid, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $guiMatches, $langMatches, $langOk, $langTotal, $meshlabIsValid, $assimpIsValid);
+  $ffmpegIsValid = $streamFfmpegIsValid = $libreOfficeIsValid = $inkscapeIsValid = $scadIsValid = $modelIsValid = $imageIsValid = $bwrapIsValid = $installedGui = $installedLang = $installedEndonym = $checkDir = $checkFile = $foundVersion = $langLine = $guiMatches = $langMatches = $langOk = $langTotal = $meshlabIsValid = $assimpIsValid = $archiveToolsAreValid = $sevenZipIsValid = $rarIsValid = $zipIsValid = $tarIsValid = $mkisofsIsValid = NULL;
+  unset($ffmpegIsValid, $streamFfmpegIsValid, $libreOfficeIsValid, $inkscapeIsValid, $scadIsValid, $modelIsValid, $imageIsValid, $bwrapIsValid, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $guiMatches, $langMatches, $langOk, $langTotal, $meshlabIsValid, $assimpIsValid, $archiveToolsAreValid, $sevenZipIsValid, $rarIsValid, $zipIsValid, $tarIsValid, $mkisofsIsValid);
   return $VersionInfoDisplayed; }
 // / -----------------------------------------------------------------------------------
 
@@ -1350,11 +1488,31 @@ function showHelpInfo() {
   print('Arguments'.$Lol);
   print('  -v, --version               Display version & dependency information.'.$Lol);
   print('  -h, --help                  Display this message.'.$Lol);
+  print('  -c, --clean                 Sweep expired sessions from both data locations.'.$Lol);
+  print('  -u, --update                Update the application from the configured source.'.$Lol);
+  print($Lol);
+  print('Clean targets'.$Lol);
+  print('  -c                          Sweep using the configured Delete Threshold.'.$Lol);
+  print('  -c=<minutes>                Sweep sessions older than that many minutes.'.$Lol);
+  print('  -c=now                      Sweep EVERY session, including sessions in use.'.$Lol);
+  print('                              A user mid conversion loses their files.'.$Lol);
+  print($Lol);
+  print('Update targets'.$Lol);
+  print('  -u                          Install the target set in config.php.'.$Lol);
+  print('  -u=latest                   Install the newest tagged release.'.$Lol);
+  print('  -u=edge                     Install the current state of the master branch.'.$Lol);
+  print('                              Edge is not a release. It carries whatever version'.$Lol);
+  print('                              stamp master holds & may match no release at all.'.$Lol);
+  print('  -u=v3.6.8                   Install exactly that tag. Fails if it does not exist.'.$Lol);
+  print('                              A partial version such as v3.6 is refused.'.$Lol);
   print($Lol);
   print('Notes'.$Lol);
   print('  Command line & web requests are mutually exclusive.'.$Lol);
   print('  An argument supplied on the command line prevents the web interface entirely.'.$Lol);
   print('  No session is created & no user data is touched by a command line invocation.'.$Lol);
+  print('  Updates must be enabled in config.php before -u will do anything.'.$Lol);
+  print('  The previous installation is preserved & is restored automatically if the new'.$Lol);
+  print('  one cannot report its own version.'.$Lol);
   print($Lol);
   print('Documentation'.$Lol);
   print('  Documentation/INSTALLATION_INSTRUCTIONS.txt  Installing & configuring a server.'.$Lol);
@@ -1382,10 +1540,10 @@ function showHelpInfo() {
 // / To run as the web server user, use command  'sudo -u www-data php convertCore.php '
 function parseCommandLine() {
   // / Set variables.
-  global $Verbose, $Lol;
-  $CommandLineHandled = FALSE;
+  global $Verbose, $Lol, $DeleteThreshold, $ConvertLoc, $ConvertTempDir;
+  $CommandLineHandled = $cliTempCleaned = $cliTempDeepCleaned = $cliDataCleaned = $cliDataDeepCleaned = FALSE;
   $UserType = 'web';
-  $cliArgumentCount = 0;
+  $cliArgumentCount = $cliThreshold = 0;
   $cliArguments = $cliParts = array();
   $cliCommand = $rawFirstArg = $cliTarget = '';
   // / A web request has no command line & must return immediately.
@@ -1429,6 +1587,37 @@ function parseCommandLine() {
         else $cliTarget = isset($cliArguments[1]) ? strtolower(trim($cliArguments[1])) : '';
         updateApplication($cliTarget);
         $CommandLineHandled = TRUE; }
+      // / Handle the -c or --clean arguments.
+      // / Sweeps expired sessions from both data locations on demand rather than waiting
+      // / for the next web request to do it. A server taken out of service still holds
+      // / user data until something sweeps it.
+      // / An optional threshold in minutes overrides --Delete Threshold-- for this run only.
+      // / A threshold of now sweeps every session regardless of age, including live ones.
+      else if ($cliCommand === '-c' or $cliCommand === '--clean') {
+        logEntry('Command line invocation. Performing a manual clean.');
+        // / Check if a threshold was passed via '=' sign first. Fall back to the second array element.
+        if (isset($cliParts[1])) $cliTarget = strtolower(trim($cliParts[1]));
+        else $cliTarget = isset($cliArguments[1]) ? strtolower(trim($cliArguments[1])) : '';
+        $cliThreshold = $DeleteThreshold;
+        // / A threshold of zero expires everything, because every session is older than nothing.
+        if ($cliTarget === 'now') $cliThreshold = 0;
+        // / ctype_digit rather than is_numeric, because is_numeric accepts a negative & a
+        // / negative threshold would expire every session while looking like a normal number.
+        else if ($cliTarget !== '' && ctype_digit($cliTarget)) $cliThreshold = (int)$cliTarget;
+        // / An unrecognized threshold falls back to the configured default rather than
+        // / refusing, but says so. Silently sweeping on a typo would be worse.
+        else if ($cliTarget !== '') {
+          warningEntry('An unrecognized clean threshold was supplied. Using the configured default.');
+          print($Lol.'Unrecognized threshold. Supply a whole number of minutes, or now.'.$Lol); }
+        print($Lol.'Cleaning sessions older than '.$cliThreshold.' minute(s).'.$Lol);
+        logEntry('Manual clean requested. Threshold set to '.$cliThreshold.' minute(s).');
+        list ($cliTempCleaned, $cliTempDeepCleaned) = cleanDataLoc($ConvertTempDir, 'ConvertTempDir', $cliThreshold);
+        print('  Temporary location   '.($cliTempCleaned ? 'OK' : 'FAILED').($cliTempDeepCleaned ? ', removed expired sessions' : ', nothing was expired').$Lol);
+        list ($cliDataCleaned, $cliDataDeepCleaned) = cleanDataLoc($ConvertLoc, 'ConvertLoc', $cliThreshold);
+        print('  Data location        '.($cliDataCleaned ? 'OK' : 'FAILED').($cliDataDeepCleaned ? ', removed expired sessions' : ', nothing was expired').$Lol);
+        if (!$cliTempCleaned or !$cliDataCleaned) print($Lol.'One or more locations could not be cleaned. See the log for the reason.'.$Lol);
+        print($Lol);
+        $CommandLineHandled = TRUE; }
       // / An unrecognized argument is a mistake, not a web request.
       // / Falling through to the web logic would be the worst possible response.
       else {
@@ -1439,8 +1628,8 @@ function parseCommandLine() {
   // / Determine if the user is using the application via command line (CLI) or Apache+PHP through a web browser.
   if ($CommandLineHandled === TRUE) $UserType = 'cli';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $cliArguments = $cliCommand = $cliArgumentCount = $rawFirstArg = $cliParts = $cliTarget = NULL;
-  unset($cliArguments, $cliCommand, $cliArgumentCount, $rawFirstArg, $cliParts, $cliTarget);
+  $cliArguments = $cliCommand = $cliArgumentCount = $rawFirstArg = $cliParts = $cliTarget = $cliThreshold = $cliTempCleaned = $cliTempDeepCleaned = $cliDataCleaned = $cliDataDeepCleaned = NULL;
+  unset($cliArguments, $cliCommand, $cliArgumentCount, $rawFirstArg, $cliParts, $cliTarget, $cliThreshold, $cliTempCleaned, $cliTempDeepCleaned, $cliDataCleaned, $cliDataDeepCleaned);
   return array($CommandLineHandled, $UserType); }
 // / -----------------------------------------------------------------------------------
 
@@ -1611,6 +1800,115 @@ function isDirEmptyOfUserFiles($path) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to wrap a dependency invocation in a bubblewrap sandbox.
+// / Accepts a finished command, the real path of the input, the real path of the output,
+// / & a boolean granting network access.
+// / Both paths must appear in the command exactly as escapeshellarg() rendered them,
+// / because that is the form matched when they are rewritten for the namespace.
+// / A path built any other way will not be matched & the command will refer to a location
+// / that does not exist inside the sandbox.
+// / Returns an availability boolean & a command string ready to run unmodified.
+// / Returns a command beginning with bwrap & referring to /in & /out when a sandbox works.
+// / Returns the command exactly as supplied when a sandbox cannot be built.
+// / The caller decides what an unavailable sandbox means & tests the boolean to find out.
+// / The directory holding the input is mounted read only at /in.
+// / The directory holding the output is mounted writable at /out.
+// / When both paths share a directory it is mounted once, writable, at /work.
+// / Nothing else from the data location is visible inside the namespace.
+// / The mounts are derived from the supplied paths, so the caller never names one.
+// / Network access is unshared unless requested, which closes every URL handler at once.
+// / OpenSCAD does NOT use this. It needs a whole directory visible to resolve includes.
+// / Returns a permission boolean & a command string ready to run unmodified.
+// / The boolean reports whether the command MAY RUN, not whether a sandbox was built.
+// / A sandbox that was built returns TRUE with a bwrap command.
+// / A sandbox that could not be built returns FALSE when $RequireSandbox is TRUE, so every
+// / caller refuses without any caller needing to know why.
+// / A sandbox that could not be built returns TRUE with the unwrapped command when
+// / $RequireSandbox is FALSE, & writes a warning naming the conversion as unprotected.
+function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork) {
+  // / Set variables.
+  global $Verbose, $RequireSandbox, $RequireSandboxOnDocker, $ThrowSandboxWarning, $RunningInContainer;
+  $CommandMayRun = $bwrapIsUsable = $sandboxIsRequired = FALSE;
+  $sandboxIsRequired = TRUE;
+  $SandboxedCommand = $networkFlag = $mountFlags = $workingDir = '';
+  $inputDir = $outputDir = $sandboxInput = $sandboxOutput = '';
+  $bwrapIsUsable = verifyBwrap();
+  // / A container blocks the namespaces bubblewrap needs unless it was started with
+  // / --security-opt seccomp=unconfined, so a separate setting governs that case.
+  // / A container that CAN build a sandbox still gets one. This only decides what happens
+  // / when it cannot.
+  $sandboxIsRequired = $RunningInContainer ? $RequireSandboxOnDocker : $RequireSandbox;
+  // / Resolve each path to the directory holding it.
+  // / The output file does not exist yet, so its directory is used rather than the file.
+  $inputDir = dirname($inputPath);
+  $outputDir = dirname($outputPath);
+  // / Build the mounts & the paths the two files carry inside the namespace.
+  // / One directory means one writable mount, because the output has to be written somewhere.
+  // / Two directories means a read only input & a writable output, so a dependency that is
+  // / exploited while parsing a hostile file cannot modify the file it came from.
+  if ($inputDir === $outputDir) {
+    $workingDir = '/work';
+    $mountFlags = ' --bind '.escapeshellarg($outputDir).' /work';
+    $sandboxInput = escapeshellarg('/work/'.basename($inputPath));
+    $sandboxOutput = escapeshellarg('/work/'.basename($outputPath)); }
+  else {
+    $workingDir = '/out';
+    $mountFlags = ' --ro-bind '.escapeshellarg($inputDir).' /in'
+      .' --bind '.escapeshellarg($outputDir).' /out';
+    $sandboxInput = escapeshellarg('/in/'.basename($inputPath));
+    $sandboxOutput = escapeshellarg('/out/'.basename($outputPath)); }
+  // / A sandbox that could not be built is a policy decision rather than a technical one.
+  // / An operator who has deliberately accepted the risk gets the command & a warning.
+  // / An operator who has not gets a refusal, & every caller already handles that.
+  if (!$bwrapIsUsable) {
+    $SandboxedCommand = $command;
+    if ($sandboxIsRequired) warningEntry('Bubblewrap is unavailable & sandboxing is required, so a conversion was refused. Install bubblewrap, or set $RequireSandbox to FALSE in config.php to run conversions unprotected.');
+    else {
+      $CommandMayRun = TRUE;
+      if ($ThrowSandboxWarning) warningEntry('Bubblewrap is unavailable & sandboxing is not required, so a conversion will run unprotected.'); } }
+  else {
+    $CommandMayRun = TRUE;
+    // / --unshare-all removes every namespace the command has no business holding.
+    // / --share-net gives back ONLY the network, for the one caller that needs it.
+    if ($allowNetwork) $networkFlag = ' --share-net';
+    // / The rewrite is an exact match on the escaped paths rather than a pattern, so nothing
+    // / else in the command can be altered by accident. Neither escaped path can appear
+    // / inside the other's replacement, so a single pass is safe.
+    $SandboxedCommand = 'bwrap'
+      .' --unshare-all'.$networkFlag
+      .' --die-with-parent'
+      .' --new-session'
+      .' --ro-bind /usr /usr'
+      .' --ro-bind-try /lib /lib'
+      .' --ro-bind-try /lib64 /lib64'
+      .' --ro-bind-try /bin /bin'
+      .' --ro-bind-try /sbin /sbin'
+      .' --ro-bind-try /etc/alternatives /etc/alternatives'
+      .' --ro-bind-try /etc/fonts /etc/fonts'
+      .' --ro-bind-try /etc/ImageMagick-7 /etc/ImageMagick-7'
+      .' --ro-bind-try /etc/ImageMagick-6 /etc/ImageMagick-6'
+      .' --ro-bind-try /etc/ld.so.cache /etc/ld.so.cache'
+      .' --ro-bind-try /etc/ssl/certs /etc/ssl/certs'
+      .' --ro-bind-try /usr/share/tesseract-ocr /usr/share/tesseract-ocr'
+      .' --proc /proc'
+      .' --dev /dev'
+      .' --tmpfs /tmp'
+      .' --setenv HOME /tmp'
+      .$mountFlags
+      .' --chdir '.$workingDir
+      .' '
+      .str_replace(
+        array(escapeshellarg($inputPath), escapeshellarg($outputPath)),
+        array($sandboxInput, $sandboxOutput),
+        $command);
+    if ($Verbose) logEntry('Sandbox prepared for a dependency invocation.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $networkFlag = $mountFlags = $workingDir = $inputDir = $outputDir = $sandboxInput = $sandboxOutput = $command = $inputPath = $outputPath = $allowNetwork = $bwrapIsUsable = NULL;
+  unset($networkFlag, $mountFlags, $workingDir, $inputDir, $outputDir, $sandboxInput, $sandboxOutput, $command, $inputPath, $outputPath, $allowNetwork, $bwrapIsUsable);
+  return array($CommandMayRun, $SandboxedCommand); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to scan an input file or folder for viruses with ClamAV.
 function virusScan($path) {
   // / Set variables.
@@ -1725,72 +2023,73 @@ function cleanFiles($path) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to clean up old sessions in a data location.
-// / Both the hosted & the non-hosted data locations share this routine.
-// / They differ only in which root is swept.
-// / The directory structure is two levels: [server-daily]/[individual-session].
-// / Sessions are swept individually. A daily parent's own mtime only changes when a NEW
-// / session is created inside it, so it cannot be trusted to reflect whether the sessions
-// / it holds are still in use. A quiet hour would otherwise delete active sessions.
-// / NOTE. secret.php lives at the root of the non-hosted location & must NEVER be removed.
-// / It is protected here by the is_dir() check, since it is a file & not a directory.
-// / The enforced index.html in every hosted folder is protected by that same check.
-function cleanDataLoc($dataLoc, $locationName) {
+// / A function to remove expired session data from a data location.
+// / A data location holds daily directories, & each daily directory holds session
+// / directories. Only a session directory is ever swept, & only once it is older than the
+// / delete threshold. A daily directory is removed once every session inside it is gone.
+// / The location being cleaned is authorized in two independent ways before anything is
+// / read. The name must be one this function recognizes, & the path must be the one that
+// / name refers to. A caller that supplies a valid name with any other path is refused,
+// / which is what stops a mistake elsewhere in the core from sweeping the wrong tree.
+function cleanDataLoc($dataLoc, $locationName, $deleteThreshold) {
   // / Set variables.
-  global $DeleteThreshold, $DefaultApps, $ProtectedRootDirs, $DirSep, $PermissionLevels, $Verbose, $ConvertLoc, $ConvertTempDir;
-  $LocationDeepCleaned = $cleanAuthorizedA = $cleanAuthorizedB = $cleanAuthorizedC = $cleanAuthorizedD = FALSE;
+  global $DefaultApps, $ProtectedRootDirs, $DirSep, $PermissionLevels, $Verbose, $ConvertLoc, $ConvertTempDir;
+  $LocationDeepCleaned = $cleanAuthorized = FALSE;
   $CleanedLocation = $loopCheck = TRUE;
   $dailyDirs = $sessionDirs = array();
   $dailyDir = $sessionDir = $dailyPath = $sessionPath = '';
   $now = time();
-  // / Determine if thie clean operation is being requested on a valid target.
-  // / Begin this multi-stage check by ensuring that the location name is even valid.
-  if ($locationName === 'ConvertLoc' or $locationName === 'ConvertTempDir') $cleanAuthorizedA = TRUE;
-  // / Next, check that the target directory to be cleaned is even valid.
-  if ($locationName === 'ConvertLoc' && $dataLoc === $ConvertLoc) $cleanAuthorizedB = TRUE;
-  if ($locationName === 'ConvertTempDir' && $dataLoc === $ConvertTempDir) $cleanAuthorizedC = TRUE;
-  if ($cleanAuthorizedB or $cleanAuthorizedC) $cleanAuthorizedD = TRUE;
-  // / If the location name and target directory to be cleaned are both valid, then the clean operation is considered authorized.
-  if ($cleanAuthorizedA && $cleanAuthorizedD) {
-    // / Make sure the directory to be scanned exists.
-    if (file_exists($dataLoc)) {
-      if ($Verbose) logEntry('The valid clean operation has been authorized.');
-      $dailyDirs = array_diff(scandir($dataLoc), array('..', '.'));
-      // / Iterate through each daily folder in the location.
-      foreach ($dailyDirs as $dailyDir) {
-        // / Validate the folder.
-        if (in_array($dailyDir, $DefaultApps)) continue;
-        // / A protected directory at this level is not a daily session parent & is never swept.
-        // / The LibreOffice profile lives at this level.
-        if (in_array($dailyDir, $ProtectedRootDirs, TRUE)) continue;
-        $dailyPath = $dataLoc.$DirSep.$dailyDir;
-        // / Only directories hold sessions. 
-        // / Files at this level are left alone entirely.
-        if (!is_dir($dailyPath)) continue;
-        $sessionDirs = array_diff(scandir($dailyPath), array('..', '.'));
-        // / Iterate through each session folder inside this day.
-        foreach ($sessionDirs as $sessionDir) {
-          if (in_array($sessionDir, $DefaultApps)) continue;
-          $sessionPath = $dailyPath.$DirSep.$sessionDir;
-          if (!is_dir($sessionPath)) continue;
-          // / See if this individual session is due for deletion.
-          if ($now - fileTime($sessionPath) > ($DeleteThreshold * 60)) {
-            $LocationDeepCleaned = TRUE;
-            @chmod($sessionPath, $PermissionLevels);
-            $loopCheck = cleanFiles($sessionPath);
-            // / Remove the session shell, including any protected file objects still in it.
-            removeEmptiedSessionDir($sessionPath); }
-          // / Check if the most recent iteration of the loop was successful.
-          if (!$loopCheck) $CleanedLocation = FALSE;
-          $loopCheck = TRUE; }
-        // / Remove the daily parent only once every session inside it is gone.
-        if (isDirEmptyOfUserFiles($dailyPath)) removeEmptiedSessionDir($dailyPath); }
-      // / Log the result.
-      if ($Verbose) logEntry('Cleaned the '.$locationName.' location. Removed Files: '.($LocationDeepCleaned ? 'TRUE' : 'FALSE').'.'); } 
-      else errorEntry('An invalid clean operation has been blocked!', 29, FALSE); }
+  // / Determine whether this clean operation is being requested on a valid target.
+  // / The name must be one of the two this function recognizes, & the path must be the one
+  // / that name refers to. Both halves must hold or the operation is refused.
+  if (($locationName === 'ConvertLoc' && $dataLoc === $ConvertLoc)
+   or ($locationName === 'ConvertTempDir' && $dataLoc === $ConvertTempDir)) $cleanAuthorized = TRUE;
+  // / An unauthorized target is a failure of the caller & must be reported as one.
+  // / Reporting success here would let the core log that a location was cleaned when it was
+  // / refused, which is the one outcome this check exists to make visible.
+  if (!$cleanAuthorized) {
+    $CleanedLocation = FALSE;
+    errorEntry('An invalid clean operation has been blocked!', 29, FALSE); }
+  // / A location that does not exist is not an error. There is simply nothing to clean.
+  else if (!file_exists($dataLoc)) warningEntry('The '.$locationName.' location does not exist at '.$dataLoc.'. Nothing to clean.');
+  else {
+    if ($Verbose) logEntry('The valid clean operation has been authorized.');
+    $dailyDirs = array_diff(scandir($dataLoc), array('..', '.'));
+    // / Iterate through each daily folder in the location.
+    foreach ($dailyDirs as $dailyDir) {
+      // / Validate the folder.
+      if (in_array($dailyDir, $DefaultApps)) continue;
+      // / A protected directory at this level is not a daily session parent & is never swept.
+      // / The LibreOffice profile, the log directory & the update backup live at this level.
+      if (in_array($dailyDir, $ProtectedRootDirs, TRUE)) continue;
+      $dailyPath = $dataLoc.$DirSep.$dailyDir;
+      // / Only directories hold sessions.
+      // / Files at this level are left alone entirely.
+      if (!is_dir($dailyPath)) continue;
+      $sessionDirs = array_diff(scandir($dailyPath), array('..', '.'));
+      // / Iterate through each session folder inside this day.
+      foreach ($sessionDirs as $sessionDir) {
+        if (in_array($sessionDir, $DefaultApps)) continue;
+        $sessionPath = $dailyPath.$DirSep.$sessionDir;
+        if (!is_dir($sessionPath)) continue;
+        // / See if this individual session is due for deletion.
+        // / A threshold of zero expires everything, because every session is older than nothing.
+        if ($now - fileTime($sessionPath) > ($deleteThreshold * 60)) {
+          $LocationDeepCleaned = TRUE;
+          @chmod($sessionPath, $PermissionLevels);
+          $loopCheck = cleanFiles($sessionPath);
+          // / Remove the session shell, including any protected file objects still in it.
+          removeEmptiedSessionDir($sessionPath); }
+        // / Check if the most recent iteration of the loop was successful.
+        if (!$loopCheck) $CleanedLocation = FALSE;
+        $loopCheck = TRUE; }
+      // / Remove the daily parent only once every session inside it is gone.
+      if (isDirEmptyOfUserFiles($dailyPath)) removeEmptiedSessionDir($dailyPath); }
+    // / Log the result.
+    if ($Verbose) logEntry('Cleaned the '.$locationName.' location. Removed Files: '.($LocationDeepCleaned ? 'TRUE' : 'FALSE').'.'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $dailyDirs = $dailyDir = $dailyPath = $sessionDirs = $sessionDir = $sessionPath = $now = $loopCheck = $dataLoc = $locationName = $cleanAuthorizedA = $cleanAuthorizedB = $cleanAuthorizedC = $cleanAuthorizedD = NULL;
-  unset($dailyDirs, $dailyDir, $dailyPath, $sessionDirs, $sessionDir, $sessionPath, $now, $loopCheck, $dataLoc, $locationName, $cleanAuthorizedA, $cleanAuthorizedB, $cleanAuthorizedC, $cleanAuthorizedD);
+  $dailyDirs = $dailyDir = $dailyPath = $sessionDirs = $sessionDir = $sessionPath = $now = $loopCheck = $dataLoc = $locationName = $deleteThreshold = $cleanAuthorized = NULL;
+  unset($dailyDirs, $dailyDir, $dailyPath, $sessionDirs, $sessionDir, $sessionPath, $now, $loopCheck, $dataLoc, $locationName, $deleteThreshold, $cleanAuthorized);
   return array($CleanedLocation, $LocationDeepCleaned); }
 // / -----------------------------------------------------------------------------------
 
@@ -1855,11 +2154,11 @@ function verifyRequiredDirs() {
 // / -----------------------------------------------------------------------------------
 // / A function to work out which release to fetch & the URL that will deliver it.
 // / Three targets are supported & each resolves to a different kind of URL.
-// /   A version such as v3.6.8 resolves to that tag's tarball directly. A tag that does
-// /   not exist produces a 404 at download time, which is the correct failure.
-// /   latest asks the GitHub API which tag is newest, then resolves to that tag.
-// /   edge resolves to the current state of the master branch. A branch tarball carries
-// /   whatever version stamp master happens to hold, which may match no release at all.
+// / A version such as v3.6.8 resolves to that tag's tarball directly. A tag that does
+// / not exist produces a 404 at download time, which is the correct failure.
+// / latest asks the GitHub API which tag is newest, then resolves to that tag.
+// / edge resolves to the current state of the master branch. A branch tarball carries
+// / whatever version stamp master happens to hold, which may match no release at all.
 // / The API call is the only network request this function makes & is only made for latest.
 function resolveUpdateTarget($requestedVersion) {
   // / Set variables.
@@ -2285,11 +2584,12 @@ function convertDocuments($pathname, $newPathname, $extension) {
 // / A v6 installation uses convert with different argument semantics & is refused.
 function convertImages($pathname, $newPathname, $height, $width, $rotate) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumImageVersion;
-  $ConversionSuccess = $ConversionErrors = $imageVersionIsValid = FALSE;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumImageVersion, $magickCommand;
+  $ConversionSuccess = $ConversionErrors = $imageVersionIsValid = $magickCommand = $sandboxIsAvailable = FALSE;
   $returnData = $wh = $wxh = $bgSwitch = $outputExt = '';
   $stopper = 0;
   $sleepTime = $SleepTimer;
+  logEntry($height.' '.$width);
   // / Confirm the installed ImageMagick meets the minimum version HRConvert2 requires.
   $imageVersionIsValid = verifyImageVersion($MinimumImageVersion);
   if (!$imageVersionIsValid) {
@@ -2301,9 +2601,16 @@ function convertImages($pathname, $newPathname, $height, $width, $rotate) {
     if (!is_numeric($width) or $width === FALSE) $width = 0;
     if (!is_numeric($rotate) or $rotate === FALSE) $rotate = '';
     else $rotate = '-rotate '.$rotate.' ';
-    $wxh = $width.'x'.$height;
-    if ($wxh === '0x0' or $wxh === 'x0' or $wxh === '0x' or $wxh === '0' or $wxh === '00' or $wxh === '' or $wxh === ' ') $wh = '';
-    else $wh = '-resize '.$wxh.' ';
+    // / ImageMagick treats WxH as a bounding box & preserves the aspect ratio, so the
+    // / dimension that binds first wins & the other comes out smaller than requested.
+    // / An exclamation mark demands the exact dimensions & accepts the distortion, which is
+    // / only correct when the user supplied both & therefore asked for both.
+    // / A dimension of zero is omitted rather than written, so the other one scales to it.
+    // / Neither dimension leaves an empty geometry & no resize is performed at all.
+    $wxh = (($width > 0) ? $width : '').'x'.(($height > 0) ? $height : '');
+    if ($width > 0 && $height > 0) $wxh = $wxh.'!';
+    if ($wxh === 'x') $wh = '';
+    else $wh = '-resize '.escapeshellarg($wxh).' ';
     // / Isolate the output extension to determine if it lacks native alpha channel support.
     $outputExt = strtolower(pathinfo($newPathname, PATHINFO_EXTENSION));
     // / Flatten transparent pixels against white when exporting to a format with no alpha.
@@ -2315,9 +2622,11 @@ function convertImages($pathname, $newPathname, $height, $width, $rotate) {
     while (!file_exists($newPathname) && $stopper <= $StopCounter) {
       // / If the last conversion attempt failed, wait a moment before trying again.
       if ($stopper !== 0) sleep($sleepTime++);
-      // / Attempt the conversion using the unified ImageMagick v7 magick command layout.
-      $returnData = shell_exec('/usr/local/bin/magick '.$bgSwitch.escapeshellarg($pathname).' '.$wh.$rotate.escapeshellarg($newPathname));
-      logEntry('/usr/local/bin '.$bgSwitch.escapeshellarg($pathname).' '.$wh.$rotate.escapeshellarg($newPathname));
+      $magickCommand = '/usr/local/bin/magick '.escapeshellarg($pathname).' '.$bgSwitch.$wh.$rotate.escapeshellarg($newPathname);
+      list ($sandboxIsAvailable, $magickCommand) = sandboxCommand($magickCommand, $pathname, $newPathname, FALSE);
+      if (!$sandboxIsAvailable) warningEntry('Bubblewrap is unavailable. An image conversion ran unsandboxed & was protected only by policy.xml.');
+      if ($Verbose) logEntry('Image command: '.$magickCommand);
+      $returnData = shell_exec($magickCommand);
       // / Count the number of conversions to avoid infinite loops.
       $stopper++;
       // / Stop attempting the conversion after $StopCounter number of attempts.
@@ -2331,8 +2640,8 @@ function convertImages($pathname, $newPathname, $height, $width, $rotate) {
     // / earlier attempt would report success for a conversion that was refused.
     if (file_exists($newPathname)) $ConversionSuccess = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $newPathname = $height = $width = $wxh = $rotate = $wh = $sleepTime = $outputExt = $bgSwitch = $imageVersionIsValid = NULL;
-  unset($returnData, $stopper, $pathname, $newPathname, $height, $width, $wxh, $rotate, $wh, $sleepTime, $outputExt, $bgSwitch, $imageVersionIsValid);
+  $returnData = $stopper = $pathname = $newPathname = $height = $width = $wxh = $rotate = $wh = $sleepTime = $outputExt = $bgSwitch = $imageVersionIsValid = $magickCommand = $sandboxIsAvailable = NULL;
+  unset($returnData, $stopper, $pathname, $newPathname, $height, $width, $wxh, $rotate, $wh, $sleepTime, $outputExt, $bgSwitch, $imageVersionIsValid, $magickCommand, $sandboxIsAvailable);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -2373,7 +2682,7 @@ function convertImages($pathname, $newPathname, $height, $width, $rotate) {
 function convertModels($pathname, $newPathname) {
   // / Set variables.
   global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumAssimpVersion, $MinimumMeshlabVersion, $UsePyMeshLab, $InstLoc, $DirSep;
-  $ConversionSuccess = $ConversionErrors = $modelsValid = $assimpVersionOK = $meshLabVersionOK = $readyToConvert = FALSE;
+  $ConversionSuccess = $ConversionErrors = $modelsValid = $assimpVersionOK = $meshLabVersionOK = $readyToConvert = $meshlabCommand = $assimpCommand = $sandboxIsAvailable = FALSE;
   $returnData = $assimpData = $inputExt = $pyMeshLabDir = $intermediatePathname = $assimpInput = '';
   $meshlabOnly = $assimpSupported = array();
   $stopper = 0;
@@ -2408,18 +2717,29 @@ function convertModels($pathname, $newPathname) {
       if ($stopper !== 0) sleep($sleepTime++);
       // / Route 1. A mesh format is normalized by MeshLab before Assimp writes the output.
       if (in_array($inputExt, $meshlabOnly)) {
-        if ($UsePyMeshLab) $returnData = shell_exec('python3 -c "import sys; sys.path.insert(0, '.escapeshellarg($pyMeshLabDir).'); import pymeshlab; ms = pymeshlab.MeshSet(); ms.load_new_mesh('.escapeshellarg($pathname).'); ms.save_current_mesh('.escapeshellarg($intermediatePathname).');"');
-        else $returnData = shell_exec('xvfb-run -a /usr/bin/meshlabserver -i '.escapeshellarg($pathname).' -o '.escapeshellarg($intermediatePathname));
+        if ($UsePyMeshLab) $meshlabCommand = 'python3 -c "import sys; sys.path.insert(0, '.escapeshellarg($pyMeshLabDir).'); import pymeshlab; ms = pymeshlab.MeshSet(); ms.load_new_mesh('.escapeshellarg($pathname).'); ms.save_current_mesh('.escapeshellarg($intermediatePathname).');"';
+        else $meshlabCommand = 'xvfb-run -a /usr/bin/meshlabserver -i '.escapeshellarg($pathname).' -o '.escapeshellarg($intermediatePathname);
+        list ($sandboxIsAvailable, $meshlabCommand) = sandboxCommand($meshlabCommand, $pathname, $intermediatePathname, FALSE);
+        if (!$sandboxIsAvailable) warningEntry('Bubblewrap is unavailable. A model conversion ran unsandboxed.');
+        $returnData = shell_exec($meshlabCommand);
         // / If the first stage produced nothing, hand Assimp the original rather than nothing.
         $assimpInput = file_exists($intermediatePathname) ? $intermediatePathname : $pathname;
-        $assimpData = shell_exec('/usr/bin/assimp export '.escapeshellarg($assimpInput).' '.escapeshellarg($newPathname)); }
+        $assimpCommand = '/usr/bin/assimp export '.escapeshellarg($assimpInput).' '.escapeshellarg($newPathname);
+        list ($sandboxIsAvailable, $assimpCommand) = sandboxCommand($assimpCommand, $assimpInput, $newPathname, FALSE);
+        $assimpData = shell_exec($assimpCommand); }
       // / Route 2. A scene format goes straight to Assimp & bypasses MeshLab entirely.
       else if (in_array($inputExt, $assimpSupported)) {
-        $assimpData = shell_exec('/usr/bin/assimp export '.escapeshellarg($pathname).' '.escapeshellarg($newPathname)); }
+        $assimpCommand = '/usr/bin/assimp export '.escapeshellarg($pathname).' '.escapeshellarg($newPathname);
+        list ($sandboxIsAvailable, $assimpCommand) = sandboxCommand($assimpCommand, $pathname, $newPathname, FALSE);
+        if (!$sandboxIsAvailable) warningEntry('Bubblewrap is unavailable. A model conversion ran unsandboxed.');
+        $assimpData = shell_exec($assimpCommand); }
       // / Route 3. An unrecognized extension is attempted with MeshLab alone.
       else {
-        if ($UsePyMeshLab) $returnData = shell_exec('python3 -c "import sys; sys.path.insert(0, '.escapeshellarg($pyMeshLabDir).'); import pymeshlab; ms = pymeshlab.MeshSet(); ms.load_new_mesh('.escapeshellarg($pathname).'); ms.save_current_mesh('.escapeshellarg($newPathname).');"');
-        else $returnData = shell_exec('xvfb-run -a /usr/bin/meshlabserver -i '.escapeshellarg($pathname).' -o '.escapeshellarg($newPathname)); }
+        if ($UsePyMeshLab) $meshlabCommand = 'python3 -c "import sys; sys.path.insert(0, '.escapeshellarg($pyMeshLabDir).'); import pymeshlab; ms = pymeshlab.MeshSet(); ms.load_new_mesh('.escapeshellarg($pathname).'); ms.save_current_mesh('.escapeshellarg($newPathname).');"';
+        else $meshlabCommand = 'xvfb-run -a /usr/bin/meshlabserver -i '.escapeshellarg($pathname).' -o '.escapeshellarg($newPathname);
+        list ($sandboxIsAvailable, $meshlabCommand) = sandboxCommand($meshlabCommand, $pathname, $newPathname, FALSE);
+        if (!$sandboxIsAvailable) warningEntry('Bubblewrap is unavailable. A model conversion ran unsandboxed.');
+        $returnData = shell_exec($meshlabCommand); }
       // / Count the number of conversions to avoid infinite loops.
       $stopper++;
       // / Stop attempting the conversion after $StopCounter number of attempts.
@@ -2434,8 +2754,8 @@ function convertModels($pathname, $newPathname) {
     // / The output file is the only verdict on whether the conversion produced anything.
     if (file_exists($newPathname)) $ConversionSuccess = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $assimpData = $stopper = $pathname = $newPathname = $intermediatePathname = $assimpInput = $inputExt = $meshlabOnly = $assimpSupported = $pyMeshLabDir = $sleepTime = $modelsValid = $assimpVersionOK = $meshLabVersionOK = $readyToConvert = NULL;
-  unset($returnData, $assimpData, $stopper, $pathname, $newPathname, $intermediatePathname, $assimpInput, $inputExt, $meshlabOnly, $assimpSupported, $pyMeshLabDir, $sleepTime, $modelsValid, $assimpVersionOK, $meshLabVersionOK, $readyToConvert);
+  $returnData = $assimpData = $stopper = $pathname = $newPathname = $intermediatePathname = $assimpInput = $inputExt = $meshlabOnly = $assimpSupported = $pyMeshLabDir = $sleepTime = $modelsValid = $assimpVersionOK = $meshLabVersionOK = $readyToConvert = $meshlabCommand = $assimpCommand = $sandboxIsAvailable = NULL;
+  unset($returnData, $assimpData, $stopper, $pathname, $newPathname, $intermediatePathname, $assimpInput, $inputExt, $meshlabOnly, $assimpSupported, $pyMeshLabDir, $sleepTime, $modelsValid, $assimpVersionOK, $meshLabVersionOK, $readyToConvert, $meshlabCommand, $assimpCommand, $sandboxIsAvailable);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 // / -----------------------------------------------------------------------------------
@@ -2863,7 +3183,7 @@ function convertSCAD($pathname, $newPathname, $extension) {
 function convertDrawings($pathname, $newPathname) {
   // / Set variables.
   global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer;
-  $ConversionSuccess = $ConversionErrors = FALSE;
+  $ConversionSuccess = $ConversionErrors = $diaCommand = $sandboxIsAvailable = FALSE;
   $returnData = '';
   $stopper = 0;
   $sleepTime = $SleepTimer;
@@ -2873,7 +3193,10 @@ function convertDrawings($pathname, $newPathname) {
     // / If the last conversion attempt failed, wait a moment before trying again.
     if ($stopper !== 0) sleep($sleepTime++);
     // / Attempt the conversion.
-    $returnData = shell_exec('inkscape --export-filename='.$newPathname.' -d 100 '.$pathname);
+    $diaCommand = 'dia '.escapeshellarg($pathname).' -e '.escapeshellarg($newPathname);
+    list ($sandboxIsAvailable, $diaCommand) = sandboxCommand($diaCommand, $pathname, $newPathname, FALSE);
+    if (!$sandboxIsAvailable) warningEntry('Bubblewrap is unavailable. A drawing conversion ran unsandboxed.');
+    $returnData = shell_exec($diaCommand);
     //$returnData = shell_exec('dia '.$pathname.' -e '.$newPathname);
     // / Count the number of conversions to avoid infinite loops.
     $stopper++;
@@ -2885,8 +3208,8 @@ function convertDrawings($pathname, $newPathname) {
   if ($Verbose && trim($returnData) !== '') logEntry('Dia returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $newPathname = $sleepTime = NULL;
-  unset($returnData, $stopper, $pathname, $newPathname, $sleepTime);
+  $returnData = $stopper = $pathname = $newPathname = $sleepTime = $diaCommand = $sandboxIsAvailable = NULL;
+  unset($returnData, $stopper, $pathname, $newPathname, $sleepTime, $diaCommand, $sandboxIsAvailable);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -2895,8 +3218,8 @@ function convertDrawings($pathname, $newPathname) {
 function convertSVG($pathname, $newPathname, $height, $width) {
   // / Set variables.
   global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumInkscapeVersion;
-  $ConversionSuccess = $ConversionErrors = $svgVersionIsValid = FALSE;
-  $returnData = $argEcho = '';
+  $ConversionSuccess = $ConversionErrors = $svgVersionIsValid = $sandboxIsAvailable = FALSE;
+  $returnData = $argEcho = $inkscapeCommand = '';
   $stopper = 0;
   $sleepTime = $SleepTimer;
   $widthEcho = '--export-width='.$width;
@@ -2915,7 +3238,10 @@ function convertSVG($pathname, $newPathname, $height, $width) {
       // / If the last conversion attempt failed, wait a moment before trying again.
       if ($stopper !== 0) sleep($sleepTime++);
       // / Attempt the conversion.
-      $returnData = shell_exec('inkscape '.$argEcho.' --export-filename='.$newPathname.' '.$pathname);
+      $inkscapeCommand = 'inkscape '.$argEcho.' --export-filename='.escapeshellarg($newPathname).' '.escapeshellarg($pathname);
+      list ($sandboxIsAvailable, $inkscapeCommand) = sandboxCommand($inkscapeCommand, $pathname, $newPathname, FALSE);
+      if (!$sandboxIsAvailable) warningEntry('Bubblewrap is unavailable. An SVG conversion ran unsandboxed.');
+      $returnData = shell_exec($inkscapeCommand);
       // / Count the number of conversions to avoid infinite loops.
       $stopper++;
       // / Stop attempting the conversion after $StopCounter number of attempts.
@@ -2926,8 +3252,8 @@ function convertSVG($pathname, $newPathname, $height, $width) {
   if ($Verbose && trim($returnData) !== '') logEntry('Inkscape returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $newPathname = $sleepTime = $heightEcho = $widthEcho = $argEcho = $svgVersionIsValid = NULL;
-  unset($returnData, $stopper, $pathname, $newPathname, $sleepTime, $heightEcho, $widthEcho, $argEcho, $svgVersionIsValid);
+  $returnData = $stopper = $pathname = $newPathname = $sleepTime = $heightEcho = $widthEcho = $argEcho = $svgVersionIsValid = $inkscapeCommand = $sandboxIsAvailable = NULL;
+  unset($returnData, $stopper, $pathname, $newPathname, $sleepTime, $heightEcho, $widthEcho, $argEcho, $svgVersionIsValid, $inkscapeCommand, $sandboxIsAvailable);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -2939,7 +3265,7 @@ function convertSVG($pathname, $newPathname, $height, $width) {
 function convertVideos($pathname, $newPathname) {
   // / Set variables.
   global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumFFMPEGVersion;
-  $ConversionSuccess = $ConversionErrors = $ffmpegVersionIsValid = FALSE;
+  $ConversionSuccess = $ConversionErrors = $ffmpegVersionIsValid = $ffmpegCommand = $sandboxIsAvailable = FALSE;
   $returnData = '';
   $stopper = 0;
   $sleepTime = $SleepTimer;
@@ -2955,7 +3281,10 @@ function convertVideos($pathname, $newPathname) {
       // / If the last conversion attempt failed, wait a moment before trying again.
       if ($stopper !== 0) sleep($sleepTime++);
       // / Attempt the conversion.
-      $returnData = shell_exec('ffmpeg -y -i '.$pathname.' -c:v libx264 '.$newPathname);
+      $ffmpegCommand = 'ffmpeg -y -i '.escapeshellarg($pathname).' -c:v libx264 '.escapeshellarg($newPathname);
+      list ($sandboxIsAvailable, $ffmpegCommand) = sandboxCommand($ffmpegCommand, $pathname, $newPathname, FALSE);
+      if (!$sandboxIsAvailable) warningEntry('Bubblewrap is unavailable. A video conversion ran unsandboxed.');
+      $returnData = shell_exec($ffmpegCommand);
       // / Count the number of conversions to avoid infinite loops.
       $stopper++;
       // / Stop attempting the conversion after $StopCounter number of attempts.
@@ -2967,8 +3296,8 @@ function convertVideos($pathname, $newPathname) {
     // / The output file is the only verdict on whether the conversion produced anything.
     if (file_exists($newPathname)) $ConversionSuccess = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $newPathname = $sleepTime = $ffmpegVersionIsValid = NULL;
-  unset($returnData, $stopper, $pathname, $newPathname, $sleepTime, $ffmpegVersionIsValid);
+  $returnData = $stopper = $pathname = $newPathname = $sleepTime = $ffmpegVersionIsValid = $ffmpegCommand = $sandboxIsAvailable = NULL;
+  unset($returnData, $stopper, $pathname, $newPathname, $sleepTime, $ffmpegVersionIsValid, $ffmpegCommand, $sandboxIsAvailable);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -2977,7 +3306,7 @@ function convertVideos($pathname, $newPathname) {
 function convertSubtitles($pathname, $newPathname) {
   // / Set variables.
   global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer;
-  $ConversionSuccess = $ConversionErrors = FALSE;
+  $ConversionSuccess = $ConversionErrors = $ffmpegCommand = $sandboxIsAvailable = FALSE;
   $returnData = '';
   $stopper = 0;
   $sleepTime = $SleepTimer;
@@ -2987,7 +3316,10 @@ function convertSubtitles($pathname, $newPathname) {
     // / If the last conversion attempt failed, wait a moment before trying again.
     if ($stopper !== 0) sleep($sleepTime++);
     // / Attempt the conversion.
-    $returnData = shell_exec('ffmpeg -y -i '.$pathname.' '.$newPathname);
+    $ffmpegCommand = 'ffmpeg -y -i '.escapeshellarg($pathname).' '.escapeshellarg($newPathname);
+    list ($sandboxIsAvailable, $ffmpegCommand) = sandboxCommand($ffmpegCommand, $pathname, $newPathname, FALSE);
+    if (!$sandboxIsAvailable) warningEntry('Bubblewrap is unavailable. A subtitle conversion ran unsandboxed.');
+    $returnData = shell_exec($ffmpegCommand);
     // / Count the number of conversions to avoid infinite loops.
     $stopper++;
     // / Stop attempting the conversion after $StopCounter number of attempts.
@@ -2998,8 +3330,8 @@ function convertSubtitles($pathname, $newPathname) {
   if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $newPathname = $sleepTime = NULL;
-  unset($returnData, $stopper, $pathname, $newPathname, $sleepTime);
+  $returnData = $stopper = $pathname = $newPathname = $sleepTime = $ffmpegCommand = $sandboxIsAvailable = NULL;
+  unset($returnData, $stopper, $pathname, $newPathname, $sleepTime, $ffmpegCommand, $sandboxIsAvailable);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -3716,9 +4048,9 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
   $stopper = 0;
   $sleepTime = $SleepTimer;
   // / Determine if the bitrate is being set.
-  if (empty($bitrate) or $bitrate = '') $bitrate = 'auto';
+  if (empty($bitrate) or $bitrate === '') $bitrate = 'auto';
   if ($bitrate === 'auto') $br = ' ';
-  else ($br = ' -b:a '.$bitrate.' ');
+  else $br = ' -b:a '.escapeshellarg($bitrate).' ';
   // / Confirm the installed FFMPEG meets the minimum version HRConvert2 requires.
   $ffmpegVersionIsValid = verifyFFMPEGVersion($MinimumFFMPEGVersion);
   if (!$ffmpegVersionIsValid) {
@@ -3731,7 +4063,10 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
       // / If the last conversion attempt failed, wait a moment before trying again.
       if ($stopper !== 0) sleep($sleepTime++);
       // / Attempt the conversion.
-      $returnData = shell_exec('ffmpeg -y -vn -i '.$pathname.$br.$newPathname);
+      $ffmpegCommand = 'ffmpeg -y -vn -i '.escapeshellarg($pathname).$br.escapeshellarg($newPathname);
+      list ($sandboxIsAvailable, $ffmpegCommand) = sandboxCommand($ffmpegCommand, $pathname, $newPathname, FALSE);
+      if (!$sandboxIsAvailable) warningEntry('Bubblewrap is unavailable. An audio conversion ran unsandboxed.');
+      $returnData = shell_exec($ffmpegCommand);
       // / Count the number of conversions to avoid infinite loops.
       $stopper++;
       // / Stop attempting the conversion after $StopCounter number of attempts.
@@ -3745,141 +4080,123 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
     // / attempt would report success for a conversion that was refused & never ran.
     if (file_exists($newPathname)) $ConversionSuccess = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $newPathname = $br = $extension = $bitrate = $sleepTime = $ffmpegVersionIsValid = NULL;
-  unset($returnData, $stopper, $pathname, $newPathname, $br, $extension, $bitrate, $sleepTime, $ffmpegVersionIsValid);
+  $returnData = $stopper = $pathname = $newPathname = $br = $extension = $bitrate = $sleepTime = $ffmpegVersionIsValid = $ffmpegCommand = $sandboxIsAvailable = NULL;
+  unset($returnData, $stopper, $pathname, $newPathname, $br, $extension, $bitrate, $sleepTime, $ffmpegVersionIsValid, $ffmpegCommand, $sandboxIsAvailable);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to convert archive & disk image formats.
+// / The source is extracted into a staging folder & the staging folder is re-archived.
+// / 7-Zip is the only extractor, so every INPUT format depends on it & nothing works
+// / without it. Each OUTPUT format has its own creator & gates on that creator alone, so a
+// / missing mkisofs does not prevent a zip conversion.
+// / An extraction that produces nothing is refused rather than re-archived, because the
+// / archiver would package the empty staging folder & the result would exist, which is the
+// / only test the success path performs.
 function convertArchives($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $ConvertDir, $Lol, $Lolol, $StopCounter, $SleepTimer, $PermissionLevels, $RARArchiveMethod;
-  $ConversionSuccess = $ConversionErrors = FALSE;
-  $returnData = '';
+  global $Verbose, $ConvertDir, $Lol, $Lolol, $StopCounter, $SleepTimer, $PermissionLevels, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion;
+  $ConversionSuccess = $ConversionErrors = $sandboxIsAvailable = FALSE;
+  $archiveToolsAreValid = $sevenZipIsValid = $rarIsValid = $zipIsValid = $tarIsValid = $mkisofsIsValid = FALSE;
+  $returnData = $extractCommand = $archiveCommand = '';
   $filename = pathinfo($pathname, PATHINFO_FILENAME);
   $safedir2 = $ConvertDir.$filename;
-  $safedir3 = $safedir2.'.7z';
-  $safedir4 = $safedir2.'.zip';
   $array7zo = array('7z', 'cbz', 'cbr');
   $arrayzipo = array('zip');
   $array7zo2 = array('vhd', 'vdi', 'iso');
   $arraytaro = array('tar.gz', 'tar.bz2', 'tar');
   $arrayraro = array('rar');
-  $rarMethod = 'other';
   $stopper = 0;
   $sleepTime = $SleepTimer;
-  $oldExtension =  getExtension($pathname);
-  // / Create a folder to contain extracted files.
-  @mkdir($safedir2, $PermissionLevels);
-  if (!is_dir($safedir2)) $ConversionErrors = TRUE;
-  // / Code to Extract the selected archive.
-  // / Currently only 7z is used, but this code exists to give flexibility.
-  // / At one time I tried using zip for zip, rar for rar, ect.
-  // / I determined that 7z was the most reliable in all cases.
-  // / However that may some day change, so the code exists to allow future granularity.
-  if ($Verbose) logEntry('Extracting file '.$pathname,' to '.$safedir2.'.');
-  if (in_array(strtolower($oldExtension), $arrayzipo)) $returnData = shell_exec('7z x -aoa '.$pathname.' -o'.$safedir2);
-  if (in_array(strtolower($oldExtension), $array7zo)) $returnData = shell_exec('7z x -aoa '.$pathname.' -o'.$safedir2);
-  if (in_array(strtolower($oldExtension), $array7zo2)) $returnData = shell_exec('7z x -y '.$pathname.' -o'.$safedir2);
-  if (in_array(strtolower($oldExtension), $arrayraro)) $returnData = shell_exec('7z x -aoa '.$pathname.' -o'.$safedir2);
-  if (in_array(strtolower($oldExtension), $arraytaro)) $returnData = shell_exec('7z x -aoa '.$pathname.' -o'.$safedir2);
-  // / Log the output of the extract operation to the logfile, if it is not blank.
-  if ($Verbose && trim($returnData) !== '') logEntry('The extractor returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-  if ($Verbose) logEntry('Archiving file '.$safedir2.' to '.$newPathname.'.');
-  // / Code to rearchive archive files using 7z.
-  if (in_array($extension, $array7zo)) {
-    // / This code will attempt the archive operation up to $StopCounter number of times.
-    while ($stopper <= $StopCounter) {
-      // / If the last conversion attempt failed, wait a moment before trying again.
-      if ($stopper !== 0) sleep($sleepTime++);
-      // / Attempt the conversion.
-      $returnData = shell_exec('7z a -t'.$extension.' '.$newPathname.' '.$safedir2);
-      // / Log the output of the archive operation to the logfile, if it is not blank.
-      if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-      // / Count the number of conversions to avoid infinite loops.
-      $stopper++;
-    // / Stop attempting the archive operation after $StopCounter number of attempts.
-      if ($stopper === $StopCounter) {
+  $oldExtension = getExtension($pathname);
+  $archiveError = 13000;
+  // / Verify every archive utility before anything is read or written.
+  list ($archiveToolsAreValid, $sevenZipIsValid, $rarIsValid, $zipIsValid, $tarIsValid, $mkisofsIsValid) = verifyArchiveVersions($Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion);
+  // / 7-Zip performs every extraction, so no archive operation of any kind works without it.
+  if (!$sevenZipIsValid) {
+    $ConversionErrors = TRUE;
+    errorEntry('The installed 7-Zip version is missing, unidentifiable, or too old!', 13008, FALSE); }
+  else {
+    // / Create a folder to contain extracted files.
+    @mkdir($safedir2, $PermissionLevels);
+    if (!is_dir($safedir2)) $ConversionErrors = TRUE;
+    // / Extract the source archive into the staging folder.
+    if ($Verbose) logEntry('Extracting file '.$pathname.' to '.$safedir2.'.');
+    if (in_array(strtolower($oldExtension), $array7zo2)) $extractCommand = '7z x -y '.escapeshellarg($pathname).' -o'.escapeshellarg($safedir2);
+    else if (in_array(strtolower($oldExtension), $arrayzipo) or in_array(strtolower($oldExtension), $array7zo) or in_array(strtolower($oldExtension), $arrayraro) or in_array(strtolower($oldExtension), $arraytaro)) $extractCommand = '7z x -aoa '.escapeshellarg($pathname).' -o'.escapeshellarg($safedir2);
+    if ($extractCommand !== '') {
+      list ($sandboxIsAvailable, $extractCommand) = sandboxCommand($extractCommand, $pathname, $safedir2, FALSE);
+      if (!$sandboxIsAvailable) {
         $ConversionErrors = TRUE;
-        errorEntry('The archiver timed out!', 13001, FALSE); } } }
-  // / Code to rearchive disk image files using mkisofs.
-  if (in_array($extension, $array7zo2)) {
-    // / This code will attempt the archive operation up to $StopCounter number of times.
-    while ($stopper <= $StopCounter) {
-      // / If the last conversion attempt failed, wait a moment before trying again.
-      if ($stopper !== 0) sleep($sleepTime++);
-      // / Attempt the conversion.
-      $returnData = shell_exec('mkisofs -o '.$newPathname.' '.$safedir2);
-      // / Log the output of the archive operation to the logfile, if it is not blank.
-      if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-      // / Count the number of conversions to avoid infinite loops.
-      $stopper++;
-    // / Stop attempting the archive operation after $StopCounter number of attempts.
-      if ($stopper === $StopCounter) {
-        $ConversionErrors = TRUE;
-        errorEntry('The archiver timed out!', 13002, FALSE); } } }
-  // / Code to rearchive archive files using zip.
-  if (in_array($extension, $arrayzipo)) {
-    // / This code will attempt the archive operation up to $StopCounter number of times.
-    while ($stopper <= $StopCounter) {
-      // / If the last conversion attempt failed, wait a moment before trying again.
-      if ($stopper !== 0) sleep($sleepTime++);
-      // / Attempt the conversion.
-      $returnData = shell_exec('zip -r -j '.$newPathname.' '.$safedir2);
-      // / Log the output of the archive operation to the logfile, if it is not blank.
-      if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-      // / Count the number of conversions to avoid infinite loops.
-      $stopper++;
-    // / Stop attempting the archive operation after $StopCounter number of attempts.
-      if ($stopper === $StopCounter) {
-        $ConversionErrors = TRUE;
-        errorEntry('The archiver timed out!', 13003, FALSE); } } }
-  // / Code to rearachive archive files using tar.
-  if (in_array($extension, $arraytaro)) {
-    // / This code will attempt the archive operation up to $StopCounter number of times.
-    while ($stopper <= $StopCounter) {
-      // / If the last conversion attempt failed, wait a moment before trying again.
-      if ($stopper !== 0) sleep($sleepTime++);
-      // / Attempt the conversion.
-      $returnData = shell_exec('tar -cjf '.$newPathname.' -C '.$safedir2.' .');
-      // / Log the output of the archive operation to the logfile, if it is not blank.
-      if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-      // / Count the number of conversions to avoid infinite loops.
-      $stopper++;
-    // / Stop attempting the archive operation after $StopCounter number of attempts.
-      if ($stopper === $StopCounter) {
-        $ConversionErrors = TRUE;
-        errorEntry('The archiver timed out!', 13004, FALSE); } } }
-  // / Code to rearchive archive files using rar.
-  if (in_array($extension, $arrayraro)) {
-    if ($RARArchiveMethod === 'rar' && file_exists('/usr/bin/rar')) $rarMethod = 'rar';
-    else $rarMethod = 'other';
-    // / This code will attempt the archive operation up to $StopCounter number of times.
-    while ($stopper <= $StopCounter) {
-      // / If the last conversion attempt failed, wait a moment before trying again.
-      if ($stopper !== 0) sleep($sleepTime++);
-      // / Attempt the conversion.
-      if ($rarMethod === 'rar') $returnData = shell_exec('rar a -ep1 -r '.$newPathname.' '.$safedir2);
-      else $returnData = shell_exec('7z a -t'.$extension.' '.$newPathname.' '.$safedir2);
-      // / Log the output of the archive operation to the logfile, if it is not blank.
-      if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-      // / Count the number of conversions to avoid infinite loops.
-      $stopper++;
-    // / Stop attempting the archive operation after $StopCounter number of attempts.
-      if ($stopper === $StopCounter) {
-        $ConversionErrors = TRUE;
-        errorEntry('The archiver timed out!', 13005, FALSE); } } }
-  // / Check if any errors occurred.
+        errorEntry('Bubblewrap is missing or non functional, so this archive extraction cannot be isolated!', 13006, FALSE); }
+      else $returnData = shell_exec($extractCommand); }
+    // / Log the output of the extract operation to the logfile, if it is not blank.
+    if ($Verbose && trim($returnData) !== '') logEntry('The extractor returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+    // / An extraction that produced nothing must not be re-archived.
+    if ($extractCommand !== '' && is_dir_empty($safedir2)) {
+      $ConversionErrors = TRUE;
+      errorEntry('The extractor produced no files from the source archive!', 13007, FALSE); }
+    else {
+      if ($Verbose) logEntry('Archiving file '.$safedir2.' to '.$newPathname.'.');
+      // / Select the archiver for the requested output format & confirm it is usable.
+      // / Five formats each had their own copy of the retry loop, & every copy carried the
+      // / same bug. The loop is written once below & only the command varies.
+      if (in_array($extension, $array7zo)) {
+        $archiveCommand = '7z a -t'.escapeshellarg($extension).' '.escapeshellarg($newPathname).' '.escapeshellarg($safedir2);
+        $archiveError = 13001; }
+      else if (in_array($extension, $array7zo2)) {
+        if (!$mkisofsIsValid) errorEntry('Mkisofs is missing, unidentifiable, or too old!', 13009, FALSE);
+        else $archiveCommand = 'mkisofs -o '.escapeshellarg($newPathname).' '.escapeshellarg($safedir2);
+        $archiveError = 13002; }
+      else if (in_array($extension, $arrayzipo)) {
+        if (!$zipIsValid) errorEntry('Zip is missing, unidentifiable, or too old!', 13010, FALSE);
+        else $archiveCommand = 'zip -r -j '.escapeshellarg($newPathname).' '.escapeshellarg($safedir2);
+        $archiveError = 13003; }
+      else if (in_array($extension, $arraytaro)) {
+        if (!$tarIsValid) errorEntry('Tar is missing, unidentifiable, or too old!', 13011, FALSE);
+        else $archiveCommand = 'tar -cjf '.escapeshellarg($newPathname).' -C '.escapeshellarg($safedir2).' .';
+        $archiveError = 13004; }
+      else if (in_array($extension, $arrayraro)) {
+        // / 7-Zip cannot create rar archives. RAR compression is proprietary & 7-Zip reads
+        // / the format without being able to write it, so there is NO fallback here.
+        // / -ma4 forces the older RAR format. RAR 7.00 defaults to a compression method
+        // / that older extractors report as unsupported, which produced an archive
+        // / HRConvert2 itself could not extract on the very next request.
+        if (!$rarIsValid) errorEntry('Rar output requires the rar utility, which is missing or too old!', 13013, FALSE);
+        else $archiveCommand = 'rar a -ma4 -ep1 -r '.escapeshellarg($newPathname).' '.escapeshellarg($safedir2);
+        $archiveError = 13005; }
+      // / Perform the archive operation, retrying up to $StopCounter times.
+      // / The loop exits as soon as the output exists. Without that test it always ran the
+      // / full count & always reported a timeout, even on a conversion that succeeded.
+      if ($archiveCommand !== '') {
+        list ($sandboxIsAvailable, $archiveCommand) = sandboxCommand($archiveCommand, $safedir2, $newPathname, FALSE);
+        if (!$sandboxIsAvailable) {
+          $ConversionErrors = TRUE;
+          errorEntry('Bubblewrap is missing or non functional, so this archive operation cannot be isolated!', 13006, FALSE); }
+        else {
+          while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+            // / If the last attempt failed, wait a moment before trying again.
+            if ($stopper !== 0) sleep($sleepTime++);
+            $returnData = shell_exec($archiveCommand);
+            // / Log the output of the archive operation to the logfile, if it is not blank.
+            if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+            // / Count the number of attempts to avoid infinite loops.
+            $stopper++;
+            // / Stop attempting the archive operation after $StopCounter number of attempts.
+            if ($stopper === $StopCounter) {
+              $ConversionErrors = TRUE;
+              errorEntry('The archiver timed out!', $archiveError, FALSE); } } } } } }
+  // / The output file is the only verdict on whether the conversion produced anything.
   if (!file_exists($newPathname)) {
     $ConversionErrors = TRUE;
     errorEntry('The archiver failed to produce an archive!', 13000, FALSE); }
-  else ($ConversionSuccess = TRUE);
+  else $ConversionSuccess = TRUE;
   // / Code to clean up temporary files & directories.
   cleanFiles($safedir2);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $filename = $safedir2 = $safedir3 = $safedir4 = $oldExtension = $returnData = $pathname = $newPathname = $extension = $array7zo = $arrayzipo = $array7zo2 = $arraytaro = $arrayraro = $sleepTime = $rarMethod = NULL;
-  unset($filename, $safedir2, $safedir3, $safedir4, $oldExtension, $returnData, $pathname, $newPathname, $extension, $array7zo, $arrayzipo, $array7zo2, $arraytaro, $arrayraro, $sleepTime, $rarMethod);
+  $filename = $safedir2 = $oldExtension = $returnData = $pathname = $newPathname = $extension = $array7zo = $arrayzipo = $array7zo2 = $arraytaro = $arrayraro = $sleepTime = $stopper = $extractCommand = $archiveCommand = $archiveError = $sandboxIsAvailable = $archiveToolsAreValid = $sevenZipIsValid = $rarIsValid = $zipIsValid = $tarIsValid = $mkisofsIsValid = NULL;
+  unset($filename, $safedir2, $oldExtension, $returnData, $pathname, $newPathname, $extension, $array7zo, $arrayzipo, $array7zo2, $arraytaro, $arrayraro, $sleepTime, $stopper, $extractCommand, $archiveCommand, $archiveError, $sandboxIsAvailable, $archiveToolsAreValid, $sevenZipIsValid, $rarIsValid, $zipIsValid, $tarIsValid, $mkisofsIsValid);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -4185,30 +4502,40 @@ function deleteFiles($FilesToDelete) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to archive a selection of files.
+// / Each file is archived on its own, so one input produces one output every time.
+// / Each output format gates on its own creator, so a missing mkisofs does not prevent a
+// / zip archive from being created.
+// / 7-Zip cannot create rar archives. RAR compression is proprietary & 7-Zip reads the
+// / format without being able to write it, so rar output has no fallback.
 function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
   // / Set variables.
-  global $Verbose, $VirusScan, $ConvertTempDir, $Lol, $Lolol, $RARArchiveMethod, $Lol;
+  global $Verbose, $VirusScan, $ConvertTempDir, $Lol, $Lolol, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion;
   $ArchiveComplete = $ArchiveErrors = $virusFound = $skip = $variableIsSanitized = FALSE;
+  $fileIsVerified = $scanComplete = $sandboxIsAvailable = $anyFileSucceeded = $loopCheck = FALSE;
+  $archiveToolsAreValid = $sevenZipIsValid = $rarIsValid = $zipIsValid = $tarIsValid = $mkisofsIsValid = FALSE;
   $clean = $copy = TRUE;
-  $returnData = $file = '';
+  $returnData = $file = $pathname = $oldPathname = $oldExtension = $newPathname = $archiveCommand = '';
   $rararr = array('rar');
   $ziparr = array('zip');
   $tararr = array('7z', 'tar', 'tar.gz', 'tar.bz2');
   $isoarr = array('iso');
-  $rarMethod = 'other';
+  // / Verify every archive utility before anything is written.
+  list ($archiveToolsAreValid, $sevenZipIsValid, $rarIsValid, $zipIsValid, $tarIsValid, $mkisofsIsValid) = verifyArchiveVersions($Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion);
   // / Make sure the input files are formatted into an array.
   if (!is_array($FilesToArchive)) $FilesToArchive = array($FilesToArchive);
   // / Iterate through the array of input files.
   foreach ($FilesToArchive as $file) {
-    $ArchiveComplete = FALSE;
+    $loopCheck = FALSE;
+    $archiveCommand = '';
     // / Make sure the file is sanitized before processing it.
     list ($file, $variableIsSanitized) = sanitize($file, TRUE);
-    if (!$variableIsSanitized or !is_string($file) or $file === '.' or $file === '..' or $file === 'index.html') {
-      $OperationErrors = TRUE;
-      errorEntry('Could not sanitize the input file!', 4000, FALSE); 
+    if (!$variableIsSanitized or !is_string($file) or $file === '' or $file === '.' or $file === '..' or $file === 'index.html') {
+      $ArchiveErrors = TRUE;
+      errorEntry('Could not sanitize the input file!', 4000, FALSE);
       continue; }
-    // / Set the $clean & $copy arguments for the verifyFiles() function as needed,
-    if (count($FilesToArchive) > 1) $clean = FALSE; $copy = TRUE;
+    // / Set the $clean & $copy arguments for the verifyFiles() function as needed.
+    if (count($FilesToArchive) > 1) $clean = FALSE;
+    $copy = TRUE;
     if ($Verbose) logEntry('User selected to Archive file '.$file.'.');
     // / Verify the file before performing any operations on it.
     list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname, $UserFilename) = verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip);
@@ -4216,7 +4543,7 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
       $ArchiveErrors = TRUE;
       errorEntry('Could not verify the input file.', 4001, FALSE);
       continue; }
-    else if ($Verbose) logEntry('Verified file'.$newPathname.'.');
+    else if ($Verbose) logEntry('Verified file '.$newPathname.'.');
     // / Scan with ClamAV if $VirusScan is set to TRUE in config.php.
     if ($VirusScan) {
       if ($Verbose) logEntry('Starting virus scan.');
@@ -4224,30 +4551,61 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
       if (!$scanComplete) errorEntry('Could not perform a virus scan!', 4002, TRUE);
       if ($virusFound) errorEntry('Virus detected!', 4003, TRUE);
       if ($Verbose) logEntry('Virus scan complete.'); }
+    // / Select the archiver for the requested output format & confirm it is usable.
     // / Handle archiving of rar compatible files.
+    // / -ma4 forces the older RAR format. RAR 7.00 defaults to a compression method that
+    // / older extractors report as unsupported, which produced an archive HRConvert2
+    // / itself could not extract on the very next request.
     if (in_array($UserExtension, $rararr)) {
-      if ($RARArchiveMethod === 'rar') $rarMethod = 'rar';
-      else $rarMethod = 'other';
-      if ($rarMethod === 'rar' && file_exists('/usr/bin/rar')) $returnData = shell_exec('rar a -ep '.$newPathname.' '.$pathname);
-      else $returnData = shell_exec('7z a '.$newPathname.' '.$pathname); }
-    // / Handle archiving of .zip compatible files.
-    if (in_array($UserExtension, $ziparr)) $returnData = shell_exec('zip -j '.$newPathname.' '.$pathname);
-    // / Handle archiving of 7zipper compatible files.
-    if (in_array($UserExtension, $tararr)) $returnData = shell_exec('7z a '.$newPathname.' '.$pathname);
+      if (!$rarIsValid) {
+        $ArchiveErrors = TRUE;
+        errorEntry('Rar output requires the rar utility, which is missing or too old!', 13012, FALSE); }
+      else $archiveCommand = 'rar a -ma4 -ep '.escapeshellarg($newPathname).' '.escapeshellarg($pathname); }
+    // / Handle archiving of zip compatible files.
+    else if (in_array($UserExtension, $ziparr)) {
+      if (!$zipIsValid) {
+        $ArchiveErrors = TRUE;
+        errorEntry('Zip is missing, unidentifiable, or too old!', 13010, FALSE); }
+      else $archiveCommand = 'zip -j '.escapeshellarg($newPathname).' '.escapeshellarg($pathname); }
+    // / Handle archiving of 7-Zip compatible files.
+    else if (in_array($UserExtension, $tararr)) {
+      if (!$sevenZipIsValid) {
+        $ArchiveErrors = TRUE;
+        errorEntry('The installed 7-Zip version is missing, unidentifiable, or too old!', 13008, FALSE); }
+      else $archiveCommand = '7z a '.escapeshellarg($newPathname).' '.escapeshellarg($pathname); }
     // / Handle archiving of mkisofs compatible files.
-    if (in_array($UserExtension, $isoarr)) $returnData = shell_exec('mkisofs -o '.$newPathname.' '.$pathname);
+    else if (in_array($UserExtension, $isoarr)) {
+      if (!$mkisofsIsValid) {
+        $ArchiveErrors = TRUE;
+        errorEntry('Mkisofs is missing, unidentifiable, or too old!', 13009, FALSE); }
+      else $archiveCommand = 'mkisofs -o '.escapeshellarg($newPathname).' '.escapeshellarg($pathname); }
+    // / Perform the archive operation inside a sandbox.
+    // / An archiver reads a file the user supplied & writes a structure it controls, so it
+    // / is isolated for the same reason every other dependency is.
+    if ($archiveCommand !== '') {
+      list ($sandboxIsAvailable, $archiveCommand) = sandboxCommand($archiveCommand, $pathname, $newPathname, FALSE);
+      if (!$sandboxIsAvailable) {
+        $ArchiveErrors = TRUE;
+        errorEntry('Bubblewrap is missing or non functional, so this archive operation cannot be isolated!', 13006, FALSE); }
+      else $returnData = shell_exec($archiveCommand); }
     // / Log the output of the archive operation to the logfile, if it is not blank.
     if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+    // / The output file is the only verdict on whether the operation produced anything.
     if (!file_exists($newPathname)) {
-      $ArchiveError = TRUE;
+      $ArchiveErrors = TRUE;
       errorEntry('Could not archive file '.$pathname.' to '.$newPathname.'!', 4004, FALSE); }
     else {
-      $ArchiveComplete = TRUE;
-      print ($UserFilename.$Lol);
-      if ($Verbose) logEntry('Archived file '.$pathname.' to '.$newPathname.'.'); } }
+      $loopCheck = TRUE;
+      print($UserFilename.$Lol);
+      if ($Verbose) logEntry('Archived file '.$pathname.' to '.$newPathname.'.'); }
+    // / Record that at least one file in this request succeeded.
+    // / $loopCheck is reset on every iteration, so without this the result would reflect
+    // / only the LAST file rather than the whole request.
+    if ($loopCheck) $anyFileSucceeded = TRUE; }
+  if ($anyFileSucceeded) $ArchiveComplete = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $rararr = $ziparr = $tararr = $isoarr = $pathname = $userFileName = $oldPathname = $newPathname = $scanComplete = $virusFound = $returnData = $variableIsSanitized = $fileIsVerified = $oldExtension = $clean = $copy = $skip = $variableIsSanitized = $rarMethod = NULL;
-  unset ($file, $rararr, $ziparr, $tararr, $isoarr, $pathname, $userFileName, $oldPathname, $newPathname, $scanComplete, $virusFound, $returnData, $variableIsSanitized, $fileIsVerified, $oldExtension, $clean, $copy, $skip, $variableIsSanitized, $rarMethod); 
+  $file = $rararr = $ziparr = $tararr = $isoarr = $pathname = $oldPathname = $newPathname = $scanComplete = $virusFound = $returnData = $variableIsSanitized = $fileIsVerified = $oldExtension = $clean = $copy = $skip = $loopCheck = $anyFileSucceeded = $archiveCommand = $sandboxIsAvailable = $archiveToolsAreValid = $sevenZipIsValid = $rarIsValid = $zipIsValid = $tarIsValid = $mkisofsIsValid = $FilesToArchive = $UserFilename = $UserExtension = NULL;
+  unset($file, $rararr, $ziparr, $tararr, $isoarr, $pathname, $oldPathname, $newPathname, $scanComplete, $virusFound, $returnData, $variableIsSanitized, $fileIsVerified, $oldExtension, $clean, $copy, $skip, $loopCheck, $anyFileSucceeded, $archiveCommand, $sandboxIsAvailable, $archiveToolsAreValid, $sevenZipIsValid, $rarIsValid, $zipIsValid, $tarIsValid, $mkisofsIsValid, $FilesToArchive, $UserFilename, $UserExtension);
   return array($ArchiveComplete, $ArchiveErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -4376,36 +4734,51 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
 
 // / -----------------------------------------------------------------------------------
 // / A function to OCR a selection of files.
+// / Three input families are handled & each takes a different route.
+// / A PDF is read directly by pdftotext, or rasterized & read page by page by Tesseract.
+// / A document is converted to PDF by the document conversion engine.
+// / An image is read directly by Tesseract, or converted to PDF & read by pdftotext.
+// / Every route produces a text file which is then converted to the requested output.
+// / Tesseract & pdftotext are sandboxed. The document conversion engine is not, because it
+// / is a persistent listener rather than a process launched per conversion.
+// / A conversion that cannot be isolated is refused rather than run without a boundary,
+// / except where the dependency carries a native control of its own.
 function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   // / Set variables.
-  global $Verbose, $VirusScan, $ConvertTempDir, $ConvertDir, $Lol, $Lolol, $Append, $PathToUnoconv, $HomeLoc, $Lol;
+  global $Verbose, $VirusScan, $ConvertTempDir, $ConvertDir, $Lol, $Lolol, $Append, $PathToUnoconv, $HomeLoc;
   $OperationSuccessful = $OperationErrors = $multiple = $virusFound = $skip = $variableIsSanitized = FALSE;
+  $fileIsVerified = $scanComplete = $documentEngineStarted = $sandboxIsAvailable = $anyFileSucceeded = FALSE;
   $clean = $copy = TRUE;
-  $returnData = $file = '';
-  $doc1array =  array('txt', 'pages', 'doc', 'xls', 'xlsx', 'docx', 'rtf', 'odt', 'ods');
+  $returnData = $file = $pathname = $oldPathname = $oldExtension = $newPathname = '';
+  $pathnameTEMP = $pathnameTEMP0 = $pathnameTEMP1 = $pathnameTEMP3 = $pathnameTEMPTesseract = '';
+  $filename = $cleanFilname = $pageNumber = $pagedFile = $readPageData = '';
+  $ocrCommand = '';
+  $documentEnginePID = $writePageData = 0;
+  $pagedFilesArrRAW = array();
+  $doc1array = array('txt', 'pages', 'doc', 'xls', 'xlsx', 'docx', 'rtf', 'odt', 'ods');
   $img1array = array('jpg', 'jpeg', 'bmp', 'webp', 'png', 'gif');
   $pdf1array = array('pdf');
-  $allowedOCR =  array('txt', 'doc', 'docx', 'rtf' ,'xls', 'xlsx', 'ods', 'odt', 'jpg', 'jpeg', 'bmp', 'webp', 'png', 'gif', 'pdf', 'abw');
+  $allowedOCR = array('txt', 'doc', 'docx', 'rtf', 'xls', 'xlsx', 'ods', 'odt', 'jpg', 'jpeg', 'bmp', 'webp', 'png', 'gif', 'pdf', 'abw');
   // / Make sure the input files are formatted into an array.
   if (!is_array($PDFWorkSelected)) $PDFWorkSelected = array($PDFWorkSelected);
   // / Iterate through the array of input files.
   foreach ($PDFWorkSelected as $file) {
-    $loopCheck = FALSE;
+    $loopCheck = $multiple = FALSE;
     // / Make sure the file is sanitized before processing it.
     list ($file, $variableIsSanitized) = sanitize($file, TRUE);
     if (!$variableIsSanitized or !is_string($file) or $file === '' or $file === '.' or $file === '..' or $file === 'index.html') {
       $OperationErrors = TRUE;
-      errorEntry('Could not sanitize the input file!', 15000, FALSE); 
+      errorEntry('Could not sanitize the input file!', 15000, FALSE);
       continue; }
     if ($Verbose) logEntry('User selected to perform OCR on file '.$file.'.');
     // / Verify the file before performing any operations on it.
     list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname, $UserFilename) = verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip);
-    $pathnameTEMP = str_replace('..', '', str_replace('.'.$oldExtension, '.txt' , $pathname));
     if (!$fileIsVerified) {
-      $MainConversionErrors = TRUE;
+      $OperationErrors = TRUE;
       errorEntry('Could not verify the input file.', 15001, FALSE);
       continue; }
     else if ($Verbose) logEntry('Verified file '.$newPathname.'.');
+    $pathnameTEMP = str_replace('..', '', str_replace('.'.$oldExtension, '.txt', $pathname));
     // / Scan with ClamAV if $VirusScan is set to TRUE in config.php.
     if ($VirusScan) {
       if ($Verbose) logEntry('Starting virus scan.');
@@ -4413,134 +4786,189 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
       if (!$scanComplete) errorEntry('Could not perform a virus scan!', 15002, TRUE);
       if ($virusFound) errorEntry('Virus detected!', 15003, TRUE);
       if ($Verbose) logEntry('Virus scan complete.'); }
-    // / Code to convert a PDF to a document.
+    // / Only an input format this function knows how to read is attempted.
     if (in_array(strtolower($oldExtension), $allowedOCR)) {
+      // / Code to convert a PDF to a document.
       if (in_array(strtolower($oldExtension), $pdf1array)) {
-        // / If Method 1 is selected, attempt a direct conversion.
         if (in_array($UserExtension, $doc1array)) {
-          if ($Method === 0 or $Method === '0' or $Method === '') {
-            if ($Verbose) logEntry('Performing OCR using method 0.');
+          // / Method 0 is the automatic choice. It attempts the simple route first &
+          // / falls back to the advanced one only if the simple route produces nothing.
+          if ($Method === 0 or $Method === '0' or $Method === '') $Method = 1;
+          // / Method 1 is the simple route. pdftotext reads a PDF that already holds text.
+          // / It is fast & exact, & produces nothing at all on a scanned page.
+          if ($Method === 1 or $Method === '1') {
+            if ($Verbose) logEntry('Performing OCR using method 1.');
             // / Perform the conversion using PDFTOTEXT.
-            $returnData = shell_exec('pdftotext -layout '.$pathname.' '.$pathnameTEMP);
+            $ocrCommand = 'pdftotext -layout '.escapeshellarg($pathname).' '.escapeshellarg($pathnameTEMP);
+            list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathname, $pathnameTEMP, FALSE);
+            // / pdftotext has no native control of its own, so an unavailable sandbox leaves
+            // / no boundary at all & the operation is refused rather than run without one.
+            if (!$sandboxIsAvailable) {
+              $OperationErrors = TRUE;
+              errorEntry('Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!', 15012, FALSE); }
+            else $returnData = shell_exec($ocrCommand);
             // / Log the output of the operation to the logfile, if it is not blank.
             if ($Verbose && trim($returnData) !== '') logEntry('The converter (PTT-1) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-            // / Check if the conversion was successful and retry with method 1 if required. 
+            // / Check if the conversion was successful and retry with method 1 if required.
             if (!file_exists($pathnameTEMP)) {
-              errorEntry('Could not complete the conversion using method 0. Reattempting using method 1.', 15004, FALSE);
-              $Method = 1; }
+              errorEntry('Could not complete the conversion using method 1. Reattempting using method 2.', 15004, FALSE);
+              $Method = 2; }
             else if ($Verbose) logEntry('A file was created at '.$pathnameTEMP); }
-            // / If Method 2 is selected, attempt to convert each page of the .pdf to .jpg, then convert that to .txt.
-            if ($Method === 1 or $Method === '1') {
-              $pathnameTEMP1 = str_replace('..', '', str_replace('.'.$oldExtension, '.jpg' , $pathname));
-              if ($Verbose) logEntry('Performing OCR intermediate operation using method 0.');
-              // / Perform the conversion using ImageMagick.
-              $returnData = shell_exec('convert '.$pathname.' '.$pathnameTEMP1);
-              // / Log the output of the operation to the logfile, if it is not blank.
-              if ($Verbose && trim($returnData) !== '') logEntry('The converter (IM-1) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-              // / If a file doesn't exist there is a good chance it is because ImageMagick has split the pages up.
-              if (!file_exists($pathnameTEMP1)) {
-                // / Scan the current directory for files matching the filename.
-                $pagedFilesArrRAW = scandir($ConvertTempDir);
-                foreach ($pagedFilesArrRAW as $pagedFile) {
-                  $filename = pathinfo($pathname, PATHINFO_FILENAME);
-                  // Look for files with the same filename but in .jpg format. Skip the rest.
-                  if (stripos($pagedFile, $filename) === FALSE) continue;
-                  if (stripos($pagedFile, '.jpg') === FALSE) continue;
-                  if ($pagedFile == '.' or $pagedFile == '..' or $pagedFile == '.AppData' or $pagedFile == 'index.html') continue;
-                  // / Set page specific variables.
-                  $pathnameTEMP1 = str_replace('..', '', str_replace('.'.$oldExtension, '.jpg' , $pathname));
-                  $cleanFilname = str_replace('..', '', str_replace($oldExtension, '', $filename));
-                  $pageNumber = str_replace('..', '', str_replace('-', '', str_replace($cleanFilname, '', str_replace('.jpg', '', $pagedFile))));
-                  $pathnameTEMP1 = str_replace('..', '', str_replace('.jpg', '-'.$pageNumber.'.jpg', $pathnameTEMP1));
-                  $pathnameTEMP = str_replace('..', '', str_replace('.'.$oldExtension, '-'.$pageNumber.'.txt', $pathname)); 
-                  $pathnameTEMPTesseract = str_replace('..', '', str_replace('.'.$oldExtension, '-'.$pageNumber, $pathname));
-                  $pathnameTEMP0 = str_replace('..', '', str_replace('-'.$pageNumber.'.txt', '.txt', $pathnameTEMP));
-                  if ($Verbose) logEntry('Performing OCR final operation using method 0.');
-                  // / Perform the conversion using Tesseract.
-                  $returnData = shell_exec('tesseract '.$pathnameTEMP1.' '.$pathnameTEMPTesseract);
-                  // / Log the output of the operation to the logfile, if it is not blank.
-                  if ($Verbose && trim($returnData) !== '') logEntry('The converter (T-1) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-                  if (!file_exists($pathnameTEMP1)) errorEntry('Could not complete the conversion using method 1.', 15005, FALSE);
-                  else if ($Verbose) logEntry('A file was created at '.$pathnameTEMP1);
-                  // / Recompile all of the text files into one big text file.
-                  $readPageData = file_get_contents($pathnameTEMP);
-                  $writePageData = file_put_contents($pathnameTEMP0, $readPageData.$Lol, $Append);
-                  $multiple = TRUE;
-                  if (!file_exists($pathnameTEMP0)) errorEntry('Could not OCR file!', 15006, FALSE); 
-                  else if ($Verbose) logEntry('A file was created at '.$pathnameTEMP0);} }
-              if ($Verbose) logEntry('Converted file '.$pathnameTEMP1.' to '.$pathnameTEMP.'.');
-              if (!$multiple) {
-                $pathnameTEMPTesseract = str_replace('..', '', str_replace('.txt', '', $pathnameTEMP));
-                if ($Verbose) logEntry('Performing OCR final using method 0.');
-                $returnData = shell_exec('tesseract '.$pathnameTEMP1.' '.$pathnameTEMPTesseract);
+          // / Method 2 is the advanced route. Each page is rasterized & read by Tesseract.
+          // / It reads a scanned page that holds no text layer, & is considerably slower.
+          if ($Method === 2 or $Method === '2') {
+            $pathnameTEMP1 = str_replace('..', '', str_replace('.'.$oldExtension, '.jpg', $pathname));
+            if ($Verbose) logEntry('Performing OCR intermediate operation using method 2.');
+            // / Perform the conversion using ImageMagick.
+            $ocrCommand = '/usr/local/bin/magick '.escapeshellarg($pathname).' '.escapeshellarg($pathnameTEMP1);
+            list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathname, $pathnameTEMP1, FALSE);
+            // / ImageMagick has policy.xml, so an unavailable sandbox is a downgrade to a
+            // / weaker control rather than to no control at all. The operation continues.
+            if (!$sandboxIsAvailable) warningEntry('Bubblewrap is unavailable. This OCR page split will run unsandboxed & is protected only by policy.xml.');
+            $returnData = shell_exec($ocrCommand);
+            // / Log the output of the operation to the logfile, if it is not blank.
+            if ($Verbose && trim($returnData) !== '') logEntry('The converter (IM-1) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+            // / If a file doesn't exist there is a good chance it is because ImageMagick has split the pages up.
+            if (!file_exists($pathnameTEMP1)) {
+              // / Scan the current directory for files matching the filename.
+              $pagedFilesArrRAW = scandir($ConvertTempDir);
+              foreach ($pagedFilesArrRAW as $pagedFile) {
+                $filename = pathinfo($pathname, PATHINFO_FILENAME);
+                // / Look for files with the same filename but in .jpg format. Skip the rest.
+                if (stripos($pagedFile, $filename) === FALSE) continue;
+                if (stripos($pagedFile, '.jpg') === FALSE) continue;
+                if ($pagedFile === '.' or $pagedFile === '..' or $pagedFile === '.AppData' or $pagedFile === 'index.html') continue;
+                // / Set page specific variables.
+                $pathnameTEMP1 = str_replace('..', '', str_replace('.'.$oldExtension, '.jpg', $pathname));
+                $cleanFilname = str_replace('..', '', str_replace($oldExtension, '', $filename));
+                $pageNumber = str_replace('..', '', str_replace('-', '', str_replace($cleanFilname, '', str_replace('.jpg', '', $pagedFile))));
+                $pathnameTEMP1 = str_replace('..', '', str_replace('.jpg', '-'.$pageNumber.'.jpg', $pathnameTEMP1));
+                $pathnameTEMP = str_replace('..', '', str_replace('.'.$oldExtension, '-'.$pageNumber.'.txt', $pathname));
+                $pathnameTEMPTesseract = str_replace('..', '', str_replace('.'.$oldExtension, '-'.$pageNumber, $pathname));
+                $pathnameTEMP0 = str_replace('..', '', str_replace('-'.$pageNumber.'.txt', '.txt', $pathnameTEMP));
+                if ($Verbose) logEntry('Performing OCR final operation using method 2.');
+                // / Perform the conversion using Tesseract.
+                // / Tesseract appends .txt to the output argument, so what is passed is a
+                // / prefix rather than a filename. The sandbox mounts its directory either way.
+                $ocrCommand = 'tesseract '.escapeshellarg($pathnameTEMP1).' '.escapeshellarg($pathnameTEMPTesseract);
+                list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathnameTEMP1, $pathnameTEMPTesseract, FALSE);
+                // / Tesseract has no native control of its own, so an unavailable sandbox
+                // / leaves no boundary & the operation is refused rather than run without one.
+                if (!$sandboxIsAvailable) {
+                  $OperationErrors = TRUE;
+                  errorEntry('Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!', 15012, FALSE);
+                  continue; }
+                $returnData = shell_exec($ocrCommand);
                 // / Log the output of the operation to the logfile, if it is not blank.
-                if ($Verbose && trim($returnData) !== '') logEntry('The converter (T-2) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); } } } }
-        // / Code to convert a document to a PDF.
-        if (in_array(strtolower($oldExtension), $doc1array)) {
-          if (in_array($UserExtension, $pdf1array)) {
-            // / The following code verifies that the Document Conversion Engine is installed & running.
-            list ($documentEngineStarted, $documentEnginePID) = verifyDocumentConversionEngine();
-            if (!$documentEngineStarted) {
-              $OperationErrors = TRUE;
-              errorEntry('Could not verify the Document Conversion Engine!', 15007, FALSE); }
-            // / Perform the conversion using Unoconv.
-            $returnData = shell_exec('LANG=C.UTF-8 LC_ALL=C.UTF-8 python3 '.$PathToUnoconv.' --verbose --user-profile='.$HomeLoc.' -o '.$newPathname.' -f pdf '.$pathname);
-            // / Log the output of the operation to the logfile, if it is not blank.
-            if ($Verbose && trim($returnData) !== '') logEntry('The converter (U-1) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); } }
-        // / Code to convert an image to a PDF.
-        if (in_array(strtolower($oldExtension), $img1array)) {
-          $pathnameTEMPTesseract = str_replace('..', '', str_replace('.'.$oldExtension, '', $pathname));
-          if ($Verbose) logEntry('Performing OCR operation using method 0.');
-          // / Perform the conversion using Tesseract.
-          $returnData = shell_exec('tesseract '.$pathname.' '.$pathnameTEMPTesseract);
-          // / Log the output of the operation to the logfile, if it is not blank.
-          if ($Verbose && trim($returnData) !== '') logEntry('The converter (T-3) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-          if (!file_exists($pathnameTEMP)) {
-            $pathnameTEMP3 = str_replace('..', '', str_replace('.'.$oldExtension, '.pdf' , $pathname));
-            // / The following code verifies that the Document Conversion Engine is installed & running.
-            list ($documentEngineStarted, $documentEnginePID) = verifyDocumentConversionEngine();
-            if (!$documentEngineStarted) {
-              $OperationErrors = TRUE;
-              errorEntry('Could not verify the Document Conversion Engine!', 15008, FALSE); }
-            if ($Verbose) logEntry('Performing OCR intermediate operation using method 0.');
-            // / Perform the conversion using Unoconv.
-            $returnData = shell_exec('LANG=C.UTF-8 LC_ALL=C.UTF-8 python3 '.$PathToUnoconv.' --verbose --user-profile='.$HomeLoc.' -o '.$pathnameTEMP3.' -f pdf '.$pathname);
-            // / Log the output of the operation to the logfile, if it is not blank.
-                  if ($Verbose && trim($returnData) !== '') logEntry('The converter (U-2) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-            // / Perform the conversion using PDFTOTEXT.
-            $returnData = shell_exec('pdftotext -layout '.$pathnameTEMP3.' '.$pathnameTEMP);
-            // / Log the output of the operation to the logfile, if it is not blank.
-            if ($Verbose && trim($returnData) !== '') logEntry('The converter (PTT-2) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); }
-          if ($Verbose && file_exists($pathnameTEMP)) logEntry('Created an intermediate file at '.$pathnameTEMP.'.');
-          if (!file_exists($pathnameTEMP)) {
-            $OperationErrors = TRUE; 
-            if ($Verbose) errorEntry('Could not create an intermediate directory at '.$pathnameTEMP.'!', 15009, FALSE); } }
-      // / If the output file is a txt file we leave it as-is.
-      if ($UserExtension == 'txt') {
-        if (file_exists($pathnameTEMP)) {
-          rename($pathnameTEMP, $newPathname);
-          if ($Verbose) logEntry('Renamed file '.$pathname.' to '.$pathnameTEMP.'.'); } }
-      // / If the output file is not a txt file we convert it with Unoconv.
-      if ($UserExtension !== 'txt') {
+                if ($Verbose && trim($returnData) !== '') logEntry('The converter (T-1) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+                // / The text file is the verdict on this page, not the image it was read from.
+                if (!file_exists($pathnameTEMP)) errorEntry('Could not complete the conversion using method 2.', 15005, FALSE);
+                else if ($Verbose) logEntry('A file was created at '.$pathnameTEMP);
+                // / Recompile all of the text files into one big text file.
+                $readPageData = file_get_contents($pathnameTEMP);
+                $writePageData = file_put_contents($pathnameTEMP0, $readPageData.$Lol, $Append);
+                $multiple = TRUE;
+                if (!file_exists($pathnameTEMP0)) errorEntry('Could not OCR file!', 15006, FALSE);
+                else if ($Verbose) logEntry('A file was created at '.$pathnameTEMP0); } }
+            if ($Verbose) logEntry('Converted file '.$pathnameTEMP1.' to '.$pathnameTEMP.'.');
+            // / A single page PDF produces one image rather than a numbered set.
+            if (!$multiple) {
+              $pathnameTEMPTesseract = str_replace('..', '', str_replace('.txt', '', $pathnameTEMP));
+              if ($Verbose) logEntry('Performing OCR final operation using method 2.');
+              $ocrCommand = 'tesseract '.escapeshellarg($pathnameTEMP1).' '.escapeshellarg($pathnameTEMPTesseract);
+              list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathnameTEMP1, $pathnameTEMPTesseract, FALSE);
+              if (!$sandboxIsAvailable) {
+                $OperationErrors = TRUE;
+                errorEntry('Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!', 15012, FALSE); }
+              else $returnData = shell_exec($ocrCommand);
+              // / Log the output of the operation to the logfile, if it is not blank.
+              if ($Verbose && trim($returnData) !== '') logEntry('The converter (T-2) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); } } } }
+      // / Code to convert a document to a PDF.
+      if (in_array(strtolower($oldExtension), $doc1array)) {
+        if (in_array($UserExtension, $pdf1array)) {
           // / The following code verifies that the Document Conversion Engine is installed & running.
           list ($documentEngineStarted, $documentEnginePID) = verifyDocumentConversionEngine();
           if (!$documentEngineStarted) {
             $OperationErrors = TRUE;
-            errorEntry('Could not verify the Document Conversion Engine!', 15010, FALSE); }
-        // / Perform the conversion using Unoconv.
-        $returnData = shell_exec('LANG=C.UTF-8 LC_ALL=C.UTF-8 python3 '.$PathToUnoconv.' --verbose --user-profile='.$HomeLoc.' -o '.$newPathname.' -f '.$UserExtension.' '.$pathnameTEMP);
+            errorEntry('Could not verify the Document Conversion Engine!', 15007, FALSE); }
+          else {
+            // / Perform the conversion using Unoconv.
+            // / The document conversion engine is a persistent listener rather than a process
+            // / launched per conversion, so it cannot be sandboxed the way the others are.
+            $returnData = shell_exec('LANG=C.UTF-8 LC_ALL=C.UTF-8 python3 '.escapeshellarg($PathToUnoconv).' --verbose --user-profile='.escapeshellarg($HomeLoc).' -o '.escapeshellarg($newPathname).' -f pdf '.escapeshellarg($pathname));
+            // / Log the output of the operation to the logfile, if it is not blank.
+            if ($Verbose && trim($returnData) !== '') logEntry('The converter (U-1) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); } } }
+      // / Code to convert an image to text.
+      if (in_array(strtolower($oldExtension), $img1array)) {
+        $pathnameTEMPTesseract = str_replace('..', '', str_replace('.'.$oldExtension, '', $pathname));
+        if ($Verbose) logEntry('Reading the image with Tesseract.');
+        // / Perform the conversion using Tesseract.
+        $ocrCommand = 'tesseract '.escapeshellarg($pathname).' '.escapeshellarg($pathnameTEMPTesseract);
+        list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathname, $pathnameTEMPTesseract, FALSE);
+        if (!$sandboxIsAvailable) {
+          $OperationErrors = TRUE;
+          errorEntry('Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!', 15012, FALSE); }
+        else $returnData = shell_exec($ocrCommand);
         // / Log the output of the operation to the logfile, if it is not blank.
-        if ($Verbose && trim($returnData) !== '') logEntry('The converter (U-3) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); }
+        if ($Verbose && trim($returnData) !== '') logEntry('The converter (T-3) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+        // / An image Tesseract could not read is converted to PDF & read by pdftotext instead.
+        if (!file_exists($pathnameTEMP)) {
+          $pathnameTEMP3 = str_replace('..', '', str_replace('.'.$oldExtension, '.pdf', $pathname));
+          // / The following code verifies that the Document Conversion Engine is installed & running.
+          list ($documentEngineStarted, $documentEnginePID) = verifyDocumentConversionEngine();
+          if (!$documentEngineStarted) {
+            $OperationErrors = TRUE;
+            errorEntry('Could not verify the Document Conversion Engine!', 15008, FALSE); }
+          else {
+            if ($Verbose) logEntry('Tesseract produced nothing. Converting the image to PDF instead.');
+            // / Perform the conversion using Unoconv.
+            $returnData = shell_exec('LANG=C.UTF-8 LC_ALL=C.UTF-8 python3 '.escapeshellarg($PathToUnoconv).' --verbose --user-profile='.escapeshellarg($HomeLoc).' -o '.escapeshellarg($pathnameTEMP3).' -f pdf '.escapeshellarg($pathname));
+            // / Log the output of the operation to the logfile, if it is not blank.
+            if ($Verbose && trim($returnData) !== '') logEntry('The converter (U-2) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+            // / Perform the conversion using PDFTOTEXT.
+            $ocrCommand = 'pdftotext -layout '.escapeshellarg($pathnameTEMP3).' '.escapeshellarg($pathnameTEMP);
+            list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathnameTEMP3, $pathnameTEMP, FALSE);
+            if (!$sandboxIsAvailable) {
+              $OperationErrors = TRUE;
+              errorEntry('Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!', 15012, FALSE); }
+            else $returnData = shell_exec($ocrCommand);
+            // / Log the output of the operation to the logfile, if it is not blank.
+            if ($Verbose && trim($returnData) !== '') logEntry('The converter (PTT-2) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); } }
+        if ($Verbose && file_exists($pathnameTEMP)) logEntry('Created an intermediate file at '.$pathnameTEMP.'.');
+        if (!file_exists($pathnameTEMP)) {
+          $OperationErrors = TRUE;
+          errorEntry('Could not create an intermediate file at '.$pathnameTEMP.'!', 15009, FALSE); } }
+      // / If the output file is a txt file we leave it as-is.
+      if ($UserExtension === 'txt') {
+        if (file_exists($pathnameTEMP)) {
+          rename($pathnameTEMP, $newPathname);
+          if ($Verbose) logEntry('Renamed file '.$pathnameTEMP.' to '.$newPathname.'.'); } }
+      // / If the output file is not a txt file we convert it with Unoconv.
+      else {
+        // / The following code verifies that the Document Conversion Engine is installed & running.
+        list ($documentEngineStarted, $documentEnginePID) = verifyDocumentConversionEngine();
+        if (!$documentEngineStarted) {
+          $OperationErrors = TRUE;
+          errorEntry('Could not verify the Document Conversion Engine!', 15010, FALSE); }
+        else {
+          // / Perform the conversion using Unoconv.
+          $returnData = shell_exec('LANG=C.UTF-8 LC_ALL=C.UTF-8 python3 '.escapeshellarg($PathToUnoconv).' --verbose --user-profile='.escapeshellarg($HomeLoc).' -o '.escapeshellarg($newPathname).' -f '.escapeshellarg($UserExtension).' '.escapeshellarg($pathnameTEMP));
+          // / Log the output of the operation to the logfile, if it is not blank.
+          if ($Verbose && trim($returnData) !== '') logEntry('The converter (U-3) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); } }
       // / Error handler for if the output file does not exist.
       if (file_exists($newPathname)) {
         $loopCheck = TRUE;
         print($UserFilename.$Lol); }
-      else if ($Verbose) errorEntry('Could not create a file at '.$pathnameTEMP.'!', 15011, FALSE); } }
+      else errorEntry('Could not create a file at '.$newPathname.'!', 15011, FALSE); }
+    // / Record that at least one file in this request succeeded.
+    // / $loopCheck is reset on every iteration, so without this the result would reflect
+    // / only the LAST file rather than the whole request.
+    if ($loopCheck) $anyFileSucceeded = TRUE; }
   // / Error handler for if any failures happened during file loops.
-  if ($loopCheck) $OperationSuccessful = TRUE;
+  if ($anyFileSucceeded) $OperationSuccessful = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $file1 = $file2 = $pathname = $oldPathname = $filename = $oldExtension = $newPathname = $doc1array = $img1array = $pdf1array = $pathnameTEMP = $pathnameTEMP1 = $pagedFilesArrRAW = $pagedFile = $cleanFilname = $pageNumber = $readPageData = $writePageData = $multiple = $pathnameTEMPTesseract = $pathnameTEMP3 = $clean = $copy = $skip =$allowedOCR = $variableIsSanitized = $loopCheck = NULL;
-  unset ($file, $file1, $file2, $pathname, $oldPathname , $filename, $oldExtension, $newPathname, $doc1array, $img1array, $pdf1array, $pathnameTEMP, $pathnameTEMP1, $pagedFilesArrRAW, $pagedFile, $cleanFilname, $pageNumber, $readPageData, $writePageData, $multiple, $pathnameTEMPTesseract, $pathnameTEMP3, $clean, $copy, $skip, $allowedOCR, $variableIsSanitized, $loopCheck); 
+  $file = $pathname = $oldPathname = $filename = $oldExtension = $newPathname = $doc1array = $img1array = $pdf1array = $pathnameTEMP = $pathnameTEMP0 = $pathnameTEMP1 = $pathnameTEMP3 = $pagedFilesArrRAW = $pagedFile = $cleanFilname = $pageNumber = $readPageData = $writePageData = $multiple = $pathnameTEMPTesseract = $clean = $copy = $skip = $allowedOCR = $variableIsSanitized = $loopCheck = $anyFileSucceeded = $ocrCommand = $sandboxIsAvailable = $fileIsVerified = $scanComplete = $virusFound = $documentEngineStarted = $documentEnginePID = $returnData = $PDFWorkSelected = $UserFilename = $UserExtension = $Method = NULL;
+  unset($file, $pathname, $oldPathname, $filename, $oldExtension, $newPathname, $doc1array, $img1array, $pdf1array, $pathnameTEMP, $pathnameTEMP0, $pathnameTEMP1, $pathnameTEMP3, $pagedFilesArrRAW, $pagedFile, $cleanFilname, $pageNumber, $readPageData, $writePageData, $multiple, $pathnameTEMPTesseract, $clean, $copy, $skip, $allowedOCR, $variableIsSanitized, $loopCheck, $anyFileSucceeded, $ocrCommand, $sandboxIsAvailable, $fileIsVerified, $scanComplete, $virusFound, $documentEngineStarted, $documentEnginePID, $returnData, $PDFWorkSelected, $UserFilename, $UserExtension, $Method);
   return array($OperationSuccessful, $OperationErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -4961,12 +5389,12 @@ if (!$CommandLineHandled && $UserType === 'web') {
     else if ($Verbose) logEntry('Verified the build environment.');
 
     // / The following code removes old files from the $ConvertTempDir.
-    list ($CleanedTempLoc, $TempLocDeepCleaned) = cleanDataLoc($ConvertTempDir, 'ConvertTempDir');
+    list ($CleanedTempLoc, $TempLocDeepCleaned) = cleanDataLoc($ConvertTempDir, 'ConvertTempDir', $DeleteThreshold);
     if (!$CleanedTempLoc) errorEntry('Could not clean the temporary location!', 13, TRUE);
     else if ($Verbose) logEntry('Cleaned temporary location.');
 
     // / The following code removes old files from the $ConvertLoc.
-    list ($CleanedConvertLoc, $ConvertLocDeepCleaned) = cleanDataLoc($ConvertLoc, 'ConvertLoc');
+    list ($CleanedConvertLoc, $ConvertLocDeepCleaned) = cleanDataLoc($ConvertLoc, 'ConvertLoc', $DeleteThreshold);
     if (!$CleanedConvertLoc) errorEntry('Could not clean the convert location!', 14, TRUE);
     else if ($Verbose) logEntry('Cleaned convert location.');
 

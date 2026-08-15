@@ -1,6 +1,6 @@
 # -----------------------------------------------------------------------------------
 # COPYRIGHT INFORMATION ...
-# HRConvert2, Copyright on 8/13/2026 by Justin Grimes, https://github.com
+# HRConvert2, Copyright on 8/15/2026 by Justin Grimes, https://github.com
 # 
 # LICENSE INFORMATION ...
 # This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@
 # on a server for users of any web browser without authentication.
 # 
 # FILE INFORMATION ...
-# v3.6.6.
+# v3.7.0.
 # This file contains the Docker build file for the project.
 # Build this with...
 #   docker build -t HRConvert2 .
@@ -78,7 +78,7 @@ RUN apt install -y libreoffice-common
 RUN apt --fix-broken install
 RUN apt install -y libreoffice-java-common
 RUN apt install -y poppler-utils
-RUN apt install -y clamav unoconv p7zip-full 
+RUN apt install -y clamav unoconv p7zip-full p7zip-rar
 RUN apt install -y dia pandoc python3 zip unzip
 RUN apt install -y xpdf mkisofs
 RUN apt install -y libx11-6

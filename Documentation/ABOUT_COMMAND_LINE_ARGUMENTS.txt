@@ -1,0 +1,309 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 8/15/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
+
+FILE INFORMATION ...
+v3.7.0.
+This plain text file describes the command line arguments HRConvert2 accepts & how to use them.
+
+HARDWARE REQUIREMENTS ... 
+This application requires at least a Raspberry Pi Model B+ or greater. 
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ... 
+This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
+Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
+Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia & xvfb-run.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Command Line Arguments--
+
+HRConvert2 accepts input from the command line to provide administrative functionality & to
+support external scripting & automation.
+
+File conversions are NOT supported from the command line. Command line functionality exists
+for administrators who are maintaining, troubleshooting, or diagnosing a server.
+
+A command line invocation & a web request are mutually exclusive & always will be.
+An argument supplied on the command line disables the web interface & every conversion path
+for that invocation. The application handles the requested operation & then stops.
+Nothing falls through. An unrecognized argument displays help rather than serving a page.
+
+No session is created by a command line invocation & no user data is touched, except by the
+clean argument, which exists to touch exactly that.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--How To Use HRConvert2 From The Command Line--
+
+Begin each call with the following, substituting the path to your own installation.
+
+  sudo php /var/www/html/HRProprietary/HRConvert2/convertCore.php
+
+Then add the argument you want to use. For example.
+
+  sudo php /var/www/html/HRProprietary/HRConvert2/convertCore.php -v
+
+An argument that accepts a value takes it in either of two forms. Both are equivalent.
+
+  sudo php /var/www/html/HRProprietary/HRConvert2/convertCore.php -u=v3.6.7
+  sudo php /var/www/html/HRProprietary/HRConvert2/convertCore.php -u v3.6.7
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--CLI User Account Considerations--
+
+HRConvert2 should be run as root when using the command line.
+
+Running as root does NOT turn the installation into a root owned permission problem.
+When HRConvert2 creates a directory while running as root it immediately corrects the owner,
+the group & the permissions to the values Apache requires. The application is designed to
+maintain readiness for web operation at all times, & a command line invocation is not
+permitted to compromise that.
+
+Running as a non root user is safe but limited. Any operation that would require write access
+the current user does not have will fail rather than partially complete. The filesystem is
+not left in a broken state. The version & help arguments work as any user.
+
+The secret file is readable only by its owner, so a non root user who is also not the web
+server user cannot read it. This is deliberate. That file derives every session identifier
+in the application.
+
+An administrator who modifies an HRConvert2 installation using external tools must leave
+every file & folder in an HRConvert2 controlled directory owned & permissioned as follows.
+
+  Owner:        www-data
+  Group:        www-data
+  Permissions:  0755
+
+The one exception is the secret file, which must remain 0600 & owned by www-data.
+It is created automatically & should never need to be touched by hand.
+
+To correct permissions that have been compromised, run the following in a terminal.
+
+  sudo chmod -R 0755 "/the/full/path/that/has/incorrect/permissions"
+  sudo chown -R www-data:www-data "/the/full/path/that/has/incorrect/permissions"
+
+Do not run the above against the data location without restoring the secret file afterwards.
+
+  sudo chmod 0600 "/DATA/HRConvert2/secret.php"
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Supported Command Line Arguments--
+
+  -v, --version               Display version & dependency information.
+  -h, --help                  Display the built in help message.
+  -c, --clean                 Sweep expired sessions from both data locations.
+  -c=<minutes>                Sweep sessions older than that many minutes.
+  -c=now                      Sweep every session regardless of age.
+  -u, --update                Update the application using the configured target.
+  -u=latest                   Update to the newest tagged release.
+  -u=edge                     Update to the current state of the master branch.
+  -u=v#.#.#                   Update to exactly that tagged release.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About  -v  and  --version--
+
+Performs a comprehensive diagnostic of the installation.
+
+This is not an echo of a version number. It reports every component that carries a version,
+runs every dependency check the converters run, & reports the result of each one.
+
+It reports the following.
+
+  The core version, the configuration version & the version of each the core requires.
+  Every version pinned dependency & whether the installed one satisfies the minimum.
+  Whether the bubblewrap sandbox is functional, which OpenSCAD conversions depend on.
+  Every installed interface & whether its version matches what the core requires.
+  How many language packs in each interface match, & which ones do not.
+  Which conversion types are enabled in the configuration.
+
+The dependency checks are the identical checks the matching converter performs, so this
+answers whether an installation will actually work rather than what it is configured to do.
+A dependency that reports FAILED is missing, unidentifiable, or older than the minimum, & the
+conversion type that depends on it will refuse to run rather than fail in a confusing way.
+
+This argument works when run as any user.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About  -h  and  --help--
+
+Displays the built in help message, which lists every supported argument & points at the
+documents in the Documentation folder that cover each subject in depth.
+
+An invocation with no argument at all also displays help, because running the web logic from
+a terminal would emit HTML to a shell & create a session for a user who does not exist.
+
+An unrecognized argument displays help as well, & writes a warning to the log.
+
+This argument works when run as any user.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About  -c  and  --clean--
+
+Sweeps expired sessions from the temporary location & from the data location.
+
+This sweep normally happens on every web request. This argument exists for the case where no
+web request is coming. A server taken out of service still holds user data until something
+sweeps it, & an administrator reclaiming disk should not have to wait for a visitor.
+
+Supplied with no value, the threshold in --Delete Threshold-- from config.php is used.
+Supplied with a whole number, that many minutes is used instead for this run only.
+Supplied with the word now, every session is swept regardless of age.
+
+  -c=now DELETES EVERY SESSION, INCLUDING SESSIONS THAT ARE CURRENTLY IN USE.
+  A user in the middle of a conversion loses their files. Use it deliberately.
+
+A value that is neither a whole number nor the word now is refused, & the configured default
+is used instead. A warning is written & a message is printed, so a typo cannot silently
+produce a sweep the administrator did not intend.
+
+Nothing outside a session directory is ever swept. The log directory, the LibreOffice
+profile & the update backup all live alongside the session directories & are protected by
+name. A location that does not match the name it was requested under is refused outright.
+
+This argument requires write access to the data locations.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About  -u  and  --update--
+
+Replaces the application code with a release from the configured update source.
+
+An update is NEVER reachable from the web interface & never will be. Replacing application
+code requires write access to the installation directory, which is what shell access already
+implies & is the correct authorization for the operation. An HTTP endpoint protected by a
+secret would reduce that authorization to one guessable string.
+
+REQUIREMENTS.
+  $EnableAutoUpdates must be TRUE in config.php. The default is FALSE.
+  The server must be able to reach the update source. Many deliberately cannot.
+  The user running the update needs write access to the PARENT of the installation
+  directory, not only to the installation itself.
+  Roughly twice the installed size must be free on the filesystem holding the installation.
+
+WHICH VERSION IS INSTALLED.
+  With no value supplied, --Automatic Update Target Version-- from config.php is used.
+  A value supplied on the command line overrides that setting for this run.
+
+  latest    The newest tagged release at the update source.
+  edge      The current state of the master branch. This is NOT a release. It carries
+            whatever version stamp master happens to hold, which may match no release.
+  v#.#.#    Exactly that tagged release.
+
+  A specific version that does not exist at the update source causes the update to FAIL.
+  There is no fallback. You cannot receive a version you did not ask for.
+  A partial version such as v3.6 is refused, because it names a series rather than a release.
+  An update to the version already installed is refused as unnecessary.
+
+WHAT HAPPENS TO THE CONFIGURATION.
+  The new release provides the file structure, the comments & the set of settings that exist.
+  The live installation provides the value of every setting that exists in both.
+  A setting that is new in the release keeps its new default.
+  A setting that was removed in the release is discarded.
+  A setting whose name was corrected is treated as a removal & an addition. No attempt is
+  made to guess that two differently spelled names mean the same thing.
+
+  ARRAY SETTINGS ARE NOT MERGED. They are reset to the new defaults.
+  An array cannot be rewritten without reformatting it, & a partial merge of a two hundred
+  element format list is worse than either version. Any array whose value differed from the
+  new default is NAMED at the end of the update so the change can be reapplied by hand.
+
+HOW THE REPLACEMENT IS PERFORMED.
+  The release is downloaded & unpacked in a temporary location.
+  The configuration is merged there, before anything touches the installation.
+  The prepared release is moved next to the installation, on the same filesystem.
+  The live data directory is moved into it, so no session is lost.
+  The installation & the prepared release are then exchanged by two rename operations.
+
+  A rename within one filesystem is atomic, so the installation directory is never half
+  populated. A web request arriving during the exchange sees either the old installation or
+  the new one. There is a very brief moment between the two renames during which a request
+  could fail, & a request that fails then will succeed on retry.
+
+  Conversions already in progress are unaffected. A running process holds open file handles
+  which remain valid across the rename, & the data directory moves with the installation.
+
+WHAT HAPPENS IF THE UPDATE FAILS.
+  Every failure before the exchange leaves the installation untouched.
+  After the exchange, the new installation is asked to report its own version as a separate
+  process. A core that cannot parse, cannot load its configuration, or cannot reach the
+  command line branch will not answer, & that is the condition this catches.
+  An installation that fails that check is rolled back automatically & the previous version
+  is restored. The log records what was attempted & why it failed.
+
+THE PREVIOUS VERSION.
+  After a successful update the previous installation is copied to --Backup Location-- from
+  config.php, which defaults to Last-Installed-Version inside the data location.
+  It is held OUTSIDE the web root, because a stale core inside the web root would be a
+  second, older copy of the application answering requests.
+  It is protected from the session sweep & is NOT deleted on the delete threshold.
+  It holds exactly one previous version & is replaced by the next successful update.
+  The live data directory is excluded from it.
+
+DOCKER USERS SHOULD NOT USE THIS.
+  A container is disposable. Update it by pulling a new image, not by updating in place.
+  An in place update would be discarded by the next pull anyway.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Automation--
+
+Every argument is safe to run from cron or from an external orchestration tool.
+
+  A clean can be scheduled on a server that receives little or no web traffic.
+  A version check can be scheduled to confirm dependencies still satisfy their minimums
+  after an unattended package upgrade.
+  An update should be scheduled with care. It replaces application code, & a release that
+  does not suit a particular deployment will be installed as readily as one that does.
+  Pin an exact version in config.php on any server where that matters.
+
+Everything a command line invocation does is written to the log with the same three tiers a
+web request uses. Op-Act reports normal activity, WARNING reports something an administrator
+should know about, & ERROR reports a numbered failure documented in ERROR_DESCRIPTIONS.txt.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Open Source--
+
+This application is open-source under the terms of the GPLv3 license, meaning anybody can obtain a copy and put it to use for personal or business use.
+If you modify this application and use it to make money or offer it to your users as a product, you MUST make the source code with your changes available.
+The ideal way to do this would be to fork the official zelon88/HRConvert2 repository on Github and make changes there.
+Alternatively you can submit a pull request and have your changes added to the official repository (with credit due to you, of course).
+By reciprocating changes & improvements with one another we can all enjoy the best, most capable and bug free version HRConvert2.
+If you modify this codebase please consider making your changes public so everyone can benefit from them. 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

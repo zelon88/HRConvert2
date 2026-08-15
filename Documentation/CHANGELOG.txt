@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/14/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/15/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.6.8.
+v3.7.0.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -21,10 +21,45 @@ This application will run on just about any x86 or x64 computer.
 DEPENDENCY REQUIREMENTS ... 
 This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
 Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
-Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap & xvfb-run.
+Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia & xvfb-run.
+
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+--------------------
+COMMIT 8/15/2026
+v3.7.0 - Add auto update via CLI. Add root detection. Improve core logic ordering.
+
+-v3.7.0.
+-Update CREATING_GUIS.txt, CREATING_LANGUAGE_PACKS.txt, DOCKER_BUILD_INSTRUCTIONS.txt.
+-Separate the detection logic for Meshlab & Assimp so that the verifyModelVersions() function detects both separately.
+-Update showHelpInfo with latest description of supported command line args, and description of update functionality.
+-Add -c, --clean argument which accepts =## or =now.
+  -This will clean the ConvertLoc and the ConvertTempDir immediately using the supplied ## as a $DeleteThreshold.
+  -If -c or --clean is supplied with no optional Delete Threshold, the default from config.php will be used instead.
+-Update cleanDataLoc() function to simplify the authorization checks that take place before any cleaning operation is approved.
+  -The function now accepts $deleteThreshold as a third argument, instead of calling $DeleteThreshold by global reference.
+-Add USING_COMMAND_LINE.txt which contains information to teach administrators proper command line usage.
+-Implementing new Documentation structure using .txt files as engineering documents, sources of truth, and .md files as human readable.
+-Implement bubblewrap namespaces accross all major dependencies.
+-Implement escapeshellargs across all major dependency calls.
+-Fix convertImages() -alpha remove ordering bug predates the sandbox. Any transparent PNG converting to JPEG was failing before today.
+-Fix Dia having been removed accidentally from header files.
+-Fix bugs in ocrFiles, update ImageMagick code path from IM6 to IM7 code format.
+-Add $RequireSandbox variable to config.php.
+  -We perform a comprehensive check to see if bwrap is needed, or possible.
+  -Bwrap is not needed on docker, because the container is... a container.
+  -Bwrap is also not POSSIBLE on docker. So don't let it run on Docker.
+  -Bwrap is only enforce if $RequireSandbox is true, and bwrap is determined to be available on the system.
+-Update convertArchives to fix bugs.
+-Update ocrFiles to fix bugs.
+-Add $RequireSandboxOnDocker to config.php.
+-Add $ThrowSandboxWarning to config.php.
+-Add version checking for convertArchives.
+-Update dockerfile to include installation for p7zip-rar which was missing.
+-Added too many errors to count.
+  -Fifteen entries: 8002, 9002, 9003, 10001, 11002, 12002, 13006, 13007, 13008, 13009, 13010, 13011, 13012, 13013, 15012, 22001, 25002.
+  -We will need to go through ERROR_DESCRIPTIONS.txt and thin it out at some point.
 
 --------------------
 COMMIT 8/15/2026

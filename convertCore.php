@@ -1,7 +1,7 @@
 <?php if (php_sapi_name() !== 'cli') print('<!DOCTYPE HTML>'.PHP_EOL);
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/14/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/15/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILEINFORMATION ...
-// / v3.6.8.
+// / v3.6.9.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -71,8 +71,8 @@ function sanitizeString($Variable, $strict) {
   $dangerFiles = array('.js', '.php', '.html', '.css', '.phar', '..', 'index.php', 'index.html', '--');
   // / Check for dangerous files or escape conditions.
   foreach ($dangerFiles as $danFile) $Variable = str_replace($danFile, '', $Variable);
-  if ($strict) $Variable = trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split(',|\\~#[](){};:$!#^&%@>*?<"\'/`'.chr(9).chr(10).chr(13).chr(0)), '', $Variable))))), '-');
-  if (!$strict) $Variable = trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split(',|\\~#[](){};:$!#^&%@>*?<"\'`'.chr(9).chr(10).chr(13).chr(0)), '', $Variable))))), '-');
+  if ($strict) $Variable = trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split(',|\\~#[](){};:$!#^&%@>*?<"\'/`'.chr(9).chr(10).chr(13).chr(0)), '', str_replace('http://', '', str_replace('https://', '', $Variable))))))), '-');
+  if (!$strict) $Variable = trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split(',|\\~#[](){};:$!#^&%@>*?<"\'`'.chr(9).chr(10).chr(13).chr(0)), '', str_replace('http://', '', str_replace('https://', '', $Variable))))))), '-');
   // / Check for dangerous files or escape conditions one more time.
   foreach ($dangerFiles as $danFile) $Variable = str_replace($danFile, '', $Variable);
   // / Trim the variable one last time to avoid any crafted leading dashes or directory separators.
@@ -249,7 +249,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
-  $HRConvertVersion = 'v3.6.8';
+  $HRConvertVersion = 'v3.6.9';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
@@ -1036,7 +1036,6 @@ function verifyImageVersion($MinimumImageVersion) {
   $versionExitCode = 1;
   $detectedVersion = '';
   $detectedMajor = $detectedMinor = $detectedPatch = $minimumMajor = $minimumMinor = $minimumPatch = 0;
-  $minimumImageVersion = $MinimumImageVersion;
   // / Execute the modern ImageMagick binary checking utility directly using standard output pipes.
   exec('/usr/local/bin/magick --version 2>&1', $versionOutput, $versionExitCode);
   if ($versionExitCode === 0 && !empty($versionOutput)) {
@@ -1048,7 +1047,7 @@ function verifyImageVersion($MinimumImageVersion) {
       $detectedPatch = (int)($versionMatches[3] ?? 0);
       $detectedVersion = $detectedMajor.'.'.$detectedMinor.'.'.$detectedPatch;
       // / Split the supplied minimum string constraint into its component parts.
-      $minimumParts = explode('.', $minimumImageVersion);
+      $minimumParts = explode('.', $MinimumImageVersion);
       $minimumMajor = (int)($minimumParts[0] ?? 0);
       $minimumMinor = (int)($minimumParts[1] ?? 0);
       $minimumPatch = (int)($minimumParts[2] ?? 0);
@@ -1057,10 +1056,10 @@ function verifyImageVersion($MinimumImageVersion) {
       elseif ($detectedMajor === $minimumMajor) {
         if ($detectedMinor > $minimumMinor) $ImageVersionIsValid = TRUE;
         elseif ($detectedMinor === $minimumMinor && $detectedPatch >= $minimumPatch) $ImageVersionIsValid = TRUE; } } }
-  if ($Verbose) logEntry('ImageMagick Version Check: '.($ImageVersionIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$minimumImageVersion.' or later.');
+  if ($Verbose) logEntry('ImageMagick Version Check: '.($ImageVersionIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumImageVersion.' or later.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $versionOutput = $versionMatches = $versionExitCode = $detectedVersion = $minimumParts = $detectedMajor = $detectedMinor = $detectedPatch = $minimumMajor = $minimumMinor = $minimumPatch = $minimumImageVersion = NULL;
-  unset($versionOutput, $versionMatches, $versionExitCode, $detectedVersion, $minimumParts, $detectedMajor, $detectedMinor, $detectedPatch, $minimumMajor, $minimumMinor, $minimumPatch, $minimumImageVersion);
+  $versionOutput = $versionMatches = $versionExitCode = $detectedVersion = $minimumParts = $detectedMajor = $detectedMinor = $detectedPatch = $minimumMajor = $minimumMinor = $minimumPatch = NULL;
+  unset($versionOutput, $versionMatches, $versionExitCode, $detectedVersion, $minimumParts, $detectedMajor, $detectedMinor, $detectedPatch, $minimumMajor, $minimumMinor, $minimumPatch);
   return $ImageVersionIsValid; }
 // / -----------------------------------------------------------------------------------
 
@@ -1118,13 +1117,9 @@ function verifyModelVersions($AssimpMinVersion, $MeshlabMinVersion) {
     logEntry('Assimp Subsystem Check: '.($AssimpValid ? 'PASSED' : 'FAILED').', Detected: '.($assimpDet === '' ? 'NONE' : $assimpDet).', Required: '.$AssimpMinVersion.' or later.');
     logEntry('MeshLab Subsystem Check: '.($MeshlabValid ? 'PASSED' : 'FAILED').', Detected: '.($meshlabDet === '' ? 'NONE' : $meshlabDet).', Required: '.$MeshlabMinVersion.' or later.'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $assimpOut = $meshlabOut = $assimpMatch = $meshlabMatch = $assimpMinParts = $meshlabMinParts = NULL;
-  $assimpCode = $meshlabCode = $assimpDet = $meshlabDet = $AssimpMinVersion = $MeshlabMinVersion = NULL;
-  $aDetMaj = $aDetMin = $aMinMaj = $aMinMin = $mDetMaj = $mDetMin = $mMinMaj = $mMinMin = $AssimpValid = $MeshlabValid = NULL;
-  unset($assimpOut, $meshlabOut, $assimpMatch, $meshlabMatch, $assimpMinParts, $meshlabMinParts);
-  unset($assimpCode, $meshlabCode, $assimpDet, $meshlabDet, $AssimpMinVersion, $MeshlabMinVersion);
-  unset($aDetMaj, $aDetMin, $aMinMaj, $aMinMin, $mDetMaj, $mDetMin, $mMinMaj, $mMinMin, $AssimpValid, $MeshlabValid);
-  return $ModelsValid; }
+  $assimpOut = $meshlabOut = $assimpMatch = $meshlabMatch = $assimpMinParts = $meshlabMinParts = $assimpCode = $meshlabCode = $assimpDet = $meshlabDet = $aDetMaj = $aDetMin = $aMinMaj = $aMinMin = $mDetMaj = $mDetMin = $mMinMaj = $mMinMin = NULL;
+  unset($assimpOut, $meshlabOut, $assimpMatch, $meshlabMatch, $assimpMinParts, $meshlabMinParts, $assimpCode, $meshlabCode, $assimpDet, $meshlabDet, $aDetMaj, $aDetMin, $aMinMaj, $aMinMin, $mDetMaj, $mDetMin, $mMinMaj, $mMinMin);
+  return array($ModelsValid, $AssimpValid, $MeshlabValid); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1249,10 +1244,11 @@ function verifyBwrap() {
 // / answers whether an installation will actually work rather than what is configured.
 function showVersionInfo() {
   // / Set variables.
-  global $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $MinimumInkscapeVersion, $MinimumSCADVersion, $MinimumImageVersion, $MinimumAssimpVersion, $MinimumMeshlabVersion, $ApplicationName, $eol, $SupportedConversionTypes;
-  $VersionInfoDisplayed = FALSE;
-  $ffmpegIsValid = $streamFfmpegIsValid = $libreOfficeIsValid = $inkscapeIsValid = $scadIsValid = $imageIsValid = $modelIsValid = $bwrapIsValid = FALSE;
-  $eol = PHP_EOL;
+  global $InstLoc, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $MinimumInkscapeVersion, $MinimumSCADVersion, $MinimumImageVersion, $MinimumAssimpVersion, $MinimumMeshlabVersion, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol;
+  $VersionInfoDisplayed = $assimpIsValid = $meshlabIsValid = $ffmpegIsValid = $streamFfmpegIsValid = $libreOfficeIsValid = $inkscapeIsValid = $scadIsValid = $imageIsValid = $modelIsValid = $bwrapIsValid = FALSE;
+  $installedGui = $installedLang = $checkDir = $checkFile = $foundVersion = $langLine = '';
+  $guiMatches = $langMatches = array();
+  $langOk = $langTotal = 0;
   // / Run each dependency check so this reports what WORKS, not what is configured.
   // / Each of these is the identical check the matching converter performs.
   $ffmpegIsValid = verifyFFMPEGVersion($MinimumFFMPEGVersion);
@@ -1261,41 +1257,76 @@ function showVersionInfo() {
   $inkscapeIsValid = verifySVGVersion($MinimumInkscapeVersion);
   $scadIsValid = verifySCADVersion($MinimumSCADVersion);
   $imageIsValid = verifyImageVersion($MinimumImageVersion);
-  $modelIsValid = verifyModelVersions($MinimumAssimpVersion, $MinimumMeshlabVersion);
+  list($modelIsValid, $assimpIsValid, $meshlabIsValid) = verifyModelVersions($MinimumAssimpVersion, $MinimumMeshlabVersion);
   $bwrapIsValid = verifyBwrap();
   // / Report the versions of every component that carries one.
-  print($eol);
-  print($ApplicationName.$eol);
-  print('  Core version                '.$HRConvertVersion.$eol);
-  print('  Config version              '.$ConfigVersion.$eol);
-  print('  Config version required     '.$RequiredConfigVersion.' or later'.$eol);
-  print('  GUI version required        '.$RequiredGuiVersion.' exactly'.$eol);
-  print('  Language version required   '.$RequiredLanguageVersion.' exactly'.$eol);
-  print($eol);
+  print($Lol);
+  print($ApplicationName.$Lol);
+  print('  Core version                '.$HRConvertVersion.$Lol);
+  print('  Config version              '.$ConfigVersion.$Lol);
+  print('  Config version required     '.$RequiredConfigVersion.' or later'.$Lol);
+  print('  GUI version required        '.$RequiredGuiVersion.' exactly'.$Lol);
+  print('  Language version required   '.$RequiredLanguageVersion.' exactly'.$Lol);
+  print($Lol);
   // / Report the state of every dependency HRConvert2 enforces a minimum against.
-  print('Dependencies'.$eol);
-  print('  FFMPEG, audio & video       '.($ffmpegIsValid ? 'OK' : 'FAILED').', requires '.$MinimumFFMPEGVersion.' or later'.$eol);
-  print('  FFMPEG, streams             '.($streamFfmpegIsValid ? 'OK' : 'FAILED').', requires '.$MinimumStreamFFMPEGVersion.' or later'.$eol);
-  print('  LibreOffice                 '.($libreOfficeIsValid ? 'OK' : 'FAILED').', requires '.$MinimumLibreOfficeVersion.' or later'.$eol);
-  print('  Inkscape                    '.($inkscapeIsValid ? 'OK' : 'FAILED').', requires '.$MinimumInkscapeVersion.' or later'.$eol);
-  print('  OpenSCAD                    '.($scadIsValid ? 'OK' : 'FAILED').', requires '.$MinimumSCADVersion.' or later'.$eol);
-  print('  ImageMagick                 '.($imageIsValid ? 'OK' : 'FAILED').', requires '.$MinimumImageVersion.' or later'.$eol);
-  print('  Assimp                      '.($modelIsValid ? 'OK' : 'FAILED').', requires '.$MinimumAssimpVersion.' or later'.$eol);
-  print('  Bubblewrap sandbox          '.($bwrapIsValid ? 'OK' : 'FAILED').', '.($bwrapIsValid ? 'Fully Functional' : 'NOT Functional - OpenSCAD conversions disabled').$eol);
-  print($eol);
+  print('Dependencies'.$Lol);
+  print('  FFMPEG, audio & video       '.($ffmpegIsValid ? 'OK' : 'FAILED').', requires '.$MinimumFFMPEGVersion.' or later'.$Lol);
+  print('  FFMPEG, streams             '.($streamFfmpegIsValid ? 'OK' : 'FAILED').', requires '.$MinimumStreamFFMPEGVersion.' or later'.$Lol);
+  print('  LibreOffice                 '.($libreOfficeIsValid ? 'OK' : 'FAILED').', requires '.$MinimumLibreOfficeVersion.' or later'.$Lol);
+  print('  Inkscape                    '.($inkscapeIsValid ? 'OK' : 'FAILED').', requires '.$MinimumInkscapeVersion.' or later'.$Lol);
+  print('  OpenSCAD                    '.($scadIsValid ? 'OK' : 'FAILED').', requires '.$MinimumSCADVersion.' or later'.$Lol);
+  print('  ImageMagick                 '.($imageIsValid ? 'OK' : 'FAILED').', requires '.$MinimumImageVersion.' or later'.$Lol);
+  print('  Assimp                      '.($assimpIsValid ? 'OK' : 'FAILED').', requires '.$MinimumAssimpVersion.' or later'.$Lol);
+  print('  Meshlab                     '.($meshlabIsValid ? 'OK' : 'FAILED').', requires '.$MinimumMeshlabVersion.' or later'.$Lol);
+  print('  Bubblewrap sandbox          '.($bwrapIsValid ? 'OK' : 'FAILED').', '.($bwrapIsValid ? 'fully functional' : 'NOT functional, OpenSCAD conversions are disabled').$Lol);
+  print($Lol);
+  // / Report every installed GUI & whether it matches the version the core requires.
+  // / The version is read from uiVersionInfo.php by pattern rather than by loading the
+  // / file, because loading twenty version files would overwrite $GuiVersion each time.
+  print('Installed interfaces'.$Lol);
+  foreach ($SupportedGuis as $installedGui) {
+    $checkDir = $InstLoc.$DirSep.'UI'.$DirSep.$installedGui;
+    $checkFile = $checkDir.$DirSep.'uiVersionInfo.php';
+    $foundVersion = '';
+    if (!is_dir($checkDir)) print('  '.str_pad($installedGui, 28).'MISSING, no folder at '.$checkDir.$Lol);
+    else if (!file_exists($checkFile)) print('  '.str_pad($installedGui, 28).'FAILED, no uiVersionInfo.php'.$Lol);
+    else {
+      if (preg_match_all('/\$GuiVersion\s*=\s*[\'"]([^\'"]+)[\'"]/', (string)@file_get_contents($checkFile), $guiMatches)) $foundVersion = ltrim(end($guiMatches[1]), 'vV');
+      if ($foundVersion === '') print('  '.str_pad($installedGui, 28).'FAILED, no version declared'.$Lol);
+      else if ($foundVersion === $RequiredGuiVersion) print('  '.str_pad($installedGui, 28).'OK, '.$foundVersion.$Lol);
+      else print('  '.str_pad($installedGui, 28).'FAILED, reports '.$foundVersion.$Lol); } }
+  print($Lol);
+  // / Report language pack coverage per interface.
+  // / Twenty six packs times three interfaces is too many lines to list individually, so
+  // / only the count & the failures are shown. A pack that fails is named.
+  print('Installed language packs'.$Lol);
+  foreach ($SupportedGuis as $installedGui) {
+    $langOk = $langTotal = 0;
+    $langLine = '';
+    foreach ($SupportedLanguages as $installedLang => $installedEndonym) {
+      $langTotal++;
+      $checkFile = $InstLoc.$DirSep.'UI'.$DirSep.$installedGui.$DirSep.'Languages'.$DirSep.$installedLang.$DirSep.'languageStrings.php';
+      $foundVersion = '';
+      if (file_exists($checkFile)) {
+        if (preg_match('/\$LanguageVersion\s*=\s*[\'"]([^\'"]+)[\'"]/', (string)@file_get_contents($checkFile), $langMatches)) $foundVersion = ltrim($langMatches[1], 'vV'); }
+      if ($foundVersion === $RequiredLanguageVersion) $langOk++;
+      else $langLine .= ' '.$installedLang; }
+    print('  '.str_pad($installedGui, 28).$langOk.' of '.$langTotal.' OK'.($langLine === '' ? '' : ', failed:'.$langLine).$Lol); }
+  print($Lol);
   // / Report which conversion types config.php has enabled.
-  print('Enabled conversion types'.$eol);
-  print('  '.implode(', ', $SupportedConversionTypes).$eol);
-  print($eol);
+  print('Enabled conversion types'.$Lol);
+  print('  '.implode(', ', $SupportedConversionTypes).$Lol);
+  print($Lol);
   // / A dependency that reports FAILED is either missing, unidentifiable, or older than
   // / the minimum. The converter that depends on it will refuse rather than fail oddly.
-  print('If a dependency is unavailable, the conversion type which rely on it will fail with errors.'.$eol);
-  print('See Documentation/ERROR_DESCRIPTIONS.txt for the error each one produces.'.$eol);
-  print($eol);
+  print('If a dependency is unavailable, the conversion types which rely on it will fail with errors.'.$Lol);
+  print('An interface or language pack that reports FAILED is not loaded & falls back to the default.'.$Lol);
+  print('See Documentation/ERROR_DESCRIPTIONS.txt for the error each one produces.'.$Lol);
+  print($Lol);
   $VersionInfoDisplayed = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $ffmpegIsValid = $streamFfmpegIsValid = $libreOfficeIsValid = $inkscapeIsValid = $scadIsValid = $modelIsValid = $imageIsValid = $bwrapIsValid = $eol = NULL;
-  unset($ffmpegIsValid, $streamFfmpegIsValid, $libreOfficeIsValid, $inkscapeIsValid, $scadIsValid, $modelIsValid, $imageIsValid, $bwrapIsValid, $eol);
+  $ffmpegIsValid = $streamFfmpegIsValid = $libreOfficeIsValid = $inkscapeIsValid = $scadIsValid = $modelIsValid = $imageIsValid = $bwrapIsValid = $installedGui = $installedLang = $installedEndonym = $checkDir = $checkFile = $foundVersion = $langLine = $guiMatches = $langMatches = $langOk = $langTotal = $meshlabIsValid = $assimpIsValid = NULL;
+  unset($ffmpegIsValid, $streamFfmpegIsValid, $libreOfficeIsValid, $inkscapeIsValid, $scadIsValid, $modelIsValid, $imageIsValid, $bwrapIsValid, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $guiMatches, $langMatches, $langOk, $langTotal, $meshlabIsValid, $assimpIsValid);
   return $VersionInfoDisplayed; }
 // / -----------------------------------------------------------------------------------
 
@@ -1307,39 +1338,36 @@ function showVersionInfo() {
 // / attempting to reproduce it.
 function showHelpInfo() {
   // / Set variables.
-  global $ApplicationName, $HRConvertVersion;
-  $eol = PHP_EOL;
+  global $ApplicationName, $HRConvertVersion, $Lol;
   $HelpInfoDisplayed = FALSE;
-  print($eol);
-  print($ApplicationName.' '.$HRConvertVersion.$eol);
-  print('A self hosted file conversion server.'.$eol);
-  print($eol);
-  print('Usage'.$eol);
-  print('  php convertCore.php [argument]'.$eol);
-  print($eol);
-  print('Arguments'.$eol);
-  print('  -v, --version               Display version & dependency information.'.$eol);
-  print('  -h, --help                  Display this message.'.$eol);
-  print($eol);
-  print('Notes'.$eol);
-  print('  Command line & web requests are mutually exclusive.'.$eol);
-  print('  An argument supplied on the command line prevents the web interface entirely.'.$eol);
-  print('  No session is created & no user data is touched by a command line invocation.'.$eol);
-  print($eol);
-  print('Documentation'.$eol);
-  print('  Documentation/INSTALLATION_INSTRUCTIONS.txt  Installing & configuring a server.'.$eol);
-  print('  Documentation/ERROR_DESCRIPTIONS.txt         Every numbered error, its cause & its fix.'.$eol);
-  print('  Documentation/CREATING_GUIS.txt              Building & installing an interface.'.$eol);
-  print('  Documentation/CREATING_LANGUAGE_PACKS.txt    Translating the interface.'.$eol);
-  print('  Documentation/CODING_CONVENTIONS.txt         Conventions this codebase follows.'.$eol);
-  print('  Documentation/DOCKER_BUILD_INSTRUCTIONS.txt  Building the container image.'.$eol);
-  print('  Documentation/CHANGELOG.txt                  What changed & when.'.$eol);
-  print($eol);
-  print('  https://github.com/zelon88/HRConvert2'.$eol);
-  print($eol);
+  print($Lol);
+  print($ApplicationName.' '.$HRConvertVersion.$Lol);
+  print('A self hosted file conversion server.'.$Lol);
+  print($Lol);
+  print('Usage'.$Lol);
+  print('  php convertCore.php [argument]'.$Lol);
+  print($Lol);
+  print('Arguments'.$Lol);
+  print('  -v, --version               Display version & dependency information.'.$Lol);
+  print('  -h, --help                  Display this message.'.$Lol);
+  print($Lol);
+  print('Notes'.$Lol);
+  print('  Command line & web requests are mutually exclusive.'.$Lol);
+  print('  An argument supplied on the command line prevents the web interface entirely.'.$Lol);
+  print('  No session is created & no user data is touched by a command line invocation.'.$Lol);
+  print($Lol);
+  print('Documentation'.$Lol);
+  print('  Documentation/INSTALLATION_INSTRUCTIONS.txt  Installing & configuring a server.'.$Lol);
+  print('  Documentation/ERROR_DESCRIPTIONS.txt         Every numbered error, its cause & its fix.'.$Lol);
+  print('  Documentation/CREATING_GUIS.txt              Building & installing an interface.'.$Lol);
+  print('  Documentation/CREATING_LANGUAGE_PACKS.txt    Translating the interface.'.$Lol);
+  print('  Documentation/CODING_CONVENTIONS.txt         Conventions this codebase follows.'.$Lol);
+  print('  Documentation/DOCKER_BUILD_INSTRUCTIONS.txt  Building the container image.'.$Lol);
+  print('  Documentation/CHANGELOG.txt                  What changed & when.'.$Lol);
+  print($Lol);
+  print('  https://github.com/zelon88/HRConvert2'.$Lol);
+  print($Lol);
   $HelpInfoDisplayed = TRUE;
-  $eol = NULL;
-  unset($eol);
   return $HelpInfoDisplayed; }
 // / -----------------------------------------------------------------------------------
 
@@ -1347,7 +1375,7 @@ function showHelpInfo() {
 // / A function to handle a command line invocation of HRConvert2.
 // / This function returns TRUE, 'cli' when it has handled an invocation.
 // / This function returns FALSE, 'web' only when there is no command line
-// / If this function fires, the core should immediately stop afterward..
+// / If this function fires, the core should immediately stop afterward.
 // / php_sapi_name() is the most reliable test for CLI arguments.
 // / Checking $argv alone can be populated by a query string in some cases.
 // / All command line arguments must be run as the web server user.
@@ -1358,12 +1386,12 @@ function parseCommandLine() {
   $CommandLineHandled = FALSE;
   $UserType = 'web';
   $cliArgumentCount = 0;
-  $cliArguments = array();
-  $cliArgument = $cliCommand = '';
+  $cliArguments = $cliParts = array();
+  $cliCommand = $rawFirstArg = $cliTarget = '';
   // / A web request has no command line & must return immediately.
   // / This is the ONLY path that returns FALSE. Every other path handles & stops.
   if (php_sapi_name() !== 'cli') $CommandLineHandled = FALSE;
-    else {
+  else {
     // / Gather the arguments. The first is always the script name & is discarded.
     $cliArguments = isset($_SERVER['argv']) ? $_SERVER['argv'] : array();
     array_shift($cliArguments);
@@ -1376,8 +1404,10 @@ function parseCommandLine() {
       showHelpInfo();
       $CommandLineHandled = TRUE; }
     else {
-      // / Dispatch on the first argument only. Later arguments belong to that command.
-      $cliCommand = strtolower(trim($cliArguments[0]));
+      // / Extract the raw first argument to check for an inline equal sign assignment.
+      $rawFirstArg = trim($cliArguments[0]);
+      $cliParts = explode('=', $rawFirstArg, 2);
+      $cliCommand = strtolower(trim($cliParts[0]));
       // / Handle the -v or --version arguments.
       // / Performs a comprehensive version analysis including all components & major dependencies.
       if ($cliCommand === '-v' or $cliCommand === '--version') {
@@ -1394,7 +1424,9 @@ function parseCommandLine() {
       // / Performs a comprehensive update on the HRConvert2 application & all bundled components.
       else if ($cliCommand === '-u' or $cliCommand === '--update') {
         logEntry('Command line invocation. Performing an application update.');
-        $cliTarget = isset($cliArguments[1]) ? strtolower(trim($cliArguments[1])) : '';
+        // / Check if target was passed via '=' sign first. Fall back to the second array element.
+        if (isset($cliParts[1])) $cliTarget = strtolower(trim($cliParts[1]));
+        else $cliTarget = isset($cliArguments[1]) ? strtolower(trim($cliArguments[1])) : '';
         updateApplication($cliTarget);
         $CommandLineHandled = TRUE; }
       // / An unrecognized argument is a mistake, not a web request.
@@ -1407,8 +1439,8 @@ function parseCommandLine() {
   // / Determine if the user is using the application via command line (CLI) or Apache+PHP through a web browser.
   if ($CommandLineHandled === TRUE) $UserType = 'cli';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $cliArguments = $cliArgument = $cliCommand = $cliArgumentCount = NULL;
-  unset($cliArguments, $cliArgument, $cliCommand, $cliArgumentCount);
+  $cliArguments = $cliCommand = $cliArgumentCount = $rawFirstArg = $cliParts = $cliTarget = NULL;
+  unset($cliArguments, $cliCommand, $cliArgumentCount, $rawFirstArg, $cliParts, $cliTarget);
   return array($CommandLineHandled, $UserType); }
 // / -----------------------------------------------------------------------------------
 
@@ -1705,49 +1737,60 @@ function cleanFiles($path) {
 // / The enforced index.html in every hosted folder is protected by that same check.
 function cleanDataLoc($dataLoc, $locationName) {
   // / Set variables.
-  global $DeleteThreshold, $DefaultApps, $ProtectedRootDirs, $DirSep, $PermissionLevels, $Verbose;
-  $LocationDeepCleaned = FALSE;
+  global $DeleteThreshold, $DefaultApps, $ProtectedRootDirs, $DirSep, $PermissionLevels, $Verbose, $ConvertLoc, $ConvertTempDir;
+  $LocationDeepCleaned = $cleanAuthorizedA = $cleanAuthorizedB = $cleanAuthorizedC = $cleanAuthorizedD = FALSE;
   $CleanedLocation = $loopCheck = TRUE;
   $dailyDirs = $sessionDirs = array();
   $dailyDir = $sessionDir = $dailyPath = $sessionPath = '';
   $now = time();
-  // / Make sure the directory to be scanned exists.
-  if (file_exists($dataLoc)) {
-    $dailyDirs = array_diff(scandir($dataLoc), array('..', '.'));
-    // / Iterate through each daily folder in the location.
-    foreach ($dailyDirs as $dailyDir) {
-      // / Validate the folder.
-      if (in_array($dailyDir, $DefaultApps)) continue;
-      // / A protected directory at this level is not a daily session parent & is never swept.
-      // / The LibreOffice profile lives at this level because HOME resolves to the data location.
-      if (in_array($dailyDir, $ProtectedRootDirs, TRUE)) continue;
-      $dailyPath = $dataLoc.$DirSep.$dailyDir;
-      // / Only directories hold sessions. Files at this level are left alone entirely.
-      if (!is_dir($dailyPath)) continue;
-      $sessionDirs = array_diff(scandir($dailyPath), array('..', '.'));
-      // / Iterate through each session folder inside this day.
-      foreach ($sessionDirs as $sessionDir) {
-        if (in_array($sessionDir, $DefaultApps)) continue;
-        $sessionPath = $dailyPath.$DirSep.$sessionDir;
-        if (!is_dir($sessionPath)) continue;
-        // / See if this individual session is due for deletion.
-        if ($now - fileTime($sessionPath) > ($DeleteThreshold * 60)) {
-          $LocationDeepCleaned = TRUE;
-          @chmod($sessionPath, $PermissionLevels);
-          $loopCheck = cleanFiles($sessionPath);
-          // / Remove the session shell, including any protected file objects still in it.
-          removeEmptiedSessionDir($sessionPath); }
-        // / Check if the most recent iteration of the loop was successful.
-        if (!$loopCheck) $CleanedLocation = FALSE;
-        $loopCheck = TRUE; }
-      // / Remove the daily parent only once every session inside it is gone.
-      if (isDirEmptyOfUserFiles($dailyPath)) removeEmptiedSessionDir($dailyPath); } }
-  // / Log the result of this sweep. The caller logs its own line, so a sweep triggered by
-  // / anything other than the core will still appear in the log on its own.
-  if ($Verbose) logEntry('Cleaned the '.$locationName.' location. Deep cleaned: '.($LocationDeepCleaned ? 'TRUE' : 'FALSE').'.');
+  // / Determine if thie clean operation is being requested on a valid target.
+  // / Begin this multi-stage check by ensuring that the location name is even valid.
+  if ($locationName === 'ConvertLoc' or $locationName === 'ConvertTempDir') $cleanAuthorizedA = TRUE;
+  // / Next, check that the target directory to be cleaned is even valid.
+  if ($locationName === 'ConvertLoc' && $dataLoc === $ConvertLoc) $cleanAuthorizedB = TRUE;
+  if ($locationName === 'ConvertTempDir' && $dataLoc === $ConvertTempDir) $cleanAuthorizedC = TRUE;
+  if ($cleanAuthorizedB or $cleanAuthorizedC) $cleanAuthorizedD = TRUE;
+  // / If the location name and target directory to be cleaned are both valid, then the clean operation is considered authorized.
+  if ($cleanAuthorizedA && $cleanAuthorizedD) {
+    // / Make sure the directory to be scanned exists.
+    if (file_exists($dataLoc)) {
+      if ($Verbose) logEntry('The valid clean operation has been authorized.');
+      $dailyDirs = array_diff(scandir($dataLoc), array('..', '.'));
+      // / Iterate through each daily folder in the location.
+      foreach ($dailyDirs as $dailyDir) {
+        // / Validate the folder.
+        if (in_array($dailyDir, $DefaultApps)) continue;
+        // / A protected directory at this level is not a daily session parent & is never swept.
+        // / The LibreOffice profile lives at this level.
+        if (in_array($dailyDir, $ProtectedRootDirs, TRUE)) continue;
+        $dailyPath = $dataLoc.$DirSep.$dailyDir;
+        // / Only directories hold sessions. 
+        // / Files at this level are left alone entirely.
+        if (!is_dir($dailyPath)) continue;
+        $sessionDirs = array_diff(scandir($dailyPath), array('..', '.'));
+        // / Iterate through each session folder inside this day.
+        foreach ($sessionDirs as $sessionDir) {
+          if (in_array($sessionDir, $DefaultApps)) continue;
+          $sessionPath = $dailyPath.$DirSep.$sessionDir;
+          if (!is_dir($sessionPath)) continue;
+          // / See if this individual session is due for deletion.
+          if ($now - fileTime($sessionPath) > ($DeleteThreshold * 60)) {
+            $LocationDeepCleaned = TRUE;
+            @chmod($sessionPath, $PermissionLevels);
+            $loopCheck = cleanFiles($sessionPath);
+            // / Remove the session shell, including any protected file objects still in it.
+            removeEmptiedSessionDir($sessionPath); }
+          // / Check if the most recent iteration of the loop was successful.
+          if (!$loopCheck) $CleanedLocation = FALSE;
+          $loopCheck = TRUE; }
+        // / Remove the daily parent only once every session inside it is gone.
+        if (isDirEmptyOfUserFiles($dailyPath)) removeEmptiedSessionDir($dailyPath); }
+      // / Log the result.
+      if ($Verbose) logEntry('Cleaned the '.$locationName.' location. Removed Files: '.($LocationDeepCleaned ? 'TRUE' : 'FALSE').'.'); } 
+      else errorEntry('An invalid clean operation has been blocked!', 29, FALSE); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $dailyDirs = $dailyDir = $dailyPath = $sessionDirs = $sessionDir = $sessionPath = $now = $loopCheck = $dataLoc = $locationName = NULL;
-  unset($dailyDirs, $dailyDir, $dailyPath, $sessionDirs, $sessionDir, $sessionPath, $now, $loopCheck, $dataLoc, $locationName);
+  $dailyDirs = $dailyDir = $dailyPath = $sessionDirs = $sessionDir = $sessionPath = $now = $loopCheck = $dataLoc = $locationName = $cleanAuthorizedA = $cleanAuthorizedB = $cleanAuthorizedC = $cleanAuthorizedD = NULL;
+  unset($dailyDirs, $dailyDir, $dailyPath, $sessionDirs, $sessionDir, $sessionPath, $now, $loopCheck, $dataLoc, $locationName, $cleanAuthorizedA, $cleanAuthorizedB, $cleanAuthorizedC, $cleanAuthorizedD);
   return array($CleanedLocation, $LocationDeepCleaned); }
 // / -----------------------------------------------------------------------------------
 
@@ -2007,11 +2050,10 @@ function updateApplication($requestedVersion) {
   $targetVersion = $targetURL = $workDir = $downloadPath = $extractedDir = $stagedDir = $oldDir = $backupOutput = '';
   $preservedSettings = $changedArrays = $extractOutput = $extractedRoots = array();
   $extractExitCode = $backupExitCode = 1;
-  $eol = PHP_EOL;
   // / An update must be explicitly enabled. A server that does not want this cannot get it.
   if (!$EnableAutoUpdates) {
     errorEntry('Automatic updates are disabled in config.php!', 29009, FALSE);
-    print($eol.'Automatic updates are disabled. Set $EnableAutoUpdates to TRUE in config.php.'.$eol.$eol); }
+    print($Lol.'Automatic updates are disabled. Set $EnableAutoUpdates to TRUE in config.php.'.$Lol.$Lol); }
   else {
     // / The command line argument overrides the configured default when one is supplied.
     if ($requestedVersion === '') $requestedVersion = $AutoUpdateTargetVersion;
@@ -2020,7 +2062,7 @@ function updateApplication($requestedVersion) {
     // / edge is always fetched, because master moves without the version stamp changing.
     if ($targetResolved && $targetVersion !== 'edge' && ltrim($targetVersion, 'vV') === ltrim($HRConvertVersion, 'vV')) {
       $targetResolved = FALSE;
-      print($eol.'Version '.$targetVersion.' is already installed. Nothing to do.'.$eol.$eol);
+      print($Lol.'Version '.$targetVersion.' is already installed. Nothing to do.'.$Lol.$Lol);
       logEntry('Update requested but '.$targetVersion.' is already installed.'); } }
   // / Download & stage the release.
   if ($targetResolved) {
@@ -2029,7 +2071,7 @@ function updateApplication($requestedVersion) {
     $stagedDir = $workDir.$DirSep.'staged';
     if (!@mkdir($workDir, $PermissionLevels, TRUE)) errorEntry('Could not create a working directory for the update!', 29010, FALSE);
     else {
-      print($eol.'Downloading '.$targetVersion.' ...'.$eol);
+      print($Lol.'Downloading '.$targetVersion.' ...'.$Lol);
       $packageDownloaded = downloadUpdatePackage($targetURL, $downloadPath); } }
   // / Extract the package & locate the single directory GitHub wraps every archive in.
   if ($packageDownloaded) {
@@ -2045,7 +2087,7 @@ function updateApplication($requestedVersion) {
         // / A release that does not contain a core is not a release.
         if (!file_exists($extractedDir.$DirSep.'convertCore.php')) errorEntry('The update package does not contain convertCore.php!', 29013, FALSE);
         else {
-          print('Merging configuration ...'.$eol);
+          print('Merging configuration ...'.$Lol);
           list ($configMerged, $preservedSettings, $changedArrays) = mergeConfigFile(
             $InstLoc.$DirSep.'Resources'.$DirSep.'config.php',
             $extractedDir.$DirSep.'Resources'.$DirSep.'config.php'); } } } }
@@ -2069,7 +2111,7 @@ function updateApplication($requestedVersion) {
       if ($RunningAsRoot) {
         exec('chown -R '.escapeshellarg($ApacheUser).':'.escapeshellarg($ApacheUser).' '.escapeshellarg($stagedDir).' 2>&1'); }
       exec('chmod -R 0755 '.escapeshellarg($stagedDir).' 2>&1');
-      print('Swapping installation ...'.$eol);
+      print('Swapping installation ...'.$Lol);
       // / Two atomic renames. There is no moment where the installation is incomplete.
       if (!@rename($InstLoc, $oldDir)) errorEntry('Could not move the existing installation aside!', 29015, FALSE);
       else if (!@rename($stagedDir, $InstLoc)) {
@@ -2079,7 +2121,7 @@ function updateApplication($requestedVersion) {
       else $swapCompleted = TRUE; } }
   // / Validate the swapped installation & roll back if it cannot run.
   if ($swapCompleted) {
-    print('Validating ...'.$eol);
+    print('Validating ...'.$Lol);
     $installationIsValid = validateInstallation($InstLoc);
     if (!$installationIsValid) {
       warningEntry('The updated installation failed validation. Rolling back.');
@@ -2113,20 +2155,20 @@ function updateApplication($requestedVersion) {
   // / Report the outcome.
   if ($UpdateSucceeded) {
     logEntry('Application updated to '.$targetVersion.' from '.$HRConvertVersion.'.');
-    print($eol.'Updated to '.$targetVersion.'.'.$eol);
-    print('The previous installation is preserved at '.$BackupLoc.'.'.$eol);
-    if (count($preservedSettings) > 0) print($eol.count($preservedSettings).' configuration setting(s) were carried over.'.$eol);
+    print($Lol.'Updated to '.$targetVersion.'.'.$Lol);
+    print('The previous installation is preserved at '.$BackupLoc.'.'.$Lol);
+    if (count($preservedSettings) > 0) print($Lol.count($preservedSettings).' configuration setting(s) were carried over.'.$Lol);
     if (count($changedArrays) > 0) {
-      print($eol.'The following array settings were RESET to the new defaults.'.$eol);
-      print('Reapply any intentional changes by hand.'.$eol);
-      foreach ($changedArrays as $changedArray) print('  $'.$changedArray.$eol); }
-    print($eol.'Run  php convertCore.php -v  to confirm the new installation.'.$eol.$eol); }
-  else if ($rolledBack) print($eol.'The update failed validation & was rolled back. The previous version is running.'.$eol.$eol);
+      print($Lol.'The following array settings were RESET to the new defaults.'.$Lol);
+      print('Reapply any intentional changes by hand.'.$Lol);
+      foreach ($changedArrays as $changedArray) print('  $'.$changedArray.$Lol); }
+    print($Lol.'Run  php convertCore.php -v  to confirm the new installation.'.$Lol.$Lol); }
+  else if ($rolledBack) print($Lol.'The update failed validation & was rolled back. The previous version is running.'.$Lol.$Lol);
   // / Remove the temporary working directory whatever the outcome.
   if ($workDir !== '' && is_dir($workDir)) exec('rm -rf '.escapeshellarg($workDir).' 2>&1');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $targetResolved = $packageDownloaded = $configMerged = $installationIsValid = $swapCompleted = $rolledBack = $targetVersion = $targetURL = $workDir = $downloadPath = $extractedDir = $stagedDir = $oldDir = $preservedSettings = $changedArrays = $extractOutput = $extractedRoots = $extractExitCode = $eol = $requestedVersion = NULL;
-  unset($targetResolved, $packageDownloaded, $configMerged, $installationIsValid, $swapCompleted, $rolledBack, $targetVersion, $targetURL, $workDir, $downloadPath, $extractedDir, $stagedDir, $oldDir, $preservedSettings, $changedArrays, $extractOutput, $extractedRoots, $extractExitCode, $eol, $requestedVersion);
+  $targetResolved = $packageDownloaded = $configMerged = $installationIsValid = $swapCompleted = $rolledBack = $targetVersion = $targetURL = $workDir = $downloadPath = $extractedDir = $stagedDir = $oldDir = $preservedSettings = $changedArrays = $extractOutput = $extractedRoots = $extractExitCode = $requestedVersion = NULL;
+  unset($targetResolved, $packageDownloaded, $configMerged, $installationIsValid, $swapCompleted, $rolledBack, $targetVersion, $targetURL, $workDir, $downloadPath, $extractedDir, $stagedDir, $oldDir, $preservedSettings, $changedArrays, $extractOutput, $extractedRoots, $extractExitCode, $Lol, $requestedVersion);
   return $UpdateSucceeded; }
 // / -----------------------------------------------------------------------------------
 
@@ -2239,51 +2281,58 @@ function convertDocuments($pathname, $newPathname, $extension) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to convert image formats.
+// / ImageMagick v7 is required for the unified magick utility & its parameter ordering.
+// / A v6 installation uses convert with different argument semantics & is refused.
 function convertImages($pathname, $newPathname, $height, $width, $rotate) {
   // / Set variables.
   global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumImageVersion;
-  $ConversionSuccess = $ConversionErrors = $imgMethod = FALSE;
-  $returnData = $wh = $bgSwitch = '';
-  $stopper = $whx = 0;
+  $ConversionSuccess = $ConversionErrors = $imageVersionIsValid = FALSE;
+  $returnData = $wh = $wxh = $bgSwitch = $outputExt = '';
+  $stopper = 0;
   $sleepTime = $SleepTimer;
-  // / Verify the system meets the minimum ImageMagick version boundary before processing.
-  // / ImageMagick v7 is required for modern parameter ordering and the unified magick utility binary.
-  if (!verifyImageVersion($MinimumImageVersion)) {
-    errorEntry('The installed ImageMagick version is missing, unidentifiable, or too old!', 8001, FALSE);
+  // / Confirm the installed ImageMagick meets the minimum version HRConvert2 requires.
+  $imageVersionIsValid = verifyImageVersion($MinimumImageVersion);
+  if (!$imageVersionIsValid) {
     $ConversionErrors = TRUE;
-    return array($ConversionSuccess, $ConversionErrors); }
-  // / Validate the height, width, & rotate arguments.
-  if (!is_numeric($height) or $height === FALSE) $height = 0;
-  if (!is_numeric($width) or $width === FALSE) $width = 0;
-  if (!is_numeric($rotate) or $rotate === FALSE) $rotate = '';
-  else $rotate = '-rotate '.$rotate.' ';
-  $wxh = $width.'x'.$height;
-  if ($wxh == '0x0' or $wxh =='x0' or $wxh == '0x' or $wxh == '0' or $wxh == '00' or $wxh == '' or $wxh == ' ') $wh = '';
-  else $wh = '-resize '.$wxh.' ';
-  // / Isolate the output file extension to determine if it lacks native alpha channel support.
-  $outputExt = strtolower(pathinfo($newPathname, PATHINFO_EXTENSION));
-  // / Force transparent pixels to flatten safely against a solid white background if exporting to JPEG.
-  if ($outputExt === 'jpg' or $outputExt === 'jpeg') $bgSwitch = '-background white -alpha remove ';
-  else $bgSwitch = '-background none ';
-  if ($Verbose) logEntry('Converting image.');
-  // / This code will attempt the conversion up to $StopCounter number of times.
-  while (!file_exists($newPathname) && $stopper <= $StopCounter) {
-    // / If the last conversion attempt failed, wait a moment before trying again.
-    if ($stopper !== 0) sleep($sleepTime++);
-    // / Attempt the conversion using the unified ImageMagick v7 magick command layout.
-    $returnData = shell_exec('/usr/bin/magick '.$bgSwitch.escapeshellarg($pathname).' '.$wh.$rotate.escapeshellarg($newPathname));
-    // / Count the number of conversions to avoid infinite loops.
-    $stopper++;
-    // / Stop attempting the conversion after $StopCounter number of attempts.
-    if ($stopper === $StopCounter) {
-      $ConversionErrors = TRUE;
-      errorEntry('The image converter timed out!', 8000, FALSE); } }
-  // / Log the output of the operation to the logfile, if it is not blank.
-  if ($Verbose && trim($returnData) !== '') logEntry('ImageMagick returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-  if (file_exists($newPathname)) $ConversionSuccess = TRUE;
+    errorEntry('The installed ImageMagick version is missing, unidentifiable, or too old!', 8001, FALSE); }
+  else {
+    // / Validate the height, width & rotate arguments.
+    if (!is_numeric($height) or $height === FALSE) $height = 0;
+    if (!is_numeric($width) or $width === FALSE) $width = 0;
+    if (!is_numeric($rotate) or $rotate === FALSE) $rotate = '';
+    else $rotate = '-rotate '.$rotate.' ';
+    $wxh = $width.'x'.$height;
+    if ($wxh === '0x0' or $wxh === 'x0' or $wxh === '0x' or $wxh === '0' or $wxh === '00' or $wxh === '' or $wxh === ' ') $wh = '';
+    else $wh = '-resize '.$wxh.' ';
+    // / Isolate the output extension to determine if it lacks native alpha channel support.
+    $outputExt = strtolower(pathinfo($newPathname, PATHINFO_EXTENSION));
+    // / Flatten transparent pixels against white when exporting to a format with no alpha.
+    // / Without this a transparent PNG becomes a black JPEG rather than a white one.
+    if ($outputExt === 'jpg' or $outputExt === 'jpeg') $bgSwitch = '-background white -alpha remove ';
+    else $bgSwitch = '-background none ';
+    if ($Verbose) logEntry('Converting image.');
+    // / This code will attempt the conversion up to $StopCounter number of times.
+    while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+      // / If the last conversion attempt failed, wait a moment before trying again.
+      if ($stopper !== 0) sleep($sleepTime++);
+      // / Attempt the conversion using the unified ImageMagick v7 magick command layout.
+      $returnData = shell_exec('/usr/local/bin/magick '.$bgSwitch.escapeshellarg($pathname).' '.$wh.$rotate.escapeshellarg($newPathname));
+      logEntry('/usr/local/bin '.$bgSwitch.escapeshellarg($pathname).' '.$wh.$rotate.escapeshellarg($newPathname));
+      // / Count the number of conversions to avoid infinite loops.
+      $stopper++;
+      // / Stop attempting the conversion after $StopCounter number of attempts.
+      if ($stopper === $StopCounter) {
+        $ConversionErrors = TRUE;
+        errorEntry('The image converter timed out!', 8000, FALSE); } }
+    // / Log the output of the operation to the logfile, if it is not blank.
+    if ($Verbose && trim($returnData) !== '') logEntry('ImageMagick returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+    // / The output file is the only verdict on whether the conversion produced anything.
+    // / This check must stay inside the version gate, or a stale output file from an
+    // / earlier attempt would report success for a conversion that was refused.
+    if (file_exists($newPathname)) $ConversionSuccess = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $newPathname = $height = $width = $extension = $wxh = $rotate = $imgMethod = $wh = $sleepTime = $outputExt = $bgSwitch = NULL;
-  unset($returnData, $stopper, $pathname, $newPathname, $height, $width, $extension, $wxh, $rotate, $imgMethod, $wh, $sleepTime, $outputExt, $bgSwitch);
+  $returnData = $stopper = $pathname = $newPathname = $height = $width = $wxh = $rotate = $wh = $sleepTime = $outputExt = $bgSwitch = $imageVersionIsValid = NULL;
+  unset($returnData, $stopper, $pathname, $newPathname, $height, $width, $wxh, $rotate, $wh, $sleepTime, $outputExt, $bgSwitch, $imageVersionIsValid);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -2310,63 +2359,85 @@ function convertImages($pathname, $newPathname, $height, $width, $rotate) {
 // / When standard mode is deployed, headless execution runs via the classic binary and relies on virtual display frame buffers (xvfb-run).
 // / When modern mode is toggled, it calls an inline Python routine that inserts bundled compiled resources folders straight into system paths.
 // / This allows HRConvert2 to operate headlessly inside system memory arrays without using external package managers or global system binaries.
+// / -----------------------------------------------------------------------------------
+// / A function to convert 3D model formats.
+// / Two utilities cover this between them & neither covers it alone.
+// / MeshLab performs triangulation & manifold normalization on engineering formats.
+// / Assimp handles scene graphs, rigs & the web asset formats MeshLab cannot write.
+// / A mesh format is therefore routed through MeshLab first & Assimp second, & a scene
+// / format goes straight to Assimp.
+// / MeshLab is reachable two ways. The bundled PyMeshLab module needs no display server.
+// / The meshlabserver binary does, so it is run under xvfb-run.
+// / PyMeshLab bypasses the meshlabserver binary entirely, so its version cannot be read &
+// / is not checked. Assimp is checked on every path, because every path uses it.
 function convertModels($pathname, $newPathname) {
   // / Set variables.
   global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumAssimpVersion, $MinimumMeshlabVersion, $UsePyMeshLab, $InstLoc, $DirSep;
-  $ConversionSuccess = $ConversionErrors = FALSE;
-  $returnData = $assimpData = '';
+  $ConversionSuccess = $ConversionErrors = $modelsValid = $assimpVersionOK = $meshLabVersionOK = $readyToConvert = FALSE;
+  $returnData = $assimpData = $inputExt = $pyMeshLabDir = $intermediatePathname = $assimpInput = '';
+  $meshlabOnly = $assimpSupported = array();
   $stopper = 0;
   $sleepTime = $SleepTimer;
-  // / Verify system parameters before execution unless PyMeshLab is bypassing the binary check entirely.
-  if (!$UsePyMeshLab && !verifyModelVersions($MinimumAssimpVersion, $MinimumMeshlabVersion)) {
-    errorEntry('Model conversion aborted because a required 3D dependency version requirement check failed!', 9001, FALSE);
+  // / Detect the installed versions of Assimp & MeshLab.
+  list ($modelsValid, $assimpVersionOK, $meshLabVersionOK) = verifyModelVersions($MinimumAssimpVersion, $MinimumMeshlabVersion);
+  // / Assimp is used by every route, so it is required unconditionally.
+  if (!$assimpVersionOK) {
     $ConversionErrors = TRUE;
-    return array($ConversionSuccess, $ConversionErrors); }
-  if ($Verbose) logEntry('Converting model.');
-  // / Isolate the input file extension to route the model through the proper utility array pathway.
-  $inputExt = strtolower(pathinfo($pathname, PATHINFO_EXTENSION));
-  // / Engineering and CAD interchange assets that require structural triangulation or manifold normalization.
-  $meshlabOnly = array('stl', 'ply', 'off', '3ds');
-  // / Complex skeletal scene graphs or niche data arrays that Assimp can process directly or expand into web assets.
-  $assimpSupported = array('fbx', 'gltf', 'glb', 'obj', 'dae', '3mf', 'x3d', 'dxf', 'bvh', 'ase');
-  // / Establish the custom bundled resources include path for the isolated internal PyMeshLab workspace modules.
-  $pyMeshLabDir = $InstLoc.$DirSep.'Resources'.$DirSep.'PyMeshLab';
-  // / Define an intermediate workspace path to bridge the two command line utilities when using the dual stage workflow.
-  $intermediatePathname = dirname($newPathname).'/rectified_'.basename($newPathname).'.obj';
-  // / This code will attempt the conversion up to $StopCounter number of times.
-  while (!file_exists($newPathname) && $stopper <= $StopCounter) {
-    // / If the last conversion attempt failed, wait a moment before trying again.
-    if ($stopper !== 0) sleep($sleepTime++);
-    // / Route 1 handles formats that benefit immensely from MeshLab processing before hitting Assimp.
-    if (in_array($inputExt, $meshlabOnly)) {
-      // / Select between custom inline python workspace definitions or legacy xvfb-run binary paths.
-      if ($UsePyMeshLab) $returnData = shell_exec('python3 -c "import sys; sys.path.insert(0, '.escapeshellarg($pyMeshLabDir).'); import pymeshlab; ms = pymeshlab.MeshSet(); ms.load_new_mesh('.escapeshellarg($pathname).'); ms.save_current_mesh('.escapeshellarg($intermediatePathname).');"');
-      else $returnData = shell_exec('xvfb-run -a /usr/bin/meshlabserver -i '.escapeshellarg($pathname).' -o '.escapeshellarg($intermediatePathname));
-      $assimpInput = file_exists($intermediatePathname) ? $intermediatePathname : $pathname;
-      $assimpData = shell_exec('/usr/bin/assimp export '.escapeshellarg($assimpInput).' '.escapeshellarg($newPathname)); }
-    // / Route 2 allows Assimp to directly intercept complex rig animation formats and bypass MeshLab entirely.
-    elseif (in_array($inputExt, $assimpSupported)) {
-      $assimpData = shell_exec('/usr/bin/assimp export '.escapeshellarg($pathname).' '.escapeshellarg($newPathname)); }
-    // / Catch-all safety fallback block attempts standard MeshLab conversion if an anonymous extension is parsed.
-    else {
-      if ($UsePyMeshLab) $returnData = shell_exec('python3 -c "import sys; sys.path.insert(0, '.escapeshellarg($pyMeshLabDir).'); import pymeshlab; ms = pymeshlab.MeshSet(); ms.load_new_mesh('.escapeshellarg($pathname).'); ms.save_current_mesh('.escapeshellarg($newPathname).');"');
-      else $returnData = shell_exec('xvfb-run -a /usr/bin/meshlabserver -i '.escapeshellarg($pathname).' -o '.escapeshellarg($newPathname)); }
-    // / Count the number of conversions to avoid infinite loops.
-    $stopper++;
-    // / Stop attempting the conversion after $StopCounter number of attempts.
-    if ($stopper === $StopCounter) {
-      $ConversionErrors = TRUE;
-      errorEntry('The model converter timed out!', 9000, FALSE); } }
-  // / Log the output of the operation to the logfile, if it is not blank.
-  if ($Verbose && trim($returnData) !== '') logEntry('Meshlab processing engine returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-  if ($Verbose && trim($assimpData) !== '') logEntry('Assimp returned the following: '.$Lol.'  '.str_replace($Lol, $Lolol, str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($assimpData)))));
-  // / Erase the temporary asset generated by Stage 1 to prevent storage exhaustion.
-  if (file_exists($intermediatePathname)) unlink($intermediatePathname);
-  if (file_exists($newPathname)) $ConversionSuccess = TRUE;
+    errorEntry('The installed Assimp version is missing, unidentifiable, or too old!', 9001, FALSE); }
+  // / MeshLab is only required when the binary is the one being used.
+  // / PyMeshLab is a bundled python module with no version to interrogate.
+  else if (!$UsePyMeshLab && !$meshLabVersionOK) {
+    $ConversionErrors = TRUE;
+    errorEntry('The installed MeshLab version is missing, unidentifiable, or too old!', 9002, FALSE); }
+  else $readyToConvert = TRUE;
+  if ($readyToConvert) {
+    if ($Verbose) logEntry('Converting model.');
+    // / Isolate the input extension to route the model through the proper utility.
+    $inputExt = strtolower(pathinfo($pathname, PATHINFO_EXTENSION));
+    // / Engineering & CAD formats that need triangulation or manifold normalization first.
+    $meshlabOnly = array('stl', 'ply', 'off', '3ds');
+    // / Scene graphs, rigs & web assets that Assimp reads directly.
+    $assimpSupported = array('fbx', 'gltf', 'glb', 'obj', 'dae', '3mf', 'x3d', 'dxf', 'bvh', 'ase');
+    // / The bundled PyMeshLab workspace, used when the binary is not.
+    $pyMeshLabDir = $InstLoc.$DirSep.'Resources'.$DirSep.'PyMeshLab';
+    // / An intermediate file bridges the two utilities on the two stage route.
+    $intermediatePathname = dirname($newPathname).$DirSep.'rectified_'.basename($newPathname).'.obj';
+    // / This code will attempt the conversion up to $StopCounter number of times.
+    while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+      // / If the last conversion attempt failed, wait a moment before trying again.
+      if ($stopper !== 0) sleep($sleepTime++);
+      // / Route 1. A mesh format is normalized by MeshLab before Assimp writes the output.
+      if (in_array($inputExt, $meshlabOnly)) {
+        if ($UsePyMeshLab) $returnData = shell_exec('python3 -c "import sys; sys.path.insert(0, '.escapeshellarg($pyMeshLabDir).'); import pymeshlab; ms = pymeshlab.MeshSet(); ms.load_new_mesh('.escapeshellarg($pathname).'); ms.save_current_mesh('.escapeshellarg($intermediatePathname).');"');
+        else $returnData = shell_exec('xvfb-run -a /usr/bin/meshlabserver -i '.escapeshellarg($pathname).' -o '.escapeshellarg($intermediatePathname));
+        // / If the first stage produced nothing, hand Assimp the original rather than nothing.
+        $assimpInput = file_exists($intermediatePathname) ? $intermediatePathname : $pathname;
+        $assimpData = shell_exec('/usr/bin/assimp export '.escapeshellarg($assimpInput).' '.escapeshellarg($newPathname)); }
+      // / Route 2. A scene format goes straight to Assimp & bypasses MeshLab entirely.
+      else if (in_array($inputExt, $assimpSupported)) {
+        $assimpData = shell_exec('/usr/bin/assimp export '.escapeshellarg($pathname).' '.escapeshellarg($newPathname)); }
+      // / Route 3. An unrecognized extension is attempted with MeshLab alone.
+      else {
+        if ($UsePyMeshLab) $returnData = shell_exec('python3 -c "import sys; sys.path.insert(0, '.escapeshellarg($pyMeshLabDir).'); import pymeshlab; ms = pymeshlab.MeshSet(); ms.load_new_mesh('.escapeshellarg($pathname).'); ms.save_current_mesh('.escapeshellarg($newPathname).');"');
+        else $returnData = shell_exec('xvfb-run -a /usr/bin/meshlabserver -i '.escapeshellarg($pathname).' -o '.escapeshellarg($newPathname)); }
+      // / Count the number of conversions to avoid infinite loops.
+      $stopper++;
+      // / Stop attempting the conversion after $StopCounter number of attempts.
+      if ($stopper === $StopCounter) {
+        $ConversionErrors = TRUE;
+        errorEntry('The model converter timed out!', 9000, FALSE); } }
+    // / Log the output of each utility to the logfile, if it is not blank.
+    if ($Verbose && trim($returnData) !== '') logEntry('Meshlab processing engine returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+    if ($Verbose && trim($assimpData) !== '') logEntry('Assimp returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($assimpData)))));
+    // / Erase the intermediate file so a two stage conversion leaves nothing behind.
+    if (file_exists($intermediatePathname)) @unlink($intermediatePathname);
+    // / The output file is the only verdict on whether the conversion produced anything.
+    if (file_exists($newPathname)) $ConversionSuccess = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $assimpData = $stopper = $pathname = $newPathname = $intermediatePathname = $assimpInput = $inputExt = $meshlabOnly = $assimpSupported = $pyMeshLabDir = NULL;
-  unset($returnData, $assimpData, $stopper, $pathname, $newPathname, $intermediatePathname, $assimpInput, $inputExt, $meshlabOnly, $assimpSupported, $pyMeshLabDir);
+  $returnData = $assimpData = $stopper = $pathname = $newPathname = $intermediatePathname = $assimpInput = $inputExt = $meshlabOnly = $assimpSupported = $pyMeshLabDir = $sleepTime = $modelsValid = $assimpVersionOK = $meshLabVersionOK = $readyToConvert = NULL;
+  unset($returnData, $assimpData, $stopper, $pathname, $newPathname, $intermediatePathname, $assimpInput, $inputExt, $meshlabOnly, $assimpSupported, $pyMeshLabDir, $sleepTime, $modelsValid, $assimpVersionOK, $meshLabVersionOK, $readyToConvert);
   return array($ConversionSuccess, $ConversionErrors); }
+// / -----------------------------------------------------------------------------------
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -4852,7 +4923,13 @@ list ($LogFileExists, $LogFile, $ClamLogFile) = verifyLogs();
 if (!$LogFileExists) die('ERROR!!! '.$Time.', '.$ApplicationName.'-9, '.$SesHash3.': Could not verify logging environment!');
 if ($Verbose) logEntry('Verified logging environment.');
 
+// / The following code verifies & sanitizes global variables for the session.
+list ($GlobalsAreVerified, $CoreLoaded) = verifyGlobals();
+if (!$GlobalsAreVerified) errorEntry('Could not verify globals!', 11, TRUE);
+else if ($Verbose) logEntry('Verified globals.');
+
 // / The following code decides if the security context being attempted matches a valid CLI or web request.
+// / Error 27 should not be possible & should never be able to fire. If it does something is seriously wrong.
 list($CommandLineHandled, $UserType) = parseCommandLine();
 if ($CommandLineHandled && $UserType === 'web') errorEntry('Could not verify user type!', 27, TRUE);
 if ($CommandLineHandled && $UserType === 'cli') warningEntry('CLI user detected. Conversion operations are disabled.');
@@ -4861,22 +4938,17 @@ if ($CommandLineHandled && $UserType === 'cli') warningEntry('CLI user detected.
 if (!$CommandLineHandled && $UserType === 'web') {
   if ($Verbose) logEntry('Web user detected. Conversion operations are enabled.');
 
-  // / The following code tries to verify that the session is encrypted, if possible.
-  list ($EncryptionVerified, $URLEcho) = verifyEncryption();
-  if (!$EncryptionVerified) errorEntry('Could not verify connection!', 10, TRUE);
-  else if ($Verbose) logEntry('Verified inbound connection.');
-
-  // / The following code verifies & sanitizes global variables for the session.
-  list ($GlobalsAreVerified, $CoreLoaded) = verifyGlobals();
-  if (!$GlobalsAreVerified) errorEntry('Could not verify globals!', 11, TRUE);
-  else if ($Verbose) logEntry('Verified globals.');
-
   // / The following code ensures that the application cannot accidentally or maliciously be run as the root or standard user beyond this point.
   if ($RunningAsRoot or $CurrentUser !== $ApacheUser) errorEntry('The application is being run in an unsupported security context!', 28, TRUE);
   else logEntry('Verified security context. Currently running as the '.$CurrentUser.' user.');
 
   // / Only enable file operations for web users if the current user is the expected www-data user.
   if ($CurrentUser === $ApacheUser) {
+
+    // / The following code tries to verify that the session is encrypted, if possible.
+    list ($EncryptionVerified, $URLEcho) = verifyEncryption();
+    if (!$EncryptionVerified) errorEntry('Could not verify connection!', 10, TRUE);
+    else if ($Verbose) logEntry('Verified inbound connection.');
 
     // / The following code verifies that required directories exist & creates them where needed.
     list ($RequiredDirsExist, $RequiredDirs) = verifyRequiredDirs();
@@ -4920,13 +4992,13 @@ if (!$CommandLineHandled && $UserType === 'web') {
       $GUIDisplayed = showGUI($ShowGUI, $ButtonCode);
       if (!$GUIDisplayed) errorEntry('Could not display GUI!', 17, TRUE);
       else if ($Verbose) logEntry('Displaying the GUI.'); }
-
-      // / Check if we're providing the user with tokens generated during this session, & write that information to the log.
-      // / In no other code path do we generate a new token that gets provided to the user.
-      if (!$TokensAreValid) if ($Verbose) logEntry('Providing user with tokens: '.$Token1.' Token2: '.$Token2.'.');
-
+    
     // / If this is an API call with a simple output, continue without having displayed any GUI at all.
     else if ($Verbose) logEntry('Skipping display GUI procedure.');
+    
+    // / Check if we're providing the user with tokens generated during this session.
+    // / In no other code path do we generate a new token that gets provided to the user.
+    if (!$TokensAreValid && $Verbose) logEntry('Providing user with tokens: '.$Token1.' Token2: '.$Token2.'.');
 
     // / Only enable file related operations if valid tokens were been supplied by the user.
     if ($TokensAreValid) {

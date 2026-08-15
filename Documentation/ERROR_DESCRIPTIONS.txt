@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/10/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/15/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.6.4.
+v3.6.8.
 This plain text file contains descriptions of all the native error messages contained in or produced by the HRConvert2 Diablo engine. 
 These descriptions should give administrators a starting point for debugging problems with HRConvert2 installations. 
 Each section in this file contains information about a different error message. The first one is an example to demonstrate the structure of this file.
@@ -1524,7 +1524,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9001, <SESSION_IDENTIFIER>: One of the 3D Model Converters version is missing, unidentifiable, or too old!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9001, <SESSION_IDENTIFIER>: The installed Assimp version is missing, unidentifiable, or too old!
 
 FILE
   /convertCore.php
@@ -1536,16 +1536,42 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  MeshLab and Assimp are the engines behind every 3D model geometry optimization, rectification, & format conversion.
+  Assimp is one of the engines behind every 3D model geometry optimization, rectification, & format conversion.
   The Model Conversion Engine passes work to them, so no model conversion can succeed without them.
   MeshLab or Assimp may not be installed, or may not be reachable on the system path used by the web server user.
-  The installed binaries may be older than the Minimum MeshLab Version or Minimum Assimp Version settings in config.php.
+  The installed binaries may be older than the Minimum Assimp Version settings in config.php.
   This minimum exists for broad format export array coverage & topological mesh cleaning stabilization & is not a security control.
-  MeshLab changed execution schemes over time, shifting from headless meshlabserver binaries toward virtual frame buffer runners.
-  Assimp requires strict command syntax arrays to correctly isolate and translate skeletal animation data rigs.
   HRConvert2 compares these values numerically down to the minor release branch depth, so all releases are ranked correctly.
   HRConvert2 refuses any build it cannot positively identify, because an unknown build cannot be cleared.
-  Check the installed versions by running 'assimp version' and 'meshlabserver --help' as the web server user.
+  Check the installed versions by running 'assimp version' as the web server user.
+  The conversion sequence is aborted to protect the processing pipeline from invalid command parameters or missing dependencies.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9002, <SESSION_IDENTIFIER>: The installed Meshlab version is missing, unidentifiable, or too old!
+
+FILE
+  /convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  If you get this error, try enabling --Use PyMeshLab Python Bindings-- in config.php.
+  By setting to --Use PyMeshLab Python Bindings-- TRUE, HRConvert2 will use it's bundled version of PyMeshLab instead of the system version of Meshlab.
+  MeshLab is one of the engines behind every 3D model geometry optimization, rectification, & format conversion.
+  The Model Conversion Engine passes work to them, so no model conversion can succeed without them.
+  MeshLab or Assimp may not be installed, or may not be reachable on the system path used by the web server user.
+  The installed binaries may be older than the Minimum MeshLab Version settings in config.php.
+  This minimum exists for broad format export array coverage & topological mesh cleaning stabilization & is not a security control.
+  HRConvert2 compares these values numerically down to the minor release branch depth, so all releases are ranked correctly.
+  HRConvert2 refuses any build it cannot positively identify, because an unknown build cannot be cleared.
+  Check the installed versions by running 'meshlabserver --help' as the web server user.
   The conversion sequence is aborted to protect the processing pipeline from invalid command parameters or missing dependencies.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -3103,6 +3129,495 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29000, <SESSION_IDENTIFIER>: Could not determine the latest release from the update source!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  HRConvert2 asked the update source which release is newest & could not read an answer.
+  This only occurs when the update target is 'latest'. A pinned version needs no such request.
+  The --Automatic Update Target Version-- entry in config.php controls which target is used.
+  The server may have no outbound network access, which is a deliberate configuration on many
+  installations & means automatic updates are not available on this server.
+  The update source may be unreachable, rate limited, or temporarily unavailable.
+  The GitHub API permits sixty unauthenticated requests per hour from one address.
+  The --Update Source Repository-- entry in config.php may name a repository that does not
+  exist, is private, or has no published releases at all.
+  A repository with tags but no releases will fail this check, because a tag & a release are
+  not the same thing to the update source.
+  Pin an exact version in config.php or supply one on the command line to bypass this request.
+  Update HRConvert2 by hand if this server cannot reach the update source at all.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29001, <SESSION_IDENTIFIER>: The requested update target is not a recognized version!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The update target supplied is neither a recognized keyword nor a valid version number.
+  Three targets are accepted & nothing else is.
+  'latest' installs the newest tagged release.
+  'edge' installs the current state of the master branch, which is not a release & carries
+  whatever version stamp master happens to hold.
+  A version of the form v3.6.8 installs exactly that tag.
+  The version pattern is strict. Three numbers separated by dots, with an optional leading v.
+  A partial version such as v3.6 is refused, because it names a series rather than a release.
+  A target is read from the command line first & from --Automatic Update Target Version--
+  in config.php when none was supplied.
+  The target is refused BEFORE any network request is made, because it would otherwise be
+  placed directly into a URL.
+  Supply the target as  -u=v3.6.8  or as  -u v3.6.8  on the command line.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29002, <SESSION_IDENTIFIER>: The requested update version does not exist at the update source!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The update source answered, & said there is no such release.
+  Curl exited with code 22, which is an HTTP error status rather than a transport failure.
+  A version was requested that has never been tagged, or was tagged & later removed.
+  The version may be spelled differently at the source. v3.6.8 & 3.6.8 are the same to
+  HRConvert2 but a tag named 3.6.8 without the v will not be found, because the URL is
+  always built with the v.
+  The --Update Source Repository-- entry in config.php may name the wrong repository.
+  A private repository answers this way to an unauthenticated request, whether or not the
+  version exists. HRConvert2 does not authenticate to the update source.
+  Nothing was changed. The installation is untouched.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29003, <SESSION_IDENTIFIER>: The update package is larger than the configured maximum!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The download was refused because it exceeded --Maximum Update Package Size-- in config.php.
+  The default is one hundred megabytes, which is far larger than any legitimate release.
+  A release that has genuinely grown past the limit needs the limit raised.
+  A release that has not should be treated as suspicious. An update package is application
+  code & is the highest value target in the system, so an unexpectedly large one is refused
+  rather than trusted.
+  The limit exists so a hostile or misconfigured source cannot fill the disk.
+  Nothing was changed. The installation is untouched.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29004, <SESSION_IDENTIFIER>: Could not download the update package! Curl exited with code <ADDITIONAL_DATA>.
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The download failed for a reason other than a missing version or an oversized package.
+  The curl exit code identifies the cause & is recorded in the message.
+  Code 6 means the update source hostname could not be resolved. Check DNS.
+  Code 7 means the connection was refused. Check outbound network access & any firewall.
+  Code 28 means the transfer exceeded --Update Connection Timeout-- in config.php.
+  Code 35 or 60 means a TLS failure. The certificate store may be out of date.
+  Code 127 means curl is not installed. It is required for updates & for stream inspection.
+  Many installations deliberately have no outbound network access, which is a reasonable
+  configuration & means automatic updates are not available on that server.
+  Nothing was changed. The installation is untouched.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29005, <SESSION_IDENTIFIER>: The downloaded update package is empty or too small to be valid!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The download reported success but produced a file under one kilobyte.
+  A release archive is never that small, so whatever arrived is not a release.
+  A proxy or captive portal may have answered instead of the update source.
+  The disk holding the temporary directory may be full.
+  This check exists because a zero byte file extracts to nothing & would otherwise be
+  treated as a valid but empty release.
+  Nothing was changed. The installation is untouched.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29006, <SESSION_IDENTIFIER>: Could not read a configuration file during the merge!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Either the live configuration or the one in the downloaded release could not be read.
+  The live file is at Resources/config.php inside the installation directory.
+  The www-data:www-data user:group needs read access to both.
+  The downloaded release may be incomplete, or may not contain a configuration file at all.
+  Nothing was changed. The installation is untouched.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29007, <SESSION_IDENTIFIER>: Could not merge the configuration file!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The merge itself failed rather than the reading or the writing.
+  The new configuration file provides the structure & the comments. The live file provides
+  the values for every setting that exists in both. A setting that is new keeps its default,
+  & a setting that was removed is discarded with the old file.
+  A failure here means the pattern match over the new file did not complete, which usually
+  means the file is not valid PHP or is not the file HRConvert2 expected to find.
+  Nothing was changed. The installation is untouched.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29008, <SESSION_IDENTIFIER>: Could not write the merged configuration file!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The merge succeeded but the result could not be written back to the staged release.
+  The staged release lives in the system temporary directory at this point.
+  The disk holding that directory may be full.
+  The temporary directory may be mounted read only or with noexec restrictions.
+  Nothing was changed. The installation is untouched.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29009, <SESSION_IDENTIFIER>: Automatic updates are disabled in config.php!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  An update was requested on a server where --Enable Automatic Updates-- is FALSE.
+  This is the default. A server does not gain the ability to replace its own code unless an
+  administrator has deliberately granted it.
+  Set $EnableAutoUpdates to TRUE in config.php to permit updates from the command line.
+  An update is NEVER reachable from the web interface & never will be. Replacing application
+  code requires write access to the installation directory, which is what shell access
+  already implies & is the correct authorization for the operation.
+  Nothing was changed. The installation is untouched.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29010, <SESSION_IDENTIFIER>: Could not create a working directory for the update!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The temporary directory that holds the download & the extracted release could not be made.
+  It is created inside the system temporary directory with a random name & mode 0700.
+  The disk holding the system temporary directory may be full.
+  The system temporary directory may be mounted read only.
+  PHP open_basedir may exclude the system temporary directory.
+  Nothing was changed. The installation is untouched.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29011, <SESSION_IDENTIFIER>: Could not extract the update package!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The package downloaded but tar could not unpack it.
+  The archive may be corrupt or incomplete, which a truncated download would produce.
+  The tar utility may not be installed. It is required for updates.
+  The disk may have filled between the download & the extraction.
+  Retry the update. A corrupt download is usually not repeated.
+  Nothing was changed. The installation is untouched.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29012, <SESSION_IDENTIFIER>: The update package does not have the expected structure!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The extracted package did not contain exactly one top level directory.
+  A release archive from the update source always wraps its contents in a single directory
+  named for the tag or branch it was built from.
+  An archive with no top level directory, or with several, is not a release archive.
+  Whatever was downloaded is not what HRConvert2 expected to receive.
+  Nothing was changed. The installation is untouched.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29013, <SESSION_IDENTIFIER>: The update package does not contain convertCore.php!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The package extracted correctly but has no core file in it.
+  Whatever was downloaded is not HRConvert2.
+  The --Update Source Repository-- entry in config.php may name a different project.
+  This is the last check performed before anything is written outside the temporary
+  directory, & exists so a wrong repository cannot replace an installation with itself.
+  Nothing was changed. The installation is untouched.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29014, <SESSION_IDENTIFIER>: Could not stage the update beside the installation!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The prepared release could not be moved next to the installation directory.
+  It has to be there rather than in the temporary directory, because the swap that follows
+  uses rename(), & rename() is only atomic within one filesystem.
+  The staged copy is written to the parent of the installation directory.
+  The user running the update needs WRITE access to that parent directory, not only to the
+  installation itself. This is a requirement the application does not otherwise have.
+  The disk holding the installation may be full. A staged release is a full second copy of
+  the application, so roughly twice the installed size must be free.
+  Nothing was changed. The installation is untouched.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29015, <SESSION_IDENTIFIER>: Could not move the existing installation aside!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The first of the two renames that perform the swap failed.
+  The installation is replaced by exchanging directories rather than by overwriting files,
+  so that there is never a moment where the installation is half of one version & half of
+  another. This is the first half of that exchange & it did not happen.
+  The user running the update needs write access to the parent of the installation.
+  A file inside the installation may be held open by another process.
+  Nothing was changed. The installation is untouched & is still the version it was.
+  The staged release is left behind & is removed at the start of the next update.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29016, <SESSION_IDENTIFIER>: Could not move the update into place! The previous installation was restored.
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The second of the two renames failed after the first had already succeeded.
+  For a moment there was no installation directory at all. HRConvert2 detected this
+  immediately & renamed the previous installation back into place before doing anything else.
+  The previous version is running. Confirm this with  php convertCore.php -v
+  A concurrent web request during that moment would have failed. It will not fail again.
+  This is close to impossible, because the first rename proved the parent directory is
+  writable & the second rename uses the same directory.
+  A disk that filled between the two renames, or a filesystem remounted read only mid
+  operation, would produce it.
+  Verify the installation with  php convertCore.php -v  before attempting another update.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29017, <SESSION_IDENTIFIER>: The updated installation failed validation & was rolled back!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The new version was installed, could not prove it runs, & the previous one was restored.
+  Validation runs the newly installed core as a separate process & asks it to report its own
+  version. A core that cannot parse, cannot load its configuration, or cannot reach the
+  command line branch will not answer, & that is the condition this catches.
+  A file count or a directory listing would prove nothing about whether the code executes.
+  The previous version is running & the installation is intact.
+  Confirm with  php convertCore.php -v
+  The most likely cause is a configuration merge that produced a file the new core rejects,
+  which happens when a setting changed meaning rather than merely changing name.
+  The second most likely cause is a release that is genuinely broken.
+  The WARNING entries above this error record what was attempted.
+  Pin the previous version in config.php if the newest release cannot be installed.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29018, <SESSION_IDENTIFIER>: The updated installation failed validation & COULD NOT be rolled back!
+
+FILE
+  /convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  THIS IS THE WORST OUTCOME THIS PROCESS CAN PRODUCE & REQUIRES MANUAL INTERVENTION.
+  The new version failed validation, & the attempt to restore the previous version also
+  failed. The installation directory may be absent, incomplete, or a mixture.
+  The application is not serving requests correctly & will not until this is repaired.
+  The previous installation is at the installation path with .old appended, unless the
+  rename that was attempted partially succeeded.
+  Restore it by hand.
+    Stop the web server.
+    Move or delete whatever is at the installation path.
+    Rename the .old directory back to the installation path.
+    Confirm ownership is www-data:www-data throughout.
+    Start the web server & confirm with  php convertCore.php -v
+  The DATA directory holding live user sessions was moved between the two installations
+  during the update. It is in whichever of the two directories still exists.
+  The configuration file is in both. The one in the .old directory is the one that worked.
+  A backup of the previous installation may also exist at the --Backup Location-- from an
+  earlier successful update. That backup is one version older still.
+  This error should not be possible. Something is seriously wrong with the filesystem.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-25000, <SESSION_IDENTIFIER>: The SVG converter timed out!
 
 FILE
@@ -3205,4 +3720,79 @@ ERROR DESCRIPTION
   This may be the result of the files having already been removed by hand outside of HRConvert2.
   This work used to run inside verifyInstallation() before the globals it needed had been defined.
   It now runs after verifyGlobals() and after verifyLogs(), so its failures can be written to the log.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27, <SESSION_IDENTIFIER>: Could not verify user type!
+
+FILE
+  /convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  There was a critical error while trying to determine if the requested operation came from a command line user or a web user.
+  The core could not guarantee that the requested operation is capable of being performed safely.
+  If the requested operation is allowed to proceed; serious security risk or filesystem damage could result.
+  The application was halted to prevent a potentially hazardous or insecure condition.
+  This error should not be possible. Something is serously wrong.
+  The application is being fuzzed, spoofed, or scanned for vulnerabilities.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-28, <SESSION_IDENTIFIER>: The application is being run in an unsupported security context!
+
+FILE
+  /convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The application is being run from a user account that is not www-data, but the requested operation can only be run as www-data.
+  The application is being run as root, but the requested operation cannot or should not be allowed to run as root.
+  An operation was requested via CLI that is only supported via web interface.
+  An operation was requested via web interface that is only supported via CLI.
+  If the requested operation is allowed to proceed; serious security risk or filesystem damage could result.
+  The application was halted to prevent a potentially hazardous or insecure condition.
+  The application is being fuzzed, spoofed, or scanned for vulnerabilities.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29, <SESSION_IDENTIFIER>: An invalid clean operation has been blocked!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  This error should not be possible on stock HRConvert2 components.
+  An HRConvert2 developer working on the codebase has made a grave mistake while calling the cleanDataLoc() function.
+  The core protected the filesystem from an erroneous function call.
+  The cleanDataLoc() function was called against a target that is not the $ConvertLoc or the $ConvertTempDir.
+  The cleanDataLoc() function requires exactly 2 arguments. The first is the path to be cleaned. The second is the name of that path.
+  The only valid input combinations are:   $ConvertLoc, 'ConvertLoc'    or    $ConvertTempDir, 'ConvertTempDir'
+  The reason for the redundant arguments in the cleanDataLoc() function is to prevent accidental filesystem damage during development.
+  If you call the cleanDataLoc() function improperly this error gives you a second chance to fix it.
+  If the requested operation is allowed to proceed; filesystem damage could result.
+  The application was halted to prevent a potentially hazardous condition.
+  The application is being fuzzed, spoofed, or scanned for vulnerabilities.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

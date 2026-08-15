@@ -27,6 +27,48 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap & xvfb-run.
 
 
 --------------------
+COMMIT 8/15/2026
+v3.6.9 - Add auto update via CLI. Add root detection. Improve core logic ordering.
+
+-v3.6.9.
+-Add http:// & https:// filtering to sanitize as the first layer.
+  -This will cleanly remove URLs, in preparation for accepting them as input for stream operations where the URL is missing.
+  -Currently URLs still get sanitized and do not pose a threat because : and / are removed.
+  -This just adds a dedicated layer which removes both http:// and http:// in one pass (each) so the 'http' doesn't contaminate the URL.
+-Update -u & --update arguments to accept version from command line, like -u=edge, or -u=latest, or -u=v3.6.9, or --update=edge, or --update=latest, or --update=v3.6.9
+-Update cleanDataLoc() function to only authorize a clean operation if it is being targetted against the $ConvertLoc or the $ConvertTempDir.
+  -The function will no longer even consider firing the at any other location, or a location that does not match what the calling code specifically intended.
+  -This will hopefully prevent people who are working on the code from clobbering their own installation with the cleanDataLoc() function by accident. It happens.
+  -Add ERROR!!! 29 - 'An invalid clean operation has been blocked!''
+  -Adjust the text of the log from "Deep Cleaned: " to "Files Removed: " which is more accurate, descriptive & straightforward.
+  -Move the log entry to happen only if the $dataLoc even exists.
+    -Previously it would fire any time the function was called, even if no file was cleaned.
+-Add GUI + Language Pack version to -v and --version CLI output.
+-Clean up early return, code quality of convertImages() function.
+-Clean up early return, code quality of convertModels() function.
+  -Separate the assimp & meshlab version detection logic.
+  -Also separate the version reporting when -v or --verbose CLI arguments are used.
+-Add ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29000, <SESSION_IDENTIFIER>: Could not determine the latest release from the update source!
+-Add ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29001, <SESSION_IDENTIFIER>: The requested update target is not a recognized version!
+-Add ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29002, <SESSION_IDENTIFIER>: The requested update version does not exist at the update source!
+-Add ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29003, <SESSION_IDENTIFIER>: The update package is larger than the configured maximum!
+-Add ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29004, <SESSION_IDENTIFIER>: Could not download the update package! Curl exited with code <ADDITIONAL_DATA>.
+-Add ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29005, <SESSION_IDENTIFIER>: The downloaded update package is empty or too small to be valid!
+-Add ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29006, <SESSION_IDENTIFIER>: Could not read a configuration file during the merge!
+-Add ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29007, <SESSION_IDENTIFIER>: Could not merge the configuration file!
+-Add ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29008, <SESSION_IDENTIFIER>: Could not write the merged configuration file!
+-Add ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29009, <SESSION_IDENTIFIER>: Automatic updates are disabled in config.php!
+-Add ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29010, <SESSION_IDENTIFIER>: Could not create a working directory for the update!
+-Add ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29011, <SESSION_IDENTIFIER>: Could not extract the update package!
+-Add ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29012, <SESSION_IDENTIFIER>: The update package does not have the expected structure!
+-Add ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29013, <SESSION_IDENTIFIER>: The update package does not contain convertCore.php!
+-Add ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29014, <SESSION_IDENTIFIER>: Could not stage the update beside the installation!
+-Add ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29015, <SESSION_IDENTIFIER>: Could not move the existing installation aside!
+-Add ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29016, <SESSION_IDENTIFIER>: Could not move the update into place! The previous installation was restored.
+-Add ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29016, <SESSION_IDENTIFIER>: Could not move the update into place! The previous installation was restored.
+-Add ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29018, <SESSION_IDENTIFIER>: The updated installation failed validation & COULD NOT be rolled back!
+
+--------------------
 COMMIT 8/14/2026
 v3.6.8 - Add auto update via CLI. Add root detection. Improve core logic ordering.
 

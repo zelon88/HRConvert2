@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/10/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/15/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.6.5.
+v3.6.8.
 This plain text file describes the process for creating, formatting, and installing additional language packs into HRConvert2.
 
 HARDWARE REQUIREMENTS ... 
@@ -45,7 +45,7 @@ This document will teach administrator and developers how languages are handled 
 In this document when we refer to a GUI, we refer to a set of files required to render HRConvert2.
 In this document when we refer to a language pack, we refer to the files required to localize a GUI into a specific language.
 
-An HRConvert2 Language Pack is made up of 3 components. Each component serves a specific function. The 2 components of a Language Pack are;
+An HRConvert2 Language Pack is made up of 3 components. Each component serves a specific function. The 3 components of a Language Pack are;
 
   1. languageStrings.php
   2. flag.png
@@ -184,7 +184,7 @@ This file must be manually copied & pasted into any folders that are manually cr
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About 'Languages' Folder--
 
-This folder must exist in each language pack.
+This folder must exist in each GUI.
 This folder contains the major language-specific files.
 Each subdirectory of this folder represents a different language pack.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

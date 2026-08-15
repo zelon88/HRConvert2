@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/14/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/15/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.6.8.
+// / v3.6.9.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -37,7 +37,7 @@
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. Replacing config.php with a newer one is the correct fix.
-$ConfigVersion = 'v3.6.8';
+$ConfigVersion = 'v3.6.9';
 
 // / ---Security Informations---
 // /
@@ -667,7 +667,7 @@ $UserSVGInputArray = array('svg', 'plain-svg');
 // /  --Supported SVG Output Formats--
 $UserSVGOutputArray = array('png', 'pdf', 'ps', 'eps', 'emf', 'wmf');
 // /  --Supported Model Formats--
-$UserModelArray = array('stl', 'ply', 'off', '3ds', 'obj', 'fbx', 'dae', 'gltf', 'glb', 'obj', '3mf', 'x3d', 'dxf');
+$UserModelArray = array('stl', 'ply', 'off', '3ds', 'fbx', 'dae', 'gltf', 'glb', 'obj', '3mf', 'x3d', 'dxf');
 // /  --Supported OpenSCAD Formats--
 // /   The first entry must be scad, which is the only input format this converter accepts.
 // /   Every remaining entry is an export format OpenSCAD can produce from 3D geometry.

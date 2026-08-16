@@ -141,7 +141,7 @@ $DeleteDevelopmentDocumentation = FALSE;
 // /   If running in docker, this must be set to FALSE.
 // /   Default is TRUE for bare metal, or VM.
 // /   Default is FALSE for Docker container.
-$RequireSandbox = FALSE;
+$RequireSandbox = TRUE;
 // /  --Require Sandbox On Docker--
 // /   Whether a conversion that cannot be isolated is refused when running in a container.
 // /   This is the container equivalent of --Require Sandbox-- & exists because a container

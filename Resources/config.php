@@ -138,8 +138,10 @@ $DeleteDevelopmentDocumentation = FALSE;
 // /   also --security-opt apparmor=unconfined, or this must be set to FALSE.
 // /   Run  php convertCore.php -v  to see whether this server has a working sandbox.
 // /   Valid options are TRUE or FALSE.
-// /   Default is TRUE.
-$RequireSandbox = TRUE;
+// /   If running in docker, this must be set to FALSE.
+// /   Default is TRUE for bare metal, or VM.
+// /   Default is FALSE for Docker container.
+$RequireSandbox = FALSE;
 // /  --Require Sandbox On Docker--
 // /   Whether a conversion that cannot be isolated is refused when running in a container.
 // /   This is the container equivalent of --Require Sandbox-- & exists because a container

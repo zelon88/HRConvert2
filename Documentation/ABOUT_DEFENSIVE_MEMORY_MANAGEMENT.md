@@ -1,5 +1,27 @@
 # 🧠 Defensive Memory Management: The Null & Unset Paradigm
 
+This document serves to provide information, context, engineering intent, & justification for the unusually thorough form of manual memory management that is required for code contained within the HRConvert2 codebase.
+
+---
+
+## 🛠️ Core Infrastructure Specifications
+
+### Legal & Distribution
+* **Intellectual Property:** HRConvert2 is Copyright © 2026 by Justin Grimes ([GitHub](https://www.github.com/zelon88)).
+* **Licensing Model:** Protected under the strict terms of the **GNU GPLv3 Open-Source License**. Refer to the [Official License Portal](https://www.gnu.org/licenses/gpl-3.0.html) for distribution requirements.
+
+### System Intent
+This application provides a highly accessible, unauthenticated web interface enabling file conversions directly on a server infrastructure using any modern web browser.
+
+| Metric | Minimum Operational Requirements |
+| :--- | :--- |
+| **Hardware** | Raspberry Pi Model B+ (or any standard x86 / x64 architecture computing platform) |
+| **Environment** | Debian Linux + Apache Web Server v2.4 + PHP v8.0 or greater |
+
+> ⚙️ **Core Dependencies:** FFMPEG, Dia, LibreOffice, Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia, and xvfb-run.
+
+---
+
 ## Core Concept
 In public-facing, security-focused open-source applications (such as [HRConvert2](https://github.com/zelon88/HRConvert2)), code is frequently executed on untrusted, compromised, or adversarial infrastructure. To mitigate the risk of variable snooping, memory scraping, and unauthorized data retention, this application implements a strict **User-Land Memory Sanitization Paradigm**:
 

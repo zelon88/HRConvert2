@@ -1717,6 +1717,40 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-10002, <SESSION_IDENTIFIER>: The installed Dia version is missing, unidentifiable, or too old!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Dia could not be verified, so technical drawing conversions cannot be performed.
+  This affects dxf, fig, vdx, dia & wpg. Those formats are converted into images by Dia.
+  SVG is NOT affected. Inkscape handles SVG in a separate converter, because Dia exports
+  SVG without truly rendering it.
+  Install it with  sudo apt install dia
+  The minimum is set by --Minimum Dia Version-- in config.php.
+  Check the installed version by running  dia --version  in a terminal.
+  Dia is one of the few dependencies whose major version is still zero. It has been at
+  0.98 since 2014, so this minimum exists to make a MISSING binary produce a named error
+  rather than a timeout, not because any known version is unsuitable.
+  A build that reports no parseable version is refused, because an unknown build cannot be
+  cleared against a minimum.
+  This check did not exist before v3.7. Dia was invoked blind, & a missing binary produced
+  error 10000, a converter timeout, after the full retry count had elapsed.
+  NOTE. Dia is a GTK application. If a drawing conversion fails INSIDE a working sandbox
+  rather than producing this error, the cause is usually a display requirement. The
+  sandbox provides a private /tmp, so an X socket outside it is not visible.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-11000, <SESSION_IDENTIFIER>: The video converter timed out!
 
 FILE
@@ -2512,6 +2546,83 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15013, <SESSION_IDENTIFIER>: The installed Tesseract version is missing, unidentifiable, or too old!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Tesseract could not be verified, so text cannot be read out of an image.
+  This affects two routes. Reading an image directly, & reading the rasterized pages of a
+  PDF during the advanced OCR method.
+  Reading a PDF that already holds a text layer is NOT affected. That route uses pdftotext.
+  Install it with  sudo apt install tesseract-ocr
+  The minimum is set by --Minimum Tesseract Version-- in config.php & is a REAL floor
+  rather than a formality.
+  Version 3 used a character classifier. Version 4 replaced it with an LSTM engine, & the
+  difference in output quality is large enough that a version 3 result reads as a broken
+  conversion rather than a poor one. A user who does not know which engine ran would
+  reasonably report it as a bug.
+  Version 5 is the current series & is what a modern distribution ships.
+  Check the installed version by running  tesseract --version  in a terminal.
+  The banner lists leptonica, libpng, zlib & a dozen other library versions. The version
+  being checked is the one on the FIRST line, immediately after the product name.
+  A build that reports no parseable version is refused, because an unknown build cannot be
+  cleared against a minimum.
+  This check did not exist before v3.7. Tesseract was invoked blind, & a missing binary
+  produced an empty result & a conversion that reported failure without naming a cause.
+  NOTE. A missing language data package produces a DIFFERENT failure that this check
+  cannot detect. Tesseract itself is present & current, & the conversion still produces
+  nothing. Install tesseract-ocr-<lang> for every language the server needs to read.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15014, <SESSION_IDENTIFIER>: The installed pdftotext version is missing, unidentifiable, or too old!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  pdftotext could not be verified, so an existing text layer cannot be extracted from a PDF.
+  pdftotext is part of the poppler-utils package rather than being a package of its own.
+  Install it with  sudo apt install poppler-utils
+  The minimum is set by --Minimum Pdftotext Version-- in config.php.
+  poppler uses a date style version where the major is the YEAR & the minor is the MONTH,
+  so 24.02 is February 2024 rather than version twenty four point two.
+  Check the installed version by running  pdftotext -v  in a terminal.
+  This minimum exists to make a MISSING binary produce a named error rather than a
+  timeout, not because any known version is unsuitable.
+  A build that reports no parseable version is refused, because an unknown build cannot be
+  cleared against a minimum.
+  THIS ERROR IS NOT ALWAYS FATAL TO THE OPERATION.
+  When it occurs during OCR method 1, the operation falls through to method 2, which
+  rasterizes the page & reads it with Tesseract instead. A server with no poppler can
+  still OCR a PDF, just more slowly & with less exact output.
+  When it occurs during the image fallback route, there is no alternative & the operation
+  fails.
+  This check did not exist before v3.7. pdftotext was invoked blind.
+  NOTE. pdftotext cannot read a scanned page. A PDF with no text layer produces nothing at
+  all even when pdftotext is present & current, which is the entire reason method 2 exists.
+  An empty result is not necessarily a fault in this dependency.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15002, <SESSION_IDENTIFIER>: Could not perform a virus scan!
 
 FILE
@@ -3083,6 +3194,64 @@ ERROR DESCRIPTION
   The device where data is stored has an insufficient amount of storage space available.
   The request contained character types or encoded data that are not supported.
   One of the $_POST or $_GET variables submitted was empty after sanitization.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-22001, <SESSION_IDENTIFIER>: The installed FFMPEG version is missing, unidentifiable, or too old!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The FFMPEG dependency required to convert audio files could not be verified.
+  FFMPEG may not be installed, or may not be reachable on the system path used by the web server user.
+  The installed FFMPEG may be older than the --Minimum FFMPEG Version-- setting in config.php.
+  The installed FFMPEG may be a development or git build which does not report a parseable version number.
+  HRConvert2 refuses any build it cannot positively identify, because an unknown build cannot be cleared.
+  Verify the installed version by running 'ffmpeg -version' as the web server user.
+  This minimum exists for feature and format support and is not a security control.
+  Audio conversions read a local file and never fetch anything remote.
+  The stream playlist protocol bypass affecting older builds cannot reach this operation.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-22002, <SESSION_IDENTIFIER>: The installed FFMPEG version is missing, unidentifiable, or too old!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  FFMPEG could not be verified, so subtitle conversions cannot be performed.
+  FFMPEG performs every subtitle conversion. It is the same binary used for audio & video.
+  The GENERAL minimum is enforced here rather than the stream minimum, because a subtitle
+  conversion reads a local file & never fetches anything remote.
+  The minimum is set by --Minimum FFMPEG Version-- in config.php.
+  Check the installed version by running  ffmpeg -version  in a terminal.
+  A git build reports a commit hash where the version belongs & is refused, because an
+  unknown build cannot be cleared against a minimum.
+  This check did not exist before v3.7. Subtitle conversion was the only FFMPEG route with
+  no version gate at all, & a missing binary produced error 22000, a converter timeout,
+  after the full retry count had elapsed.
+  See error 12001 for the audio route & 11001 for the video route. They enforce the same
+  minimum & differ only in which conversion reported the failure.
+  See error 21002 for the stream route, which enforces a HIGHER minimum because a stream
+  fetches remote content & needs a build carrying the protocol handling fixes.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 

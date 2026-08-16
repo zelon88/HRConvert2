@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/10/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/16/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.6.4.
+v3.7.1.
 This file contains detailed information about the coding & quality conventions in-use 
 in the HRConvert2 codebase.
 
@@ -41,7 +41,7 @@ Devel
 -----------------------------------------------------------------------------------
 
 
------CODING CONVENTIONS-----
+-----GENERAL CODING CONVENTIONS-----
 
 HRConvert2 is built using strict coding & quality conventions to promote quality and 
 consistency within the codebase. Those conventions are detailed here so they can be
@@ -98,6 +98,8 @@ developed in the open, alongside the code they are designed to safeguard.
   in the ERROR_DESCRIPTIONS.txt file.
 
 17. No cookies. No databases. No third party connections. No analytics. No exceptions.
+
+18. If the code needs all capital comments; it's too important.
 -----------------------------------------------------------------------------------
 
 

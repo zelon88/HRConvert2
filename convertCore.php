@@ -1,7 +1,7 @@
 <?php if (php_sapi_name() !== 'cli') print('<!DOCTYPE HTML>'.PHP_EOL);
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/15/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/16/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILEINFORMATION ...
-// / v3.7.0.
+// / v3.7.2.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -192,11 +192,11 @@ function verifyConfigVersion($RequiredConfigVersion) {
     'UserDrawingArray', 'UserSVGInputArray', 'UserSVGOutputArray', 'UserModelArray', 
     'UserSCADArray', 'UserSubtitleInputArray', 'UserSubtitleOutputArray', 'UserPDFWorkArr',
     'AllowStreamOverHTTP', 'StreamWatchTimeout', 'StreamConnectionTimeout',
-    'StreamInspectionLayers', 'StreamInspectionFilesPerLayer',
+    'StreamInspectionLayers', 'StreamInspectionFilesPerLayer', 'MinimumPdftotextVersion',
     'DefaultStreamInspectionForfeitAction', 'MaxStreamInspectionFileSize', 'RequireSandboxOnDocker',
     'AllowSCADIncludeResolution', 'SCADConversionTimeout', 'RequireSandbox', 'ThrowSandboxWarning',
-    'MinimumSCADVersion', 'MinimumFFMPEGVersion', 'MinimumStreamFFMPEGVersion',
-    'MinimumLibreOfficeVersion', 'MinimumInkscapeVersion', 'MinimumImageVersion',
+    'MinimumSCADVersion', 'MinimumFFMPEGVersion', 'MinimumStreamFFMPEGVersion', 'MinimumDiaVersion',
+    'MinimumLibreOfficeVersion', 'MinimumInkscapeVersion', 'MinimumImageVersion', 'MinimumTesseractVersion',
     'MinimumAssimpVersion', 'MinimumMeshlabVersion', 'UsePyMeshLab', 'EnableAutoUpdates', 
     'AutoUpdateTargetVersion', 'UpdateSourceRepository', 'MaxUpdatePackageSize', 'UpdateConnectionTimeout',
     'Minimum7zVersion', 'MinimumZipVersion', 'MinimumRarVersion', 'MinimumTarVersion', 'MinimumMkisofsVersion');
@@ -325,7 +325,7 @@ function resolveSecretFile($secretFile) {
 // / Any other combination gets no secret at all & fails verification.
 function verifyInstallation() {
   // / Set variables.
-  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumImageVersion, $UsePyMeshLab, $MinimumMeshlabVersion, $MinimumAssimpVersion, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $Minimum7zVersion, $MinimumZipVersion, $MinimumRarVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels;
+  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumImageVersion, $UsePyMeshLab, $MinimumMeshlabVersion, $MinimumAssimpVersion, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $Minimum7zVersion, $MinimumZipVersion, $MinimumRarVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumDiaVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels;
   $InstallationIsVerified = $RunningFromCLI = $RunningAsRoot = $RunningInContainer = FALSE;
   $secretAuthorized = $userSecretAuthorized = $secretIsReady = $configIsValid = FALSE;
   $SecretKey = $CurrentUser = $detectedConfigVersion = $configFile = $secretFolder = $secretFile = '';
@@ -356,13 +356,13 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
-  $HRConvertVersion = 'v3.7.0';
+  $HRConvertVersion = 'v3.7.2';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
   // / A release that changes no settings leaves this alone, so existing config files keep working.
   // / Any config.php version that is greater (newer) than the version listed below is considered acceptable.
-  $RequiredConfigVersion = 'v3.7.0';
+  $RequiredConfigVersion = 'v3.7.2';
   $RequiredConfigVersion = ltrim($RequiredConfigVersion, 'vV');
   // / Define the minimum acceptable GUI version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
@@ -401,7 +401,9 @@ function verifyInstallation() {
   // / The directory is created if it does not exist, because this is the first thing that
   // / user has ever asked HRConvert2 to do.
   else if ($userSecretAuthorized) {
-    $secretFolder = getenv('HOME').DIRECTORY_SEPARATOR.'.HRConvert2';
+    $secretFolder = getenv('HOME');
+    if ($secretFolder === FALSE or $secretFolder === '') $secretFolder = sys_get_temp_dir();
+    $secretFolder = $secretFolder.DIRECTORY_SEPARATOR.'.HRConvert2';
     $LogDir = $secretFolder.DIRECTORY_SEPARATOR.'Logs'.DIRECTORY_SEPARATOR;
     if (!is_dir($secretFolder)) @mkdir($secretFolder, 0700, TRUE);
     if (is_dir($secretFolder)) {
@@ -914,13 +916,6 @@ function verifyGlobals() {
   $CoreLoaded = TRUE;
   $SleepTimer = 0;
   $StopCounter = $RetryCount;
-
-  // / Determine the user who is currently executing the script.
-  // / If convertCore.php is called by the web server to serve a web client this should be www-data.
-  // / If someone is running convertCore.php from a CLI tool as a non-root user, this will be that users username.
-  // / If someone is running convertCore.php from a CLI tool as root user, this will be root.
-  // / Some systems have posix extensions that make checking the current username very fast.
-  if (function_exists('posix_getpwuid') && function_exists('posix_geteuid')) $CurrentUser = posix_getpwuid(posix_geteuid())['name'];
   // / Convinience variables.
   $DirSep = DIRECTORY_SEPARATOR;
   $Lol = PHP_EOL;
@@ -1023,48 +1018,49 @@ function verifyGlobals() {
   return array($GlobalsAreVerified, $CoreLoaded); }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
-// / A function to confirm the installed FFMPEG meets a minimum version.
-// / The minimum arrives as an argument so different operations can require different builds.
-// / Audio & video conversions read a local file & never fetch anything remote.
-// / Stream conversions do fetch, & FFMPEG v2.0 through v6.0 bypass the protocol whitelist.
-// / Those builds apply their own whitelist to segments referenced inside a playlist.
-// / A build that reports no parseable version is refused, because an unknown build cannot be cleared.
-// / FFMPEG reports its version in three different shapes depending on how it was built.
-// / A release build reports something like "ffmpeg version 6.1.1".
-// / A distribution build reports something like "ffmpeg version 7.1-1ubuntu1".
-// / A git build reports something like "ffmpeg version N-109534-g1b2c3d4" & carries no usable number.
+// / A function to confirm the installed FFMPEG meets the minimum version required.
+// / Accepts the minimum version as major.minor.
+// / Returns the absolute path of the binary that was verified, or FALSE.
+// / A path is returned ONLY when the binary was found & its version satisfies the minimum,
+// / so a caller holding a path may use it without checking anything else.
+// / The binary is located rather than assumed, & the located binary is the one whose
+// / version is read, so the version verified is provably the version that will run.
+// / TWO different minimums are enforced against this one binary & the caller supplies the
+// / one it needs. An ordinary audio or video conversion reads a local file. A stream
+// / conversion fetches remote content & needs a build carrying the protocol handling fixes,
+// / so it passes a higher minimum than the others do.
+// / A git build reports a hash rather than a version & is refused, because an unknown build
+// / cannot be cleared against a minimum.
 function verifyFFMPEGVersion($MinimumVersion) {
   // / Set variables.
   global $Verbose;
-  $FFMPEGVersionIsValid = FALSE;
+  $FFMPEGBinary = FALSE;
+  $locatedBinary = $detectedVersion = '';
   $versionOutput = $versionMatches = $minimumParts = array();
   $versionExitCode = 1;
-  $detectedVersion = '';
   $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
-  // / FFMPEG writes its version banner to standard error, so it must be redirected to be captured.
-  exec('ffmpeg -version 2>&1', $versionOutput, $versionExitCode);
-  if ($versionExitCode === 0 && !empty($versionOutput)) {
-    // / Match a major.minor pair immediately following the word version.
-    // / Anchoring on that word prevents a match against a library version further down the banner.
-    if (preg_match('/ffmpeg version n?(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
-      $detectedMajor = (int)$versionMatches[1];
-      $detectedMinor = (int)$versionMatches[2];
-      $detectedVersion = $detectedMajor.'.'.$detectedMinor;
-      // / Split the supplied minimum into the same two parts.
-      $minimumParts = explode('.', $MinimumVersion);
-      $minimumMajor = (int)($minimumParts[0] ?? 0);
-      $minimumMinor = (int)($minimumParts[1] ?? 0);
-      // / Compare numerically, never as strings.
-      // / A string comparison would rank version 10.0 below version 6.0.
-      if ($detectedMajor > $minimumMajor) $FFMPEGVersionIsValid = TRUE;
-      elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $FFMPEGVersionIsValid = TRUE; } }
-  if ($Verbose) logEntry('FFMPEG Version Check: '.($FFMPEGVersionIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later.');
+  $locatedBinary = locateDependency('ffmpeg');
+  if ($locatedBinary !== '') {
+    exec(escapeshellarg($locatedBinary).' -version 2>&1', $versionOutput, $versionExitCode);
+    if ($versionExitCode === 0 && !empty($versionOutput)) {
+      // / Anchor on the product name. A git build reports a hash where the version belongs
+      // / & will not match this pattern, which is the correct outcome.
+      if (preg_match('/ffmpeg version\s+n?(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
+        $detectedMajor = (int)$versionMatches[1];
+        $detectedMinor = (int)$versionMatches[2];
+        $detectedVersion = $detectedMajor.'.'.$detectedMinor;
+        $minimumParts = explode('.', $MinimumVersion);
+        $minimumMajor = (int)($minimumParts[0] ?? 0);
+        $minimumMinor = (int)($minimumParts[1] ?? 0);
+        // / Compare numerically, never as strings. A string comparison ranks 6.1 below 5.9.
+        if ($detectedMajor > $minimumMajor) $FFMPEGBinary = $locatedBinary;
+        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $FFMPEGBinary = $locatedBinary; } } }
+  if ($Verbose) logEntry('FFMPEG Version Check: '.($FFMPEGBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later'.($FFMPEGBinary === FALSE ? '' : ', Using: '.$FFMPEGBinary).'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $versionOutput = $versionMatches = $versionExitCode = $detectedVersion = $minimumParts = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumVersion = NULL;
-  unset($versionOutput, $versionMatches, $versionExitCode, $detectedVersion, $minimumParts, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
-  return $FFMPEGVersionIsValid; }
+  $locatedBinary = $detectedVersion = $versionOutput = $versionMatches = $minimumParts = $versionExitCode = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumVersion = NULL;
+  unset($locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
+  return $FFMPEGBinary; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1157,282 +1153,434 @@ function verifyImageVersion($MinimumVersion) {
   return $ImageBinary; }
 // / -----------------------------------------------------------------------------------
 
-// / -----------------------------------------------------------------------------------
-// / A function to confirm both MeshLab and Assimp match the minimum required target branches.
-// / Combining the verification checks into a single module helps to protect the double-stage
-// / pipeline by ensuring that neither the repair layer nor the export engine fail due to version limits.
-// / Assimp writes details like "assimp 5.4.3" to standard output when using its version argument.
-// / Legacy MeshLab configurations write build definitions natively to standard error pipes.
-// / If either binary is missing or fails to report a readable pattern, verification fails.
-function verifyModelVersions($AssimpMinVersion, $MeshlabMinVersion) {
+// / A function to verify both utilities a 3D model conversion depends on.
+// / Accepts the minimum Assimp version & the minimum MeshLab version, in that order.
+// / Returns an overall boolean, the Assimp path & the MeshLab path, in that order.
+// / Each path is the absolute path of a verified binary, or FALSE.
+// / The overall boolean reports whether the model SUBSYSTEM is functional, which is not
+// / derivable from the two paths alone. MeshLab is only needed when the binary is the one
+// / being used, so a server running PyMeshLab is fully functional without it.
+// / Assimp is required by every route & MeshLab only by the mesh routes, so a caller taking
+// / the scene route tests the Assimp path alone rather than the overall boolean.
+// / Neither utility reports its version in the ordinary way.
+// / Assimp uses a subcommand rather than a flag, & prints a banner with the version several
+// / lines down, so the pattern anchors on the word Version rather than the first number.
+// / meshlabserver is a Qt application & will not start without a display, even to print its
+// / own version, so it runs under xvfb-run exactly as the conversion does.
+// / Neither exit code is consulted, because both print a usable banner while exiting non zero.
+// / MeshLab uses date style version numbers such as 2020.09, so the two parts are compared
+// / numerically & a build reporting 2020.9 satisfies a minimum of 2020.09.
+// / PyMeshLab is a bundled python module with no version to interrogate, so it is never
+// / checked & its use is what makes a missing MeshLab binary acceptable.
+function verifyModelVersions($MinimumAssimpVersion, $MinimumMeshlabVersion) {
   // / Set variables.
-  global $Verbose;
-  $ModelsValid = $AssimpValid = $MeshlabValid = FALSE;
-  $assimpOut = $meshlabOut = $assimpMatch = $meshlabMatch = $assimpMinParts = $meshlabMinParts = array();
-  $assimpCode = $meshlabCode = 1;
-  $assimpDet = $meshlabDet = '';
-  $aDetMaj = $aDetMin = $aMinMaj = $aMinMin = 0;
-  $mDetMaj = $mDetMin = $mMinMaj = $mMinMin = 0;
-  // / Phase 1: Query the standalone Assimp command line tool version metadata block.
-  // / Redirect standard error to standard output to force PHP to capture the token stream.
-  exec('/usr/bin/assimp version 2>&1', $assimpOut, $assimpCode);
-  if (!empty($assimpOut)) {
-    // / Parse the major and minor numerical components out of the standard version string.
-    // / The match pattern securely looks for standalone version integers inside the banner arrays.
-    if (preg_match('/Version\s+(\d+)\.(\d+)/i', implode(' ', $assimpOut), $assimpMatch)) {
-      $aDetMaj = (int)$assimpMatch[1];
-      $aDetMin = (int)$assimpMatch[2];
-      $assimpDet = $aDetMaj.'.'.$aDetMin;
-      $assimpMinParts = explode('.', $AssimpMinVersion);
-      $aMinMaj = (int)($assimpMinParts[0] ?? 0);
-      $aMinMin = (int)($assimpMinParts[1] ?? 0);
-      // / Compare boundaries numerically to accurately rank newer releases over baseline branches.
-      if ($aDetMaj > $aMinMaj) $AssimpValid = TRUE;
-      elseif ($aDetMaj === $aMinMaj && $aDetMin >= $aMinMin) $AssimpValid = TRUE; } }
-  // / Phase 2: Query the headless MeshLab server processor build metadata strings.
-  // / MeshLab releases typically expose code signatures like "MeshLabServer v2020.09" or similar tags.
-  exec('xvfb-run -a /usr/bin/meshlabserver --help 2>&1', $meshlabOut, $meshlabCode);
-  if (!empty($meshlabOut)) {
-    // / Isolate the first chronological sequence matching structural year or version decimals.
-    // / The match block handles both prefix strings and clean colon metadata properties smoothly.
-    if (preg_match('/MeshLab(?:Server)?\s*(?:v|version)?:?\s*(\d+)\.(\d+)/i', implode(' ', $meshlabOut), $meshlabMatch)) {
-      $mDetMaj = (int)$meshlabMatch[1];
-      $mDetMin = (int)$meshlabMatch[2];
-      $meshlabDet = $mDetMaj.'.'.$mDetMin;
-      $meshlabMinParts = explode('.', $MeshlabMinVersion);
-      $mMinMaj = (int)($meshlabMinParts[0] ?? 0);
-      $mMinMin = (int)($meshlabMinParts[1] ?? 0);
-      // / Establish validation checkpoints matching your core configuration patterns.
-      if ($mDetMaj > $mMinMaj) $MeshlabValid = TRUE;
-      elseif ($mDetMaj === $mMinMaj && $mDetMin >= $mMinMin) $MeshlabValid = TRUE; } }
-  // / The model subsystem passes verification only if both individual platforms match conditions.
-  if ($AssimpValid && $MeshlabValid) $ModelsValid = TRUE;
-  if ($Verbose) {
-    logEntry('Assimp Subsystem Check: '.($AssimpValid ? 'PASSED' : 'FAILED').', Detected: '.($assimpDet === '' ? 'NONE' : $assimpDet).', Required: '.$AssimpMinVersion.' or later.');
-    logEntry('MeshLab Subsystem Check: '.($MeshlabValid ? 'PASSED' : 'FAILED').', Detected: '.($meshlabDet === '' ? 'NONE' : $meshlabDet).', Required: '.$MeshlabMinVersion.' or later.'); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $assimpOut = $meshlabOut = $assimpMatch = $meshlabMatch = $assimpMinParts = $meshlabMinParts = $assimpCode = $meshlabCode = $assimpDet = $meshlabDet = $aDetMaj = $aDetMin = $aMinMaj = $aMinMin = $mDetMaj = $mDetMin = $mMinMaj = $mMinMin = NULL;
-  unset($assimpOut, $meshlabOut, $assimpMatch, $meshlabMatch, $assimpMinParts, $meshlabMinParts, $assimpCode, $meshlabCode, $assimpDet, $meshlabDet, $aDetMaj, $aDetMin, $aMinMaj, $aMinMin, $mDetMaj, $mDetMin, $mMinMaj, $mMinMin);
-  return array($ModelsValid, $AssimpValid, $MeshlabValid); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to confirm the installed OpenSCAD meets the minimum version HRConvert2 requires.
-// / HRConvert2 does not probe for capabilities & does not accommodate older builds.
-// / A pinned minimum version means the export formats in config.php can be trusted as written.
-// / OpenSCAD reports its version as "OpenSCAD version YYYY.MM" on standard error, not standard output.
-function verifySCADVersion($MinimumSCADVersion) {
-  // / Set variables.
-  global $Verbose;
-  $SCADVersionIsValid = FALSE;
-  $versionOutput = $versionMatches = array();
+  global $Verbose, $UsePyMeshLab;
+  $ModelsAreValid = FALSE;
+  $AssimpBinary = $MeshlabBinary = FALSE;
+  $locatedBinary = $detectedAssimp = $detectedMeshlab = '';
+  $versionOutput = $versionMatches = $minimumParts = array();
   $versionExitCode = 1;
-  $detectedVersion = '';
-  // / OpenSCAD writes its version banner to standard error, so it must be redirected to be captured.
-  exec('openscad --version 2>&1', $versionOutput, $versionExitCode);
-  if ($versionExitCode === 0 && !empty($versionOutput)) {
-    // / Match the YYYY.MM release stamp anywhere in the banner.
-    if (preg_match('/(\d{4})\.(\d{2})/', implode(' ', $versionOutput), $versionMatches)) {
-      $detectedVersion = $versionMatches[1].'.'.$versionMatches[2];
-      // / A plain string comparison is correct here because the format is fixed width & zero padded.
-      if ($detectedVersion >= $MinimumSCADVersion) $SCADVersionIsValid = TRUE; } }
-  if ($Verbose) logEntry('OpenSCAD Version Check: '.($SCADVersionIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumSCADVersion.'.');
+  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
+  // / Assimp reports its version through the version subcommand, not through a flag.
+  $locatedBinary = locateDependency('assimp');
+  if ($locatedBinary !== '') {
+    $versionOutput = array();
+    exec(escapeshellarg($locatedBinary).' version 2>&1', $versionOutput, $versionExitCode);
+    if (!empty($versionOutput)) {
+      if (preg_match('/Version\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
+        $detectedMajor = (int)$versionMatches[1];
+        $detectedMinor = (int)$versionMatches[2];
+        $detectedAssimp = $detectedMajor.'.'.$detectedMinor;
+        $minimumParts = explode('.', $MinimumAssimpVersion);
+        $minimumMajor = (int)($minimumParts[0] ?? 0);
+        $minimumMinor = (int)($minimumParts[1] ?? 0);
+        if ($detectedMajor > $minimumMajor) $AssimpBinary = $locatedBinary;
+        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $AssimpBinary = $locatedBinary; } } }
+  // / MeshLab is provided by the meshlabserver binary when PyMeshLab is not in use.
+  $locatedBinary = locateDependency('meshlabserver');
+  if ($locatedBinary !== '') {
+    $versionOutput = array();
+    exec('xvfb-run -a '.escapeshellarg($locatedBinary).' --version 2>&1', $versionOutput, $versionExitCode);
+    if (!empty($versionOutput)) {
+      if (preg_match('/(\d{4})\.(\d+)/', implode(' ', $versionOutput), $versionMatches)) {
+        $detectedMajor = (int)$versionMatches[1];
+        $detectedMinor = (int)$versionMatches[2];
+        $detectedMeshlab = $detectedMajor.'.'.$versionMatches[2];
+        $minimumParts = explode('.', $MinimumMeshlabVersion);
+        $minimumMajor = (int)($minimumParts[0] ?? 0);
+        $minimumMinor = (int)($minimumParts[1] ?? 0);
+        // / A leading zero must not survive into the comparison. 2020.09 is month nine &
+        // / (int)'09' is nine, so a build reporting 2020.9 satisfies it correctly.
+        if ($detectedMajor > $minimumMajor) $MeshlabBinary = $locatedBinary;
+        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $MeshlabBinary = $locatedBinary; } } }
+  // / The subsystem is functional when Assimp works & the MeshLab requirement is satisfied
+  // / either by the binary or by PyMeshLab standing in for it.
+  if ($AssimpBinary !== FALSE && ($UsePyMeshLab or $MeshlabBinary !== FALSE)) $ModelsAreValid = TRUE;
+  if ($Verbose) {
+    logEntry('Assimp Version Check: '.($AssimpBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedAssimp === '' ? 'NONE' : $detectedAssimp).', Required: '.$MinimumAssimpVersion.' or later'.($AssimpBinary === FALSE ? '' : ', Using: '.$AssimpBinary).'.');
+    logEntry('MeshLab Version Check: '.($MeshlabBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedMeshlab === '' ? 'NONE' : $detectedMeshlab).', Required: '.$MinimumMeshlabVersion.' or later'.($MeshlabBinary === FALSE ? '' : ', Using: '.$MeshlabBinary).($UsePyMeshLab ? ', PyMeshLab is in use & the binary is not required.' : '.')); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $versionOutput = $versionMatches = $versionExitCode = $detectedVersion = NULL;
-  unset($versionOutput, $versionMatches, $versionExitCode, $detectedVersion);
-  return $SCADVersionIsValid; }
+  $locatedBinary = $detectedAssimp = $detectedMeshlab = $versionOutput = $versionMatches = $minimumParts = $versionExitCode = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumAssimpVersion = $MinimumMeshlabVersion = NULL;
+  unset($locatedBinary, $detectedAssimp, $detectedMeshlab, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumAssimpVersion, $MinimumMeshlabVersion);
+  return array($ModelsAreValid, $AssimpBinary, $MeshlabBinary); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to confirm the installed Inkscape meets the minimum version HRConvert2 requires.
-// / Inkscape replaced its entire command line interface at version 1.0.
-// / The 0.92 flags such as --export-png were removed rather than deprecated, so a command
-// / written for the current interface fails outright on an older build.
-// / Inkscape reports its version as "Inkscape 1.2.2 (b0a8486541, 2022-12-01)".
-// / The version is written to standard output, unlike OpenSCAD which writes to standard error.
-// / A build that reports no parseable version is refused, because an unknown build cannot be cleared.
-// / Inkscape requires a writable HOME directory & will fail to start without one.
-// / The core sets HOME to the configured home location during verifyGlobals().
+// / A function to confirm the installed Dia meets the minimum version required.
+// / Accepts the minimum version as major.minor.
+// / Returns the absolute path of the binary that was verified, or FALSE.
+// / A path is returned ONLY when the binary was found & its version satisfies the minimum,
+// / so a caller holding a path may use it without checking anything else.
+// / Dia reports its version as "Dia version 0.98.0" & is one of the few dependencies whose
+// / major version is zero, so the comparison must not assume a non zero major.
+// / Dia is a GTK application. It accepts --version without a display, but a CONVERSION may
+// / still need one. If a drawing conversion fails inside a working sandbox rather than
+// / being refused, a missing display is the first thing to suspect & xvfb-run is the answer.
+// / A build that reports no parseable version is refused, because an unknown build cannot
+// / be cleared against a minimum.
+function verifyDrawingVersion($MinimumVersion) {
+  // / Set variables.
+  global $Verbose;
+  $DrawingBinary = FALSE;
+  $locatedBinary = $detectedVersion = '';
+  $versionOutput = $versionMatches = $minimumParts = array();
+  $versionExitCode = 1;
+  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
+  $locatedBinary = locateDependency('dia');
+  if ($locatedBinary !== '') {
+    exec(escapeshellarg($locatedBinary).' --version 2>&1', $versionOutput, $versionExitCode);
+    if (!empty($versionOutput)) {
+      // / Anchor on the product name so nothing else in the banner can be matched instead.
+      if (preg_match('/Dia\s+version\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
+        $detectedMajor = (int)$versionMatches[1];
+        $detectedMinor = (int)$versionMatches[2];
+        $detectedVersion = $detectedMajor.'.'.$versionMatches[2];
+        $minimumParts = explode('.', $MinimumVersion);
+        $minimumMajor = (int)($minimumParts[0] ?? 0);
+        $minimumMinor = (int)($minimumParts[1] ?? 0);
+        // / Compare numerically, never as strings. A string comparison ranks 0.98 below 0.9.
+        if ($detectedMajor > $minimumMajor) $DrawingBinary = $locatedBinary;
+        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $DrawingBinary = $locatedBinary; } } }
+  if ($Verbose) logEntry('Dia Version Check: '.($DrawingBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later'.($DrawingBinary === FALSE ? '' : ', Using: '.$DrawingBinary).'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $locatedBinary = $detectedVersion = $versionOutput = $versionMatches = $minimumParts = $versionExitCode = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumVersion = NULL;
+  unset($locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
+  return $DrawingBinary; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to verify both utilities an OCR operation depends on.
+// / Accepts the minimum Tesseract version & the minimum pdftotext version, in that order.
+// / Returns an overall boolean, the Tesseract path & the pdftotext path, in that order.
+// / Each path is the absolute path of a verified binary, or FALSE.
+// / The overall boolean reports whether the OCR SUBSYSTEM is functional, which means both,
+// / because the two routes through ocrFiles() need different ones & a caller taking a
+// / single route tests that route's path rather than the overall boolean.
+// / Tesseract reads an image directly. pdftotext reads a PDF that already holds a text
+// / layer. Neither substitutes for the other.
+// / Tesseract prints a long banner listing every library it was built against, so the
+// / pattern anchors on the product name to avoid matching a dependency version instead.
+// / pdftotext is part of poppler-utils & reports a date style version such as 24.02.0,
+// / where the major is the year & the minor is the month.
+// / Neither exit code is consulted, because both print a usable banner while exiting non zero.
+function verifyOCRVersions($MinimumTesseractVersion, $MinimumPdftotextVersion) {
+  // / Set variables.
+  global $Verbose;
+  $OCRToolsAreValid = FALSE;
+  $TesseractBinary = $PdftotextBinary = FALSE;
+  $locatedBinary = $detectedTesseract = $detectedPdftotext = '';
+  $versionOutput = $versionMatches = $minimumParts = array();
+  $versionExitCode = 1;
+  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
+  // / Tesseract reads an image & produces text. It is the primary OCR engine.
+  $locatedBinary = locateDependency('tesseract');
+  if ($locatedBinary !== '') {
+    $versionOutput = array();
+    exec(escapeshellarg($locatedBinary).' --version 2>&1', $versionOutput, $versionExitCode);
+    if (!empty($versionOutput)) {
+      // / Anchor on the product name. The banner lists leptonica, libpng, zlib & a dozen
+      // / other versions, & an unanchored pattern would match whichever came first.
+      if (preg_match('/tesseract\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
+        $detectedMajor = (int)$versionMatches[1];
+        $detectedMinor = (int)$versionMatches[2];
+        $detectedTesseract = $detectedMajor.'.'.$versionMatches[2];
+        $minimumParts = explode('.', $MinimumTesseractVersion);
+        $minimumMajor = (int)($minimumParts[0] ?? 0);
+        $minimumMinor = (int)($minimumParts[1] ?? 0);
+        if ($detectedMajor > $minimumMajor) $TesseractBinary = $locatedBinary;
+        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $TesseractBinary = $locatedBinary; } } }
+  // / pdftotext extracts an existing text layer & cannot read a scanned page.
+  $locatedBinary = locateDependency('pdftotext');
+  if ($locatedBinary !== '') {
+    $versionOutput = array();
+    exec(escapeshellarg($locatedBinary).' -v 2>&1', $versionOutput, $versionExitCode);
+    if (!empty($versionOutput)) {
+      if (preg_match('/pdftotext\s+version\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
+        $detectedMajor = (int)$versionMatches[1];
+        $detectedMinor = (int)$versionMatches[2];
+        $detectedPdftotext = $detectedMajor.'.'.$versionMatches[2];
+        $minimumParts = explode('.', $MinimumPdftotextVersion);
+        $minimumMajor = (int)($minimumParts[0] ?? 0);
+        $minimumMinor = (int)($minimumParts[1] ?? 0);
+        // / The major is a YEAR & the minor is a MONTH, so a leading zero must not survive
+        // / into the comparison. 24.02 is month two & (int)'02' is two.
+        if ($detectedMajor > $minimumMajor) $PdftotextBinary = $locatedBinary;
+        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $PdftotextBinary = $locatedBinary; } } }
+  // / Both are required for the subsystem to be considered functional, because the two
+  // / routes through an OCR operation use different ones & neither substitutes for the other.
+  if ($TesseractBinary !== FALSE && $PdftotextBinary !== FALSE) $OCRToolsAreValid = TRUE;
+  if ($Verbose) {
+    logEntry('Tesseract Version Check: '.($TesseractBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedTesseract === '' ? 'NONE' : $detectedTesseract).', Required: '.$MinimumTesseractVersion.' or later'.($TesseractBinary === FALSE ? '' : ', Using: '.$TesseractBinary).'.');
+    logEntry('Pdftotext Version Check: '.($PdftotextBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedPdftotext === '' ? 'NONE' : $detectedPdftotext).', Required: '.$MinimumPdftotextVersion.' or later'.($PdftotextBinary === FALSE ? '' : ', Using: '.$PdftotextBinary).'.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $locatedBinary = $detectedTesseract = $detectedPdftotext = $versionOutput = $versionMatches = $minimumParts = $versionExitCode = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumTesseractVersion = $MinimumPdftotextVersion = NULL;
+  unset($locatedBinary, $detectedTesseract, $detectedPdftotext, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumTesseractVersion, $MinimumPdftotextVersion);
+  return array($OCRToolsAreValid, $TesseractBinary, $PdftotextBinary); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to confirm the installed OpenSCAD meets the minimum version required.
+// / Accepts the minimum version as YYYY.MM.
+// / Returns the absolute path of the binary that was verified, or FALSE.
+// / A path is returned ONLY when the binary was found & its version satisfies the minimum,
+// / so a caller holding a path may use it without checking anything else.
+// / OpenSCAD writes its version banner to standard ERROR rather than standard output, so
+// / stderr is redirected into the captured output & the exit code cannot be relied upon.
+// / OpenSCAD uses a year & month rather than a major & minor, so the comparison is on the
+// / year first & the month second, both numerically.
+// / A build that reports no parseable version is refused, because an unknown build cannot
+// / be cleared against a minimum.
+function verifySCADVersion($MinimumVersion) {
+  // / Set variables.
+  global $Verbose;
+  $SCADBinary = FALSE;
+  $locatedBinary = $detectedVersion = '';
+  $versionOutput = $versionMatches = $minimumParts = array();
+  $versionExitCode = 1;
+  $detectedYear = $detectedMonth = $minimumYear = $minimumMonth = 0;
+  $locatedBinary = locateDependency('openscad');
+  if ($locatedBinary !== '') {
+    exec(escapeshellarg($locatedBinary).' --version 2>&1', $versionOutput, $versionExitCode);
+    if (!empty($versionOutput)) {
+      if (preg_match('/OpenSCAD\s+version\s+(\d{4})\.(\d{2})/i', implode(' ', $versionOutput), $versionMatches)) {
+        $detectedYear = (int)$versionMatches[1];
+        $detectedMonth = (int)$versionMatches[2];
+        $detectedVersion = $versionMatches[1].'.'.$versionMatches[2];
+        $minimumParts = explode('.', $MinimumVersion);
+        $minimumYear = (int)($minimumParts[0] ?? 0);
+        $minimumMonth = (int)($minimumParts[1] ?? 0);
+        // / Compare numerically. A string comparison ranks 2021.10 below 2021.09.
+        if ($detectedYear > $minimumYear) $SCADBinary = $locatedBinary;
+        elseif ($detectedYear === $minimumYear && $detectedMonth >= $minimumMonth) $SCADBinary = $locatedBinary; } } }
+  if ($Verbose) logEntry('OpenSCAD Version Check: '.($SCADBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later'.($SCADBinary === FALSE ? '' : ', Using: '.$SCADBinary).'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $locatedBinary = $detectedVersion = $versionOutput = $versionMatches = $minimumParts = $versionExitCode = $detectedYear = $detectedMonth = $minimumYear = $minimumMonth = $MinimumVersion = NULL;
+  unset($locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedYear, $detectedMonth, $minimumYear, $minimumMonth, $MinimumVersion);
+  return $SCADBinary; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to confirm the installed Inkscape meets the minimum version required.
+// / Accepts the minimum version as major.minor.
+// / Returns the absolute path of the binary that was verified, or FALSE.
+// / A path is returned ONLY when the binary was found & its version satisfies the minimum,
+// / so a caller holding a path may use it without checking anything else.
+// / The binary is located rather than assumed, & the located binary is the one whose
+// / version is read, so the version verified is provably the version that will run.
+// / Inkscape replaced its entire command line interface at version 1.0. The 0.92 flags such
+// / as --export-png were REMOVED rather than deprecated, so a command written for the
+// / current interface fails outright on an older build.
+// / Inkscape writes its version banner to standard output, unlike OpenSCAD.
+// / Standard error is redirected anyway, because a headless launch emits harmless warnings.
+// / A build that reports no parseable version is refused, because an unknown build cannot
+// / be cleared against a minimum.
 function verifySVGVersion($MinimumVersion) {
   // / Set variables.
   global $Verbose;
-  $SVGVersionIsValid = FALSE;
+  $SVGBinary = FALSE;
+  $locatedBinary = $detectedVersion = '';
   $versionOutput = $versionMatches = $minimumParts = array();
   $versionExitCode = 1;
-  $detectedVersion = '';
   $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
-  // / Inkscape writes its version banner to standard output.
-  // / Standard error is redirected anyway, because a headless launch emits harmless warnings.
-  exec('inkscape --version 2>&1', $versionOutput, $versionExitCode);
-  if ($versionExitCode === 0 && !empty($versionOutput)) {
-    // / Match a major.minor pair immediately following the product name.
-    // / Anchoring on the name prevents a match against the commit date later in the banner.
-    if (preg_match('/Inkscape\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
-      $detectedMajor = (int)$versionMatches[1];
-      $detectedMinor = (int)$versionMatches[2];
-      $detectedVersion = $detectedMajor.'.'.$detectedMinor;
-      // / Split the supplied minimum into the same two parts.
-      $minimumParts = explode('.', $MinimumVersion);
-      $minimumMajor = (int)($minimumParts[0] ?? 0);
-      $minimumMinor = (int)($minimumParts[1] ?? 0);
-      // / Compare numerically, never as strings.
-      // / A string comparison would rank version 1.10 below version 1.2.
-      if ($detectedMajor > $minimumMajor) $SVGVersionIsValid = TRUE;
-      elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $SVGVersionIsValid = TRUE; } }
-  if ($Verbose) logEntry('Inkscape Version Check: '.($SVGVersionIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later.');
+  $locatedBinary = locateDependency('inkscape');
+  if ($locatedBinary !== '') {
+    exec(escapeshellarg($locatedBinary).' --version 2>&1', $versionOutput, $versionExitCode);
+    if ($versionExitCode === 0 && !empty($versionOutput)) {
+      // / Anchor on the product name. The banner ends with a commit hash & a date, & an
+      // / unanchored pattern would happily match the date instead.
+      if (preg_match('/Inkscape\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
+        $detectedMajor = (int)$versionMatches[1];
+        $detectedMinor = (int)$versionMatches[2];
+        $detectedVersion = $detectedMajor.'.'.$detectedMinor;
+        $minimumParts = explode('.', $MinimumVersion);
+        $minimumMajor = (int)($minimumParts[0] ?? 0);
+        $minimumMinor = (int)($minimumParts[1] ?? 0);
+        // / Compare numerically, never as strings. A string comparison ranks 1.10 below 1.2.
+        if ($detectedMajor > $minimumMajor) $SVGBinary = $locatedBinary;
+        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $SVGBinary = $locatedBinary; } } }
+  if ($Verbose) logEntry('Inkscape Version Check: '.($SVGBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later'.($SVGBinary === FALSE ? '' : ', Using: '.$SVGBinary).'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $versionOutput = $versionMatches = $versionExitCode = $detectedVersion = $minimumParts = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumVersion = NULL;
-  unset($versionOutput, $versionMatches, $versionExitCode, $detectedVersion, $minimumParts, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
-  return $SVGVersionIsValid; }
+  $locatedBinary = $detectedVersion = $versionOutput = $versionMatches = $minimumParts = $versionExitCode = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumVersion = NULL;
+  unset($locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
+  return $SVGBinary; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to verify every archive utility HRConvert2 depends on.
 // / Accepts the minimum version of each utility, in the order they are returned.
-// / Returns an overall boolean followed by one boolean per utility.
-// / Returns TRUE overall only when every utility REQUIRED for the enabled formats is valid.
-// / A utility that is missing entirely returns FALSE for itself rather than throwing.
-// / 7z is the only extractor & is therefore required for every archive INPUT format.
-// / rar, zip, tar & mkisofs are creators & each is required only for its own OUTPUT format.
-// / rar is optional. When it is absent or too old, 7z creates rar archives instead, which
-// / is what --RAR Archive Method-- selects between.
-// / mkisofs may be provided by cdrtools or by genisoimage, & either satisfies the check.
-// / Version numbers are compared numerically, never as strings, because a string
-// / comparison ranks 7-Zip 23.01 above 7-Zip 24.05.
+// / Returns an overall boolean followed by one path per utility, each being the absolute
+// / path of a verified binary or FALSE.
+// / 7-Zip is the ONLY extractor & is therefore required for every archive INPUT format.
+// / rar, zip, tar & mkisofs are creators & each is required only for its own OUTPUT format,
+// / so a caller creating a zip tests the zip path rather than the overall boolean.
+// / rar is EXCLUDED from the overall boolean because it is optional for input. It is NOT
+// / optional for rar output, because 7-Zip cannot create rar archives at all.
+// / mkisofs may be provided by cdrtools or by genisoimage & either satisfies the check.
+// / 7z & rar both print their banner when invoked with NO arguments & exit non zero doing
+// / so, which is why the exit code is not consulted for either of them.
 function verifyArchiveVersions($Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion) {
   // / Set variables.
   global $Verbose;
-  $ArchiveToolsAreValid = $SevenZipIsValid = $RarIsValid = $ZipIsValid = $TarIsValid = $MkisofsIsValid = FALSE;
-  $toolOutput = $toolMatches = $minimumParts = array();
-  $toolExitCode = 1;
-  $detected7z = $detectedRar = $detectedZip = $detectedTar = $detectedMkisofs = '';
+  $ArchiveToolsAreValid = FALSE;
+  $SevenZipBinary = $RarBinary = $ZipBinary = $TarBinary = $MkisofsBinary = FALSE;
+  $locatedBinary = $detected7z = $detectedRar = $detectedZip = $detectedTar = $detectedMkisofs = '';
+  $versionOutput = $versionMatches = $minimumParts = array();
+  $versionExitCode = 1;
   $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
-  // / 7z prints its banner when invoked with no arguments & exits non zero doing so, so the
-  // / exit code cannot be trusted here. The banner itself is the only reliable signal.
-  $toolOutput = array();
-  exec('7z 2>&1', $toolOutput, $toolExitCode);
-  if (!empty($toolOutput)) {
-    if (preg_match('/7-Zip[^\d]*(\d+)\.(\d+)/i', implode(' ', $toolOutput), $toolMatches)) {
-      $detectedMajor = (int)$toolMatches[1];
-      $detectedMinor = (int)$toolMatches[2];
-      $detected7z = $detectedMajor.'.'.$toolMatches[2];
-      $minimumParts = explode('.', $Minimum7zVersion);
-      $minimumMajor = (int)($minimumParts[0] ?? 0);
-      $minimumMinor = (int)($minimumParts[1] ?? 0);
-      if ($detectedMajor > $minimumMajor) $SevenZipIsValid = TRUE;
-      elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $SevenZipIsValid = TRUE; } }
-  // / rar prints its banner when invoked with no arguments & also exits non zero.
-  // / rar is optional. Its absence is not a failure, it only removes the rar output method.
-  $toolOutput = array();
-  exec('rar 2>&1', $toolOutput, $toolExitCode);
-  if (!empty($toolOutput)) {
-    if (preg_match('/RAR\s+(\d+)\.(\d+)/i', implode(' ', $toolOutput), $toolMatches)) {
-      $detectedMajor = (int)$toolMatches[1];
-      $detectedMinor = (int)$toolMatches[2];
-      $detectedRar = $detectedMajor.'.'.$toolMatches[2];
-      $minimumParts = explode('.', $MinimumRarVersion);
-      $minimumMajor = (int)($minimumParts[0] ?? 0);
-      $minimumMinor = (int)($minimumParts[1] ?? 0);
-      if ($detectedMajor > $minimumMajor) $RarIsValid = TRUE;
-      elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $RarIsValid = TRUE; } }
-  // / zip reports its version on the first line of its help banner.
-  $toolOutput = array();
-  exec('zip -v 2>&1', $toolOutput, $toolExitCode);
-  if (!empty($toolOutput)) {
-    if (preg_match('/Zip\s+(\d+)\.(\d+)/i', implode(' ', $toolOutput), $toolMatches)) {
-      $detectedMajor = (int)$toolMatches[1];
-      $detectedMinor = (int)$toolMatches[2];
-      $detectedZip = $detectedMajor.'.'.$toolMatches[2];
-      $minimumParts = explode('.', $MinimumZipVersion);
-      $minimumMajor = (int)($minimumParts[0] ?? 0);
-      $minimumMinor = (int)($minimumParts[1] ?? 0);
-      if ($detectedMajor > $minimumMajor) $ZipIsValid = TRUE;
-      elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $ZipIsValid = TRUE; } }
-  // / tar reports GNU tar followed by the version.
-  $toolOutput = array();
-  exec('tar --version 2>&1', $toolOutput, $toolExitCode);
-  if ($toolExitCode === 0 && !empty($toolOutput)) {
-    if (preg_match('/tar[^\d]*(\d+)\.(\d+)/i', implode(' ', $toolOutput), $toolMatches)) {
-      $detectedMajor = (int)$toolMatches[1];
-      $detectedMinor = (int)$toolMatches[2];
-      $detectedTar = $detectedMajor.'.'.$toolMatches[2];
-      $minimumParts = explode('.', $MinimumTarVersion);
-      $minimumMajor = (int)($minimumParts[0] ?? 0);
-      $minimumMinor = (int)($minimumParts[1] ?? 0);
-      if ($detectedMajor > $minimumMajor) $TarIsValid = TRUE;
-      elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $TarIsValid = TRUE; } }
-  // / mkisofs may be cdrtools mkisofs or the genisoimage fork wearing the same name.
-  // / Both are accepted, so the product name is not anchored on.
-  $toolOutput = array();
-  exec('mkisofs --version 2>&1', $toolOutput, $toolExitCode);
-  if (!empty($toolOutput)) {
-    if (preg_match('/(?:mkisofs|genisoimage)[^\d]*(\d+)\.(\d+)/i', implode(' ', $toolOutput), $toolMatches)) {
-      $detectedMajor = (int)$toolMatches[1];
-      $detectedMinor = (int)$toolMatches[2];
-      $detectedMkisofs = $detectedMajor.'.'.$toolMatches[2];
-      $minimumParts = explode('.', $MinimumMkisofsVersion);
-      $minimumMajor = (int)($minimumParts[0] ?? 0);
-      $minimumMinor = (int)($minimumParts[1] ?? 0);
-      if ($detectedMajor > $minimumMajor) $MkisofsIsValid = TRUE;
-      elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $MkisofsIsValid = TRUE; } }
-  // / 7z is the only extractor, so no archive operation of any kind works without it.
-  // / rar is deliberately excluded from the overall verdict, because 7z creates rar
-  // / archives when rar is unavailable & the application remains fully functional.
-  if ($SevenZipIsValid && $ZipIsValid && $TarIsValid && $MkisofsIsValid) $ArchiveToolsAreValid = TRUE;
+  // / 7-Zip. The only extractor. Every archive input format depends on it.
+  $locatedBinary = locateDependency('7z');
+  if ($locatedBinary !== '') {
+    $versionOutput = array();
+    exec(escapeshellarg($locatedBinary).' 2>&1', $versionOutput, $versionExitCode);
+    if (!empty($versionOutput)) {
+      if (preg_match('/7-Zip[^\d]*(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
+        $detectedMajor = (int)$versionMatches[1];
+        $detectedMinor = (int)$versionMatches[2];
+        $detected7z = $detectedMajor.'.'.$versionMatches[2];
+        $minimumParts = explode('.', $Minimum7zVersion);
+        $minimumMajor = (int)($minimumParts[0] ?? 0);
+        $minimumMinor = (int)($minimumParts[1] ?? 0);
+        if ($detectedMajor > $minimumMajor) $SevenZipBinary = $locatedBinary;
+        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $SevenZipBinary = $locatedBinary; } } }
+  // / rar. Optional for input, mandatory for rar output.
+  $locatedBinary = locateDependency('rar');
+  if ($locatedBinary !== '') {
+    $versionOutput = array();
+    exec(escapeshellarg($locatedBinary).' 2>&1', $versionOutput, $versionExitCode);
+    if (!empty($versionOutput)) {
+      if (preg_match('/RAR\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
+        $detectedMajor = (int)$versionMatches[1];
+        $detectedMinor = (int)$versionMatches[2];
+        $detectedRar = $detectedMajor.'.'.$versionMatches[2];
+        $minimumParts = explode('.', $MinimumRarVersion);
+        $minimumMajor = (int)($minimumParts[0] ?? 0);
+        $minimumMinor = (int)($minimumParts[1] ?? 0);
+        if ($detectedMajor > $minimumMajor) $RarBinary = $locatedBinary;
+        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $RarBinary = $locatedBinary; } } }
+  // / zip.
+  $locatedBinary = locateDependency('zip');
+  if ($locatedBinary !== '') {
+    $versionOutput = array();
+    exec(escapeshellarg($locatedBinary).' -v 2>&1', $versionOutput, $versionExitCode);
+    if (!empty($versionOutput)) {
+      if (preg_match('/Zip\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
+        $detectedMajor = (int)$versionMatches[1];
+        $detectedMinor = (int)$versionMatches[2];
+        $detectedZip = $detectedMajor.'.'.$versionMatches[2];
+        $minimumParts = explode('.', $MinimumZipVersion);
+        $minimumMajor = (int)($minimumParts[0] ?? 0);
+        $minimumMinor = (int)($minimumParts[1] ?? 0);
+        if ($detectedMajor > $minimumMajor) $ZipBinary = $locatedBinary;
+        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $ZipBinary = $locatedBinary; } } }
+  // / tar.
+  $locatedBinary = locateDependency('tar');
+  if ($locatedBinary !== '') {
+    $versionOutput = array();
+    exec(escapeshellarg($locatedBinary).' --version 2>&1', $versionOutput, $versionExitCode);
+    if ($versionExitCode === 0 && !empty($versionOutput)) {
+      if (preg_match('/tar[^\d]*(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
+        $detectedMajor = (int)$versionMatches[1];
+        $detectedMinor = (int)$versionMatches[2];
+        $detectedTar = $detectedMajor.'.'.$versionMatches[2];
+        $minimumParts = explode('.', $MinimumTarVersion);
+        $minimumMajor = (int)($minimumParts[0] ?? 0);
+        $minimumMinor = (int)($minimumParts[1] ?? 0);
+        if ($detectedMajor > $minimumMajor) $TarBinary = $locatedBinary;
+        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $TarBinary = $locatedBinary; } } }
+  // / mkisofs. May be cdrtools or the genisoimage fork wearing the same name.
+  $locatedBinary = locateDependency('mkisofs');
+  if ($locatedBinary !== '') {
+    $versionOutput = array();
+    exec(escapeshellarg($locatedBinary).' --version 2>&1', $versionOutput, $versionExitCode);
+    if (!empty($versionOutput)) {
+      if (preg_match('/(?:mkisofs|genisoimage)[^\d]*(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
+        $detectedMajor = (int)$versionMatches[1];
+        $detectedMinor = (int)$versionMatches[2];
+        $detectedMkisofs = $detectedMajor.'.'.$versionMatches[2];
+        $minimumParts = explode('.', $MinimumMkisofsVersion);
+        $minimumMajor = (int)($minimumParts[0] ?? 0);
+        $minimumMinor = (int)($minimumParts[1] ?? 0);
+        if ($detectedMajor > $minimumMajor) $MkisofsBinary = $locatedBinary;
+        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $MkisofsBinary = $locatedBinary; } } }
+  // / rar is deliberately excluded. 7-Zip extracts rar archives, so a server without the
+  // / rar utility can still read them & only loses the ability to CREATE them.
+  if ($SevenZipBinary !== FALSE && $ZipBinary !== FALSE && $TarBinary !== FALSE && $MkisofsBinary !== FALSE) $ArchiveToolsAreValid = TRUE;
   if ($Verbose) {
-    logEntry('7-Zip Check: '.($SevenZipIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detected7z === '' ? 'NONE' : $detected7z).', Required: '.$Minimum7zVersion.' or later.');
-    logEntry('Rar Check: '.($RarIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedRar === '' ? 'NONE' : $detectedRar).', Required: '.$MinimumRarVersion.' or later.');
-    logEntry('Zip Check: '.($ZipIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedZip === '' ? 'NONE' : $detectedZip).', Required: '.$MinimumZipVersion.' or later.');
-    logEntry('Tar Check: '.($TarIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedTar === '' ? 'NONE' : $detectedTar).', Required: '.$MinimumTarVersion.' or later.');
-    logEntry('Mkisofs Check: '.($MkisofsIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedMkisofs === '' ? 'NONE' : $detectedMkisofs).', Required: '.$MinimumMkisofsVersion.' or later.'); }
+    logEntry('7-Zip Check: '.($SevenZipBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detected7z === '' ? 'NONE' : $detected7z).', Required: '.$Minimum7zVersion.' or later'.($SevenZipBinary === FALSE ? '' : ', Using: '.$SevenZipBinary).'.');
+    logEntry('Rar Check: '.($RarBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedRar === '' ? 'NONE' : $detectedRar).', Required: '.$MinimumRarVersion.' or later'.($RarBinary === FALSE ? '' : ', Using: '.$RarBinary).'.');
+    logEntry('Zip Check: '.($ZipBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedZip === '' ? 'NONE' : $detectedZip).', Required: '.$MinimumZipVersion.' or later'.($ZipBinary === FALSE ? '' : ', Using: '.$ZipBinary).'.');
+    logEntry('Tar Check: '.($TarBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedTar === '' ? 'NONE' : $detectedTar).', Required: '.$MinimumTarVersion.' or later'.($TarBinary === FALSE ? '' : ', Using: '.$TarBinary).'.');
+    logEntry('Mkisofs Check: '.($MkisofsBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedMkisofs === '' ? 'NONE' : $detectedMkisofs).', Required: '.$MinimumMkisofsVersion.' or later'.($MkisofsBinary === FALSE ? '' : ', Using: '.$MkisofsBinary).'.'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $toolOutput = $toolMatches = $toolExitCode = $minimumParts = $detected7z = $detectedRar = $detectedZip = $detectedTar = $detectedMkisofs = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $Minimum7zVersion = $MinimumRarVersion = $MinimumZipVersion = $MinimumTarVersion = $MinimumMkisofsVersion = NULL;
-  unset($toolOutput, $toolMatches, $toolExitCode, $minimumParts, $detected7z, $detectedRar, $detectedZip, $detectedTar, $detectedMkisofs, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion);
-  return array($ArchiveToolsAreValid, $SevenZipIsValid, $RarIsValid, $ZipIsValid, $TarIsValid, $MkisofsIsValid); }
+  $locatedBinary = $detected7z = $detectedRar = $detectedZip = $detectedTar = $detectedMkisofs = $versionOutput = $versionMatches = $minimumParts = $versionExitCode = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $Minimum7zVersion = $MinimumRarVersion = $MinimumZipVersion = $MinimumTarVersion = $MinimumMkisofsVersion = NULL;
+  unset($locatedBinary, $detected7z, $detectedRar, $detectedZip, $detectedTar, $detectedMkisofs, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion);
+  return array($ArchiveToolsAreValid, $SevenZipBinary, $RarBinary, $ZipBinary, $TarBinary, $MkisofsBinary); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to confirm this server can actually isolate an OpenSCAD render.
-// / OpenSCAD reads any file the web server user can read & has no sandbox of its own.
-// / It also cannot be given one through its arguments, the way FFMPEG accepts a protocol
-// / whitelist, so the boundary is enforced by the operating system using bubblewrap.
-// / Filtering the source cannot be the boundary, because a filter that inspects one line
-// / at a time cannot agree with a parser that carries state across lines & across
-// / statements. That approach was reported as bypassable in four independent ways.
-// / bwrap may be installed but non functional, because unprivileged user namespaces can
-// / be disabled at the kernel level, restricted by AppArmor, or blocked by a container
-// / runtime. Testing that the binary exists is therefore not enough, so a real minimal
-// / sandbox is launched here instead.
-// / A server that cannot isolate a render must refuse to render at all.
+// / A function to confirm this server can actually isolate a dependency invocation.
+// / Returns the absolute path of a WORKING bubblewrap binary, or FALSE.
+// / A path is returned ONLY when a real sandbox was launched successfully, so a caller
+// / holding a path may build a command with it without checking anything else.
+// / This is a CAPABILITY check rather than a version check & is the only one in the
+// / application. Bubblewrap may be installed & still be non functional, because
+// / unprivileged user namespaces can be disabled at the kernel level, restricted by an
+// / AppArmor profile, or blocked by a container runtime. Testing that the binary exists
+// / proves nothing at all, so a real minimal sandbox is launched here instead.
+// / A dependency that cannot be isolated must be refused rather than run unprotected, so a
+// / FALSE from this function is the strongest signal the application produces.
 function verifyBwrap() {
   // / Set variables.
   global $Verbose;
-  $BwrapIsUsable = FALSE;
+  $BwrapBinary = FALSE;
+  $locatedBinary = $bwrapCommand = '';
   $bwrapOutput = array();
   $bwrapExitCode = 1;
-  $bwrapCommand = '';
-  // / Launch the smallest possible sandbox & run a command that does nothing but exit.
-  // / This proves the kernel will actually grant the namespaces the real render depends on.
-  // / The ro-bind-try entries are optional & are skipped on systems that do not have them.
-  $bwrapCommand = 'timeout 10 bwrap'
-    .' --unshare-all'
-    .' --die-with-parent'
-    .' --ro-bind /usr /usr'
-    .' --ro-bind-try /lib /lib'
-    .' --ro-bind-try /lib64 /lib64'
-    .' --ro-bind-try /bin /bin'
-    .' --proc /proc'
-    .' --dev /dev'
-    .' --tmpfs /tmp'
-    .' /usr/bin/true > /dev/null 2>&1';
-  exec($bwrapCommand, $bwrapOutput, $bwrapExitCode);
-  if ($bwrapExitCode === 0) $BwrapIsUsable = TRUE;
-  if ($Verbose) logEntry('Bubblewrap Sandbox Check: '.($BwrapIsUsable ? 'PASSED' : 'FAILED').', Exit code: '.$bwrapExitCode.'.');
+  $locatedBinary = locateDependency('bwrap');
+  if ($locatedBinary !== '') {
+    // / Launch the smallest possible sandbox & run a command that does nothing but exit.
+    // / This proves the kernel will actually grant the namespaces a real render depends on.
+    // / The ro-bind-try entries are optional & are skipped on systems that do not have them.
+    $bwrapCommand = 'timeout 10 '.escapeshellarg($locatedBinary)
+      .' --unshare-all'
+      .' --die-with-parent'
+      .' --ro-bind /usr /usr'
+      .' --ro-bind-try /lib /lib'
+      .' --ro-bind-try /lib64 /lib64'
+      .' --ro-bind-try /bin /bin'
+      .' --proc /proc'
+      .' --dev /dev'
+      .' --tmpfs /tmp'
+      .' /usr/bin/true > /dev/null 2>&1';
+    exec($bwrapCommand, $bwrapOutput, $bwrapExitCode);
+    if ($bwrapExitCode === 0) $BwrapBinary = $locatedBinary; }
+  if ($Verbose) logEntry('Bubblewrap Sandbox Check: '.($BwrapBinary === FALSE ? 'FAILED' : 'PASSED').', Exit code: '.$bwrapExitCode.($BwrapBinary === FALSE ? '' : ', Using: '.$BwrapBinary).'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $bwrapOutput = $bwrapExitCode = $bwrapCommand = NULL;
-  unset($bwrapOutput, $bwrapExitCode, $bwrapCommand);
-  return $BwrapIsUsable; }
+  $locatedBinary = $bwrapCommand = $bwrapOutput = $bwrapExitCode = NULL;
+  unset($locatedBinary, $bwrapCommand, $bwrapOutput, $bwrapExitCode);
+  return $BwrapBinary; }
 // / -----------------------------------------------------------------------------------
+
 
  // / -----------------------------------------------------------------------------------
 // / A function to display version information about this installation.
@@ -1877,10 +2025,15 @@ function isDirEmptyOfUserFiles($path) {
 // / because that is the form matched when they are rewritten for the namespace.
 // / A path built any other way will not be matched & the command will refer to a location
 // / that does not exist inside the sandbox.
-// / Returns an availability boolean & a command string ready to run unmodified.
-// / Returns a command beginning with bwrap & referring to /in & /out when a sandbox works.
-// / Returns the command exactly as supplied when a sandbox cannot be built.
-// / The caller decides what an unavailable sandbox means & tests the boolean to find out.
+// / Returns a permission boolean & a command string ready to run unmodified.
+// / The boolean reports whether the command MAY RUN, not whether a sandbox was built.
+// / A sandbox that was built returns TRUE with a bwrap command.
+// / A sandbox that could not be built returns FALSE when sandboxing is required, so every
+// / caller refuses without any caller needing to know why.
+// / A sandbox that could not be built returns TRUE with the unwrapped command when
+// / sandboxing is not required, & writes a warning naming the conversion as unprotected.
+// / A container blocks the namespaces bubblewrap needs unless it was started with
+// / --security-opt seccomp=unconfined, so a separate setting governs that case.
 // / The directory holding the input is mounted read only at /in.
 // / The directory holding the output is mounted writable at /out.
 // / When both paths share a directory it is mounted once, writable, at /work.
@@ -1888,23 +2041,17 @@ function isDirEmptyOfUserFiles($path) {
 // / The mounts are derived from the supplied paths, so the caller never names one.
 // / Network access is unshared unless requested, which closes every URL handler at once.
 // / OpenSCAD does NOT use this. It needs a whole directory visible to resolve includes.
-// / Returns a permission boolean & a command string ready to run unmodified.
-// / The boolean reports whether the command MAY RUN, not whether a sandbox was built.
-// / A sandbox that was built returns TRUE with a bwrap command.
-// / A sandbox that could not be built returns FALSE when $RequireSandbox is TRUE, so every
-// / caller refuses without any caller needing to know why.
-// / A sandbox that could not be built returns TRUE with the unwrapped command when
-// / $RequireSandbox is FALSE, & writes a warning naming the conversion as unprotected.
 function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork) {
   // / Set variables.
   global $Verbose, $RequireSandbox, $RequireSandboxOnDocker, $ThrowSandboxWarning, $RunningInContainer;
-  $CommandMayRun = $bwrapIsUsable = $sandboxIsRequired = FALSE;
+  $CommandMayRun = FALSE;
+  $bwrapBinary = FALSE;
+  // / This initializes TRUE rather than FALSE, because for this variable TRUE is the safe
+  // / state. It is overwritten unconditionally below & the initial value is never read.
   $sandboxIsRequired = TRUE;
   $SandboxedCommand = $networkFlag = $mountFlags = $workingDir = '';
   $inputDir = $outputDir = $sandboxInput = $sandboxOutput = '';
-  $bwrapIsUsable = verifyBwrap();
-  // / A container blocks the namespaces bubblewrap needs unless it was started with
-  // / --security-opt seccomp=unconfined, so a separate setting governs that case.
+  $bwrapBinary = verifyBwrap();
   // / A container that CAN build a sandbox still gets one. This only decides what happens
   // / when it cannot.
   $sandboxIsRequired = $RunningInContainer ? $RequireSandboxOnDocker : $RequireSandbox;
@@ -1930,9 +2077,9 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork) {
   // / A sandbox that could not be built is a policy decision rather than a technical one.
   // / An operator who has deliberately accepted the risk gets the command & a warning.
   // / An operator who has not gets a refusal, & every caller already handles that.
-  if (!$bwrapIsUsable) {
+  if ($bwrapBinary === FALSE) {
     $SandboxedCommand = $command;
-    if ($sandboxIsRequired) warningEntry('Bubblewrap is unavailable & sandboxing is required, so a conversion was refused. Install bubblewrap, or set $RequireSandbox to FALSE in config.php to run conversions unprotected.');
+    if ($sandboxIsRequired) warningEntry('Bubblewrap is unavailable & sandboxing is required, so a conversion was refused. Install bubblewrap, or set '.($RunningInContainer ? '$RequireSandboxOnDocker' : '$RequireSandbox').' to FALSE in config.php to run conversions unprotected.');
     else {
       $CommandMayRun = TRUE;
       if ($ThrowSandboxWarning) warningEntry('Bubblewrap is unavailable & sandboxing is not required, so a conversion will run unprotected.'); } }
@@ -1944,7 +2091,7 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork) {
     // / The rewrite is an exact match on the escaped paths rather than a pattern, so nothing
     // / else in the command can be altered by accident. Neither escaped path can appear
     // / inside the other's replacement, so a single pass is safe.
-    $SandboxedCommand = 'bwrap'
+    $SandboxedCommand = escapeshellarg($bwrapBinary)
       .' --unshare-all'.$networkFlag
       .' --die-with-parent'
       .' --new-session'
@@ -1973,8 +2120,8 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork) {
         $command);
     if ($Verbose) logEntry('Sandbox prepared for a dependency invocation.'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $networkFlag = $mountFlags = $workingDir = $inputDir = $outputDir = $sandboxInput = $sandboxOutput = $command = $inputPath = $outputPath = $allowNetwork = $bwrapIsUsable = NULL;
-  unset($networkFlag, $mountFlags, $workingDir, $inputDir, $outputDir, $sandboxInput, $sandboxOutput, $command, $inputPath, $outputPath, $allowNetwork, $bwrapIsUsable);
+  $bwrapBinary = $sandboxIsRequired = $networkFlag = $mountFlags = $workingDir = $inputDir = $outputDir = $sandboxInput = $sandboxOutput = $command = $inputPath = $outputPath = $allowNetwork = NULL;
+  unset($bwrapBinary, $sandboxIsRequired, $networkFlag, $mountFlags, $workingDir, $inputDir, $outputDir, $sandboxInput, $sandboxOutput, $command, $inputPath, $outputPath, $allowNetwork);
   return array($CommandMayRun, $SandboxedCommand); }
 // / -----------------------------------------------------------------------------------
 
@@ -2765,29 +2912,6 @@ function convertImages($pathname, $newPathname, $height, $width, $rotate) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to convert 3D model formats.
-// / The model conversion engine is designed as a hybrid, multi-stage processing pipeline to maximize reliability and output format coverage.
-// / 3D assets vary wildly in their structural integrity; engineering and CAD formats frequently suffer from open boundaries and non-manifold bugs.
-// / Conversely, modern web and runtime formats contain complex material systems, explicit node transformations, and deep skeletal rigging hierarchies.
-// / Passing rigged animations through a traditional mesh processor strips critical bone datasets and flattens scene nodes into basic geometric elements.
-// / To solve this, HRConvert2 bifurcates incoming assets into separate logical execution pathways based on their specific file extension parameters.
-// /
-// / Route 1 acts as a dual-stage processing buffer built specifically for raw geometry, laser scans, and 3D printing formats like STL and PLY.
-// / The asset is first passed through a localized MeshLab optimization pass to rectify inverted face normals, fix vertex indexes, and weld open gaps.
-// / This pass standardizes the asset, generating a normalized, clean intermediate OBJ file template completely free of topological anomalies.
-// / This clean baseline is then handed off to the Open Asset Import Library (Assimp) to handle the export compilation into the requested format.
-// / If the primary MeshLab cleaning pass hits a severe geometry structural boundary and crashes, the core transparently catches the failure state.
-// / It rewrites its internal file pointers to fallback instantly, passing the original upload file directly to the Assimp export array.
-// /
-// / Route 2 acts as a high-speed direct intercept path built to protect complex scene charts and animated assets like FBX and GLTF containers.
-// / These file configurations completely bypass the MeshLab structural step, avoiding destructive data truncation or structural flattening loops.
-// / The assets land directly inside Assimp's tokenization matrices, keeping bones, vertex weights, and physical material sets intact.
-// /
-// / The engine natively scales its processing environment to adapt smoothly to individual server deployment architecture requirements.
-// / When standard mode is deployed, headless execution runs via the classic binary and relies on virtual display frame buffers (xvfb-run).
-// / When modern mode is toggled, it calls an inline Python routine that inserts bundled compiled resources folders straight into system paths.
-// / This allows HRConvert2 to operate headlessly inside system memory arrays without using external package managers or global system binaries.
-// / -----------------------------------------------------------------------------------
-// / A function to convert 3D model formats.
 // / Two utilities cover this between them & neither covers it alone.
 // / MeshLab performs triangulation & manifold normalization on engineering formats.
 // / Assimp handles scene graphs, rigs & the web asset formats MeshLab cannot write.
@@ -2800,20 +2924,19 @@ function convertImages($pathname, $newPathname, $height, $width, $rotate) {
 function convertModels($pathname, $newPathname) {
   // / Set variables.
   global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumAssimpVersion, $MinimumMeshlabVersion, $UsePyMeshLab, $InstLoc, $DirSep;
-  $ConversionSuccess = $ConversionErrors = $modelsValid = $assimpVersionOK = $meshLabVersionOK = $readyToConvert = $meshlabCommand = $assimpCommand = $sandboxIsAvailable = FALSE;
+  $ConversionSuccess = $ConversionErrors = $modelsValid =  $meshlabBinary = $assimpBinary = $readyToConvert = $meshlabCommand = $assimpCommand = $sandboxIsAvailable = FALSE;
   $returnData = $assimpData = $inputExt = $pyMeshLabDir = $intermediatePathname = $assimpInput = '';
   $meshlabOnly = $assimpSupported = array();
   $stopper = 0;
   $sleepTime = $SleepTimer;
   // / Detect the installed versions of Assimp & MeshLab.
-  list ($modelsValid, $assimpVersionOK, $meshLabVersionOK) = verifyModelVersions($MinimumAssimpVersion, $MinimumMeshlabVersion);
+  list ($modelsValid, $assimpBinary, $meshlabBinary) = verifyModelVersions($MinimumAssimpVersion, $MinimumMeshlabVersion);
   // / Assimp is used by every route, so it is required unconditionally.
-  if (!$assimpVersionOK) {
+  if ($assimpBinary === FALSE) {
     $ConversionErrors = TRUE;
     errorEntry('The installed Assimp version is missing, unidentifiable, or too old!', 9001, FALSE); }
   // / MeshLab is only required when the binary is the one being used.
-  // / PyMeshLab is a bundled python module with no version to interrogate.
-  else if (!$UsePyMeshLab && !$meshLabVersionOK) {
+  else if (!$UsePyMeshLab && $meshlabBinary === FALSE) {
     $ConversionErrors = TRUE;
     errorEntry('The installed MeshLab version is missing, unidentifiable, or too old!', 9002, FALSE); }
   else $readyToConvert = TRUE;
@@ -2842,19 +2965,19 @@ function convertModels($pathname, $newPathname) {
         $returnData = shell_exec($meshlabCommand);
         // / If the first stage produced nothing, hand Assimp the original rather than nothing.
         $assimpInput = file_exists($intermediatePathname) ? $intermediatePathname : $pathname;
-        $assimpCommand = '/usr/bin/assimp export '.escapeshellarg($assimpInput).' '.escapeshellarg($newPathname);
+        $assimpCommand = escapeshellarg($assimpBinary).' export '.escapeshellarg($assimpInput).' '.escapeshellarg($newPathname);
         list ($sandboxIsAvailable, $assimpCommand) = sandboxCommand($assimpCommand, $assimpInput, $newPathname, FALSE);
         $assimpData = shell_exec($assimpCommand); }
       // / Route 2. A scene format goes straight to Assimp & bypasses MeshLab entirely.
       else if (in_array($inputExt, $assimpSupported)) {
-        $assimpCommand = '/usr/bin/assimp export '.escapeshellarg($pathname).' '.escapeshellarg($newPathname);
+        $assimpCommand = escapeshellarg($assimpBinary).' export '.escapeshellarg($pathname).' '.escapeshellarg($newPathname);
         list ($sandboxIsAvailable, $assimpCommand) = sandboxCommand($assimpCommand, $pathname, $newPathname, FALSE);
         if (!$sandboxIsAvailable) warningEntry('Bubblewrap is unavailable. A model conversion ran unsandboxed.');
         $assimpData = shell_exec($assimpCommand); }
       // / Route 3. An unrecognized extension is attempted with MeshLab alone.
       else {
         if ($UsePyMeshLab) $meshlabCommand = 'python3 -c "import sys; sys.path.insert(0, '.escapeshellarg($pyMeshLabDir).'); import pymeshlab; ms = pymeshlab.MeshSet(); ms.load_new_mesh('.escapeshellarg($pathname).'); ms.save_current_mesh('.escapeshellarg($newPathname).');"';
-        else $meshlabCommand = 'xvfb-run -a /usr/bin/meshlabserver -i '.escapeshellarg($pathname).' -o '.escapeshellarg($newPathname);
+        else $meshlabCommand = 'xvfb-run -a '.escapeshellarg($meshlabBinary).' -i '.escapeshellarg($pathname).' -o '.escapeshellarg($newPathname);
         list ($sandboxIsAvailable, $meshlabCommand) = sandboxCommand($meshlabCommand, $pathname, $newPathname, FALSE);
         if (!$sandboxIsAvailable) warningEntry('Bubblewrap is unavailable. A model conversion ran unsandboxed.');
         $returnData = shell_exec($meshlabCommand); }
@@ -2872,10 +2995,9 @@ function convertModels($pathname, $newPathname) {
     // / The output file is the only verdict on whether the conversion produced anything.
     if (file_exists($newPathname)) $ConversionSuccess = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $assimpData = $stopper = $pathname = $newPathname = $intermediatePathname = $assimpInput = $inputExt = $meshlabOnly = $assimpSupported = $pyMeshLabDir = $sleepTime = $modelsValid = $assimpVersionOK = $meshLabVersionOK = $readyToConvert = $meshlabCommand = $assimpCommand = $sandboxIsAvailable = NULL;
-  unset($returnData, $assimpData, $stopper, $pathname, $newPathname, $intermediatePathname, $assimpInput, $inputExt, $meshlabOnly, $assimpSupported, $pyMeshLabDir, $sleepTime, $modelsValid, $assimpVersionOK, $meshLabVersionOK, $readyToConvert, $meshlabCommand, $assimpCommand, $sandboxIsAvailable);
+  $returnData = $assimpData = $stopper = $pathname = $newPathname = $intermediatePathname = $assimpInput = $inputExt = $meshlabOnly = $assimpSupported = $pyMeshLabDir = $sleepTime = $modelsValid = $readyToConvert = $meshlabCommand = $assimpCommand = $sandboxIsAvailable = $meshlabBinary = $assimpBinary = NULL;
+  unset($returnData, $assimpData, $stopper, $pathname, $newPathname, $intermediatePathname, $assimpInput, $inputExt, $meshlabOnly, $assimpSupported, $pyMeshLabDir, $sleepTime, $modelsValid, $readyToConvert, $meshlabCommand, $assimpCommand, $sandboxIsAvailable, $meshlabBinary, $assimpBinary);
   return array($ConversionSuccess, $ConversionErrors); }
-// / -----------------------------------------------------------------------------------
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -3113,9 +3235,14 @@ function rectifySCAD($scadContents, $sessionFiles, $resolveIncludes) {
       continue; }
     // / A resolved include is replaced outright with a reference to the staged copy.
     // / The original line is preserved as a comment so the user can see what it was.
+    // / The reference is written as a BARE FILENAME rather than as the absolute path that
+    // / resolveSCADInclude() returned. Every sanitized copy lives in one directory, & the
+    // / render runs with that directory as its working directory, so a bare name resolves.
+    // / An absolute path would not, because inside the sandbox that directory is mounted
+    // / somewhere else entirely & the real path does not exist at all.
     if ($callsByLine[$lineNumber]['Action'] === 'RESOLVE') {
       $RectifiedSCAD .= '// HRC2-RESOLVED-FROM: '.$scadLine.PHP_EOL;
-      $RectifiedSCAD .= $callsByLine[$lineNumber]['Keyword'].' <'.$callsByLine[$lineNumber]['Path'].'>'.PHP_EOL;
+      $RectifiedSCAD .= $callsByLine[$lineNumber]['Keyword'].' <'.basename($callsByLine[$lineNumber]['Path']).'>'.PHP_EOL;
       continue; }
     // / Everything else is commented out whole & labelled with what it was.
     $marker = '// HRC2-REMOVED-'.strtoupper($callsByLine[$lineNumber]['Keyword']).': ';
@@ -3191,34 +3318,35 @@ function sanitizeAllSCADUploads() {
 // / oriented version, & a fifth against the stateful rewrite that replaced it.
 // / The boundary is the operating system sandbox below & nothing else.
 // /
-// / OpenSCAD reads any file the web server user can read & cannot be given a sandbox
-// / through its own arguments, so bubblewrap provides one. The render can see nothing but
-// / the session ScadTemp directory. A server that cannot create that sandbox refuses to
-// / render at all. There is deliberately no fallback to filtering alone.
-// / OpenSCAD has no execution bound of its own, so the render is also killed by timeout.
-// / The render is niced so a runaway model yields to everything else on the server.
-// / OpenSCAD error output is deliberately NOT written to the log.
-// / A failed parse quotes the offending line, which would turn the log into an exfiltration channel.
-// / The installed OpenSCAD version is verified before any conversion is attempted.
-// / HRConvert2 does not accommodate builds older than the pinned minimum.
+// / This function does NOT use sandboxCommand(). It needs a WHOLE DIRECTORY visible so that
+// / include statements resolve, where every other converter needs exactly one input file.
+// / Both binaries are located rather than assumed, so the OpenSCAD whose version was
+// / verified & the bubblewrap that was proven functional are the ones that actually run.
+// /
+// / OpenSCAD does NOT fail on a missing include. It warns & renders what it can, so a model
+// / can come out geometrically incomplete while reporting success. The COUNT of such
+// / warnings is logged & the text is never written, because a parse warning quotes the
+// / offending source line & that would turn the log into an exfiltration channel.
 function convertSCAD($pathname, $newPathname, $extension) {
   // / Set variables.
   global $Verbose, $DirSep, $SCADConversionTimeout, $ScadTemp, $MinimumSCADVersion;
   $ConversionSuccess = $ConversionErrors = FALSE;
-  $allSanitized = $readyToRender = $scadVersionIsValid = $bwrapIsUsable = FALSE;
-  $filesSanitized = $referencesFound = $referencesResolved = $referencesRemoved = $openscadExitCode = 0;
+  $allSanitized = $readyToRender = FALSE;
+  $scadBinary = $bwrapBinary = FALSE;
+  $filesSanitized = $referencesFound = $referencesResolved = $referencesRemoved = 0;
+  $openscadExitCode = $missingIncludes = 0;
   $sanitizedPath = $openscadCommand = $sandboxOutputName = $sandboxOutputPath = '';
   $openscadOutput = array();
   // / Confirm this server can isolate a render before anything else happens.
   // / A server that cannot isolate a render must refuse to render at all.
-  $bwrapIsUsable = verifyBwrap();
-  if (!$bwrapIsUsable) {
+  $bwrapBinary = verifyBwrap();
+  if ($bwrapBinary === FALSE) {
     $ConversionErrors = TRUE;
     errorEntry('Bubblewrap is missing or non functional, so OpenSCAD renders cannot be isolated!', 27007, FALSE); }
   else {
-    // / Confirm the installed OpenSCAD is new enough before anything else happens.
-    $scadVersionIsValid = verifySCADVersion($MinimumSCADVersion);
-    if (!$scadVersionIsValid) {
+    // / Locate & verify OpenSCAD. A path is returned only when both succeeded.
+    $scadBinary = verifySCADVersion($MinimumSCADVersion);
+    if ($scadBinary === FALSE) {
       $ConversionErrors = TRUE;
       errorEntry('The installed OpenSCAD version is missing or too old!', 27005, FALSE); }
     else {
@@ -3243,14 +3371,13 @@ function convertSCAD($pathname, $newPathname, $extension) {
     // / That includes the network, which closes any OpenSCAD build whose import() takes a URL.
     // / --die-with-parent guarantees the render cannot outlive the PHP process that started it.
     // / --new-session prevents the render from injecting into the controlling terminal.
-    // / The ro-bind-try entries are optional & are skipped on systems that lack them.
     // / /work is the ONLY writable path & the ONLY path from the data location that exists.
-    // / Nothing else on the disk is visible from inside, so nothing else can be read.
+    // / --chdir /work is what makes a resolved include work. rectifySCAD() rewrites an
+    // / include to a bare filename, & every sanitized copy lives in this one directory.
     // / nice yields the render to everything else on the server.
     // / timeout enforces a wall clock limit because OpenSCAD will not stop on its own.
-    // / Standard output & standard error are both discarded rather than captured.
     $openscadCommand = 'nice -n 19 timeout '.(int)$SCADConversionTimeout
-      .' bwrap'
+      .' '.escapeshellarg($bwrapBinary)
       .' --unshare-all'
       .' --die-with-parent'
       .' --new-session'
@@ -3266,9 +3393,9 @@ function convertSCAD($pathname, $newPathname, $extension) {
       .' --setenv HOME /tmp'
       .' --bind '.escapeshellarg($ScadTemp).' /work'
       .' --chdir /work'
-      .' openscad -o '.escapeshellarg('/work/'.$sandboxOutputName)
+      .' '.escapeshellarg($scadBinary).' -o '.escapeshellarg('/work/'.$sandboxOutputName)
       .' '.escapeshellarg('/work/'.basename($sanitizedPath))
-      .' > /dev/null 2>&1';
+      .' 2>&1';
     exec($openscadCommand, $openscadOutput, $openscadExitCode);
     // / An exit code of 124 is the timeout command reporting that it killed the render.
     if ($openscadExitCode === 124) {
@@ -3277,6 +3404,10 @@ function convertSCAD($pathname, $newPathname, $extension) {
     else if ($openscadExitCode !== 0) {
       $ConversionErrors = TRUE;
       errorEntry('The OpenSCAD converter failed with exit code '.$openscadExitCode.'!', 27003, FALSE); }
+    // / Count the includes OpenSCAD could not open. The COUNT is reported & the text is not.
+    // / A render that silently drops geometry reports success without this.
+    if (is_array($openscadOutput)) $missingIncludes = count(preg_grep('/Can\'t open include file/i', $openscadOutput));
+    if ($missingIncludes > 0) warningEntry('The OpenSCAD render could not open '.$missingIncludes.' include file(s). The model may be incomplete.');
     // / Move the rendered model out of the sandbox directory to where the core expects it.
     // / This happens BEFORE the cleanup, or the cleanup would delete the model.
     if (file_exists($sandboxOutputPath)) {
@@ -3291,165 +3422,213 @@ function convertSCAD($pathname, $newPathname, $extension) {
   // / The output file is the only verdict on whether the render actually produced anything.
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $sanitizedPath = $openscadCommand = $openscadOutput = $openscadExitCode = $readyToRender = $scadVersionIsValid = $bwrapIsUsable = $allSanitized = $filesSanitized = $referencesFound = $referencesResolved = $referencesRemoved = $sandboxOutputName = $sandboxOutputPath = $pathname = $newPathname = $extension = NULL;
-  unset($sanitizedPath, $openscadCommand, $openscadOutput, $openscadExitCode, $readyToRender, $scadVersionIsValid, $bwrapIsUsable, $allSanitized, $filesSanitized, $referencesFound, $referencesResolved, $referencesRemoved, $sandboxOutputName, $sandboxOutputPath, $pathname, $newPathname, $extension);
+  // / $openscadOutput may hold quoted source lines & is cleared like everything else.
+  $sanitizedPath = $openscadCommand = $openscadOutput = $openscadExitCode = $missingIncludes = $readyToRender = $scadBinary = $bwrapBinary = $allSanitized = $filesSanitized = $referencesFound = $referencesResolved = $referencesRemoved = $sandboxOutputName = $sandboxOutputPath = $pathname = $newPathname = $extension = NULL;
+  unset($sanitizedPath, $openscadCommand, $openscadOutput, $openscadExitCode, $missingIncludes, $readyToRender, $scadBinary, $bwrapBinary, $allSanitized, $filesSanitized, $referencesFound, $referencesResolved, $referencesRemoved, $sandboxOutputName, $sandboxOutputPath, $pathname, $newPathname, $extension);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to convert 2D vector drawing formats.
+// / Dia handles diagram formats such as dxf, fig, vdx & wpg. SVG is handled by Inkscape in
+// / convertSVG() instead, because Dia exports SVG without truly rendering it.
+// / The binary is supplied by verifyDrawingVersion() rather than assumed, so the version
+// / that was verified is provably the version that runs.
+// / This function had NO version gate at all before this change. Dia was invoked blind, &
+// / a missing binary produced a timeout rather than naming the cause.
+// / Dia is a GTK application. If a conversion fails INSIDE a working sandbox rather than
+// / being refused by the sandbox gate, a missing display is the first thing to suspect,
+// / because the sandbox provides a private /tmp & an X socket outside it is not visible.
 function convertDrawings($pathname, $newPathname) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer;
-  $ConversionSuccess = $ConversionErrors = $diaCommand = $sandboxIsAvailable = FALSE;
-  $returnData = '';
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumDiaVersion;
+  $ConversionSuccess = $ConversionErrors = $sandboxIsAvailable = FALSE;
+  $drawingBinary = FALSE;
+  $returnData = $diaCommand = '';
   $stopper = 0;
   $sleepTime = $SleepTimer;
-  if ($Verbose) logEntry('Converting drawing.');
-  // / This code will attempt the conversion up to $StopCounter number of times.
-  while (!file_exists($newPathname) && $stopper <= $StopCounter) {
-    // / If the last conversion attempt failed, wait a moment before trying again.
-    if ($stopper !== 0) sleep($sleepTime++);
-    // / Attempt the conversion.
-    $diaCommand = 'dia '.escapeshellarg($pathname).' -e '.escapeshellarg($newPathname);
+  // / Locate & verify Dia. A path is returned only when both succeeded.
+  $drawingBinary = verifyDrawingVersion($MinimumDiaVersion);
+  if ($drawingBinary === FALSE) {
+    $ConversionErrors = TRUE;
+    errorEntry('The installed Dia version is missing, unidentifiable, or too old!', 10002, FALSE); }
+  else {
+    // / Build & sandbox the command once. It does not change between retries.
+    $diaCommand = escapeshellarg($drawingBinary).' '.escapeshellarg($pathname).' -e '.escapeshellarg($newPathname);
     list ($sandboxIsAvailable, $diaCommand) = sandboxCommand($diaCommand, $pathname, $newPathname, FALSE);
-    if (!$sandboxIsAvailable) warningEntry('Bubblewrap is unavailable. A drawing conversion ran unsandboxed.');
-    $returnData = shell_exec($diaCommand);
-    //$returnData = shell_exec('dia '.$pathname.' -e '.$newPathname);
-    // / Count the number of conversions to avoid infinite loops.
-    $stopper++;
-    // / Stop attempting the conversion after $StopCounter number of attempts.
-    if ($stopper === $StopCounter) { 
+    if (!$sandboxIsAvailable) {
       $ConversionErrors = TRUE;
-      errorEntry('The drawing converter timed out!', 10000, FALSE); } }
-  // / Log the output of the operation to the logfile, if it is not blank.
-  if ($Verbose && trim($returnData) !== '') logEntry('Dia returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-  if (file_exists($newPathname)) $ConversionSuccess = TRUE;
+      errorEntry('Bubblewrap is missing or non functional, so this drawing conversion cannot be isolated!', 10001, FALSE); }
+    else {
+      if ($Verbose) logEntry('Converting drawing.');
+      // / This code will attempt the conversion up to $StopCounter number of times.
+      while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+        // / If the last conversion attempt failed, wait a moment before trying again.
+        if ($stopper !== 0) sleep($sleepTime++);
+        $returnData = shell_exec($diaCommand);
+        // / Count the number of conversions to avoid infinite loops.
+        $stopper++;
+        // / Stop attempting the conversion after $StopCounter number of attempts.
+        if ($stopper === $StopCounter) {
+          $ConversionErrors = TRUE;
+          errorEntry('The drawing converter timed out!', 10000, FALSE); } }
+      // / Log the output of the operation to the logfile, if it is not blank.
+      if ($Verbose && trim($returnData) !== '') logEntry('Dia returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+      // / The output file is the only verdict on whether the conversion produced anything.
+      // / This check must stay inside the gates, or a stale output file from an earlier
+      // / attempt would report success for a conversion that was refused & never ran.
+      if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $newPathname = $sleepTime = $diaCommand = $sandboxIsAvailable = NULL;
-  unset($returnData, $stopper, $pathname, $newPathname, $sleepTime, $diaCommand, $sandboxIsAvailable);
+  $returnData = $stopper = $pathname = $newPathname = $sleepTime = $diaCommand = $drawingBinary = $sandboxIsAvailable = NULL;
+  unset($returnData, $stopper, $pathname, $newPathname, $sleepTime, $diaCommand, $drawingBinary, $sandboxIsAvailable);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
+
 // / -----------------------------------------------------------------------------------
 // / A function to convert SVG vector drawing formats.
+// / The binary is supplied by verifySVGVersion() rather than assumed.
+// / A width & a height may both be supplied. Inkscape honours both independently, which
+// / stretches the image, so the caller decides whether that is what the user asked for.
 function convertSVG($pathname, $newPathname, $height, $width) {
   // / Set variables.
   global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumInkscapeVersion;
-  $ConversionSuccess = $ConversionErrors = $svgVersionIsValid = $sandboxIsAvailable = FALSE;
+  $ConversionSuccess = $ConversionErrors = $sandboxIsAvailable = FALSE;
+  $svgBinary = FALSE;
   $returnData = $argEcho = $inkscapeCommand = '';
   $stopper = 0;
   $sleepTime = $SleepTimer;
-  $widthEcho = '--export-width='.$width;
-  $heightEcho = '--export-height='.$height;
-  if (!empty($width) && $width > 0) $argEcho = $widthEcho;
-  if (!empty($height) && $height > 0) $argEcho = $heightEcho;
-  if ((!empty($height)  && $height > 0) && (!empty($width) && $width > 0)) $argEcho = $widthEcho.' '.$heightEcho;
-  if ($Verbose) logEntry('Converting SVG.');
-  $svgVersionIsValid = verifySVGVersion($MinimumInkscapeVersion);
-  if (!$svgVersionIsValid) {
+  // / Build the export sizing arguments. A dimension of zero is not passed at all.
+  if (!empty($width) && $width > 0) $argEcho = '--export-width='.escapeshellarg($width);
+  if (!empty($height) && $height > 0) $argEcho = trim($argEcho.' --export-height='.escapeshellarg($height));
+  if ($argEcho !== '') $argEcho = $argEcho.' ';
+  // / Locate & verify Inkscape. A path is returned only when both succeeded.
+  $svgBinary = verifySVGVersion($MinimumInkscapeVersion);
+  if ($svgBinary === FALSE) {
     $ConversionErrors = TRUE;
     errorEntry('The installed Inkscape version is missing, unidentifiable, or too old!', 25001, FALSE); }
   else {
-    // / This code will attempt the conversion up to $StopCounter number of times.
-    while (!file_exists($newPathname) && $stopper <= $StopCounter) {
-      // / If the last conversion attempt failed, wait a moment before trying again.
-      if ($stopper !== 0) sleep($sleepTime++);
-      // / Attempt the conversion.
-      $inkscapeCommand = 'inkscape '.$argEcho.' --export-filename='.escapeshellarg($newPathname).' '.escapeshellarg($pathname);
-      list ($sandboxIsAvailable, $inkscapeCommand) = sandboxCommand($inkscapeCommand, $pathname, $newPathname, FALSE);
-      if (!$sandboxIsAvailable) warningEntry('Bubblewrap is unavailable. An SVG conversion ran unsandboxed.');
-      $returnData = shell_exec($inkscapeCommand);
-      // / Count the number of conversions to avoid infinite loops.
-      $stopper++;
-      // / Stop attempting the conversion after $StopCounter number of attempts.
-      if ($stopper === $StopCounter) { 
-        $ConversionErrors = TRUE;
-        errorEntry('The SVG converter timed out!', 25000, FALSE); } } }
-  // / Log the output of the operation to the logfile, if it is not blank.
-  if ($Verbose && trim($returnData) !== '') logEntry('Inkscape returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-  if (file_exists($newPathname)) $ConversionSuccess = TRUE;
+    // / Build & sandbox the command once. It does not change between retries.
+    $inkscapeCommand = escapeshellarg($svgBinary).' '.$argEcho.'--export-filename='.escapeshellarg($newPathname).' '.escapeshellarg($pathname);
+    list ($sandboxIsAvailable, $inkscapeCommand) = sandboxCommand($inkscapeCommand, $pathname, $newPathname, FALSE);
+    if (!$sandboxIsAvailable) {
+      $ConversionErrors = TRUE;
+      errorEntry('Bubblewrap is missing or non functional, so this SVG conversion cannot be isolated!', 25002, FALSE); }
+    else {
+      if ($Verbose) logEntry('Converting SVG.');
+      // / This code will attempt the conversion up to $StopCounter number of times.
+      while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+        // / If the last conversion attempt failed, wait a moment before trying again.
+        if ($stopper !== 0) sleep($sleepTime++);
+        $returnData = shell_exec($inkscapeCommand);
+        // / Count the number of conversions to avoid infinite loops.
+        $stopper++;
+        // / Stop attempting the conversion after $StopCounter number of attempts.
+        if ($stopper === $StopCounter) {
+          $ConversionErrors = TRUE;
+          errorEntry('The SVG converter timed out!', 25000, FALSE); } }
+      // / Log the output of the operation to the logfile, if it is not blank.
+      if ($Verbose && trim($returnData) !== '') logEntry('Inkscape returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+      // / The output file is the only verdict on whether the conversion produced anything.
+      if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $newPathname = $sleepTime = $heightEcho = $widthEcho = $argEcho = $svgVersionIsValid = $inkscapeCommand = $sandboxIsAvailable = NULL;
-  unset($returnData, $stopper, $pathname, $newPathname, $sleepTime, $heightEcho, $widthEcho, $argEcho, $svgVersionIsValid, $inkscapeCommand, $sandboxIsAvailable);
+  $returnData = $stopper = $pathname = $newPathname = $height = $width = $sleepTime = $argEcho = $svgBinary = $inkscapeCommand = $sandboxIsAvailable = NULL;
+  unset($returnData, $stopper, $pathname, $newPathname, $height, $width, $sleepTime, $argEcho, $svgBinary, $inkscapeCommand, $sandboxIsAvailable);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to convert video formats.
-// / The installed FFMPEG is verified against the general minimum, not the stream minimum.
-// / Video conversions read a local file & never fetch anything remote, so the playlist
-// / protocol bypass affecting older builds cannot reach this operation.
+// / The general minimum is enforced rather than the stream minimum, because a video
+// / conversion reads a local file & never fetches anything remote.
 function convertVideos($pathname, $newPathname) {
   // / Set variables.
   global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumFFMPEGVersion;
-  $ConversionSuccess = $ConversionErrors = $ffmpegVersionIsValid = $ffmpegCommand = $sandboxIsAvailable = FALSE;
-  $returnData = '';
+  $ConversionSuccess = $ConversionErrors = $sandboxIsAvailable = FALSE;
+  $ffmpegBinary = FALSE;
+  $returnData = $ffmpegCommand = '';
   $stopper = 0;
   $sleepTime = $SleepTimer;
-  // / Confirm the installed FFMPEG meets the minimum version HRConvert2 requires.
-  $ffmpegVersionIsValid = verifyFFMPEGVersion($MinimumFFMPEGVersion);
-  if (!$ffmpegVersionIsValid) {
+  // / Locate & verify FFMPEG. A path is returned only when both succeeded.
+  $ffmpegBinary = verifyFFMPEGVersion($MinimumFFMPEGVersion);
+  if ($ffmpegBinary === FALSE) {
     $ConversionErrors = TRUE;
     errorEntry('The installed FFMPEG version is missing, unidentifiable, or too old!', 11001, FALSE); }
   else {
-    if ($Verbose) logEntry('Converting video.');
-    // / This code will attempt the conversion up to $StopCounter number of times.
-    while (!file_exists($newPathname) && $stopper <= $StopCounter) {
-      // / If the last conversion attempt failed, wait a moment before trying again.
-      if ($stopper !== 0) sleep($sleepTime++);
-      // / Attempt the conversion.
-      $ffmpegCommand = 'ffmpeg -y -i '.escapeshellarg($pathname).' -c:v libx264 '.escapeshellarg($newPathname);
-      list ($sandboxIsAvailable, $ffmpegCommand) = sandboxCommand($ffmpegCommand, $pathname, $newPathname, FALSE);
-      if (!$sandboxIsAvailable) warningEntry('Bubblewrap is unavailable. A video conversion ran unsandboxed.');
-      $returnData = shell_exec($ffmpegCommand);
-      // / Count the number of conversions to avoid infinite loops.
-      $stopper++;
-      // / Stop attempting the conversion after $StopCounter number of attempts.
-      if ($stopper === $StopCounter) {
-        $ConversionErrors = TRUE;
-        errorEntry('The video converter timed out!', 11000, FALSE); } }
-    // / Log the output of the operation to the logfile, if it is not blank.
-    if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-    // / The output file is the only verdict on whether the conversion produced anything.
-    if (file_exists($newPathname)) $ConversionSuccess = TRUE; }
+    // / Build & sandbox the command once. It does not change between retries.
+    $ffmpegCommand = escapeshellarg($ffmpegBinary).' -y -i '.escapeshellarg($pathname).' -c:v libx264 '.escapeshellarg($newPathname);
+    list ($sandboxIsAvailable, $ffmpegCommand) = sandboxCommand($ffmpegCommand, $pathname, $newPathname, FALSE);
+    if (!$sandboxIsAvailable) {
+      $ConversionErrors = TRUE;
+      errorEntry('Bubblewrap is missing or non functional, so this video conversion cannot be isolated!', 11002, FALSE); }
+    else {
+      if ($Verbose) logEntry('Converting video.');
+      // / This code will attempt the conversion up to $StopCounter number of times.
+      while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+        // / If the last conversion attempt failed, wait a moment before trying again.
+        if ($stopper !== 0) sleep($sleepTime++);
+        $returnData = shell_exec($ffmpegCommand);
+        // / Count the number of conversions to avoid infinite loops.
+        $stopper++;
+        // / Stop attempting the conversion after $StopCounter number of attempts.
+        if ($stopper === $StopCounter) {
+          $ConversionErrors = TRUE;
+          errorEntry('The video converter timed out!', 11000, FALSE); } }
+      // / Log the output of the operation to the logfile, if it is not blank.
+      if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+      // / The output file is the only verdict on whether the conversion produced anything.
+      if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $newPathname = $sleepTime = $ffmpegVersionIsValid = $ffmpegCommand = $sandboxIsAvailable = NULL;
-  unset($returnData, $stopper, $pathname, $newPathname, $sleepTime, $ffmpegVersionIsValid, $ffmpegCommand, $sandboxIsAvailable);
+  $returnData = $stopper = $pathname = $newPathname = $sleepTime = $ffmpegBinary = $ffmpegCommand = $sandboxIsAvailable = NULL;
+  unset($returnData, $stopper, $pathname, $newPathname, $sleepTime, $ffmpegBinary, $ffmpegCommand, $sandboxIsAvailable);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to convert subtitle formats.
+// / The general minimum is enforced rather than the stream minimum, because a subtitle
+// / conversion reads a local file & never fetches anything remote.
+// / This function had NO version gate at all before this change. FFMPEG was invoked blind.
 function convertSubtitles($pathname, $newPathname) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer;
-  $ConversionSuccess = $ConversionErrors = $ffmpegCommand = $sandboxIsAvailable = FALSE;
-  $returnData = '';
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumFFMPEGVersion;
+  $ConversionSuccess = $ConversionErrors = $sandboxIsAvailable = FALSE;
+  $ffmpegBinary = FALSE;
+  $returnData = $ffmpegCommand = '';
   $stopper = 0;
   $sleepTime = $SleepTimer;
-  if ($Verbose) logEntry('Converting subtitle.');
-  // / This code will attempt the conversion up to $StopCounter number of times.
-  while (!file_exists($newPathname) && $stopper <= $StopCounter) {
-    // / If the last conversion attempt failed, wait a moment before trying again.
-    if ($stopper !== 0) sleep($sleepTime++);
-    // / Attempt the conversion.
-    $ffmpegCommand = 'ffmpeg -y -i '.escapeshellarg($pathname).' '.escapeshellarg($newPathname);
+  // / Locate & verify FFMPEG. A path is returned only when both succeeded.
+  $ffmpegBinary = verifyFFMPEGVersion($MinimumFFMPEGVersion);
+  if ($ffmpegBinary === FALSE) {
+    $ConversionErrors = TRUE;
+    errorEntry('The installed FFMPEG version is missing, unidentifiable, or too old!', 22002, FALSE); }
+  else {
+    // / Build & sandbox the command once. It does not change between retries.
+    $ffmpegCommand = escapeshellarg($ffmpegBinary).' -y -i '.escapeshellarg($pathname).' '.escapeshellarg($newPathname);
     list ($sandboxIsAvailable, $ffmpegCommand) = sandboxCommand($ffmpegCommand, $pathname, $newPathname, FALSE);
-    if (!$sandboxIsAvailable) warningEntry('Bubblewrap is unavailable. A subtitle conversion ran unsandboxed.');
-    $returnData = shell_exec($ffmpegCommand);
-    // / Count the number of conversions to avoid infinite loops.
-    $stopper++;
-    // / Stop attempting the conversion after $StopCounter number of attempts.
-    if ($stopper === $StopCounter) {
+    if (!$sandboxIsAvailable) {
       $ConversionErrors = TRUE;
-      errorEntry('The subtitle converter timed out!', 22000, FALSE); } }
-  // / Log the output of the operation to the logfile, if it is not blank.
-  if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-  if (file_exists($newPathname)) $ConversionSuccess = TRUE;
+      errorEntry('Bubblewrap is missing or non functional, so this subtitle conversion cannot be isolated!', 22001, FALSE); }
+    else {
+      if ($Verbose) logEntry('Converting subtitle.');
+      // / This code will attempt the conversion up to $StopCounter number of times.
+      while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+        // / If the last conversion attempt failed, wait a moment before trying again.
+        if ($stopper !== 0) sleep($sleepTime++);
+        $returnData = shell_exec($ffmpegCommand);
+        // / Count the number of conversions to avoid infinite loops.
+        $stopper++;
+        // / Stop attempting the conversion after $StopCounter number of attempts.
+        if ($stopper === $StopCounter) {
+          $ConversionErrors = TRUE;
+          errorEntry('The subtitle converter timed out!', 22000, FALSE); } }
+      // / Log the output of the operation to the logfile, if it is not blank.
+      if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+      // / The output file is the only verdict on whether the conversion produced anything.
+      if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $newPathname = $sleepTime = $ffmpegCommand = $sandboxIsAvailable = NULL;
-  unset($returnData, $stopper, $pathname, $newPathname, $sleepTime, $ffmpegCommand, $sandboxIsAvailable);
+  $returnData = $stopper = $pathname = $newPathname = $sleepTime = $ffmpegBinary = $ffmpegCommand = $sandboxIsAvailable = NULL;
+  unset($returnData, $stopper, $pathname, $newPathname, $sleepTime, $ffmpegBinary, $ffmpegCommand, $sandboxIsAvailable);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -4153,15 +4332,14 @@ function convertStreams($pathname, $newPathname) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to convert audio formats.
-// / The bitrate check compares instead of assigning.
-// / The installed FFMPEG is verified against the general minimum, not the stream minimum.
-// / Audio conversions read a local file & never fetch anything remote, so the playlist
-// / protocol bypass affecting older builds cannot reach this operation.
+// / The general minimum is enforced rather than the stream minimum, because an audio
+// / conversion reads a local file & never fetches anything remote.
 function convertAudio($pathname, $newPathname, $extension, $bitrate) {
   // / Set variables.
   global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumFFMPEGVersion;
-  $ConversionSuccess = $ConversionErrors = $ffmpegVersionIsValid = FALSE;
-  $returnData = $br = '';
+  $ConversionSuccess = $ConversionErrors = $sandboxIsAvailable = FALSE;
+  $ffmpegBinary = FALSE;
+  $returnData = $ffmpegCommand = '';
   $br = ' ';
   $stopper = 0;
   $sleepTime = $SleepTimer;
@@ -4169,37 +4347,40 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
   if (empty($bitrate) or $bitrate === '') $bitrate = 'auto';
   if ($bitrate === 'auto') $br = ' ';
   else $br = ' -b:a '.escapeshellarg($bitrate).' ';
-  // / Confirm the installed FFMPEG meets the minimum version HRConvert2 requires.
-  $ffmpegVersionIsValid = verifyFFMPEGVersion($MinimumFFMPEGVersion);
-  if (!$ffmpegVersionIsValid) {
+  // / Locate & verify FFMPEG. A path is returned only when both succeeded.
+  $ffmpegBinary = verifyFFMPEGVersion($MinimumFFMPEGVersion);
+  if ($ffmpegBinary === FALSE) {
     $ConversionErrors = TRUE;
     errorEntry('The installed FFMPEG version is missing, unidentifiable, or too old!', 12001, FALSE); }
   else {
-    if ($Verbose) logEntry('Converting audio.');
-    // / This code will attempt the conversion up to $StopCounter number of times.
-    while (!file_exists($newPathname) && $stopper <= $StopCounter) {
-      // / If the last conversion attempt failed, wait a moment before trying again.
-      if ($stopper !== 0) sleep($sleepTime++);
-      // / Attempt the conversion.
-      $ffmpegCommand = 'ffmpeg -y -vn -i '.escapeshellarg($pathname).$br.escapeshellarg($newPathname);
-      list ($sandboxIsAvailable, $ffmpegCommand) = sandboxCommand($ffmpegCommand, $pathname, $newPathname, FALSE);
-      if (!$sandboxIsAvailable) warningEntry('Bubblewrap is unavailable. An audio conversion ran unsandboxed.');
-      $returnData = shell_exec($ffmpegCommand);
-      // / Count the number of conversions to avoid infinite loops.
-      $stopper++;
-      // / Stop attempting the conversion after $StopCounter number of attempts.
-      if ($stopper === $StopCounter) {
-        $ConversionErrors = TRUE;
-        errorEntry('The audio converter timed out!', 12000, FALSE); } }
-    // / Log the output of the operation to the logfile, if it is not blank.
-    if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-    // / The output file is the only verdict on whether the conversion produced anything.
-    // / This check must stay inside the version gate, or a stale output file from an earlier
-    // / attempt would report success for a conversion that was refused & never ran.
-    if (file_exists($newPathname)) $ConversionSuccess = TRUE; }
+    // / Build & sandbox the command once. It does not change between retries.
+    $ffmpegCommand = escapeshellarg($ffmpegBinary).' -y -vn -i '.escapeshellarg($pathname).$br.escapeshellarg($newPathname);
+    list ($sandboxIsAvailable, $ffmpegCommand) = sandboxCommand($ffmpegCommand, $pathname, $newPathname, FALSE);
+    if (!$sandboxIsAvailable) {
+      $ConversionErrors = TRUE;
+      errorEntry('Bubblewrap is missing or non functional, so this audio conversion cannot be isolated!', 12002, FALSE); }
+    else {
+      if ($Verbose) logEntry('Converting audio.');
+      // / This code will attempt the conversion up to $StopCounter number of times.
+      while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+        // / If the last conversion attempt failed, wait a moment before trying again.
+        if ($stopper !== 0) sleep($sleepTime++);
+        $returnData = shell_exec($ffmpegCommand);
+        // / Count the number of conversions to avoid infinite loops.
+        $stopper++;
+        // / Stop attempting the conversion after $StopCounter number of attempts.
+        if ($stopper === $StopCounter) {
+          $ConversionErrors = TRUE;
+          errorEntry('The audio converter timed out!', 12000, FALSE); } }
+      // / Log the output of the operation to the logfile, if it is not blank.
+      if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+      // / The output file is the only verdict on whether the conversion produced anything.
+      // / This check must stay inside the gates, or a stale output file from an earlier
+      // / attempt would report success for a conversion that was refused & never ran.
+      if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $newPathname = $br = $extension = $bitrate = $sleepTime = $ffmpegVersionIsValid = $ffmpegCommand = $sandboxIsAvailable = NULL;
-  unset($returnData, $stopper, $pathname, $newPathname, $br, $extension, $bitrate, $sleepTime, $ffmpegVersionIsValid, $ffmpegCommand, $sandboxIsAvailable);
+  $returnData = $stopper = $pathname = $newPathname = $br = $extension = $bitrate = $sleepTime = $ffmpegBinary = $ffmpegCommand = $sandboxIsAvailable = NULL;
+  unset($returnData, $stopper, $pathname, $newPathname, $br, $extension, $bitrate, $sleepTime, $ffmpegBinary, $ffmpegCommand, $sandboxIsAvailable);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -4216,7 +4397,7 @@ function convertArchives($pathname, $newPathname, $extension) {
   // / Set variables.
   global $Verbose, $ConvertDir, $Lol, $Lolol, $StopCounter, $SleepTimer, $PermissionLevels, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion;
   $ConversionSuccess = $ConversionErrors = $sandboxIsAvailable = FALSE;
-  $archiveToolsAreValid = $sevenZipIsValid = $rarIsValid = $zipIsValid = $tarIsValid = $mkisofsIsValid = FALSE;
+  $archiveToolsAreValid = $sevenZipBianry = $rarBianry = $zipBianry = $tarBianry = $mkisofsBianry = FALSE;
   $returnData = $extractCommand = $archiveCommand = '';
   $filename = pathinfo($pathname, PATHINFO_FILENAME);
   $safedir2 = $ConvertDir.$filename;
@@ -4230,9 +4411,8 @@ function convertArchives($pathname, $newPathname, $extension) {
   $oldExtension = getExtension($pathname);
   $archiveError = 13000;
   // / Verify every archive utility before anything is read or written.
-  list ($archiveToolsAreValid, $sevenZipIsValid, $rarIsValid, $zipIsValid, $tarIsValid, $mkisofsIsValid) = verifyArchiveVersions($Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion);
-  // / 7-Zip performs every extraction, so no archive operation of any kind works without it.
-  if (!$sevenZipIsValid) {
+  list ($archiveToolsAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary) = verifyArchiveVersions($Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion);
+  if ($sevenZipBinary === FALSE) {
     $ConversionErrors = TRUE;
     errorEntry('The installed 7-Zip version is missing, unidentifiable, or too old!', 13008, FALSE); }
   else {
@@ -4241,8 +4421,8 @@ function convertArchives($pathname, $newPathname, $extension) {
     if (!is_dir($safedir2)) $ConversionErrors = TRUE;
     // / Extract the source archive into the staging folder.
     if ($Verbose) logEntry('Extracting file '.$pathname.' to '.$safedir2.'.');
-    if (in_array(strtolower($oldExtension), $array7zo2)) $extractCommand = '7z x -y '.escapeshellarg($pathname).' -o'.escapeshellarg($safedir2);
-    else if (in_array(strtolower($oldExtension), $arrayzipo) or in_array(strtolower($oldExtension), $array7zo) or in_array(strtolower($oldExtension), $arrayraro) or in_array(strtolower($oldExtension), $arraytaro)) $extractCommand = '7z x -aoa '.escapeshellarg($pathname).' -o'.escapeshellarg($safedir2);
+    if (in_array(strtolower($oldExtension), $array7zo2)) $extractCommand = escapeshellarg($sevenZipBinary).' x -y '.escapeshellarg($pathname).' -o'.escapeshellarg($safedir2);
+    else if (in_array(strtolower($oldExtension), $arrayzipo) or in_array(strtolower($oldExtension), $array7zo) or in_array(strtolower($oldExtension), $arrayraro) or in_array(strtolower($oldExtension), $arraytaro)) $extractCommand = escapeshellarg($sevenZipBinary).' x -aoa '.escapeshellarg($pathname).' -o'.escapeshellarg($safedir2);
     if ($extractCommand !== '') {
       list ($sandboxIsAvailable, $extractCommand) = sandboxCommand($extractCommand, $pathname, $safedir2, FALSE);
       if (!$sandboxIsAvailable) {
@@ -4261,28 +4441,25 @@ function convertArchives($pathname, $newPathname, $extension) {
       // / Five formats each had their own copy of the retry loop, & every copy carried the
       // / same bug. The loop is written once below & only the command varies.
       if (in_array($extension, $array7zo)) {
-        $archiveCommand = '7z a -t'.escapeshellarg($extension).' '.escapeshellarg($newPathname).' '.escapeshellarg($safedir2);
+        $archiveCommand = escapeshellarg($sevenZipBinary).' a -t'.escapeshellarg($extension).' '.escapeshellarg($newPathname).' '.escapeshellarg($safedir2);
         $archiveError = 13001; }
       else if (in_array($extension, $array7zo2)) {
-        if (!$mkisofsIsValid) errorEntry('Mkisofs is missing, unidentifiable, or too old!', 13009, FALSE);
-        else $archiveCommand = 'mkisofs -o '.escapeshellarg($newPathname).' '.escapeshellarg($safedir2);
+        if (!$mkisofsBinary) errorEntry('Mkisofs is missing, unidentifiable, or too old!', 13009, FALSE);
+        else $archiveCommand = escapeshellarg($mkisofsBinary).' -o '.escapeshellarg($newPathname).' '.escapeshellarg($safedir2);
         $archiveError = 13002; }
       else if (in_array($extension, $arrayzipo)) {
-        if (!$zipIsValid) errorEntry('Zip is missing, unidentifiable, or too old!', 13010, FALSE);
-        else $archiveCommand = 'zip -r -j '.escapeshellarg($newPathname).' '.escapeshellarg($safedir2);
+        if (!$zipBinary) errorEntry('Zip is missing, unidentifiable, or too old!', 13010, FALSE);
+        else $archiveCommand = escapeshellarg($zipBinary).' -r -j '.escapeshellarg($newPathname).' '.escapeshellarg($safedir2);
         $archiveError = 13003; }
       else if (in_array($extension, $arraytaro)) {
-        if (!$tarIsValid) errorEntry('Tar is missing, unidentifiable, or too old!', 13011, FALSE);
-        else $archiveCommand = 'tar -cjf '.escapeshellarg($newPathname).' -C '.escapeshellarg($safedir2).' .';
+        if (!$tarBinary) errorEntry('Tar is missing, unidentifiable, or too old!', 13011, FALSE);
+        else $archiveCommand = escapeshellarg($tarBinary).' -cjf '.escapeshellarg($newPathname).' -C '.escapeshellarg($safedir2).' .';
         $archiveError = 13004; }
       else if (in_array($extension, $arrayraro)) {
         // / 7-Zip cannot create rar archives. RAR compression is proprietary & 7-Zip reads
         // / the format without being able to write it, so there is NO fallback here.
-        // / -ma4 forces the older RAR format. RAR 7.00 defaults to a compression method
-        // / that older extractors report as unsupported, which produced an archive
-        // / HRConvert2 itself could not extract on the very next request.
-        if (!$rarIsValid) errorEntry('Rar output requires the rar utility, which is missing or too old!', 13013, FALSE);
-        else $archiveCommand = 'rar a -ma4 -ep1 -r '.escapeshellarg($newPathname).' '.escapeshellarg($safedir2);
+        if (!$rarBinary) errorEntry('Rar output requires the rar utility, which is missing or too old!', 13013, FALSE);
+        else $archiveCommand = escapeshellarg($rarBinary).' a -ep1 -r '.escapeshellarg($newPathname).' '.escapeshellarg($safedir2);
         $archiveError = 13005; }
       // / Perform the archive operation, retrying up to $StopCounter times.
       // / The loop exits as soon as the output exists. Without that test it always ran the
@@ -4313,8 +4490,8 @@ function convertArchives($pathname, $newPathname, $extension) {
   // / Code to clean up temporary files & directories.
   cleanFiles($safedir2);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $filename = $safedir2 = $oldExtension = $returnData = $pathname = $newPathname = $extension = $array7zo = $arrayzipo = $array7zo2 = $arraytaro = $arrayraro = $sleepTime = $stopper = $extractCommand = $archiveCommand = $archiveError = $sandboxIsAvailable = $archiveToolsAreValid = $sevenZipIsValid = $rarIsValid = $zipIsValid = $tarIsValid = $mkisofsIsValid = NULL;
-  unset($filename, $safedir2, $oldExtension, $returnData, $pathname, $newPathname, $extension, $array7zo, $arrayzipo, $array7zo2, $arraytaro, $arrayraro, $sleepTime, $stopper, $extractCommand, $archiveCommand, $archiveError, $sandboxIsAvailable, $archiveToolsAreValid, $sevenZipIsValid, $rarIsValid, $zipIsValid, $tarIsValid, $mkisofsIsValid);
+  $filename = $safedir2 = $oldExtension = $returnData = $pathname = $newPathname = $extension = $array7zo = $arrayzipo = $array7zo2 = $arraytaro = $arrayraro = $sleepTime = $stopper = $extractCommand = $archiveCommand = $archiveError = $sandboxIsAvailable = $archiveToolsAreValid = $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = NULL;
+  unset($filename, $safedir2, $oldExtension, $returnData, $pathname, $newPathname, $extension, $array7zo, $arrayzipo, $array7zo2, $arraytaro, $arrayraro, $sleepTime, $stopper, $extractCommand, $archiveCommand, $archiveError, $sandboxIsAvailable, $archiveToolsAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -4623,22 +4800,25 @@ function deleteFiles($FilesToDelete) {
 // / Each file is archived on its own, so one input produces one output every time.
 // / Each output format gates on its own creator, so a missing mkisofs does not prevent a
 // / zip archive from being created.
+// / Every binary is supplied by verifyArchiveVersions() rather than assumed, so the version
+// / that was verified is provably the version that runs.
 // / 7-Zip cannot create rar archives. RAR compression is proprietary & 7-Zip reads the
-// / format without being able to write it, so rar output has no fallback.
+// / format without being able to write it, so rar output has NO fallback.
 function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
   // / Set variables.
   global $Verbose, $VirusScan, $ConvertTempDir, $Lol, $Lolol, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion;
   $ArchiveComplete = $ArchiveErrors = $virusFound = $skip = $variableIsSanitized = FALSE;
   $fileIsVerified = $scanComplete = $sandboxIsAvailable = $anyFileSucceeded = $loopCheck = FALSE;
-  $archiveToolsAreValid = $sevenZipIsValid = $rarIsValid = $zipIsValid = $tarIsValid = $mkisofsIsValid = FALSE;
+  $archiveToolsAreValid = FALSE;
+  $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = FALSE;
   $clean = $copy = TRUE;
   $returnData = $file = $pathname = $oldPathname = $oldExtension = $newPathname = $archiveCommand = '';
   $rararr = array('rar');
   $ziparr = array('zip');
   $tararr = array('7z', 'tar', 'tar.gz', 'tar.bz2');
   $isoarr = array('iso');
-  // / Verify every archive utility before anything is written.
-  list ($archiveToolsAreValid, $sevenZipIsValid, $rarIsValid, $zipIsValid, $tarIsValid, $mkisofsIsValid) = verifyArchiveVersions($Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion);
+  // / Locate & verify every archive utility before anything is written.
+  list ($archiveToolsAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary) = verifyArchiveVersions($Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion);
   // / Make sure the input files are formatted into an array.
   if (!is_array($FilesToArchive)) $FilesToArchive = array($FilesToArchive);
   // / Iterate through the array of input files.
@@ -4671,32 +4851,29 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
       if ($Verbose) logEntry('Virus scan complete.'); }
     // / Select the archiver for the requested output format & confirm it is usable.
     // / Handle archiving of rar compatible files.
-    // / -ma4 forces the older RAR format. RAR 7.00 defaults to a compression method that
-    // / older extractors report as unsupported, which produced an archive HRConvert2
-    // / itself could not extract on the very next request.
     if (in_array($UserExtension, $rararr)) {
-      if (!$rarIsValid) {
+      if ($rarBinary === FALSE) {
         $ArchiveErrors = TRUE;
         errorEntry('Rar output requires the rar utility, which is missing or too old!', 13012, FALSE); }
-      else $archiveCommand = 'rar a -ma4 -ep '.escapeshellarg($newPathname).' '.escapeshellarg($pathname); }
+      else $archiveCommand = escapeshellarg($rarBinary).' a -ep '.escapeshellarg($newPathname).' '.escapeshellarg($pathname); }
     // / Handle archiving of zip compatible files.
     else if (in_array($UserExtension, $ziparr)) {
-      if (!$zipIsValid) {
+      if ($zipBinary === FALSE) {
         $ArchiveErrors = TRUE;
         errorEntry('Zip is missing, unidentifiable, or too old!', 13010, FALSE); }
-      else $archiveCommand = 'zip -j '.escapeshellarg($newPathname).' '.escapeshellarg($pathname); }
+      else $archiveCommand = escapeshellarg($zipBinary).' -j '.escapeshellarg($newPathname).' '.escapeshellarg($pathname); }
     // / Handle archiving of 7-Zip compatible files.
     else if (in_array($UserExtension, $tararr)) {
-      if (!$sevenZipIsValid) {
+      if ($sevenZipBinary === FALSE) {
         $ArchiveErrors = TRUE;
         errorEntry('The installed 7-Zip version is missing, unidentifiable, or too old!', 13008, FALSE); }
-      else $archiveCommand = '7z a '.escapeshellarg($newPathname).' '.escapeshellarg($pathname); }
+      else $archiveCommand = escapeshellarg($sevenZipBinary).' a '.escapeshellarg($newPathname).' '.escapeshellarg($pathname); }
     // / Handle archiving of mkisofs compatible files.
     else if (in_array($UserExtension, $isoarr)) {
-      if (!$mkisofsIsValid) {
+      if ($mkisofsBinary === FALSE) {
         $ArchiveErrors = TRUE;
         errorEntry('Mkisofs is missing, unidentifiable, or too old!', 13009, FALSE); }
-      else $archiveCommand = 'mkisofs -o '.escapeshellarg($newPathname).' '.escapeshellarg($pathname); }
+      else $archiveCommand = escapeshellarg($mkisofsBinary).' -o '.escapeshellarg($newPathname).' '.escapeshellarg($pathname); }
     // / Perform the archive operation inside a sandbox.
     // / An archiver reads a file the user supplied & writes a structure it controls, so it
     // / is isolated for the same reason every other dependency is.
@@ -4722,8 +4899,8 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
     if ($loopCheck) $anyFileSucceeded = TRUE; }
   if ($anyFileSucceeded) $ArchiveComplete = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $rararr = $ziparr = $tararr = $isoarr = $pathname = $oldPathname = $newPathname = $scanComplete = $virusFound = $returnData = $variableIsSanitized = $fileIsVerified = $oldExtension = $clean = $copy = $skip = $loopCheck = $anyFileSucceeded = $archiveCommand = $sandboxIsAvailable = $archiveToolsAreValid = $sevenZipIsValid = $rarIsValid = $zipIsValid = $tarIsValid = $mkisofsIsValid = $FilesToArchive = $UserFilename = $UserExtension = NULL;
-  unset($file, $rararr, $ziparr, $tararr, $isoarr, $pathname, $oldPathname, $newPathname, $scanComplete, $virusFound, $returnData, $variableIsSanitized, $fileIsVerified, $oldExtension, $clean, $copy, $skip, $loopCheck, $anyFileSucceeded, $archiveCommand, $sandboxIsAvailable, $archiveToolsAreValid, $sevenZipIsValid, $rarIsValid, $zipIsValid, $tarIsValid, $mkisofsIsValid, $FilesToArchive, $UserFilename, $UserExtension);
+  $file = $rararr = $ziparr = $tararr = $isoarr = $pathname = $oldPathname = $newPathname = $scanComplete = $virusFound = $returnData = $variableIsSanitized = $fileIsVerified = $oldExtension = $clean = $copy = $skip = $loopCheck = $anyFileSucceeded = $archiveCommand = $sandboxIsAvailable = $archiveToolsAreValid = $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = $FilesToArchive = $UserFilename = $UserExtension = NULL;
+  unset($file, $rararr, $ziparr, $tararr, $isoarr, $pathname, $oldPathname, $newPathname, $scanComplete, $virusFound, $returnData, $variableIsSanitized, $fileIsVerified, $oldExtension, $clean, $copy, $skip, $loopCheck, $anyFileSucceeded, $archiveCommand, $sandboxIsAvailable, $archiveToolsAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $FilesToArchive, $UserFilename, $UserExtension);
   return array($ArchiveComplete, $ArchiveErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -4857,15 +5034,20 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
 // / A document is converted to PDF by the document conversion engine.
 // / An image is read directly by Tesseract, or converted to PDF & read by pdftotext.
 // / Every route produces a text file which is then converted to the requested output.
-// / Tesseract & pdftotext are sandboxed. The document conversion engine is not, because it
-// / is a persistent listener rather than a process launched per conversion.
-// / A conversion that cannot be isolated is refused rather than run without a boundary,
-// / except where the dependency carries a native control of its own.
+// / Every binary is located & verified rather than assumed, so the version that was
+// / verified is provably the version that runs.
+// / Tesseract, pdftotext & ImageMagick are sandboxed. The document conversion engine is
+// / not, because it is a persistent listener rather than a process launched per conversion.
+// / An operation that cannot be isolated is refused, except for the ImageMagick page split,
+// / which has policy.xml as a native control & is therefore only downgraded rather than
+// / left with no boundary at all.
 function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   // / Set variables.
-  global $Verbose, $VirusScan, $ConvertTempDir, $ConvertDir, $Lol, $Lolol, $Append, $PathToUnoconv, $HomeLoc;
+  global $Verbose, $VirusScan, $ConvertTempDir, $ConvertDir, $Lol, $Lolol, $Append, $PathToUnoconv, $HomeLoc, $MinimumTesseractVersion, $MinimumPdftotextVersion, $MinimumImageVersion;
   $OperationSuccessful = $OperationErrors = $multiple = $virusFound = $skip = $variableIsSanitized = FALSE;
-  $fileIsVerified = $scanComplete = $documentEngineStarted = $sandboxIsAvailable = $anyFileSucceeded = FALSE;
+  $fileIsVerified = $scanComplete = $documentEngineStarted = $sandboxIsAvailable = $anyFileSucceeded = $loopCheck = FALSE;
+  $ocrToolsAreValid = FALSE;
+  $tesseractBinary = $pdftotextBinary = $imageBinary = FALSE;
   $clean = $copy = TRUE;
   $returnData = $file = $pathname = $oldPathname = $oldExtension = $newPathname = '';
   $pathnameTEMP = $pathnameTEMP0 = $pathnameTEMP1 = $pathnameTEMP3 = $pathnameTEMPTesseract = '';
@@ -4877,6 +5059,12 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   $img1array = array('jpg', 'jpeg', 'bmp', 'webp', 'png', 'gif');
   $pdf1array = array('pdf');
   $allowedOCR = array('txt', 'doc', 'docx', 'rtf', 'xls', 'xlsx', 'ods', 'odt', 'jpg', 'jpeg', 'bmp', 'webp', 'png', 'gif', 'pdf', 'abw');
+  // / Locate & verify every OCR utility before anything is read.
+  // / Each route gates on the specific tool it uses rather than on the overall verdict, so
+  // / a missing pdftotext does not prevent an image from being read by Tesseract.
+  list ($ocrToolsAreValid, $tesseractBinary, $pdftotextBinary) = verifyOCRVersions($MinimumTesseractVersion, $MinimumPdftotextVersion);
+  // / ImageMagick rasterizes a PDF page for the advanced route & is verified separately.
+  $imageBinary = verifyImageVersion($MinimumImageVersion);
   // / Make sure the input files are formatted into an array.
   if (!is_array($PDFWorkSelected)) $PDFWorkSelected = array($PDFWorkSelected);
   // / Iterate through the array of input files.
@@ -4915,92 +5103,104 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
           // / Method 1 is the simple route. pdftotext reads a PDF that already holds text.
           // / It is fast & exact, & produces nothing at all on a scanned page.
           if ($Method === 1 or $Method === '1') {
-            if ($Verbose) logEntry('Performing OCR using method 1.');
-            // / Perform the conversion using PDFTOTEXT.
-            $ocrCommand = 'pdftotext -layout '.escapeshellarg($pathname).' '.escapeshellarg($pathnameTEMP);
-            list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathname, $pathnameTEMP, FALSE);
-            // / pdftotext has no native control of its own, so an unavailable sandbox leaves
-            // / no boundary at all & the operation is refused rather than run without one.
-            if (!$sandboxIsAvailable) {
+            if ($pdftotextBinary === FALSE) {
               $OperationErrors = TRUE;
-              errorEntry('Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!', 15012, FALSE); }
-            else $returnData = shell_exec($ocrCommand);
-            // / Log the output of the operation to the logfile, if it is not blank.
-            if ($Verbose && trim($returnData) !== '') logEntry('The converter (PTT-1) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-            // / Check if the conversion was successful and retry with method 1 if required.
-            if (!file_exists($pathnameTEMP)) {
-              errorEntry('Could not complete the conversion using method 1. Reattempting using method 2.', 15004, FALSE);
+              errorEntry('The installed pdftotext version is missing, unidentifiable, or too old!', 15014, FALSE);
               $Method = 2; }
-            else if ($Verbose) logEntry('A file was created at '.$pathnameTEMP); }
-          // / Method 2 is the advanced route. Each page is rasterized & read by Tesseract.
-          // / It reads a scanned page that holds no text layer, & is considerably slower.
-          if ($Method === 2 or $Method === '2') {
-            $pathnameTEMP1 = str_replace('..', '', str_replace('.'.$oldExtension, '.jpg', $pathname));
-            if ($Verbose) logEntry('Performing OCR intermediate operation using method 2.');
-            // / Perform the conversion using ImageMagick.
-            $ocrCommand = '/usr/local/bin/magick '.escapeshellarg($pathname).' '.escapeshellarg($pathnameTEMP1);
-            list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathname, $pathnameTEMP1, FALSE);
-            // / ImageMagick has policy.xml, so an unavailable sandbox is a downgrade to a
-            // / weaker control rather than to no control at all. The operation continues.
-            if (!$sandboxIsAvailable) warningEntry('Bubblewrap is unavailable. This OCR page split will run unsandboxed & is protected only by policy.xml.');
-            $returnData = shell_exec($ocrCommand);
-            // / Log the output of the operation to the logfile, if it is not blank.
-            if ($Verbose && trim($returnData) !== '') logEntry('The converter (IM-1) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-            // / If a file doesn't exist there is a good chance it is because ImageMagick has split the pages up.
-            if (!file_exists($pathnameTEMP1)) {
-              // / Scan the current directory for files matching the filename.
-              $pagedFilesArrRAW = scandir($ConvertTempDir);
-              foreach ($pagedFilesArrRAW as $pagedFile) {
-                $filename = pathinfo($pathname, PATHINFO_FILENAME);
-                // / Look for files with the same filename but in .jpg format. Skip the rest.
-                if (stripos($pagedFile, $filename) === FALSE) continue;
-                if (stripos($pagedFile, '.jpg') === FALSE) continue;
-                if ($pagedFile === '.' or $pagedFile === '..' or $pagedFile === '.AppData' or $pagedFile === 'index.html') continue;
-                // / Set page specific variables.
-                $pathnameTEMP1 = str_replace('..', '', str_replace('.'.$oldExtension, '.jpg', $pathname));
-                $cleanFilname = str_replace('..', '', str_replace($oldExtension, '', $filename));
-                $pageNumber = str_replace('..', '', str_replace('-', '', str_replace($cleanFilname, '', str_replace('.jpg', '', $pagedFile))));
-                $pathnameTEMP1 = str_replace('..', '', str_replace('.jpg', '-'.$pageNumber.'.jpg', $pathnameTEMP1));
-                $pathnameTEMP = str_replace('..', '', str_replace('.'.$oldExtension, '-'.$pageNumber.'.txt', $pathname));
-                $pathnameTEMPTesseract = str_replace('..', '', str_replace('.'.$oldExtension, '-'.$pageNumber, $pathname));
-                $pathnameTEMP0 = str_replace('..', '', str_replace('-'.$pageNumber.'.txt', '.txt', $pathnameTEMP));
-                if ($Verbose) logEntry('Performing OCR final operation using method 2.');
-                // / Perform the conversion using Tesseract.
-                // / Tesseract appends .txt to the output argument, so what is passed is a
-                // / prefix rather than a filename. The sandbox mounts its directory either way.
-                $ocrCommand = 'tesseract '.escapeshellarg($pathnameTEMP1).' '.escapeshellarg($pathnameTEMPTesseract);
-                list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathnameTEMP1, $pathnameTEMPTesseract, FALSE);
-                // / Tesseract has no native control of its own, so an unavailable sandbox
-                // / leaves no boundary & the operation is refused rather than run without one.
-                if (!$sandboxIsAvailable) {
-                  $OperationErrors = TRUE;
-                  errorEntry('Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!', 15012, FALSE);
-                  continue; }
-                $returnData = shell_exec($ocrCommand);
-                // / Log the output of the operation to the logfile, if it is not blank.
-                if ($Verbose && trim($returnData) !== '') logEntry('The converter (T-1) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-                // / The text file is the verdict on this page, not the image it was read from.
-                if (!file_exists($pathnameTEMP)) errorEntry('Could not complete the conversion using method 2.', 15005, FALSE);
-                else if ($Verbose) logEntry('A file was created at '.$pathnameTEMP);
-                // / Recompile all of the text files into one big text file.
-                $readPageData = file_get_contents($pathnameTEMP);
-                $writePageData = file_put_contents($pathnameTEMP0, $readPageData.$Lol, $Append);
-                $multiple = TRUE;
-                if (!file_exists($pathnameTEMP0)) errorEntry('Could not OCR file!', 15006, FALSE);
-                else if ($Verbose) logEntry('A file was created at '.$pathnameTEMP0); } }
-            if ($Verbose) logEntry('Converted file '.$pathnameTEMP1.' to '.$pathnameTEMP.'.');
-            // / A single page PDF produces one image rather than a numbered set.
-            if (!$multiple) {
-              $pathnameTEMPTesseract = str_replace('..', '', str_replace('.txt', '', $pathnameTEMP));
-              if ($Verbose) logEntry('Performing OCR final operation using method 2.');
-              $ocrCommand = 'tesseract '.escapeshellarg($pathnameTEMP1).' '.escapeshellarg($pathnameTEMPTesseract);
-              list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathnameTEMP1, $pathnameTEMPTesseract, FALSE);
+            else {
+              if ($Verbose) logEntry('Performing OCR using method 1.');
+              // / Perform the conversion using PDFTOTEXT.
+              $ocrCommand = escapeshellarg($pdftotextBinary).' -layout '.escapeshellarg($pathname).' '.escapeshellarg($pathnameTEMP);
+              list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathname, $pathnameTEMP, FALSE);
+              // / pdftotext has no native control of its own, so an unavailable sandbox leaves
+              // / no boundary at all & the operation is refused rather than run without one.
               if (!$sandboxIsAvailable) {
                 $OperationErrors = TRUE;
                 errorEntry('Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!', 15012, FALSE); }
               else $returnData = shell_exec($ocrCommand);
               // / Log the output of the operation to the logfile, if it is not blank.
-              if ($Verbose && trim($returnData) !== '') logEntry('The converter (T-2) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); } } } }
+              if ($Verbose && trim($returnData) !== '') logEntry('The converter (PTT-1) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+              // / Check if the conversion was successful and retry with method 2 if required.
+              if (!file_exists($pathnameTEMP)) {
+                errorEntry('Could not complete the conversion using method 1. Reattempting using method 2.', 15004, FALSE);
+                $Method = 2; }
+              else if ($Verbose) logEntry('A file was created at '.$pathnameTEMP); } }
+          // / Method 2 is the advanced route. Each page is rasterized & read by Tesseract.
+          // / It reads a scanned page that holds no text layer, & is considerably slower.
+          if ($Method === 2 or $Method === '2') {
+            if ($imageBinary === FALSE) {
+              $OperationErrors = TRUE;
+              errorEntry('The installed ImageMagick version is missing, unidentifiable, or too old!', 8001, FALSE); }
+            else if ($tesseractBinary === FALSE) {
+              $OperationErrors = TRUE;
+              errorEntry('The installed Tesseract version is missing, unidentifiable, or too old!', 15013, FALSE); }
+            else {
+              $pathnameTEMP1 = str_replace('..', '', str_replace('.'.$oldExtension, '.jpg', $pathname));
+              if ($Verbose) logEntry('Performing OCR intermediate operation using method 2.');
+              // / Perform the conversion using ImageMagick.
+              $ocrCommand = escapeshellarg($imageBinary).' '.escapeshellarg($pathname).' '.escapeshellarg($pathnameTEMP1);
+              list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathname, $pathnameTEMP1, FALSE);
+              // / ImageMagick has policy.xml, so an unavailable sandbox is a downgrade to a
+              // / weaker control rather than to no control at all. The operation continues.
+              if (!$sandboxIsAvailable) warningEntry('Bubblewrap is unavailable. This OCR page split will run unsandboxed & is protected only by policy.xml.');
+              $returnData = shell_exec($ocrCommand);
+              // / Log the output of the operation to the logfile, if it is not blank.
+              if ($Verbose && trim($returnData) !== '') logEntry('The converter (IM-1) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+              // / If a file doesn't exist there is a good chance it is because ImageMagick has split the pages up.
+              if (!file_exists($pathnameTEMP1)) {
+                // / Scan the current directory for files matching the filename.
+                $pagedFilesArrRAW = scandir($ConvertTempDir);
+                foreach ($pagedFilesArrRAW as $pagedFile) {
+                  $filename = pathinfo($pathname, PATHINFO_FILENAME);
+                  // / Look for files with the same filename but in .jpg format. Skip the rest.
+                  if (stripos($pagedFile, $filename) === FALSE) continue;
+                  if (stripos($pagedFile, '.jpg') === FALSE) continue;
+                  if ($pagedFile === '.' or $pagedFile === '..' or $pagedFile === '.AppData' or $pagedFile === 'index.html') continue;
+                  // / Set page specific variables.
+                  $pathnameTEMP1 = str_replace('..', '', str_replace('.'.$oldExtension, '.jpg', $pathname));
+                  $cleanFilname = str_replace('..', '', str_replace($oldExtension, '', $filename));
+                  $pageNumber = str_replace('..', '', str_replace('-', '', str_replace($cleanFilname, '', str_replace('.jpg', '', $pagedFile))));
+                  $pathnameTEMP1 = str_replace('..', '', str_replace('.jpg', '-'.$pageNumber.'.jpg', $pathnameTEMP1));
+                  $pathnameTEMP = str_replace('..', '', str_replace('.'.$oldExtension, '-'.$pageNumber.'.txt', $pathname));
+                  $pathnameTEMPTesseract = str_replace('..', '', str_replace('.'.$oldExtension, '-'.$pageNumber, $pathname));
+                  $pathnameTEMP0 = str_replace('..', '', str_replace('-'.$pageNumber.'.txt', '.txt', $pathnameTEMP));
+                  if ($Verbose) logEntry('Performing OCR final operation using method 2.');
+                  // / Perform the conversion using Tesseract.
+                  // / Tesseract appends .txt to the output argument, so what is passed is a
+                  // / prefix rather than a filename. The sandbox mounts its directory either way.
+                  $ocrCommand = escapeshellarg($tesseractBinary).' '.escapeshellarg($pathnameTEMP1).' '.escapeshellarg($pathnameTEMPTesseract);
+                  list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathnameTEMP1, $pathnameTEMPTesseract, FALSE);
+                  // / Tesseract has no native control of its own, so an unavailable sandbox
+                  // / leaves no boundary & the operation is refused rather than run without one.
+                  if (!$sandboxIsAvailable) {
+                    $OperationErrors = TRUE;
+                    errorEntry('Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!', 15012, FALSE);
+                    continue; }
+                  $returnData = shell_exec($ocrCommand);
+                  // / Log the output of the operation to the logfile, if it is not blank.
+                  if ($Verbose && trim($returnData) !== '') logEntry('The converter (T-1) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+                  // / The text file is the verdict on this page, not the image it was read from.
+                  if (!file_exists($pathnameTEMP)) errorEntry('Could not complete the conversion using method 2.', 15005, FALSE);
+                  else if ($Verbose) logEntry('A file was created at '.$pathnameTEMP);
+                  // / Recompile all of the text files into one big text file.
+                  $readPageData = file_get_contents($pathnameTEMP);
+                  $writePageData = file_put_contents($pathnameTEMP0, $readPageData.$Lol, $Append);
+                  $multiple = TRUE;
+                  if (!file_exists($pathnameTEMP0)) errorEntry('Could not OCR file!', 15006, FALSE);
+                  else if ($Verbose) logEntry('A file was created at '.$pathnameTEMP0); } }
+              if ($Verbose) logEntry('Converted file '.$pathnameTEMP1.' to '.$pathnameTEMP.'.');
+              // / A single page PDF produces one image rather than a numbered set.
+              if (!$multiple) {
+                $pathnameTEMPTesseract = str_replace('..', '', str_replace('.txt', '', $pathnameTEMP));
+                if ($Verbose) logEntry('Performing OCR final operation using method 2.');
+                $ocrCommand = escapeshellarg($tesseractBinary).' '.escapeshellarg($pathnameTEMP1).' '.escapeshellarg($pathnameTEMPTesseract);
+                list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathnameTEMP1, $pathnameTEMPTesseract, FALSE);
+                if (!$sandboxIsAvailable) {
+                  $OperationErrors = TRUE;
+                  errorEntry('Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!', 15012, FALSE); }
+                else $returnData = shell_exec($ocrCommand);
+                // / Log the output of the operation to the logfile, if it is not blank.
+                if ($Verbose && trim($returnData) !== '') logEntry('The converter (T-2) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); } } } } }
       // / Code to convert a document to a PDF.
       if (in_array(strtolower($oldExtension), $doc1array)) {
         if (in_array($UserExtension, $pdf1array)) {
@@ -5018,17 +5218,21 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
             if ($Verbose && trim($returnData) !== '') logEntry('The converter (U-1) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); } } }
       // / Code to convert an image to text.
       if (in_array(strtolower($oldExtension), $img1array)) {
-        $pathnameTEMPTesseract = str_replace('..', '', str_replace('.'.$oldExtension, '', $pathname));
-        if ($Verbose) logEntry('Reading the image with Tesseract.');
-        // / Perform the conversion using Tesseract.
-        $ocrCommand = 'tesseract '.escapeshellarg($pathname).' '.escapeshellarg($pathnameTEMPTesseract);
-        list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathname, $pathnameTEMPTesseract, FALSE);
-        if (!$sandboxIsAvailable) {
+        if ($tesseractBinary === FALSE) {
           $OperationErrors = TRUE;
-          errorEntry('Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!', 15012, FALSE); }
-        else $returnData = shell_exec($ocrCommand);
-        // / Log the output of the operation to the logfile, if it is not blank.
-        if ($Verbose && trim($returnData) !== '') logEntry('The converter (T-3) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+          errorEntry('The installed Tesseract version is missing, unidentifiable, or too old!', 15013, FALSE); }
+        else {
+          $pathnameTEMPTesseract = str_replace('..', '', str_replace('.'.$oldExtension, '', $pathname));
+          if ($Verbose) logEntry('Reading the image with Tesseract.');
+          // / Perform the conversion using Tesseract.
+          $ocrCommand = escapeshellarg($tesseractBinary).' '.escapeshellarg($pathname).' '.escapeshellarg($pathnameTEMPTesseract);
+          list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathname, $pathnameTEMPTesseract, FALSE);
+          if (!$sandboxIsAvailable) {
+            $OperationErrors = TRUE;
+            errorEntry('Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!', 15012, FALSE); }
+          else $returnData = shell_exec($ocrCommand);
+          // / Log the output of the operation to the logfile, if it is not blank.
+          if ($Verbose && trim($returnData) !== '') logEntry('The converter (T-3) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); }
         // / An image Tesseract could not read is converted to PDF & read by pdftotext instead.
         if (!file_exists($pathnameTEMP)) {
           $pathnameTEMP3 = str_replace('..', '', str_replace('.'.$oldExtension, '.pdf', $pathname));
@@ -5037,6 +5241,9 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
           if (!$documentEngineStarted) {
             $OperationErrors = TRUE;
             errorEntry('Could not verify the Document Conversion Engine!', 15008, FALSE); }
+          else if ($pdftotextBinary === FALSE) {
+            $OperationErrors = TRUE;
+            errorEntry('The installed pdftotext version is missing, unidentifiable, or too old!', 15014, FALSE); }
           else {
             if ($Verbose) logEntry('Tesseract produced nothing. Converting the image to PDF instead.');
             // / Perform the conversion using Unoconv.
@@ -5044,7 +5251,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
             // / Log the output of the operation to the logfile, if it is not blank.
             if ($Verbose && trim($returnData) !== '') logEntry('The converter (U-2) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
             // / Perform the conversion using PDFTOTEXT.
-            $ocrCommand = 'pdftotext -layout '.escapeshellarg($pathnameTEMP3).' '.escapeshellarg($pathnameTEMP);
+            $ocrCommand = escapeshellarg($pdftotextBinary).' -layout '.escapeshellarg($pathnameTEMP3).' '.escapeshellarg($pathnameTEMP);
             list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathnameTEMP3, $pathnameTEMP, FALSE);
             if (!$sandboxIsAvailable) {
               $OperationErrors = TRUE;
@@ -5085,8 +5292,8 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   // / Error handler for if any failures happened during file loops.
   if ($anyFileSucceeded) $OperationSuccessful = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $pathname = $oldPathname = $filename = $oldExtension = $newPathname = $doc1array = $img1array = $pdf1array = $pathnameTEMP = $pathnameTEMP0 = $pathnameTEMP1 = $pathnameTEMP3 = $pagedFilesArrRAW = $pagedFile = $cleanFilname = $pageNumber = $readPageData = $writePageData = $multiple = $pathnameTEMPTesseract = $clean = $copy = $skip = $allowedOCR = $variableIsSanitized = $loopCheck = $anyFileSucceeded = $ocrCommand = $sandboxIsAvailable = $fileIsVerified = $scanComplete = $virusFound = $documentEngineStarted = $documentEnginePID = $returnData = $PDFWorkSelected = $UserFilename = $UserExtension = $Method = NULL;
-  unset($file, $pathname, $oldPathname, $filename, $oldExtension, $newPathname, $doc1array, $img1array, $pdf1array, $pathnameTEMP, $pathnameTEMP0, $pathnameTEMP1, $pathnameTEMP3, $pagedFilesArrRAW, $pagedFile, $cleanFilname, $pageNumber, $readPageData, $writePageData, $multiple, $pathnameTEMPTesseract, $clean, $copy, $skip, $allowedOCR, $variableIsSanitized, $loopCheck, $anyFileSucceeded, $ocrCommand, $sandboxIsAvailable, $fileIsVerified, $scanComplete, $virusFound, $documentEngineStarted, $documentEnginePID, $returnData, $PDFWorkSelected, $UserFilename, $UserExtension, $Method);
+  $file = $pathname = $oldPathname = $filename = $oldExtension = $newPathname = $doc1array = $img1array = $pdf1array = $pathnameTEMP = $pathnameTEMP0 = $pathnameTEMP1 = $pathnameTEMP3 = $pagedFilesArrRAW = $pagedFile = $cleanFilname = $pageNumber = $readPageData = $writePageData = $multiple = $pathnameTEMPTesseract = $clean = $copy = $skip = $allowedOCR = $variableIsSanitized = $loopCheck = $anyFileSucceeded = $ocrCommand = $sandboxIsAvailable = $fileIsVerified = $scanComplete = $virusFound = $documentEngineStarted = $documentEnginePID = $returnData = $ocrToolsAreValid = $tesseractBinary = $pdftotextBinary = $imageBinary = $PDFWorkSelected = $UserFilename = $UserExtension = $Method = NULL;
+  unset($file, $pathname, $oldPathname, $filename, $oldExtension, $newPathname, $doc1array, $img1array, $pdf1array, $pathnameTEMP, $pathnameTEMP0, $pathnameTEMP1, $pathnameTEMP3, $pagedFilesArrRAW, $pagedFile, $cleanFilname, $pageNumber, $readPageData, $writePageData, $multiple, $pathnameTEMPTesseract, $clean, $copy, $skip, $allowedOCR, $variableIsSanitized, $loopCheck, $anyFileSucceeded, $ocrCommand, $sandboxIsAvailable, $fileIsVerified, $scanComplete, $virusFound, $documentEngineStarted, $documentEnginePID, $returnData, $ocrToolsAreValid, $tesseractBinary, $pdftotextBinary, $imageBinary, $PDFWorkSelected, $UserFilename, $UserExtension, $Method);
   return array($OperationSuccessful, $OperationErrors); }
 // / -----------------------------------------------------------------------------------
 

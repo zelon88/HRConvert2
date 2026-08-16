@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/15/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/16/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.7.0.
+// / v3.7.2.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -37,7 +37,7 @@
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. Replacing config.php with a newer one is the correct fix.
-$ConfigVersion = 'v3.7.0';
+$ConfigVersion = 'v3.7.2';
 
 // / ---Security Informations---
 // /
@@ -414,6 +414,34 @@ $MinimumTarVersion = '1.30';
 // /   Format is major.minor.
 // /   Default is '1.1'.
 $MinimumMkisofsVersion = '1.1';
+// /  --Minimum Dia Version--
+// /   Dia converts technical drawing formats such as dxf, fig, vdx & wpg into images.
+// /   Dia is one of the few dependencies whose major version is still zero, & it has been
+// /   at 0.98 since 2014, so this minimum exists for consistency with the other checks
+// /   rather than because any known version is unsuitable.
+// /   Check the installed version by running 'dia --version' in a terminal.
+// /   Format is major.minor.
+// /   Default is '0.97'.
+$MinimumDiaVersion = '0.97';
+// /  --Minimum Tesseract Version--
+// /   Tesseract is the OCR engine that reads text out of an image.
+// /   Version 4 introduced the LSTM engine & is dramatically more accurate than version 3,
+// /   which used a character classifier. A version 3 installation will produce output that
+// /   looks like a failure to a user who does not know which engine ran.
+// /   Version 5 is the current series & is what a modern distribution ships.
+// /   Check the installed version by running 'tesseract --version' in a terminal.
+// /   Format is major.minor.
+// /   Default is '4.0'.
+$MinimumTesseractVersion = '4.0';
+// /  --Minimum Pdftotext Version--
+// /   pdftotext extracts an existing text layer from a PDF & is part of poppler-utils.
+// /   It cannot read a scanned page. A PDF with no text layer produces nothing at all,
+// /   which is why an OCR operation falls back to rasterizing the page for Tesseract.
+// /   poppler uses a date style version where the major is the year & the minor the month.
+// /   Check the installed version by running 'pdftotext -v' in a terminal.
+// /   Format is year.month.
+// /   Default is '20.09'.
+$MinimumPdftotextVersion = '20.09';
 // / ------------------------------
 
 // / ------------------------------

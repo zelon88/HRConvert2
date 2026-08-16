@@ -1,0 +1,66 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 8/15/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
+
+FILE INFORMATION ...
+v3.7.0.
+This plain text file describes the strict repository documentation paradigm, the dual-flavor format strategy, and standard file layout specifications.
+
+HARDWARE REQUIREMENTS ... 
+This application requires at least a Raspberry Pi Model B+ or greater. 
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ... 
+This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
+Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
+Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia & xvfb-run.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Documentation Paradigm--
+
+All reference materials are centrally housed inside the Documentation folder located at the root of the repository.
+
+Every core administrative subject must be fully detailed using a matching pair of specialized informational files.
+
+The framework enforces an absolute segregation between raw technical mechanics and user-facing instructional content.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Plain Text File Flavor--
+
+The plain text format utilizes the standard .txt file extension to serve as the absolute source of truth for the codebase.
+
+These documents are designed to remain universally readable in any text reader on any operating system without processing.
+
+Each text file acts as a rigid, uniform, and hyper-concise engineering specification stripped of unnecessary fluff or prose.
+
+Every informational statement must be direct, containing nothing but explicit technical facts, definitions, or instructions.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Markdown File Flavor--
+
+The rich media format utilizes the standard .md file extension and must match the precise base name of its plain text sibling.
+
+These files transform the strict engineering data from the text version into a highly digestible, engaging layout for humans.
+
+The styling resembles a premium, colorful user manual that adds clear aesthetic value for hobbyists who enjoy interacting with it.
+
+The layout heavily leverages markdown tables, clear bullet structures, visual warning blocks, bold text anchors, and color.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

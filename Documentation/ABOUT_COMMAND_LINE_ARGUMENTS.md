@@ -1,5 +1,27 @@
 # 💻 HRConvert2: Command Line Interface (CLI) Guide
 
+Welcome to the official Command Line Interface (CLI) manual for HRConvert2! This document describes how administrators with CLI access to the HRConvert2 can utilize the built-in features of `convertCore.php` to simplify maintenance, improve reliability, troubleshoot effectively & maximize uptime.
+
+---
+
+## 🛠️ Core Infrastructure Specifications
+
+### Legal & Distribution
+* **Intellectual Property:** HRConvert2 is Copyright © 2026 by Justin Grimes ([GitHub](https://www.github.com/zelon88)).
+* **Licensing Model:** Protected under the strict terms of the **GNU GPLv3 Open-Source License**. Refer to the [Official License Portal](https://www.gnu.org/licenses/gpl-3.0.html) for distribution requirements.
+
+### System Intent
+This application provides a highly accessible, unauthenticated web interface enabling file conversions directly on a server infrastructure using any modern web browser.
+
+| Metric | Minimum Operational Requirements |
+| :--- | :--- |
+| **Hardware** | Raspberry Pi Model B+ (or any standard x86 / x64 architecture computing platform) |
+| **Environment** | Debian Linux + Apache Web Server v2.4 + PHP v8.0 or greater |
+
+> ⚙️ **Core Dependencies:** FFMPEG, Dia, LibreOffice, Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia, and xvfb-run.
+
+---
+
 ## About Command Line Arguments
 HRConvert2 accepts input from the command line to provide administrative functionality and to support external scripting and automation.
 

@@ -122,6 +122,8 @@ If any non-stock directories are added to HRConvert2, a copy of index.html must 
 Do not create any files named index.html. This filename is reserved by the application for document root protection mechanisms.
 Upper Case variables are Global in scope. Lower case variables are severely limited in scope. 
 Limited scope variables should be manually nulled & unset after they are no longer required.
+Your Language Pack can come with it's own Documentation folder, or any additional files or folders you wish.
+Every folder requires the stock index.html. Copy and paste an existing one.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.7.1.
+v3.7.2.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -28,11 +28,56 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia
 
 --------------------
 COMMIT 8/16/2026
-v3.7.1 - 
+v3.7.2 - Start working on dependency path validation. Improve non-sudo CLI operation.
+
+-v3.7.2.
+-Add a bunch of .md documents.
+  -.txt documentation files are for engineering intent.
+  -.md documentation files are for human consumption, like a user manual for a hobby product you enjoy reading.
+-Add dependency checking to images as a test.
+  -Leaving streams & LibreOffice unsandboxxed FOR NOW.
+    -The stream SSRF protector is the security boundary.
+    -If we wrap with bubblewrap, the PID detection routine will grab PID from bwrap, not ffmpeg.
+    -To reliably track streams, we must leave the PID and bwrap out of the picture, only track ffmpeg.
+    -We will add worker lifespan tracking during the upcoming "Concurrency Rate Limiting" update.
+    -After worker lifespan cycle tracking is complete,the core will be structurally prepared for sandboxxing convertStreams() safely.
+  -Add ffmpeg, inkscape, 
+  -OpenSCAD adjust rectifySCAD to use relative paths instead of absolute ones.
+    -Bubblewrap namespace sandboxxing requires this.
+    -Also adjust the return value to capture if any includes were abandoned by OpenSCAD during the render.
+    -If any includes were skipped by OpenSCAD, throw a warningEntry() with that information to the log.
+  -Fix missing convertSubtitles() version check error message, ERROR!!! 22002.
+  -Added a ton og new errors.
+-Next we are going to work on capability validation & concurrency rate limiting.
+
+--------------------
+COMMIT 8/16/2026
+v3.7.1 - Start working on dependency path validation. Improve non-sudo CLI operation.
 
 -v3.7.1.
 -Add dependency checking throughout.
 -Add userland secret & log creation.
+  -Now command line arguments work properly without 'sudo'.
+  -Only -v and -h commands work without sudo.
+  -The -c and -u commands still require sudo, as these require modifying the installation or data directories.
+
+--------------------
+COMMIT 8/16/2026
+v3.7.1 - Start working on dependency path validation. Improve non-sudo CLI operation.
+
+-v3.7.1.
+-Add dependency checking to images as a test.
+  -Leaving streams unsandboxxed FOR NOW.
+    -The stream SSRF protector is the security boundary.
+    -If we wrap with bubblewrap, the PID detection routine will grab PID from bwrap, not ffmpeg.
+    -To reliably track streams, we must leave the PID and bwrap out of the picture, only track ffmpeg.
+    -We will add worker lifespan tracking during the upcoming "Concurrency Rate Limiting" update.
+    -After worker lifespan cycle tracking is complete,the core will be structurally prepared for sandboxxing convertStreams() safely.
+  -Add ffmpeg,
+  -Fix missing convertSubtitles() version check error message, ERROR!!! 22002.
+-Improve non-sudo CLI operation.
+  -Add userland secret & log creation.
+  -Add gates to lock down the arguments from even being considered unless the correct security context exists.
   -Now command line arguments work properly without 'sudo'.
   -Only -v and -h commands work without sudo.
   -The -c and -u commands still require sudo, as these require modifying the installation or data directories.

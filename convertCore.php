@@ -2602,7 +2602,7 @@ function validateInstallation($installPath) {
 // / who discovers a problem an hour later still has something to restore by hand.
 function updateApplication($requestedVersion) {
   // / Set variables.
-  global $Verbose, $InstLoc, $ProprietaryLoc, $DirSep, $HRConvertVersion, $AutoUpdateTargetVersion, $EnableAutoUpdates, $BackupLoc, $RunningAsRoot, $ApacheUser, $PermissionLevels, $ConvertDir;
+  global $Verbose, $InstLoc, $ProprietaryLoc, $DirSep, $HRConvertVersion, $AutoUpdateTargetVersion, $EnableAutoUpdates, $BackupLoc, $RunningAsRoot, $ApacheUser, $PermissionLevels, $ConvertDir, $Lol;
   $UpdateSucceeded = $targetResolved = $packageDownloaded = $configMerged = $installationIsValid = FALSE;
   $swapCompleted = $rolledBack = FALSE;
   $targetVersion = $targetURL = $workDir = $downloadPath = $extractedDir = $stagedDir = $oldDir = $backupOutput = '';

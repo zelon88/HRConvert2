@@ -232,6 +232,31 @@ function verifyConfigVersion($RequiredConfigVersion) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to detect whether this installation is running inside a container.
+// / Returns TRUE only when two independent signals agree, because a false positive would
+// / silently relax the sandbox requirement on a bare metal server.
+// / A false negative is preferable. It refuses conversions in a container, which is
+// / visible & correctable, rather than running unprotected on hardware, which is neither.
+function verifyContainerEnvironment() {
+  // / Set variables.
+  $RunningInContainer = FALSE;
+  $dockerEnvExists = $cgroupIndicatesContainer = FALSE;
+  $cgroupContents = '';
+  // / Docker creates this file in every container it starts.
+  if (file_exists('/.dockerenv')) $dockerEnvExists = TRUE;
+  // / The init process of a container reports a container runtime in its cgroup path.
+  $cgroupContents = @file_get_contents('/proc/1/cgroup');
+  if (is_string($cgroupContents)) {
+    if (strpos($cgroupContents, 'docker') !== FALSE or strpos($cgroupContents, 'containerd') !== FALSE or strpos($cgroupContents, 'kubepods') !== FALSE) $cgroupIndicatesContainer = TRUE; }
+  // / Both signals must agree. Either one alone is not enough to relax a security control.
+  if ($dockerEnvExists && $cgroupIndicatesContainer) $RunningInContainer = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $dockerEnvExists = $cgroupIndicatesContainer = $cgroupContents = NULL;
+  unset($dockerEnvExists, $cgroupIndicatesContainer, $cgroupContents);
+  return $RunningInContainer; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to load required HRConvert2 files.
 // / This function verifies the installation environment.
 // / Three separate things are checked here & all three must pass.
@@ -239,14 +264,95 @@ function verifyConfigVersion($RequiredConfigVersion) {
 // / The config file must carry every setting this core reads.
 // / The per install secret must either load successfully or be created successfully.
 // / This function runs before verifyLogs(), so every failure here dies rather than logging.
+// / A function to load an install secret from a file, or to create one when none exists.
+// / Accepts the absolute path of the secret file.
+// / Returns a readiness boolean & the secret key, in that order.
+// / Returns FALSE & an empty string whenever the secret could not be established, & the
+// / caller must treat that as a failed installation.
+// / The file is written with ONLY the secret in it & is checked byte for byte afterwards,
+// / because appending to an existing file would produce a file that loads without error &
+// / carries a key the caller never generated. A file that fails that check is deleted.
+// / The file is chmod 0600 on every path, including when it already existed, because a
+// / secret that another account can read is not a secret.
+// / This is called for two different files. The install wide secret in the data location,
+// / & a per user secret in the home directory of an administrator running from the command
+// / line who is neither root nor the web server user. The logic is identical & the only
+// / difference is which path is passed in, so it lives here rather than twice in the caller.
+function resolveSecretFile($secretFile) {
+  // / Set variables.
+  $SecretIsReady = FALSE;
+  $ResolvedSecretKey = $secret = $secretFileContent = '';
+  $secretGenerated = FALSE;
+  $bytesWritten = 0;
+  // / If a secret file does not exist, create one.
+  if (!file_exists($secretFile)) {
+    list ($secret, $secretGenerated) = generateInstallSecret();
+    if ($secretGenerated) {
+      $secretFileContent = '<?php $SecretKey = \''.$secret.'\';';
+      $bytesWritten = file_put_contents($secretFile, $secretFileContent, LOCK_EX);
+      // / Check that the secret key, & ONLY the secret key, was written to the file.
+      // / If we just appended the secret to an existing file this will catch it.
+      if ($bytesWritten === strlen($secretFileContent)) {
+        @chmod($secretFile, 0600);
+        $ResolvedSecretKey = $secret;
+        $SecretIsReady = TRUE; }
+      else if (file_exists($secretFile)) @unlink($secretFile); } }
+  // / If a secret file does exist, load it & make sure it is valid.
+  else {
+    @chmod($secretFile, 0600);
+    // / require rather than require_once, because this function may be called for a second
+    // / file in the same request & _once would silently skip it.
+    require ($secretFile);
+    if (!empty($SecretKey) && strlen($SecretKey) === 64) {
+      $ResolvedSecretKey = $SecretKey;
+      $SecretIsReady = TRUE; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $secret = $secretFileContent = $secretGenerated = $bytesWritten = $secretFile = NULL;
+  unset($secret, $secretFileContent, $secretGenerated, $bytesWritten, $secretFile);
+  return array($SecretIsReady, $ResolvedSecretKey); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to verify that this installation is complete, current & usable.
+// / Returns a verification boolean, the path of the config file & the version reported by
+// / versionInfo.php, in that order.
+// / Every failure other than the secret is fatal & dies here, because nothing downstream
+// / can operate without a config file or against a mismatched core.
+// / THE SECRET FILE IS ONLY TOUCHED BY AN AUTHORIZED COMBINATION OF USER & CONTEXT.
+// / root from the command line, or the web server user from a web request, gets the install
+// / wide secret. Any other command line user gets a secret of their own in their home
+// / directory, which lets them run diagnostics without ever reading the install wide one.
+// / Any other combination gets no secret at all & fails verification.
 function verifyInstallation() {
   // / Set variables.
-  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumImageVersion, $UsePyMeshLab, $MinimumMeshlabVersion, $MinimumAssimpVersion, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $Minimum7zVersion, $MinimumZipVersion, $MinimumRarVersion, $MinimumTarVersion, $MinimumMkisofsVersion;
-  $InstallationIsVerified = $secret = $secretFile = $secretFileContent = $createSecretFile = $SecretKey = $secretFailed = $loadSecretFile = $secretFileWriteComplete = $secretCheck = $appVersionCheck = $configIsValid = FALSE;
-  $check1 = $check2 = TRUE;
-  $bytesWritten = 0;
+  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumImageVersion, $UsePyMeshLab, $MinimumMeshlabVersion, $MinimumAssimpVersion, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $Minimum7zVersion, $MinimumZipVersion, $MinimumRarVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels;
+  $InstallationIsVerified = $RunningFromCLI = $RunningAsRoot = $RunningInContainer = FALSE;
+  $secretAuthorized = $userSecretAuthorized = $secretIsReady = $configIsValid = FALSE;
+  $SecretKey = $CurrentUser = $detectedConfigVersion = $configFile = $secretFolder = $secretFile = '';
   $missingConfigVars = array();
-  $detectedConfigVersion = $configFile = '';
+  // / Detect if the application is being run from the command line.
+  if (php_sapi_name() === 'cli') $RunningFromCLI = TRUE;
+  // / Detect the current user account that is running the application.
+  // / The application inherits the execution context of this user.
+  // / This must happen for EVERY context, not only for a web request. A command line
+  // / invocation that skipped this left the user unknown, which made root unrecognizable &
+  // / sent every command line user down the per user secret path including root.
+  // / Some systems do not have posix extensions, so shell_exec is used instead.
+  $CurrentUser = trim((string)shell_exec('whoami'));
+  if ($CurrentUser === 'root') $RunningAsRoot = TRUE;
+  $ApacheUser = 'www-data';
+  $PermissionLevels = 0755;
+  // / Detect if the application is being run inside a container.
+  $RunningInContainer = verifyContainerEnvironment();
+  // / Decide which secret, if any, this combination of user & context may have.
+  // / The install wide secret derives every web session, so only the two contexts that
+  // / legitimately serve or maintain those sessions may read it.
+  if ($RunningFromCLI && $RunningAsRoot) $secretAuthorized = TRUE;
+  if (!$RunningFromCLI && $CurrentUser === $ApacheUser) $secretAuthorized = TRUE;
+  // / An administrator on the command line who is neither root nor the web server user is
+  // / given a secret of their own. It lets them run diagnostics without ever reading the
+  // / install wide secret, & it cannot be used to derive or forge a web session.
+  if ($RunningFromCLI && !$secretAuthorized) $userSecretAuthorized = TRUE;
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
@@ -281,44 +387,37 @@ function verifyInstallation() {
   $ConfigVersion = ltrim($ConfigVersion, 'vV');
   // / Perform a version integrity check.
   // / A core file that does not match versionInfo.php indicates a partial or interrupted update.
-  if ($HRConvertVersion === $Version) $appVersionCheck = TRUE;
-  else die ('ERROR!!! HRConvert2-28001: The core file reports version v'.$HRConvertVersion.' but the version information file reports version v'.$Version.'. This installation is incomplete or was updated incorrectly.'.PHP_EOL.'<br />');
+  if ($HRConvertVersion !== $Version) die ('ERROR!!! HRConvert2-28001: The core file reports version v'.$HRConvertVersion.' but the version information file reports version v'.$Version.'. This installation is incomplete or was updated incorrectly.'.PHP_EOL.'<br />');
   // / Confirm the config file carries every setting this core requires.
   // / An undefined setting reads as NULL, which silently becomes FALSE or zero at every point of use.
   list ($configIsValid, $missingConfigVars, $detectedConfigVersion) = verifyConfigVersion($RequiredConfigVersion);
   if (!$configIsValid) die ('ERROR!!! HRConvert2-28000: The config.php file is missing '.count($missingConfigVars).' required setting(s). Config version detected: v'.$detectedConfigVersion.'. Config version required: v'.$RequiredConfigVersion.'. Missing Variables: '.implode(', ', $missingConfigVars).PHP_EOL.'<br />');
-  // / Define the location of the per install secret file.
-  $secretFile = $ConvertLoc.DIRECTORY_SEPARATOR.'secret.php';
-  // / If a secret file does not exist, create one.
-  if (!file_exists($secretFile)) {
-    $createSecretFile = TRUE;
-    list ($secret, $secretCheck) = generateInstallSecret();
-    if ($secretCheck) {
-      $secretFileContent = '<?php $SecretKey = \''.$secret.'\';';
-      $bytesWritten = file_put_contents($secretFile, $secretFileContent, LOCK_EX); }
-    // / Check that the secret key, & only the secret key, was written to the secret file.
-    // / If we just appended the secret to an existing file this will catch it & delete the file.
-    if ($secretCheck && $bytesWritten === strlen($secretFileContent)) {
-      @chmod($secretFile, 0600);
-      $SecretKey = $secret;
-      $secretFileWriteComplete = TRUE; }
-    else if (file_exists($secretFile)) @unlink($secretFile); }
-  // / If a secret file does exist, load it & make sure it is valid.
-  else {
-    @chmod($secretFile, 0600);
-    $loadSecretFile = TRUE;
-    require_once ($secretFile);
-    if (empty($SecretKey) or strlen($SecretKey) !== 64) $secretFailed = TRUE; }
-  // / Check if a secret file was needed, & whether it was actually created.
-  if ($createSecretFile) if (!$secretFileWriteComplete) $check1 = FALSE;
-  // / Check if a secret key file was found, & if the secret key was loaded successfully.
-  if ($loadSecretFile) if ($secretFailed or empty($SecretKey)) $check2 = FALSE;
+  // / Establish a secret. The path differs by authorization & nothing else does.
+  // / The install wide secret lives in the data location, outside the web root.
+  if ($secretAuthorized) {
+    $secretFile = $ConvertLoc.DIRECTORY_SEPARATOR.'secret.php';
+    list ($secretIsReady, $SecretKey) = resolveSecretFile($secretFile); }
+  // / A per user secret lives in the home directory of the user running the command.
+  // / The directory is created if it does not exist, because this is the first thing that
+  // / user has ever asked HRConvert2 to do.
+  else if ($userSecretAuthorized) {
+    $secretFolder = getenv('HOME').DIRECTORY_SEPARATOR.'.HRConvert2';
+    $LogDir = $secretFolder.DIRECTORY_SEPARATOR.'Logs'.DIRECTORY_SEPARATOR;
+    if (!is_dir($secretFolder)) @mkdir($secretFolder, 0700, TRUE);
+    if (is_dir($secretFolder)) {
+      $secretFile = $secretFolder.DIRECTORY_SEPARATOR.'secret-'.sanitizeString($CurrentUser, TRUE).'.php';
+      list ($secretIsReady, $SecretKey) = resolveSecretFile($secretFile); } }
   // / Perform a check to see if all required tests passed.
-  if ($check1 && $check2 && $appVersionCheck && $configIsValid) $InstallationIsVerified = TRUE;
+  // / The version check & the config check both die on failure, so reaching this line means
+  // / both passed & only the secret remains in question.
+  // / A secret is ready when it was CREATED or when it was LOADED. Requiring both, as an
+  // / earlier version did, could never be satisfied. A first run only ever creates & every
+  // / run after that only ever loads, so the two conditions are mutually exclusive.
+  if ($secretIsReady) $InstallationIsVerified = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $SecretKey is deliberately NOT cleared here because the rest of the core needs it.
-  $secret = $secretCheck = $secretFile = $secretFileContent = $secretFileWriteComplete = $createSecretFile = $loadSecretFile = $secretFailed = $bytesWritten = $check1 = $check2 = $appVersionCheck = $configIsValid = $missingConfigVars = $detectedConfigVersion = NULL;
-  unset($secret, $secretCheck, $secretFile, $secretFileContent, $secretFileWriteComplete, $createSecretFile, $loadSecretFile, $secretFailed, $bytesWritten, $check1, $check2, $appVersionCheck, $configIsValid, $missingConfigVars, $detectedConfigVersion);
+  $secretAuthorized = $userSecretAuthorized = $secretIsReady = $configIsValid = $missingConfigVars = $detectedConfigVersion = $secretFolder = $secretFile = NULL;
+  unset($secretAuthorized, $userSecretAuthorized, $secretIsReady, $configIsValid, $missingConfigVars, $detectedConfigVersion, $secretFolder, $secretFile);
   return array($InstallationIsVerified, $configFile, $Version); }
 // / -----------------------------------------------------------------------------------
 
@@ -388,7 +487,7 @@ function verifySesHash($Token1) {
 // / The rotation condition compares the file size directly against the configured maximum.
 function verifyLogs() {
   // / Set variables.
-  global $LogDir, $LogFile, $MaxLogSize, $InstLoc, $SesHash, $SesHash4, $DefaultLogDir, $DefaultLogSize, $Time, $Date, $LogInc, $LogInc2, $VirusScan, $ApplicationName, $ConvertLoc, $AppendLogHashToLogFiles;
+  global $LogDir, $LogFile, $MaxLogSize, $InstLoc, $SesHash, $SesHash4, $DefaultLogDir, $DefaultLogSize, $Time, $Date, $LogInc, $LogInc2, $VirusScan, $ApplicationName, $ConvertLoc, $AppendLogHashToLogFiles, $ApacheUser, $PermissionLevels;
   $LogExists = $logWritten = FALSE;
   $logHashAppend = '';
   $LogInc = $LogInc2 = 0;
@@ -400,7 +499,6 @@ function verifyLogs() {
   $LogFile = str_replace('..', '', $LogDir.'/'.$ApplicationName.'_'.$LogInc.'_'.$Date.$logHashAppend.'.txt');
   if (!is_numeric($MaxLogSize)) $MaxLogSize = $DefaultLogSize;
   // / The permissions in this function are hard-coded deliberately.
-  // / This function runs before verifyGlobals(), so $ApacheUser & $PermissionLevels aren't available yet.
   // / If running as root (such as after updating or installing fresh) the Log dir needs to be writable to www-data.
   // / If running as a regular user, the user will either possess or lack the permissions needed to leave the $LogDir in proper condition.
   // / So a regular user fails silent here (and is caught further down), but they also don't do anything to the filesystem on failure.
@@ -802,31 +900,6 @@ function verifyLanguage() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to detect whether this installation is running inside a container.
-// / Returns TRUE only when two independent signals agree, because a false positive would
-// / silently relax the sandbox requirement on a bare metal server.
-// / A false negative is preferable. It refuses conversions in a container, which is
-// / visible & correctable, rather than running unprotected on hardware, which is neither.
-function verifyContainerEnvironment() {
-  // / Set variables.
-  $RunningInContainer = FALSE;
-  $dockerEnvExists = $cgroupIndicatesContainer = FALSE;
-  $cgroupContents = '';
-  // / Docker creates this file in every container it starts.
-  if (file_exists('/.dockerenv')) $dockerEnvExists = TRUE;
-  // / The init process of a container reports a container runtime in its cgroup path.
-  $cgroupContents = @file_get_contents('/proc/1/cgroup');
-  if (is_string($cgroupContents)) {
-    if (strpos($cgroupContents, 'docker') !== FALSE or strpos($cgroupContents, 'containerd') !== FALSE or strpos($cgroupContents, 'kubepods') !== FALSE) $cgroupIndicatesContainer = TRUE; }
-  // / Both signals must agree. Either one alone is not enough to relax a security control.
-  if ($dockerEnvExists && $cgroupIndicatesContainer) $RunningInContainer = TRUE;
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $dockerEnvExists = $cgroupIndicatesContainer = $cgroupContents = NULL;
-  unset($dockerEnvExists, $cgroupIndicatesContainer, $cgroupContents);
-  return $RunningInContainer; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
 // / A function to set the global variables for the session.
 // / The stream timeouts are left in the units config.php documents them in.
 // / $StreamWatchTimeout is stated in minutes & $StreamConnectionTimeout is stated in seconds.
@@ -834,26 +907,20 @@ function verifyContainerEnvironment() {
 // / Converting here as well produced a fifteen hour watch timeout & a ten million second connect timeout.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $PermissionLevels, $ApacheUser, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $MinimumFFMPEGVersion, $ProtectedRootDirs, $RunningAsRoot, $RunningInContainer;
+  global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $ProtectedRootDirs;
   // / Application related variables.
   putenv('HOME='.$HomeLoc);
-  $GlobalsAreVerified = $sanitizeGlobalCheck = $sanitizeGlobalCheckA = $sanitizeGlobalCheckB = $sanitizeGlobalCheckC = $sanitizeGlobalCheckD = $sanitizeGlobalCheckE = $RunningAsRoot = FALSE;
+  $GlobalsAreVerified = $sanitizeGlobalCheck = $sanitizeGlobalCheckA = $sanitizeGlobalCheckB = $sanitizeGlobalCheckC = $sanitizeGlobalCheckD = $sanitizeGlobalCheckE = FALSE;
   $CoreLoaded = TRUE;
   $SleepTimer = 0;
   $StopCounter = $RetryCount;
-  $PermissionLevels = 0755;
-  $ApacheUser = 'www-data';
-  $CurrentUser = '';
-  $RunningInContainer = verifyContainerEnvironment();
+
   // / Determine the user who is currently executing the script.
   // / If convertCore.php is called by the web server to serve a web client this should be www-data.
   // / If someone is running convertCore.php from a CLI tool as a non-root user, this will be that users username.
   // / If someone is running convertCore.php from a CLI tool as root user, this will be root.
   // / Some systems have posix extensions that make checking the current username very fast.
   if (function_exists('posix_getpwuid') && function_exists('posix_geteuid')) $CurrentUser = posix_getpwuid(posix_geteuid())['name'];
-  // / Some systems do not have posix extensions, so we have to use shell_exec to get the username instead.
-  else $CurrentUser = trim(shell_exec('whoami'));
-  if ($CurrentUser === 'root') $RunningAsRoot = TRUE;
   // / Convinience variables.
   $DirSep = DIRECTORY_SEPARATOR;
   $Lol = PHP_EOL;
@@ -1048,46 +1115,46 @@ function verifyLibreOfficeVersion($MinimumVersion) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to confirm the installed ImageMagick meets the minimum version HRConvert2 requires.
-// / ImageMagick replaced its entire command line interface scheme at version 7.0.
-// / Legacy commands such as convert were unified into the single magick binary launcher tool,
-// / which alters argument ordering rules and causes older deployments to fail completely.
-// / ImageMagick reports its version via standard output as "Version: ImageMagick 7.1.1-29".
-// / Standard error redirection ensures warning messages do not break standard buffer processing.
-// / A deployment that reports no parseable version sequence is strictly refused by the core.
-function verifyImageVersion($MinimumImageVersion) {
+// / A function to confirm the installed ImageMagick meets the minimum version required.
+// / Accepts the minimum version as major.minor.
+// / Returns the absolute path of the binary that was verified, or FALSE.
+// / A path is returned ONLY when the binary was found & its version satisfies the minimum,
+// / so a caller holding a path may use it without checking anything else.
+// / The binary is located rather than assumed, & the located binary is the one whose
+// / version is read, so the version verified is provably the version that will run.
+// / ImageMagick v7 is required for the unified magick utility & its parameter ordering.
+// / A v6 installation provides convert with different argument semantics & is refused
+// / rather than accommodated, so the command built by the caller can be trusted as written.
+// / A build that reports no parseable version is refused, because an unknown build cannot
+// / be cleared against a minimum.
+function verifyImageVersion($MinimumVersion) {
   // / Set variables.
   global $Verbose;
-  $ImageVersionIsValid = FALSE;
+  $ImageBinary = FALSE;
+  $locatedBinary = $detectedVersion = '';
   $versionOutput = $versionMatches = $minimumParts = array();
   $versionExitCode = 1;
-  $detectedVersion = '';
-  $detectedMajor = $detectedMinor = $detectedPatch = $minimumMajor = $minimumMinor = $minimumPatch = 0;
-  // / Execute the modern ImageMagick binary checking utility directly using standard output pipes.
-  exec('/usr/local/bin/magick --version 2>&1', $versionOutput, $versionExitCode);
-  if ($versionExitCode === 0 && !empty($versionOutput)) {
-    // / Match the major, minor, and patch numeric sequence immediately following the product label.
-    // / The third patch group is made optional to maintain backward compatibility with two-digit strings.
-    if (preg_match('/ImageMagick\s+(\d+)\.(\d+)(?:\.(\d+))?/i', implode(' ', $versionOutput), $versionMatches)) {
-      $detectedMajor = (int)$versionMatches[1];
-      $detectedMinor = (int)$versionMatches[2];
-      $detectedPatch = (int)($versionMatches[3] ?? 0);
-      $detectedVersion = $detectedMajor.'.'.$detectedMinor.'.'.$detectedPatch;
-      // / Split the supplied minimum string constraint into its component parts.
-      $minimumParts = explode('.', $MinimumImageVersion);
-      $minimumMajor = (int)($minimumParts[0] ?? 0);
-      $minimumMinor = (int)($minimumParts[1] ?? 0);
-      $minimumPatch = (int)($minimumParts[2] ?? 0);
-      // / Compare boundaries numerically down to the third patch depth level to prevent string sort errors.
-      if ($detectedMajor > $minimumMajor) $ImageVersionIsValid = TRUE;
-      elseif ($detectedMajor === $minimumMajor) {
-        if ($detectedMinor > $minimumMinor) $ImageVersionIsValid = TRUE;
-        elseif ($detectedMinor === $minimumMinor && $detectedPatch >= $minimumPatch) $ImageVersionIsValid = TRUE; } } }
-  if ($Verbose) logEntry('ImageMagick Version Check: '.($ImageVersionIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumImageVersion.' or later.');
+  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
+  $locatedBinary = locateDependency('magick');
+  if ($locatedBinary !== '') {
+    exec(escapeshellarg($locatedBinary).' -version 2>&1', $versionOutput, $versionExitCode);
+    if ($versionExitCode === 0 && !empty($versionOutput)) {
+      // / Anchor on the product name. The banner also carries a build date & a URL.
+      if (preg_match('/ImageMagick\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
+        $detectedMajor = (int)$versionMatches[1];
+        $detectedMinor = (int)$versionMatches[2];
+        $detectedVersion = $detectedMajor.'.'.$detectedMinor;
+        $minimumParts = explode('.', $MinimumVersion);
+        $minimumMajor = (int)($minimumParts[0] ?? 0);
+        $minimumMinor = (int)($minimumParts[1] ?? 0);
+        // / Compare numerically, never as strings. A string comparison ranks 7.1 below 6.9.
+        if ($detectedMajor > $minimumMajor) $ImageBinary = $locatedBinary;
+        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $ImageBinary = $locatedBinary; } } }
+  if ($Verbose) logEntry('ImageMagick Version Check: '.($ImageBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later'.($ImageBinary === FALSE ? '' : ', Using: '.$ImageBinary).'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $versionOutput = $versionMatches = $versionExitCode = $detectedVersion = $minimumParts = $detectedMajor = $detectedMinor = $detectedPatch = $minimumMajor = $minimumMinor = $minimumPatch = NULL;
-  unset($versionOutput, $versionMatches, $versionExitCode, $detectedVersion, $minimumParts, $detectedMajor, $detectedMinor, $detectedPatch, $minimumMajor, $minimumMinor, $minimumPatch);
-  return $ImageVersionIsValid; }
+  $locatedBinary = $detectedVersion = $versionOutput = $versionMatches = $minimumParts = $versionExitCode = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumVersion = NULL;
+  unset($locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
+  return $ImageBinary; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1540,7 +1607,7 @@ function showHelpInfo() {
 // / To run as the web server user, use command  'sudo -u www-data php convertCore.php '
 function parseCommandLine() {
   // / Set variables.
-  global $Verbose, $Lol, $DeleteThreshold, $ConvertLoc, $ConvertTempDir;
+  global $Verbose, $Lol, $DeleteThreshold, $ConvertLoc, $ConvertTempDir, $RunningFromCLI, $RunningAsRoot;
   $CommandLineHandled = $cliTempCleaned = $cliTempDeepCleaned = $cliDataCleaned = $cliDataDeepCleaned = FALSE;
   $UserType = 'web';
   $cliArgumentCount = $cliThreshold = 0;
@@ -1548,7 +1615,7 @@ function parseCommandLine() {
   $cliCommand = $rawFirstArg = $cliTarget = '';
   // / A web request has no command line & must return immediately.
   // / This is the ONLY path that returns FALSE. Every other path handles & stops.
-  if (php_sapi_name() !== 'cli') $CommandLineHandled = FALSE;
+  if (!$RunningFromCLI) $CommandLineHandled = FALSE;
   else {
     // / Gather the arguments. The first is always the script name & is discarded.
     $cliArguments = isset($_SERVER['argv']) ? $_SERVER['argv'] : array();
@@ -1578,46 +1645,49 @@ function parseCommandLine() {
         logEntry('Command line invocation. Displaying help.');
         showHelpInfo();
         $CommandLineHandled = TRUE; }
-      // / Handle the -u or --update arguments.
-      // / Performs a comprehensive update on the HRConvert2 application & all bundled components.
-      else if ($cliCommand === '-u' or $cliCommand === '--update') {
-        logEntry('Command line invocation. Performing an application update.');
-        // / Check if target was passed via '=' sign first. Fall back to the second array element.
-        if (isset($cliParts[1])) $cliTarget = strtolower(trim($cliParts[1]));
-        else $cliTarget = isset($cliArguments[1]) ? strtolower(trim($cliArguments[1])) : '';
-        updateApplication($cliTarget);
-        $CommandLineHandled = TRUE; }
-      // / Handle the -c or --clean arguments.
-      // / Sweeps expired sessions from both data locations on demand rather than waiting
-      // / for the next web request to do it. A server taken out of service still holds
-      // / user data until something sweeps it.
-      // / An optional threshold in minutes overrides --Delete Threshold-- for this run only.
-      // / A threshold of now sweeps every session regardless of age, including live ones.
-      else if ($cliCommand === '-c' or $cliCommand === '--clean') {
-        logEntry('Command line invocation. Performing a manual clean.');
-        // / Check if a threshold was passed via '=' sign first. Fall back to the second array element.
-        if (isset($cliParts[1])) $cliTarget = strtolower(trim($cliParts[1]));
-        else $cliTarget = isset($cliArguments[1]) ? strtolower(trim($cliArguments[1])) : '';
-        $cliThreshold = $DeleteThreshold;
-        // / A threshold of zero expires everything, because every session is older than nothing.
-        if ($cliTarget === 'now') $cliThreshold = 0;
-        // / ctype_digit rather than is_numeric, because is_numeric accepts a negative & a
-        // / negative threshold would expire every session while looking like a normal number.
-        else if ($cliTarget !== '' && ctype_digit($cliTarget)) $cliThreshold = (int)$cliTarget;
-        // / An unrecognized threshold falls back to the configured default rather than
-        // / refusing, but says so. Silently sweeping on a typo would be worse.
-        else if ($cliTarget !== '') {
-          warningEntry('An unrecognized clean threshold was supplied. Using the configured default.');
-          print($Lol.'Unrecognized threshold. Supply a whole number of minutes, or now.'.$Lol); }
-        print($Lol.'Cleaning sessions older than '.$cliThreshold.' minute(s).'.$Lol);
-        logEntry('Manual clean requested. Threshold set to '.$cliThreshold.' minute(s).');
-        list ($cliTempCleaned, $cliTempDeepCleaned) = cleanDataLoc($ConvertTempDir, 'ConvertTempDir', $cliThreshold);
-        print('  Temporary location   '.($cliTempCleaned ? 'OK' : 'FAILED').($cliTempDeepCleaned ? ', removed expired sessions' : ', nothing was expired').$Lol);
-        list ($cliDataCleaned, $cliDataDeepCleaned) = cleanDataLoc($ConvertLoc, 'ConvertLoc', $cliThreshold);
-        print('  Data location        '.($cliDataCleaned ? 'OK' : 'FAILED').($cliDataDeepCleaned ? ', removed expired sessions' : ', nothing was expired').$Lol);
-        if (!$cliTempCleaned or !$cliDataCleaned) print($Lol.'One or more locations could not be cleaned. See the log for the reason.'.$Lol);
-        print($Lol);
-        $CommandLineHandled = TRUE; }
+      // / Gate root-only, filesystem breaking command line operations behind a security context awareness check.
+      // / The -c, --clean, -u, & --update arguments can only be performed from CLI while running as root.
+      else if ($RunningAsRoot) {
+        // / Handle the -u or --update arguments.
+        // / Performs a comprehensive update on the HRConvert2 application & all bundled components.
+        if ($cliCommand === '-u' or $cliCommand === '--update') {
+          logEntry('Command line invocation. Performing an application update.');
+          // / Check if target was passed via '=' sign first. Fall back to the second array element.
+          if (isset($cliParts[1])) $cliTarget = strtolower(trim($cliParts[1]));
+          else $cliTarget = isset($cliArguments[1]) ? strtolower(trim($cliArguments[1])) : '';
+          updateApplication($cliTarget);
+          $CommandLineHandled = TRUE; }
+        // / Handle the -c or --clean arguments.
+        // / Sweeps expired sessions from both data locations on demand rather than waiting
+        // / for the next web request to do it. A server taken out of service still holds
+        // / user data until something sweeps it.
+        // / An optional threshold in minutes overrides --Delete Threshold-- for this run only.
+        // / A threshold of now sweeps every session regardless of age, including live ones.
+        else if ($cliCommand === '-c' or $cliCommand === '--clean') {
+          logEntry('Command line invocation. Performing a manual clean.');
+          // / Check if a threshold was passed via '=' sign first. Fall back to the second array element.
+          if (isset($cliParts[1])) $cliTarget = strtolower(trim($cliParts[1]));
+          else $cliTarget = isset($cliArguments[1]) ? strtolower(trim($cliArguments[1])) : '';
+          $cliThreshold = $DeleteThreshold;
+          // / A threshold of zero expires everything, because every session is older than nothing.
+          if ($cliTarget === 'now') $cliThreshold = 0;
+          // / ctype_digit rather than is_numeric, because is_numeric accepts a negative & a
+          // / negative threshold would expire every session while looking like a normal number.
+          else if ($cliTarget !== '' && ctype_digit($cliTarget)) $cliThreshold = (int)$cliTarget;
+          // / An unrecognized threshold falls back to the configured default rather than
+          // / refusing, but says so. Silently sweeping on a typo would be worse.
+          else if ($cliTarget !== '') {
+            warningEntry('An unrecognized clean threshold was supplied. Using the configured default.');
+            print($Lol.'Unrecognized threshold. Supply a whole number of minutes, or now.'.$Lol); }
+          print($Lol.'Cleaning sessions older than '.$cliThreshold.' minute(s).'.$Lol);
+          logEntry('Manual clean requested. Threshold set to '.$cliThreshold.' minute(s).');
+          list ($cliTempCleaned, $cliTempDeepCleaned) = cleanDataLoc($ConvertTempDir, 'ConvertTempDir', $cliThreshold);
+          print('  Temporary location   '.($cliTempCleaned ? 'OK' : 'FAILED').($cliTempDeepCleaned ? ', removed expired sessions' : ', nothing was expired').$Lol);
+          list ($cliDataCleaned, $cliDataDeepCleaned) = cleanDataLoc($ConvertLoc, 'ConvertLoc', $cliThreshold);
+          print('  Data location        '.($cliDataCleaned ? 'OK' : 'FAILED').($cliDataDeepCleaned ? ', removed expired sessions' : ', nothing was expired').$Lol);
+          if (!$cliTempCleaned or !$cliDataCleaned) print($Lol.'One or more locations could not be cleaned. See the log for the reason.'.$Lol);
+          print($Lol);
+          $CommandLineHandled = TRUE; } }
       // / An unrecognized argument is a mistake, not a web request.
       // / Falling through to the web logic would be the worst possible response.
       else {
@@ -1906,6 +1976,48 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork) {
   $networkFlag = $mountFlags = $workingDir = $inputDir = $outputDir = $sandboxInput = $sandboxOutput = $command = $inputPath = $outputPath = $allowNetwork = $bwrapIsUsable = NULL;
   unset($networkFlag, $mountFlags, $workingDir, $inputDir, $outputDir, $sandboxInput, $sandboxOutput, $command, $inputPath, $outputPath, $allowNetwork, $bwrapIsUsable);
   return array($CommandMayRun, $SandboxedCommand); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to locate the absolute path of a dependency binary.
+// / Accepts the name of the binary, without a path.
+// / Returns the absolute path, or an empty string when the binary cannot be found.
+// / A binary installed from a package lands in /usr/bin & one built from source lands in
+// / /usr/local/bin, so hardcoding either one is wrong on half of all installations.
+// / The web server user's PATH is not the administrator's PATH & often excludes
+// / /usr/local/bin entirely, so a bare command name is not reliable either.
+// / The candidate directories are searched in order before command -v is consulted, so a
+// / source built binary is preferred over a packaged one when both exist & most lookups
+// / never spawn a process at all.
+// / command -v is used rather than which, because which is a separate package on a minimal
+// / installation & reports failure inconsistently between implementations.
+// / A name containing a path separator is refused, because this locates a binary by name &
+// / a caller supplying a path has already decided where it is.
+function locateDependency($binaryName) {
+  // / Set variables.
+  global $Verbose;
+  $BinaryPath = '';
+  $candidateDirs = array('/usr/local/bin', '/usr/local/sbin', '/usr/bin', '/usr/sbin', '/bin', '/sbin');
+  $candidateDir = $candidatePath = $commandOutput = '';
+  $binaryName = trim($binaryName);
+  // / A name is a name. A caller supplying a path is not asking this function anything.
+  if ($binaryName === '' or strpos($binaryName, '/') !== FALSE or strpos($binaryName, '\\') !== FALSE) $BinaryPath = '';
+  else {
+    // / Search the known locations directly before spawning anything.
+    foreach ($candidateDirs as $candidateDir) {
+      $candidatePath = $candidateDir.'/'.$binaryName;
+      if (is_file($candidatePath) && is_executable($candidatePath)) {
+        $BinaryPath = $candidatePath;
+        break; } }
+    // / Fall back to the shell only when the known locations did not have it.
+    if ($BinaryPath === '') {
+      $commandOutput = trim((string)@shell_exec('command -v '.escapeshellarg($binaryName).' 2>/dev/null'));
+      if ($commandOutput !== '' && is_file($commandOutput) && is_executable($commandOutput)) $BinaryPath = $commandOutput; }
+    if ($Verbose) logEntry('Dependency lookup: '.$binaryName.' '.($BinaryPath === '' ? 'NOT FOUND' : 'found at '.$BinaryPath).'.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $candidateDirs = $candidateDir = $candidatePath = $commandOutput = $binaryName = NULL;
+  unset($candidateDirs, $candidateDir, $candidatePath, $commandOutput, $binaryName);
+  return $BinaryPath; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -2580,33 +2692,34 @@ function convertDocuments($pathname, $newPathname, $extension) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to convert image formats.
-// / ImageMagick v7 is required for the unified magick utility & its parameter ordering.
-// / A v6 installation uses convert with different argument semantics & is refused.
+// / The binary is supplied by verifyImageVersion() rather than hardcoded, so the version
+// / that was verified is provably the version that runs.
+// / A dimension of zero is omitted from the geometry rather than written, so the other
+// / dimension scales to it. ImageMagick treats WxH as a bounding box & preserves the
+// / aspect ratio, so an exclamation mark is added when the user supplied both & therefore
+// / asked for both exactly.
 function convertImages($pathname, $newPathname, $height, $width, $rotate) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumImageVersion, $magickCommand;
-  $ConversionSuccess = $ConversionErrors = $imageVersionIsValid = $magickCommand = $sandboxIsAvailable = FALSE;
-  $returnData = $wh = $wxh = $bgSwitch = $outputExt = '';
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumImageVersion;
+  $ConversionSuccess = $ConversionErrors = $sandboxIsAvailable = FALSE;
+  $imageBinary = FALSE;
+  $returnData = $wh = $wxh = $bgSwitch = $outputExt = $magickCommand = '';
   $stopper = 0;
   $sleepTime = $SleepTimer;
-  logEntry($height.' '.$width);
-  // / Confirm the installed ImageMagick meets the minimum version HRConvert2 requires.
-  $imageVersionIsValid = verifyImageVersion($MinimumImageVersion);
-  if (!$imageVersionIsValid) {
+  // / Locate & verify ImageMagick. A path is returned only when both succeeded.
+  $imageBinary = verifyImageVersion($MinimumImageVersion);
+  if ($imageBinary === FALSE) {
     $ConversionErrors = TRUE;
     errorEntry('The installed ImageMagick version is missing, unidentifiable, or too old!', 8001, FALSE); }
   else {
     // / Validate the height, width & rotate arguments.
     if (!is_numeric($height) or $height === FALSE) $height = 0;
     if (!is_numeric($width) or $width === FALSE) $width = 0;
-    if (!is_numeric($rotate) or $rotate === FALSE) $rotate = '';
-    else $rotate = '-rotate '.$rotate.' ';
-    // / ImageMagick treats WxH as a bounding box & preserves the aspect ratio, so the
-    // / dimension that binds first wins & the other comes out smaller than requested.
-    // / An exclamation mark demands the exact dimensions & accepts the distortion, which is
+    if (!is_numeric($rotate) or (int)$rotate === 0) $rotate = '';
+    else $rotate = '-rotate '.escapeshellarg($rotate).' ';
+    // / An omitted dimension is unconstrained & the other scales to fit it.
+    // / An exclamation mark demands exact dimensions & accepts the distortion, which is
     // / only correct when the user supplied both & therefore asked for both.
-    // / A dimension of zero is omitted rather than written, so the other one scales to it.
-    // / Neither dimension leaves an empty geometry & no resize is performed at all.
     $wxh = (($width > 0) ? $width : '').'x'.(($height > 0) ? $height : '');
     if ($width > 0 && $height > 0) $wxh = $wxh.'!';
     if ($wxh === 'x') $wh = '';
@@ -2617,31 +2730,36 @@ function convertImages($pathname, $newPathname, $height, $width, $rotate) {
     // / Without this a transparent PNG becomes a black JPEG rather than a white one.
     if ($outputExt === 'jpg' or $outputExt === 'jpeg') $bgSwitch = '-background white -alpha remove ';
     else $bgSwitch = '-background none ';
-    if ($Verbose) logEntry('Converting image.');
-    // / This code will attempt the conversion up to $StopCounter number of times.
-    while (!file_exists($newPathname) && $stopper <= $StopCounter) {
-      // / If the last conversion attempt failed, wait a moment before trying again.
-      if ($stopper !== 0) sleep($sleepTime++);
-      $magickCommand = '/usr/local/bin/magick '.escapeshellarg($pathname).' '.$bgSwitch.$wh.$rotate.escapeshellarg($newPathname);
-      list ($sandboxIsAvailable, $magickCommand) = sandboxCommand($magickCommand, $pathname, $newPathname, FALSE);
-      if (!$sandboxIsAvailable) warningEntry('Bubblewrap is unavailable. An image conversion ran unsandboxed & was protected only by policy.xml.');
-      if ($Verbose) logEntry('Image command: '.$magickCommand);
-      $returnData = shell_exec($magickCommand);
-      // / Count the number of conversions to avoid infinite loops.
-      $stopper++;
-      // / Stop attempting the conversion after $StopCounter number of attempts.
-      if ($stopper === $StopCounter) {
-        $ConversionErrors = TRUE;
-        errorEntry('The image converter timed out!', 8000, FALSE); } }
-    // / Log the output of the operation to the logfile, if it is not blank.
-    if ($Verbose && trim($returnData) !== '') logEntry('ImageMagick returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-    // / The output file is the only verdict on whether the conversion produced anything.
-    // / This check must stay inside the version gate, or a stale output file from an
-    // / earlier attempt would report success for a conversion that was refused.
-    if (file_exists($newPathname)) $ConversionSuccess = TRUE; }
+    // / Build & sandbox the command once. It does not change between retries.
+    // / The input comes FIRST. -alpha remove is an operation & needs an image already
+    // / loaded, so a settings block placed before the input fails with no images found.
+    $magickCommand = escapeshellarg($imageBinary).' '.escapeshellarg($pathname).' '.$bgSwitch.$wh.$rotate.escapeshellarg($newPathname);
+    list ($sandboxIsAvailable, $magickCommand) = sandboxCommand($magickCommand, $pathname, $newPathname, FALSE);
+    if (!$sandboxIsAvailable) {
+      $ConversionErrors = TRUE;
+      errorEntry('Bubblewrap is missing or non functional, so this image conversion cannot be isolated!', 8002, FALSE); }
+    else {
+      if ($Verbose) logEntry('Converting image.');
+      // / This code will attempt the conversion up to $StopCounter number of times.
+      while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+        // / If the last conversion attempt failed, wait a moment before trying again.
+        if ($stopper !== 0) sleep($sleepTime++);
+        $returnData = shell_exec($magickCommand);
+        // / Count the number of conversions to avoid infinite loops.
+        $stopper++;
+        // / Stop attempting the conversion after $StopCounter number of attempts.
+        if ($stopper === $StopCounter) {
+          $ConversionErrors = TRUE;
+          errorEntry('The image converter timed out!', 8000, FALSE); } }
+      // / Log the output of the operation to the logfile, if it is not blank.
+      if ($Verbose && trim($returnData) !== '') logEntry('ImageMagick returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+      // / The output file is the only verdict on whether the conversion produced anything.
+      // / This check must stay inside the gates, or a stale output file from an earlier
+      // / attempt would report success for a conversion that was refused & never ran.
+      if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $newPathname = $height = $width = $wxh = $rotate = $wh = $sleepTime = $outputExt = $bgSwitch = $imageVersionIsValid = $magickCommand = $sandboxIsAvailable = NULL;
-  unset($returnData, $stopper, $pathname, $newPathname, $height, $width, $wxh, $rotate, $wh, $sleepTime, $outputExt, $bgSwitch, $imageVersionIsValid, $magickCommand, $sandboxIsAvailable);
+  $returnData = $stopper = $pathname = $newPathname = $height = $width = $wxh = $rotate = $wh = $sleepTime = $outputExt = $bgSwitch = $imageBinary = $magickCommand = $sandboxIsAvailable = NULL;
+  unset($returnData, $stopper, $pathname, $newPathname, $height, $width, $wxh, $rotate, $wh, $sleepTime, $outputExt, $bgSwitch, $imageBinary, $magickCommand, $sandboxIsAvailable);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 

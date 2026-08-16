@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/15/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/16/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.7.0.
+v3.7.1.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -25,6 +25,17 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia
 
 <3 Open-Source
 -----------------------------------------------------------------------------------
+
+--------------------
+COMMIT 8/16/2026
+v3.7.1 - 
+
+-v3.7.1.
+-Add dependency checking throughout.
+-Add userland secret & log creation.
+  -Now command line arguments work properly without 'sudo'.
+  -Only -v and -h commands work without sudo.
+  -The -c and -u commands still require sudo, as these require modifying the installation or data directories.
 
 --------------------
 COMMIT 8/15/2026

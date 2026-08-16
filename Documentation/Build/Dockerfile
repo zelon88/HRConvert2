@@ -89,7 +89,7 @@ RUN apt install -y openscad
 RUN apt install -y inkscape
 RUN apt install -y bubblewrap
 RUN apt install -y tesseract-ocr tar libgxps-utils
-RYN apt install -y ghostscript genisoimage curl assimp-utils
+RUN apt install -y ghostscript genisoimage curl assimp-utils
 
 # FIX: If building for ARM64, bypass source compilation entirely and use apt to prevent 3+ hour emulator crashes
 # ARG TARGETPLATFORM is automatically populated by Docker Buildx

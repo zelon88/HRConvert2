@@ -29,7 +29,7 @@ This application provides a highly accessible, unauthenticated web interface ena
 Ensure your development machine (Debian/Ubuntu) has the required tools installed to build loop images without root privileges:
 
 ```bash
-sudo apt update && sudo apt install -y dosfstools mtools
+sudo apt-get update && sudo apt-get install mtools dosfstools isolinux syslinux-common
 ```
 
 ---

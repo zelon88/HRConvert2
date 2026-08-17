@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-  <img src="https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/new-webui.png" alt="The HRConvert2 upload interface"/>
+  <img src="https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/new-selector-bar2.png" alt="The HRConvert2 options interface"/>
 </p>
 
 ---
@@ -42,23 +42,26 @@ no trace. It will run on a Raspberry Pi.
 
 ## Features
 
-**457 file formats** across documents, spreadsheets, presentations, images, audio, video,
+**463 file formats** across documents, spreadsheets, presentations, images, audio, video,
 streams, 3D models, CAD drawings, vector graphics, subtitles & archives.
 
-- **Every conversion runs inside its own operating system sandbox.** Not just the risky ones.
-- Optical Character Recognition on PDFs & images.
-- OpenSCAD rendering, sandboxed, with multi-file assemblies supported.
-- Live stream capture from `.m3u8` playlists, with full SSRF inspection before any fetch.
-- On-demand virus scanning with ClamAV or [scanCore](https://github.com/zelon88/scanCore).
-- Automatic background virus scanning of every upload, if you want it.
-- Temporary share links that expire with the file.
+**Bootable disk images.** Builds MBR, UEFI & hybrid ISO images from uploaded files, for
+  x86, x86-64, ARM32 & ARM64. Bundled bootloaders are hash-pinned & verified before use.
+
+- **Conversions run inside their own sandbox.** Called dependencies cannot see the filesystem.
+- **A command line interface** for updating, diagnostics & maintenance.
+- **Creates bootable iso images** from any archive format. Supports 5 system architecture types automatically.
+- **Optical Character Recognition**, on PDFs & images. Reads pictures, outputs documents.
+- **OpenSCAD rendering**, with multi-file assemblies supported. Automatically resolves include paths.
+- **Live stream capture/re-encoding** from `.m3u8` playlists, with full SSRF inspection before any fetch.
+- **Virus Scanning** with ClamAV or [scanCore](https://github.com/zelon88/scanCore).
+- **Temporary Share Links** that expire with the file.
 - **26 languages**, switchable by the user, built in. No language packs to install.
 - **3 interfaces & 7 color schemes**, switchable from within the page.
-- Right-to-left layout support for Arabic, Hebrew, Persian, Urdu & Syriac.
-- **A command line interface** for diagnostics, maintenance & self-updating.
+- **Proper Right-to-left language support** for Arabic, Hebrew, Persian, Urdu & Syriac.
+- **Every dependency is version pinned & validated.** Comprehensive binary validation performed at runtime.
 - **Self-updating from the command line**, with automatic rollback if the update will not run.
-- Installs cleanly alongside WordPress & other software on the same server.
-- Every dependency version-checked at runtime, so a broken install says so instead of failing quietly.
+- **Installs cleanly alongside other software** on the same server, like WordPress. Does not live in the web root.
 
 ---
 
@@ -124,6 +127,14 @@ that cannot answer is rolled back automatically & the previous version is preser
 Full details in
 [USING_COMMAND_LINE.txt](https://github.com/zelon88/HRConvert2/blob/master/Documentation/USING_COMMAND_LINE.txt).
 
+<p align="left">
+  <img src="https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/command-line-version-argument-small.png" alt="The HRConvert2 interface options menu"/>
+</p>
+
+<p align="right">
+  <img src="https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/command-line-help-argument-small.png" alt="The HRConvert2 interface options menu"/>
+</p>
+
 ---
 
 ## Requirements
@@ -158,6 +169,10 @@ in the URL with `?language=de`. Every translation ships with the application.
 Adding a language means adding one folder. The application is built so that communities can
 translate it for themselves without touching a single line of application code.
 
+<p align="center">
+  <img src="https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/new-selector-bar3-small.png" alt="The HRConvert2 interface options menu"/>
+</p>
+
 ---
 
 ## Interface & Appearance
@@ -173,10 +188,18 @@ deployment can carry its own branding.
 Interfaces & language packs are version-checked against the core. One that does not match is
 not loaded, & the default is used instead rather than rendering a broken page.
 
+<p align="left">
+  <img src="https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/new-selector-bar-small.png" alt="The HRConvert2 upload options menu"/>
+</p>
+
+<p align="right">
+  <img src="https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/new-selector-bar2-small.png" alt="The HRConvert2 interface options menu"/>
+</p>
+
 ---
 
 <details>
-<summary><strong>Supports 457 Formats</strong> — click to expand
+<summary><strong>Supports 463 Formats</strong> — click to expand
 </summary>
 
 #### Audio
@@ -205,6 +228,11 @@ Pptx, Ppt, Pot, Potx, Potm, Ppa, Odp, Xps, Oxps.
 #### Archives & Disk Images
 Zip, Rar, Tar, 7z, Bz, Gz, Bz2, Tar.bz2, Tar.gz, Iso, Vhd, Vdi, Cbr, Cbz.
 Converts between archive formats & disk image formats.
+
+#### Bootable Disk Images
+Converts any supported archive format into a bootable ISO from any uploaded file set.
+Supports Legacy, UEFI for x86, x86-64, ARM32 & ARM64, MBR/GPT hybrid.
+Included bootloaders are cryptographically validated at runtime.
 
 #### Images
 Jpg, Jpeg, Jpe, Png, Bmp, Gif, Webp, Heic, Ico, Avif, Flif, Cin, Dds, Dib, Gplt, Sct, Xcf.

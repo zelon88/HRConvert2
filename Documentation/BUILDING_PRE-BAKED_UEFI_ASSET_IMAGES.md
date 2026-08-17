@@ -137,17 +137,17 @@ All bootloader files mush be hashed and hased added to the core they can be used
 Once the script completes, verify that the output files are structured exactly as shown above. 
 
 The isolinux/isolinux.bin file can be obtained from a linux machine with `isolinux` installed.
-  It is located in `/usr/lib/ISOLINUX/`
-  To find it, run `find / -name isolinux.bin 2>/dev/null`
-  Copy `isolinux.bin` to `/var/www/html/HRProprietary/HRConvert2/Resources/Bootloaders/isolinux`
-  Hash the isolinux file using the `sha256sum /var/www/html/HRProprietary/HRConvert2/Resources/Bootloaders/isolinux/isolinux.bin` command.
+  1. It is located in `/usr/lib/ISOLINUX/`
+  2. To find it, run `find / -name isolinux.bin 2>/dev/null`
+  3. Copy `isolinux.bin` to `/var/www/html/HRProprietary/HRConvert2/Resources/Bootloaders/isolinux`
+  4. Hash the isolinux file using the `sha256sum /var/www/html/HRProprietary/HRConvert2/Resources/Bootloaders/isolinux/isolinux.bin` command.
 
 
 The isolinux/extra/ldlinux.c32 file can be obtained from a linux machine with `syslinux-common` installed.
-  It is located in `/usr/lib/syslinux/modules/bios/`
-  To find it, run `find / -name isolinux.bin 2>/dev/null`
-  Copy `ldlinux.c32` to `/var/www/html/HRProprietary/HRConvert2/Resources/Bootloaders/isolinux/extra`
-  Hash the isolinux file using the `sha256sum /var/www/html/HRProprietary/HRConvert2/Resources/Bootloaders/isolinux/extra/ldlinux.c32` command.
+  1. It is located in `/usr/lib/syslinux/modules/bios/`
+  2. To find it, run `find / -name isolinux.bin 2>/dev/null`
+  3. Copy `ldlinux.c32` to `/var/www/html/HRProprietary/HRConvert2/Resources/Bootloaders/isolinux/extra`
+  4. Hash the isolinux file using the `sha256sum /var/www/html/HRProprietary/HRConvert2/Resources/Bootloaders/isolinux/extra/ldlinux.c32` command.
  
 
 All bootloader files mush be hashed and hased added to the core they can be used for generating bootable iso images.

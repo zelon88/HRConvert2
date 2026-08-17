@@ -88,6 +88,7 @@ RUN apt install -y meshlab
 RUN apt install -y openscad
 RUN apt install -y inkscape
 RUN apt install -y bubblewrap
+RUN apt install -y isohybrid
 RUN apt install -y tesseract-ocr tar libgxps-utils
 RUN apt install -y ghostscript genisoimage curl assimp-utils
 

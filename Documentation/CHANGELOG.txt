@@ -28,6 +28,22 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia
 
 --------------------
 COMMIT 8/16/2026
+v3.7.3 - Add support for bootable ISO images. Fix Default UI Generate Share Link.
+
+-v3.7.3.
+-The Generate Share Link button was broken in the Default UI.
+  -Reported by zelon88 (me) in  https://github.com/zelon88/HRConvert2/issues/104
+  -The reason was copypasta in HRC2-Functions.js that repalced the function required to generate the link.
+-Add support for bootable iso images.
+  -Supports MBR, GPT, MBR+GPT, GPTx86, GPTx86-64, and latest GPT-ARM32 and GPT-ARM64.
+  -Converts any archive format into bootable iso.
+  -The bootable iso pipeline verifies dependencies, utilized pre-baked binaries, and hashes it's binaries at runtime to ensure they are valid.
+  -Implement dependency version pinning & checking.
+  -Implement bubblewrap namespaces for bootlable iso operations.
+  -Add documentation about how bootable iso creation works, and about how to generate the binaries when it's time to update them.
+
+--------------------
+COMMIT 8/16/2026
 v3.7.2 - Start working on dependency path validation. Improve non-sudo CLI operation.
 
 -v3.7.2.

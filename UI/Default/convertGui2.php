@@ -539,58 +539,51 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <input type="submit" id="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" name="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text33; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type="text/javascript">
             $(document).ready(function () {
-              // 1. Share Generate Button
               $('#sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
                 $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: { 
-                    Token1: '<?php echo $Token1; ?>',
-                    Token2: '<?php echo $Token2; ?>',
-                    download: '<?php echo $File; ?>' 
-                  },
-                  success: function(ReturnData) {
-                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text24; ?><i><?php echo $Gui2Text26; ?></i>';
-                    document.getElementById('shareclipStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text27; ?><i><?php echo $Gui2Text28; ?></i>';
-                    document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text29; ?><i>' + share_file_url('<?php echo $FullURL.'/DATA/'.$SesHash3.'/'; ?>', '<?php echo $File; ?>') + '</i>';
-                    copy_share_link(share_file_url('<?php echo $FullURL.'/DATA/'.$SesHash3.'/'; ?>', '<?php echo $File; ?>'), '<?php echo $GuiFunctionsText1; ?>');
-                    alert("<?php echo $Gui2Text73; ?>");
-                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); 
-                  },
-                  error: function(ReturnData) {
-                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); 
-                    alert("<?php echo $Gui2Text74; ?>"); 
-                  } 
-                }); });
-              // 2. Share Copy Button
+                type: 'POST',
+                url: 'convertCore.php',
+                data: { 
+                  Token1:'<?php echo $Token1; ?>',
+                  Token2:'<?php echo $Token2; ?>',
+                  download:'<?php echo $File; ?>' },
+                success: function(returnFile) {
+                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                  document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text24; ?><i><?php echo $Gui2Text26; ?></i>';
+                  document.getElementById('shareclipStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text27; ?><i><?php echo $Gui2Text28; ?></i>';
+                  document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text29; ?><i>' + share_file_url('<?php echo $FullURL.'/DATA/'.$SesHash3.'/'; ?>', '<?php echo $File; ?>') + '</i>';
+                  copy_share_link(share_file_url('<?php echo $FullURL.'/DATA/'.$SesHash3.'/'; ?>', '<?php echo $File; ?>'), '<?php echo $GuiFunctionsText1; ?>');
+                  alert("<?php echo $Gui2Text73; ?>");
+                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                  setTimeout(function() {
+                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); },
+                error: function(ReturnData) {
+                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                  setTimeout(function() {
+                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); 
+                  alert("<?php echo $Gui2Text74; ?>"); } }); });
               $('#sharecopybutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
                 $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: { 
-                    Token1: '<?php echo $Token1; ?>',
-                    Token2: '<?php echo $Token2; ?>',
-                    download: '<?php echo $File; ?>' 
-                  },
-                  success: function(ReturnData) {
-                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); 
-                    document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text24; ?><i><?php echo $Gui2Text26; ?></i>';
-                    document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text29; ?><i>' + share_file_url('<?php echo $FullURL.'/DATA/'.$SesHash3.'/'; ?>', '<?php echo $File; ?>') + '</i>'; 
-                  },
-                  error: function(ReturnData) {
-                    toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); 
-                    alert("<?php echo $Gui2Text74; ?>");
-                  } 
-                }); });
-            });
+                type: 'POST',
+                url: 'convertCore.php',
+                data: { 
+                  Token1:'<?php echo $Token1; ?>',
+                  Token2:'<?php echo $Token2; ?>',
+                  download:'<?php echo $File; ?>' },
+                success: function(returnFile) {
+                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                  setTimeout(function() {
+                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); 
+                  document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text24; ?><i><?php echo $Gui2Text26; ?></i>';
+                  document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text29; ?><i>' + share_file_url('<?php echo $FullURL.'/DATA/'.$SesHash3.'/'; ?>', '<?php echo $File; ?>') + '</i>'; },
+                error: function(ReturnData) {
+                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                  setTimeout(function() {
+                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); 
+                  alert("<?php echo $Gui2Text74; ?>");} }); }); });
           </script>
 
         </div>

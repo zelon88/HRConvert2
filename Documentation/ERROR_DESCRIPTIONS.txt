@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/15/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/16/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.6.8.
+v3.7.3.
 This plain text file contains descriptions of all the native error messages contained in or produced by the HRConvert2 Diablo engine. 
 These descriptions should give administrators a starting point for debugging problems with HRConvert2 installations. 
 Each section in this file contains information about a different error message. The first one is an example to demonstrate the structure of this file.
@@ -2348,6 +2348,83 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13105, <SESSION_IDENTIFIER>: Cryptographic validation failed for internal UEFI assets! Files are missing or corrupted.
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The static image asset required to create a bootable UEFI system partition failed its integrity check.
+  The targeted virtual filesystem image file may be missing from the internal $BootloadersDir storage path.
+  The image may have been altered, damaged during deployment, or truncated during a standard update cycle.
+  The computed file hash did not match the corresponding hardcoded --Required Hash-- value in config.php.
+  HRConvert2 refuses any asset it cannot positively validate to guarantee deployment container security.
+  Verify file integrity by calculating 'sha256sum' on the files inside the bootloaders directory.
+  This restriction exists to protect media consistency and ensure predictable sector routing formats.
+  Image operations manipulate local filesystem structures and never reach out to remote hosts.
+  A compromised or mismatching base image cannot bypass verification to reach the sandbox pipeline.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13106, <SESSION_IDENTIFIER>: The installed Isohybrid version is missing, unidentifiable, or too old!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The Isohybrid dependency required to create bootable iso files could not be verified.
+  Isohybrid may not be installed, or may not be reachable on the system path used by the web server user.
+  The installed Isohybrid may be older than the --Minimum Isohybrid Version-- setting in config.php.
+  The installed Isohybrid may be a development or git build which does not report a parseable version number.
+  HRConvert2 refuses any build it cannot positively identify, because an unknown build cannot be cleared.
+  Verify the installed version by running 'isohybrid -version' as the web server user.
+  This minimum exists for feature and format support and is not a security control.
+  Bootable iso conversions using Isohybrid read a local file and never fetch anything remote.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13106, <SESSION_IDENTIFIER>: Could not generate required bootloader assets!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The pipeline failed to process, format, or inject the necessary files into the workspace prior to compiling.
+  The host environment may be running low on transient space or has encountered storage block access restrictions.
+  An internal file system failure may have occurred while attempting to duplicate a pre-baked target image asset.
+  The global $BootloadersDir configuration path might point to a structure lacking readable directory boundaries.
+  HRConvert2 throws this alert to stop mkisofs from compiling incomplete structural configurations.
+  Verify host platform conditions and ensure appropriate storage tracking limits are assigned to scratch paths.
+  This restriction acts as a processing firewall to safeguard filesystem parameters from empty calculations.
+  Workspace operations write changes directly onto local data pathways and do not communicate externally.
+  A disrupted copy operation safely drops execution logic blocks before reaching the sandboxed compiler phase.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14000, <SESSION_IDENTIFIER>: The file <FILE_NAME> failed first stage validation!
 
 FILE
@@ -2512,112 +2589,6 @@ ERROR DESCRIPTION
   One of the $_POST or $_GET variables submitted was empty after sanitization.
   The user has requested to convert a file that was deleted for exceededing the --File Deletion Age Theshold-- specified in config.php.
   This error is not fatal but the file that causes it will be skipped.
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15012, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!
-
-FILE
-  /convertCore.php
-
-FATAL
-  NO
-
-LOGGED
-  YES
-
-ERROR DESCRIPTION
-  An OCR operation was refused because the server could not build a sandbox for it.
-  This error covers pdftotext & Tesseract. Neither offers a native restriction on what it
-  may read, so the sandbox is the only boundary available.
-  A PDF is a container format that can reference external resources & embed fonts, scripts
-  and images, so a PDF parser is a considerably larger attack surface than it appears.
-  See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
-  NOTE. The ImageMagick step of the advanced OCR method does NOT produce this error.
-  ImageMagick has policy.xml, so an unavailable sandbox is a downgrade to a weaker control
-  rather than to no control, & that step continues with a warning instead.
-  NOTE. The document conversion engine is not sandboxed at all & is unaffected by this.
-  It is a persistent listener rather than a process launched per conversion.
-  Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15013, <SESSION_IDENTIFIER>: The installed Tesseract version is missing, unidentifiable, or too old!
-
-FILE
-  /convertCore.php
-
-FATAL
-  NO
-
-LOGGED
-  YES
-
-ERROR DESCRIPTION
-  Tesseract could not be verified, so text cannot be read out of an image.
-  This affects two routes. Reading an image directly, & reading the rasterized pages of a
-  PDF during the advanced OCR method.
-  Reading a PDF that already holds a text layer is NOT affected. That route uses pdftotext.
-  Install it with  sudo apt install tesseract-ocr
-  The minimum is set by --Minimum Tesseract Version-- in config.php & is a REAL floor
-  rather than a formality.
-  Version 3 used a character classifier. Version 4 replaced it with an LSTM engine, & the
-  difference in output quality is large enough that a version 3 result reads as a broken
-  conversion rather than a poor one. A user who does not know which engine ran would
-  reasonably report it as a bug.
-  Version 5 is the current series & is what a modern distribution ships.
-  Check the installed version by running  tesseract --version  in a terminal.
-  The banner lists leptonica, libpng, zlib & a dozen other library versions. The version
-  being checked is the one on the FIRST line, immediately after the product name.
-  A build that reports no parseable version is refused, because an unknown build cannot be
-  cleared against a minimum.
-  This check did not exist before v3.7. Tesseract was invoked blind, & a missing binary
-  produced an empty result & a conversion that reported failure without naming a cause.
-  NOTE. A missing language data package produces a DIFFERENT failure that this check
-  cannot detect. Tesseract itself is present & current, & the conversion still produces
-  nothing. Install tesseract-ocr-<lang> for every language the server needs to read.
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15014, <SESSION_IDENTIFIER>: The installed pdftotext version is missing, unidentifiable, or too old!
-
-FILE
-  /convertCore.php
-
-FATAL
-  NO
-
-LOGGED
-  YES
-
-ERROR DESCRIPTION
-  pdftotext could not be verified, so an existing text layer cannot be extracted from a PDF.
-  pdftotext is part of the poppler-utils package rather than being a package of its own.
-  Install it with  sudo apt install poppler-utils
-  The minimum is set by --Minimum Pdftotext Version-- in config.php.
-  poppler uses a date style version where the major is the YEAR & the minor is the MONTH,
-  so 24.02 is February 2024 rather than version twenty four point two.
-  Check the installed version by running  pdftotext -v  in a terminal.
-  This minimum exists to make a MISSING binary produce a named error rather than a
-  timeout, not because any known version is unsuitable.
-  A build that reports no parseable version is refused, because an unknown build cannot be
-  cleared against a minimum.
-  THIS ERROR IS NOT ALWAYS FATAL TO THE OPERATION.
-  When it occurs during OCR method 1, the operation falls through to method 2, which
-  rasterizes the page & reads it with Tesseract instead. A server with no poppler can
-  still OCR a PDF, just more slowly & with less exact output.
-  When it occurs during the image fallback route, there is no alternative & the operation
-  fails.
-  This check did not exist before v3.7. pdftotext was invoked blind.
-  NOTE. pdftotext cannot read a scanned page. A PDF with no text layer produces nothing at
-  all even when pdftotext is present & current, which is the entire reason method 2 exists.
-  An empty result is not necessarily a fault in this dependency.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -2814,6 +2785,112 @@ ERROR DESCRIPTION
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
   The request contained character types or encoded data that are not supported.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15012, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  An OCR operation was refused because the server could not build a sandbox for it.
+  This error covers pdftotext & Tesseract. Neither offers a native restriction on what it
+  may read, so the sandbox is the only boundary available.
+  A PDF is a container format that can reference external resources & embed fonts, scripts
+  and images, so a PDF parser is a considerably larger attack surface than it appears.
+  See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
+  NOTE. The ImageMagick step of the advanced OCR method does NOT produce this error.
+  ImageMagick has policy.xml, so an unavailable sandbox is a downgrade to a weaker control
+  rather than to no control, & that step continues with a warning instead.
+  NOTE. The document conversion engine is not sandboxed at all & is unaffected by this.
+  It is a persistent listener rather than a process launched per conversion.
+  Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15013, <SESSION_IDENTIFIER>: The installed Tesseract version is missing, unidentifiable, or too old!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Tesseract could not be verified, so text cannot be read out of an image.
+  This affects two routes. Reading an image directly, & reading the rasterized pages of a
+  PDF during the advanced OCR method.
+  Reading a PDF that already holds a text layer is NOT affected. That route uses pdftotext.
+  Install it with  sudo apt install tesseract-ocr
+  The minimum is set by --Minimum Tesseract Version-- in config.php & is a REAL floor
+  rather than a formality.
+  Version 3 used a character classifier. Version 4 replaced it with an LSTM engine, & the
+  difference in output quality is large enough that a version 3 result reads as a broken
+  conversion rather than a poor one. A user who does not know which engine ran would
+  reasonably report it as a bug.
+  Version 5 is the current series & is what a modern distribution ships.
+  Check the installed version by running  tesseract --version  in a terminal.
+  The banner lists leptonica, libpng, zlib & a dozen other library versions. The version
+  being checked is the one on the FIRST line, immediately after the product name.
+  A build that reports no parseable version is refused, because an unknown build cannot be
+  cleared against a minimum.
+  This check did not exist before v3.7. Tesseract was invoked blind, & a missing binary
+  produced an empty result & a conversion that reported failure without naming a cause.
+  NOTE. A missing language data package produces a DIFFERENT failure that this check
+  cannot detect. Tesseract itself is present & current, & the conversion still produces
+  nothing. Install tesseract-ocr-<lang> for every language the server needs to read.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15014, <SESSION_IDENTIFIER>: The installed pdftotext version is missing, unidentifiable, or too old!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  pdftotext could not be verified, so an existing text layer cannot be extracted from a PDF.
+  pdftotext is part of the poppler-utils package rather than being a package of its own.
+  Install it with  sudo apt install poppler-utils
+  The minimum is set by --Minimum Pdftotext Version-- in config.php.
+  poppler uses a date style version where the major is the YEAR & the minor is the MONTH,
+  so 24.02 is February 2024 rather than version twenty four point two.
+  Check the installed version by running  pdftotext -v  in a terminal.
+  This minimum exists to make a MISSING binary produce a named error rather than a
+  timeout, not because any known version is unsuitable.
+  A build that reports no parseable version is refused, because an unknown build cannot be
+  cleared against a minimum.
+  THIS ERROR IS NOT ALWAYS FATAL TO THE OPERATION.
+  When it occurs during OCR method 1, the operation falls through to method 2, which
+  rasterizes the page & reads it with Tesseract instead. A server with no poppler can
+  still OCR a PDF, just more slowly & with less exact output.
+  When it occurs during the image fallback route, there is no alternative & the operation
+  fails.
+  This check did not exist before v3.7. pdftotext was invoked blind.
+  NOTE. pdftotext cannot read a scanned page. A PDF with no text layer produces nothing at
+  all even when pdftotext is present & current, which is the entire reason method 2 exists.
+  An empty result is not necessarily a fault in this dependency.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 

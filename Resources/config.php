@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.7.2.
+// / v3.7.3.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -37,7 +37,7 @@
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. Replacing config.php with a newer one is the correct fix.
-$ConfigVersion = 'v3.7.2';
+$ConfigVersion = 'v3.7.3';
 
 // / ---Security Informations---
 // /
@@ -444,6 +444,18 @@ $MinimumTesseractVersion = '4.0';
 // /   Format is year.month.
 // /   Default is '20.09'.
 $MinimumPdftotextVersion = '20.09';
+// /  --Minimum Isohybrid Version--
+// /   isohybrid post processes a finished ISO so one image boots from optical media, from a
+// /   USB stick presenting an MBR, & from UEFI firmware.
+// /   It is part of the syslinux-utils package rather than being a package of its own.
+// /   Install it with  sudo apt install syslinux-utils
+// /   ONLY the generic hybrid image needs it. An architecture specific UEFI image is not
+// /   MBR bootable & is never passed through isohybrid, so a server that only produces
+// /   those images does not need this utility at all.
+// /   Check the installed version by running 'isohybrid --version' in a terminal.
+// /   Format is major.minor.
+// /   Default is '6.03'.
+$MinimumIsoHybridVersion = '0.12';
 // / ------------------------------
 
 // / ------------------------------
@@ -648,6 +660,17 @@ $AllowUserShare = TRUE;
 // /   If a conversion type is disabled, options for processing that conversion will not be displayed by the UI.
 // /   Default is 'Document', 'Image', 'Model', 'Scad', 'Drawing', 'SVG', 'Video', 'Subtitle', 'Audio', 'Archive', 'Stream', 'OCR'.
 $SupportedConversionTypes = array('Document', 'Image', 'Model', 'Scad', 'Drawing', 'SVG', 'Video', 'Subtitle', 'Audio', 'Archive', 'Stream', 'OCR');
+// /  --Allow Creation Of Bootable ISO Images--
+// /   Allow or disallow users to create bootable ISO images for multiple target systems.
+// /   The list of supported bootable image formats is contained in the --Supported Bootable ISO Output Formats-- config.php section.
+// /   Creating bootable .iso images is only possible through the Archive conversion process.
+// /   This setting requires that Archive conversions be a member of --Supported Conversion Types-- in config.php.
+// /   This setting requires that the iso format is a member of --Supported Archive Formats-- in config.php.
+// /   If this is set to TRUE, users will be allowed to create bootable .iso files that match the list of supported formats.
+// /   If this is set to FALSE, users will be NOT allowed to create bootable .iso files of any kind.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$AllowBootableIsoImage = TRUE;
 // /  --File Deletion Age Theshold--
 // /   Age in minutes of files to be deleted.
 // /   Set to 0 to keep files forever.
@@ -762,6 +785,8 @@ $UsePatchedDocumentEngine = TRUE;
 // /
 // /  --Supported Archive Formats--
 $UserArchiveArray = array('zip', 'rar', 'tar', '7z', 'iso');
+// /  --Supported Bootable ISO Output Formats--
+$UserBootableIsoArray = array('iso_mbr-boot', 'iso_gpt-boot', 'iso_gpt-boot-x86', 'iso_gpt-boot-x86-64', 'iso_gpt-boot-arm32', 'iso_gpt-boot-arm64');
 // /  --Supported Dearchive Formats--
 $UserDearchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi', 'tar.bz2', 'tar.gz', 'cbr', 'cbz');
 // /  --Supported Document Formats--

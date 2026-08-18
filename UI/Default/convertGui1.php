@@ -38,7 +38,7 @@ $UIDisplayed = TRUE;
 if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
 // / Assign temporary variables.
 $oppositeAlignment = (strtolower($GUIAlignment) === 'left') ? 'right' : 'left';
-$gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2XpsArr = $gui2ScadArr = $gui2SvgArr = array();
+$gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui1PresArr = $gui1ArchArr = $gui1ImaArr = $gui1ModArr = $gui1SubArr = $gui1DraArr = $gui1OcrArr = $gui1XpsArr = $gui1ScadArr = $gui1SvgArr = $gui1EbkArr = array();
 $selectorBase = 'convertCore.php?';
 $selectorSide = ($GUIAlignment === 'left') ? 'right' : 'left';
 $selectorSwatches = array(
@@ -151,9 +151,14 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
               <?php foreach ($DocumentArray as $gui1DocArr) { ?>
               <li><?php echo $gui1DocArr; ?></li>
               <?php } ?>
-              <?php foreach ($XPSInputArray as $gui1XpsArr) { ?>
+              <?php if (in_array('XPS', $SupportedConversionTypes)) {
+                foreach ($XPSInputArray as $gui1XpsArr) { ?>
               <li><?php echo $gui1XpsArr; ?></li>
-              <?php } ?>
+              <?php } } ?>
+              <?php if (in_array('Ebook', $SupportedConversionTypes)) {
+                foreach ($EbookInputArray as $gui1EbookArr) { ?>
+              <li><?php echo $gui1EbookArr; ?></li>
+              <?php } } ?>
             </ol>
             <?php } if (in_array('Document', $SupportedConversionTypes)) { ?>
             <strong><?php echo $Gui1Text15; ?></strong>
@@ -275,5 +280,5 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
 
     <?php
     // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-    $oppositeAlignment = $gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui1PresArr = $gui1ArchArr = $gui1ImaArr = $gui1ModArr = $gui2SubArr = $gui1DraArr = $gui2XpsArr = NULL;
-    unset($oppositeAlignment, $gui1AudArr, $gui1VidArr, $gui1StreamArr, $gui1DocArr, $gui1SpreadArr, $gui1PresArr, $gui1ArchArr, $gui1ImaArr, $gui1ModArr, $gui2SubArr, $gui1DraArr, $gui2XpsArr);
+    $oppositeAlignment = $gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui1PresArr = $gui1ArchArr = $gui1ImaArr = $gui1ModArr = $gui1SubArr = $gui1DraArr = $gui1XpsArr = $gui1SvgArr = $gui1EbkArr = NULL;
+    unset($oppositeAlignment, $gui1AudArr, $gui1VidArr, $gui1StreamArr, $gui1DocArr, $gui1SpreadArr, $gui1PresArr, $gui1ArchArr, $gui1ImaArr, $gui1ModArr, $gui1SubArr, $gui1DraArr, $gui1XpsArr, $gui1ScadArr, $gui1SvgArr, $gui1EbkArr);

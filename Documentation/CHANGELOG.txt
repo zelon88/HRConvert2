@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/16/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.7.2.
+v3.7.4.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -20,11 +20,54 @@ This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ... 
 This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
-Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
+Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Calibre,
 Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia & xvfb-run.
 
 <3 Open-Source
 -----------------------------------------------------------------------------------
+
+
+--------------------
+COMMIT 8/16/2026
+v3.7.4 - Add support for EBook files & additional image formats.
+
+-v3.7.4.
+  -Bump config.php, all 3 GUIs, and all 26 language packs to v3.7.4.
+-Add support for Ebook documents using calibre.
+  -Install with `sudo apt-get install calibre`
+  -We may revise the version we're using soon, when we introduce supply chain auditing.
+  -Input EBook support:
+    -'epub', 'mobi', 'azw3', 'fb2', 'lit', 'lrf', 'pdb', 'pml', 'rb', 'snb', 'tcr', 'txt', 'txtz', 'html', 'htmlz', 'rtf', 'oeb', 'docx'
+  -Output EBook support:
+    -'epub', 'mobi', 'azw', 'azw3', 'azw4', 'fb2', 'fbz', 'lit', 'lrf', 'pdb', 'pml', 'rb', 'snb', 'tcr', 'txt', 'txtz', 'html', 'htmlz', 'rtf', 'odt', 'docx', 'pdf', 'chm', 'cbz', 'cbr', 'cbc', 'prc', 'opf', 'recipe'
+-Add support for 6 additional image formats.
+  -If on bare-metal / VM, this requires rebuilding IM7 from source using the provided script.
+  -The script is located in `Documentation/Build/build-imagemagick-v7.sh`
+  -Docker users can just download a new docker image.
+  -tiff
+  -tif
+  -heif
+  -jp2
+  -j2k
+  -jxl
+-Update ImageMagick7 build script.
+  -The script is located in `Documentation/Build/build-imagemagick-v7.sh`
+  -It now installs dependencies.
+  -It now cleans up the build location, so you can run it twice in a row.
+  -It now reinstalls the locally installed source built IM7 if it exists.
+  -It now builds a more capable version of IM7 that has more reliable support for more formats.
+-Update README.md to.....
+  -Describe new bootable format support.
+  -Increase conversion count.
+  -Add screenshots,
+  -Revise some sections.
+-Update documentation.
+  -Add ABOUT_REST_API.txt.
+  -Add ABOUT_REST_API.md
+  -Update CREATING_GUIS.txt (which technically has always held the REST API information).
+  -Updated README.md on Dockerhub.
+    -https://hub.docker.com/repository/docker/zelon88/hrconvert2/general
+  -Added CREATING_CONVERSION_PIPELINES.txt.
 
 --------------------
 COMMIT 8/16/2026

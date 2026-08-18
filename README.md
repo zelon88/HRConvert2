@@ -42,7 +42,7 @@ no trace. It will run on a Raspberry Pi.
 
 ## Features
 
-**463 file formats** across documents, spreadsheets, presentations, images, audio, video,
+**488 file formats** across documents, ebooks, comics, spreadsheets, presentations, images, audio, video,
 streams, 3D models, CAD drawings, vector graphics, subtitles & archives.
 
 **Bootable disk images.** Builds MBR, UEFI & hybrid ISO images from uploaded files, for
@@ -127,11 +127,11 @@ that cannot answer is rolled back automatically & the previous version is preser
 Full details in
 [USING_COMMAND_LINE.txt](https://github.com/zelon88/HRConvert2/blob/master/Documentation/USING_COMMAND_LINE.txt).
 
-<p align="left">
+<p align="center">
   <img src="https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/command-line-version-argument-small.png" alt="The HRConvert2 interface options menu"/>
 </p>
 
-<p align="right">
+<p align="center">
   <img src="https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/command-line-help-argument-small.png" alt="The HRConvert2 interface options menu"/>
 </p>
 
@@ -188,18 +188,18 @@ deployment can carry its own branding.
 Interfaces & language packs are version-checked against the core. One that does not match is
 not loaded, & the default is used instead rather than rendering a broken page.
 
-<p align="left">
+<p align="center">
   <img src="https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/new-selector-bar-small.png" alt="The HRConvert2 upload options menu"/>
 </p>
 
-<p align="right">
+<p align="center">
   <img src="https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/new-selector-bar2-small.png" alt="The HRConvert2 interface options menu"/>
 </p>
 
 ---
 
 <details>
-<summary><strong>Supports 463 Formats</strong> — click to expand
+<summary><strong>Supports 488 Formats</strong> — click to expand
 </summary>
 
 #### Audio
@@ -218,6 +218,11 @@ M3u8. Captures a live stream & converts it into any supported video or audio for
 
 #### Documents
 Doc, Docx, Txt, Rtf, Odt, Pdf.
+
+#### E-Books & Comics
+Epub, Mobi, Azw, Azw3, Azw4, Fb2, Fbz, Lit, Lrf, Pdb, Pml, Rb, Snb, Tcr, Txtz, Chm,
+Cbc, Prc, Opf, Recipe, Oeb, plus Txt, Rtf, Odt, Docx & Pdf.
+Converts between e-book formats & document formats.
 
 #### Spreadsheets
 Csv, Xls, Xlsx, Ods.

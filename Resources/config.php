@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/16/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.7.3.
+// / v3.7.4.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -24,7 +24,7 @@
 // /
 // / DEPENDENCY REQUIREMENTS ... 
 // / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
-// / Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
+// / Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Calibre,
 // / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap Dia & xvfb-run.
 // /
 // / <3 Open-Source
@@ -37,7 +37,7 @@
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. Replacing config.php with a newer one is the correct fix.
-$ConfigVersion = 'v3.7.3';
+$ConfigVersion = 'v3.7.4';
 
 // / ---Security Informations---
 // /
@@ -456,6 +456,18 @@ $MinimumPdftotextVersion = '20.09';
 // /   Format is major.minor.
 // /   Default is '6.03'.
 $MinimumIsoHybridVersion = '0.12';
+// /  --Minimum Calibre Version--
+// /   Calibre provides the ebook-convert utility, which is the engine behind every e-book
+// /   conversion. It is one program handling every e-book format in both directions.
+// /   Install it with  sudo apt install calibre
+// /   Calibre is a LARGE dependency. It pulls in Qt & a bundled Python interpreter, & a
+// /   minimal server will gain several hundred megabytes by installing it. A server that
+// /   does not need e-book conversion should remove Ebook from --Supported Conversion Types--
+// /   rather than installing this.
+// /   Check the installed version by running 'ebook-convert --version' in a terminal.
+// /   Format is major.minor.
+// /   Default is '5.0'.
+$MinimumCalibreVersion = '9.13';
 // / ------------------------------
 
 // / ------------------------------
@@ -659,7 +671,7 @@ $AllowUserShare = TRUE;
 // /   Only conversion types contained in this list will be processed.
 // /   If a conversion type is disabled, options for processing that conversion will not be displayed by the UI.
 // /   Default is 'Document', 'Image', 'Model', 'Scad', 'Drawing', 'SVG', 'Video', 'Subtitle', 'Audio', 'Archive', 'Stream', 'OCR'.
-$SupportedConversionTypes = array('Document', 'Image', 'Model', 'Scad', 'Drawing', 'SVG', 'Video', 'Subtitle', 'Audio', 'Archive', 'Stream', 'OCR');
+$SupportedConversionTypes = array('Document', 'Image', 'Model', 'Scad', 'Drawing', 'SVG', 'Video', 'Subtitle', 'Audio', 'Archive', 'Stream', 'OCR', 'Ebook');
 // /  --Allow Creation Of Bootable ISO Images--
 // /   Allow or disallow users to create bootable ISO images for multiple target systems.
 // /   The list of supported bootable image formats is contained in the --Supported Bootable ISO Output Formats-- config.php section.
@@ -802,7 +814,7 @@ $UserPresentationInputArray = array('pptx', 'ppt', 'potx', 'potm', 'pot', 'ppa',
 // /  --Supported Presentation Output Formats--
 $UserPresentationOutputArray = array('pptx', 'ppt', 'potx', 'potm', 'pot', 'ppa', 'odp', 'pdf');
 // /  --Supported Image Formats--
-$UserImageArray = array('jpeg', 'jpg', 'jpe', 'png', 'bmp', 'gif', 'webp', 'cin', 'dds', 'dib', 'flif', 'avif', 'gplt', 'sct', 'xcf', 'heic', 'ico');
+$UserImageArray = array('jpeg', 'jpg', 'jpe', 'png', 'bmp', 'gif', 'webp', 'cin', 'dds', 'dib', 'flif', 'avif', 'gplt', 'sct', 'xcf', 'heic', 'ico', 'tiff', 'tif', 'heif', 'jp2', 'j2k', 'jxl');
 // /  --Supported Audio Input Formats--
 $UserMediaInputArray = array('sox', 'spdif', 'spx', 'tta', 'u16be', 'u16le', 'u24be', 'u24le', 'u32be', 'u32le', 'u8', 'voc', 'wav', 'wv', 'wsaud', 'mulaw', 'mxf', 'mxf_d10', 'mxf_opatom', 'oga', 'ogg', 'opus', 'oss', 'psp', 'rawvideo', 's16be', 's16le', 's24be', 's24le', 's32be', 's32le', 's8', 'sbc', 'ilbc', 'ircam', 'latm', 'lrc', 'mp2', 'mp3', 'mlp', 'flac', 'g722', 'g723_1', 'g726', 'g726le', 'gsm', 'caf', 'daud', 'dts', 'eac3', 'f32be', 'f32le', 'f64be', 'f64le', 'ac3', 'ac4', 'adts', 'aiff', 'alaw', 'amr', 'aptx', 'aptx_hd', 'argo_asf', 'argo_cvg', 'ast', 'au', 'a64', 'aa', 'aac', 'aax', 'acm', 'act', 'adp', 'adx', 'aea', 'afc', 'aix', 'alp', 'amrnb', 'amrwb', 'apac', 'apc', 'ape', 'apm', 'argo_asf', 'binka', 'bit', 'boa', 'bonk', 'brstm', 'dfpwm', 'dsf', 'dss', 'epaf', 'fsb', 'fwse', 'g729', 'hca', 'idf', 'kux', 'kvag', 'laf', 'lavfi', 'loas', 'luodat', 'lvf', 'lxf', 'mca', 'mcc', 'megsts', 'mlv', 'mmf', 'mods', 'moflex', 'mpc8', 'msf', 'msnwctcp', 'mtaf', 'musx', 'nc', 'nistsphere', 'nsp', 'paf', 'pam_pipe', 'pbm_pipe', 'pfm_pipe', 'pp_bnk', 'psxstr', 'pva', 'pvf', 'qcp', 'rka', 'rl2', 'rpl', 'rso', 's337m', 'sap', 'sbg', 'scd', 'sdns', 'sdp', 'sds', 'sdx', 'siff', 'simbiosis_imx', 'sln', 'smk', 'smush', 'sol', 'svag', 'svs', 'tak', 'thp', 'tierexseq', 'tty', 'ty', 'usm', 'vag', 'vidc', 'vpk', 'vqf', 'w64', 'wady', 'wavarc', 'wsd', 'wsvqa', 'wve', 'xa', 'xbin', 'xbm_pipe', 'xmd', 'xpm_pipe', 'xwma', 'yop', 'wma', 'm4a');
 // /  --Supported Audio Output Formats--
@@ -836,4 +848,22 @@ $UserSubtitleInputArray = array('sub', 'sbv', 'srt', 'stream_segment', 'ssegment
 $UserSubtitleOutputArray = array('vtt', 'ssa', 'ass', 'srt');
 // /  --Supported OCR Formats--
 $UserPDFWorkArr = array('pdf', 'jpg', 'jpeg', 'png', 'bmp', 'webp', 'gif');
+// /  --User Ebook Input Array--
+// /   The e-book formats a user may convert FROM.
+// /   Several of these overlap with the document & archive formats on purpose. The routing
+// /   loop tries the document & archive families FIRST, so an ordinary docx to pdf stays
+// /   with LibreOffice & a cbz to cbr stays with 7-Zip. Only a pair that no earlier family
+// /   can satisfy, such as docx to epub, reaches this pipeline.
+// /   PDF input is supported but is the weakest conversion Calibre performs. A PDF has no
+// /   reflowable structure to recover, so the result is frequently poor. It is offered
+// /   because it is occasionally the only option, not because it works well.
+$UserEbookInputArray = array('epub', 'mobi', 'azw', 'azw3', 'azw4', 'fb2', 'fbz', 'lit', 'lrf', 'pdb', 'pml', 'rb', 'snb', 'tcr', 'txt', 'txtz', 'rtf', 'odt', 'docx', 'pdf', 'chm', 'cbz', 'cbr', 'cbc', 'prc', 'opf', 'recipe');
+// /  --User Ebook Output Array--
+// /   The e-book formats a user may convert TO.
+// /   PDF IS DELIBERATELY EXCLUDED. Calibre renders PDF output through Qt WebEngine, which
+// /   wants a browser engine & a display & is the one output path that commonly fails on a
+// /   headless server. Document to PDF is already handled properly by LibreOffice through
+// /   the document pipeline, so nothing is lost by leaving it out.
+// /   Add 'pdf' here only after confirming it actually works on your server.
+$UserEbookOutputArray = array('epub', 'mobi', 'azw3', 'fb2', 'lit', 'lrf', 'pdb', 'pml', 'rb', 'snb', 'tcr', 'txt', 'txtz', 'rtf', 'oeb', 'docx', 'pdf');
 // / ------------------------------

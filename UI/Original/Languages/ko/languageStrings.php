@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/10/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.6.4.
+// / v3.7.4.
 // / This file contains language specific GUI related text for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -21,7 +21,7 @@
 // /
 // / DEPENDENCY REQUIREMENTS ...
 // / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
-// / Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
+// / Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Calibre,
 // / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap Dia & xvfb-run.
 // /
 // / <3 Open-Source
@@ -32,7 +32,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.6.4';
+$LanguageVersion = 'v3.7.4';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -81,7 +81,7 @@ $GuiSelectorText4 = '언어, 색상 및 인터페이스 옵션 표시';
 // / Online File Converter, Extractor, Compressor'
 $Gui1Text1 = '온라인 파일 변환기, 추출기, 압축기';
 // / $ApplicationName.' is based off the open-source web-app <a href=\'https://github.com/zelon88/HRConvert2\'>HRConvert2</a> by <a href=\'https://github.com/zelon88\'>Zelon88</a> that converts files without tracking users across the net or infringing on your intellectual property.'
-$Gui1Text2 = $ApplicationName.' <a href=\'https://github.com의 오픈 소스 웹 앱 <a href=\'https://github.com/zelon88/HRConvert2\'>HRConvert2</a>를 기반으로 합니다. /zelon88\'>Zelon88</a>은 네트워크를 통해 사용자를 추적하거나 지적 재산권을 침해하지 않고 파일을 변환합니다.';
+$Gui1Text2 = $ApplicationName.' <a href=\'https://github.com/zelon88\'>Zelon88</a>의 오픈 소스 웹 앱 <a href=\'https://github.com/zelon88/HRConvert2\'>HRConvert2</a>를 기반으로 합니다. 네트워크를 통해 사용자를 추적하거나 지적 재산권을 침해하지 않고 파일을 변환합니다.';
 // / 'More Info ...'
 $Gui1Text3 = '더 많은 정보 ...';
 // / 'Less Info ...'
@@ -308,6 +308,10 @@ $Gui2Text78 = 'C이 파일을 변환하세요';
 $Gui2Text79 = '이 OpenSCAD 모델 렌더링';
 // / 'Render Model'
 $Gui2Text80 = '모델 렌더링';
+// / 'Convert This E-Book'
+$Gui2Text81 = '이 전자책 변환';
+// / 'Convert E-Book'
+$Gui2Text82 = '전자책 변환';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

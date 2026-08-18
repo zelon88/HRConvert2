@@ -1,0 +1,197 @@
+ -----------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats
+on a server for users of any web browser without authentication. 
+
+FILE INFORMATION ...
+v3.7.4.
+This file contains instructions for developers who want to add or manage dependencies. 
+
+HARDWARE REQUIREMENTS ... 
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ... 
+This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
+Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Calibre,
+Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia & xvfb-run.
+
+<3 Open-Source
+-----------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------
+--About Dependencies--
+
+Dependencies are the engines that give HRConvert2 its power. Witout them, HRConvert2 would be un-scalable.
+  1. Dependencies are software packages, like FFMPEG, Dia, InkScape, or OpenSCAD.
+  2. These software packages are installed on the server where HRConvert2 runs.
+  3. The dependencies are accessed by HRConvert2 through API or system calls.
+  4. Each dependency provides some functionality which we bundle into a pipeline to serve a specific purpose.
+  5. Most conversion pipelines in HRConvert2 utilize one or more system-level dependency.
+  6. Depencencies go through an approval process with annual auditing.
+  7. Documented procedures exist for 'Adoping', 'Owning', or 'Removing' dependencies from the codebase.
+-----------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------
+--Adopting A Dependency--
+
+In this context, 'Adopting a Dependency' means "We are approving this dependency for use as-is."
+
+Examples of currently 'Adopted' dependencies include: Ffmpeg, Dia, Pdf2Text, ImageMagick, or LibreOffice.
+
+This process is initiated when developers want to add functionality to HRConvert2 that requires 3rd party software.
+
+Due to the critical role of dependencies & the sensitive nature of their operation, their 'Adoption' is controlled.
+  1. Research the dependency.
+    1a. Evaluate it's security design. Pass judgement on whether it's security paradigm is amenable to our own.
+    1b. Look for recent CVE's, security issues, or proof-of-concept exploits for the version we want to run.
+    1c. Check how active the development cycle is. How frequently are the features we need going to break?
+    1d. What does it need to function? Network? File access? System calls?
+    1e. Can it be sandboxed? Can it be isolated? Does it's default behavoir pose an attack vector?
+    1f. What security options does it present? What configuration is available? What does a hardened version look like?
+    1g. Can another dependency do this job better? Safer? Smaller? Simpler?
+    1h. Where does the dependency come from? Does it present a supply chain risk? Is the developer reliable? Reputable?
+    1i. Take a moment to consider any dependency traps we may create for existing installs or new installs.
+  2. Determine the most suitable version to use.
+    2a. Check what the system package can do, then check what a `latest` source build can do.
+    2b. Evaluate building from source with optional flags, additional libraries, or enhanced features.
+    2c. Consider mininum version levels, minimum functional levels, or any other version edge cases with this dependency.
+    2d. Consider the licensing implications. Some source builds have flags like --non-free or --gpl-only.
+  3. Obtain the dependency.
+    3a. Decide on a distribution method. Options include; bundling assets, system-package, or source build.
+    3b. Find the most reliable, most reputable, most official download source and use only that.
+    3c. If using a system install package; document how to get the version we expect users to use.
+    3d. If bundling a binary or code; inspect & cross-reference it to the best of your ability.
+    3e. If bundling a something we built; sanity check our system before building it.
+    3f. If we expect installers to build something themselves; provide a working build script.
+  4. Update the Documentation to list the new dependency. 
+    4a. Include file header comment block, `SUPPLY_CHAIN_AUDIT_[YEAR].xlxs`, `Dockerfile` & `INSTALLATION_INSTRUCTIONS.txt`.
+  5. Update `CHANGELOG.txt` with any changes.
+  6. The dependency is considered 'Adopted'.
+-----------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------
+--Owning A Dependency--
+
+In this context, 'Owning a Dependency' means "We are forking this dependency to continue distribution or development ourselves."
+
+Examples of currently 'Owned' dependencies include:
+  1. Unoconv
+  2. PyMeshLab
+  3. Bootable ISO Bootloaders
+  4. JQuery.
+
+This process is initiated when developers notice the following circumstances regarding a 3rd party dependency:
+  1. Is easier, safer, simpler, or more amenable to our quality standards to distribute this dependency ourselves.
+  2. Has become unmaintained, unreliable, incompatible or compromised.
+  3. No longer provides the performance characteristics we require. 
+
+Due to the critical role of dependencies & the sensitive nature of their operation, their 'Ownership' is controlled.
+  1. Research the dependency.
+    1a. Evaluate it's security design. Pass judgement on whether it's security paradigm is amenable to our own.
+    1b. Look for recent CVE's, security issues, or proof-of-concept exploits for the version we want to run.
+    1c. Check how active the development cycle is. How frequently are the features we need going to break?
+    1d. What does it need to function? Network? File access? System calls?
+    1e. Can it be sandboxed? Can it be isolated? Does it's default behavoir pose an attack vector?
+    1f. What security options does it present? What configuration is available? What does a hardened version look like?
+    1g. Can another dependency do this job better? Safer? Smaller? Simpler?
+    1h. Where does the dependency come from? Does it present a supply chain risk? Is the developer reliable? Reputable?
+    1i. Take a moment to consider any dependency traps we may create for existing installs or new installs.
+  2. Determine the most suitable version to use.
+    2a. Check what the system package can do, then check what a `latest` source build can do.
+    2b. Evaluate building from source with optional flags, additional libraries, or enhanced features.
+    2c. Consider mininum version levels, minimum functional levels, or any other version edge cases with this dependency.
+    2d. Consider the licensing implications. Some source builds have flags like --non-free or --gpl-only.
+  3. Obtain the dependency.
+    3a. Decide on a distribution method. Options include; bundling assets, system-package, or source build.
+    3b. Find the most reliable, most reputable, most official download source and use only that.
+    3c. If using a system install package; document how to get the version we expect users to use.
+    3d. If bundling a binary or code; inspect & cross-reference it to the best of your ability.
+    3e. If bundling a something we built; sanity check our system before building it.
+    3f. If we expect installers to build something themselves; provide a working build script.
+  4. Update the Documentation to list the new dependency. 
+    4a. Include file header comment block, `SUPPLY_CHAIN_AUDIT_[YEAR].xlxs`, `Dockerfile` & `INSTALLATION_INSTRUCTIONS.txt`.
+  5. Remediate the factor that initiated ownership.
+    4a. Correct the flaw, compromise, incompatibility, or issue that caused our development team to assume ownership.
+  6. Update `CHANGELOG.txt` with any changes.
+  7. The dependency is considered 'Owned'.
+-----------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------
+--Removing A Dependency--
+
+In this context, 'Removing a Dependency' means "We are removing all reference to this dependency from the codebase."
+
+This process is initiated when developers notice the following circumstances regarding a 3rd party dependency:
+  1. The dependency has been removed, supersceded, or is simply no longer required.
+  2. The dependency has been replaced.
+  3. The dependency is not needed.
+
+Due to the critical role of dependencies & the sensitive nature of their operation, their 'Removal' is controlled.
+  1. Uninstall the dependency from a complete, live, working version of the HRConvert2 codebase. Validate the uninstall.
+  2. Ensure the installation is identical to what a new user be using after following `INSTALLATION_INSTRUCTIONS.txt`.
+  3. Test all functionality related to the dependency being removed. Ensure that HRConvert2 actually still works.
+  4. Do not remove the dependency from the current years `SUPPLY_CHAIN_AUDIT_[YEAR].xlxs`. 
+    4a. Mark the removal date & reason under 'Description'.
+  4. Search the codebase for reference to the dependency. Remove each one.
+  5. Ensure the dependency has been removed from `Dockerfile`, `INSTALLATION_INSTRUCTIONS.txt` & file header comment blocks.
+  6. Update `CHANGELOG.txt` with any changes.
+  7. The dependency is considered 'Removed'.
+-----------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------
+--Auditing Dependencies (Supply Chain Audit)--
+
+In this context, 'Auditing a Dependency' means "We are inspecting this dependency to determine if it is fit for use."
+
+There are several triggers that initiate dependency audits or make a dependency eligible for re-audit.
+  1. The "Supply Chain Audit" schedule begins on January 1st of each year.
+  -ADOPTED DEPENDENCIES-
+    1. All 'Adopted' or 'Owned' dependencies are audited at the time they are 'Adopted' or 'Owned'.
+    2. Only 'Adopted' dependencies are audited annually.
+    3. All 'Adopted' dependency audits are due by January 1st.
+    4. The process for auditing an 'Adopted' dependency is identical to 'Adopting' it.
+      4a. If you are trying to follow the audit procedure, just 'Adopt' the dependency again.
+      4b. `SUPPLY_CHAIN_AUDIT_[YEAR].xlxs` contains answers for every question the audit requires.
+      4c. After 'Adopting' the dependency again, fill out the cells in `SUPPLY_CHAIN_AUDIT_[YEAR].xlxs` for that dependency.
+    5. The dependency audit is considered complete. 
+  -OWNED DEPENDENCIES-
+    1. All 'Owned' dependencies are audited once at the time they are 'Owned'.
+    2. All 'Owned' dependencies are audited at the time they are updated from a 3rd party. 
+      4a. 'Owned' dependencies that have been updated entirely in-house, or not updated at all are exempt from audits.
+      4c. An example of an 'Owned' dependency update that requires an audit:  `JQuery-v3.9` -> `JQuery-v4.0`
+      4d. In the example above; `JQuery` was updated with external code. The addition of 3rd party code requires an audit.
+      4e. An example of an 'Owned' dependency update THAT DOES NOT require an audit:  `Unoconv-v0.8.3z1` -> `Unoconv-v0.8.3z2`
+      4f. In the example above; Unoconv was updated internally by the HRConvert2 development team. An audit trail exists on Github.
+    3. The process for auditing an 'Owned' dependency is identical to 'Owning' it.
+      3a. If you are trying to follow the audit procedure, just 'Own' the dependency again.
+      3b. `SUPPLY_CHAIN_AUDIT_[YEAR].xlxs` contains answers for every question the audit requires.
+      3c. After 'Owning' the dependency again, fill out the cells in `SUPPLY_CHAIN_AUDIT_[YEAR].xlxs` for that dependency.
+    4. The dependency audit is considered complete.
+-----------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------
+--Policy Adoption Schedule--
+
+Due to the sheer number of dependencies, the first annual supply chain audit will be not be complete before January 1st, 2027.
+  1. HRConvert2 is primarily maintained by a single developer, and HRConvert2 has been in development for 10 years.
+  2. We have collected a large number of dependencies over the years. Yet these procedures for controlling supply chain are new.
+  3. At the time of this writing, we have 3 months to inspect 30+ dependencies. I would need help to get this done in time.
+  4. Having the procedure is the most important thing. Honoring it the best we can with what we have is better than nothing.
+  5. We've lived the alternative. We've seen dependency hell. We can do better. Visibility & organization will only make it better.
+  6. Paitience and reasonable expectations are required for this. 
+  7. If you want to help, grab some dependencies and ask AI to fill out the questions above. 
+-----------------------------------------------------------------------------------

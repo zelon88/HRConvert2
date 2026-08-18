@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/10/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.6.4.
+// / v3.7.4.
 // / This file contains language specific GUI elements for accepting file uploads.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -21,7 +21,7 @@
 // /
 // / DEPENDENCY REQUIREMENTS ...
 // / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
-// / Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
+// / Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Calibre,
 // / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap Dia & xvfb-run.
 // /
 // / <3 Open-Source
@@ -33,7 +33,8 @@ $UIDisplayed = TRUE;
 // / Check if the core is loaded.
 if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
 // / Assign temporary variables.
-$gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2XpsArr = $gui2ScadArr = $gui2SvgArr = array();
+$oppositeAlignment = (strtolower($GUIAlignment) === 'left') ? 'right' : 'left';
+$gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui1PresArr = $gui1ArchArr = $gui1ImaArr = $gui1ModArr = $gui1SubArr = $gui1DraArr = $gui1OcrArr = $gui1XpsArr = $gui1ScadArr = $gui1SvgArr = $gui1EbkArr = array();
 $selectorBase = 'convertCore.php?';
 $selectorSide = ($GUIAlignment === 'left') ? 'right' : 'left';
 $selectorSwatches = array(
@@ -157,11 +158,19 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
               <?php } ?>
             </ol>
             <?php } if (in_array('Document', $SupportedConversionTypes)) { ?>
-            <strong><?php echo $Gui1Text16; ?></strong>
+            <strong><?php echo $Gui1Text14; ?></strong>
             <ol>
-              <?php foreach ($PresentationInputArray as $gui1PresArr) { ?>
-              <li><?php echo $gui1PresArr; ?></li>
+              <?php foreach ($DocumentArray as $gui1DocArr) { ?>
+              <li><?php echo $gui1DocArr; ?></li>
               <?php } ?>
+              <?php if (in_array('XPS', $SupportedConversionTypes)) {
+                foreach ($XPSInputArray as $gui1XpsArr) { ?>
+              <li><?php echo $gui1XpsArr; ?></li>
+              <?php } } ?>
+              <?php if (in_array('Ebook', $SupportedConversionTypes)) {
+                foreach ($EbookInputArray as $gui1EbookArr) { ?>
+              <li><?php echo $gui1EbookArr; ?></li>
+              <?php } } ?>
             </ol>
             <?php } if (in_array('Archive', $SupportedConversionTypes)) { ?>
             <strong><?php echo $Gui1Text17; ?></strong>
@@ -269,5 +278,5 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
     </div>
     <?php }
     // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-    $gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui1XpsArr = $gui1PresArr = $gui1ArchArr = $gui1ImaArr = $gui1ModArr = $gui2SubArr = $gui1DraArr = $gui2XpsArr = NULL;
-    unset($gui1AudArr, $gui1VidArr, $gui1StreamArr, $gui1DocArr, $gui1SpreadArr, $gui1XpsArr, $gui1PresArr, $gui1ArchArr, $gui1ImaArr, $gui1ModArr, $gui2SubArr, $gui1DraArr, $gui2XpsArr);
+    $oppositeAlignment = $gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui1PresArr = $gui1ArchArr = $gui1ImaArr = $gui1ModArr = $gui1SubArr = $gui1DraArr = $gui1XpsArr = $gui1SvgArr = $gui1EbkArr = NULL;
+    unset($oppositeAlignment, $gui1AudArr, $gui1VidArr, $gui1StreamArr, $gui1DocArr, $gui1SpreadArr, $gui1PresArr, $gui1ArchArr, $gui1ImaArr, $gui1ModArr, $gui1SubArr, $gui1DraArr, $gui1XpsArr, $gui1ScadArr, $gui1SvgArr, $gui1EbkArr);

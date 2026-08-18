@@ -1,0 +1,335 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
+
+FILE INFORMATION ...
+v3.7.4.
+This file contains an example conversion pipeline, using EBooks and Calibre as an example.
+The code in this document represents one vertical slice through convertCore.php that carries a file through a conversion operation.
+This code also contains an example of how to implement a new slice in the core that has been developed.
+This document demonstrates a vertical slice through convertCore.php only.
+This document does not demonstrate the vertical slice through the GUI layer.
+
+HARDWARE REQUIREMENTS ... 
+This application requires at least a Raspberry Pi Model B+ or greater. 
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ... 
+This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
+Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Calibre,
+Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia & xvfb-run.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / E-BOOK CONVERSION PIPELINE. CALIBRE.
+// / Built against ADDING_PIPELINES.txt. Every step is accounted for below.
+// / Error block 30000-30005 reserved. 30000, 30001 & 30002 are used.
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / STEP 4. CONFIG.PHP ADDITIONS.
+// / -----------------------------------------------------------------------------------
+// /  --Minimum Calibre Version--
+// /   Calibre provides the ebook-convert utility, which is the engine behind every e-book
+// /   conversion. It is one program handling every e-book format in both directions.
+// /   Install it with  sudo apt install calibre
+// /   Calibre is a LARGE dependency. It pulls in Qt & a bundled Python interpreter, & a
+// /   minimal server will gain several hundred megabytes by installing it. A server that
+// /   does not need e-book conversion should remove Ebook from --Supported Conversion Types--
+// /   rather than installing this.
+// /   Check the installed version by running 'ebook-convert --version' in a terminal.
+// /   Format is major.minor.
+// /   Default is '5.0'.
+// / $MinimumCalibreVersion = '5.0';
+// /
+// /  --User Ebook Input Array--
+// /   The e-book formats a user may convert FROM.
+// /   Several of these overlap with the document & archive formats on purpose. The routing
+// /   loop tries the document & archive families FIRST, so an ordinary docx to pdf stays
+// /   with LibreOffice & a cbz to cbr stays with 7-Zip. Only a pair that no earlier family
+// /   can satisfy, such as docx to epub, reaches this pipeline.
+// /   PDF input is supported but is the weakest conversion Calibre performs. A PDF has no
+// /   reflowable structure to recover, so the result is frequently poor. It is offered
+// /   because it is occasionally the only option, not because it works well.
+// / $UserEbookInputArray = array('epub', 'mobi', 'azw', 'azw3', 'azw4', 'fb2', 'fbz', 'lit', 'lrf', 'pdb', 'pml', 'rb', 'snb', 'tcr', 'txt', 'txtz', 'html', 'htmlz', 'rtf', 'odt', 'docx', 'pdf', 'chm', 'cbz', 'cbr', 'cbc', 'prc', 'opf', 'recipe');
+// /
+// /  --User Ebook Output Array--
+// /   The e-book formats a user may convert TO.
+// /   PDF IS DELIBERATELY EXCLUDED. Calibre renders PDF output through Qt WebEngine, which
+// /   wants a browser engine & a display & is the one output path that commonly fails on a
+// /   headless server. Document to PDF is already handled properly by LibreOffice through
+// /   the document pipeline, so nothing is lost by leaving it out.
+// /   Add 'pdf' here only after confirming it actually works on your server.
+// / $UserEbookOutputArray = array('epub', 'mobi', 'azw3', 'fb2', 'lit', 'lrf', 'pdb', 'pml', 'rb', 'snb', 'tcr', 'txt', 'txtz', 'html', 'htmlz', 'rtf', 'oeb', 'docx');
+// /
+// / Add 'Ebook' to --Supported Conversion Types-- to enable the pipeline.
+// / Bump the config.php version & the $RequiredConfigVersion in convertCore.php.
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / STEP 5. REGISTERING THE CONFIGURATION.
+// / -----------------------------------------------------------------------------------
+// / 5a. verifyConfigVersion() - add to the $requiredConfigVars array.
+// /       'MinimumCalibreVersion', 'UserEbookInputArray', 'UserEbookOutputArray',
+// /
+// / 5b. verifyInstallation() - add to the globals line.
+// /       $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray
+// /
+// / 5c. verifyGlobals() - add to the globals line.
+// /       $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray, $EbookInputArray, $EbookOutputArray
+// /
+// /     Add to the array initialization line, alongside $SVGInputArray & the rest.
+// /       $EbookInputArray = $EbookOutputArray =
+// /
+// /     Add the two build lines with the others.
+// /       if (in_array('Ebook', $SupportedConversionTypes)) $EbookInputArray = array_map('strtolower', $UserEbookInputArray);
+// /       if (in_array('Ebook', $SupportedConversionTypes)) $EbookOutputArray = array_map('strtolower', $UserEbookOutputArray);
+// /
+// /     Add BOTH to $allArrays. This is what puts the formats into $Allowed, & a format
+// /     missing from $Allowed is rejected by verifyFile() at third stage validation no
+// /     matter what else is correct.
+// /       $EbookInputArray, $EbookOutputArray);
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / STEP 6. THE VERSION CHECK.
+// / -----------------------------------------------------------------------------------
+// / A function to confirm the installed Calibre meets the minimum version required.
+// / Accepts the minimum version as major.minor.
+// / Returns the absolute path of the binary that was verified, or FALSE.
+// / A path is returned ONLY when the binary was found & its version satisfies the minimum,
+// / so a caller holding a path may use it without checking anything else.
+// / The utility is named ebook-convert but the PRODUCT is Calibre, & the version banner
+// / reports the product rather than the utility. It looks like this.
+// /   ebook-convert (calibre 6.13)
+// / The pattern therefore anchors on the word calibre rather than on the binary name, which
+// / also prevents a match against the 2 in ebook-convert on a build with an odd banner.
+// / Calibre is a large application bundling its own Python interpreter, & the utility is a
+// / wrapper script rather than a compiled binary, so it may live outside the usual
+// / locations on a source installation. locateDependency() handles that.
+function verifyEbookVersion($MinimumVersion) {
+  // / Set variables.
+  global $Verbose;
+  $EbookBinary = FALSE;
+  $locatedBinary = $detectedVersion = '';
+  $versionOutput = $versionMatches = $minimumParts = array();
+  $versionExitCode = 1;
+  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
+  $locatedBinary = locateDependency('ebook-convert');
+  if ($locatedBinary !== '') {
+    exec(escapeshellarg($locatedBinary).' --version 2>&1', $versionOutput, $versionExitCode);
+    if (!empty($versionOutput)) {
+      // / Anchor on the product name. The banner leads with the utility name, which carries
+      // / a digit of its own that an unanchored pattern would happily match instead.
+      if (preg_match('/calibre\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
+        $detectedMajor = (int)$versionMatches[1];
+        $detectedMinor = (int)$versionMatches[2];
+        $detectedVersion = $detectedMajor.'.'.$detectedMinor;
+        $minimumParts = explode('.', $MinimumVersion);
+        $minimumMajor = (int)($minimumParts[0] ?? 0);
+        $minimumMinor = (int)($minimumParts[1] ?? 0);
+        // / Compare numerically, never as strings. A string comparison ranks 6.13 below 6.9.
+        if ($detectedMajor > $minimumMajor) $EbookBinary = $locatedBinary;
+        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $EbookBinary = $locatedBinary; } } }
+  if ($Verbose) logEntry('Calibre Version Check: '.($EbookBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later'.($EbookBinary === FALSE ? '' : ', Using: '.$EbookBinary).'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $locatedBinary = $detectedVersion = $versionOutput = $versionMatches = $minimumParts = $versionExitCode = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumVersion = NULL;
+  unset($locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
+  return $EbookBinary; }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / STEP 7. THE CONVERTER.
+// / -----------------------------------------------------------------------------------
+// / A function to convert e-book formats.
+// / Calibre is one utility covering every e-book format in both directions, so this is a
+// / single stage pipeline with no intermediate file & no second dependency.
+// / ebook-convert INFERS THE OUTPUT FORMAT FROM THE OUTPUT FILE EXTENSION rather than from
+// / a flag. The extension therefore has to survive the trip into the sandbox, & it does,
+// / because sandboxCommand() rewrites the directory & keeps the basename intact.
+// / Calibre insists on a writable HOME & builds a configuration directory on first run.
+// / The sandbox sets HOME to a tmpfs, so that directory is built fresh inside the namespace
+// / on every conversion & is discarded with it. That costs a little time per conversion &
+// / buys a guarantee that nothing a hostile book does to Calibre's configuration survives.
+// / Calibre also reaches the network for metadata & update checks when it is allowed to.
+// / The sandbox unshares the network, which closes that off without needing a flag.
+// / --no-default-epub-cover is deliberately NOT passed. A generated cover is expected
+// / behaviour & suppressing it surprises users who converted a book that had no cover.
+function convertEbooks($pathname, $newPathname, $extension) {
+  // / Set variables.
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumCalibreVersion;
+  $ConversionSuccess = $ConversionErrors = $sandboxIsAvailable = FALSE;
+  $ebookBinary = FALSE;
+  $returnData = $ebookCommand = '';
+  $stopper = 0;
+  $sleepTime = $SleepTimer;
+  // / Locate & verify Calibre. A path is returned only when both succeeded.
+  $ebookBinary = verifyEbookVersion($MinimumCalibreVersion);
+  if ($ebookBinary === FALSE) {
+    $ConversionErrors = TRUE;
+    errorEntry('The installed Calibre version is missing, unidentifiable, or too old!', 30001, FALSE); }
+  else {
+    // / Build & sandbox the command once. It does not change between retries.
+    // / The output extension IS the format selector, so no format flag is passed.
+    $ebookCommand = escapeshellarg($ebookBinary).' '.escapeshellarg($pathname).' '.escapeshellarg($newPathname);
+    list ($sandboxIsAvailable, $ebookCommand) = sandboxCommand($ebookCommand, $pathname, $newPathname, FALSE);
+    if (!$sandboxIsAvailable) {
+      $ConversionErrors = TRUE;
+      errorEntry('Bubblewrap is missing or non functional, so this e-book conversion cannot be isolated!', 30002, FALSE); }
+    else {
+      if ($Verbose) logEntry('Converting e-book to '.$extension.'.');
+      // / This code will attempt the conversion up to $StopCounter number of times.
+      while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+        // / If the last conversion attempt failed, wait a moment before trying again.
+        if ($stopper !== 0) sleep($sleepTime++);
+        $returnData = shell_exec($ebookCommand);
+        // / Count the number of conversions to avoid infinite loops.
+        $stopper++;
+        // / Stop attempting the conversion after $StopCounter number of attempts.
+        if ($stopper === $StopCounter) {
+          $ConversionErrors = TRUE;
+          errorEntry('The e-book converter timed out!', 30000, FALSE); } }
+      // / Log the output of the operation to the logfile, if it is not blank.
+      // / Calibre is verbose by default & reports its whole conversion pipeline, which is
+      // / genuinely useful when a book converts but comes out wrong.
+      if ($Verbose && trim($returnData) !== '') logEntry('Calibre returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+      // / The output file is the only verdict on whether the conversion produced anything.
+      // / This check must stay inside the gates, or a stale output file from an earlier
+      // / attempt would report success for a conversion that was refused & never ran.
+      if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $returnData = $stopper = $pathname = $sleepTime = $ebookBinary = $ebookCommand = $sandboxIsAvailable = NULL;
+  unset($returnData, $stopper, $pathname, $sleepTime, $ebookBinary, $ebookCommand, $sandboxIsAvailable);
+  return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension); }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / STEP 8. ROUTING IN convert().
+// / -----------------------------------------------------------------------------------
+// / Add alongside the other branches, before the Stream branch.
+// /   if ($type === 'Ebook') list ($ConversionSuccess, $ConversionErrors, $newPathname, $extension) = convertEbooks($pathname, $newPathname, $extension);
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / STEP 9. ROUTING IN convertFiles().
+// / -----------------------------------------------------------------------------------
+// / Add to the globals line.
+// /   $EbookInputArray = $EbookOutputArray
+// /
+// / Add the two family variables with the others.
+// /   $ebookarray = $EbookInputArray;
+// /   $ebookarrayout = $EbookOutputArray;
+// /
+// / PLACEMENT IS THE WHOLE DECISION HERE & IT IS DELIBERATE.
+// / Ebook goes AFTER Document & AFTER Archive, & BEFORE Stream.
+// / The input array overlaps both of those families on purpose. txt, rtf, odt, docx & pdf
+// / are document formats. cbz & cbr are archive formats. Ebook must not claim any of them
+// / when an earlier family can satisfy the pair, because LibreOffice converts a docx to a
+// / pdf better than Calibre does & 7-Zip converts a cbz to a cbr better than Calibre does.
+// /
+// / The routing loop makes this work without any special casing. It requires the INPUT to
+// / match a family AND the OUTPUT to match that same family, & moves on when either fails.
+// /   docx to pdf    Document matches both.                     Document wins. Correct.
+// /   docx to epub   Document matches input, not output.        Falls through to Ebook.
+// /   cbz to cbr     Archive matches both.                      Archive wins. Correct.
+// /   cbz to epub    Archive matches input, not output.         Falls through to Ebook.
+// /   epub to mobi   No earlier family matches the input.       Ebook. Correct.
+// /   epub to docx   No earlier family matches the input.       Ebook. Correct.
+// /
+// / Stream MUST remain last, as it always has.
+// /
+// /   $arrayArray = array('Document' => $docarray, 'Image' => $imgarray, 'Model' => $modelarray, 'Scad' => $scadarray, 'SVG' => $svgarray, 'Video' => $videoarray, 'Subtitle' => $subtitleArray, 'Audio' => $audioarray, 'Archive' => $archarray, 'Drawing' => $drawingarray, 'Ebook' => $ebookarray, 'Stream' => $streamarray);
+// /
+// /   $arrayArrayOut = array('Document' => $docarrayout, 'Image' => $imgarrayout, 'Model' => $modelarrayout, 'Scad' => $scadarrayout, 'SVG' => $svgarrayout, 'Video' => $videoarrayout, 'Subtitle' => $subtitleArrayout, 'Audio' => $audioarrayout, 'Archive' => $archarrayout, 'Drawing' => $drawingarrayout, 'Ebook' => $ebookarrayout, 'Stream' => $streamarray);
+// /
+// / Add $ebookarray & $ebookarrayout to the cleanup line.
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / STEP 10. showVersionInfo().
+// / -----------------------------------------------------------------------------------
+// / Add $MinimumCalibreVersion to the globals line & $ebookBinary to the variable block.
+// /
+// / Add the check with the others.
+// /   $ebookBinary = verifyEbookVersion($MinimumCalibreVersion);
+// /
+// / Add the report line to the Dependencies block.
+// /   print('  Calibre, e-books            '.($ebookBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumCalibreVersion.' or later'.$Lol);
+// /
+// / Add $ebookBinary to the cleanup line.
+// / No subsystem readiness line is needed. One dependency covers the whole pipeline, so the
+// / dependency line already answers the question a readiness line would.
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / STEP 3. ERROR_DESCRIPTIONS.TXT ENTRIES.
+// / -----------------------------------------------------------------------------------
+// / HRConvert2-30000
+// /   The e-book converter timed out.
+// /   Calibre was located & cleared its version check, but produced no output file within
+// /   the configured number of attempts.
+// /   A very large book, a book with thousands of embedded images, or a Raspberry Pi class
+// /   server can all reach this legitimately. Raise --Retry Count-- in config.php.
+// /   A conversion that never succeeds at any retry count is usually a malformed source.
+// /   Enable --Enhanced Logging Verbosity-- to see what Calibre reported.
+// /
+// / HRConvert2-30001
+// /   The installed Calibre version is missing, unidentifiable, or too old.
+// /   HRConvert2 could not find ebook-convert, or found it & could not read a version from
+// /   it, or read a version older than --Minimum Calibre Version--.
+// /   Install it with  sudo apt install calibre
+// /   Confirm the version with  ebook-convert --version
+// /   Run  php convertCore.php -v  to see what HRConvert2 detected.
+// /
+// / HRConvert2-30002
+// /   Bubblewrap is missing or non functional, so an e-book conversion could not be isolated.
+// /   The conversion was REFUSED rather than run unprotected.
+// /   Install bubblewrap, or resolve the reason the sandbox could not start. Debian 12 &
+// /   Ubuntu 24.04 restrict unprivileged user namespaces by default & need an AppArmor
+// /   profile. See INSTALLATION_INSTRUCTIONS.txt.
+// /   Setting $RequireSandbox to FALSE in config.php will allow the conversion to run
+// /   without isolation. This is not recommended on a public facing server.
+// /
+// / 30003, 30004 & 30005 are reserved for this pipeline & are unused.
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / STEP 14. WHAT TO TEST, IN ORDER OF HOW LIKELY IT IS TO FAIL.
+// / -----------------------------------------------------------------------------------
+// / 1.  epub to mobi. The simplest pair. If this fails nothing else matters.
+// / 2.  epub to epub. THE SAME EXTENSION CASE. verifyFile() unlinks a stale output path
+// /     that IS the original when input & output match, & this pipeline makes that pair
+// /     easy for a user to request by accident. This is the known open bug & e-books are
+// /     the most likely place a real user will hit it.
+// / 3.  docx to epub, then docx to pdf. The first must reach Calibre & the second must
+// /     reach LibreOffice. If the second one produces a Calibre style result, the family
+// /     ordering is wrong.
+// / 4.  cbz to epub, then cbz to cbr. Same test against the Archive family.
+// / 5.  A book with a large embedded cover. Calibre rewrites images & this is where the
+// /     tmpfs HOME inside the sandbox gets used hardest.
+// / 6.  Calibre removed entirely. Must produce 30001 rather than a timeout.
+// / 7.  Bubblewrap disabled at the kernel level. Must produce 30002 & refuse.
+// / 8.  Two books in one request. Several bugs have only ever appeared on the second file.
+// / 9.  php convertCore.php -v. Calibre must be reported with its real version.
+// / 10. If you added pdf to the OUTPUT array, test it specifically & watch for a Qt
+// /     WebEngine failure in the verbose log. That path wants a browser engine & is the
+// /     one that commonly fails headless.
+// / -----------------------------------------------------------------------------------

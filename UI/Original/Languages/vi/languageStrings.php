@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/10/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.6.4.
+// / v3.7.4.
 // / This file contains language specific GUI related text for performing file conversions.
 // / This file contains the Vietnamese (vi) language strings.
 // / Vietnamese does not inflect nouns for number, so the plural helper strings are empty.
@@ -40,7 +40,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.6.4';
+$LanguageVersion = 'v3.7.4';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -322,6 +322,10 @@ $Gui2Text78 = 'Chuyển Đổi Tệp XPS Này';
 $Gui2Text79 = 'Kết Xuất Mô Hình OpenSCAD Này';
 // / 'Render Model'
 $Gui2Text80 = 'Kết Xuất Mô Hình';
+// / 'Convert This E-Book'
+$Gui2Text81 = 'Chuyển đổi sách điện tử này';
+// / 'Convert E-Book'
+$Gui2Text82 = 'Chuyển đổi sách điện tử';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

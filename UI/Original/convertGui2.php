@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/10/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,9 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.6.4.
-// / The files in this UI were submitted by Github user hernandito in Issue #85. Thank you!
-// / https://github.com/hernandito
+// / v3.7.4.
 // / This file contains language specific GUI elements for performing file conversions.
 // / This file was created by Github user hernandito as part of his forked repo, available 
 // / at https://github.com/hernandito/HRConvert2/tree/master. Thank you, hernandito!
@@ -25,7 +23,7 @@
 // /
 // / DEPENDENCY REQUIREMENTS ...
 // / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
-// / Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
+// / Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Calibre,
 // / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap Dia & xvfb-run.
 // /
 // / <3 Open-Source
@@ -37,7 +35,7 @@ $UIDisplayed = TRUE;
 // / Check if the core is loaded.
 if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
 // / Assign temporary variables.
-$gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2XpsArr = $gui2ScadArr = $gui2SvgArr = array();
+$gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2XpsArr = $gui2ScadArr = $gui2SvgArr = $gui2ScadArr = $gui2EbookArr = array();
 $selectorBase = 'convertCore.php?';
 $selectorSide = ($GUIAlignment === 'left') ? 'right' : 'left';
 $selectorSwatches = array(
@@ -326,6 +324,15 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
            onclick='toggle_visibility("docOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("documentButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("documentXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
           <img id="documentXButton<?php echo $ConvertGuiCounter1; ?>" name="documentXButton<?php echo $ConvertGuiCounter1; ?>" src='<?php echo $GuiImageDir; ?>x.png' style="float:<?php echo $GUIAlignment; ?>; display:none;" 
            onclick="toggle_visibility('docOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+          <?php } 
+
+          if (in_array($extension, $EbookInputArray) && in_array('Document', $SupportedConversionTypes)) { ?>
+          <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
+
+          <img id='ebookButton<?php echo $ConvertGuiCounter1; ?>' name='ebookButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>document.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
+           onclick='toggle_visibility("ebookOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("ebookButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("ebookXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+          <img id="ebookXButton<?php echo $ConvertGuiCounter1; ?>" name="ebookXButton<?php echo $ConvertGuiCounter1; ?>" src='<?php echo $GuiImageDir; ?>x.png' style="float:<?php echo $GUIAlignment; ?>; display:none;" 
+           onclick="toggle_visibility('ebookOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('ebookButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('ebookXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
           <?php } 
 
           if (in_array($extension, $SpreadsheetArray) && in_array('Document', $SupportedConversionTypes)) { ?>
@@ -886,6 +893,69 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
                             type: 'POST',
                             url: 'convertCore.php',
                             data: {
+                              Token1:'<?php echo $Token1; ?>',
+                              Token2:'<?php echo $Token2; ?>',
+                              download:line },
+                            success: function(ReturnData) {
+                              if (ReturnData.includes('ERROR!!!')) {
+                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                                setTimeout(function() {
+                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                                alert(ReturnData); }
+                              else if (ReturnData !== '') {
+                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
+                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                                setTimeout(function() {
+                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                                } },
+                            error: function(ReturnData) {
+                              toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                              setTimeout(function() {
+                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+          </script>
+        </div>
+        <?php }
+
+        if (in_array($extension, $EbookInputArray) && in_array('Ebook', $SupportedConversionTypes)) {
+        ?>
+        <div id='ebookOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='ebookOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+          <p style="max-width:500px;"></p>
+          <p><strong><?php echo $Gui2Text81; ?></strong></p>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='userebookfilename<?php echo $ConvertGuiCounter1; ?>' name='userebookfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <select id='ebookextension<?php echo $ConvertGuiCounter1; ?>' name='ebookextension<?php echo $ConvertGuiCounter1; ?>'> 
+            <option value="epub"><?php echo $Gui2Text18; ?></option>
+            <?php foreach ($EbookOutputArray as $gui2EbookArr) { ?>
+            <option value="<?php echo $gui2EbookArr; ?>"><?php echo $gui2EbookArr; ?></option>
+            <?php } ?>
+          </select></p>
+          <input type="submit" id="ebookconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="ebookconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text82; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <script type="text/javascript">
+            $(document).ready(function () {
+              $('#ebookconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
+                $.ajax({
+                  type: 'POST',
+                  url: 'convertCore.php',
+                  data: {
+                    Token1:'<?php echo $Token1; ?>',
+                    Token2:'<?php echo $Token2; ?>',
+                    convertSelected:'<?php echo $File; ?>',
+                    extension:document.getElementById('ebookextension<?php echo $ConvertGuiCounter1; ?>').value,
+                    userconvertfilename:document.getElementById('userebookfilename<?php echo $ConvertGuiCounter1; ?>').value },
+                    success: function(ReturnData) {
+                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                      const ReturnDataArray = ReturnData.split(/\r?\n/);
+                      ReturnDataArray.slice(1).forEach((line, index) => {
+                        if (line.includes('ERROR!!!')) { 
+                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
+                          setTimeout(function() {
+                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
+                          alert(line); }
+                        else if (line !== '') {
+                          $.ajax({
+                            type: 'POST',
+                            url: 'convertCore.php',
+                            data: { 
                               Token1:'<?php echo $Token1; ?>',
                               Token2:'<?php echo $Token2; ?>',
                               download:line },
@@ -1677,5 +1747,5 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
     </div>
     <?php
     // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-    $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2XpsArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2ScadArr = $selectorBase = $selectorSide = $selectorSwatches = $selectorLang = $selectorLabel = $selectorCurrent = $selectorColor = $selectorSwatch = $selectorGui = $selectorURL = $gui2SvgArr = NULL;
-    unset($gui2AudArr, $gui2VidArr, $gui2StreamArr, $gui2DocArr, $gui2SpreadArr, $gui2XpsArr, $gui2PresArr, $gui2ArchArr, $gui2ImaArr, $gui2ModArr, $gui2SubArr, $gui2DraArr, $gui2OcrArr, $gui2ScadArr, $gui2SvgArr, $selectorBase, $selectorSide, $selectorSwatches, $selectorLang, $selectorLabel, $selectorCurrent, $selectorColor, $selectorSwatch, $selectorGui, $selectorURL);
+    $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2XpsArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2ScadArr = $selectorBase = $selectorSide = $selectorSwatches = $selectorLang = $selectorLabel = $selectorCurrent = $selectorColor = $selectorSwatch = $selectorGui = $selectorURL = $gui2SvgArr = $gui2ScadArr = $gui2EbookArr = NULL;
+    unset($gui2AudArr, $gui2VidArr, $gui2StreamArr, $gui2DocArr, $gui2SpreadArr, $gui2XpsArr, $gui2PresArr, $gui2ArchArr, $gui2ImaArr, $gui2ModArr, $gui2SubArr, $gui2DraArr, $gui2OcrArr, $gui2ScadArr, $gui2SvgArr, $selectorBase, $selectorSide, $selectorSwatches, $selectorLang, $selectorLabel, $selectorCurrent, $selectorColor, $selectorSwatch, $selectorGui, $selectorURL, $gui2ScadArr, $gui2EbookArr);

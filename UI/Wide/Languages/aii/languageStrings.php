@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/10/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.6.4.
+// / v3.7.4.
 // / This file contains language specific GUI related text for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -21,7 +21,7 @@
 // /
 // / DEPENDENCY REQUIREMENTS ...
 // / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
-// / Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
+// / Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Calibre,
 // / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap Dia & xvfb-run.
 // /
 // / <3 Open-Source
@@ -32,7 +32,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.6.4';
+$LanguageVersion = 'v3.7.4';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -313,6 +313,10 @@ $Gui2Text78 = 'ܫܲܚܠܸܦ ܦܸܬܩܵܐ ܕ-XPS ܗܵנܵܐ';
 $Gui2Text79 = 'ܥܒܸܕ ܛܘܼܦܸܣܵܐ ܕ-OpenSCAD ܗܵנܵܐ';
 // / 'Render Model'
 $Gui2Text80 = 'ܥܒܸܕ ܛܘܼܦܸܣܵܐ';
+// / 'Convert This E-Book'
+$Gui2Text81 = 'ܫܲܚܠܸܦ ܐܵܗܵܐ ܟܬܵܒ݂ܵܐ ܐܸܠܸܩܛܪܘܿܢܵܝܵܐ';
+// / 'Convert E-Book'
+$Gui2Text82 = 'ܫܲܚܠܸܦ ܟܬܵܒ݂ܵܐ ܐܸܠܸܩܛܪܘܿܢܵܝܵܐ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

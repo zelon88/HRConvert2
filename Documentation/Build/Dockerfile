@@ -72,6 +72,7 @@ RUN cp HRConvert2/Documentation/Build/debian.sources /etc/apt/sources.list.d/deb
 # The very first thing that must happen is apt-update.
 #RUN apt-get update && apt-get install -y --allow-downgrades zlib1g=1:1.2.13.dfsg-1 zlib1g-dev=1:1.2.13.dfsg-1
 RUN apt-get update && apt-get install -y zlib1g zlib1g-dev
+RUN apt install -y libheif-dev libavif-dev libopenjp2-7-dev libjxl-dev
 RUN apt install -y libpng-dev
 RUN apt install -y libzip-dev
 RUN apt install -y libreoffice-common
@@ -91,6 +92,11 @@ RUN apt install -y bubblewrap
 RUN apt install -y isohybrid
 RUN apt install -y tesseract-ocr tar libgxps-utils
 RUN apt install -y ghostscript genisoimage curl assimp-utils
+RUN apt install -y libxcb-cursor0
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+RUN wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh \
+    | sh /dev/stdin version=6.13 \
+ && ebook-convert --version
 
 # FIX: If building for ARM64, bypass source compilation entirely and use apt to prevent 3+ hour emulator crashes
 # ARG TARGETPLATFORM is automatically populated by Docker Buildx

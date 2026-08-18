@@ -1,7 +1,7 @@
 <?php if (php_sapi_name() !== 'cli') print('<!DOCTYPE HTML>'.PHP_EOL);
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/16/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILEINFORMATION ...
-// / v3.7.3.
+// / v3.7.4.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -21,7 +21,7 @@
 // /
 // / DEPENDENCY REQUIREMENTS ...
 // / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
-// / Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
+// / Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Calibre,
 // / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap Dia & xvfb-run.
 // /
 // / <3 Open-Source
@@ -179,11 +179,11 @@ function verifyConfigVersion($RequiredConfigVersion) {
     'SupportedLanguages', 'DefaultLanguage', 'AllowUserSelectableLanguage',
     'SupportedGuis', 'DefaultGui', 'AllowUserSelectableGui',
     'SupportedColors', 'AllowUserSelectableColor', 'ButtonStyle',
-    'Font', 'SpinnerStyle', 'SpinnerColor',
+    'Font', 'SpinnerStyle', 'SpinnerColor', 'MinimumCalibreVersion', 'UserEbookInputArray',
     'ShowGUI', 'ShowFinePrint', 'TOSURL', 'PPURL', 'AllowUserShare',
     'SupportedConversionTypes', 'RetryCount', 'DocumentEngineSleepTimer',
     'UsePatchedDocumentEngine', 'RARArchiveMethod', 'AllowBootableIsoImage',
-    'DeleteBuildEnvironment', 'DeleteDevelopmentDocumentation',
+    'DeleteBuildEnvironment', 'DeleteDevelopmentDocumentation', 'UserEbookOutputArray',
     'UserArchiveArray', 'UserDearchiveArray', 'UserDocumentArray', 'UserSpreadsheetArray',
     'UserPresentationInputArray', 'UserPresentationOutputArray',
     'UserXPSInputArray', 'UserXPSOutputArray', 'UserImageArray',
@@ -325,7 +325,7 @@ function resolveSecretFile($secretFile) {
 // / Any other combination gets no secret at all & fails verification.
 function verifyInstallation() {
   // / Set variables.
-  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumImageVersion, $UsePyMeshLab, $MinimumMeshlabVersion, $MinimumAssimpVersion, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $Minimum7zVersion, $MinimumZipVersion, $MinimumRarVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumDiaVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $MinimumIsoHybridVersion;
+  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumImageVersion, $UsePyMeshLab, $MinimumMeshlabVersion, $MinimumAssimpVersion, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $Minimum7zVersion, $MinimumZipVersion, $MinimumRarVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumDiaVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray;
   $InstallationIsVerified = $RunningFromCLI = $RunningAsRoot = $RunningInContainer = FALSE;
   $secretAuthorized = $userSecretAuthorized = $secretIsReady = $configIsValid = FALSE;
   $SecretKey = $CurrentUser = $detectedConfigVersion = $configFile = $secretFolder = $secretFile = '';
@@ -356,25 +356,25 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
-  $HRConvertVersion = 'v3.7.3';
+  $HRConvertVersion = 'v3.7.4';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
   // / A release that changes no settings leaves this alone, so existing config files keep working.
   // / Any config.php version that is greater (newer) than the version listed below is considered acceptable.
-  $RequiredConfigVersion = 'v3.7.3';
+  $RequiredConfigVersion = 'v3.7.4';
   $RequiredConfigVersion = ltrim($RequiredConfigVersion, 'vV');
   // / Define the minimum acceptable GUI version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / Gui version that do not exactly match the version listed below are not considered acceptable.
   // / This is because Guis are not always guaranteed to be forward or reverse compatible.
-  $RequiredGuiVersion = 'v3.6.4';
+  $RequiredGuiVersion = 'v3.7.4';
   $RequiredGuiVersion = ltrim($RequiredGuiVersion, 'vV');
   // / Define the minimum acceptable Language Pack version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / Language version that do not exactly match the version listed below are not considered acceptable.
   // / This is because Language Packs are not always guaranteed to be forward or reverse compatible.
-  $RequiredLanguageVersion = 'v3.6.4';
+  $RequiredLanguageVersion = 'v3.7.4';
   $RequiredLanguageVersion = ltrim($RequiredLanguageVersion, 'vV');
   // / Define absolute paths for files that we only have relative paths for.
   $configFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'config.php');
@@ -908,7 +908,7 @@ function verifyLanguage() {
 // / Converting here as well produced a fifteen hour watch timeout & a ten million second connect timeout.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $ProtectedRootDirs, $ResourcesDir, $BootloadersDir, $AllowBootableIsoImage, $UserBootableIsoArray, $BootableIsoArray;
+  global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $ProtectedRootDirs, $ResourcesDir, $BootloadersDir, $AllowBootableIsoImage, $UserBootableIsoArray, $BootableIsoArray, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray, $EbookInputArray, $EbookOutputArray;
   // / Application related variables.
   putenv('HOME='.$HomeLoc);
   $GlobalsAreVerified = $sanitizeGlobalCheck = $sanitizeGlobalCheckA = $sanitizeGlobalCheckB = $sanitizeGlobalCheckC = $sanitizeGlobalCheckD = $sanitizeGlobalCheckE = FALSE;
@@ -977,7 +977,7 @@ function verifyGlobals() {
   $ConsolidatedLogFileName = 'User_Consolidated_Virus_Scan_Report.txt';
   $ConsolidatedLogFile = $ConvertTempDir.$ConsolidatedLogFileName;
   // / Format related variables.
-  $ArchiveArray = $DearchiveArray = $DocumentArray = $SpreadsheetArray = $PresentationInputArray = $PresentationOutputArray = $XPSInputArray = $XPSOutputArray = $ImageArray = $MediaInputArray = $MediaOutputArray = $VideoInputArray = $VideoOutputArray = $StreamArray = $DrawingArray = $ModelArray = $SubtitleInputArray = $SubtitleOutputArray = $PDFWorkArr = $StreamOutputArray = $SCADArray = $SCADOutputArray = $SVGInputArray = $SVGOutputArray = $BootableIsoArray = $allArrays = array();
+  $ArchiveArray = $DearchiveArray = $DocumentArray = $SpreadsheetArray = $PresentationInputArray = $PresentationOutputArray = $XPSInputArray = $XPSOutputArray = $ImageArray = $MediaInputArray = $MediaOutputArray = $VideoInputArray = $VideoOutputArray = $StreamArray = $DrawingArray = $ModelArray = $SubtitleInputArray = $SubtitleOutputArray = $PDFWorkArr = $StreamOutputArray = $SCADArray = $SCADOutputArray = $SVGInputArray = $SVGOutputArray = $EbookInputArray = $EbookOutputArray = $BootableIsoArray = $allArrays = array();
   if (in_array('Archive', $SupportedConversionTypes)) $ArchiveArray = array_map('strtolower', $UserArchiveArray);
   if (in_array('Archive', $SupportedConversionTypes)) $DearchiveArray = array_map('strtolower', $UserDearchiveArray);
   if (in_array('Archive', $SupportedConversionTypes) && $AllowBootableIsoImage) {
@@ -1005,13 +1005,16 @@ function verifyGlobals() {
   if (in_array('Subtitle', $SupportedConversionTypes)) $SubtitleInputArray = $UserSubtitleInputArray;
   if (in_array('Subtitle', $SupportedConversionTypes)) $SubtitleOutputArray = array_map('strtolower', $UserSubtitleOutputArray);
   if (in_array('OCR', $SupportedConversionTypes) && in_array('Document', $SupportedConversionTypes)) $PDFWorkArr = array_map('strtolower', $UserPDFWorkArr);
+  if (in_array('Ebook', $SupportedConversionTypes)) $EbookInputArray = array_map('strtolower', $UserEbookInputArray);
+  if (in_array('Ebook', $SupportedConversionTypes)) $EbookOutputArray = array_map('strtolower', $UserEbookOutputArray);
   $allArrays = array(
     $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray,
     $PresentationInputArray, $PresentationOutputArray, $ImageArray,
     $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray,
     $StreamArray, $StreamOutputArray, $DrawingArray, $SVGInputArray, 
     $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray,
-    $PDFWorkArr, $XPSInputArray, $XPSOutputArray, $SCADArray, $BootableIsoArray);
+    $PDFWorkArr, $XPSInputArray, $XPSOutputArray, $SCADArray, $BootableIsoArray,
+    $EbookInputArray, $EbookOutputArray);
   $Allowed = array_map('strtolower', array_unique(array_merge(...$allArrays)));
   $SupportedFormatCount = count($Allowed);
   // / Check that all sanitization checks passed.
@@ -1430,6 +1433,51 @@ function verifySVGVersion($MinimumVersion) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to confirm the installed Calibre meets the minimum version required.
+// / Accepts the minimum version as major.minor.
+// / Returns the absolute path of the binary that was verified, or FALSE.
+// / A path is returned ONLY when the binary was found & its version satisfies the minimum,
+// / so a caller holding a path may use it without checking anything else.
+// / The utility is named ebook-convert but the PRODUCT is Calibre, & the version banner
+// / reports the product rather than the utility. It looks like this.
+// /   ebook-convert (calibre 6.13)
+// / The pattern therefore anchors on the word calibre rather than on the binary name, which
+// / also prevents a match against the 2 in ebook-convert on a build with an odd banner.
+// / Calibre is a large application bundling its own Python interpreter, & the utility is a
+// / wrapper script rather than a compiled binary, so it may live outside the usual
+// / locations on a source installation. locateDependency() handles that.
+function verifyEbookVersion($MinimumVersion) {
+  // / Set variables.
+  global $Verbose;
+  $EbookBinary = FALSE;
+  $locatedBinary = $detectedVersion = '';
+  $versionOutput = $versionMatches = $minimumParts = array();
+  $versionExitCode = 1;
+  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
+  $locatedBinary = locateDependency('ebook-convert');
+  if ($locatedBinary !== '') {
+    exec(escapeshellarg($locatedBinary).' --version 2>&1', $versionOutput, $versionExitCode);
+    if (!empty($versionOutput)) {
+      // / Anchor on the product name. The banner leads with the utility name, which carries
+      // / a digit of its own that an unanchored pattern would happily match instead.
+      if (preg_match('/calibre\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
+        $detectedMajor = (int)$versionMatches[1];
+        $detectedMinor = (int)$versionMatches[2];
+        $detectedVersion = $detectedMajor.'.'.$detectedMinor;
+        $minimumParts = explode('.', $MinimumVersion);
+        $minimumMajor = (int)($minimumParts[0] ?? 0);
+        $minimumMinor = (int)($minimumParts[1] ?? 0);
+        // / Compare numerically, never as strings. A string comparison ranks 6.13 below 6.9.
+        if ($detectedMajor > $minimumMajor) $EbookBinary = $locatedBinary;
+        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $EbookBinary = $locatedBinary; } } }
+  if ($Verbose) logEntry('Calibre Version Check: '.($EbookBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later'.($EbookBinary === FALSE ? '' : ', Using: '.$EbookBinary).'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $locatedBinary = $detectedVersion = $versionOutput = $versionMatches = $minimumParts = $versionExitCode = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumVersion = NULL;
+  unset($locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
+  return $EbookBinary; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to verify every archive utility HRConvert2 depends on.
 // / Accepts the minimum version of each utility, in the order they are returned.
 // / Returns an overall boolean followed by one path per utility, each being the absolute
@@ -1646,9 +1694,9 @@ function verifyBwrap() {
 // / file, because loading twenty version files would overwrite the variable each time.
 function showVersionInfo() {
   // / Set variables.
-  global $InstLoc, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $MinimumInkscapeVersion, $MinimumDiaVersion, $MinimumSCADVersion, $MinimumImageVersion, $MinimumAssimpVersion, $MinimumMeshlabVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumIsoHybridVersion;
+  global $InstLoc, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $MinimumInkscapeVersion, $MinimumDiaVersion, $MinimumSCADVersion, $MinimumImageVersion, $MinimumAssimpVersion, $MinimumMeshlabVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $RunningAsRoot, $RunningFromCLI, $CurrentUser;
   $VersionInfoDisplayed = $modelsAreValid = $ocrToolsAreValid = $archiveToolsAreValid = $libreOfficeIsValid = FALSE;
-  $ffmpegBinary = $streamFfmpegBinary = $inkscapeBinary = $diaBinary = $scadBinary = $imageBinary = FALSE;
+  $ffmpegBinary = $streamFfmpegBinary = $inkscapeBinary = $diaBinary = $scadBinary = $imageBinary = $ebookBinary = FALSE;
   $assimpBinary = $meshlabBinary = $tesseractBinary = $pdftotextBinary = FALSE;
   $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = $isoHybridBinary = FALSE;
   $bwrapBinary = FALSE;
@@ -1663,6 +1711,7 @@ function showVersionInfo() {
   $diaBinary = verifyDrawingVersion($MinimumDiaVersion);
   $scadBinary = verifySCADVersion($MinimumSCADVersion);
   $imageBinary = verifyImageVersion($MinimumImageVersion);
+  $ebookBinary = verifyEbookVersion($MinimumCalibreVersion);
   list ($modelsAreValid, $assimpBinary, $meshlabBinary) = verifyModelVersions($MinimumAssimpVersion, $MinimumMeshlabVersion);
   list ($ocrToolsAreValid, $tesseractBinary, $pdftotextBinary) = verifyOCRVersions($MinimumTesseractVersion, $MinimumPdftotextVersion);
   list ($archiveToolsAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary) = verifyArchiveVersions($Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion);
@@ -1680,28 +1729,33 @@ function showVersionInfo() {
   // / Report the environment this installation is running in.
   print('Environment'.$Lol);
   print('  Container detected          '.($RunningInContainer ? 'YES' : 'NO').$Lol);
-  print('  Sandbox required            '.(($RunningInContainer ? $RequireSandboxOnDocker : $RequireSandbox) ? 'YES' : 'NO').$Lol);
+  print('  Sandbox required            '.(($RunningInContainer ? $RequireSandboxOnDocker : $RequireSandbox) ? 'YES' : 'NO').$Lol);  
+  print('  Running as root             '.($RunningAsRoot ? 'YES' : 'NO').$Lol);
+  print('  Current user                '.$CurrentUser.$Lol);    
   print($Lol);
   // / Report the state of every dependency HRConvert2 enforces a minimum against.
   print('Dependencies'.$Lol);
   print('  FFMPEG, audio & video       '.($ffmpegBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumFFMPEGVersion.' or later'.$Lol);
   print('  FFMPEG, streams             '.($streamFfmpegBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumStreamFFMPEGVersion.' or later'.$Lol);
-  print('  LibreOffice                 '.($libreOfficeIsValid ? 'OK' : 'FAILED').', requires '.$MinimumLibreOfficeVersion.' or later'.$Lol);
-  print('  ImageMagick                 '.($imageBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumImageVersion.' or later'.$Lol);
+  print('  LibreOffice, documents      '.($libreOfficeIsValid ? 'OK' : 'FAILED').', requires '.$MinimumLibreOfficeVersion.' or later'.$Lol);
+  print('  ImageMagick, images         '.($imageBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumImageVersion.' or later'.$Lol);
   print('  Inkscape, SVG               '.($inkscapeBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumInkscapeVersion.' or later'.$Lol);
   print('  Dia, drawings               '.($diaBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumDiaVersion.' or later'.$Lol);
-  print('  OpenSCAD                    '.($scadBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumSCADVersion.' or later'.$Lol);
-  print('  Assimp                      '.($assimpBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumAssimpVersion.' or later'.$Lol);
-  print('  Meshlab                     '.($meshlabBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumMeshlabVersion.' or later'.($UsePyMeshLab ? ', PyMeshLab is in use & this binary is not required' : '').$Lol);
+  print('  OpenSCAD, scad              '.($scadBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumSCADVersion.' or later'.$Lol);
+  print('  Assimp, models              '.($assimpBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumAssimpVersion.' or later'.$Lol);
+  print('  Meshlab, models, optional   '.($meshlabBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumMeshlabVersion.' or later'.$Lol);
+  print('  PyMeshLab, models           '.($UsePyMeshLab === FALSE ? 'PyMeshLab is enabled, Meshlab not required' : 'PyMeshLab is disabled, Meshlab required').$Lol);
   print('  Tesseract, OCR              '.($tesseractBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumTesseractVersion.' or later'.$Lol);
   print('  Pdftotext, OCR              '.($pdftotextBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumPdftotextVersion.' or later'.$Lol);
   print('  7-Zip, ALL extraction       '.($sevenZipBinary === FALSE ? 'FAILED' : 'OK').', requires '.$Minimum7zVersion.' or later'.$Lol);
-  print('  Zip                         '.($zipBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumZipVersion.' or later'.$Lol);
-  print('  Tar                         '.($tarBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumTarVersion.' or later'.$Lol);
-  print('  Mkisofs                     '.($mkisofsBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumMkisofsVersion.' or later'.$Lol);
-  print('  Rar, optional               '.($rarBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumRarVersion.' or later'.$Lol);
-  print('  Isohybrid, optional         '.($isoHybridBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumIsoHybridVersion.' or later'.$Lol);
-  print('  Bubblewrap sandbox          '.($bwrapBinary === FALSE ? 'FAILED' : 'OK').', '.($bwrapBinary === FALSE ? 'NOT functional' : 'fully functional').$Lol);
+  print('  Zip, archives               '.($zipBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumZipVersion.' or later'.$Lol);
+  print('  Tar, archives               '.($tarBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumTarVersion.' or later'.$Lol);
+  print('  Mkisofs, iso                '.($mkisofsBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumMkisofsVersion.' or later'.$Lol);
+  print('  Rar, archives, optional     '.($rarBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumRarVersion.' or later'.$Lol);
+  print('  Isohybrid, iso, optional    '.($isoHybridBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumIsoHybridVersion.' or later'.$Lol);
+  print('  Calibre, e-books            '.($ebookBinary === FALSE ? 'FAILED' : 'OK').', requires '.$MinimumCalibreVersion.' or later'.$Lol);
+  if ($RunningInContainer) print('  Sandbox:  Docker            '.($bwrapBinary === FALSE ? 'FAILED' : 'OK').', '.($bwrapBinary === FALSE ? 'NOT functional' : 'functional').$Lol);
+  else print('  Sandbox:  Bubblewrap        '.($bwrapBinary === FALSE ? 'FAILED' : 'OK').', '.($bwrapBinary === FALSE ? 'NOT functional' : 'functional').$Lol);
   print($Lol);
   // / A subsystem is only functional when every dependency it needs is.
   // / A single dependency reporting OK does not mean the operations that use it will run.
@@ -1757,8 +1811,8 @@ function showVersionInfo() {
   print($Lol);
   $VersionInfoDisplayed = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $modelsAreValid = $ocrToolsAreValid = $archiveToolsAreValid = $libreOfficeIsValid = $ffmpegBinary = $streamFfmpegBinary = $inkscapeBinary = $diaBinary = $scadBinary = $imageBinary = $assimpBinary = $meshlabBinary = $tesseractBinary = $pdftotextBinary = $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = $isoHybridBinary = $bwrapBinary = $installedGui = $installedLang = $installedEndonym = $checkDir = $checkFile = $foundVersion = $langLine = $guiMatches = $langMatches = $langOk = $langTotal = NULL;
-  unset($modelsAreValid, $ocrToolsAreValid, $archiveToolsAreValid, $libreOfficeIsValid, $ffmpegBinary, $streamFfmpegBinary, $inkscapeBinary, $diaBinary, $scadBinary, $imageBinary, $assimpBinary, $meshlabBinary, $tesseractBinary, $pdftotextBinary, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary, $bwrapBinary, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $guiMatches, $langMatches, $langOk, $langTotal);
+  $modelsAreValid = $ocrToolsAreValid = $archiveToolsAreValid = $libreOfficeIsValid = $ffmpegBinary = $streamFfmpegBinary = $inkscapeBinary = $diaBinary = $scadBinary = $imageBinary = $assimpBinary = $meshlabBinary = $tesseractBinary = $pdftotextBinary = $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = $isoHybridBinary = $bwrapBinary = $installedGui = $installedLang = $installedEndonym = $checkDir = $checkFile = $foundVersion = $langLine = $guiMatches = $langMatches = $langOk = $langTotal = $ebookBinary = NULL;
+  unset($modelsAreValid, $ocrToolsAreValid, $archiveToolsAreValid, $libreOfficeIsValid, $ffmpegBinary, $streamFfmpegBinary, $inkscapeBinary, $diaBinary, $scadBinary, $imageBinary, $assimpBinary, $meshlabBinary, $tesseractBinary, $pdftotextBinary, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary, $bwrapBinary, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $guiMatches, $langMatches, $langOk, $langTotal, $ebookBinary);
   return $VersionInfoDisplayed; }
 // / -----------------------------------------------------------------------------------
 
@@ -2186,6 +2240,7 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork) {
       .' --ro-bind-try /etc/ld.so.cache /etc/ld.so.cache'
       .' --ro-bind-try /etc/ssl/certs /etc/ssl/certs'
       .' --ro-bind-try /usr/share/tesseract-ocr /usr/share/tesseract-ocr'
+      .' --ro-bind-try /opt /opt'
       .' --proc /proc'
       .' --dev /dev'
       .' --tmpfs /tmp'
@@ -3625,6 +3680,69 @@ function convertSVG($pathname, $newPathname, $extension, $height, $width) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to convert e-book formats.
+// / Calibre is one utility covering every e-book format in both directions, so this is a
+// / single stage pipeline with no intermediate file & no second dependency.
+// / ebook-convert INFERS THE OUTPUT FORMAT FROM THE OUTPUT FILE EXTENSION rather than from
+// / a flag. The extension therefore has to survive the trip into the sandbox, & it does,
+// / because sandboxCommand() rewrites the directory & keeps the basename intact.
+// / Calibre insists on a writable HOME & builds a configuration directory on first run.
+// / The sandbox sets HOME to a tmpfs, so that directory is built fresh inside the namespace
+// / on every conversion & is discarded with it. That costs a little time per conversion &
+// / buys a guarantee that nothing a hostile book does to Calibre's configuration survives.
+// / Calibre also reaches the network for metadata & update checks when it is allowed to.
+// / The sandbox unshares the network, which closes that off without needing a flag.
+// / --no-default-epub-cover is deliberately NOT passed. A generated cover is expected
+// / behaviour & suppressing it surprises users who converted a book that had no cover.
+function convertEbooks($pathname, $newPathname, $extension) {
+  // / Set variables.
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumCalibreVersion;
+  $ConversionSuccess = $ConversionErrors = $sandboxIsAvailable = FALSE;
+  $ebookBinary = FALSE;
+  $returnData = $ebookCommand = '';
+  $stopper = 0;
+  $sleepTime = $SleepTimer;
+  // / Locate & verify Calibre. A path is returned only when both succeeded.
+  $ebookBinary = verifyEbookVersion($MinimumCalibreVersion);
+  if ($ebookBinary === FALSE) {
+    $ConversionErrors = TRUE;
+    errorEntry('The installed Calibre version is missing, unidentifiable, or too old!', 30001, FALSE); }
+  else {
+    // / Build & sandbox the command once. It does not change between retries.
+    // / The output extension IS the format selector, so no format flag is passed.
+    $ebookCommand = escapeshellarg($ebookBinary).' '.escapeshellarg($pathname).' '.escapeshellarg($newPathname);
+    list ($sandboxIsAvailable, $ebookCommand) = sandboxCommand($ebookCommand, $pathname, $newPathname, FALSE);
+    if (!$sandboxIsAvailable) {
+      $ConversionErrors = TRUE;
+      errorEntry('Bubblewrap is missing or non functional, so this e-book conversion cannot be isolated!', 30002, FALSE); }
+    else {
+      if ($Verbose) logEntry('Converting e-book to '.$extension.'.');
+      // / This code will attempt the conversion up to $StopCounter number of times.
+      while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+        // / If the last conversion attempt failed, wait a moment before trying again.
+        if ($stopper !== 0) sleep($sleepTime++);
+        $returnData = shell_exec($ebookCommand);
+        // / Count the number of conversions to avoid infinite loops.
+        $stopper++;
+        // / Stop attempting the conversion after $StopCounter number of attempts.
+        if ($stopper === $StopCounter) {
+          $ConversionErrors = TRUE;
+          errorEntry('The e-book converter timed out!', 30000, FALSE); } }
+      // / Log the output of the operation to the logfile, if it is not blank.
+      // / Calibre is verbose by default & reports its whole conversion pipeline, which is
+      // / genuinely useful when a book converts but comes out wrong.
+      if ($Verbose && trim($returnData) !== '') logEntry('Calibre returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+      // / The output file is the only verdict on whether the conversion produced anything.
+      // / This check must stay inside the gates, or a stale output file from an earlier
+      // / attempt would report success for a conversion that was refused & never ran.
+      if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $returnData = $stopper = $pathname = $sleepTime = $ebookBinary = $ebookCommand = $sandboxIsAvailable = NULL;
+  unset($returnData, $stopper, $pathname, $sleepTime, $ebookBinary, $ebookCommand, $sandboxIsAvailable);
+  return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to convert video formats.
 // / The general minimum is enforced rather than the stream minimum, because a video
 // / conversion reads a local file & never fetches anything remote.
@@ -4832,6 +4950,7 @@ function convert($type, $pathname, $newPathname, $extension, $height, $width, $r
     if ($type === 'Subtitle') list ($ConversionSuccess, $ConversionErrors, $newPathname, $extension) = convertSubtitles($pathname, $newPathname, $extension);
     if ($type === 'Audio') list ($ConversionSuccess, $ConversionErrors, $newPathname, $extension) = convertAudio($pathname, $newPathname, $extension, $bitrate);
     if ($type === 'Archive') list ($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $UserFilename) = convertArchives($pathname, $newPathname, $extension);
+    if ($type === 'Ebook') list ($ConversionSuccess, $ConversionErrors, $newPathname, $extension) = convertEbooks($pathname, $newPathname, $extension);
     // / A stream is launched rather than completed, so it reports a PID instead of a path.
     // / $StreamOutputPath is set INSIDE this branch. An earlier version set it outside &
     // / therefore overwrote it on every conversion of every other type.
@@ -4897,7 +5016,7 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
 // / pack is required from inside this function. Nothing outside this call can read them.
 function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   // / Set variables.
-  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage;
+  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray;
   $GUIDisplayed = FALSE;
   $guiUIFile = $GuiUI1File;
   $fallbackStringsFile = '';
@@ -5231,7 +5350,7 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
 // / $WaitForStream tells us the conversion is still running & must not be judged by its output.
 function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, $Width, $Rotate, $Bitrate) {
   // / Set variables.
-  global $Verbose, $VirusScan, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $DocumentArray, $ImageArray, $ModelArray, $SCADArray, $DrawingArray, $SVGInputArray, $SVGOutputArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $StreamOutputArray, $MediaInputArray, $MediaOutputArray, $ArchiveArray, $BootableIsoArray, $SupportedConversionTypes, $Lol, $WaitForStream;
+  global $Verbose, $VirusScan, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $DocumentArray, $ImageArray, $ModelArray, $SCADArray, $DrawingArray, $SVGInputArray, $SVGOutputArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $StreamOutputArray, $MediaInputArray, $MediaOutputArray, $ArchiveArray, $BootableIsoArray, $EbookInputArray, $EbookOutputArray, $SupportedConversionTypes, $Lol, $WaitForStream;
   $MainConversionSuccess = $MainConversionErrors = $virusFound = $skip = $isExtensionSupported = $fileIsVerified = $variableIsSanitized = $outputExists = $ConversionSuccess = $ConversionErrors = $fileConversionSuccess = $anyStreamStarted = $scanComplete = FALSE;
   $clean = $copy = TRUE;
   $pathname = $oldPathname = $oldExtension = $newPathname = $file = $convertedFilename = $extension = '';
@@ -5247,6 +5366,8 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
   $subtitleArray = $SubtitleInputArray;
   $audioarray = $MediaInputArray;
   $archarray = $ArchiveArray;
+  $ebookarray = $EbookInputArray;
+  $ebookarrayout = $EbookOutputArray;
   // / A stream family needs both halves together, because a family matches only when the
   // / input & the output extension are both in it. The two halves are kept apart everywhere
   // / else so that detecting an m3u8 does not also claim every ordinary audio & video file.
@@ -5255,7 +5376,7 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
   // / Every stream output format is also an ordinary audio or video format, so an mp3 to
   // / aac conversion belongs to Audio & to Stream both. The first family to match wins,
   // / so Stream sits last & only ever claims a file no earlier family recognized.
-  $arrayArray = array('Document' => $docarray, 'Image' => $imgarray, 'Model' => $modelarray, 'Scad' => $scadarray, 'SVG' => $svgarray, 'Video' => $videoarray, 'Subtitle' => $subtitleArray, 'Audio' => $audioarray, 'Archive' => $archarray, 'Drawing' => $drawingarray, 'Stream' => $streamarray);
+  $arrayArray = array('Document' => $docarray, 'Image' => $imgarray, 'Model' => $modelarray, 'Scad' => $scadarray, 'SVG' => $svgarray, 'Video' => $videoarray, 'Subtitle' => $subtitleArray, 'Audio' => $audioarray, 'Archive' => $archarray, 'Drawing' => $drawingarray, 'Ebook' => $ebookarray, 'Stream' => $streamarray);
   // /  This is for output file filtering.
   $docarrayout = array_merge($DocumentArray, $SpreadsheetArray, $PresentationOutputArray, $XPSOutputArray);
   $imgarrayout = $ImageArray;
@@ -5267,7 +5388,7 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
   $subtitleArrayout = $SubtitleOutputArray;
   $audioarrayout = $MediaOutputArray;
   $archarrayout = $ArchiveArray;
-  $arrayArrayOut = array('Document' => $docarrayout, 'Image' => $imgarrayout, 'Model' => $modelarrayout, 'Scad' => $scadarrayout, 'SVG' => $svgarrayout, 'Video' => $videoarrayout, 'Subtitle' => $subtitleArrayout, 'Audio' => $audioarrayout, 'Archive' => $archarrayout, 'Drawing' => $drawingarrayout, 'Stream' => $streamarray);
+  $arrayArrayOut = array('Document' => $docarrayout, 'Image' => $imgarrayout, 'Model' => $modelarrayout, 'Scad' => $scadarrayout, 'SVG' => $svgarrayout, 'Video' => $videoarrayout, 'Subtitle' => $subtitleArrayout, 'Audio' => $audioarrayout, 'Archive' => $archarrayout, 'Drawing' => $drawingarrayout, 'Ebook' => $ebookarrayout, 'Stream' => $streamarray);
   $arrKey = 0;
   $file = '';
   // / Make sure the input files are formatted into an array.
@@ -5304,6 +5425,7 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
       if ($Verbose) logEntry('Virus scan complete.'); }
     // / Loop through the array of supported formats & only call the converter if both input & output files are supported.
     foreach ($arrayArray as $arrKey => $arrArray) {
+      if (!is_array($arrArray) or !is_array($arrayArrayOut[$arrKey] ?? NULL)) continue;
       if (!in_array(strtolower($oldExtension), $arrArray)) continue; 
       if (!in_array(strtolower($UserExtension), $arrayArrayOut[$arrKey])) continue; 
       $isExtensionSupported = TRUE;
@@ -5343,8 +5465,8 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
   // / Restore the aggregate so the core can supervise a stream started by ANY file.
   $WaitForStream = $anyStreamStarted;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $pathname = $oldPathname = $oldExtension = $newPathname = $docarray = $imgarray = $audioarray = $videoarray = $subtitleArray = $modelarray = $scadarray = $drawingarray = $archarray = $streamarray = $arrayArray = $arrArray = $fileIsVerified = $scanComplete = $virusFound = $variableIsSanitized = $arrKey = $clean = $copy = $skip = $isExtensionSupported = $outputExists = $ConversionSuccess = $ConversionErrors = $fileConversionSuccess = $anyStreamStarted = $arrayArrayOut = $convertedFilename = $extension = NULL;
-  unset($file, $pathname, $oldPathname, $oldExtension, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $subtitleArray, $modelarray, $scadarray, $drawingarray, $archarray, $streamarray, $arrayArray, $arrArray, $fileIsVerified, $scanComplete, $virusFound, $variableIsSanitized, $arrKey, $clean, $copy, $skip, $isExtensionSupported, $outputExists, $ConversionSuccess, $ConversionErrors, $fileConversionSuccess, $anyStreamStarted, $arrayArrayOut, $convertedFilename, $extension);
+  $file = $pathname = $oldPathname = $oldExtension = $newPathname = $docarray = $imgarray = $audioarray = $videoarray = $subtitleArray = $modelarray = $scadarray = $drawingarray = $archarray = $streamarray = $arrayArray = $arrArray = $fileIsVerified = $scanComplete = $virusFound = $variableIsSanitized = $arrKey = $clean = $copy = $skip = $isExtensionSupported = $outputExists = $ConversionSuccess = $ConversionErrors = $fileConversionSuccess = $anyStreamStarted = $arrayArrayOut = $convertedFilename = $extension = $ebookarray = $ebookarrayout = NULL;
+  unset($file, $pathname, $oldPathname, $oldExtension, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $subtitleArray, $modelarray, $scadarray, $drawingarray, $archarray, $streamarray, $arrayArray, $arrArray, $fileIsVerified, $scanComplete, $virusFound, $variableIsSanitized, $arrKey, $clean, $copy, $skip, $isExtensionSupported, $outputExists, $ConversionSuccess, $ConversionErrors, $fileConversionSuccess, $anyStreamStarted, $arrayArrayOut, $convertedFilename, $extension, $ebookarray, $ebookarrayout);
   return array($MainConversionSuccess, $MainConversionErrors); }
 // / -----------------------------------------------------------------------------------
 

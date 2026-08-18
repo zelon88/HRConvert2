@@ -19,7 +19,7 @@ This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ... 
 This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
-Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
+Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Calibre,
 Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia & xvfb-run.
 ADDITIONAL INFORMATION
 HRConvert2 has one default GUI set in config.php and additional GUIs can be installed by administrators and selected by the user at runtime.
@@ -353,6 +353,9 @@ To use HRConvert2 via POST & GET requests only;
   1. Submit a blank GET request to convertCore.php to retrieve the value of Token1 and Token2.
   2. Submit a file upload along with Token1 and Token2 to convertCore.php via POST input.
   3. Submit an uploaded filename, a new filename, a file extension, Token1, Token2, and a valid set of conversion options to convertCore.php via POST input.
+  4. The core will return a filename to the file that was created, or an error that can be checked against ERROR_DESCRIPTIONS.txt.
+  5. Submit a download request for the filename that the core provided to you in the last step.
+  6. The core will return a relative URL to the file that will remain valid for --File Deletion Age Theshold-- set in config.php, after which it will be removed.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -361,13 +364,18 @@ To use HRConvert2 via POST & GET requests only;
 The following is a list of supported GET inputs with description & supported values for each;
 
   noGui
-      GUI Operation
+      GUI Operation, but with no header images or introduction text.
       Display the minimal amount of GUI elements to accomplish the mission.
       Set this input to any value to trigger the UI to display the least amount of elements that is possible.
       This input can also be specified by POST request, but GET will always take precedence.
+  
+  showFiles
+      Tell the GUI to display uploaded files (convertGui2.php).
+      If this is not specified, the upload page is displayed instead (convertGui1.php).
+      Valid tokens must be supplied via POST along with this request.
 
   gui
-      GUI Operation
+      GUI Operation, with all GUI features
       Select the GUI to use.
       Can be enabled/disabled in config.php.
       Supported GUI's can be added/removed in config.php.

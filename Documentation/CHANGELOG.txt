@@ -38,7 +38,6 @@ v3.7.5 - Start work on concurrent rate planning.
   -Space for clarity.
   -Space for clarity.
   -Space for clarity.
-  -Space for clarity.
   -It turns out our understanding was incomplete, and the devil is in the details.
   -Our approach until now has revolved almost entirely about 'reducing the temporal window of availability of data on the heap'.
   -This is a good approach, and it is valid to want to reduce the temporal window of data availability on the heap.
@@ -64,7 +63,6 @@ v3.7.5 - Start work on concurrent rate planning.
   -So it is CLEANER to declare MANY variables with narrow scope and destroy them than it is to redeclare the same variables over and over again.
   -For all intents and purposes, LOWER CASE FIRST LETTER VARIABLES MUST BE ONE-TIME-USE DISPOSABLE!!!!!!!!
   -Update CODING_CONVENTIONS.txt & .md to explicitly state not to redeclare narrow scope variables do to PHP Copy on Write (COW) variable architecture.
-  -Space for clarity.
   -Space for clarity.
   -Space for clarity.
   -Space for clarity.

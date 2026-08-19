@@ -1,6 +1,8 @@
 # 📚 HRConvert2: The Dual-Flavor Documentation Paradigm
 
-Welcome to the official repository manual layout guide. This document outlines how we present authoritative software specs alongside high-quality, readable instructional guides to give administrators and developers the best possible reference experience.
+Welcome to the official repository documentation layout guide. This guide excplains how our documentation paradigm, and why there are `.md` & `.txt` versions of each major file contained in this folder.
+
+This document outlines how we present authoritative software specs alongside high-quality, readable instructional guides to give administrators and developers the best possible reference experience.
 
 ---
 
@@ -24,7 +26,7 @@ This application provides a highly accessible, unauthenticated web interface ena
 
 ## 🗺️ The Central Documentation Library
 
-All system reference items are securely housed inside the `/Documentation` directory at the absolute root of the repository. Every significant subject inside this folder comes packaged in exactly **two distinct flavors**:
+Every significant subject inside this folder comes packaged in **two distinct flavors**:
 
 ```text
 📁 /Documentation

@@ -30,7 +30,7 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia
 -----------------------------------------------------------------------------------
 --About Dependencies--
 
-Dependencies are the engines that give HRConvert2 its power. Witout them, HRConvert2 would be un-scalable.
+Dependencies are the engines that give HRConvert2 its power. Without them, HRConvert2 would be un-scalable.
   1. Dependencies are software packages, like FFMPEG, Dia, InkScape, or OpenSCAD.
   2. These software packages are installed on the server where HRConvert2 runs.
   3. The dependencies are accessed by HRConvert2 through API or system calls.

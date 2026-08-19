@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/16/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/19/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.7.1.
+v3.7.5.
 This file contains detailed information about the coding & quality conventions in-use 
 in the HRConvert2 codebase.
 
@@ -57,49 +57,65 @@ developed in the open, alongside the code they are designed to safeguard.
 3. Upper case first letter variables are global in scope. Only variables with upper-case can
   transcend multiple functions. Upper case first letter variables can be used as Globals or
   function returns.
+  When followed, this technique will reduce the applications exposure to PHP memory leakage.
+  For more information, see `Documentation/ABOUT_DEFENSIVE_MEMORY_MANAGEMENT.md`.
 
 4. Lower case variables are severely limited in scope. Lower case first letter variables 
   must not be used or extended outside of the function in which they are initialized.
-  
-5. Lower case variables must be initialized only within the function where they are used,
-  and destroyed via 'NULL' and 'Unset' immediately after they are no longer required.
+  When followed, this technique will reduce the applications exposure to PHP memory leakage.
+  For more information, see `Documentation/ABOUT_DEFENSIVE_MEMORY_MANAGEMENT.md`.
 
-6. Functions go first. Logic goes after. All functions must be defined sequentially at 
+5. Lower case variables must be initialized only within the function where they are used,
+  and destroyed via purgeSensitiveMemory($Array) function immediately afterwards.
+  When followed, this technique will reduce the applications exposure to PHP memory leakage.
+  For more information, see `Documentation/ABOUT_DEFENSIVE_MEMORY_MANAGEMENT.md`.
+
+6. Do not redeclare lower case, narrow scope variables! Doing so creates ghost copies
+  of the variable in the PHP heap that cannot be recovered by memory protection mechanisms.
+  Instead, narrow-scope variables should be considered one-time-use only.
+  It is much safer from a memory protection perspective to have many recoverable variables
+  rather than few unrecoverable variables. 
+  PHP uses "Copy-On-Write" (COW) memory architecture for variable storage.
+  Redeclaring them creates unrecoverable, unreferencable copies of the variable.
+  When followed, this technique will reduce the applications exposure to PHP memory leakage.
+  For more information, see `Documentation/ABOUT_DEFENSIVE_MEMORY_MANAGEMENT.md`.
+
+7. Functions go first. Logic goes after. All functions must be defined sequentially at 
   the top of a code file. Do not define functions nested with logical code.
 
-7. If a function is complex or longer than approximately 35 lines of code, then it must
+8. If a function is complex or longer than approximately 35 lines of code, then it must
   return a sanity check in addition to it's usual output.
 
-8. If a function has a sanity check bundled with it's return, the calling code must 
+9. If a function has a sanity check bundled with it's return, the calling code must 
   ensure that the sanity check has passed.
 
-9. If a sanity check could alter behavior; failing the check must be logged.
+10. If a sanity check could alter behavior; failing the check must be logged.
 
-10. Any and all code changes must be mentioned in the CHANGELOG.txt file.
+11. Any and all code changes must be mentioned in the CHANGELOG.txt file.
 
-11. Code comments must be written in complete sentences, with proper grammar & punctuation.
+12. Code comments must be written in complete sentences, with proper grammar & punctuation.
 
-12. Functions must be prefaced with a comment describing it's functionality.
+13. Functions must be prefaced with a comment describing it's functionality.
 
-13. Function input and return variable names should be coherent to a human reader. Do not
+14. Function input and return variable names should be coherent to a human reader. Do not
   use generic, non-descriptive variable names like $f or $a in function inputs or returns.
 
-14. Changes to code files should be batched into groups, tested completely and thoroughly,
+15. Changes to code files should be batched into groups, tested completely and thoroughly,
   and uploaded to the repository only once they are complete. Do not upload in-process or 
   untested code to the repository under any circumstances. Code contained in the repository
   must always be fully executable.
 
-15. No browser console errors or HTML syntax errors are allowed to exist in any release or 
+16. No browser console errors or HTML syntax errors are allowed to exist in any release or 
   nightly build that gets uploaded to the repositopry. The code contained in the repository 
   must execute in all tested cases without HTML, JS, or PHP Errors or Warnings. Warnings or
   errors that are generated normally during expected operation are acceptable.
 
-16. Any warning or error message that the application code may produce must be documented
+17. Any warning or error message that the application code may produce must be documented
   in the ERROR_DESCRIPTIONS.txt file.
 
-17. No cookies. No databases. No third party connections. No analytics. No exceptions.
+18. No cookies. No databases. No third party connections. No analytics. No exceptions.
 
-18. If the code needs all capital comments; it's too important.
+19. If the code needs all capital comments; it's too important.
 -----------------------------------------------------------------------------------
 
 

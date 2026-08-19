@@ -1,7 +1,7 @@
 <?php if (php_sapi_name() !== 'cli') print('<!DOCTYPE HTML>'.PHP_EOL);
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/19/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILEINFORMATION ...
-// / v3.7.4.
+// / v3.7.5.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -38,7 +38,7 @@ function setTimeLimit() {
 // / A function to set the date & time for the session.
 function verifyTime() {
   // / Set variables.
-  global $TimeIsSet, $Date, $Time;
+  global $TimeIsSet, $Date, $Time, $EpochTime;
   $TimeIsSet = FALSE;
   $tzAbbreviations = DateTimeZone::listAbbreviations();
   $tzList = array();
@@ -49,12 +49,13 @@ function verifyTime() {
   // / Check that the currently set timezone is valid.
   if (in_array(@date_default_timezone_get(), $zoneList)) $TimeIsSet = TRUE;
   // / Try to set the time regardless of whether or not the timezone is correct.
+  $EpochTime = time();
   $Date = date("m_d_y");
   $Time = date("F j, Y, g:i a");
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   $tzAbbreviations = $tzList = $zoneList = $zone = $item = NULL;
   unset($tzAbbreviations, $tzList, $zoneList, $zone, $item);
-  return array($TimeIsSet, $Date, $Time); }
+  return array($TimeIsSet, $Date, $Time, $EpochTime); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -175,7 +176,7 @@ function verifyConfigVersion($RequiredConfigVersion) {
     'ApplicationName', 'ApplicationTitle', 'Verbose', 'MaxLogSize', 'DeleteThreshold',
     'BackupLoc', 'UniqueDailyLogHash', 'AppendLogHashToLogFiles',
     'VirusScan', 'AllowUserVirusScan', 'ScanCoreMemoryLimit', 'ScanCoreChunkSize',
-    'ScanCoreDebug', 'ScanCoreVerbose',
+    'ScanCoreDebug', 'ScanCoreVerbose', 'EnableMemoryProtection',
     'SupportedLanguages', 'DefaultLanguage', 'AllowUserSelectableLanguage',
     'SupportedGuis', 'DefaultGui', 'AllowUserSelectableGui',
     'SupportedColors', 'AllowUserSelectableColor', 'ButtonStyle',
@@ -256,6 +257,125 @@ function verifyContainerEnvironment() {
   return $RunningInContainer; }
 // / -----------------------------------------------------------------------------------
 
+// / ----------------------------------------------------------------------------------------
+// / A function to determine what function called the function that called this function.
+// / Only a human brain could have written that last comment. Just sit with it. I promise it makses sense.\
+// / This function accepts no input arguments & outputs a string containing only the name of the function prior to this one.
+// / If the call prior to this one came from main, or from no function at all, $DirectlyCalledFunctionName will be 'main'.
+function getChildFunction() {
+  $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+  $DirectCallingFunctionName = isset($trace[1]['function']) ? $trace[1]['function'] : 'main';
+  return($DirectCallingFunctionName); }
+// / ----------------------------------------------------------------------------------------
+
+// / ----------------------------------------------------------------------------------------
+// / This function destroys & clears variables from the system heap to reduce risk of memory leakage.
+// / For string variables, it performs a destructive overwrite of the raw character
+// / buffer before breaking references to prevent data recovery from process core dumps.
+// / Accepts an array of variable references to the target variables.
+// / Variables must be passed directly (by reference ONLY) so the function can mutate the original memory registers.
+// / Note that this function does not call cleanup on it's own functions. That would generate infinite loops.
+// / Instead this function is deliberately careful about what memory it consumes.
+// / Note that this function ONLY LOGS a warning or error depending on $ErrorOrWarning.
+// / We deliberately DO NOT use $EnableMemoryCleanup directly, as it may or may be be set when this function is called. 
+// / When calling this function, you are expected to use purgeSensitiveMemory($ArrayToClean, $EnableMemoryProtection).
+// / If the $EnableMemoryProtection is not available, use TRUE to throw a warning or FALSE to throw a fatal error on failure.
+// / If you receive warnings or ERROR!!! 40000, check the log for the $FunctionName of the responsible function.
+// / Note that this does not "free" destroyed memory. The memory values are overwrittein in place with 0.
+// / Destroyed memory allocations still consume the same amount of memory. The memory value is just replaced with 0.
+function purgeSensitiveMemory($ErrorOrWarning, &...$variables) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $FunctionName = getChildFunction();
+  $variableIsDestroyed = FALSE;
+  $CannotDestroyVariables = FALSE;
+  $mpStatus = 'undefined';
+  // / Detect if $EnableMemoryProtection is enabled, disabled, or undefined.
+  if (!isset($EnableMemoryProtection)) $mpStatus = 'Disabled';
+  if (isset($EnableMemoryProtection)) {
+    if (!$EnableMemoryProtection) $mpStatus = 'Disabled';
+    if ($EnableMemoryProtection) $mpStatus = 'Enabled'; }
+  // / Loop through all variables of the input array of variables to be destroyed.
+  foreach ($variables as &$variable) {
+    // / Reset the $variableIsDestroyed flag at the start of every iteration of the loop.
+    $variableIsDestroyed = FALSE;
+    // Shred multi-dimensional arrays recursively using reference keys.
+    if (is_array($variable) && !empty($variable)) { 
+      // / If the target variable is an array, submit the array contents to this function again.
+      foreach ($variable as $key => &$subValue) purgeSensitiveMemory($ErrorOrWarning, $subValue);
+      // / Clear the loop reference safely.
+      unset($subValue); 
+      $variable = NULL; 
+      $variableIsDestroyed = TRUE; }
+    // / Explicitly handle empty arrays.
+    if (is_array($variable) && empty($variable)) {
+      $variable = NULL; 
+      $variableIsDestroyed = TRUE; }
+    // / Standard boolean resolution tracking.
+    if (is_bool($variable)) {
+      $variable = NULL;
+      $variableIsDestroyed = TRUE; }
+    // / Convert numeric variables to character buffers.
+    if (is_numeric($variable)) $variable = (string)$variable;
+    // / Physically overwrite strings with null bytes.
+    if (is_string($variable)) {
+      $length = strlen($variable);
+      for ($i = 0; $i < $length; $i++) $variable[$i] = "\0";
+      $variable = NULL; 
+      $variableIsDestroyed = TRUE; }
+    // / Halt or alert if a complex unhandled object references leaks past the cleanup conditions.
+    if (!$variableIsDestroyed) { 
+      if (!$ErrorOrWarning) warningEntry('Cannot purge sensitive memory for the '.$FunctionName.' function! Memory protection is '.$mpStatus.' in config.php. Continuing...');
+      if ($ErrorOrWarning) {
+        warningEntry('Cannot purge sensitive memory for the '.$FunctionName.' function! Memory protection is '.$mpStatus.' in config.php. Execution cannot continue!', 40000, TRUE);
+        $CannotDestroyVariables = TRUE; } } }
+  // / Note that this function does not call cleanup on it's own functions. That would generate infinite loops.
+  // / Instead this function is deliberately careful about what memory it consumes. 
+  unset($variable, $mpStatus, $variableIsDestroyed, $i, $length, $subValue, $key);
+  return($CannotDestroyVariables); }
+// / ----------------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to obfuscate the secret file contents.
+// / This function adds a decoy secret to the secret file that CLI users scanning with grep + regex would be inclined to use instead of the actual secret.
+// / This adds complexity & cognitive load for potential adversaries, but it is not impossible to bypass with root or www-data CLI access.
+// / The complexity added by this function guards against sophmoric or drive-by adversaries. 
+// / A determined attacker will find this function and use it to adjust their exploit chain accordingly.
+// / It is the time we are adding to the development of that exploit chain that we are building here.
+// / Hopefully once potential adversaties realize how difficult every exploit stage needs to be, they will give up and look for other targets.
+// / The idea is to raise the cost of effort of an attack to the point that it exceeds an adversaries willingness to pay for it in effort.
+// / Adversaries who are here adjusting their exploit chains; consider dropping a star on Github and forking the repository. 
+// / Please bring it to your next confrence and show your friends! Your security advisories make HRConvert2 a better product for all.
+// / A function to obfuscate the secret file contents.
+function addSillyString($Secret) {
+  // / Set variables.
+  global $Lol, $EnableMemoryProtection;
+  // / Craft variables so we can make the newline count on either side of each $Secret (decoy & real) match.
+  $lolol2 = $Lol.$Lol.$Lol.$Lol;
+  // / 7 is the optimal number for the decoy loop.
+  $numberOfDecoys = 7;
+  // / Select a random index from the 
+  $randomNumber = random_int(1, $numberOfDecoys);
+  // / Initialize an array to buffer strings before a single compilation step.
+  $parts = [];
+  $parts[] = $Lol.'<?php /* ';
+  // / Loop to create the desired number of decoy secrets. 
+  while ($numberOfDecoys > 0) {
+    // / Set a random seed for the decoy secret generated in this iteration of the decoy loop.
+    $randomNumber2 = random_int(100000, 999999);
+    // / Buffer segments into independent array elements instead of continuously concatenating.
+    if ($numberOfDecoys !== $randomNumber) $parts[] = $lolol2.'$SecretKey = \''.hash('sha256',$randomNumber.$randomNumber2.$randomNumber).'\';'.$lolol2;
+    if ($numberOfDecoys === $randomNumber) $parts[] = ' */ ?>'.$lolol2.'<?php '.$lolol2.'$SecretKey = \''.$Secret.'\';'.$lolol2.'?>'.$lolol2.'<?php /* ';
+    $numberOfDecoys--; } 
+  $parts[] = $Lol.' */ ?>'.$Lol;
+  // / Compile the final output string.
+  $finalOutput = implode('', $parts);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  $cleanupArr = array($Secret, $numberOfDecoys, $randomNumber, $randomNumber2, $lolol2, $parts);
+  purgeSensitiveMemory($EnableMemoryProtection, $cleanupArr);
+  return ($finalOutput); }
+// / -----------------------------------------------------------------------------------
+
 // / -----------------------------------------------------------------------------------
 // / A function to load required HRConvert2 files.
 // / This function verifies the installation environment.
@@ -280,15 +400,18 @@ function verifyContainerEnvironment() {
 // / difference is which path is passed in, so it lives here rather than twice in the caller.
 function resolveSecretFile($secretFile) {
   // / Set variables.
+  global $Lol, $EnableMemoryProtection;
   $SecretIsReady = FALSE;
-  $ResolvedSecretKey = $secret = $secretFileContent = '';
+  $ResolvedSecretKey = $secret = $secretFileContent = $secretSillyString = '';
   $secretGenerated = FALSE;
   $bytesWritten = 0;
   // / If a secret file does not exist, create one.
   if (!file_exists($secretFile)) {
     list ($secret, $secretGenerated) = generateInstallSecret();
     if ($secretGenerated) {
-      $secretFileContent = '<?php $SecretKey = \''.$secret.'\';';
+      // / Build obfuscated payload out of transient buffers.
+      $secretFileContent = addSillyString($secret);
+      // / Commit the structural buffer straight to disk tracks under immediate exclusive locks.
       $bytesWritten = file_put_contents($secretFile, $secretFileContent, LOCK_EX);
       // / Check that the secret key, & ONLY the secret key, was written to the file.
       // / If we just appended the secret to an existing file this will catch it.
@@ -298,7 +421,7 @@ function resolveSecretFile($secretFile) {
         $SecretIsReady = TRUE; }
       else if (file_exists($secretFile)) @unlink($secretFile); } }
   // / If a secret file does exist, load it & make sure it is valid.
-  else {
+  if (file_exists($secretFile)) {
     @chmod($secretFile, 0600);
     // / require rather than require_once, because this function may be called for a second
     // / file in the same request & _once would silently skip it.
@@ -307,8 +430,8 @@ function resolveSecretFile($secretFile) {
       $ResolvedSecretKey = $SecretKey;
       $SecretIsReady = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $secret = $secretFileContent = $secretGenerated = $bytesWritten = $secretFile = NULL;
-  unset($secret, $secretFileContent, $secretGenerated, $bytesWritten, $secretFile);
+  $cleanupArr = array($SecretKey, $secret, $secretFile, $secretFileContent, $bytesWritten, $secretGenerated, $secretSillyString);
+  purgeSensitiveMemory($EnableMemoryProtection, $cleanupArr);
   return array($SecretIsReady, $ResolvedSecretKey); }
 // / -----------------------------------------------------------------------------------
 
@@ -325,7 +448,7 @@ function resolveSecretFile($secretFile) {
 // / Any other combination gets no secret at all & fails verification.
 function verifyInstallation() {
   // / Set variables.
-  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumImageVersion, $UsePyMeshLab, $MinimumMeshlabVersion, $MinimumAssimpVersion, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $Minimum7zVersion, $MinimumZipVersion, $MinimumRarVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumDiaVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray;
+  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumImageVersion, $UsePyMeshLab, $MinimumMeshlabVersion, $MinimumAssimpVersion, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $Minimum7zVersion, $MinimumZipVersion, $MinimumRarVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumDiaVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection;
   $InstallationIsVerified = $RunningFromCLI = $RunningAsRoot = $RunningInContainer = FALSE;
   $secretAuthorized = $userSecretAuthorized = $secretIsReady = $configIsValid = FALSE;
   $SecretKey = $CurrentUser = $detectedConfigVersion = $configFile = $secretFolder = $secretFile = '';
@@ -356,13 +479,13 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
-  $HRConvertVersion = 'v3.7.4';
+  $HRConvertVersion = 'v3.7.5';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
   // / A release that changes no settings leaves this alone, so existing config files keep working.
   // / Any config.php version that is greater (newer) than the version listed below is considered acceptable.
-  $RequiredConfigVersion = 'v3.7.4';
+  $RequiredConfigVersion = 'v3.7.5';
   $RequiredConfigVersion = ltrim($RequiredConfigVersion, 'vV');
   // / Define the minimum acceptable GUI version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
@@ -6091,7 +6214,7 @@ $TimeReset = setTimeLimit();
 if (!$TimeReset) die('ERROR!!! HRConvert2-3: Could not set the execution timer!');
 
 // / The following code sets date & time related variables.
-list ($TimeIsSet, $Date, $Time) = verifyTime();
+list ($TimeIsSet, $Date, $Time, $EpochTime) = verifyTime();
 if (!$TimeIsSet or !$Date or !$Time) die('ERROR!!! HRConvert2-4: Could not verify timezone!');
 
 // / The following code verifies that the installation is valid.

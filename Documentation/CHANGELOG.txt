@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/19/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.7.4.
+v3.7.5.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -25,6 +25,94 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia
 
 <3 Open-Source
 -----------------------------------------------------------------------------------
+
+
+--------------------
+COMMIT 8/18/2026
+v3.7.5 - Start work on concurrent rate planning.
+
+-v3.7.5.
+-Improve memory cleanup routine.
+  -Take the time to truly understand how memory structures work inside PHP, at the deepest possible level.
+  -Space for clarity.
+  -Space for clarity.
+  -Space for clarity.
+  -Space for clarity.
+  -Space for clarity.
+  -It turns out our understanding was incomplete, and the devil is in the details.
+  -Our approach until now has revolved almost entirely about 'reducing the temporal window of availability of data on the heap'.
+  -This is a good approach, and it is valid to want to reduce the temporal window of data availability on the heap.
+  -What our past approach lacked due consideration for is the *Footprint* of data availability.
+  -By not fully understanding the *Footprint significance, we made inaccurate assumptions regarding the *Scope* of data availability.
+  -PHP is a messy beast. It allocates memory simply on *Reference to a variable. So you get the same variable in memory numerous times.
+  -The variable copies are not accessible easily via reference. The process for clobbering them is manual, and must be deliberate.
+  -Destroying the original variable DOES NOT destroy the copies. It only destroys the original.
+  -So simply the ACT of trying to destroy a variable can actually CREATE new instances of the data that variable contains in memory.
+  -In order to effectively "Protect" memory, we must manage PHP memory allocations that PHP does expose to us by default.
+  -We must consider the footprint we are creating in memory when we are merely *REFERENCING variables.
+  -We must then make the *BEST DECISION regarding when, how, or why to REFERENCE a variable only after considering it's temporal window of exposure and the size of it's exposure footprint.
+  -A good example of this is string concantenation. Every time you re-define a variable that is already defined, a new copy of that variable is stored in memory.
+  -So using '.=' to update a variable "in-place" actually creates A NEW COPY of that variable in memory, and updates your ONLY reference to point to the newest copy.
+  -The old copy and the new copy now exist in memory at the same time.
+  -We cannot recover or clean the old copy after we PHP updates the reference to $variable. 
+  -We can only ever purge whatever $variable points to in memory at that time.
+  -All past copies of $variable are are located at memory addresses we do not know, and PHP does not expose to us.
+  -Therefore, the best way to "protect" variables requiring concantenation is TO NOT CONCANTANATE THEM.
+  -Instead, declare NEW TEMPORARY VARIABLES and destroy those when no longer needed.
+  -It seems counter-intuitive that declaring MORE variables actually results in LESS memory footprint. But it's true.
+  -The reason it's true is.... New variables can be recovered for destruction. Re-written ones cannot.
+  -So it is CLEANER to declare MANY variables with narrow scope and destroy them than it is to redeclare the same variables over and over again.
+  -For all intents and purposes, LOWER CASE FIRST LETTER VARIABLES MUST BE ONE-TIME-USE DISPOSABLE!!!!!!!!
+  -Update CODING_CONVENTIONS.txt & .md to explicitly state not to redeclare narrow scope variables do to PHP Copy on Write (COW) variable architecture.
+  -Space for clarity.
+  -Space for clarity.
+  -Space for clarity.
+  -Space for clarity.
+  -Space for clarity.
+  -Update `ABOUT_DEFENSIVE_MEMORY_MANAGEMENT.md` to match what is actually built.
+  -Functionalize memory cleanup to improve safety & ease of use.
+  -Turns "WET" code (2 cleanup lines per function) into a clean function call + result check.
+  -Memory protections are now enforced or not enforced, optionaly via config.php.
+  -Provides a tiny performance boost at the expense of additional temporal memory exposure.
+  -This is now in a purge function.
+  -Memory is protected regardless, config.php setting $EnforceMemoryProtections just decides what to do when memory protection fails.
+  -If $EnforceMemoryProtection is enabled in config.php, the application will throw a fatal error if memory cannot be protected.
+  -If $EnforceMemoryProtection is enabled in config.php, the application will throw a warning and continue if memory cannot be protected.
+  -Added ERROR!!!, 40000 - 'Cannot purge sensitive memory for the '.$FunctionName.' function! Memory protection is enabled in config.php. Execution cannot continue!'
+  -Added WARNING!!! - 'Cannot purge sensitive memory for the '.$FunctionName.' function! Memory protection is disabled in config.php. Continuing...'
+  -These warnings both print the calling function name in the log.
+  -Add getChildFunction() function to get the name of a calling function for this log entry.
+  -Note the purge memory routine does not purge it's own memory, that would be an infinite loop generator instead.
+    -So we have to be careful about initializing variables in this function, as they don't get protected themselves.
+-Add decoy $SecretFile contents loop.
+  -This drops decoy lines into the secret file, as a tar pitt for amatures or low-effort LLMs grepping for secrets.
+  -This does not effect $SecretFiles that already exist.
+  -Existing $SecretFiles in the wild are still valid. They just dont have decoy lines.
+  -Maybe eventually we will need version control, but not yet.
+-Add or update functions... getChildFunction, resolveSecretFile, addSillyString, purgeSensitiveMemory, getChildFunction, verifyContainerEnvironment.
+  -purgeSensitiveMemory takes as a second input argument a boolean that determines if the function throws a non-fatal warning or a fatal error on failure.
+  -In any code path, a failure writes a log message containing the name of the calling function.
+  -The name of the calling function is important, because otherwise a troubleshooter would look at purgeSensitiveMemory as the culprit, when it is probably just the messenger.
+  -purgeSensitiveMemory takes the fatal argument instead of using $EnableMemoryProtection as global so it can be used before verifyInstallation runs.
+    -Note that this does not "free" destroyed memory. The memory values are overwrittein in place with 0.
+    -"Destroyed" memory allocations still consume the same amount of memory. The memory value is just replaced with 0.
+    -Early running calling code just needs to manually decide if it wants the error to be fatal or not.
+    -Late running calling code can simply pass $EnableMemoryProtection to purgeSensitiveMemory as the second argument.
+    -purgeSensitiveMemory reports the calling function name as the culprit when it writes any log. So calling code properly shares blame.
+    -Otherwise, this would kill the application and throw ERROR!!! 40000 and it would be a mystery which invocation of purgeSensitiveMemory was the cause.
+-Add config.php variables... $EnableMemoryProtection
+  -Add to verifyInstallation globals line, verifyConfigVersion required variables array. 
+  -Bump config version to v3.7.5.
+-Working on `coreManager.php` listener components & `convertCore.php` worker+listener components.
+  -There are basically 3 daemons rolled into convertCore.php & coreManager.php, all called through CLI invocation to convertCore.php.
+  -Work on cryptographic keying structure.
+    -Understand features & limitations of the design.
+  -Add  ERROR!!! 50000, FATAL, in convertCore.php.
+    -'Could not format a resource request! '.$RequestType.' request.'
+  -Add  ERROR!!! 50001, FATAL, in coreManager.php.
+    -'The resource planner daemon (coreManager.php) is not running, but is configured to be required. This operation cannot continue!'
+  -Add  ERROR!!! 50002, FATAL, in coreManager.php.
+    -'Coud not enumerate a required device! Please verify that '.$addedConvertLoc.' is valid!'
 
 
 --------------------

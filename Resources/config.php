@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/19/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.7.4.
+// / v3.7.5.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -37,7 +37,7 @@
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. Replacing config.php with a newer one is the correct fix.
-$ConfigVersion = 'v3.7.4';
+$ConfigVersion = 'v3.7.5';
 
 // / ---Security Informations---
 // /
@@ -46,6 +46,19 @@ $ConfigVersion = 'v3.7.4';
 // /   Do not include a trailing slash.
 // /   Default is localhost.
 $URL = 'localhost';
+// /  --Enable Memory Protection--
+// /   This application includes an extremely robust, heavily fortified memory protection routines.
+// /   The memory routines contained in this application are designed to protect sensitive data against debugging tools.
+// /   The memory routines contained in this application rely on defensive coding standards established in 'Documentation/CODING_CONVENTIONS.txt'.
+// /   This setting controls the default fallback behaviour in the event that a sensitive memory operation failed to cleanup sensitive memory.
+// /   If set to TRUE, failed memory protection operations are considered fatal. 
+// /   If set to TRUE, the core will produce fatal ERROR 40000 upon failure of a sensitive memory cleanup operation.
+// /   If set to FALSE, failed memory protection operations are not considered fatal.
+// /   If set to FALSE, failed memory protection operations will result in a non-fatal WARNING being written to the logfile.
+// /   If this is set to TRUE or FALSE, a failed memory protection operation will result in a log entry containing the origin function.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$EnableMemoryProtection = TRUE;
 // /  --Virus Scanning--
 // /   Scan for viruses before performing file operations.
 // /   Requires ClamAV to be installed on the server.

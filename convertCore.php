@@ -58,6 +58,16 @@ function verifyTime() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to close the web server connection.
+function closeHRC2Connection() {
+  ignore_user_abort(TRUE);
+  if (function_exists('fastcgi_finish_request')) fastcgi_finish_request();
+  else {
+    if (ob_get_level() > 0) ob_end_flush();
+    flush(); } }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to sanitize input strings with varying degrees of tolerance.
 // / Filters a given string of | \ ~ # [ ] ( ) { } ; : $ ! # ^ & % @ > * & < " / ' ` chr(9) chr(10) chr(13) chr(0)
 // / This function will replace any of the above specified charcters with NOTHING. No character at all. An empty string.
@@ -197,9 +207,13 @@ function verifyConfigVersion($RequiredConfigVersion) {
     'AllowSCADIncludeResolution', 'SCADConversionTimeout', 'RequireSandbox', 'ThrowSandboxWarning',
     'MinimumSCADVersion', 'MinimumFFMPEGVersion', 'MinimumStreamFFMPEGVersion', 'MinimumDiaVersion',
     'MinimumLibreOfficeVersion', 'MinimumInkscapeVersion', 'MinimumImageVersion', 'MinimumTesseractVersion',
-    'MinimumAssimpVersion', 'MinimumMeshlabVersion', 'UsePyMeshLab', 'EnableAutoUpdates', 
+    'MinimumAssimpVersion', 'MinimumMeshlabVersion', 'UsePyMeshLab', 'EnableAutoUpdates',
     'AutoUpdateTargetVersion', 'UpdateSourceRepository', 'MaxUpdatePackageSize', 'UpdateConnectionTimeout',
-    'Minimum7zVersion', 'MinimumZipVersion', 'MinimumRarVersion', 'MinimumTarVersion', 'MinimumMkisofsVersion');
+    'Minimum7zVersion', 'MinimumZipVersion', 'MinimumRarVersion', 'MinimumTarVersion', 'MinimumMkisofsVersion',
+    'EnableResourceAwareness', 'RequireResourceAwareness', 'CoreManagerSubprocessPollInterval',
+    'ResourcePollInterval', 'WorkerReapInterval', 'WorkerStaleGracePeriod', 'TotalResourceBudget',
+    'ReserveResourcePercentage', 'MaxConcurrentWorkers', 'MaxExpectedRuntime', 'MaxRuntimeExtensions',
+    'DefaultConversionCost', 'DefaultExpectedRuntime');
   // / Check that every required setting actually exists in the global scope.
   // / config.php is required at global scope, so every setting it defines lands in $GLOBALS.
   // / isset() is deliberately not used because a setting legitimately set to NULL still exists.
@@ -340,7 +354,7 @@ function getChildFunction() {
 // / Check the log for the named function whenever error 40000 or a purge warning appears.
 function purgeSensitiveMemory($FailureIsFatal, &...$variables) {
   // / Set variables.
-  global $EnableMemoryProtection, $LogFile;
+  global $EnableMemoryProtection, $LogFile, $Verbose;
   // / These two survive recursion so an inner call still names the function that owns the data.
   // / Neither ever holds sensitive data & both are released when the outermost call unwinds.
   static $callerName = '';
@@ -390,11 +404,10 @@ function purgeSensitiveMemory($FailureIsFatal, &...$variables) {
       $variable = NULL;
       $variableIsDestroyed = TRUE; }
     // / An object or a resource has internal buffers this function cannot write into.
-    // / Drop the reference & warn, rather than erroring on a recoverable case.
-    // / This warning is never printed, because the fallback below it is expected to succeed.
+    // / Drop the reference. This is a permanent property of the type rather than an event,
+    // / so it is recorded as normal activity & not as a warning.
     if (!$variableIsDestroyed) {
-      if ($loggingIsReady) warningEntry('Could not shred a variable of type '.gettype($variable).' for the '.$callerName.' function. Dropping the reference instead...');
-      else error_log('WARNING!!! HRConvert2: Could not shred a variable of type '.gettype($variable).' for the '.$callerName.' function. Dropping the reference instead...');
+      if ($loggingIsReady && $Verbose) logEntry('Dropped unshreddable reference type '.gettype($variable).' for the '.$callerName.' function.');
       $variable = NULL;
       if (is_null($variable)) $variableIsDestroyed = TRUE; }
     // / Halt or alert only once the fallback above has also failed to release the variable.
@@ -434,43 +447,46 @@ function purgeSensitiveMemory($FailureIsFatal, &...$variables) {
 // / A root or www-data command line user can still read the real key from this function.
 // / The time an adversary spends adjusting an exploit chain is the product being built here.
 // / Adversaries reading this are invited to star the repository & bring it to their next conference.
-function addSillyString($Secret) {
+function addSillyString($Secret, $secretVersion) {
   // / Set variables.
-  global $Lol, $EnableMemoryProtection;
+  global $EnableMemoryProtection;
   $FinalOutput = '';
+  // / A local separator that cannot be empty. An empty one removes the whitespace after
+  // / the opening tag, which stops PHP recognizing the file as PHP at all.
+  $newLine = PHP_EOL;
   // / Match the newline count on either side of every secret, decoy & real alike.
-  $lolol2 = $Lol.$Lol.$Lol.$Lol;
+  $lolol2 = $newLine.$newLine.$newLine.$newLine;
   // / Seven is the optimal number for the decoy loop.
   $numberOfDecoys = 7;
   // / Select the iteration of the decoy loop that will carry the real secret.
   $randomNumber = random_int(1, $numberOfDecoys);
-  $randomNumber2 = 0;
   // / Buffer strings into an array before a single compilation step.
   $parts = array();
-  // / Open the PHP region & the comment fence, neither of which is reopened from outside a tag.
-  $parts[] = '<?php'.$Lol.'/* ';
+  // / Strip anything that is not a version character before it is written into PHP source.
+  $cleanVersion = preg_replace('/[^0-9A-Za-z.\-]/', '', (string)$secretVersion);
+  // / Open the PHP region & pin the version, then open the comment fence.
+  // / The newline directly after the opening tag is what makes this a PHP file.
+  $parts[] = '<?php'.$newLine.'$SecretVersion = \''.$cleanVersion.'\';'.$newLine.'/* ';
   // / Loop to create the desired number of decoy secrets.
   while ($numberOfDecoys > 0) {
-    // / Set a random seed for the decoy secret generated in this iteration.
-    $randomNumber2 = random_int(100000, 999999);
-    // / Buffer each segment into its own array element instead of concatenating continuously.
-    if ($numberOfDecoys !== $randomNumber) $parts[] = $lolol2.'$SecretKey = \''.hash('sha256', $randomNumber.$randomNumber2.$randomNumber).'\';'.$lolol2;
+    // / Every decoy is drawn from the same source as the real secret, so no table of
+    // / candidate decoys can be precomputed to eliminate them.
+    if ($numberOfDecoys !== $randomNumber) $parts[] = $lolol2.'$SecretKey = \''.bin2hex(random_bytes(32)).'\';'.$lolol2;
     // / Close the comment fence for the real secret & reopen it immediately afterwards.
     if ($numberOfDecoys === $randomNumber) $parts[] = ' */'.$lolol2.'$SecretKey = \''.$Secret.'\';'.$lolol2.'/* ';
     $numberOfDecoys--; }
   // / Close the trailing comment fence, deliberately without a closing PHP tag.
-  $parts[] = $Lol.' */'.$Lol;
+  $parts[] = $newLine.' */'.$newLine;
   // / Compile the final output string.
   $FinalOutput = implode('', $parts);
   // / Manually clean up sensitive memory. Every target is passed directly by reference.
   // / $FinalOutput is not purged, because it is the return value.
-  if (!purgeSensitiveMemory($EnableMemoryProtection, $Secret, $numberOfDecoys, $randomNumber, $randomNumber2, $lolol2, $parts)) {
+  if (!purgeSensitiveMemory($EnableMemoryProtection, $Secret, $numberOfDecoys, $randomNumber, $lolol2, $newLine, $parts, $cleanVersion, $secretVersion)) {
     // / The failure is already logged under this function's name & is not logged again here.
     // / An unpurged buffer does not make the payload wrong, so the payload is still returned.
     $FinalOutput = $FinalOutput; }
   return $FinalOutput; }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to load an install secret from a file, or to create one when none exists.
@@ -485,42 +501,87 @@ function addSillyString($Secret) {
 // / The logic is identical & only the supplied path differs, so it lives here rather than twice.
 // / $SecretKey is capitalized against convention 3 because the secret file defines it under that name.
 // / It is a function local here regardless of its case & is shredded before this function returns.
-function resolveSecretFile($secretFile) {
+function resolveSecretFile($secretFile, $requiredSecretVersion) {
   // / Set variables.
-  global $EnableMemoryProtection;
+  global $LogFile, $EnableMemoryProtection;
   $SecretIsReady = FALSE;
   $ResolvedSecretKey = $secret = $secretFileContent = '';
-  $secretGenerated = FALSE;
+  $detectedSecretVersion = $cleanRequiredVersion = $rotationNotice = $strayOutput = '';
+  $secretGenerated = $existingIsUsable = $loggingIsReady = $payloadIsWellFormed = FALSE;
   $bytesWritten = 0;
-  // / $SecretKey is only ever defined by the require below.
-  // / It is initialized here so a path that never reaches the require does not leave it undefined.
+  // / Both are only ever defined by the require below.
+  // / They are initialized here so a path that never reaches the require leaves neither undefined.
   $SecretKey = '';
-  // / If a secret file does not exist, create one.
-  if (!file_exists($secretFile)) {
-    list ($secret, $secretGenerated) = generateInstallSecret();
-    if ($secretGenerated) {
-      // / Build the obfuscated payload out of transient buffers.
-      $secretFileContent = addSillyString($secret);
-      // / Commit the buffer to disk under an immediate exclusive lock.
-      $bytesWritten = file_put_contents($secretFile, $secretFileContent, LOCK_EX);
-      // / Check that the secret, & only the secret, was written to the file.
-      if ($bytesWritten === strlen($secretFileContent)) {
-        @chmod($secretFile, 0600);
-        $ResolvedSecretKey = $secret;
-        $SecretIsReady = TRUE; }
-      else if (file_exists($secretFile)) @unlink($secretFile); } }
-  // / If a secret file does exist, load it & make sure it is valid.
+  $SecretVersion = '';
+  $cleanRequiredVersion = ltrim(trim((string)$requiredSecretVersion), 'vV');
+  if (isset($LogFile) && is_string($LogFile) && $LogFile !== '') $loggingIsReady = TRUE;
+  // / Load an existing secret file & decide whether this core may still use it.
   if (file_exists($secretFile)) {
     @chmod($secretFile, 0600);
     // / require rather than require_once, because a second file may be resolved in the same request.
+    // / The buffer is what stops a malformed file printing the key into the response.
+    ob_start();
     require ($secretFile);
-    if (!empty($SecretKey) && strlen($SecretKey) === 64) {
-      $ResolvedSecretKey = $SecretKey;
-      $SecretIsReady = TRUE; } }
+    $strayOutput = ob_get_clean();
+    $detectedSecretVersion = ltrim(trim((string)$SecretVersion), 'vV');
+    // / A file that emitted anything did not parse as PHP & cannot be trusted or reused.
+    if ($strayOutput !== '') {
+      $SecretKey = '';
+      $rotationNotice = 'The secret file at '.$secretFile.' emitted '.strlen($strayOutput).' byte(s) instead of parsing as PHP. It is malformed & is being replaced.'; }
+    else if (!empty($SecretKey) && strlen($SecretKey) === 64 && $detectedSecretVersion !== '' && $detectedSecretVersion === $cleanRequiredVersion) $existingIsUsable = TRUE; }
+  // / Remove a secret file this core may not use, so a replacement can take its place.
+  // / A file carrying no version predates version pinning & is always replaced.
+  if (file_exists($secretFile) && !$existingIsUsable) {
+    if ($rotationNotice === '') $rotationNotice = 'The secret file at '.$secretFile.' reports version '.($detectedSecretVersion === '' ? 'none' : 'v'.$detectedSecretVersion).' & this core requires v'.$cleanRequiredVersion.'. It is being replaced & every session derived from it is now invalid.';
+    if ($loggingIsReady) warningEntry($rotationNotice);
+    else error_log('WARNING!!! HRConvert2: '.$rotationNotice);
+    @unlink($secretFile);
+    // / Discard the key that was loaded from the file being replaced.
+    $SecretKey = ''; }
+  // / Create a secret file whenever a usable one is not already in place.
+  if (!$existingIsUsable && !file_exists($secretFile)) {
+    list ($secret, $secretGenerated) = generateInstallSecret();
+    if ($secretGenerated) {
+      // / Build the obfuscated payload out of transient buffers.
+      $secretFileContent = addSillyString($secret, $cleanRequiredVersion);
+      // / Refuse to write a payload that would not parse.
+      // / The opening tag must be followed by whitespace & the file must carry no closing tag.
+      if (preg_match('/^<\?php\s/', $secretFileContent) === 1 && strpos($secretFileContent, '?>') === FALSE) $payloadIsWellFormed = TRUE;
+      if (!$payloadIsWellFormed) {
+        $rotationNotice = 'The generated secret file payload is malformed & was not written to '.$secretFile.'.';
+        if ($loggingIsReady) warningEntry($rotationNotice);
+        else error_log('WARNING!!! HRConvert2: '.$rotationNotice); }
+      else {
+        // / Commit the buffer to disk under an immediate exclusive lock.
+        $bytesWritten = file_put_contents($secretFile, $secretFileContent, LOCK_EX);
+        // / Check that the secret, & only the secret, was written to the file.
+        if ($bytesWritten !== strlen($secretFileContent)) {
+          if (file_exists($secretFile)) @unlink($secretFile); }
+        else {
+          @chmod($secretFile, 0600);
+          // / Read the new file back exactly as every later request will read it.
+          // / A file that does not return the key it was built from is deleted, not kept.
+          $SecretKey = '';
+          $SecretVersion = '';
+          ob_start();
+          require ($secretFile);
+          $strayOutput = ob_get_clean();
+          if ($strayOutput === '' && $SecretKey === $secret) {
+            $ResolvedSecretKey = $secret;
+            $SecretIsReady = TRUE; }
+          else {
+            @unlink($secretFile);
+            $rotationNotice = 'The secret file written to '.$secretFile.' did not read back correctly & was removed.';
+            if ($loggingIsReady) warningEntry($rotationNotice);
+            else error_log('WARNING!!! HRConvert2: '.$rotationNotice); } } } } }
+  // / Adopt the key from a file that was already usable.
+  if ($existingIsUsable) {
+    $ResolvedSecretKey = $SecretKey;
+    $SecretIsReady = TRUE; }
   // / Manually clean up sensitive memory. Every target is passed directly by reference.
   // / $ResolvedSecretKey is not purged, because it is the return value.
   // / PHP separates the shared buffer when $SecretKey is shredded, so the return survives intact.
-  if (!purgeSensitiveMemory($EnableMemoryProtection, $SecretKey, $secret, $secretFile, $secretFileContent, $bytesWritten, $secretGenerated)) {
+  if (!purgeSensitiveMemory($EnableMemoryProtection, $SecretKey, $SecretVersion, $secret, $secretFile, $secretFileContent, $bytesWritten, $secretGenerated, $existingIsUsable, $detectedSecretVersion, $cleanRequiredVersion, $rotationNotice, $strayOutput, $loggingIsReady, $payloadIsWellFormed, $requiredSecretVersion)) {
     // / The failure is already logged under this function's name & is not logged again here.
     // / A secret that loaded correctly is still correct, so readiness is not withdrawn.
     $SecretIsReady = $SecretIsReady; }
@@ -540,10 +601,15 @@ function resolveSecretFile($secretFile) {
 // / Any other combination gets no secret at all & fails verification.
 function verifyInstallation() {
   // / Set variables.
-  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumImageVersion, $UsePyMeshLab, $MinimumMeshlabVersion, $MinimumAssimpVersion, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $Minimum7zVersion, $MinimumZipVersion, $MinimumRarVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumDiaVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection;
+  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $LogFile, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $SecretFile, $RequiredSecretVersion, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumImageVersion, $UsePyMeshLab, $MinimumMeshlabVersion, $MinimumAssimpVersion, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $Minimum7zVersion, $MinimumZipVersion, $MinimumRarVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumDiaVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection, $ResourceAwarenessActive, $EnableResourceAwareness, $RequireResourceAwareness, $ManagerSocketDir, $DirSep, $RequiredCoreManagerVersion, $CoreManagerVersion, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $CoreLoaded, $HomeLoc;
+  putenv('HOME='.$HomeLoc);
+  $CoreLoaded = TRUE;
   $InstallationIsVerified = $RunningFromCLI = $RunningAsRoot = $RunningInContainer = FALSE;
-  $secretAuthorized = $userSecretAuthorized = $secretIsReady = $configIsValid = FALSE;
-  $SecretKey = $CurrentUser = $detectedConfigVersion = $configFile = $secretFolder = $secretFile = '';
+  $secretAuthorized = $userSecretAuthorized = $secretIsReady = $configIsValid = $componentIsAvailable = FALSE;
+  $detectedCoreManagerVersion = '';
+  $SecretKey = $CurrentUser = $detectedConfigVersion = $configFile = $secretFolder = '';
+  $applicationSlug = $legacySecretFile = '';
+  $SecretFile = '';
   $missingConfigVars = array();
   // / Detect if the application is being run from the command line.
   if (php_sapi_name() === 'cli') $RunningFromCLI = TRUE;
@@ -577,7 +643,7 @@ function verifyInstallation() {
   // / This is only raised when a release adds or removes a config setting.
   // / A release that changes no settings leaves this alone, so existing config files keep working.
   // / Any config.php version that is greater (newer) than the version listed below is considered acceptable.
-  $RequiredConfigVersion = 'v3.7.5';
+  $RequiredConfigVersion = 'v3.7.6';
   $RequiredConfigVersion = ltrim($RequiredConfigVersion, 'vV');
   // / Define the minimum acceptable GUI version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
@@ -591,6 +657,16 @@ function verifyInstallation() {
   // / This is because Language Packs are not always guaranteed to be forward or reverse compatible.
   $RequiredLanguageVersion = 'v3.7.4';
   $RequiredLanguageVersion = ltrim($RequiredLanguageVersion, 'vV');
+  // / The Core Manager component version this core requires.
+  // / This is an EXACT match. A component built for another core may not be called safely.
+  $RequiredCoreManagerVersion = 'v3.7.6';
+  $RequiredCoreManagerVersion = ltrim($RequiredCoreManagerVersion, 'vV');
+  // / The secret file version this core requires.
+  // / This is an EXACT match. A secret file reporting anything else is deleted & rewritten.
+  // / Raise this to force every installation in the wild off an exposed or outdated secret.
+  // / Raising it invalidates every active session on the next request. That is the point.
+  $RequiredSecretVersion = 'v3.7.6';
+  $RequiredSecretVersion = ltrim($RequiredSecretVersion, 'vV');
   // / Define absolute paths for files that we only have relative paths for.
   $configFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'config.php');
   $VersionInfoFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'versionInfo.php');
@@ -607,11 +683,25 @@ function verifyInstallation() {
   // / An undefined setting reads as NULL, which silently becomes FALSE or zero at every point of use.
   list ($configIsValid, $missingConfigVars, $detectedConfigVersion) = verifyConfigVersion($RequiredConfigVersion);
   if (!$configIsValid) die ('ERROR!!! HRConvert2-28000: The config.php file is missing '.count($missingConfigVars).' required setting(s). Config version detected: v'.$detectedConfigVersion.'. Config version required: v'.$RequiredConfigVersion.'. Missing Variables: '.implode(', ', $missingConfigVars).PHP_EOL.'<br />');
+  // / Derive a filesystem safe token from the application name.
+  // / The name comes from config.php, so it is sanitized before it is used to build a path.
+  // / A name that sanitizes to nothing falls back to the project name rather than to an
+  // / empty string, which would produce a hidden file named -secret.php.
+  $applicationSlug = sanitizeString($ApplicationName, TRUE);
+  if ($applicationSlug === '') $applicationSlug = 'HRConvert2';
   // / Establish a secret. The path differs by authorization & nothing else does.
   // / The install wide secret lives in the data location, outside the web root.
   if ($secretAuthorized) {
-    $secretFile = $ConvertLoc.DIRECTORY_SEPARATOR.'secret.php';
-    list ($secretIsReady, $SecretKey) = resolveSecretFile($secretFile); }
+    $SecretFile = $ConvertLoc.DIRECTORY_SEPARATOR.$applicationSlug.'-secret.php';
+    $legacySecretFile = $ConvertLoc.DIRECTORY_SEPARATOR.'secret.php';
+    list ($secretIsReady, $SecretKey) = resolveSecretFile($SecretFile, $RequiredSecretVersion);
+    // / Remove the unnamed secret file left by a release before this one.
+    // / It is removed only once a replacement is in place, so a failure above leaves the
+    // / old file usable & the installation recoverable.
+    if ($secretIsReady && file_exists($legacySecretFile)) {
+      @unlink($legacySecretFile);
+      if (isset($LogFile) && is_string($LogFile) && $LogFile !== '') warningEntry('The legacy secret file at '.$legacySecretFile.' was removed.');
+      else error_log('WARNING!!! HRConvert2: The legacy secret file at '.$legacySecretFile.' was removed.'); } }
   // / A per user secret lives in the home directory of the user running the command.
   // / The directory is created if it does not exist, because this is the first thing that
   // / user has ever asked HRConvert2 to do.
@@ -622,8 +712,17 @@ function verifyInstallation() {
     $LogDir = $secretFolder.DIRECTORY_SEPARATOR.'Logs'.DIRECTORY_SEPARATOR;
     if (!is_dir($secretFolder)) @mkdir($secretFolder, 0700, TRUE);
     if (is_dir($secretFolder)) {
-      $secretFile = $secretFolder.DIRECTORY_SEPARATOR.'secret-'.sanitizeString($CurrentUser, TRUE).'.php';
-      list ($secretIsReady, $SecretKey) = resolveSecretFile($secretFile); } }
+      $SecretFile = $secretFolder.DIRECTORY_SEPARATOR.$applicationSlug.'-secret-'.sanitizeString($CurrentUser, TRUE).'.php';
+      list ($secretIsReady, $SecretKey) = resolveSecretFile($SecretFile, $RequiredSecretVersion); } }
+  // / Resolve the Core Manager component. Resource awareness is unavailable without it.
+  $ResourceAwarenessActive = FALSE;
+  $ManagerSocketDir = $ConvertLoc.DIRECTORY_SEPARATOR.'Sockets';
+  if ($secretIsReady && $EnableResourceAwareness) {
+    list ($componentIsAvailable, $detectedCoreManagerVersion) = verifyCoreManagerComponent($RequiredCoreManagerVersion);
+    if ($componentIsAvailable) $ResourceAwarenessActive = TRUE;
+    // / An administrator may refuse to run without resource awareness.
+    else if ($RequireResourceAwareness) errorEntry('Resource awareness is required by config.php & the Core Manager component is unavailable!', 31010, TRUE); }
+  else if ($RequireResourceAwareness) errorEntry('Resource awareness is required by config.php but is disabled or has no secret!', 31010, TRUE);
   // / Perform a check to see if all required tests passed.
   // / The version check & the config check both die on failure, so reaching this line means
   // / both passed & only the secret remains in question.
@@ -633,8 +732,9 @@ function verifyInstallation() {
   if ($secretIsReady) $InstallationIsVerified = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $SecretKey is deliberately NOT cleared here because the rest of the core needs it.
-  purgeSensitiveMemory($EnableMemoryProtection, $secretAuthorized, $userSecretAuthorized, $secretIsReady, $configIsValid, $missingConfigVars, $detectedConfigVersion, $secretFolder, $secretFile);
-  return array($InstallationIsVerified, $configFile, $Version); }
+  // / $SecretFile is deliberately NOT cleared here because it is a global the core reads later.
+  purgeSensitiveMemory($EnableMemoryProtection, $secretAuthorized, $userSecretAuthorized, $secretIsReady, $configIsValid, $missingConfigVars, $detectedConfigVersion, $secretFolder, $applicationSlug, $legacySecretFile, $componentIsAvailable, $detectedCoreManagerVersion);
+  return array($InstallationIsVerified, $configFile, $Version, $CoreLoaded); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1118,11 +1218,9 @@ function verifyLanguage() {
 // / Converting here as well produced a fifteen hour watch timeout & a ten million second connect timeout.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $ProtectedRootDirs, $ResourcesDir, $BootloadersDir, $AllowBootableIsoImage, $UserBootableIsoArray, $BootableIsoArray, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection;
+  global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $ProtectedRootDirs, $ResourcesDir, $BootloadersDir, $AllowBootableIsoImage, $UserBootableIsoArray, $BootableIsoArray, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $ManagerSocketDir, $ManagerSocketTimeout, $ManagerMessageBatchSize, $ManagerMessageSkew, $StartupKeyWindow, $ResourceAwarenessActive, $CoreManagerVersion, $RequiredCoreManagerVersion, $EnableResourceAwareness, $RequireResourceAwareness, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime;
   // / Application related variables.
-  putenv('HOME='.$HomeLoc);
   $GlobalsAreVerified = $sanitizeGlobalCheck = $sanitizeGlobalCheckA = $sanitizeGlobalCheckB = $sanitizeGlobalCheckC = $sanitizeGlobalCheckD = $sanitizeGlobalCheckE = FALSE;
-  $CoreLoaded = TRUE;
   $SleepTimer = 0;
   $StopCounter = $RetryCount;
   // / Convinience variables.
@@ -1147,7 +1245,7 @@ function verifyGlobals() {
   // / Directories at the root of a data location that are never sessions & must never be swept.
   // / The LibreOffice profile lives here because HOME resolves to the data location.
   // / Rebuilding that profile is expensive, so it is deliberately preserved between requests.
-  $ProtectedRootDirs = array('.cache', '.config', 'Logs', 'ScadTemp', 'StreamTemp', 'lost+found', 'Last-Installed-Version');
+  $ProtectedRootDirs = array('.cache', '.config', 'Logs', 'ScadTemp', 'StreamTemp', 'lost+found', 'Last-Installed-Version', 'Sockets');
   // / Stream related variables.
   // / The two stream timeouts are deliberately left in their documented units here.
   // / Do not convert them in this function.
@@ -1162,6 +1260,13 @@ function verifyGlobals() {
   $webRoot = $DirSep.'var'.$DirSep.'www';
   $ResourcesDir = $InstLoc.$DirSep.'Resources';
   $BootloadersDir = $ResourcesDir.$DirSep.'Bootloaders';
+  // / Core Manager related variables.
+  // / The socket directory lives in the data location & is never inside the web root.
+  $ManagerSocketDir = $ConvertLoc.$DirSep.'Sockets';
+  $ManagerSocketTimeout = 2;
+  $ManagerMessageBatchSize = 32;
+  $ManagerMessageSkew = 30;
+  $StartupKeyWindow = 10;
   list ($convertDir0, $sanitizeGlobalCheckA) = sanitize($ConvertLoc.$DirSep.$SesHash, FALSE);
   list ($ConvertDir, $sanitizeGlobalCheckB) = sanitize($convertDir0.$DirSep.$SesHash2.$DirSep, FALSE);
   list ($ConvertTemp, $sanitizeGlobalCheckC) = sanitize($InstLoc.$DirSep.'DATA', FALSE);
@@ -1231,7 +1336,7 @@ function verifyGlobals() {
   if ($sanitizeGlobalCheck) $GlobalsAreVerified = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $convertDir0, $convertTempDir0, $subDir, $partURL, $allArrays, $webRoot, $sanitizeGlobalCheck, $sanitizeGlobalCheckA, $sanitizeGlobalCheckB, $sanitizeGlobalCheckC, $sanitizeGlobalCheckD, $sanitizeGlobalCheckE);
-  return array($GlobalsAreVerified, $CoreLoaded); }
+  return array($GlobalsAreVerified); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -2084,12 +2189,13 @@ function showHelpInfo() {
 // / To run as the web server user, use command  'sudo -u www-data php convertCore.php '
 function parseCommandLine() {
   // / Set variables.
-  global $Verbose, $Lol, $DeleteThreshold, $ConvertLoc, $ConvertTempDir, $RunningFromCLI, $RunningAsRoot, $EnableMemoryProtection;
+  global $Verbose, $Lol, $DeleteThreshold, $ConvertLoc, $ConvertTempDir, $RunningFromCLI, $RunningAsRoot, $CurrentUser, $ApacheUser, $ResourceAwarenessActive, $ManagerSocketDir, $EnableMemoryProtection;
   $CommandLineHandled = $cliTempCleaned = $cliTempDeepCleaned = $cliDataCleaned = $cliDataDeepCleaned = FALSE;
   $UserType = 'web';
-  $cliArgumentCount = $cliThreshold = 0;
-  $cliArguments = $cliParts = array();
-  $cliCommand = $rawFirstArg = $cliTarget = '';
+  $cliArgumentCount = $cliThreshold = $cliPathsCorrected = 0;
+  $cliArguments = $cliParts = $cliStatus = array();
+  $cliCommand = $rawFirstArg = $cliTarget = $cliSecondTarget = '';
+  $cliConfirmed = $cliListenerAuthorized = $cliActionConfirmed = $cliPermissionsFixed = $cliListenerRunning = FALSE;
   // / A web request has no command line & must return immediately.
   // / This is the ONLY path that returns FALSE. Every other path handles & stops.
   if (!$RunningFromCLI) $CommandLineHandled = FALSE;
@@ -2098,9 +2204,12 @@ function parseCommandLine() {
     $cliArguments = isset($_SERVER['argv']) ? $_SERVER['argv'] : array();
     array_shift($cliArguments);
     $cliArgumentCount = count($cliArguments);
+    // / A trailing -y anywhere in the argument list pre confirms a destructive action.
+    if (in_array('-y', $cliArguments, TRUE) or in_array('--yes', $cliArguments, TRUE)) $cliConfirmed = TRUE;
+    // / Only the web server user & root may operate the listener.
+    // / A standard user holds a per user secret, which cannot derive a valid startup key.
+    if ($RunningAsRoot or $CurrentUser === $ApacheUser) $cliListenerAuthorized = TRUE;
     // / A command line invocation with no argument is a request for help.
-    // / Running the web logic from a terminal would emit HTML to a shell & create a session
-    // / for a user that does not exist, so it is never the right answer.
     if ($cliArgumentCount < 1) {
       logEntry('Command line invocation with no argument. Displaying help.');
       showHelpInfo();
@@ -2110,49 +2219,138 @@ function parseCommandLine() {
       $rawFirstArg = trim($cliArguments[0]);
       $cliParts = explode('=', $rawFirstArg, 2);
       $cliCommand = strtolower(trim($cliParts[0]));
+      // / Resolve the target from an equal sign first & from the next argument second.
+      if (isset($cliParts[1])) $cliTarget = trim($cliParts[1]);
+      else $cliTarget = isset($cliArguments[1]) ? trim($cliArguments[1]) : '';
+      $cliSecondTarget = isset($cliArguments[2]) ? trim($cliArguments[2]) : '';
       // / Handle the -v or --version arguments.
-      // / Performs a comprehensive version analysis including all components & major dependencies.
       if ($cliCommand === '-v' or $cliCommand === '--version') {
         logEntry('Command line invocation. Displaying version information.');
         showVersionInfo();
         $CommandLineHandled = TRUE; }
       // / Handle the -h or --help arguments.
-      // / Dislays information about the application & included documentation.
       else if ($cliCommand === '-h' or $cliCommand === '--help') {
         logEntry('Command line invocation. Displaying help.');
         showHelpInfo();
         $CommandLineHandled = TRUE; }
-      // / Gate root-only, filesystem breaking command line operations behind a security context awareness check.
-      // / The -c, --clean, -u, & --update arguments can only be performed from CLI while running as root.
-      else if ($RunningAsRoot) {
-        // / Handle the -u or --update arguments.
-        // / Performs a comprehensive update on the HRConvert2 application & all bundled components.
-        if ($cliCommand === '-u' or $cliCommand === '--update') {
+      // / Handle the internal Core Manager entry point.
+      // / This is never typed by an administrator. It is invoked by the -l argument with a
+      // / key derived from the install secret & is refused without one.
+      else if ($cliCommand === '--start-core-manager') {
+        if (!$ResourceAwarenessActive) errorEntry('A Core Manager start was requested but the component is unavailable!', 31009, TRUE);
+        else dispatchManagerRole('core-manager', $cliTarget);
+        $CommandLineHandled = TRUE; }
+      // / Handle the internal subordinate manager entry point.
+      else if ($cliCommand === '--start-manager') {
+        if (!$ResourceAwarenessActive) errorEntry('A manager start was requested but the component is unavailable!', 31009, TRUE);
+        else dispatchManagerRole($cliTarget, $cliSecondTarget);
+        $CommandLineHandled = TRUE; }
+      // / Handle the --status argument. Available to any user & reports the context that
+      // / decides whether every other listener command will be accepted.
+      else if ($cliCommand === '--status') {
+        print($Lol.'Security context'.$Lol);
+        print('  Current user       '.($CurrentUser === '' ? '(undetected)' : $CurrentUser).$Lol);
+        print('  Running as root    '.($RunningAsRoot ? 'yes' : 'no').$Lol);
+        print('  Web server user    '.$ApacheUser.$Lol);
+        print('  Listener commands  '.($cliListenerAuthorized ? 'AUTHORIZED' : 'REFUSED, run as root or '.$ApacheUser).$Lol);
+        print($Lol.'Resource awareness'.$Lol);
+        if (!$ResourceAwarenessActive) print('  Component          UNAVAILABLE, missing or version mismatched'.$Lol);
+        else {
+          print('  Component          available'.$Lol);
+          print('  Socket directory   '.$ManagerSocketDir.$Lol);
+          list ($cliListenerRunning, $cliStatus) = reportListenerStatus();
+          print('  Listener           '.($cliListenerRunning ? 'RUNNING as process '.$cliStatus['CoreManagerPid'] : 'STOPPED').$Lol);
+          print('  Subordinates       '.count($cliStatus['Subordinates']).$Lol);
+          print('  Tracked workers    '.$cliStatus['TrackedWorkers'].$Lol);
+          if (isset($cliStatus['Budget']['RemainingBudget'])) print('  Remaining budget   '.$cliStatus['Budget']['RemainingBudget'].' of '.$cliStatus['Budget']['TotalBudget'].$Lol); }
+        print($Lol);
+        $CommandLineHandled = TRUE; }
+      // / Handle the -l or --listen arguments.
+      // / The command is matched before authorization is tested, so a refused user is told
+      // / why rather than being told the argument does not exist.
+      else if ($cliCommand === '-l' or $cliCommand === '--listen') {
+        if (!$cliListenerAuthorized) {
+          warningEntry('An unauthorized user attempted to start the Core Manager listener.');
+          print($Lol.'Only root or '.$ApacheUser.' may start the listener.'.$Lol);
+          print('Detected user '.($CurrentUser === '' ? '(undetected)' : $CurrentUser).', running as root '.($RunningAsRoot ? 'yes' : 'no').'.'.$Lol);
+          print('Run  php convertCore.php --status  for the full context.'.$Lol.$Lol); }
+        else if (!$ResourceAwarenessActive) print($Lol.'Resource awareness is unavailable. The Core Manager component is missing or does not match this core.'.$Lol.$Lol);
+        else {
+          logEntry('Command line invocation. Starting the Core Manager listener.');
+          startCoreManagerListener(); }
+        $CommandLineHandled = TRUE; }
+      // / Handle -k with no target as a listener stop & with a target as a worker kill.
+      else if ($cliCommand === '-k' or $cliCommand === '--kill') {
+        if (!$cliListenerAuthorized) {
+          warningEntry('An unauthorized user attempted to operate the Core Manager listener.');
+          print($Lol.'Only root or '.$ApacheUser.' may operate the listener.'.$Lol.$Lol); }
+        else if (!$ResourceAwarenessActive) print($Lol.'Resource awareness is unavailable. There is no listener to stop.'.$Lol.$Lol);
+        else if ($cliTarget === '') {
+          logEntry('Command line invocation. Stopping the Core Manager listener.');
+          stopCoreManagerListener(); }
+        else {
+          logEntry('Command line invocation. Terminating worker '.$cliTarget.'.');
+          killTargetedWorker($cliTarget); }
+        $CommandLineHandled = TRUE; }
+      // / Handle --kill-all-workers. Ends every TRACKED worker.
+      else if ($cliCommand === '--kill-all-workers') {
+        if (!$cliListenerAuthorized) {
+          warningEntry('An unauthorized user attempted to terminate tracked workers.');
+          print($Lol.'Only root or '.$ApacheUser.' may operate the listener.'.$Lol.$Lol); }
+        else if (!$ResourceAwarenessActive) print($Lol.'Resource awareness is unavailable, so no worker is tracked.'.$Lol.$Lol);
+        else {
+          $cliActionConfirmed = confirmDestructiveAction('This ends every tracked conversion in progress. Users will lose work.', $cliConfirmed);
+          if ($cliActionConfirmed) {
+            warningEntry('Command line invocation. Terminating every tracked worker.');
+            print($Lol.'Terminated '.killTrackedWorkers().' tracked worker(s).'.$Lol.$Lol); } }
+        $CommandLineHandled = TRUE; }
+      // / Handle --kill-every-worker. Ends every PHP process owned by the web server user.
+      // / This reaches unrelated applications sharing the host & says so before it runs.
+      else if ($cliCommand === '--kill-every-worker') {
+        if (!$cliListenerAuthorized) {
+          warningEntry('An unauthorized user attempted to terminate every worker.');
+          print($Lol.'Only root or '.$ApacheUser.' may operate the listener.'.$Lol.$Lol); }
+        else if (!$ResourceAwarenessActive) print($Lol.'Resource awareness is unavailable, so no worker registry exists.'.$Lol.$Lol);
+        else {
+          $cliActionConfirmed = confirmDestructiveAction('This ends EVERY PHP process owned by '.$ApacheUser.' on this host. Other applications sharing this server, such as WordPress or OwnCloud, will lose every session in progress.', $cliConfirmed);
+          if ($cliActionConfirmed) {
+            warningEntry('Command line invocation. Terminating every process owned by the web server user.');
+            print($Lol.'Terminated '.killEveryWorker().' process(es).'.$Lol.$Lol); } }
+        $CommandLineHandled = TRUE; }
+      // / Handle the -fp or --fix-permissions arguments. Root only, because it chowns.
+      else if ($cliCommand === '-fp' or $cliCommand === '--fix-permissions') {
+        if (!$RunningAsRoot) {
+          warningEntry('A non root user attempted to correct managed permissions.');
+          print($Lol.'Permissions can only be corrected while running as root.'.$Lol.$Lol); }
+        else {
+          logEntry('Command line invocation. Correcting managed permissions.');
+          print($Lol.'Correcting permissions on managed paths.'.$Lol);
+          list ($cliPermissionsFixed, $cliPathsCorrected) = fixManagedPermissions();
+          print($Lol.($cliPermissionsFixed ? 'Corrected '.$cliPathsCorrected.' path(s).' : 'Permissions could not be corrected.').$Lol.$Lol); }
+        $CommandLineHandled = TRUE; }
+      // / Handle the -u or --update arguments. Root only, because it swaps the installation.
+      else if ($cliCommand === '-u' or $cliCommand === '--update') {
+        if (!$RunningAsRoot) {
+          warningEntry('A non root user attempted to update the application.');
+          print($Lol.'An update can only be performed while running as root.'.$Lol.$Lol); }
+        else {
           logEntry('Command line invocation. Performing an application update.');
-          // / Check if target was passed via '=' sign first. Fall back to the second array element.
-          if (isset($cliParts[1])) $cliTarget = strtolower(trim($cliParts[1]));
-          else $cliTarget = isset($cliArguments[1]) ? strtolower(trim($cliArguments[1])) : '';
-          updateApplication($cliTarget);
-          $CommandLineHandled = TRUE; }
-        // / Handle the -c or --clean arguments.
-        // / Sweeps expired sessions from both data locations on demand rather than waiting
-        // / for the next web request to do it. A server taken out of service still holds
-        // / user data until something sweeps it.
-        // / An optional threshold in minutes overrides --Delete Threshold-- for this run only.
-        // / A threshold of now sweeps every session regardless of age, including live ones.
-        else if ($cliCommand === '-c' or $cliCommand === '--clean') {
+          updateApplication(strtolower($cliTarget)); }
+        $CommandLineHandled = TRUE; }
+      // / Handle the -c or --clean arguments. Root only, because it removes user data.
+      else if ($cliCommand === '-c' or $cliCommand === '--clean') {
+        if (!$RunningAsRoot) {
+          warningEntry('A non root user attempted to clean a data location.');
+          print($Lol.'A clean can only be performed while running as root.'.$Lol.$Lol); }
+        else {
           logEntry('Command line invocation. Performing a manual clean.');
-          // / Check if a threshold was passed via '=' sign first. Fall back to the second array element.
-          if (isset($cliParts[1])) $cliTarget = strtolower(trim($cliParts[1]));
-          else $cliTarget = isset($cliArguments[1]) ? strtolower(trim($cliArguments[1])) : '';
+          $cliTarget = strtolower($cliTarget);
           $cliThreshold = $DeleteThreshold;
           // / A threshold of zero expires everything, because every session is older than nothing.
           if ($cliTarget === 'now') $cliThreshold = 0;
           // / ctype_digit rather than is_numeric, because is_numeric accepts a negative & a
           // / negative threshold would expire every session while looking like a normal number.
           else if ($cliTarget !== '' && ctype_digit($cliTarget)) $cliThreshold = (int)$cliTarget;
-          // / An unrecognized threshold falls back to the configured default rather than
-          // / refusing, but says so. Silently sweeping on a typo would be worse.
           else if ($cliTarget !== '') {
             warningEntry('An unrecognized clean threshold was supplied. Using the configured default.');
             print($Lol.'Unrecognized threshold. Supply a whole number of minutes, or now.'.$Lol); }
@@ -2163,8 +2361,8 @@ function parseCommandLine() {
           list ($cliDataCleaned, $cliDataDeepCleaned) = cleanDataLoc($ConvertLoc, 'ConvertLoc', $cliThreshold);
           print('  Data location        '.($cliDataCleaned ? 'OK' : 'FAILED').($cliDataDeepCleaned ? ', removed expired sessions' : ', nothing was expired').$Lol);
           if (!$cliTempCleaned or !$cliDataCleaned) print($Lol.'One or more locations could not be cleaned. See the log for the reason.'.$Lol);
-          print($Lol);
-          $CommandLineHandled = TRUE; } }
+          print($Lol); }
+        $CommandLineHandled = TRUE; }
       // / An unrecognized argument is a mistake, not a web request.
       // / Falling through to the web logic would be the worst possible response.
       else {
@@ -2175,7 +2373,7 @@ function parseCommandLine() {
   // / Determine if the user is using the application via command line (CLI) or Apache+PHP through a web browser.
   if ($CommandLineHandled === TRUE) $UserType = 'cli';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $cliArguments, $cliCommand, $cliArgumentCount, $rawFirstArg, $cliParts, $cliTarget, $cliThreshold, $cliTempCleaned, $cliTempDeepCleaned, $cliDataCleaned, $cliDataDeepCleaned);
+  purgeSensitiveMemory($EnableMemoryProtection, $cliArguments, $cliCommand, $cliArgumentCount, $rawFirstArg, $cliParts, $cliTarget, $cliSecondTarget, $cliThreshold, $cliTempCleaned, $cliTempDeepCleaned, $cliDataCleaned, $cliDataDeepCleaned, $cliConfirmed, $cliListenerAuthorized, $cliActionConfirmed, $cliPermissionsFixed, $cliListenerRunning, $cliPathsCorrected, $cliStatus);
   return array($CommandLineHandled, $UserType); }
 // / -----------------------------------------------------------------------------------
 
@@ -3355,26 +3553,20 @@ function resolveSCADInclude($scadReference, $sessionFiles) {
 // / Stripping one kind before the other gets both of those backwards & swallows real code.
 // / Comments & strings are removed because a keyword inside either is not a call.
 // / An angle bracket path is removed for the same reason. A directory name is not a call.
-// /
 // / A keyword is only counted as a call when BOTH of the following hold.
 // / The character before it must not be a letter, a digit or an underscore.
 // / That is what stops house_width & diffuser_height from counting as a use.
 // / The next meaningful character must be an opening bracket or an angle bracket.
 // / That is what stops include_lid from counting as an include.
-// /
-// / A COMMENT IS A TOKEN SEPARATOR TO OPENSCAD, NOT A TERMINATOR.
+// / A comment is a token separator in OpenSCAD. Not a terminator.
 // / The main loop below treats a comment as the end of live code, which is correct there.
 // / The lookahead treats a comment as whitespace, which is correct there & is NOT the same rule.
 // / An earlier version applied the main loop rule in the lookahead & concluded that
 // / surface/**/("file") was not a call. OpenSCAD reads that file. It was reported as a bypass.
 // / Whitespace & comments are therefore both skipped while looking for the bracket, & again
 // / while reading the reference, because a comment may also sit between the bracket & the quote.
-// /
-// / THIS FUNCTION IS NOT THE SECURITY BOUNDARY.
-// / The boundary is the operating system sandbox in convertSCAD() & nothing else.
-// / This function exists so ordinary files render predictably & so the user is told what
-// / was removed. It is expected to be incomplete & the sandbox does not depend on it.
-// /
+// / The boundary is the operating system sandbox in convertSCAD().
+// / This function exists so ordinary files render predictably.
 // / Returns one record per call found, carrying the keyword, the line it started on & the
 // / raw text of the reference where one could be read.
 function sanitizeSCAD($scadContents) {
@@ -6214,13 +6406,243 @@ function userVirusScan($FilesToScan, $type) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to close the web server connection.
-function closeHRC2Connection() {
-  ignore_user_abort(TRUE);
-  if (function_exists('fastcgi_finish_request')) fastcgi_finish_request();
+// / A function to derive a time bucketed startup key for an internal core invocation.
+// / Accepts the purpose the key authorizes.
+// / Returns the key, or an empty string when no install secret is available.
+// / The bucket bounds the window in which a captured key can be reused.
+function deriveStartupKey($keyPurpose) {
+  // / Set variables.
+  global $SecretKey, $StartupKeyWindow, $EnableMemoryProtection;
+  $StartupKey = '';
+  $timeBucket = 0;
+  $keyMaterial = '';
+  if (is_string($SecretKey) && strlen($SecretKey) === 64) {
+    $timeBucket = (int)floor(time() / max(1, (int)$StartupKeyWindow));
+    $keyMaterial = 'startup|'.$keyPurpose.'|'.$timeBucket;
+    $StartupKey = hash_hmac('sha256', $keyMaterial, $SecretKey); }
+  purgeSensitiveMemory($EnableMemoryProtection, $timeBucket, $keyMaterial, $keyPurpose);
+  return $StartupKey; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to validate a startup key supplied on the command line.
+// / Accepts the purpose the key must authorize & the key that was supplied.
+// / Returns TRUE when the key matches the current or the previous window.
+// / The previous window is accepted because process launch is not instant.
+function validateStartupKey($keyPurpose, $suppliedKey) {
+  // / Set variables.
+  global $SecretKey, $StartupKeyWindow, $EnableMemoryProtection;
+  $KeyIsValid = FALSE;
+  $timeBucket = 0;
+  $currentKey = $previousKey = $cleanKey = '';
+  $cleanKey = preg_replace('/[^a-f0-9]/', '', strtolower((string)$suppliedKey));
+  if (is_string($SecretKey) && strlen($SecretKey) === 64 && strlen($cleanKey) === 64) {
+    $timeBucket = (int)floor(time() / max(1, (int)$StartupKeyWindow));
+    $currentKey = hash_hmac('sha256', 'startup|'.$keyPurpose.'|'.$timeBucket, $SecretKey);
+    $previousKey = hash_hmac('sha256', 'startup|'.$keyPurpose.'|'.($timeBucket - 1), $SecretKey);
+    if (hash_equals($currentKey, $cleanKey) or hash_equals($previousKey, $cleanKey)) $KeyIsValid = TRUE; }
+  if (!$KeyIsValid) warningEntry('A startup key for '.$keyPurpose.' was refused.');
+  purgeSensitiveMemory($EnableMemoryProtection, $timeBucket, $currentKey, $previousKey, $cleanKey, $keyPurpose, $suppliedKey);
+  return $KeyIsValid; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to verify & load the Core Manager component.
+// / Accepts the component version this core requires.
+// / Returns an availability boolean & the detected version, in that order.
+// / The version is read from the file WITHOUT executing it, because a mismatched component
+// / defines functions this core may not be able to call safely.
+// / This is an EXACT match, the same rule applied to a GUI or a language pack.
+function verifyCoreManagerComponent($requiredCoreManagerVersion) {
+  // / Set variables.
+  global $InstLoc, $EnableMemoryProtection, $CoreLoaded;
+  $ComponentIsAvailable = FALSE;
+  $DetectedCoreManagerVersion = '';
+  $componentPath = $componentContents = $cleanDetected = $cleanRequired = '';
+  $versionMatches = array();
+  $componentPath = $InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'coreManager.php';
+  if (!file_exists($componentPath)) warningEntry('The Core Manager component is not installed. Resource awareness is unavailable.');
   else {
-    if (ob_get_level() > 0) ob_end_flush();
-    flush(); } }
+    $componentContents = @file_get_contents($componentPath);
+    if (!is_string($componentContents) or $componentContents === '') warningEntry('The Core Manager component could not be read. Resource awareness is unavailable.');
+    else {
+      if (preg_match('/\$CoreManagerVersion\s*=\s*\'([^\']+)\'/', $componentContents, $versionMatches)) $DetectedCoreManagerVersion = $versionMatches[1];
+      $cleanDetected = ltrim(trim($DetectedCoreManagerVersion), 'vV');
+      $cleanRequired = ltrim(trim((string)$requiredCoreManagerVersion), 'vV');
+      // / A component that reports no version is refused. An unknown build cannot be cleared.
+      if ($cleanDetected === '') warningEntry('The Core Manager component reports no version. Resource awareness is unavailable.');
+      else if ($cleanDetected !== $cleanRequired) warningEntry('The Core Manager component reports v'.$cleanDetected.' & this core requires v'.$cleanRequired.'. Resource awareness is unavailable.');
+      else {
+        require ($componentPath);
+        $ComponentIsAvailable = TRUE; } } }
+  purgeSensitiveMemory($EnableMemoryProtection, $componentPath, $componentContents, $cleanDetected, $cleanRequired, $versionMatches, $requiredCoreManagerVersion);
+  return array($ComponentIsAvailable, $DetectedCoreManagerVersion); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to request permission to consume resources before a conversion begins.
+// / Accepts the conversion cost & the expected runtime in seconds.
+// / Returns an approval boolean & the issued budget token, in that order.
+// / This FAILS OPEN. When resource awareness is unavailable the request is approved & the
+// / core behaves exactly as it did before this component existed.
+function requestConversionBudget($conversionCost, $expectedRuntime) {
+  // / Set variables.
+  global $ResourceAwarenessActive, $ManagerSocketTimeout, $EnableMemoryProtection;
+  $BudgetWasApproved = FALSE;
+  $BudgetToken = '';
+  $requestPayload = $replyPayload = array();
+  $messageWasDelivered = FALSE;
+  $requestSocket = '';
+  if (!$ResourceAwarenessActive) $BudgetWasApproved = TRUE;
+  else {
+    $requestSocket = buildManagerSocketPath('request-manager');
+    $requestPayload = array(
+      'RequestType' => 'budget',
+      'ConversionCost' => (int)$conversionCost,
+      'ExpectedRuntime' => (int)$expectedRuntime,
+      'WorkerPid' => getmypid());
+    list ($messageWasDelivered, $replyPayload) = sendManagerMessage($requestSocket, $requestPayload, 'worker', (int)$ManagerSocketTimeout);
+    // / A listener that cannot be reached must not stop a conversion that would have run.
+    if (!$messageWasDelivered) {
+      warningEntry('The Core Manager listener did not answer a budget request. Proceeding without resource awareness.');
+      $BudgetWasApproved = TRUE; }
+    else if (isset($replyPayload['Approved']) && $replyPayload['Approved'] === TRUE) {
+      $BudgetWasApproved = TRUE;
+      $BudgetToken = isset($replyPayload['BudgetToken']) ? (string)$replyPayload['BudgetToken'] : ''; }
+    else logEntry('A conversion was refused by the resource budget. '.(isset($replyPayload['Reason']) ? $replyPayload['Reason'] : '')); }
+  purgeSensitiveMemory($EnableMemoryProtection, $requestPayload, $replyPayload, $messageWasDelivered, $requestSocket, $conversionCost, $expectedRuntime);
+  return array($BudgetWasApproved, $BudgetToken); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to report that a conversion has finished & release its budget.
+// / Accepts the budget token issued at approval.
+// / Returns TRUE when the release was acknowledged, or when there was nothing to release.
+function releaseConversionBudget($budgetToken) {
+  // / Set variables.
+  global $ResourceAwarenessActive, $ManagerSocketTimeout, $EnableMemoryProtection;
+  $BudgetWasReleased = FALSE;
+  $requestPayload = $replyPayload = array();
+  $messageWasDelivered = FALSE;
+  if (!$ResourceAwarenessActive or (string)$budgetToken === '') $BudgetWasReleased = TRUE;
+  else {
+    $requestPayload = array('RequestType' => 'release', 'BudgetToken' => (string)$budgetToken, 'WorkerPid' => getmypid());
+    list ($messageWasDelivered, $replyPayload) = sendManagerMessage(buildManagerSocketPath('request-manager'), $requestPayload, 'worker', (int)$ManagerSocketTimeout);
+    if ($messageWasDelivered && isset($replyPayload['Approved']) && $replyPayload['Approved'] === TRUE) $BudgetWasReleased = TRUE;
+    else warningEntry('A budget token could not be released. The reaper will reclaim it.'); }
+  purgeSensitiveMemory($EnableMemoryProtection, $requestPayload, $replyPayload, $messageWasDelivered, $budgetToken);
+  return $BudgetWasReleased; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to request more runtime for a conversion that is still working.
+// / Accepts the budget token & the number of additional seconds required.
+// / Returns TRUE when the extension was granted or was not needed.
+function requestRuntimeExtension($budgetToken, $requestedSeconds) {
+  // / Set variables.
+  global $ResourceAwarenessActive, $ManagerSocketTimeout, $EnableMemoryProtection;
+  $ExtensionWasGranted = FALSE;
+  $requestPayload = $replyPayload = array();
+  $messageWasDelivered = FALSE;
+  if (!$ResourceAwarenessActive or (string)$budgetToken === '') $ExtensionWasGranted = TRUE;
+  else {
+    $requestPayload = array('RequestType' => 'extend', 'BudgetToken' => (string)$budgetToken, 'RequestedSeconds' => (int)$requestedSeconds, 'WorkerPid' => getmypid());
+    list ($messageWasDelivered, $replyPayload) = sendManagerMessage(buildManagerSocketPath('request-manager'), $requestPayload, 'worker', (int)$ManagerSocketTimeout);
+    if ($messageWasDelivered && isset($replyPayload['Approved']) && $replyPayload['Approved'] === TRUE) $ExtensionWasGranted = TRUE;
+    else warningEntry('A runtime extension was refused. This worker may be reaped.'); }
+  purgeSensitiveMemory($EnableMemoryProtection, $requestPayload, $replyPayload, $messageWasDelivered, $budgetToken, $requestedSeconds);
+  return $ExtensionWasGranted; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to correct ownership & permissions on every managed path.
+// / Accepts no arguments & must be run as root.
+// / Returns a success boolean & the number of paths corrected, in that order.
+function fixManagedPermissions() {
+  // / Set variables.
+  global $InstLoc, $ConvertLoc, $ConvertTemp, $LogDir, $HomeLoc, $ProprietaryLoc, $BackupLoc, $ManagerSocketDir, $ApacheUser, $SecretFile, $DirSep, $Lol, $RunningAsRoot, $EnableMemoryProtection;
+  $PermissionsWereFixed = FALSE;
+  $PathsCorrected = 0;
+  $managedPaths = array();
+  $managedPath = '';
+  $commandOutput = array();
+  $commandExitCode = 1;
+  if (!$RunningAsRoot) errorEntry('Permissions can only be corrected while running as root!', 31008, FALSE);
+  else {
+    $managedPaths = array($InstLoc, $ConvertLoc, $ConvertTemp, $LogDir, $HomeLoc, $ProprietaryLoc, $BackupLoc, $ManagerSocketDir);
+    foreach ($managedPaths as $managedPath) {
+      if ($managedPath !== '' && is_dir($managedPath)) {
+        exec('chown -R '.escapeshellarg($ApacheUser).':'.escapeshellarg($ApacheUser).' '.escapeshellarg($managedPath).' 2>&1', $commandOutput, $commandExitCode);
+        exec('chmod -R 0755 '.escapeshellarg($managedPath).' 2>&1', $commandOutput, $commandExitCode);
+        $PathsCorrected++;
+        print('  Corrected  '.$managedPath.$Lol); } }
+    // / The socket directory is never world readable, whatever the sweep above set.
+    if (is_dir($ManagerSocketDir)) exec('chmod 0700 '.escapeshellarg($ManagerSocketDir).' 2>&1', $commandOutput, $commandExitCode);
+    // / The secret is the one file that must not be group or world readable.
+    if (isset($SecretFile) && $SecretFile !== '' && file_exists($SecretFile)) {
+      exec('chown '.escapeshellarg($ApacheUser).':'.escapeshellarg($ApacheUser).' '.escapeshellarg($SecretFile).' 2>&1', $commandOutput, $commandExitCode);
+      exec('chmod 0600 '.escapeshellarg($SecretFile).' 2>&1', $commandOutput, $commandExitCode);
+      $PathsCorrected++;
+      print('  Corrected  '.$SecretFile.' (0600)'.$Lol); }
+    $PermissionsWereFixed = TRUE;
+    logEntry('Permissions were corrected on '.$PathsCorrected.' managed path(s).'); }
+  purgeSensitiveMemory($EnableMemoryProtection, $managedPaths, $managedPath, $commandOutput, $commandExitCode);
+  return array($PermissionsWereFixed, $PathsCorrected); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to ask the listener to terminate one tracked worker.
+// / Accepts the budget token or the process identifier of the worker.
+// / Returns TRUE when the worker was terminated.
+function killTargetedWorker($workerTarget) {
+  // / Set variables.
+  global $ResourceAwarenessActive, $ManagerSocketTimeout, $Lol, $EnableMemoryProtection;
+  $WorkerWasKilled = FALSE;
+  $requestPayload = $replyPayload = $workerRegistry = array();
+  $messageWasDelivered = $registryWasRead = FALSE;
+  $cleanTarget = trim((string)$workerTarget);
+  $targetPid = 0;
+  $targetToken = '';
+  if (!$ResourceAwarenessActive) print($Lol.'Resource awareness is unavailable, so no worker is tracked.'.$Lol);
+  else if ($cleanTarget === '') print($Lol.'Supply a worker identifier or process identifier.'.$Lol);
+  else {
+    // / A numeric target is a process identifier. Anything else is treated as a token.
+    if (ctype_digit($cleanTarget)) $targetPid = (int)$cleanTarget;
+    else {
+      $targetToken = preg_replace('/[^a-f0-9]/', '', strtolower($cleanTarget));
+      list ($registryWasRead, $workerRegistry) = readManagerState('workers');
+      if (isset($workerRegistry[$targetToken])) $targetPid = (int)$workerRegistry[$targetToken]['WorkerPid']; }
+    if ($targetPid < 2) print($Lol.'That worker is not tracked.'.$Lol);
+    else {
+      $requestPayload = array('RequestType' => 'kill', 'WorkerPid' => $targetPid, 'BudgetToken' => $targetToken);
+      list ($messageWasDelivered, $replyPayload) = sendManagerMessage(buildManagerSocketPath('core-manager'), $requestPayload, 'core', (int)$ManagerSocketTimeout);
+      if ($messageWasDelivered && isset($replyPayload['Approved']) && $replyPayload['Approved'] === TRUE) $WorkerWasKilled = TRUE;
+      print($Lol.($WorkerWasKilled ? 'Worker '.$targetPid.' terminated.' : 'Worker '.$targetPid.' could not be terminated.').$Lol); } }
+  purgeSensitiveMemory($EnableMemoryProtection, $requestPayload, $replyPayload, $workerRegistry, $messageWasDelivered, $registryWasRead, $cleanTarget, $targetPid, $targetToken, $workerTarget);
+  return $WorkerWasKilled; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to ask for confirmation on a destructive command line action.
+// / Accepts the prompt text & a boolean indicating confirmation was already given.
+// / Returns TRUE when the action may proceed.
+function confirmDestructiveAction($promptText, $confirmationSupplied) {
+  // / Set variables.
+  global $Lol, $EnableMemoryProtection;
+  $ActionIsConfirmed = FALSE;
+  $inputHandle = FALSE;
+  $typedAnswer = '';
+  if ($confirmationSupplied) $ActionIsConfirmed = TRUE;
+  else {
+    print($Lol.$promptText.$Lol.'Type YES to continue. Anything else cancels. '.$Lol);
+    $inputHandle = @fopen('php://stdin', 'r');
+    if ($inputHandle !== FALSE) {
+      $typedAnswer = trim((string)fgets($inputHandle));
+      @fclose($inputHandle);
+      if ($typedAnswer === 'YES') $ActionIsConfirmed = TRUE; }
+    if (!$ActionIsConfirmed) print($Lol.'Cancelled.'.$Lol); }
+  purgeSensitiveMemory($EnableMemoryProtection, $typedAnswer, $promptText, $confirmationSupplied);
+  return $ActionIsConfirmed; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -6235,7 +6657,7 @@ list ($TimeIsSet, $Date, $Time, $EpochTime) = verifyTime();
 if (!$TimeIsSet or !$Date or !$Time) die('ERROR!!! HRConvert2-4: Could not verify timezone!');
 
 // / The following code verifies that the installation is valid.
-list ($InstallationIsVerified, $ConfigFile, $Version) = verifyInstallation();
+list ($InstallationIsVerified, $ConfigFile, $Version, $CoreLoaded) = verifyInstallation();
 if (!$InstallationIsVerified) die('ERROR!!! '.$Time.', HRConvert2-5: Could not verify installation!');
 
 // / The following code verifies that string inputs to the core are properly sanitized.
@@ -6260,7 +6682,7 @@ if (!$LogFileExists) die('ERROR!!! '.$Time.', '.$ApplicationName.'-9, '.$SesHash
 if ($Verbose) logEntry('Verified logging environment.');
 
 // / The following code verifies & sanitizes global variables for the session.
-list ($GlobalsAreVerified, $CoreLoaded) = verifyGlobals();
+list ($GlobalsAreVerified) = verifyGlobals();
 if (!$GlobalsAreVerified) errorEntry('Could not verify globals!', 11, TRUE);
 else if ($Verbose) logEntry('Verified globals.');
 
@@ -6363,7 +6785,7 @@ if (!$CommandLineHandled && $UserType === 'web') {
         if (!$DeleteComplete) errorEntry('Delete Failed!', 24, TRUE);
         if ($DeleteErrors) logEntry('Delete finished with errors.');
         if ($Verbose) logEntry('Delete Complete.'); }
-
+      
       // / The following code is performed when a user archives a selection of files.
       if (isset($_POST['filesToArchive'])) {
         logEntry('Initiating Archiver.');
@@ -6374,11 +6796,17 @@ if (!$CommandLineHandled && $UserType === 'web') {
 
       // / The following code is performed when a user converts a selection of files.
       if (isset($_POST['convertSelected'])) {
-        logEntry('Initiating Converter.');
-        list ($ConversionComplete, $ConversionErrors) = convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, $Width, $Rotate, $Bitrate);
-        if (!$ConversionComplete) errorEntry('Conversion Failed!', 21, TRUE);
-        if ($ConversionErrors) logEntry('Conversion finished with errors.');
-        if ($Verbose) logEntry('Conversion Complete.'); }
+        list ($BudgetWasApproved, $BudgetToken) = requestConversionBudget($DefaultConversionCost, $DefaultExpectedRuntime);
+        if (!$BudgetWasApproved) {
+          warningEntry('A conversion was refused because the server is at its resource budget.');
+          print($Alert3.$Lol); }
+        else {
+          logEntry('Initiating Converter.');
+          list ($ConversionComplete, $ConversionErrors) = convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, $Width, $Rotate, $Bitrate);
+          if (!$ConversionComplete) errorEntry('Conversion Failed!', 21, TRUE);
+          if ($ConversionErrors) logEntry('Conversion finished with errors.');
+          if ($Verbose) logEntry('Conversion Complete.'); }
+        releaseConversionBudget($BudgetToken); }
 
       // / The following code is performed when a user performs OCR on a selection of files.
       if (isset($_POST['pdfworkSelected'])) {

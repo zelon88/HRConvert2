@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.7.5.
+// / v3.7.6.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -37,7 +37,7 @@
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. Replacing config.php with a newer one is the correct fix.
-$ConfigVersion = 'v3.7.5';
+$ConfigVersion = 'v3.7.6';
 
 // / ---Security Informations---
 // /
@@ -803,6 +803,86 @@ $DocumentEngineSleepTimer = 5;
 // /   If set to FALSE, the system version of Unoconv will be used for document conversins.
 // /   Default is TRUE.
 $UsePatchedDocumentEngine = TRUE;
+// / ------------------------------
+
+// / ------------------------------
+// / ---Resource Management Information---
+// / 
+// /  --Enable Resource Awareness--
+// /   Allows HRConvert2 to check a resource budget before starting a conversion.
+// /   Requires the coreManager.php component & a running listener.
+// /   When disabled, HRConvert2 behaves exactly as it did before this component existed.
+// /   Valid options are TRUE or FALSE.
+// /   Default is FALSE.
+$EnableResourceAwareness = TRUE;
+// /  --Require Resource Awareness--
+// /   Refuses to run at all when resource awareness is unavailable.
+// /   Set this on a server that must never accept work it cannot account for.
+// /   Leave this FALSE unless a missing component should take the whole site down.
+// /   Valid options are TRUE or FALSE.
+// /   Default is FALSE.
+$RequireResourceAwareness = FALSE;
+// /  --Core Manager Subprocess Poll Interval--
+// /   How long the Core Manager waits for work before checking on its subordinates.
+// /   A shorter interval detects a dead manager faster & wakes the process more often.
+// /   Valid options are integers 1 and larger.
+// /   Default is 5.
+$CoreManagerSubprocessPollInterval = 5;
+// /  --Resource Poll Interval--
+// /   How often the Resource Manager re-reads system load & memory to adjust the budget.
+// /   Valid options are integers 1 and larger.
+// /   Default is 10.
+$ResourcePollInterval = 10;
+// /  --Worker Reap Interval--
+// /   How often the Worker Manager scans for workers that have outlived their runtime.
+// /   Valid options are integers 1 and larger.
+// /   Default is 15.
+$WorkerReapInterval = 15;
+// /  --Worker Stale Grace Period--
+// /   Seconds added to every expected runtime before a worker is considered stale.
+// /   A conversion that is merely slow should not be reaped, so keep this generous.
+// /   Valid options are integers 0 and larger.
+// /   Default is 60.
+$WorkerStaleGracePeriod = 60;
+// /  --Total Resource Budget--
+// /   The total budget available for concurrent conversions, in arbitrary cost units.
+// /   Set to 0 to derive the budget from the processor count at one hundred units per core.
+// /   Valid options are integers 0 and larger.
+// /   Default is 0.
+$TotalResourceBudget = 0;
+// /  --Reserve Resource Percentage--
+// /   The share of the total budget never handed to a conversion.
+// /   This is what keeps the server answering requests while it is fully loaded.
+// /   Valid options are integers 0 through 90.
+// /   Default is 20.
+$ReserveResourcePercentage = 20;
+// /  --Maximum Concurrent Workers--
+// /   A hard ceiling on tracked conversions, applied before the budget is consulted.
+// /   Set to 0 to let the budget decide alone.
+// /   Valid options are integers 0 and larger.
+// /   Default is 0.
+$MaxConcurrentWorkers = 0;
+// /  --Maximum Expected Runtime--
+// /   The longest runtime a worker may declare or extend to, in seconds.
+// /   A request above this is refused rather than truncated.
+// /   Valid options are integers greater than 0.
+// /   Default is 900.
+$MaxExpectedRuntime = 900;
+// /  --Maximum Runtime Extensions--
+// /   How many times one worker may ask for more time before it is refused.
+// /   Valid options are integers 0 and larger.
+// /   Default is 3.
+$MaxRuntimeExtensions = 3;
+// /  --Default Conversion Cost--
+// /   The budget cost charged for a conversion that does not declare its own.
+// /   Valid options are integers greater than 0.
+// /   Default is 10.
+$DefaultConversionCost = 10;
+// /  --Default Expected Runtime--
+// /   The runtime declared for a conversion that does not declare its own, in seconds.
+// /   Valid options are integers greater than 0.
+// /   Default is 120.
+$DefaultExpectedRuntime = 120;
 // / ------------------------------
 
 // / ------------------------------

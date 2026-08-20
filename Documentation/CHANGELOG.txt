@@ -32,6 +32,14 @@ COMMIT 8/19/2026
 v3.7.6 - Repair the memory purge & secret obfuscation routines added earlier in v3.7.5.
 
 -v3.7.6.
+-Work on coreManager, listeners, resource management.
+  -Just trying to get the listener structured, prototyped, and running.
+  -The bones are there, but the listener won't start. Detection in convertCore.php is faulty.
+  -What DOES work is fallback. If resource awareness is enabled, and the listener is broken, convertCore still converts files.
+  -Need to update ERROR_DESCRIPTIONS.
+  -Need to update -v output text.
+  -Need to update -h output text.
+  -Need to update ABOUT_COMMAND_LINE.txt doc.
 -Repair the memory purge & secret obfuscation routines added earlier in v3.7.5.
   -addSillyString no longer emits bytes outside a PHP tag.
     -The previous payload placed newlines before <?php & between ?> and <?php.

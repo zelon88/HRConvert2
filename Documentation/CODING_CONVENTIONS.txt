@@ -70,13 +70,7 @@ developed in the open, alongside the code they are designed to safeguard.
   When followed, this technique will reduce the applications exposure to PHP memory leakage.
   For more information, see `Documentation/ABOUT_DEFENSIVE_MEMORY_MANAGEMENT.md`.
 
-6. Do not redeclare lower case, narrow scope variables! Doing so creates ghost copies
-  of the variable in the PHP heap that cannot be recovered by memory protection mechanisms.
-  Instead, narrow-scope variables should be considered one-time-use only.
-  It is much safer from a memory protection perspective to have many recoverable variables
-  rather than few unrecoverable variables. 
-  PHP uses "Copy-On-Write" (COW) memory architecture for variable storage.
-  Redeclaring them creates unrecoverable, unreferencable copies of the variable.
+6. Do not redeclare lower case, narrow scope variables!
   When followed, this technique will reduce the applications exposure to PHP memory leakage.
   For more information, see `Documentation/ABOUT_DEFENSIVE_MEMORY_MANAGEMENT.md`.
 
@@ -116,38 +110,13 @@ developed in the open, alongside the code they are designed to safeguard.
 18. No cookies. No databases. No third party connections. No analytics. No exceptions.
 
 19. If the code needs all capital comments; it's too important.
+
+20. A pattern repeated more than twice belongs in a function or a template.
+
+21. Call sanitize() against any user input before using it. It accepts any variable type as input.
 -----------------------------------------------------------------------------------
 
-
 -----DETAILED CODEBASE STANDARDS & GUIDANCE-----
-
------ESCAPING & ENCODING-----
-
-Escaping belongs at the point of use, never in the core.
-
-The core guarantees CONTENT is safe. Each output context handles its own ENCODING.
-The core cannot know whether a value is about to become a URL, HTML text, a shell
-argument or a JSON value, so it must not guess.
-
-  Context                        Function                Applies to
-  URL path segment, in PHP       rawurlencode()          filenames going into a link
-  URL path segment, in JS        encodeURIComponent()    filenames built at runtime
-  Text going into HTML           htmlspecialchars()      anything echoed into markup
-  Shell argument                 escapeshellarg()        anything reaching a command
-
-These are NOT interchangeable. rawurlencode() encodes / as %2F, so it must never be
-applied to a path containing separators. htmlspecialchars() does not make a value URL
-safe. escapeshellarg() does not make a value HTML safe.
-
-A raw & in an HTML attribute is invalid & must be &amp;. Build the URL in PHP, escape it
-once with htmlspecialchars(), then echo the result.
-
-Never encode the same value twice. A filename echoed into a JS string literal is encoded
-by the JS helper at runtime & must NOT also be rawurlencode()d in PHP. Double encoding
-turns a space into %2520.
-
-sanitizeString() deliberately permits ? + and = because all three are legitimate in a
-filename. It is not a URL sanitizer & must not become one.
 
 -----FALLBACK & FAILURE-----
 
@@ -155,36 +124,30 @@ A subsystem that can fall back MUST fall back before it errors.
 
 The pattern is: try the requested thing, warn if it fails, try the default, warn again,
 and only then return failure. The numbered error fires only when the DEFAULT has also
-failed, at which point it remains fatal because nothing is left to do.
+failed, at which point the issue is deemed fatal.
 
 A user who cannot read the page cannot report the problem. Falling back to a working
-default & logging loudly is better than a blank page & a number.
-
-Never validate a value on one path & trust it on another. If $DefaultLanguage is checked
-before use in one branch, it must be checked in every branch.
+default & logging loudly is better than a blank page & a number wherever possible.
 
 Initialize a local fallback that cannot be overwritten by configuration. A lowercase
 $defaultGui alongside the global $DefaultGui gives the function something to fall back to
 when the administrator's value is invalid.
 
-Something that can be replaced by loading a second file may be checked AFTER loading.
-Something that prints output must be checked BEFORE loading. A language pack is only
-variable assignments & can be replaced. A UI file prints HTML & cannot.
-
 -----LOGGING TIERS-----
 
   logEntry()        Op-Act        Normal activity. Suppressed when $Verbose is FALSE.
   warningEntry()    WARNING!!!    Always written. Carries no error number.
-  errorEntry()      ERROR!!!      Always written. Carries a documented error number.
+  errorEntry()      ERROR!!!      Always written. Sometimes fatal. Carries a documented error number.
+
+A log is for normal operational activity. `logEntry('This will be logged.');`
 
 A warning is something the administrator should know is happening. It does not
-necessarily mean anything needs to change. It can never halt execution.
+necessarily mean anything needs to change. It can never halt execution. `warningEntry('This will be logged.');`
+
+An error is for reporting critical operational failures that alter HRConvert2 behaviour. Can sometimes be fatal, but not always. `logEntry('This will be logged.', 123, FALSE);` where `123` is the documented error number & `FALSE` is a bool representing if the error is fatal or not. If fatal is detected, errorEntry stops execution. 
 
 Anything an attacker caused that HRConvert2 handled correctly is a warning, not an error.
 A blocked SSRF attempt, a removed file reference & a refused stream are all warnings.
-
-An operator running with $Verbose disabled must still be able to tell a blocked attack
-from an ordinary conversion failure. That is what the warning tier is for.
 
 -----VERSION CHECKING-----
 
@@ -200,55 +163,6 @@ Strip a leading v before comparing. Casting 'v3' to an integer yields 0, which s
 reduces a three part comparison to a two part one.
 
 A build that reports no parseable version is REFUSED. An unknown build cannot be cleared.
-
-Two minimums may exist for one dependency when one is a feature floor & the other is a
-security floor. FFMPEG has both. Name them separately in config.php & say which is which.
-
------SECURITY BOUNDARIES-----
-
-sanitize() and sanitizeString() are an RCE boundary. Any user-controlled value the core 
-touches passes through one of them, and what survives cannot inject into a shell, into 
-HTML, or into a path. They are deliberately not URL sanitizers — + and = are legitimate 
-in a filename and are encoded at the point a filename becomes a URL, not stripped at the 
-point it enters the system.
-
-The SCAD scanner is a convenience layer, not a defence. It exists to resolve include
-statements reliably & to tell the user which references were removed. It is expected to
-be incomplete & nothing depends on it being right.
-
-file_get_contents() is only as dangerous as the sink it feeds. The read never executes
-code as RCE. Danger lives in the file path & what happens to the bytes afterwards.
-
------FUNCTION STRUCTURE-----
-
-Single exit. One return at the end of every function.
-
-UPPERCASE first letter for anything returned or global. lowercase for locals.
-
-Every local is set to NULL & unset() before the return. A variable created inside a loop
-or a branch still needs cleaning. A variable that is initialized but never used should be
-removed rather than cleaned.
-
-Initialize every variable the function uses before the first branch, including ones only
-assigned inside a conditional. An undefined variable reaching a comparison is a warning in
-PHP 8, & a warning printed into an AJAX response corrupts it.
-
-Pass a configurable value as a PARAMETER rather than reading it as a global when more than
-one caller needs a different value. verifyFFMPEGVersion() takes its minimum as an argument
-because streams & audio require different ones.
-
-Do not declare a variable global AND accept it as a parameter. The global wins & the
-parameter is silently discarded.
-
------REPETITION-----
-
-A pattern repeated more than twice belongs in a function or a template.
-
-The cost is not the typing. It is that a fix gets applied N-1 times. Every bug found in a
-repeated block in this codebase was present in some copies & absent in others.
-
-When a repeated block cannot be collapsed, verify the count mechanically after editing it.
-Count the call sites before & after. A silent miss is the failure mode.
 
 -----LANGUAGE PACKS-----
 

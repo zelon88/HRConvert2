@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILEINFORMATION ...
-// / v3.7.5.
+// / v3.7.6.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -38,7 +38,7 @@ function setTimeLimit() {
 // / A function to set the date & time for the session.
 function verifyTime() {
   // / Set variables.
-  global $TimeIsSet, $Date, $Time, $EpochTime;
+  global $TimeIsSet, $Date, $Time, $EpochTime, $EnableMemoryProtection;
   $TimeIsSet = FALSE;
   $tzAbbreviations = DateTimeZone::listAbbreviations();
   $tzList = array();
@@ -53,8 +53,7 @@ function verifyTime() {
   $Date = date("m_d_y");
   $Time = date("F j, Y, g:i a");
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $tzAbbreviations = $tzList = $zoneList = $zone = $item = NULL;
-  unset($tzAbbreviations, $tzList, $zoneList, $zone, $item);
+  purgeSensitiveMemory($EnableMemoryProtection, $tzAbbreviations, $tzList, $zoneList, $zone, $item);
   return array($TimeIsSet, $Date, $Time, $EpochTime); }
 // / -----------------------------------------------------------------------------------
 
@@ -67,6 +66,7 @@ function verifyTime() {
 // / Set $strict to TRUE to also filter out backslash characters as well. Example:  /
 function sanitizeString($Variable, $strict) {
   // / Set variables.
+  global $EnableMemoryProtection;
   // / Note that this function does not use the global $DangerousFiles. 
   // / Instead this function defines & destroys it's own array every time it is called.
   $dangerFiles = array('.js', '.php', '.html', '.css', '.phar', '..', 'index.php', 'index.html', '--');
@@ -79,8 +79,7 @@ function sanitizeString($Variable, $strict) {
   // / Trim the variable one last time to avoid any crafted leading dashes or directory separators.
   $Variable = trim(trim(trim(trim($Variable, '-'), '.'), '-'), '.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $strict = $dangerFiles = $danFile = NULL;
-  unset($strict, $dangerFiles, $danFile);
+  purgeSensitiveMemory($EnableMemoryProtection, $strict, $dangerFiles, $danFile);
   return $Variable; }
 // / -----------------------------------------------------------------------------------
 
@@ -92,6 +91,7 @@ function sanitizeString($Variable, $strict) {
 // / Set $strict to TRUE to also filter out backslash characters as well. Example:  /
 function sanitize($Variable, $strict) {
   // / Set variables.
+  global $EnableMemoryProtection;
   $VariableIsSanitized = FALSE;
   $var = '';
   $key = 0;
@@ -107,8 +107,7 @@ function sanitize($Variable, $strict) {
     // / Only set the Sanitized flag to TRUE if we have taken action on this variable.
     $VariableIsSanitized = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $strict = $key = $var = NULL;
-  unset($strict, $key, $var);
+  purgeSensitiveMemory($EnableMemoryProtection, $strict, $key, $var);
   return array($Variable, $VariableIsSanitized); }
 // / -----------------------------------------------------------------------------------
 
@@ -121,14 +120,14 @@ function sanitize($Variable, $strict) {
 // / The caller MUST check $RandomNumberCheck. A predictable identifier is worse than none.
 function generateRandomNumber() {
   // / Set variables.
+  global $EnableMemoryProtection;
   $RandomNumber = FALSE;
   $RandomNumberCheck = TRUE;
   // / random_int() throws rather than returning a poor result when entropy is unavailable.
   try { $RandomNumber = random_int(100000000000000000, 999999999999999999); }
   catch (Throwable $error) { $RandomNumberCheck = FALSE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $error = NULL;
-  unset($error);
+  purgeSensitiveMemory($EnableMemoryProtection, $error);
   return array($RandomNumber, $RandomNumberCheck); }
 // / -----------------------------------------------------------------------------------
 
@@ -137,6 +136,7 @@ function generateRandomNumber() {
 // / 32 bytes gives 256 bits of entropy & returns as a 64 hexadecimal character string.
 function generateInstallSecret() {
   // / Set variables.
+  global $EnableMemoryProtection;
   $InstallSecret = FALSE;
   $InstallSecretCheck = TRUE;
   // / random_bytes() throws rather than returning a poor result when entropy is unavailable.
@@ -144,8 +144,7 @@ function generateInstallSecret() {
   try { $InstallSecret = bin2hex(random_bytes(32)); }
   catch (Throwable $error) { $InstallSecretCheck = FALSE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $error = NULL;
-  unset($error);
+  purgeSensitiveMemory($EnableMemoryProtection, $error);
   return array($InstallSecret, $InstallSecretCheck); }
 // / -----------------------------------------------------------------------------------
 
@@ -162,7 +161,7 @@ function generateInstallSecret() {
 // / Casting 'v3' to an integer yields 0, which would silently reduce this to a minor & patch check.
 function verifyConfigVersion($RequiredConfigVersion) {
   // / Set variables.
-  global $ConfigVersion;
+  global $ConfigVersion, $EnableMemoryProtection;
   $ConfigIsValid = TRUE;
   $MissingConfigVars = array();
   $requiredConfigVars = $configVersionParts = $requiredVersionParts = array();
@@ -227,8 +226,7 @@ function verifyConfigVersion($RequiredConfigVersion) {
   // / $ConfigIsValid should already be false by now, but just in case.
   if (!$configVersionIsCurrent && !$ConfigIsValid) $ConfigIsValid = FALSE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $requiredConfigVars = $requiredConfigVar = $configVersionParts = $requiredVersionParts = $configVersionIsCurrent = $cleanConfigVersion = $cleanRequiredVersion = $RequiredConfigVersion = NULL;
-  unset($requiredConfigVars, $requiredConfigVar, $configVersionParts, $requiredVersionParts, $configVersionIsCurrent, $cleanConfigVersion, $cleanRequiredVersion, $RequiredConfigVersion);
+  purgeSensitiveMemory($EnableMemoryProtection, $requiredConfigVars, $requiredConfigVar, $configVersionParts, $requiredVersionParts, $configVersionIsCurrent, $cleanConfigVersion, $cleanRequiredVersion, $RequiredConfigVersion);
   return array($ConfigIsValid, $MissingConfigVars, $detectedConfigVersion); }
 // / -----------------------------------------------------------------------------------
 
@@ -240,6 +238,7 @@ function verifyConfigVersion($RequiredConfigVersion) {
 // / visible & correctable, rather than running unprotected on hardware, which is neither.
 function verifyContainerEnvironment() {
   // / Set variables.
+  global $EnableMemoryProtection;
   $RunningInContainer = FALSE;
   $dockerEnvExists = $cgroupIndicatesContainer = FALSE;
   $cgroupContents = '';
@@ -252,64 +251,131 @@ function verifyContainerEnvironment() {
   // / Both signals must agree. Either one alone is not enough to relax a security control.
   if ($dockerEnvExists && $cgroupIndicatesContainer) $RunningInContainer = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $dockerEnvExists = $cgroupIndicatesContainer = $cgroupContents = NULL;
-  unset($dockerEnvExists, $cgroupIndicatesContainer, $cgroupContents);
+  purgeSensitiveMemory($EnableMemoryProtection, $dockerEnvExists, $cgroupIndicatesContainer, $cgroupContents);
   return $RunningInContainer; }
 // / -----------------------------------------------------------------------------------
 
-// / ----------------------------------------------------------------------------------------
-// / A function to determine what function called the function that called this function.
-// / Only a human brain could have written that last comment. Just sit with it. I promise it makses sense.\
-// / This function accepts no input arguments & outputs a string containing only the name of the function prior to this one.
-// / If the call prior to this one came from main, or from no function at all, $DirectlyCalledFunctionName will be 'main'.
-function getChildFunction() {
-  $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
-  $DirectCallingFunctionName = isset($trace[1]['function']) ? $trace[1]['function'] : 'main';
-  return($DirectCallingFunctionName); }
-// / ----------------------------------------------------------------------------------------
-
-// / ----------------------------------------------------------------------------------------
-// / This function destroys & clears variables from the system heap to reduce risk of memory leakage.
-// / For string variables, it performs a destructive overwrite of the raw character
-// / buffer before breaking references to prevent data recovery from process core dumps.
-// / Accepts an array of variable references to the target variables.
-// / Variables must be passed directly (by reference ONLY) so the function can mutate the original memory registers.
-// / Note that this function does not call cleanup on it's own functions. That would generate infinite loops.
-// / Instead this function is deliberately careful about what memory it consumes.
-// / Note that this function ONLY LOGS a warning or error depending on $ErrorOrWarning.
-// / We deliberately DO NOT use $EnableMemoryCleanup directly, as it may or may be be set when this function is called. 
-// / When calling this function, you are expected to use purgeSensitiveMemory($ArrayToClean, $EnableMemoryProtection).
-// / If the $EnableMemoryProtection is not available, use TRUE to throw a warning or FALSE to throw a fatal error on failure.
-// / If you receive warnings or ERROR!!! 40000, check the log for the $FunctionName of the responsible function.
-// / Note that this does not "free" destroyed memory. The memory values are overwrittein in place with 0.
-// / Destroyed memory allocations still consume the same amount of memory. The memory value is just replaced with 0.
-function purgeSensitiveMemory($ErrorOrWarning, &...$variables) {
+// / -----------------------------------------------------------------------------------
+// / A function to give a variable a second value without leaving the first one behind.
+// / Call this as redeclare($targetVariable, $newValue) & do not assign the result back.
+// / The target is taken by reference & is modified in place.
+// / A form such as $target = redeclare($target, $new) would overwrite the target with a boolean.
+// / The target is shredded before the new value is assigned, never after & never instead.
+// / Returns TRUE when the old value was destroyed before the new one landed, per convention 8.
+// / A FALSE return means the new value is in place but the old one may not be gone.
+// / This is a deliberate exception to convention 6 & is not a licence to ignore it.
+// / Convention 6 buys the shredding & the ability to read one name as holding one value.
+// / This function preserves the first of those & gives up the second.
+// / A loop body is the honest case for it, because a distinct name per value is impossible there.
+// / Straight line code is not, because a second variable name costs nothing & documents itself.
+// / An interned string cannot be shredded, so a value that came from a literal survives regardless.
+// / A value built at runtime is not interned & shreds correctly.
+// / A copy held by another variable cannot be reached, because PHP separates the buffer on write.
+// / Each call costs one debug_backtrace() through the purge routine.
+function redeclare(&$targetVariable, $newValue) {
   // / Set variables.
   global $EnableMemoryProtection;
-  $FunctionName = getChildFunction();
-  $variableIsDestroyed = FALSE;
-  $CannotDestroyVariables = FALSE;
-  $mpStatus = 'undefined';
-  // / Detect if $EnableMemoryProtection is enabled, disabled, or undefined.
-  if (!isset($EnableMemoryProtection)) $mpStatus = 'Disabled';
-  if (isset($EnableMemoryProtection)) {
-    if (!$EnableMemoryProtection) $mpStatus = 'Disabled';
-    if ($EnableMemoryProtection) $mpStatus = 'Enabled'; }
-  // / Loop through all variables of the input array of variables to be destroyed.
+  $VariableIsRedeclared = FALSE;
+  $oldValueWasPurged = FALSE;
+  // / Shred whatever the target holds before anything is allowed to overwrite it.
+  // / The target is a reference to the caller's register, so this writes into the real buffer.
+  $oldValueWasPurged = purgeSensitiveMemory($EnableMemoryProtection, $targetVariable);
+  // / Assign the new value only once the old one has been dealt with.
+  $targetVariable = $newValue;
+  if ($oldValueWasPurged) $VariableIsRedeclared = TRUE;
+  // / $newValue is a copy & the caller still holds the original, so shredding it achieves nothing.
+  // / $targetVariable is not purged, because it is the value this function was asked to set.
+  $oldValueWasPurged = NULL;
+  unset($oldValueWasPurged);
+  return $VariableIsRedeclared; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to determine what function called the function that called this function.
+// / This function uses naieve memory cleanup routine deliberately out of neccesity.
+// / Only a human brain could have written that last comment. Just sit with it. I promise it makes sense.
+// / Accepts no arguments & returns the name of the first caller that is not a memory routine.
+// / Frames belonging to the memory routines are skipped deliberately.
+// / A caller that reached the purge through redeclare() still owns the data & is still the culprit.
+// / Naming the wrapper would recreate the mystery this function exists to prevent.
+// / Returns 'main' when the call came from main or from no function at all.
+function getChildFunction() {
+  // / Set variables.
+  // / A depth of eight is generous, because the memory routines never stack three frames deep.
+  $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 8);
+  $memoryFunctions = array('getChildFunction', 'purgeSensitiveMemory', 'redeclare');
+  $DirectCallingFunctionName = 'main';
+  $traceKey = 1;
+  // / Walk up the stack until a frame outside the memory routines is found.
+  while (isset($trace[$traceKey]['function'])) {
+    if (!in_array($trace[$traceKey]['function'], $memoryFunctions, TRUE)) {
+      $DirectCallingFunctionName = $trace[$traceKey]['function'];
+      break; }
+    $traceKey++; }
+  // / This cleanup is manual, because purgeSensitiveMemory() calls this function.
+  $trace = $memoryFunctions = $traceKey = NULL;
+  unset($trace, $memoryFunctions, $traceKey);
+  return $DirectCallingFunctionName; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to destroy variables from the heap to reduce the risk of memory leakage.
+// / String buffers are overwritten with null bytes before the reference is broken.
+// / Call this as purgeSensitiveMemory($FailureIsFatal, $variableOne, $variableTwo).
+// / Every target must be its own argument, because the argument list is taken by reference.
+// / Collecting targets into an array copies their values & shreds only the copies.
+// / The first argument decides the cost of a failure & nothing else decides it.
+// / TRUE prints error 40000 to the page, closes the connection & halts.
+// / FALSE records a warning & continues.
+// / Late running callers pass $EnableMemoryProtection & early running callers pass a literal.
+// / The reporting channel is decided by whether $LogFile is usable, not by the first argument.
+// / config.php loads before verifyLogs() runs, so an available config does not mean available logging.
+// / A fatal failure always reaches the page, whether or not it reached the logfile.
+// / A non-fatal failure never reaches the page, because the user is still going to be served.
+// / Returns TRUE when every target was destroyed, per convention 8.
+// / This function does not purge its own variables, because that would loop forever.
+// / This function does not free memory & a destroyed value still occupies its allocation.
+// / PHP separates a shared string on first write, so a second variable holding the same value keeps it.
+// / resolveSecretFile() relies on that behaviour to shred a key it is returning.
+// / Check the log for the named function whenever error 40000 or a purge warning appears.
+function purgeSensitiveMemory($FailureIsFatal, &...$variables) {
+  // / Set variables.
+  global $EnableMemoryProtection, $LogFile;
+  // / These two survive recursion so an inner call still names the function that owns the data.
+  // / Neither ever holds sensitive data & both are released when the outermost call unwinds.
+  static $callerName = '';
+  static $recursionDepth = 0;
+  $MemoryIsPurged = TRUE;
+  $variableIsDestroyed = $loggingIsReady = FALSE;
+  $mpStatus = 'Disabled';
+  $mpNote = $failureText = '';
+  $length = $i = 0;
+  // / Resolve the responsible function once, on the outermost call only.
+  if ($recursionDepth === 0) $callerName = getChildFunction();
+  $recursionDepth++;
+  // / Report the behaviour this call was given, not the global it may not agree with.
+  if ($FailureIsFatal) $mpStatus = 'Enabled';
+  // / Say so when the supplied behaviour disagrees with config.php, so the log names the decider.
+  if (isset($EnableMemoryProtection) && (bool)$EnableMemoryProtection !== (bool)$FailureIsFatal) $mpNote = ' This behaviour was supplied by the caller & does not match config.php.';
+  // / Decide which reporting channel exists yet, because installation code runs before verifyLogs().
+  if (isset($LogFile) && is_string($LogFile) && $LogFile !== '') $loggingIsReady = TRUE;
+  // / Loop through every variable that was submitted for destruction.
   foreach ($variables as &$variable) {
-    // / Reset the $variableIsDestroyed flag at the start of every iteration of the loop.
+    // / Reset the flag at the start of every iteration of the loop.
     $variableIsDestroyed = FALSE;
-    // Shred multi-dimensional arrays recursively using reference keys.
-    if (is_array($variable) && !empty($variable)) { 
-      // / If the target variable is an array, submit the array contents to this function again.
-      foreach ($variable as $key => &$subValue) purgeSensitiveMemory($ErrorOrWarning, $subValue);
+    // / A variable that already holds nothing has nothing to shred & is not a failure.
+    if (is_null($variable)) $variableIsDestroyed = TRUE;
+    // / Shred multi-dimensional arrays recursively using reference keys.
+    if (is_array($variable) && !empty($variable)) {
+      // / A failure at any depth invalidates the whole operation, so the result is carried up.
+      foreach ($variable as $key => &$subValue) { if (!purgeSensitiveMemory($FailureIsFatal, $subValue)) $MemoryIsPurged = FALSE; }
       // / Clear the loop reference safely.
-      unset($subValue); 
-      $variable = NULL; 
+      unset($subValue);
+      $variable = NULL;
       $variableIsDestroyed = TRUE; }
     // / Explicitly handle empty arrays.
     if (is_array($variable) && empty($variable)) {
-      $variable = NULL; 
+      $variable = NULL;
       $variableIsDestroyed = TRUE; }
     // / Standard boolean resolution tracking.
     if (is_bool($variable)) {
@@ -321,100 +387,123 @@ function purgeSensitiveMemory($ErrorOrWarning, &...$variables) {
     if (is_string($variable)) {
       $length = strlen($variable);
       for ($i = 0; $i < $length; $i++) $variable[$i] = "\0";
-      $variable = NULL; 
+      $variable = NULL;
       $variableIsDestroyed = TRUE; }
-    // / Halt or alert if a complex unhandled object references leaks past the cleanup conditions.
-    if (!$variableIsDestroyed) { 
-      if (!$ErrorOrWarning) warningEntry('Cannot purge sensitive memory for the '.$FunctionName.' function! Memory protection is '.$mpStatus.' in config.php. Continuing...');
-      if ($ErrorOrWarning) {
-        warningEntry('Cannot purge sensitive memory for the '.$FunctionName.' function! Memory protection is '.$mpStatus.' in config.php. Execution cannot continue!', 40000, TRUE);
-        $CannotDestroyVariables = TRUE; } } }
-  // / Note that this function does not call cleanup on it's own functions. That would generate infinite loops.
-  // / Instead this function is deliberately careful about what memory it consumes. 
-  unset($variable, $mpStatus, $variableIsDestroyed, $i, $length, $subValue, $key);
-  return($CannotDestroyVariables); }
-// / ----------------------------------------------------------------------------------------
+    // / An object or a resource has internal buffers this function cannot write into.
+    // / Drop the reference & warn, rather than erroring on a recoverable case.
+    // / This warning is never printed, because the fallback below it is expected to succeed.
+    if (!$variableIsDestroyed) {
+      if ($loggingIsReady) warningEntry('Could not shred a variable of type '.gettype($variable).' for the '.$callerName.' function. Dropping the reference instead...');
+      else error_log('WARNING!!! HRConvert2: Could not shred a variable of type '.gettype($variable).' for the '.$callerName.' function. Dropping the reference instead...');
+      $variable = NULL;
+      if (is_null($variable)) $variableIsDestroyed = TRUE; }
+    // / Halt or alert only once the fallback above has also failed to release the variable.
+    // / This branch maintains the integrity of the fallback contract.
+    // / It should never be reachable, because assigning NULL cannot fail.
+    if (!$variableIsDestroyed) {
+      $MemoryIsPurged = FALSE;
+      $failureText = 'Cannot purge sensitive memory for the '.$callerName.' function! Memory protection is '.$mpStatus.'.'.$mpNote;
+      // / Record a non-fatal failure & continue without printing anything to the page.
+      // / The error log is the only channel available before verifyLogs() has run.
+      if (!$FailureIsFatal) {
+        if ($loggingIsReady) warningEntry($failureText.' Continuing...');
+        else error_log('WARNING!!! HRConvert2: '.$failureText.' Continuing...'); }
+      // / Log a fatal failure where it can be logged, then always report it to the page.
+      // / errorEntry is given a FALSE die flag so control returns here for the print & the close.
+      // / Letting errorEntry die would drop the connection & would skip the print entirely.
+      if ($FailureIsFatal) {
+        if ($loggingIsReady) errorEntry($failureText.' Execution cannot continue!', 40000, FALSE);
+        print('ERROR!!! HRConvert2-40000: '.$failureText.' Execution cannot continue!'.PHP_EOL);
+        if (function_exists('closeHRC2Connection')) closeHRC2Connection();
+        die(); } } }
+  // / This function does not purge its own variables, because that would loop forever.
+  // / It is deliberately careful about what memory it consumes instead.
+  unset($variable, $subValue, $key, $mpStatus, $mpNote, $failureText, $variableIsDestroyed, $loggingIsReady, $i, $length);
+  // / Release the recursion state once the outermost call has finished with it.
+  $recursionDepth--;
+  if ($recursionDepth < 1) {
+    $recursionDepth = 0;
+    $callerName = ''; }
+  return $MemoryIsPurged; }
+// / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to obfuscate the secret file contents.
-// / This function adds a decoy secret to the secret file that CLI users scanning with grep + regex would be inclined to use instead of the actual secret.
-// / This adds complexity & cognitive load for potential adversaries, but it is not impossible to bypass with root or www-data CLI access.
-// / The complexity added by this function guards against sophmoric or drive-by adversaries. 
-// / A determined attacker will find this function and use it to adjust their exploit chain accordingly.
-// / It is the time we are adding to the development of that exploit chain that we are building here.
-// / Hopefully once potential adversaties realize how difficult every exploit stage needs to be, they will give up and look for other targets.
-// / The idea is to raise the cost of effort of an attack to the point that it exceeds an adversaries willingness to pay for it in effort.
-// / Adversaries who are here adjusting their exploit chains; consider dropping a star on Github and forking the repository. 
-// / Please bring it to your next confrence and show your friends! Your security advisories make HRConvert2 a better product for all.
-// / A function to obfuscate the secret file contents.
+// / Decoy secrets give a grep & regex scan seven plausible keys instead of one.
+// / This raises the cost of an attack rather than preventing one.
+// / A root or www-data command line user can still read the real key from this function.
+// / The time an adversary spends adjusting an exploit chain is the product being built here.
+// / Adversaries reading this are invited to star the repository & bring it to their next conference.
 function addSillyString($Secret) {
   // / Set variables.
   global $Lol, $EnableMemoryProtection;
-  // / Craft variables so we can make the newline count on either side of each $Secret (decoy & real) match.
+  $FinalOutput = '';
+  // / Match the newline count on either side of every secret, decoy & real alike.
   $lolol2 = $Lol.$Lol.$Lol.$Lol;
-  // / 7 is the optimal number for the decoy loop.
+  // / Seven is the optimal number for the decoy loop.
   $numberOfDecoys = 7;
-  // / Select a random index from the 
+  // / Select the iteration of the decoy loop that will carry the real secret.
   $randomNumber = random_int(1, $numberOfDecoys);
-  // / Initialize an array to buffer strings before a single compilation step.
-  $parts = [];
-  $parts[] = $Lol.'<?php /* ';
-  // / Loop to create the desired number of decoy secrets. 
+  $randomNumber2 = 0;
+  // / Buffer strings into an array before a single compilation step.
+  $parts = array();
+  // / Open the PHP region & the comment fence, neither of which is reopened from outside a tag.
+  $parts[] = '<?php'.$Lol.'/* ';
+  // / Loop to create the desired number of decoy secrets.
   while ($numberOfDecoys > 0) {
-    // / Set a random seed for the decoy secret generated in this iteration of the decoy loop.
+    // / Set a random seed for the decoy secret generated in this iteration.
     $randomNumber2 = random_int(100000, 999999);
-    // / Buffer segments into independent array elements instead of continuously concatenating.
-    if ($numberOfDecoys !== $randomNumber) $parts[] = $lolol2.'$SecretKey = \''.hash('sha256',$randomNumber.$randomNumber2.$randomNumber).'\';'.$lolol2;
-    if ($numberOfDecoys === $randomNumber) $parts[] = ' */ ?>'.$lolol2.'<?php '.$lolol2.'$SecretKey = \''.$Secret.'\';'.$lolol2.'?>'.$lolol2.'<?php /* ';
-    $numberOfDecoys--; } 
-  $parts[] = $Lol.' */ ?>'.$Lol;
+    // / Buffer each segment into its own array element instead of concatenating continuously.
+    if ($numberOfDecoys !== $randomNumber) $parts[] = $lolol2.'$SecretKey = \''.hash('sha256', $randomNumber.$randomNumber2.$randomNumber).'\';'.$lolol2;
+    // / Close the comment fence for the real secret & reopen it immediately afterwards.
+    if ($numberOfDecoys === $randomNumber) $parts[] = ' */'.$lolol2.'$SecretKey = \''.$Secret.'\';'.$lolol2.'/* ';
+    $numberOfDecoys--; }
+  // / Close the trailing comment fence, deliberately without a closing PHP tag.
+  $parts[] = $Lol.' */'.$Lol;
   // / Compile the final output string.
-  $finalOutput = implode('', $parts);
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $cleanupArr = array($Secret, $numberOfDecoys, $randomNumber, $randomNumber2, $lolol2, $parts);
-  purgeSensitiveMemory($EnableMemoryProtection, $cleanupArr);
-  return ($finalOutput); }
+  $FinalOutput = implode('', $parts);
+  // / Manually clean up sensitive memory. Every target is passed directly by reference.
+  // / $FinalOutput is not purged, because it is the return value.
+  if (!purgeSensitiveMemory($EnableMemoryProtection, $Secret, $numberOfDecoys, $randomNumber, $randomNumber2, $lolol2, $parts)) {
+    // / The failure is already logged under this function's name & is not logged again here.
+    // / An unpurged buffer does not make the payload wrong, so the payload is still returned.
+    $FinalOutput = $FinalOutput; }
+  return $FinalOutput; }
 // / -----------------------------------------------------------------------------------
 
+
 // / -----------------------------------------------------------------------------------
-// / A function to load required HRConvert2 files.
-// / This function verifies the installation environment.
-// / Three separate things are checked here & all three must pass.
-// / The core file version must match the version recorded in versionInfo.php.
-// / The config file must carry every setting this core reads.
-// / The per install secret must either load successfully or be created successfully.
-// / This function runs before verifyLogs(), so every failure here dies rather than logging.
 // / A function to load an install secret from a file, or to create one when none exists.
 // / Accepts the absolute path of the secret file.
 // / Returns a readiness boolean & the secret key, in that order.
-// / Returns FALSE & an empty string whenever the secret could not be established, & the
-// / caller must treat that as a failed installation.
-// / The file is written with ONLY the secret in it & is checked byte for byte afterwards,
-// / because appending to an existing file would produce a file that loads without error &
-// / carries a key the caller never generated. A file that fails that check is deleted.
-// / The file is chmod 0600 on every path, including when it already existed, because a
-// / secret that another account can read is not a secret.
-// / This is called for two different files. The install wide secret in the data location,
-// / & a per user secret in the home directory of an administrator running from the command
-// / line who is neither root nor the web server user. The logic is identical & the only
-// / difference is which path is passed in, so it lives here rather than twice in the caller.
+// / A failure returns FALSE & an empty string, which the caller must treat as a failed installation.
+// / The file is written with only the secret & is checked byte for byte afterwards.
+// / Appending to an existing file would produce a file that loads & carries a key nobody generated.
+// / A file that fails that check is deleted.
+// / The file is chmod 0600 on every path, because a secret another account can read is not a secret.
+// / This is called for the install wide secret & for a per user secret in a home directory.
+// / The logic is identical & only the supplied path differs, so it lives here rather than twice.
+// / $SecretKey is capitalized against convention 3 because the secret file defines it under that name.
+// / It is a function local here regardless of its case & is shredded before this function returns.
 function resolveSecretFile($secretFile) {
   // / Set variables.
-  global $Lol, $EnableMemoryProtection;
+  global $EnableMemoryProtection;
   $SecretIsReady = FALSE;
-  $ResolvedSecretKey = $secret = $secretFileContent = $secretSillyString = '';
+  $ResolvedSecretKey = $secret = $secretFileContent = '';
   $secretGenerated = FALSE;
   $bytesWritten = 0;
+  // / $SecretKey is only ever defined by the require below.
+  // / It is initialized here so a path that never reaches the require does not leave it undefined.
+  $SecretKey = '';
   // / If a secret file does not exist, create one.
   if (!file_exists($secretFile)) {
     list ($secret, $secretGenerated) = generateInstallSecret();
     if ($secretGenerated) {
-      // / Build obfuscated payload out of transient buffers.
+      // / Build the obfuscated payload out of transient buffers.
       $secretFileContent = addSillyString($secret);
-      // / Commit the structural buffer straight to disk tracks under immediate exclusive locks.
+      // / Commit the buffer to disk under an immediate exclusive lock.
       $bytesWritten = file_put_contents($secretFile, $secretFileContent, LOCK_EX);
-      // / Check that the secret key, & ONLY the secret key, was written to the file.
-      // / If we just appended the secret to an existing file this will catch it.
+      // / Check that the secret, & only the secret, was written to the file.
       if ($bytesWritten === strlen($secretFileContent)) {
         @chmod($secretFile, 0600);
         $ResolvedSecretKey = $secret;
@@ -423,15 +512,18 @@ function resolveSecretFile($secretFile) {
   // / If a secret file does exist, load it & make sure it is valid.
   if (file_exists($secretFile)) {
     @chmod($secretFile, 0600);
-    // / require rather than require_once, because this function may be called for a second
-    // / file in the same request & _once would silently skip it.
+    // / require rather than require_once, because a second file may be resolved in the same request.
     require ($secretFile);
     if (!empty($SecretKey) && strlen($SecretKey) === 64) {
       $ResolvedSecretKey = $SecretKey;
       $SecretIsReady = TRUE; } }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $cleanupArr = array($SecretKey, $secret, $secretFile, $secretFileContent, $bytesWritten, $secretGenerated, $secretSillyString);
-  purgeSensitiveMemory($EnableMemoryProtection, $cleanupArr);
+  // / Manually clean up sensitive memory. Every target is passed directly by reference.
+  // / $ResolvedSecretKey is not purged, because it is the return value.
+  // / PHP separates the shared buffer when $SecretKey is shredded, so the return survives intact.
+  if (!purgeSensitiveMemory($EnableMemoryProtection, $SecretKey, $secret, $secretFile, $secretFileContent, $bytesWritten, $secretGenerated)) {
+    // / The failure is already logged under this function's name & is not logged again here.
+    // / A secret that loaded correctly is still correct, so readiness is not withdrawn.
+    $SecretIsReady = $SecretIsReady; }
   return array($SecretIsReady, $ResolvedSecretKey); }
 // / -----------------------------------------------------------------------------------
 
@@ -479,7 +571,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
-  $HRConvertVersion = 'v3.7.5';
+  $HRConvertVersion = 'v3.7.6';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
@@ -541,8 +633,7 @@ function verifyInstallation() {
   if ($secretIsReady) $InstallationIsVerified = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $SecretKey is deliberately NOT cleared here because the rest of the core needs it.
-  $secretAuthorized = $userSecretAuthorized = $secretIsReady = $configIsValid = $missingConfigVars = $detectedConfigVersion = $secretFolder = $secretFile = NULL;
-  unset($secretAuthorized, $userSecretAuthorized, $secretIsReady, $configIsValid, $missingConfigVars, $detectedConfigVersion, $secretFolder, $secretFile);
+  purgeSensitiveMemory($EnableMemoryProtection, $secretAuthorized, $userSecretAuthorized, $secretIsReady, $configIsValid, $missingConfigVars, $detectedConfigVersion, $secretFolder, $secretFile);
   return array($InstallationIsVerified, $configFile, $Version); }
 // / -----------------------------------------------------------------------------------
 
@@ -575,7 +666,7 @@ function verifySession() {
 // / config.php. An attacker who knows the machine still cannot compute any of these values.
 function verifySesHash($Token1) {
   // / Set variables.
-  global $Date, $SecretKey, $UniqueDailyLogHash;
+  global $Date, $SecretKey, $UniqueDailyLogHash, $EnableMemoryProtection;
   $SesHashIsVerified = $inputsAreUsable = FALSE;
   $SesHash = $SesHash2 = $SesHash3 = $SesHash4 = FALSE;
   $dailyContext = '';
@@ -600,8 +691,7 @@ function verifySesHash($Token1) {
   // / Any failure at any point invalidates all four. Never hand back a partial set.
   if (!$SesHashIsVerified) $SesHash = $SesHash2 = $SesHash3 = $SesHash4 = FALSE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $dailyContext = $inputsAreUsable = NULL;
-  unset($dailyContext, $inputsAreUsable);
+  purgeSensitiveMemory($EnableMemoryProtection, $dailyContext, $inputsAreUsable);
   return array($SesHashIsVerified, $SesHash, $SesHash2, $SesHash3, $SesHash4); }
 // / -----------------------------------------------------------------------------------
 
@@ -612,7 +702,7 @@ function verifySesHash($Token1) {
 // / The rotation condition compares the file size directly against the configured maximum.
 function verifyLogs() {
   // / Set variables.
-  global $LogDir, $LogFile, $MaxLogSize, $InstLoc, $SesHash, $SesHash4, $DefaultLogDir, $DefaultLogSize, $Time, $Date, $LogInc, $LogInc2, $VirusScan, $ApplicationName, $ConvertLoc, $AppendLogHashToLogFiles, $ApacheUser, $PermissionLevels;
+  global $LogDir, $LogFile, $MaxLogSize, $InstLoc, $SesHash, $SesHash4, $DefaultLogDir, $DefaultLogSize, $Time, $Date, $LogInc, $LogInc2, $VirusScan, $ApplicationName, $ConvertLoc, $AppendLogHashToLogFiles, $ApacheUser, $PermissionLevels, $EnableMemoryProtection;
   $LogExists = $logWritten = FALSE;
   $logHashAppend = '';
   $LogInc = $LogInc2 = 0;
@@ -661,13 +751,13 @@ function verifyLogs() {
       $LogInc2++;
       $ClamLogFile = str_replace('..', '', $LogDir.'/ClamLog_'.$LogInc2.'_'.$Date.$logHashAppend.'.txt'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $logWritten = $logHashAppend = NULL;
-  unset($logWritten, $logHashAppend);
+  purgeSensitiveMemory($EnableMemoryProtection, $logWritten, $logHashAppend);
   return array($LogExists, $LogFile, $ClamLogFile); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to format a log entry & write it to the logfile.
+// / This function uses naieve memory cleanup routine deliberately out of neccesity.
 // / A "Log Entry" starts with the word "OP-Act" which is intended to represent "Operational Activity".
 // / A log entry is considered something that the indicates specific execution paths are taking place within the core.
 // / A log entry represents normal operational activity of HRConvert2.
@@ -687,7 +777,7 @@ function logEntry($entry) {
   $LogWritten = FALSE;
   // / Format the input string into a log entry & write it to the $LogFile.
   $LogWritten = file_put_contents($LogFile, 'Op-Act, '.$Time.', '.$SesHash3.': '.$entry.PHP_EOL, FILE_APPEND);
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / This cleanup is manual, because purgeSensitiveMemory() calls this function.
   $entry = NULL;
   unset($entry);
   return $LogWritten; }
@@ -695,6 +785,7 @@ function logEntry($entry) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to format a warning entry & write it to the logfile.
+// / This function uses naieve memory cleanup routine deliberately out of neccesity.
 // / A "Warning Entry" starts with the word "WARNING!!!".
 // / A warning entry is written regardless of the Enhanced Logging Verbosity setting.
 // / A warning entry is considered something that the administrator should know is happening.
@@ -713,7 +804,7 @@ function warningEntry($entry) {
   $LogWritten = FALSE;
   // / Format the input string into a log entry & write it to the $LogFile.
   $LogWritten = file_put_contents($LogFile, 'WARNING!!! '.$Time.', '.$SesHash3.': '.$entry.PHP_EOL, FILE_APPEND);
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / This cleanup is manual, because purgeSensitiveMemory() calls this function.
   $entry = NULL;
   unset($entry);
   return $LogWritten; }
@@ -721,6 +812,7 @@ function warningEntry($entry) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to format an error entry & write it to the logfile.
+// / This function uses naieve memory cleanup routine deliberately out of neccesity.
 // / A "Error Entry" starts with the word "ERROR!!!".
 // / An error entry is written regardless of the Enhanced Logging Verbosity setting.
 // / An error entry is considered something that the administrator should investigate. Maybe take action.
@@ -744,7 +836,7 @@ function errorEntry($entry, $errorNumber, $die) {
   // / Format the input string into a log entry with the error number & write it to the $LogFile.
   $LogWritten = file_put_contents($LogFile, 'ERROR!!! '.$Time.', '.$errorNumber.', '.$SesHash3.': '.$entry.PHP_EOL, FILE_APPEND);
   if ($die) die('ERROR!!! '.$Time.' '.$errorNumber.': '.$entry.PHP_EOL);
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / This cleanup is manual, because purgeSensitiveMemory() calls this function.
   $entry = $errorNumber = $die = NULL;
   unset($entry, $errorNumber, $die);
   return $LogWritten; }
@@ -770,7 +862,7 @@ function verifyEncryption() {
 // / This validation is arithmetic only. 
 function verifyTokens($Token1, $Token2) {
   // / Set variables.
-  global $SecretKey;
+  global $SecretKey, $EnableMemoryProtection;
   $TokensAreValid = $randomCheck = $secretIsUsable = $issueNewSession = FALSE;
   $expectedToken2 = '';
   // / Without the install secret nothing can be validated or signed.
@@ -795,8 +887,7 @@ function verifyTokens($Token1, $Token2) {
   // / Any failure at any point invalidates both halves. Never hand back a partial pair.
   if (!$TokensAreValid) $Token1 = $Token2 = FALSE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $expectedToken2 = $randomCheck = $secretIsUsable = $issueNewSession = NULL;
-  unset($expectedToken2, $randomCheck, $secretIsUsable, $issueNewSession);
+  purgeSensitiveMemory($EnableMemoryProtection, $expectedToken2, $randomCheck, $secretIsUsable, $issueNewSession);
   return array($TokensAreValid, $Token1, $Token2); }
 // / -----------------------------------------------------------------------------------
 
@@ -804,7 +895,7 @@ function verifyTokens($Token1, $Token2) {
 // / A function to verify that all required POST & GET inputs are properly sanitized.
 function verifyInputs() {
   // / Set variables.
-  global $ShowGUI;
+  global $ShowGUI, $EnableMemoryProtection;
   $var = FALSE;
   $InputsAreVerified = TRUE;
   $GUI = $Color = $Language = $Token1 = $Token2 = $Height = $Width = $Rotate = $Bitrate = $Method = $Download = $UserFilename = $UserExtension = $Archive = $UserScanType = $ScanAll = $UserClamScan = $UserScanCoreScan = $var = '';
@@ -858,8 +949,7 @@ function verifyInputs() {
   // / Check the list of error check results and see if any errors occured.
   foreach ($variableIsSanitized as $var) if (!$var) ($InputsAreVerified = FALSE);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $variableIsSanitized = $key = $var = NULL;
-  unset($variableIsSanitized, $key, $var);
+  purgeSensitiveMemory($EnableMemoryProtection, $variableIsSanitized, $key, $var);
   return array($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType); }
 // / -----------------------------------------------------------------------------------
 
@@ -867,7 +957,7 @@ function verifyInputs() {
 // / A function to set the styles to use for the session.
 function verifyColors($ButtonStyle) {
   // / Set variables.
-  global $Color, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $OrangeButtonCode, $PurpleButtonCode, $DarkButtonCode, $DefaultButtonCode;
+  global $Color, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $OrangeButtonCode, $PurpleButtonCode, $DarkButtonCode, $DefaultButtonCode, $EnableMemoryProtection;
   $ColorsAreSet = FALSE;
   $ColorToUse = 'blue';
   $ButtonStyle = strtolower($ButtonStyle);
@@ -894,8 +984,7 @@ function verifyColors($ButtonStyle) {
     if ($ColorToUse === 'dark') $ButtonCode = $DarkButtonCode; 
     if ($ColorToUse === 'grey') $ButtonCode = $DefaultButtonCode; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $validColors = NULL;
-  unset($validColors);
+  purgeSensitiveMemory($EnableMemoryProtection, $validColors);
   return array($ColorsAreSet, $ButtonCode); }
 // / -----------------------------------------------------------------------------------
 
@@ -903,7 +992,7 @@ function verifyColors($ButtonStyle) {
 // / A function to set the GUI to use for the session.
 function verifyGui() {
   // / Set variables.
-  global $GUI, $DefaultGui, $SupportedGuis, $AllowUserSelectableGui, $GuiFiles, $GuiDir, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $OrangeButtonCode, $PurpleButtonCode, $DarkButtonCode, $DefaultButtonCode, $Font, $GuiVersion, $RequiredGuiVersion;
+  global $GUI, $DefaultGui, $SupportedGuis, $AllowUserSelectableGui, $GuiFiles, $GuiDir, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $OrangeButtonCode, $PurpleButtonCode, $DarkButtonCode, $DefaultButtonCode, $Font, $GuiVersion, $RequiredGuiVersion, $EnableMemoryProtection;
   $reqFile = $GuiIsSet = FALSE;
   $GuiToUse = $defaultGui = 'Default';
   $GuiFiles = $guiFiles = array();
@@ -967,8 +1056,7 @@ function verifyGui() {
     $DarkButtonCode = $darkButtonCode;
     $DefaultButtonCode = $defaultButtonCode; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-$defaultGuis = $defaultGui = $candidateGuis = $candidateGui = $reqFile = $guiFiles = $StyleCoreFile = $GuiVersionFile = $greenButtonCode = $blueButtonCode = $redButtonCode = $orangeButtonCode = $purpleButtonCode = $darkButtonCode = $defaultButtonCode = NULL;
-  unset($defaultGuis, $defaultGui, $candidateGuis, $candidateGui, $reqFile, $guiFiles, $StyleCoreFile, $GuiVersionFile, $greenButtonCode, $blueButtonCode, $redButtonCode, $orangeButtonCode, $purpleButtonCode, $darkButtonCode, $defaultButtonCode);
+purgeSensitiveMemory($EnableMemoryProtection, $defaultGuis, $defaultGui, $candidateGuis, $candidateGui, $reqFile, $guiFiles, $StyleCoreFile, $GuiVersionFile, $greenButtonCode, $blueButtonCode, $redButtonCode, $orangeButtonCode, $purpleButtonCode, $darkButtonCode, $defaultButtonCode);
   return array($GuiIsSet, $GuiToUse, $GuiDir, $GuiFiles); }
 // / -----------------------------------------------------------------------------------
 
@@ -976,7 +1064,7 @@ $defaultGuis = $defaultGui = $candidateGuis = $candidateGui = $reqFile = $guiFil
 // / A function to set the language to use for the session.
 function verifyLanguage() {
   // / Set variables.
-  global $Language, $DefaultLanguage, $SupportedLanguages, $AllowUserSelectableLanguage, $LanguageFiles, $GuiDir, $LanguageDir, $LanguageStringsFile, $LanguageFlagFile;
+  global $Language, $DefaultLanguage, $SupportedLanguages, $AllowUserSelectableLanguage, $LanguageFiles, $GuiDir, $LanguageDir, $LanguageStringsFile, $LanguageFlagFile, $EnableMemoryProtection;
   $reqFile = $LanguageIsSet = FALSE;
   $LanguageToUse = $defaultLanguage = 'en';
   $LanguageFiles = $languageFiles = array();
@@ -1018,8 +1106,7 @@ function verifyLanguage() {
       foreach ($languageFiles as $reqFile) if (file_exists($reqFile)) array_push($LanguageFiles, $reqFile);
       if (count($LanguageFiles) > 0) if (count($languageFiles) === count($LanguageFiles)) $LanguageIsSet = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $defaultLanguages = $reqFile = $languageFiles = $defaultLanguage = NULL;
-  unset($defaultLanguages, $reqFile, $languageFiles, $defaultLanguage);
+  purgeSensitiveMemory($EnableMemoryProtection, $defaultLanguages, $reqFile, $languageFiles, $defaultLanguage);
   return array($LanguageIsSet, $LanguageToUse, $LanguageDir, $LanguageFiles); }
 // / -----------------------------------------------------------------------------------
 
@@ -1031,7 +1118,7 @@ function verifyLanguage() {
 // / Converting here as well produced a fifteen hour watch timeout & a ten million second connect timeout.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $ProtectedRootDirs, $ResourcesDir, $BootloadersDir, $AllowBootableIsoImage, $UserBootableIsoArray, $BootableIsoArray, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray, $EbookInputArray, $EbookOutputArray;
+  global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $ProtectedRootDirs, $ResourcesDir, $BootloadersDir, $AllowBootableIsoImage, $UserBootableIsoArray, $BootableIsoArray, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection;
   // / Application related variables.
   putenv('HOME='.$HomeLoc);
   $GlobalsAreVerified = $sanitizeGlobalCheck = $sanitizeGlobalCheckA = $sanitizeGlobalCheckB = $sanitizeGlobalCheckC = $sanitizeGlobalCheckD = $sanitizeGlobalCheckE = FALSE;
@@ -1143,8 +1230,7 @@ function verifyGlobals() {
   // / Check that all sanitization checks passed.
   if ($sanitizeGlobalCheck) $GlobalsAreVerified = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $convertDir0 = $convertTempDir0 = $subDir = $partURL = $allArrays = $webRoot = $sanitizeGlobalCheck = $sanitizeGlobalCheckA = $sanitizeGlobalCheckB = $sanitizeGlobalCheckC = $sanitizeGlobalCheckD = $sanitizeGlobalCheckE = NULL;
-  unset($convertDir0, $convertTempDir0, $subDir, $partURL, $allArrays, $webRoot, $sanitizeGlobalCheck, $sanitizeGlobalCheckA, $sanitizeGlobalCheckB, $sanitizeGlobalCheckC, $sanitizeGlobalCheckD, $sanitizeGlobalCheckE);
+  purgeSensitiveMemory($EnableMemoryProtection, $convertDir0, $convertTempDir0, $subDir, $partURL, $allArrays, $webRoot, $sanitizeGlobalCheck, $sanitizeGlobalCheckA, $sanitizeGlobalCheckB, $sanitizeGlobalCheckC, $sanitizeGlobalCheckD, $sanitizeGlobalCheckE);
   return array($GlobalsAreVerified, $CoreLoaded); }
 // / -----------------------------------------------------------------------------------
 
@@ -1164,7 +1250,7 @@ function verifyGlobals() {
 // / cannot be cleared against a minimum.
 function verifyFFMPEGVersion($MinimumVersion) {
   // / Set variables.
-  global $Verbose;
+  global $Verbose, $EnableMemoryProtection;
   $FFMPEGBinary = FALSE;
   $locatedBinary = $detectedVersion = '';
   $versionOutput = $versionMatches = $minimumParts = array();
@@ -1188,8 +1274,7 @@ function verifyFFMPEGVersion($MinimumVersion) {
         elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $FFMPEGBinary = $locatedBinary; } } }
   if ($Verbose) logEntry('FFMPEG Version Check: '.($FFMPEGBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later'.($FFMPEGBinary === FALSE ? '' : ', Using: '.$FFMPEGBinary).'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $locatedBinary = $detectedVersion = $versionOutput = $versionMatches = $minimumParts = $versionExitCode = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumVersion = NULL;
-  unset($locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
+  purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
   return $FFMPEGBinary; }
 // / -----------------------------------------------------------------------------------
 
@@ -1206,7 +1291,7 @@ function verifyFFMPEGVersion($MinimumVersion) {
 // / The core sets HOME to the configured home location during verifyGlobals().
 function verifyLibreOfficeVersion($MinimumVersion) {
   // / Set variables.
-  global $Verbose;
+  global $Verbose, $EnableMemoryProtection;
   $LibreOfficeVersionIsValid = FALSE;
   $versionOutput = $versionMatches = $minimumParts = array();
   $versionExitCode = 1;
@@ -1235,8 +1320,7 @@ function verifyLibreOfficeVersion($MinimumVersion) {
       elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $LibreOfficeVersionIsValid = TRUE; } }
   if ($Verbose) logEntry('LibreOffice Version Check: '.($LibreOfficeVersionIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $versionOutput = $versionMatches = $versionExitCode = $detectedVersion = $minimumParts = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumVersion = NULL;
-  unset($versionOutput, $versionMatches, $versionExitCode, $detectedVersion, $minimumParts, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
+  purgeSensitiveMemory($EnableMemoryProtection, $versionOutput, $versionMatches, $versionExitCode, $detectedVersion, $minimumParts, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
   return $LibreOfficeVersionIsValid; }
 // / -----------------------------------------------------------------------------------
 
@@ -1255,7 +1339,7 @@ function verifyLibreOfficeVersion($MinimumVersion) {
 // / be cleared against a minimum.
 function verifyImageVersion($MinimumVersion) {
   // / Set variables.
-  global $Verbose;
+  global $Verbose, $EnableMemoryProtection;
   $ImageBinary = FALSE;
   $locatedBinary = $detectedVersion = '';
   $versionOutput = $versionMatches = $minimumParts = array();
@@ -1278,8 +1362,7 @@ function verifyImageVersion($MinimumVersion) {
         elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $ImageBinary = $locatedBinary; } } }
   if ($Verbose) logEntry('ImageMagick Version Check: '.($ImageBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later'.($ImageBinary === FALSE ? '' : ', Using: '.$ImageBinary).'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $locatedBinary = $detectedVersion = $versionOutput = $versionMatches = $minimumParts = $versionExitCode = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumVersion = NULL;
-  unset($locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
+  purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
   return $ImageBinary; }
 // / -----------------------------------------------------------------------------------
 
@@ -1304,7 +1387,7 @@ function verifyImageVersion($MinimumVersion) {
 // / checked & its use is what makes a missing MeshLab binary acceptable.
 function verifyModelVersions($MinimumAssimpVersion, $MinimumMeshlabVersion) {
   // / Set variables.
-  global $Verbose, $UsePyMeshLab;
+  global $Verbose, $UsePyMeshLab, $EnableMemoryProtection;
   $ModelsAreValid = FALSE;
   $AssimpBinary = $MeshlabBinary = FALSE;
   $locatedBinary = $detectedAssimp = $detectedMeshlab = '';
@@ -1350,8 +1433,7 @@ function verifyModelVersions($MinimumAssimpVersion, $MinimumMeshlabVersion) {
     logEntry('Assimp Version Check: '.($AssimpBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedAssimp === '' ? 'NONE' : $detectedAssimp).', Required: '.$MinimumAssimpVersion.' or later'.($AssimpBinary === FALSE ? '' : ', Using: '.$AssimpBinary).'.');
     logEntry('MeshLab Version Check: '.($MeshlabBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedMeshlab === '' ? 'NONE' : $detectedMeshlab).', Required: '.$MinimumMeshlabVersion.' or later'.($MeshlabBinary === FALSE ? '' : ', Using: '.$MeshlabBinary).($UsePyMeshLab ? ', PyMeshLab is in use & the binary is not required.' : '.')); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $locatedBinary = $detectedAssimp = $detectedMeshlab = $versionOutput = $versionMatches = $minimumParts = $versionExitCode = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumAssimpVersion = $MinimumMeshlabVersion = NULL;
-  unset($locatedBinary, $detectedAssimp, $detectedMeshlab, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumAssimpVersion, $MinimumMeshlabVersion);
+  purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $detectedAssimp, $detectedMeshlab, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumAssimpVersion, $MinimumMeshlabVersion);
   return array($ModelsAreValid, $AssimpBinary, $MeshlabBinary); }
 // / -----------------------------------------------------------------------------------
 
@@ -1370,7 +1452,7 @@ function verifyModelVersions($MinimumAssimpVersion, $MinimumMeshlabVersion) {
 // / be cleared against a minimum.
 function verifyDrawingVersion($MinimumVersion) {
   // / Set variables.
-  global $Verbose;
+  global $Verbose, $EnableMemoryProtection;
   $DrawingBinary = FALSE;
   $locatedBinary = $detectedVersion = '';
   $versionOutput = $versionMatches = $minimumParts = array();
@@ -1393,8 +1475,7 @@ function verifyDrawingVersion($MinimumVersion) {
         elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $DrawingBinary = $locatedBinary; } } }
   if ($Verbose) logEntry('Dia Version Check: '.($DrawingBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later'.($DrawingBinary === FALSE ? '' : ', Using: '.$DrawingBinary).'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $locatedBinary = $detectedVersion = $versionOutput = $versionMatches = $minimumParts = $versionExitCode = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumVersion = NULL;
-  unset($locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
+  purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
   return $DrawingBinary; }
 // / -----------------------------------------------------------------------------------
 
@@ -1415,7 +1496,7 @@ function verifyDrawingVersion($MinimumVersion) {
 // / Neither exit code is consulted, because both print a usable banner while exiting non zero.
 function verifyOCRVersions($MinimumTesseractVersion, $MinimumPdftotextVersion) {
   // / Set variables.
-  global $Verbose;
+  global $Verbose, $EnableMemoryProtection;
   $OCRToolsAreValid = FALSE;
   $TesseractBinary = $PdftotextBinary = FALSE;
   $locatedBinary = $detectedTesseract = $detectedPdftotext = '';
@@ -1463,8 +1544,7 @@ function verifyOCRVersions($MinimumTesseractVersion, $MinimumPdftotextVersion) {
     logEntry('Tesseract Version Check: '.($TesseractBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedTesseract === '' ? 'NONE' : $detectedTesseract).', Required: '.$MinimumTesseractVersion.' or later'.($TesseractBinary === FALSE ? '' : ', Using: '.$TesseractBinary).'.');
     logEntry('Pdftotext Version Check: '.($PdftotextBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedPdftotext === '' ? 'NONE' : $detectedPdftotext).', Required: '.$MinimumPdftotextVersion.' or later'.($PdftotextBinary === FALSE ? '' : ', Using: '.$PdftotextBinary).'.'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $locatedBinary = $detectedTesseract = $detectedPdftotext = $versionOutput = $versionMatches = $minimumParts = $versionExitCode = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumTesseractVersion = $MinimumPdftotextVersion = NULL;
-  unset($locatedBinary, $detectedTesseract, $detectedPdftotext, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumTesseractVersion, $MinimumPdftotextVersion);
+  purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $detectedTesseract, $detectedPdftotext, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumTesseractVersion, $MinimumPdftotextVersion);
   return array($OCRToolsAreValid, $TesseractBinary, $PdftotextBinary); }
 // / -----------------------------------------------------------------------------------
 
@@ -1482,7 +1562,7 @@ function verifyOCRVersions($MinimumTesseractVersion, $MinimumPdftotextVersion) {
 // / be cleared against a minimum.
 function verifySCADVersion($MinimumVersion) {
   // / Set variables.
-  global $Verbose;
+  global $Verbose, $EnableMemoryProtection;
   $SCADBinary = FALSE;
   $locatedBinary = $detectedVersion = '';
   $versionOutput = $versionMatches = $minimumParts = array();
@@ -1504,8 +1584,7 @@ function verifySCADVersion($MinimumVersion) {
         elseif ($detectedYear === $minimumYear && $detectedMonth >= $minimumMonth) $SCADBinary = $locatedBinary; } } }
   if ($Verbose) logEntry('OpenSCAD Version Check: '.($SCADBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later'.($SCADBinary === FALSE ? '' : ', Using: '.$SCADBinary).'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $locatedBinary = $detectedVersion = $versionOutput = $versionMatches = $minimumParts = $versionExitCode = $detectedYear = $detectedMonth = $minimumYear = $minimumMonth = $MinimumVersion = NULL;
-  unset($locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedYear, $detectedMonth, $minimumYear, $minimumMonth, $MinimumVersion);
+  purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedYear, $detectedMonth, $minimumYear, $minimumMonth, $MinimumVersion);
   return $SCADBinary; }
 // / -----------------------------------------------------------------------------------
 
@@ -1526,7 +1605,7 @@ function verifySCADVersion($MinimumVersion) {
 // / be cleared against a minimum.
 function verifySVGVersion($MinimumVersion) {
   // / Set variables.
-  global $Verbose;
+  global $Verbose, $EnableMemoryProtection;
   $SVGBinary = FALSE;
   $locatedBinary = $detectedVersion = '';
   $versionOutput = $versionMatches = $minimumParts = array();
@@ -1550,8 +1629,7 @@ function verifySVGVersion($MinimumVersion) {
         elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $SVGBinary = $locatedBinary; } } }
   if ($Verbose) logEntry('Inkscape Version Check: '.($SVGBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later'.($SVGBinary === FALSE ? '' : ', Using: '.$SVGBinary).'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $locatedBinary = $detectedVersion = $versionOutput = $versionMatches = $minimumParts = $versionExitCode = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumVersion = NULL;
-  unset($locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
+  purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
   return $SVGBinary; }
 // / -----------------------------------------------------------------------------------
 
@@ -1571,7 +1649,7 @@ function verifySVGVersion($MinimumVersion) {
 // / locations on a source installation. locateDependency() handles that.
 function verifyEbookVersion($MinimumVersion) {
   // / Set variables.
-  global $Verbose;
+  global $Verbose, $EnableMemoryProtection;
   $EbookBinary = FALSE;
   $locatedBinary = $detectedVersion = '';
   $versionOutput = $versionMatches = $minimumParts = array();
@@ -1595,8 +1673,7 @@ function verifyEbookVersion($MinimumVersion) {
         elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $EbookBinary = $locatedBinary; } } }
   if ($Verbose) logEntry('Calibre Version Check: '.($EbookBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later'.($EbookBinary === FALSE ? '' : ', Using: '.$EbookBinary).'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $locatedBinary = $detectedVersion = $versionOutput = $versionMatches = $minimumParts = $versionExitCode = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumVersion = NULL;
-  unset($locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
+  purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
   return $EbookBinary; }
 // / -----------------------------------------------------------------------------------
 
@@ -1615,7 +1692,7 @@ function verifyEbookVersion($MinimumVersion) {
 // / so, which is why the exit code is not consulted for either of them.
 function verifyArchiveVersions($Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion) {
   // / Set variables.
-  global $Verbose;
+  global $Verbose, $EnableMemoryProtection;
   $ArchiveToolsAreValid = FALSE;
   $SevenZipBinary = $RarBinary = $ZipBinary = $TarBinary = $MkisofsBinary = FALSE;
   $locatedBinary = $detected7z = $detectedRar = $detectedZip = $detectedTar = $detectedMkisofs = '';
@@ -1707,8 +1784,7 @@ function verifyArchiveVersions($Minimum7zVersion, $MinimumRarVersion, $MinimumZi
     logEntry('Tar Check: '.($TarBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedTar === '' ? 'NONE' : $detectedTar).', Required: '.$MinimumTarVersion.' or later'.($TarBinary === FALSE ? '' : ', Using: '.$TarBinary).'.');
     logEntry('Mkisofs Check: '.($MkisofsBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedMkisofs === '' ? 'NONE' : $detectedMkisofs).', Required: '.$MinimumMkisofsVersion.' or later'.($MkisofsBinary === FALSE ? '' : ', Using: '.$MkisofsBinary).'.'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $locatedBinary = $detected7z = $detectedRar = $detectedZip = $detectedTar = $detectedMkisofs = $versionOutput = $versionMatches = $minimumParts = $versionExitCode = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $Minimum7zVersion = $MinimumRarVersion = $MinimumZipVersion = $MinimumTarVersion = $MinimumMkisofsVersion = NULL;
-  unset($locatedBinary, $detected7z, $detectedRar, $detectedZip, $detectedTar, $detectedMkisofs, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion);
+  purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $detected7z, $detectedRar, $detectedZip, $detectedTar, $detectedMkisofs, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion);
   return array($ArchiveToolsAreValid, $SevenZipBinary, $RarBinary, $ZipBinary, $TarBinary, $MkisofsBinary); }
 // / -----------------------------------------------------------------------------------
 
@@ -1731,7 +1807,7 @@ function verifyArchiveVersions($Minimum7zVersion, $MinimumRarVersion, $MinimumZi
 // / output & is deliberately loose. Confirm the detected number against a real installation.
 function verifyIsoHybridVersion($MinimumVersion) {
   // / Set variables.
-  global $Verbose;
+  global $Verbose, $EnableMemoryProtection;
   $IsoHybridBinary = FALSE;
   $locatedBinary = $detectedVersion = '';
   $versionOutput = $versionMatches = $minimumParts = array();
@@ -1753,8 +1829,7 @@ function verifyIsoHybridVersion($MinimumVersion) {
         elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $IsoHybridBinary = $locatedBinary; } } }
   if ($Verbose) logEntry('Isohybrid Version Check: '.($IsoHybridBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later'.($IsoHybridBinary === FALSE ? '' : ', Using: '.$IsoHybridBinary).'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $locatedBinary = $detectedVersion = $versionOutput = $versionMatches = $minimumParts = $versionExitCode = $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = $MinimumVersion = NULL;
-  unset($locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
+  purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
   return $IsoHybridBinary; }
 // / -----------------------------------------------------------------------------------
 
@@ -1772,7 +1847,7 @@ function verifyIsoHybridVersion($MinimumVersion) {
 // / FALSE from this function is the strongest signal the application produces.
 function verifyBwrap() {
   // / Set variables.
-  global $Verbose;
+  global $Verbose, $EnableMemoryProtection;
   $BwrapBinary = FALSE;
   $locatedBinary = $bwrapCommand = '';
   $bwrapOutput = array();
@@ -1797,8 +1872,7 @@ function verifyBwrap() {
     if ($bwrapExitCode === 0) $BwrapBinary = $locatedBinary; }
   if ($Verbose) logEntry('Bubblewrap Sandbox Check: '.($BwrapBinary === FALSE ? 'FAILED' : 'PASSED').', Exit code: '.$bwrapExitCode.($BwrapBinary === FALSE ? '' : ', Using: '.$BwrapBinary).'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $locatedBinary = $bwrapCommand = $bwrapOutput = $bwrapExitCode = NULL;
-  unset($locatedBinary, $bwrapCommand, $bwrapOutput, $bwrapExitCode);
+  purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $bwrapCommand, $bwrapOutput, $bwrapExitCode);
   return $BwrapBinary; }
 // / -----------------------------------------------------------------------------------
 
@@ -1817,7 +1891,7 @@ function verifyBwrap() {
 // / file, because loading twenty version files would overwrite the variable each time.
 function showVersionInfo() {
   // / Set variables.
-  global $InstLoc, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $MinimumInkscapeVersion, $MinimumDiaVersion, $MinimumSCADVersion, $MinimumImageVersion, $MinimumAssimpVersion, $MinimumMeshlabVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $RunningAsRoot, $RunningFromCLI, $CurrentUser;
+  global $InstLoc, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $MinimumInkscapeVersion, $MinimumDiaVersion, $MinimumSCADVersion, $MinimumImageVersion, $MinimumAssimpVersion, $MinimumMeshlabVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $RunningAsRoot, $RunningFromCLI, $CurrentUser, $EnableMemoryProtection;
   $VersionInfoDisplayed = $modelsAreValid = $ocrToolsAreValid = $archiveToolsAreValid = $libreOfficeIsValid = FALSE;
   $ffmpegBinary = $streamFfmpegBinary = $inkscapeBinary = $diaBinary = $scadBinary = $imageBinary = $ebookBinary = FALSE;
   $assimpBinary = $meshlabBinary = $tesseractBinary = $pdftotextBinary = FALSE;
@@ -1934,8 +2008,7 @@ function showVersionInfo() {
   print($Lol);
   $VersionInfoDisplayed = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $modelsAreValid = $ocrToolsAreValid = $archiveToolsAreValid = $libreOfficeIsValid = $ffmpegBinary = $streamFfmpegBinary = $inkscapeBinary = $diaBinary = $scadBinary = $imageBinary = $assimpBinary = $meshlabBinary = $tesseractBinary = $pdftotextBinary = $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = $isoHybridBinary = $bwrapBinary = $installedGui = $installedLang = $installedEndonym = $checkDir = $checkFile = $foundVersion = $langLine = $guiMatches = $langMatches = $langOk = $langTotal = $ebookBinary = NULL;
-  unset($modelsAreValid, $ocrToolsAreValid, $archiveToolsAreValid, $libreOfficeIsValid, $ffmpegBinary, $streamFfmpegBinary, $inkscapeBinary, $diaBinary, $scadBinary, $imageBinary, $assimpBinary, $meshlabBinary, $tesseractBinary, $pdftotextBinary, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary, $bwrapBinary, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $guiMatches, $langMatches, $langOk, $langTotal, $ebookBinary);
+  purgeSensitiveMemory($EnableMemoryProtection, $modelsAreValid, $ocrToolsAreValid, $archiveToolsAreValid, $libreOfficeIsValid, $ffmpegBinary, $streamFfmpegBinary, $inkscapeBinary, $diaBinary, $scadBinary, $imageBinary, $assimpBinary, $meshlabBinary, $tesseractBinary, $pdftotextBinary, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary, $bwrapBinary, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $guiMatches, $langMatches, $langOk, $langTotal, $ebookBinary);
   return $VersionInfoDisplayed; }
 // / -----------------------------------------------------------------------------------
 
@@ -2011,7 +2084,7 @@ function showHelpInfo() {
 // / To run as the web server user, use command  'sudo -u www-data php convertCore.php '
 function parseCommandLine() {
   // / Set variables.
-  global $Verbose, $Lol, $DeleteThreshold, $ConvertLoc, $ConvertTempDir, $RunningFromCLI, $RunningAsRoot;
+  global $Verbose, $Lol, $DeleteThreshold, $ConvertLoc, $ConvertTempDir, $RunningFromCLI, $RunningAsRoot, $EnableMemoryProtection;
   $CommandLineHandled = $cliTempCleaned = $cliTempDeepCleaned = $cliDataCleaned = $cliDataDeepCleaned = FALSE;
   $UserType = 'web';
   $cliArgumentCount = $cliThreshold = 0;
@@ -2102,8 +2175,7 @@ function parseCommandLine() {
   // / Determine if the user is using the application via command line (CLI) or Apache+PHP through a web browser.
   if ($CommandLineHandled === TRUE) $UserType = 'cli';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $cliArguments = $cliCommand = $cliArgumentCount = $rawFirstArg = $cliParts = $cliTarget = $cliThreshold = $cliTempCleaned = $cliTempDeepCleaned = $cliDataCleaned = $cliDataDeepCleaned = NULL;
-  unset($cliArguments, $cliCommand, $cliArgumentCount, $rawFirstArg, $cliParts, $cliTarget, $cliThreshold, $cliTempCleaned, $cliTempDeepCleaned, $cliDataCleaned, $cliDataDeepCleaned);
+  purgeSensitiveMemory($EnableMemoryProtection, $cliArguments, $cliCommand, $cliArgumentCount, $rawFirstArg, $cliParts, $cliTarget, $cliThreshold, $cliTempCleaned, $cliTempDeepCleaned, $cliDataCleaned, $cliDataDeepCleaned);
   return array($CommandLineHandled, $UserType); }
 // / -----------------------------------------------------------------------------------
 
@@ -2114,7 +2186,7 @@ function parseCommandLine() {
 // / These paths live under the application directory, not part of the regular cleanup routine.
 function cleanBuildEnvironment() {
   // / Set variables.
-  global $Verbose, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $DirSep;
+  global $Verbose, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $DirSep, $EnableMemoryProtection;
   $BuildEnvCleaned = TRUE;
   $BuildEnvDeleted = $DevDocsDeleted = FALSE;
   $buildDirContents = array();
@@ -2152,8 +2224,7 @@ function cleanBuildEnvironment() {
       errorEntry('Could not remove the development documentation!', 26001, FALSE); }
     if ($Verbose && $DevDocsDeleted) logEntry('Removed the development documentation.'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $dockerFile = $changelogFile = $readmeFile = $buildDir = $buildDirContents = $buildDirEntry = NULL;
-  unset($dockerFile, $changelogFile, $readmeFile, $buildDir, $buildDirContents, $buildDirEntry);
+  purgeSensitiveMemory($EnableMemoryProtection, $dockerFile, $changelogFile, $readmeFile, $buildDir, $buildDirContents, $buildDirEntry);
   return array($BuildEnvCleaned, $BuildEnvDeleted, $DevDocsDeleted); }
 // / -----------------------------------------------------------------------------------
 
@@ -2161,15 +2232,14 @@ function cleanBuildEnvironment() {
 // / A function to sanitize & return the extension to a specified file.
 function getExtension($pathToFile) {
   // / Set variables.
-  global $PathExt;
+  global $PathExt, $EnableMemoryProtection;
   $Pathinfo = '';
   $pathinfoCleaned = FALSE;
   list ($pathinfo, $pathinfoCleaned) = sanitize(pathinfo(strtolower($pathToFile), $PathExt), TRUE);
   if ($pathinfoCleaned) $Pathinfo = trim($pathinfo);
   else errorEntry('Could not process extension for file '.$pathToFile.'!', 300, FALSE);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $pathToFile = $pathinfoCleaned = $pathinfo = NULL;
-  unset($pathToFile, $pathinfoCleaned, $pathinfo);
+  purgeSensitiveMemory($EnableMemoryProtection, $pathToFile, $pathinfoCleaned, $pathinfo);
   return $Pathinfo;  }
 // / -----------------------------------------------------------------------------------
 
@@ -2190,7 +2260,7 @@ function getFilesize($File) {
 // / A function to sanitize & verify an array of files.
 function getFiles($pathToFiles) {
   // / Set variables.
-  global $DangerousFiles, $DirSep;
+  global $DangerousFiles, $DirSep, $EnableMemoryProtection;
   $Files = $dirtyFileArr = array();
   if (is_dir($pathToFiles)) $dirtyFileArr = @scandir($pathToFiles);
   // / Iterate through each detected file & make sure it's not dangerous before adding it to the output array.
@@ -2200,8 +2270,7 @@ function getFiles($pathToFiles) {
     if (!in_array(strtolower($dirtyExt), $DangerousFiles) && !is_dir($pathToFiles.$DirSep.$dirtyFile)) array_push($Files, $dirtyFile);
     else if ($dirtyExt === '.' or $dirtyExt === '..') errorEntry('Could not display file '.$dirtyFile.'!', 400, FALSE); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $dirtyFile = $pathToFiles = $dirtyFileArr = $dirtyExt = NULL;
-  unset($dirtyFile, $pathToFiles, $dirtyFileArr, $dirtyExt);
+  purgeSensitiveMemory($EnableMemoryProtection, $dirtyFile, $pathToFiles, $dirtyFileArr, $dirtyExt);
   return $Files; }
 // / -----------------------------------------------------------------------------------
 
@@ -2209,10 +2278,10 @@ function getFiles($pathToFiles) {
 // / A function to return the file time of a specified symlink.
 function symlinkmtime($symlinkPath) {
   // / Set variables.
+  global $EnableMemoryProtection;
   $Stat = @lstat($symlinkPath);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $symlinkPath = NULL;
-  unset($symlinkPath);
+  purgeSensitiveMemory($EnableMemoryProtection, $symlinkPath);
   return isset($Stat['mtime']) ? $Stat['mtime'] : NULL; }
 // / -----------------------------------------------------------------------------------
 
@@ -2222,11 +2291,11 @@ function symlinkmtime($symlinkPath) {
 // / Returns FALSE when the path cannot be read.
 function fileTime($filePath) {
   // / Set variables.
+  global $EnableMemoryProtection;
   $Stat = FALSE;
   if (file_exists($filePath)) $Stat = @filemtime($filePath);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $filePath = NULL;
-  unset($filePath);
+  purgeSensitiveMemory($EnableMemoryProtection, $filePath);
   return $Stat; }
 // / -----------------------------------------------------------------------------------
 
@@ -2237,6 +2306,7 @@ function fileTime($filePath) {
 // / Every directory contains a . and a .. entry, so both are discarded before testing.
 function is_dir_empty($dir) {
   // / Set variables.
+  global $EnableMemoryProtection;
   $Check = TRUE;
   $contents = array();
   // / Make sure the selected directory is actually a directory.
@@ -2248,8 +2318,7 @@ function is_dir_empty($dir) {
   // / A path that is not a directory at all must never be reported as an empty one.
   else $Check = FALSE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $dir = $contents = NULL;
-  unset($dir, $contents);
+  purgeSensitiveMemory($EnableMemoryProtection, $dir, $contents);
   return $Check; }
 // / -----------------------------------------------------------------------------------
 
@@ -2259,7 +2328,7 @@ function is_dir_empty($dir) {
 // / This overlooks the required files and only looks to see if any user requested files remain.
 function isDirEmptyOfUserFiles($path) {
   // / Set variables.
-  global $DefaultApps;
+  global $DefaultApps, $EnableMemoryProtection;
   $DirIsEmptyOfUserFiles = FALSE;
   $remaining = array();
   if (is_dir($path)) {
@@ -2268,8 +2337,7 @@ function isDirEmptyOfUserFiles($path) {
     $remaining = array_diff($remaining, $DefaultApps);
     if (empty($remaining)) $DirIsEmptyOfUserFiles = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $remaining = $path = NULL;
-  unset($remaining, $path);
+  purgeSensitiveMemory($EnableMemoryProtection, $remaining, $path);
   return $DirIsEmptyOfUserFiles; }
 // / -----------------------------------------------------------------------------------
 
@@ -2299,7 +2367,7 @@ function isDirEmptyOfUserFiles($path) {
 // / OpenSCAD does NOT use this. It needs a whole directory visible to resolve includes.
 function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork) {
   // / Set variables.
-  global $Verbose, $RequireSandbox, $RequireSandboxOnDocker, $ThrowSandboxWarning, $RunningInContainer;
+  global $Verbose, $RequireSandbox, $RequireSandboxOnDocker, $ThrowSandboxWarning, $RunningInContainer, $EnableMemoryProtection;
   $CommandMayRun = FALSE;
   $bwrapBinary = FALSE;
   // / This initializes TRUE rather than FALSE, because for this variable TRUE is the safe
@@ -2377,8 +2445,7 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork) {
         $command);
     if ($Verbose) logEntry('Sandbox prepared for a dependency invocation.'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $bwrapBinary = $sandboxIsRequired = $networkFlag = $mountFlags = $workingDir = $inputDir = $outputDir = $sandboxInput = $sandboxOutput = $command = $inputPath = $outputPath = $allowNetwork = NULL;
-  unset($bwrapBinary, $sandboxIsRequired, $networkFlag, $mountFlags, $workingDir, $inputDir, $outputDir, $sandboxInput, $sandboxOutput, $command, $inputPath, $outputPath, $allowNetwork);
+  purgeSensitiveMemory($EnableMemoryProtection, $bwrapBinary, $sandboxIsRequired, $networkFlag, $mountFlags, $workingDir, $inputDir, $outputDir, $sandboxInput, $sandboxOutput, $command, $inputPath, $outputPath, $allowNetwork);
   return array($CommandMayRun, $SandboxedCommand); }
 // / -----------------------------------------------------------------------------------
 
@@ -2399,7 +2466,7 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork) {
 // / a caller supplying a path has already decided where it is.
 function locateDependency($binaryName) {
   // / Set variables.
-  global $Verbose;
+  global $Verbose, $EnableMemoryProtection;
   $BinaryPath = '';
   $candidateDirs = array('/usr/local/bin', '/usr/local/sbin', '/usr/bin', '/usr/sbin', '/bin', '/sbin');
   $candidateDir = $candidatePath = $commandOutput = '';
@@ -2419,8 +2486,7 @@ function locateDependency($binaryName) {
       if ($commandOutput !== '' && is_file($commandOutput) && is_executable($commandOutput)) $BinaryPath = $commandOutput; }
     if ($Verbose) logEntry('Dependency lookup: '.$binaryName.' '.($BinaryPath === '' ? 'NOT FOUND' : 'found at '.$BinaryPath).'.'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $candidateDirs = $candidateDir = $candidatePath = $commandOutput = $binaryName = NULL;
-  unset($candidateDirs, $candidateDir, $candidatePath, $commandOutput, $binaryName);
+  purgeSensitiveMemory($EnableMemoryProtection, $candidateDirs, $candidateDir, $candidatePath, $commandOutput, $binaryName);
   return $BinaryPath; }
 // / -----------------------------------------------------------------------------------
 
@@ -2428,7 +2494,7 @@ function locateDependency($binaryName) {
 // / A function to scan an input file or folder for viruses with ClamAV.
 function virusScan($path) {
   // / Set variables.
-  global $Verbose, $ClamLogFile, $AllowUserVirusScan, $Lol, $Lolol, $ApplicationName;
+  global $Verbose, $ClamLogFile, $AllowUserVirusScan, $Lol, $Lolol, $ApplicationName, $EnableMemoryProtection;
   $ScanComplete = TRUE;
   $VirusFound = FALSE;
   $returnData = '';
@@ -2442,8 +2508,7 @@ function virusScan($path) {
     errorEntry('There were potentially infected files detected at '.$path.'!', 500, FALSE);
     errorEntry('ClamAV output the following: '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))), 501, TRUE); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $clamLogFileDATA = $path = NULL;
-  unset($returnData, $clamLogFileDATA, $path);
+  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $clamLogFileDATA, $path);
   return array($ScanComplete, $VirusFound); }
 // / -----------------------------------------------------------------------------------
 
@@ -2452,7 +2517,7 @@ function virusScan($path) {
 // / Protected file objects such as the enforced index.html are removed only at this point.
 function removeEmptiedSessionDir($sessionPath) {
   // / Set variables.
-  global $DefaultApps, $DirSep;
+  global $DefaultApps, $DirSep, $EnableMemoryProtection;
   $SessionDirRemoved = FALSE;
   $leftovers = array();
   $leftover = '';
@@ -2464,8 +2529,7 @@ function removeEmptiedSessionDir($sessionPath) {
     @rmdir($sessionPath);
     if (!is_dir($sessionPath)) $SessionDirRemoved = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $leftovers = $leftover = $sessionPath = NULL;
-  unset($leftovers, $leftover, $sessionPath);
+  purgeSensitiveMemory($EnableMemoryProtection, $leftovers, $leftover, $sessionPath);
   return $SessionDirRemoved; }
 // / -----------------------------------------------------------------------------------
 
@@ -2479,7 +2543,7 @@ function removeEmptiedSessionDir($sessionPath) {
 // / the wrong variable, the result is a no-op & a FALSE return, not an incident.
 function cleanFiles($path) {
   // / Set variables.
-  global $ConvertLoc, $ConvertTemp, $DefaultApps, $DirSep, $RequiredCleanupFolders;
+  global $ConvertLoc, $ConvertTemp, $DefaultApps, $DirSep, $RequiredCleanupFolders, $EnableMemoryProtection;
   $variableIsSanitized = $CleanSuccess = $pathCheck = $pathIsContained = FALSE;
   $loopCheck = TRUE;
   $dirContents = $allowedRoots = array();
@@ -2533,8 +2597,7 @@ function cleanFiles($path) {
   // / An uncontained path is never a success. Nothing was cleaned & nothing should report otherwise.
   if (!$pathIsContained) $CleanSuccess = FALSE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $path = $dirContents = $dirEntry = $childPath = $realPath = $realRoot = $allowedRoot = $allowedRoots = $variableIsSanitized = $pathCheck = $pathIsContained = $loopCheck = NULL;
-  unset($path, $dirContents, $dirEntry, $childPath, $realPath, $realRoot, $allowedRoot, $allowedRoots, $variableIsSanitized, $pathCheck, $pathIsContained, $loopCheck);
+  purgeSensitiveMemory($EnableMemoryProtection, $path, $dirContents, $dirEntry, $childPath, $realPath, $realRoot, $allowedRoot, $allowedRoots, $variableIsSanitized, $pathCheck, $pathIsContained, $loopCheck);
   return $CleanSuccess; }
 // / -----------------------------------------------------------------------------------
 
@@ -2549,7 +2612,7 @@ function cleanFiles($path) {
 // / which is what stops a mistake elsewhere in the core from sweeping the wrong tree.
 function cleanDataLoc($dataLoc, $locationName, $deleteThreshold) {
   // / Set variables.
-  global $DefaultApps, $ProtectedRootDirs, $DirSep, $PermissionLevels, $Verbose, $ConvertLoc, $ConvertTempDir;
+  global $DefaultApps, $ProtectedRootDirs, $DirSep, $PermissionLevels, $Verbose, $ConvertLoc, $ConvertTempDir, $EnableMemoryProtection;
   $LocationDeepCleaned = $cleanAuthorized = FALSE;
   $CleanedLocation = TRUE;
   $dailyDirs = $sessionDirs = array();
@@ -2613,8 +2676,7 @@ function cleanDataLoc($dataLoc, $locationName, $deleteThreshold) {
     // / Log the result.
     if ($Verbose) logEntry('Cleaned the '.$locationName.' location. Removed Files: '.($LocationDeepCleaned ? 'TRUE' : 'FALSE').'.'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $dailyDirs = $dailyDir = $dailyPath = $sessionDirs = $sessionDir = $sessionPath = $now = $dataLoc = $locationName = $deleteThreshold = $cleanAuthorized = $directoryIterator = $iterator = $fileObject = $realPath = NULL;
-  unset($dailyDirs, $dailyDir, $dailyPath, $sessionDirs, $sessionDir, $sessionPath, $now, $dataLoc, $locationName, $deleteThreshold, $cleanAuthorized, $directoryIterator, $iterator, $fileObject, $realPath);
+  purgeSensitiveMemory($EnableMemoryProtection, $dailyDirs, $dailyDir, $dailyPath, $sessionDirs, $sessionDir, $sessionPath, $now, $dataLoc, $locationName, $deleteThreshold, $cleanAuthorized, $directoryIterator, $iterator, $fileObject, $realPath);
   return array($CleanedLocation, $LocationDeepCleaned); }
 // / -----------------------------------------------------------------------------------
 
@@ -2628,7 +2690,7 @@ function cleanDataLoc($dataLoc, $locationName, $deleteThreshold) {
 // / keeps a normal web request from attempting something it cannot do.
 function verifyRequiredDirs() {
   // /  Set variables.
-  global $ConvertLoc, $RequiredDirs, $RequiredIndexes, $RequiredCleanupFolders, $Verbose, $PermissionLevels, $ApacheUser, $DirSep, $InstLoc, $RunningAsRoot;
+  global $ConvertLoc, $RequiredDirs, $RequiredIndexes, $RequiredCleanupFolders, $Verbose, $PermissionLevels, $ApacheUser, $DirSep, $InstLoc, $RunningAsRoot, $EnableMemoryProtection;
   $RequiredDirsExist = TRUE;
   $cleanupContents = array();
   $requiredDir = $requiredIndex = $requiredCleanupFolder = $cleanupEntry = $cleanupPath = '';
@@ -2671,8 +2733,7 @@ function verifyRequiredDirs() {
     // / The folder itself is removed only once its contents are gone.
     @rmdir($requiredCleanupFolder); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $requiredDir = $requiredIndex = $requiredCleanupFolder = $cleanupEntry = $cleanupPath = $cleanupContents = NULL;
-  unset($requiredDir, $requiredIndex, $requiredCleanupFolder, $cleanupEntry, $cleanupPath, $cleanupContents);
+  purgeSensitiveMemory($EnableMemoryProtection, $requiredDir, $requiredIndex, $requiredCleanupFolder, $cleanupEntry, $cleanupPath, $cleanupContents);
   return array($RequiredDirsExist, $RequiredDirs); }
 // / -----------------------------------------------------------------------------------
 
@@ -2687,7 +2748,7 @@ function verifyRequiredDirs() {
 // / The API call is the only network request this function makes & is only made for latest.
 function resolveUpdateTarget($requestedVersion) {
   // / Set variables.
-  global $Verbose, $UpdateSourceRepository;
+  global $Verbose, $UpdateSourceRepository, $EnableMemoryProtection;
   $TargetResolved = FALSE;
   $TargetVersion = $TargetURL = $apiURL = $apiResponse = $apiMatches = '';
   $curlCommand = $curlOutput = '';
@@ -2725,8 +2786,7 @@ function resolveUpdateTarget($requestedVersion) {
     else errorEntry('The requested update target is not a recognized version!', 29001, FALSE); }
   if ($Verbose && $TargetResolved) logEntry('Update target resolved to '.$TargetVersion.'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $apiURL = $apiResponse = $apiMatches = $curlCommand = $curlOutput = $curlExitCode = $requestedVersion = NULL;
-  unset($apiURL, $apiResponse, $apiMatches, $curlCommand, $curlOutput, $curlExitCode, $requestedVersion);
+  purgeSensitiveMemory($EnableMemoryProtection, $apiURL, $apiResponse, $apiMatches, $curlCommand, $curlOutput, $curlExitCode, $requestedVersion);
   return array($TargetResolved, $TargetVersion, $TargetURL); }
 // / -----------------------------------------------------------------------------------
 
@@ -2739,7 +2799,7 @@ function resolveUpdateTarget($requestedVersion) {
 // / the disk or hold the process open indefinitely.
 function downloadUpdatePackage($targetURL, $downloadPath) {
   // / Set variables.
-  global $Verbose, $MaxUpdatePackageSize, $UpdateConnectionTimeout;
+  global $Verbose, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $EnableMemoryProtection;
   $PackageDownloaded = FALSE;
   $curlCommand = '';
   $curlOutput = array();
@@ -2762,8 +2822,7 @@ function downloadUpdatePackage($targetURL, $downloadPath) {
   else if (!file_exists($downloadPath) or filesize($downloadPath) < 1024) errorEntry('The downloaded update package is empty or too small to be valid!', 29005, FALSE);
   else $PackageDownloaded = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $curlCommand = $curlOutput = $curlExitCode = $targetURL = $downloadPath = NULL;
-  unset($curlCommand, $curlOutput, $curlExitCode, $targetURL, $downloadPath);
+  purgeSensitiveMemory($EnableMemoryProtection, $curlCommand, $curlOutput, $curlExitCode, $targetURL, $downloadPath);
   return $PackageDownloaded; }
 // / -----------------------------------------------------------------------------------
 
@@ -2784,7 +2843,7 @@ function downloadUpdatePackage($targetURL, $downloadPath) {
 // / reapplied by hand.
 function mergeConfigFile($oldConfigPath, $newConfigPath) {
   // / Set variables.
-  global $Verbose;
+  global $Verbose, $EnableMemoryProtection;
   $ConfigMerged = FALSE;
   $ChangedArrays = $PreservedSettings = array();
   $oldValues = $newContents = $mergedContents = $matches = array();
@@ -2825,8 +2884,7 @@ function mergeConfigFile($oldConfigPath, $newConfigPath) {
       else errorEntry('Could not write the merged configuration file!', 29008, FALSE); } }
   if ($Verbose && $ConfigMerged) logEntry('Configuration merged. '.count($PreservedSettings).' setting(s) carried over. '.count($ChangedArrays).' array(s) reset to the new default.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $oldContents = $newContents = $mergedContents = $matches = $oldValues = $settingName = $settingValue = $exportedValue = $bytesWritten = $oldConfigPath = $newConfigPath = NULL;
-  unset($oldContents, $newContents, $mergedContents, $matches, $oldValues, $settingName, $settingValue, $exportedValue, $bytesWritten, $oldConfigPath, $newConfigPath);
+  purgeSensitiveMemory($EnableMemoryProtection, $oldContents, $newContents, $mergedContents, $matches, $oldValues, $settingName, $settingValue, $exportedValue, $bytesWritten, $oldConfigPath, $newConfigPath);
   return array($ConfigMerged, $PreservedSettings, $ChangedArrays); }
 // / -----------------------------------------------------------------------------------
 
@@ -2838,7 +2896,7 @@ function mergeConfigFile($oldConfigPath, $newConfigPath) {
 // / A file count or a directory listing proves nothing about whether the code executes.
 function validateInstallation($installPath) {
   // / Set variables.
-  global $Verbose;
+  global $Verbose, $EnableMemoryProtection;
   $InstallationIsValid = FALSE;
   $validateCommand = '';
   $validateOutput = array();
@@ -2850,8 +2908,7 @@ function validateInstallation($installPath) {
     if (strpos(implode(' ', $validateOutput), 'Core version') !== FALSE) $InstallationIsValid = TRUE; }
   if ($Verbose) logEntry('Installation validation: '.($InstallationIsValid ? 'PASSED' : 'FAILED').', exit code '.$validateExitCode.'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $validateCommand = $validateOutput = $validateExitCode = $installPath = NULL;
-  unset($validateCommand, $validateOutput, $validateExitCode, $installPath);
+  purgeSensitiveMemory($EnableMemoryProtection, $validateCommand, $validateOutput, $validateExitCode, $installPath);
   return $InstallationIsValid; }
 // / -----------------------------------------------------------------------------------
 
@@ -2868,7 +2925,7 @@ function validateInstallation($installPath) {
 // / who discovers a problem an hour later still has something to restore by hand.
 function updateApplication($requestedVersion) {
   // / Set variables.
-  global $Verbose, $InstLoc, $ProprietaryLoc, $DirSep, $HRConvertVersion, $AutoUpdateTargetVersion, $EnableAutoUpdates, $BackupLoc, $RunningAsRoot, $ApacheUser, $PermissionLevels, $ConvertDir, $Lol;
+  global $Verbose, $InstLoc, $ProprietaryLoc, $DirSep, $HRConvertVersion, $AutoUpdateTargetVersion, $EnableAutoUpdates, $BackupLoc, $RunningAsRoot, $ApacheUser, $PermissionLevels, $ConvertDir, $Lol, $EnableMemoryProtection;
   $UpdateSucceeded = $targetResolved = $packageDownloaded = $configMerged = $installationIsValid = FALSE;
   $swapCompleted = $rolledBack = FALSE;
   $targetVersion = $targetURL = $workDir = $downloadPath = $extractedDir = $stagedDir = $oldDir = $backupOutput = '';
@@ -2991,8 +3048,7 @@ function updateApplication($requestedVersion) {
   // / Remove the temporary working directory whatever the outcome.
   if ($workDir !== '' && is_dir($workDir)) exec('rm -rf '.escapeshellarg($workDir).' 2>&1');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $targetResolved = $packageDownloaded = $configMerged = $installationIsValid = $swapCompleted = $rolledBack = $targetVersion = $targetURL = $workDir = $downloadPath = $extractedDir = $stagedDir = $oldDir = $preservedSettings = $changedArrays = $extractOutput = $extractedRoots = $extractExitCode = $requestedVersion = NULL;
-  unset($targetResolved, $packageDownloaded, $configMerged, $installationIsValid, $swapCompleted, $rolledBack, $targetVersion, $targetURL, $workDir, $downloadPath, $extractedDir, $stagedDir, $oldDir, $preservedSettings, $changedArrays, $extractOutput, $extractedRoots, $extractExitCode, $Lol, $requestedVersion);
+  purgeSensitiveMemory($EnableMemoryProtection, $targetResolved, $packageDownloaded, $configMerged, $installationIsValid, $swapCompleted, $rolledBack, $targetVersion, $targetURL, $workDir, $downloadPath, $extractedDir, $stagedDir, $oldDir, $preservedSettings, $changedArrays, $extractOutput, $extractedRoots, $extractExitCode, $requestedVersion, $Lol);
   return $UpdateSucceeded; }
 // / -----------------------------------------------------------------------------------
 
@@ -3003,7 +3059,7 @@ function updateApplication($requestedVersion) {
 // / The listener is only started once the installation & the version have both been cleared.
 function verifyDocumentConversionEngine() {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $ApacheUser, $DocumentEngineSleepTimer, $PathToUnoconv, $HomeLoc, $MinimumLibreOfficeVersion;
+  global $Verbose, $Lol, $Lolol, $ApacheUser, $DocumentEngineSleepTimer, $PathToUnoconv, $HomeLoc, $MinimumLibreOfficeVersion, $EnableMemoryProtection;
   $DocEnginePID = 0;
   $docEnginePIDCheck = $docEngineUserCheck = $DocumentEngineStarted = $installCheck = $okToStart = $libreOfficeVersionIsValid = FALSE;
   $returnData = $docEngineUser = '';
@@ -3056,8 +3112,7 @@ function verifyDocumentConversionEngine() {
       $DocumentEngineStarted = TRUE;
       if ($Verbose) logEntry('The Document Conversion Engine is running.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $docEnginePIDCheck = $docEngineUserCheck = $docEngineUser = $installCheck = $okToStart = $libreOfficeVersionIsValid = NULL;
-  unset($returnData, $docEnginePIDCheck, $docEngineUserCheck, $docEngineUser, $installCheck, $okToStart, $libreOfficeVersionIsValid);
+  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $docEnginePIDCheck, $docEngineUserCheck, $docEngineUser, $installCheck, $okToStart, $libreOfficeVersionIsValid);
   return array($DocumentEngineStarted, $DocEnginePID); }
 // / -----------------------------------------------------------------------------------
 
@@ -3065,7 +3120,7 @@ function verifyDocumentConversionEngine() {
 // / A function to convert document formats.
 function convertDocuments($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $XPSInputArray, $PathToUnoconv, $HomeLoc;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $XPSInputArray, $PathToUnoconv, $HomeLoc, $EnableMemoryProtection;
   $ConversionSuccess = $ConversionErrors = FALSE;
   $returnData = '';
   $stopper = 0;
@@ -3098,8 +3153,7 @@ function convertDocuments($pathname, $newPathname, $extension) {
     if ($Verbose && trim($returnData) !== '') logEntry('Unoconv returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); }
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $stopper = $pathname = $returnData = $documentEngineStarted = $documentEnginePID = $sleepTime = $oldExtension = $arrayxpsi = NULL;
-  unset($stopper, $pathname, $returnData, $documentEngineStarted, $documentEnginePID, $sleepTime, $oldExtension, $arrayxpsi);
+  purgeSensitiveMemory($EnableMemoryProtection, $stopper, $pathname, $returnData, $documentEngineStarted, $documentEnginePID, $sleepTime, $oldExtension, $arrayxpsi);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension); }
 // / -----------------------------------------------------------------------------------
 
@@ -3113,7 +3167,7 @@ function convertDocuments($pathname, $newPathname, $extension) {
 // / asked for both exactly.
 function convertImages($pathname, $newPathname, $extension, $height, $width, $rotate) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumImageVersion;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumImageVersion, $EnableMemoryProtection;
   $ConversionSuccess = $ConversionErrors = $sandboxIsAvailable = FALSE;
   $imageBinary = FALSE;
   $returnData = $wh = $wxh = $bgSwitch = $outputExt = $magickCommand = '';
@@ -3171,8 +3225,7 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
       // / attempt would report success for a conversion that was refused & never ran.
       if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $height = $width = $wxh = $rotate = $wh = $sleepTime = $outputExt = $bgSwitch = $imageBinary = $magickCommand = $sandboxIsAvailable = NULL;
-  unset($returnData, $stopper, $pathname, $height, $width, $wxh, $rotate, $wh, $sleepTime, $outputExt, $bgSwitch, $imageBinary, $magickCommand, $sandboxIsAvailable);
+  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $height, $width, $wxh, $rotate, $wh, $sleepTime, $outputExt, $bgSwitch, $imageBinary, $magickCommand, $sandboxIsAvailable);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension); }
 // / -----------------------------------------------------------------------------------
 
@@ -3189,7 +3242,7 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
 // / is not checked. Assimp is checked on every path, because every path uses it.
 function convertModels($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumAssimpVersion, $MinimumMeshlabVersion, $UsePyMeshLab, $InstLoc, $DirSep;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumAssimpVersion, $MinimumMeshlabVersion, $UsePyMeshLab, $InstLoc, $DirSep, $EnableMemoryProtection;
   $ConversionSuccess = $ConversionErrors = $modelsValid =  $meshlabBinary = $assimpBinary = $readyToConvert = $meshlabCommand = $assimpCommand = $sandboxIsAvailable = FALSE;
   $returnData = $assimpData = $inputExt = $pyMeshLabDir = $intermediatePathname = $assimpInput = '';
   $meshlabOnly = $assimpSupported = array();
@@ -3261,8 +3314,7 @@ function convertModels($pathname, $newPathname, $extension) {
     // / The output file is the only verdict on whether the conversion produced anything.
     if (file_exists($newPathname)) $ConversionSuccess = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $assimpData = $stopper = $pathname = $intermediatePathname = $assimpInput = $inputExt = $meshlabOnly = $assimpSupported = $pyMeshLabDir = $sleepTime = $modelsValid = $readyToConvert = $meshlabCommand = $assimpCommand = $sandboxIsAvailable = $meshlabBinary = $assimpBinary = NULL;
-  unset($returnData, $assimpData, $stopper, $pathname, $intermediatePathname, $assimpInput, $inputExt, $meshlabOnly, $assimpSupported, $pyMeshLabDir, $sleepTime, $modelsValid, $readyToConvert, $meshlabCommand, $assimpCommand, $sandboxIsAvailable, $meshlabBinary, $assimpBinary);
+  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $assimpData, $stopper, $pathname, $intermediatePathname, $assimpInput, $inputExt, $meshlabOnly, $assimpSupported, $pyMeshLabDir, $sleepTime, $modelsValid, $readyToConvert, $meshlabCommand, $assimpCommand, $sandboxIsAvailable, $meshlabBinary, $assimpBinary);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension); }
 // / -----------------------------------------------------------------------------------
 
@@ -3277,7 +3329,7 @@ function convertModels($pathname, $newPathname, $extension) {
 // / Returns an empty string when nothing matched, & the caller must comment the reference out.
 function resolveSCADInclude($scadReference, $sessionFiles) {
   // / Set variables.
-  global $ScadTemp, $DirSep;
+  global $ScadTemp, $DirSep, $EnableMemoryProtection;
   $ResolvedFile = $sessionFile = '';
   $referenceIsUsable = FALSE;
   $referenceBase = strtolower(trim(basename(str_replace('\\', '/', trim($scadReference)))));
@@ -3290,8 +3342,7 @@ function resolveSCADInclude($scadReference, $sessionFiles) {
         $ResolvedFile = $ScadTemp.$DirSep.basename($sessionFile);
         break; } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $referenceBase = $sessionFile = $referenceIsUsable = NULL;
-  unset($referenceBase, $sessionFile, $referenceIsUsable);
+  purgeSensitiveMemory($EnableMemoryProtection, $referenceBase, $sessionFile, $referenceIsUsable);
   return $ResolvedFile; }
 // / -----------------------------------------------------------------------------------
 
@@ -3328,6 +3379,7 @@ function resolveSCADInclude($scadReference, $sessionFiles) {
 // / raw text of the reference where one could be read.
 function sanitizeSCAD($scadContents) {
   // / Set variables.
+  global $EnableMemoryProtection;
   $ScadCalls = array();
   $keywords = array();
   $keyword = $currentChar = $nextChar = $priorChar = $lookaheadChar = $peekChar = $referenceText = '';
@@ -3448,8 +3500,7 @@ function sanitizeSCAD($scadContents) {
       $charIndex = $charIndex + $keywordLength - 1;
       break; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $scadContents = $keywords = $keyword = $currentChar = $nextChar = $priorChar = $lookaheadChar = $peekChar = $referenceText = $sourceLength = $charIndex = $lineNumber = $keywordLength = $lookaheadIndex = $referenceStart = $inLineComment = $inBlockComment = $inString = $isCall = NULL;
-  unset($scadContents, $keywords, $keyword, $currentChar, $nextChar, $priorChar, $lookaheadChar, $peekChar, $referenceText, $sourceLength, $charIndex, $lineNumber, $keywordLength, $lookaheadIndex, $referenceStart, $inLineComment, $inBlockComment, $inString, $isCall);
+  purgeSensitiveMemory($EnableMemoryProtection, $scadContents, $keywords, $keyword, $currentChar, $nextChar, $priorChar, $lookaheadChar, $peekChar, $referenceText, $sourceLength, $charIndex, $lineNumber, $keywordLength, $lookaheadIndex, $referenceStart, $inLineComment, $inBlockComment, $inString, $isCall);
   return $ScadCalls; }
 // / -----------------------------------------------------------------------------------
 
@@ -3470,6 +3521,7 @@ function sanitizeSCAD($scadContents) {
 // / Geometry & heightmap reads are never resolved & never rewritten.
 function rectifySCAD($scadContents, $sessionFiles, $resolveIncludes) {
   // / Set variables.
+  global $EnableMemoryProtection;
   $RectifiedSCAD = '';
   $ReferencesFound = $ReferencesResolved = $ReferencesRemoved = 0;
   $scadCalls = $scadLines = $linesToComment = $callsByLine = array();
@@ -3514,8 +3566,7 @@ function rectifySCAD($scadContents, $sessionFiles, $resolveIncludes) {
     $marker = '// HRC2-REMOVED-'.strtoupper($callsByLine[$lineNumber]['Keyword']).': ';
     $RectifiedSCAD .= $marker.$scadLine.PHP_EOL; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $scadContents = $sessionFiles = $resolveIncludes = $scadCalls = $scadCall = $scadLines = $scadLine = $linesToComment = $callsByLine = $resolvedPath = $marker = $lineIndex = $lineNumber = $callLine = $callEndLine = NULL;
-  unset($scadContents, $sessionFiles, $resolveIncludes, $scadCalls, $scadCall, $scadLines, $scadLine, $linesToComment, $callsByLine, $resolvedPath, $marker, $lineIndex, $lineNumber, $callLine, $callEndLine);
+  purgeSensitiveMemory($EnableMemoryProtection, $scadContents, $sessionFiles, $resolveIncludes, $scadCalls, $scadCall, $scadLines, $scadLine, $linesToComment, $callsByLine, $resolvedPath, $marker, $lineIndex, $lineNumber, $callLine, $callEndLine);
   return array($RectifiedSCAD, $ReferencesFound, $ReferencesResolved, $ReferencesRemoved); }
 // / -----------------------------------------------------------------------------------
 
@@ -3531,7 +3582,7 @@ function rectifySCAD($scadContents, $sessionFiles, $resolveIncludes) {
 // / Every sanitized copy is written to ScadTemp & the users originals are never modified.
 function sanitizeAllSCADUploads() {
   // / Set variables.
-  global $Verbose, $ConvertDir, $ScadTemp, $DirSep, $AllowSCADIncludeResolution;
+  global $Verbose, $ConvertDir, $ScadTemp, $DirSep, $AllowSCADIncludeResolution, $EnableMemoryProtection;
   $AllSanitized = TRUE;
   $FilesSanitized = $ReferencesFound = $ReferencesResolved = $ReferencesRemoved = 0;
   $fileFound = $fileResolved = $fileRemoved = $bytesWritten = 0;
@@ -3563,8 +3614,7 @@ function sanitizeAllSCADUploads() {
   if ($ReferencesRemoved > 0) warningEntry('OpenSCAD Sanitization removed '.$ReferencesRemoved.' file reference(s) across '.$FilesSanitized.' uploaded source file(s) in this session. Resolved: '.$ReferencesResolved.'.');
   else if ($Verbose) logEntry('OpenSCAD Sanitization Result: Files Sanitized: '.$FilesSanitized.', References Found: '.$ReferencesFound.', Resolved: '.$ReferencesResolved.', Removed: '.$ReferencesRemoved.', Resolution Enabled: '.($AllowSCADIncludeResolution ? 'TRUE' : 'FALSE').'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $sessionFiles = $sessionFile = $scadContents = $sanitizedSCAD = $sanitizedPath = $fileFound = $fileResolved = $fileRemoved = $bytesWritten = NULL;
-  unset($sessionFiles, $sessionFile, $scadContents, $sanitizedSCAD, $sanitizedPath, $fileFound, $fileResolved, $fileRemoved, $bytesWritten);
+  purgeSensitiveMemory($EnableMemoryProtection, $sessionFiles, $sessionFile, $scadContents, $sanitizedSCAD, $sanitizedPath, $fileFound, $fileResolved, $fileRemoved, $bytesWritten);
   return array($AllSanitized, $FilesSanitized, $ReferencesFound, $ReferencesResolved, $ReferencesRemoved); }
 // / -----------------------------------------------------------------------------------
 
@@ -3595,7 +3645,7 @@ function sanitizeAllSCADUploads() {
 // / offending source line & that would turn the log into an exfiltration channel.
 function convertSCAD($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $DirSep, $SCADConversionTimeout, $ScadTemp, $MinimumSCADVersion;
+  global $Verbose, $DirSep, $SCADConversionTimeout, $ScadTemp, $MinimumSCADVersion, $EnableMemoryProtection;
   $ConversionSuccess = $ConversionErrors = FALSE;
   $allSanitized = $readyToRender = FALSE;
   $scadBinary = $bwrapBinary = FALSE;
@@ -3689,8 +3739,7 @@ function convertSCAD($pathname, $newPathname, $extension) {
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $openscadOutput may hold quoted source lines & is cleared like everything else.
-  $sanitizedPath = $openscadCommand = $openscadOutput = $openscadExitCode = $missingIncludes = $readyToRender = $scadBinary = $bwrapBinary = $allSanitized = $filesSanitized = $referencesFound = $referencesResolved = $referencesRemoved = $sandboxOutputName = $sandboxOutputPath = $pathname = NULL;
-  unset($sanitizedPath, $openscadCommand, $openscadOutput, $openscadExitCode, $missingIncludes, $readyToRender, $scadBinary, $bwrapBinary, $allSanitized, $filesSanitized, $referencesFound, $referencesResolved, $referencesRemoved, $sandboxOutputName, $sandboxOutputPath, $pathname);
+  purgeSensitiveMemory($EnableMemoryProtection, $sanitizedPath, $openscadCommand, $openscadOutput, $openscadExitCode, $missingIncludes, $readyToRender, $scadBinary, $bwrapBinary, $allSanitized, $filesSanitized, $referencesFound, $referencesResolved, $referencesRemoved, $sandboxOutputName, $sandboxOutputPath, $pathname);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension); }
 // / -----------------------------------------------------------------------------------
 
@@ -3707,7 +3756,7 @@ function convertSCAD($pathname, $newPathname, $extension) {
 // / because the sandbox provides a private /tmp & an X socket outside it is not visible.
 function convertDrawings($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumDiaVersion;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumDiaVersion, $EnableMemoryProtection;
   $ConversionSuccess = $ConversionErrors = $sandboxIsAvailable = FALSE;
   $drawingBinary = FALSE;
   $returnData = $diaCommand = '';
@@ -3745,8 +3794,7 @@ function convertDrawings($pathname, $newPathname, $extension) {
       // / attempt would report success for a conversion that was refused & never ran.
       if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $sleepTime = $diaCommand = $drawingBinary = $sandboxIsAvailable = NULL;
-  unset($returnData, $stopper, $pathname, $sleepTime, $diaCommand, $drawingBinary, $sandboxIsAvailable);
+  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $sleepTime, $diaCommand, $drawingBinary, $sandboxIsAvailable);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension); }
 // / -----------------------------------------------------------------------------------
 
@@ -3757,7 +3805,7 @@ function convertDrawings($pathname, $newPathname, $extension) {
 // / stretches the image, so the caller decides whether that is what the user asked for.
 function convertSVG($pathname, $newPathname, $extension, $height, $width) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumInkscapeVersion;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumInkscapeVersion, $EnableMemoryProtection;
   $ConversionSuccess = $ConversionErrors = $sandboxIsAvailable = FALSE;
   $svgBinary = FALSE;
   $returnData = $argEcho = $inkscapeCommand = '';
@@ -3797,8 +3845,7 @@ function convertSVG($pathname, $newPathname, $extension, $height, $width) {
       // / The output file is the only verdict on whether the conversion produced anything.
       if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $height = $width = $sleepTime = $argEcho = $svgBinary = $inkscapeCommand = $sandboxIsAvailable = NULL;
-  unset($returnData, $stopper, $pathname, $height, $width, $sleepTime, $argEcho, $svgBinary, $inkscapeCommand, $sandboxIsAvailable);
+  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $height, $width, $sleepTime, $argEcho, $svgBinary, $inkscapeCommand, $sandboxIsAvailable);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension); }
 // / -----------------------------------------------------------------------------------
 
@@ -3819,7 +3866,7 @@ function convertSVG($pathname, $newPathname, $extension, $height, $width) {
 // / behaviour & suppressing it surprises users who converted a book that had no cover.
 function convertEbooks($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumCalibreVersion;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumCalibreVersion, $EnableMemoryProtection;
   $ConversionSuccess = $ConversionErrors = $sandboxIsAvailable = FALSE;
   $ebookBinary = FALSE;
   $returnData = $ebookCommand = '';
@@ -3860,8 +3907,7 @@ function convertEbooks($pathname, $newPathname, $extension) {
       // / attempt would report success for a conversion that was refused & never ran.
       if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $sleepTime = $ebookBinary = $ebookCommand = $sandboxIsAvailable = NULL;
-  unset($returnData, $stopper, $pathname, $sleepTime, $ebookBinary, $ebookCommand, $sandboxIsAvailable);
+  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $sleepTime, $ebookBinary, $ebookCommand, $sandboxIsAvailable);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension); }
 // / -----------------------------------------------------------------------------------
 
@@ -3871,7 +3917,7 @@ function convertEbooks($pathname, $newPathname, $extension) {
 // / conversion reads a local file & never fetches anything remote.
 function convertVideos($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumFFMPEGVersion;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumFFMPEGVersion, $EnableMemoryProtection;
   $ConversionSuccess = $ConversionErrors = $sandboxIsAvailable = FALSE;
   $ffmpegBinary = FALSE;
   $returnData = $ffmpegCommand = '';
@@ -3907,8 +3953,7 @@ function convertVideos($pathname, $newPathname, $extension) {
       // / The output file is the only verdict on whether the conversion produced anything.
       if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $sleepTime = $ffmpegBinary = $ffmpegCommand = $sandboxIsAvailable = NULL;
-  unset($returnData, $stopper, $pathname, $sleepTime, $ffmpegBinary, $ffmpegCommand, $sandboxIsAvailable);
+  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $sleepTime, $ffmpegBinary, $ffmpegCommand, $sandboxIsAvailable);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension); }
 // / -----------------------------------------------------------------------------------
 
@@ -3919,7 +3964,7 @@ function convertVideos($pathname, $newPathname, $extension) {
 // / This function had NO version gate at all before this change. FFMPEG was invoked blind.
 function convertSubtitles($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumFFMPEGVersion;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumFFMPEGVersion, $EnableMemoryProtection;
   $ConversionSuccess = $ConversionErrors = $sandboxIsAvailable = FALSE;
   $ffmpegBinary = FALSE;
   $returnData = $ffmpegCommand = '';
@@ -3955,8 +4000,7 @@ function convertSubtitles($pathname, $newPathname, $extension) {
       // / The output file is the only verdict on whether the conversion produced anything.
       if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $sleepTime = $ffmpegBinary = $ffmpegCommand = $sandboxIsAvailable = NULL;
-  unset($returnData, $stopper, $pathname, $sleepTime, $ffmpegBinary, $ffmpegCommand, $sandboxIsAvailable);
+  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $sleepTime, $ffmpegBinary, $ffmpegCommand, $sandboxIsAvailable);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension); }
 // / -----------------------------------------------------------------------------------
 
@@ -3982,6 +4026,7 @@ function isPubliclyRoutableIP($ip) {
 // / $LookupFailed will return TRUE if no DNS response was received or FALSE if DNS succeeded.
 function dnsLookup($URLHost) {
   // / Set variables.
+  global $EnableMemoryProtection;
   $records = $record = array();
   $urlIP = $URLIP = $LookupFailed = $StreamContainsLAN = $isPublic = FALSE;
   // / Perform the actual DNS lookup against the $URLHost.
@@ -4003,8 +4048,7 @@ function dnsLookup($URLHost) {
   // / Set a flag to tell if the lookup failed outright.
   else $LookupFailed = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $records = $record = $urlIP = $isPublic = NULL;
-  unset($records, $record, $urlIP, $isPublic);
+  purgeSensitiveMemory($EnableMemoryProtection, $records, $record, $urlIP, $isPublic);
   return array($URLIP, $StreamContainsLAN, $LookupFailed); }
 // / -----------------------------------------------------------------------------------
 
@@ -4017,7 +4061,7 @@ function dnsLookup($URLHost) {
 // / The information obtained here binds downstream dependencies like CURL & FFMPEG to these locations.
 function gatherRemoteStreamHostInfo($StreamURL) {
   // / Set variables.
-  global $Verbose, $AllowStreamOverHTTP;
+  global $Verbose, $AllowStreamOverHTTP, $EnableMemoryProtection;
   $LookupFailed = $InspectionFailed = TRUE;
   $URLIP = $URLHost = $URLPort = $URLScheme = $StreamContainsLAN = $StreamDNSContainsLAN = $StreamURLResolutionFailed = FALSE;
   $urlIsSanitized = $partsAreSanitized = $schemeIsSanitized = $hostIsSanitized = FALSE;
@@ -4079,8 +4123,7 @@ function gatherRemoteStreamHostInfo($StreamURL) {
   // / Write the information obtained to the log file.
   if ($Verbose) logEntry('URL Inspection Result: '.($InspectionFailed ? 'FAILED' : 'PASSED').', Host: '.$URLHost.', Port: '.$URLPort.', Scheme: '.$URLScheme.', Contains LAN: '.($StreamContainsLAN ? 'TRUE' : 'FALSE').', URL Resolution Failed: '.($StreamURLResolutionFailed ? 'TRUE' : 'FALSE').', Lookup Failed: '.($LookupFailed ? 'TRUE' : 'FALSE').'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $allowedSchemes = $urlParts = $StreamDNSContainsLAN = $urlIsSanitized = $partsAreSanitized = $schemeIsSanitized = $hostIsSanitized = NULL;
-  unset($allowedSchemes, $urlParts, $StreamDNSContainsLAN, $urlIsSanitized, $partsAreSanitized, $schemeIsSanitized, $hostIsSanitized);
+  purgeSensitiveMemory($EnableMemoryProtection, $allowedSchemes, $urlParts, $StreamDNSContainsLAN, $urlIsSanitized, $partsAreSanitized, $schemeIsSanitized, $hostIsSanitized);
   return array($InspectionFailed, $StreamURLResolutionFailed, $StreamContainsLAN, $LookupFailed, $URLHost, $URLPort, $URLScheme, $URLIP); }
 // / -----------------------------------------------------------------------------------
 
@@ -4093,6 +4136,7 @@ function gatherRemoteStreamHostInfo($StreamURL) {
 // / Returns an empty string when the URI cannot be honestly resolved. The caller must deny on empty.
 function resolveStreamURI($StreamURI, $ParentURL) {
   // / Set variables.
+  global $EnableMemoryProtection;
   $AbsoluteURL = '';
   $parentParts = array();
   $parentScheme = $parentHost = $parentPort = $parentDir = '';
@@ -4123,8 +4167,7 @@ function resolveStreamURI($StreamURI, $ParentURL) {
       $parentDir = rtrim(dirname($parentParts['path'] ?? '/'), '/');
       $AbsoluteURL = $parentScheme.'://'.$parentHost.$parentPort.$parentDir.'/'.$StreamURI; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $parentParts = $parentScheme = $parentHost = $parentPort = $parentDir = $uriIsAbsolute = $parentIsUsable = NULL;
-  unset($parentParts, $parentScheme, $parentHost, $parentPort, $parentDir, $uriIsAbsolute, $parentIsUsable);
+  purgeSensitiveMemory($EnableMemoryProtection, $parentParts, $parentScheme, $parentHost, $parentPort, $parentDir, $uriIsAbsolute, $parentIsUsable);
   return $AbsoluteURL; }
 // / -----------------------------------------------------------------------------------
 
@@ -4134,6 +4177,7 @@ function resolveStreamURI($StreamURI, $ParentURL) {
 // / This function only validates the syntactical form of IP addresses, and ensures they are not in a reserved range.
 function inspectStreamIP($streamFileContents) {
   // / Set variables.
+  global $EnableMemoryProtection;
   $ipMatch = '';
   $IPCount = 0;
   $ipMatchesTemp = $ip4Temp = $ip6Temp = $IPMatches = array();
@@ -4168,8 +4212,7 @@ function inspectStreamIP($streamFileContents) {
   // / Count the number of publicly routable IPs found before we stopped.
   $IPCount = count($IPMatches);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $ipMatch = $ipMatchesTemp = $ip4Pattern = $ip6Pattern = $streamFileContents = $ip4Temp = $ip6Temp = NULL;
-  unset($ipMatch, $ipMatchesTemp, $ip4Pattern, $ip6Pattern, $streamFileContents, $ip4Temp, $ip6Temp);
+  purgeSensitiveMemory($EnableMemoryProtection, $ipMatch, $ipMatchesTemp, $ip4Pattern, $ip6Pattern, $streamFileContents, $ip4Temp, $ip6Temp);
   return array($IPMatches, $IPCount, $StreamContainsLAN, $StreamContainsIP); }
 // / -----------------------------------------------------------------------------------
 
@@ -4180,6 +4223,7 @@ function inspectStreamIP($streamFileContents) {
 // / Preserves http:// and https:// as the only allowed protocols.
 function inspectStreamDomain($streamFileContents) {
   // / Set variables.
+  global $EnableMemoryProtection;
   $DomainCount = 0;
   $DomainNames = $domainMatches = array();
   $StreamContainsDomain = FALSE;
@@ -4196,8 +4240,7 @@ function inspectStreamDomain($streamFileContents) {
     // / $domainMatches[0] is NOT safe to use for DNS. It is only referenced here for counting.
     $DomainCount = count($domainMatches[0]); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $domainPattern = $streamFileContents = $domainMatches = NULL;
-  unset($domainPattern, $streamFileContents, $domainMatches);
+  purgeSensitiveMemory($EnableMemoryProtection, $domainPattern, $streamFileContents, $domainMatches);
   return array($DomainNames, $DomainCount, $StreamContainsDomain); }
 // / -----------------------------------------------------------------------------------
 
@@ -4210,6 +4253,7 @@ function inspectStreamDomain($streamFileContents) {
 // / Otherwise every genuine segment will fail this check for the wrong reason.
 function inspectTSFile($fileContents) {
   // / Set variables.
+  global $EnableMemoryProtection;
   $packetSize = 188;
   $packetsToCheck = 5;
   $syncByte = "\x47";
@@ -4228,8 +4272,7 @@ function inspectTSFile($fileContents) {
         $Check = FALSE;
         break; } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $packetSize = $packetsToCheck = $syncByte = $offset = $bytesRequired = $fileContents = NULL;
-  unset($packetSize, $packetsToCheck, $syncByte, $offset, $bytesRequired, $fileContents);
+  purgeSensitiveMemory($EnableMemoryProtection, $packetSize, $packetsToCheck, $syncByte, $offset, $bytesRequired, $fileContents);
   return $Check; }
 // / -----------------------------------------------------------------------------------
 
@@ -4240,14 +4283,14 @@ function inspectTSFile($fileContents) {
 // / This is the single source of truth for stream file classification. Do not duplicate this logic.
 function classifyStreamContent($streamContents) {
   // / Set variables.
+  global $EnableMemoryProtection;
   $IsPlaylist = $IsSegment = FALSE;
   // / A playlist must open with the #EXTM3U tag. ltrim handles a BOM or leading whitespace.
   if (strncmp(ltrim($streamContents), '#EXTM3U', 7) === 0) $IsPlaylist = TRUE;
   // / Only check for MPEG-TS if it is not already a playlist. Nothing can legitimately be both.
   else $IsSegment = inspectTSFile($streamContents);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $streamContents = NULL;
-  unset($streamContents);
+  purgeSensitiveMemory($EnableMemoryProtection, $streamContents);
   return array($IsPlaylist, $IsSegment); }
 // / -----------------------------------------------------------------------------------
 
@@ -4263,7 +4306,7 @@ function classifyStreamContent($streamContents) {
 // / $StreamWatchTimeout is documented in minutes & is converted once here.
 function downloadStreamFile($StreamURL, $URLHost, $URLPort, $URLIP, $URLScheme, $FileNumber) {
   // / Set variables.
-  global $Verbose, $AllowStreamOverHTTP, $StreamConnectionTimeout, $StreamWatchTimeout, $DirSep, $MaxStreamInspectionFileSize, $StreamTemp;
+  global $Verbose, $AllowStreamOverHTTP, $StreamConnectionTimeout, $StreamWatchTimeout, $DirSep, $MaxStreamInspectionFileSize, $StreamTemp, $EnableMemoryProtection;
   $DownloadFailed = $StreamFileTruncated = TRUE;
   $pinIsComplete = FALSE;
   $curlOutput = array();
@@ -4313,8 +4356,7 @@ function downloadStreamFile($StreamURL, $URLHost, $URLPort, $URLIP, $URLScheme, 
   // / The caller reads this file immediately after this function returns.
   if ($DownloadFailed) $LocalStreamPath = '';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $curlCommand = $curlOutput = $protoString = $curlExitCode = $downloadedBytes = $pinIsComplete = NULL;
-  unset($curlCommand, $curlOutput, $protoString, $curlExitCode, $downloadedBytes, $pinIsComplete);
+  purgeSensitiveMemory($EnableMemoryProtection, $curlCommand, $curlOutput, $protoString, $curlExitCode, $downloadedBytes, $pinIsComplete);
   return array($DownloadFailed, $LocalStreamPath, $StreamFileTruncated); }
 // / -----------------------------------------------------------------------------------
 
@@ -4326,7 +4368,7 @@ function downloadStreamFile($StreamURL, $URLHost, $URLPort, $URLIP, $URLScheme, 
 // / This function inspects. It does not connect to anything & it does not decide the fate of the walk.
 function inspectStreamFile($StreamFile, $ParentURL, $CurrentLayer) {
   // / Set variables.
-  global $Verbose, $AllowStreamOverHTTP, $SupportedConversionTypes, $StreamArray;
+  global $Verbose, $AllowStreamOverHTTP, $SupportedConversionTypes, $StreamArray, $EnableMemoryProtection;
   $StreamContainsIP = $StreamContainsLAN = $StreamContainsHTTP = $StreamContainsDomain = FALSE;
   $streamFileExtension = $RawURI = $streamFileContents = '';
   $StreamURIs = $DomainMatches = $IPMatches = $streamLineMatches = array();
@@ -4403,8 +4445,7 @@ function inspectStreamFile($StreamFile, $ParentURL, $CurrentLayer) {
   // / Content that disagrees with its own extension is the shape of a disguised file.
   if ($ContentMismatch) warningEntry('Stream File '.$StreamFile.' content does not match its file extension.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $streamFileContents = $DomainMatches = $IPMatches = $streamLineMatches = $RawURI = $extensionAllowed = NULL;
-  unset($streamFileContents, $DomainMatches, $IPMatches, $streamLineMatches, $RawURI, $extensionAllowed);
+  purgeSensitiveMemory($EnableMemoryProtection, $streamFileContents, $DomainMatches, $IPMatches, $streamLineMatches, $RawURI, $extensionAllowed);
   return array($InspectionFailed, $StreamURIs, $StreamContainsLAN, $StreamContainsIP, $StreamContainsHTTP, $looksLikePlaylist, $looksLikeSegment); }
 // / -----------------------------------------------------------------------------------
 
@@ -4415,7 +4456,7 @@ function inspectStreamFile($StreamFile, $ParentURL, $CurrentLayer) {
 // / $TotalBudget never resets because it bounds the entire tree regardless of shape.
 // / $Halt is one-way. Once anything sets it, nothing may clear it.
 function streamFileWalker($StreamFile) {
-  global $Verbose, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction;
+  global $Verbose, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $EnableMemoryProtection;
   // / Set variables.
   $Halt = $StreamBudgetExhausted = $InspectionFailed = $DownloadFailed = $StreamFileTruncated = FALSE;
   $looksLikePlaylist = $looksLikeSegment = $StreamContainsLAN = $StreamContainsIP = $StreamContainsHTTP = FALSE;
@@ -4557,10 +4598,7 @@ function streamFileWalker($StreamFile) {
   if ($Verbose) logEntry('Stream Walk Result: '.($InspectionFailed ? 'DENIED' : 'ALLOWED').', Layers Walked: '.$currentLayer.', Files Downloaded: '.$FileNumber.', URIs Examined: '.count($AllStreamURIs).', Unique URLs Seen: '.count($SeenURLs).', Budget Exhausted: '.($StreamBudgetExhausted ? 'TRUE' : 'FALSE').', Reason: '.($HaltReason === '' ? 'NONE' : $HaltReason).'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $layerFile & $uriRecord hold whole records including validated IPs & local paths, so they matter most here.
-  $currentLayerFiles = $nextLayerFiles = $streamURIs = $layerFile = $uriRecord = $currentLayer = $index = NULL;
-  $urlHost = $urlPort = $urlScheme = $urlIP = NULL;
-  unset($currentLayerFiles, $nextLayerFiles, $streamURIs, $layerFile, $uriRecord, $currentLayer, $index);
-  unset($urlHost, $urlPort, $urlScheme, $urlIP);
+  purgeSensitiveMemory($EnableMemoryProtection, $currentLayerFiles, $nextLayerFiles, $streamURIs, $layerFile, $uriRecord, $currentLayer, $index, $urlHost, $urlPort, $urlScheme, $urlIP);
   return array($InspectionFailed, $StreamBudgetExhausted, $HaltReason, $AllStreamURIs, $SeenURLs); }
 // / -----------------------------------------------------------------------------------
 
@@ -4570,7 +4608,7 @@ function streamFileWalker($StreamFile) {
 // / This is the only thing preventing an abandoned stream from running until PHP or the OS intervenes.
 function waitForStream($StreamPID, $newPathname) {
   // / Set variables.
-  global $Verbose, $StreamWatchTimeout;
+  global $Verbose, $StreamWatchTimeout, $EnableMemoryProtection;
   $StreamCompleted = $StreamKilled = $pidIsUsable = FALSE;
   $psOutput = array();
   $ElapsedSeconds = 0;
@@ -4597,8 +4635,7 @@ function waitForStream($StreamPID, $newPathname) {
       if ($Verbose) logEntry('Stream PID '.$StreamPID.' exceeded the watch timeout & was terminated.'); }
     else if ($Verbose) logEntry('Stream PID '.$StreamPID.' finished after '.$ElapsedSeconds.' seconds. Output exists: '.(file_exists($newPathname) ? 'TRUE' : 'FALSE').'.'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $psOutput = $pollInterval = $timeoutSeconds = $pidIsUsable = NULL;
-  unset($psOutput, $pollInterval, $timeoutSeconds, $pidIsUsable);
+  purgeSensitiveMemory($EnableMemoryProtection, $psOutput, $pollInterval, $timeoutSeconds, $pidIsUsable);
   return array($StreamCompleted, $StreamKilled, $ElapsedSeconds); }
 // / -----------------------------------------------------------------------------------
 
@@ -4611,7 +4648,7 @@ function waitForStream($StreamPID, $newPathname) {
 // / Stream inspection cannot protect an affected build, so those builds are refused outright.
 function convertStreams($pathname, $newPathname) {
   // / Set variables.
-  global $Verbose, $StreamConnectionTimeout, $AllowStreamOverHTTP, $MinimumStreamFFMPEGVersion;
+  global $Verbose, $StreamConnectionTimeout, $AllowStreamOverHTTP, $MinimumStreamFFMPEGVersion, $EnableMemoryProtection;
   $ConversionSuccess = $ConversionErrors = $WaitForStream = FALSE;
   $ffmpegVersionIsValid = $inspectionFailed = $streamBudgetExhausted = FALSE;
   $allStreamURIs = $seenURLs = array();
@@ -4653,8 +4690,7 @@ function convertStreams($pathname, $newPathname) {
         $ConversionErrors = TRUE;
         errorEntry('The stream converter failed to launch!', 21000, FALSE); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $ffmpegCommand = $httpString = $allStreamURIs = $seenURLs = $haltReason = $streamBudgetExhausted = $inspectionFailed = $ffmpegVersionIsValid = $pathname = $newPathname = NULL;
-  unset($returnData, $ffmpegCommand, $httpString, $allStreamURIs, $seenURLs, $haltReason, $streamBudgetExhausted, $inspectionFailed, $ffmpegVersionIsValid, $pathname, $newPathname);
+  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $ffmpegCommand, $httpString, $allStreamURIs, $seenURLs, $haltReason, $streamBudgetExhausted, $inspectionFailed, $ffmpegVersionIsValid, $pathname, $newPathname);
   return array($ConversionSuccess, $ConversionErrors, $WaitForStream, $StreamPID); }
 // / -----------------------------------------------------------------------------------
 
@@ -4664,7 +4700,7 @@ function convertStreams($pathname, $newPathname) {
 // / conversion reads a local file & never fetches anything remote.
 function convertAudio($pathname, $newPathname, $extension, $bitrate) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumFFMPEGVersion;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumFFMPEGVersion, $EnableMemoryProtection;
   $ConversionSuccess = $ConversionErrors = $sandboxIsAvailable = FALSE;
   $ffmpegBinary = FALSE;
   $returnData = $ffmpegCommand = '';
@@ -4707,8 +4743,7 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
       // / attempt would report success for a conversion that was refused & never ran.
       if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $returnData = $stopper = $pathname = $br = $bitrate = $sleepTime = $ffmpegBinary = $ffmpegCommand = $sandboxIsAvailable = NULL;
-  unset($returnData, $stopper, $pathname, $br, $bitrate, $sleepTime, $ffmpegBinary, $ffmpegCommand, $sandboxIsAvailable);
+  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $br, $bitrate, $sleepTime, $ffmpegBinary, $ffmpegCommand, $sandboxIsAvailable);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension); }
 // / -----------------------------------------------------------------------------------
 
@@ -4736,7 +4771,7 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
 // / cannot be built. That is deliberate. An unpinned bootloader is worse than no bootloader.
 function verifyIsoBootloaders($extension, $safedir2) {
   // / Set variables.
-  global $DirSep, $BootloadersDir;
+  global $DirSep, $BootloadersDir, $EnableMemoryProtection;
   $BootloadersOK = FALSE;
   $userPathIsPresent = $allAssetsValid = FALSE;
   $userEfiPath = $bundledPath = $computedHash = $requiredAsset = '';
@@ -4782,8 +4817,7 @@ function verifyIsoBootloaders($extension, $safedir2) {
         else if ($computedHash !== $assetMap[$requiredAsset]['hash']) $allAssetsValid = FALSE; }
       $BootloadersOK = $allAssetsValid; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $extension = $safedir2 = $userEfiPath = $bundledPath = $computedHash = $requiredAsset = $assetMap = $requiredAssets = $userPathIsPresent = $allAssetsValid = NULL;
-  unset($extension, $safedir2, $userEfiPath, $bundledPath, $computedHash, $requiredAsset, $assetMap, $requiredAssets, $userPathIsPresent, $allAssetsValid);
+  purgeSensitiveMemory($EnableMemoryProtection, $extension, $safedir2, $userEfiPath, $bundledPath, $computedHash, $requiredAsset, $assetMap, $requiredAssets, $userPathIsPresent, $allAssetsValid);
   return $BootloadersOK; }
 // / -----------------------------------------------------------------------------------
 
@@ -4808,7 +4842,7 @@ function verifyIsoBootloaders($extension, $safedir2) {
 // / ordinary iso rather than an architecture flag it does not understand.
 function generateBootableIsoCommand($extension, $newPathname, $safedir2, $mkisofsBinary, $isoHybridBinary) {
   // / Set variables.
-  global $DirSep, $BootloadersDir;
+  global $DirSep, $BootloadersDir, $EnableMemoryProtection;
   $bootData = FALSE;
   $CleanNewPathname = $HybridCommand = $baseFlags = $bootFlags = $command = $userBin = $targetIsoLinuxDir = '';
   $bundledBin = $bundledC32 = $isoRelativeEfi = $bundledImg = $targetEfiName = $targetEfiPath = '';
@@ -4885,8 +4919,7 @@ function generateBootableIsoCommand($extension, $newPathname, $safedir2, $mkisof
   // / core will use the correct filename.
   $extension = 'iso';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $newPathname = $safedir2 = $mkisofsBinary = $isoHybridBinary = $baseFlags = $bootFlags = $command = $userBin = $targetIsoLinuxDir = $bundledBin = $bundledC32 = $gptMap = $selectedGpt = $isoRelativeEfi = $bundledImg = $targetEfiName = $targetEfiPath = NULL;
-  unset($newPathname, $safedir2, $mkisofsBinary, $isoHybridBinary, $baseFlags, $bootFlags, $command, $userBin, $targetIsoLinuxDir, $bundledBin, $bundledC32, $gptMap, $selectedGpt, $isoRelativeEfi, $bundledImg, $targetEfiName, $targetEfiPath);
+  purgeSensitiveMemory($EnableMemoryProtection, $newPathname, $safedir2, $mkisofsBinary, $isoHybridBinary, $baseFlags, $bootFlags, $command, $userBin, $targetIsoLinuxDir, $bundledBin, $bundledC32, $gptMap, $selectedGpt, $isoRelativeEfi, $bundledImg, $targetEfiName, $targetEfiPath);
   return array($bootData, $extension, $CleanNewPathname, $HybridCommand); }
 // / -----------------------------------------------------------------------------------
 
@@ -4906,7 +4939,7 @@ function generateBootableIsoCommand($extension, $newPathname, $safedir2, $mkisof
 // / the image & isohybrid then rewrites its MBR in place.
 function convertArchives($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $ConvertDir, $Lol, $Lolol, $StopCounter, $SleepTimer, $PermissionLevels, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumIsoHybridVersion, $AllowBootableIsoImage, $BootableIsoArray;
+  global $Verbose, $ConvertDir, $Lol, $Lolol, $StopCounter, $SleepTimer, $PermissionLevels, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumIsoHybridVersion, $AllowBootableIsoImage, $BootableIsoArray, $EnableMemoryProtection;
   $ConversionSuccess = $ConversionErrors = $sandboxIsAvailable = FALSE;
   $archiveToolsAreValid = $bootloadersAreValid = FALSE;
   $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = $isoHybridBinary = FALSE;
@@ -5043,8 +5076,7 @@ function convertArchives($pathname, $newPathname, $extension) {
   // / Code to clean up temporary files & directories.
   cleanFiles($safedir2);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $filename = $safedir2 = $oldExtension = $returnData = $pathname = $array7zo = $arrayzipo = $array7zo2 = $array7zo3 = $arraytaro = $arrayraro = $sleepTime = $stopper = $extractCommand = $archiveCommand = $hybridCommand = $archiveError = $sandboxIsAvailable = $archiveToolsAreValid = $bootloadersAreValid = $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = $isoHybridBinary = NULL;
-  unset($filename, $safedir2, $oldExtension, $returnData, $pathname, $array7zo, $arrayzipo, $array7zo2, $array7zo3, $arraytaro, $arrayraro, $sleepTime, $stopper, $extractCommand, $archiveCommand, $hybridCommand, $archiveError, $sandboxIsAvailable, $archiveToolsAreValid, $bootloadersAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary);
+  purgeSensitiveMemory($EnableMemoryProtection, $filename, $safedir2, $oldExtension, $returnData, $pathname, $array7zo, $arrayzipo, $array7zo2, $array7zo3, $arraytaro, $arrayraro, $sleepTime, $stopper, $extractCommand, $archiveCommand, $hybridCommand, $archiveError, $sandboxIsAvailable, $archiveToolsAreValid, $bootloadersAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $UserFilename); }
 // / -----------------------------------------------------------------------------------
 
@@ -5058,7 +5090,7 @@ function convertArchives($pathname, $newPathname, $extension) {
 // / an undefined return value is a warning & a warning corrupts an AJAX response.
 function convert($type, $pathname, $newPathname, $extension, $height, $width, $rotate, $bitrate) {
   // / Set variables.
-  global $Verbose, $SupportedConversionTypes, $WaitForStream, $StreamPID, $StreamOutputPath;
+  global $Verbose, $SupportedConversionTypes, $WaitForStream, $StreamPID, $StreamOutputPath, $EnableMemoryProtection;
   $ConversionSuccess = $ConversionErrors = FALSE;
   $UserFilename = basename($newPathname);
   // / Check that the required conversion type is allowed.
@@ -5081,15 +5113,14 @@ function convert($type, $pathname, $newPathname, $extension, $height, $width, $r
       list ($ConversionSuccess, $ConversionErrors, $WaitForStream, $StreamPID) = convertStreams($pathname, $newPathname);
       $StreamOutputPath = $newPathname; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $type = $pathname = $height = $width = $rotate = $bitrate = NULL;
-  unset($type, $pathname, $height, $width, $rotate, $bitrate);
+  purgeSensitiveMemory($EnableMemoryProtection, $type, $pathname, $height, $width, $rotate, $bitrate);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $UserFilename); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to verify files before performing operations on them.
 function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) {
-  global $DangerousFiles, $ConvertDir, $ConvertTempDir, $Allowed, $Verbose;
+  global $DangerousFiles, $ConvertDir, $ConvertTempDir, $Allowed, $Verbose, $EnableMemoryProtection;
   $FileIsVerified = $Pathname = $OldPathname = $NewPathname = $variableIsSanitized = FALSE;
   // / If the $UserFilename is blank then use the original filename instead.
   $OldExtension = getExtension($file);
@@ -5126,8 +5157,7 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
       // / Check to make sure that the stale file was deleted if required or creating a new one will cause problems.
       if (file_exists($NewPathname) && $clean) errorEntry('Could not delete stale file '.$NewPathname.'!', 14004, TRUE); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $variableIsSanitized = NULL;
-  unset($file, $variableIsSanitized);
+  purgeSensitiveMemory($EnableMemoryProtection, $file, $variableIsSanitized);
   return array($FileIsVerified, $Pathname, $OldPathname, $OldExtension, $NewPathname, $UserFilename); }
 // / -----------------------------------------------------------------------------------
 
@@ -5139,7 +5169,7 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
 // / pack is required from inside this function. Nothing outside this call can read them.
 function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   // / Set variables.
-  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray;
+  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection;
   $GUIDisplayed = FALSE;
   $guiUIFile = $GuiUI1File;
   $fallbackStringsFile = '';
@@ -5197,8 +5227,7 @@ function buildGUI($guiType, $ShowGUI, $ButtonCode) {
     // / Check if the required GUI elements were loaded.
     if ($HeaderDisplayed && $UIDisplayed && $FooterDisplayed && $LanguageStringsLoaded) $GUIDisplayed = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $guiType = $guiUIFile = $fallbackStringsFile = $ButtonCode = NULL;
-  unset($guiType, $guiUIFile, $fallbackStringsFile, $ButtonCode);
+  purgeSensitiveMemory($EnableMemoryProtection, $guiType, $guiUIFile, $fallbackStringsFile, $ButtonCode);
   return $GUIDisplayed; }
 // / -----------------------------------------------------------------------------------
 
@@ -5218,7 +5247,7 @@ function showGUI($ShowGUI, $ButtonCode) {
 // / A function to upload a selection of files.
 function uploadFiles() {
   // / Set variables.
-  global $DangerousFiles, $VirusScan, $AllowUserVirusScan, $ConvertDir, $LogFile, $Verbose, $PermissionLevels, $Allowed;
+  global $DangerousFiles, $VirusScan, $AllowUserVirusScan, $ConvertDir, $LogFile, $Verbose, $PermissionLevels, $Allowed, $EnableMemoryProtection;
   $UploadComplete = $UploadErrors = $virusFound = $variableIsSanitized = FALSE;
   $file = $f0 = $f1 = '';
   // / Make sure the input files are formatted into an array.
@@ -5259,8 +5288,7 @@ function uploadFiles() {
         if ($virusFound) errorEntry('Virus detected!', 6004, TRUE);
         if ($Verbose) logEntry('Virus scan complete.'); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $f0 = $f1 = $variableIsSanitized = $scanComplete = $virusFound = NULL;
-  unset ($file, $f0, $f1, $variableIsSanitized, $scanComplete, $virusFound);
+  purgeSensitiveMemory($EnableMemoryProtection, $file, $f0, $f1, $variableIsSanitized, $scanComplete, $virusFound);
   return array($UploadComplete, $UploadErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -5268,7 +5296,7 @@ function uploadFiles() {
 // / A function to upload a selection of files.
 function downloadFiles($Download) {
   // / Set variables.
-  global $DangerousFiles, $Verbose, $ConvertDir, $ConsolidatedLogFileName, $Allowed;
+  global $DangerousFiles, $Verbose, $ConvertDir, $ConsolidatedLogFileName, $Allowed, $EnableMemoryProtection;
   $DownloadComplete = $DownloadErrors = $clean = $copy = $skip = $variableIsSanitized = FALSE;
   $file = $f0 = '';
   list ($Download, $variableIsSanitized) = sanitize($Download, FALSE);
@@ -5307,8 +5335,7 @@ function downloadFiles($Download) {
       if (!$DownloadErrors) $DownloadComplete = TRUE;
       if ($Verbose) logEntry('Verified file'.$newPathname.'.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $f0 = $clean = $copy = $skip = $variableIsSanitized = NULL;
-  unset ($file, $f0, $clean, $copy, $skip, $variableIsSanitized); 
+  purgeSensitiveMemory($EnableMemoryProtection, $file, $f0, $clean, $copy, $skip, $variableIsSanitized);
   return array($DownloadComplete, $DownloadErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -5317,7 +5344,7 @@ function downloadFiles($Download) {
 // / Each location is now unlinked using its own variable.
 function deleteFiles($FilesToDelete) {
   // / Set variables.
-  global $DangerousFiles, $Verbose, $ConvertDir, $ConvertTempDir;
+  global $DangerousFiles, $Verbose, $ConvertDir, $ConvertTempDir, $EnableMemoryProtection;
   $DeleteComplete = $DeleteErrors = $variableIsSanitized = FALSE;
   $file = $f0 = $f1 = '';
   list ($FilesToDelete, $variableIsSanitized) = sanitize($FilesToDelete, FALSE);
@@ -5352,8 +5379,7 @@ function deleteFiles($FilesToDelete) {
       $DeleteErrors = TRUE;
       errorEntry('Could not delete file '.$file.'!', 23002, FALSE); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $f0 = $f1 = $variableIsSanitized = NULL;
-  unset($file, $f0, $f1, $variableIsSanitized);
+  purgeSensitiveMemory($EnableMemoryProtection, $file, $f0, $f1, $variableIsSanitized);
   return array($DeleteComplete, $DeleteErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -5368,7 +5394,7 @@ function deleteFiles($FilesToDelete) {
 // / format without being able to write it, so rar output has NO fallback.
 function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
   // / Set variables.
-  global $Verbose, $VirusScan, $ConvertTempDir, $Lol, $Lolol, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion;
+  global $Verbose, $VirusScan, $ConvertTempDir, $Lol, $Lolol, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $EnableMemoryProtection;
   $ArchiveComplete = $ArchiveErrors = $virusFound = $skip = $variableIsSanitized = FALSE;
   $fileIsVerified = $scanComplete = $sandboxIsAvailable = $anyFileSucceeded = $loopCheck = FALSE;
   $archiveToolsAreValid = FALSE;
@@ -5462,8 +5488,7 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
     if ($loopCheck) $anyFileSucceeded = TRUE; }
   if ($anyFileSucceeded) $ArchiveComplete = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $rararr = $ziparr = $tararr = $isoarr = $pathname = $oldPathname = $scanComplete = $virusFound = $returnData = $variableIsSanitized = $fileIsVerified = $oldExtension = $clean = $copy = $skip = $loopCheck = $anyFileSucceeded = $archiveCommand = $sandboxIsAvailable = $archiveToolsAreValid = $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = $FilesToArchive = $UserFilename = $UserExtension = NULL;
-  unset($file, $rararr, $ziparr, $tararr, $isoarr, $pathname, $oldPathname, $scanComplete, $virusFound, $returnData, $variableIsSanitized, $fileIsVerified, $oldExtension, $clean, $copy, $skip, $loopCheck, $anyFileSucceeded, $archiveCommand, $sandboxIsAvailable, $archiveToolsAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $FilesToArchive, $UserFilename, $UserExtension);
+  purgeSensitiveMemory($EnableMemoryProtection, $file, $rararr, $ziparr, $tararr, $isoarr, $pathname, $oldPathname, $scanComplete, $virusFound, $returnData, $variableIsSanitized, $fileIsVerified, $oldExtension, $clean, $copy, $skip, $loopCheck, $anyFileSucceeded, $archiveCommand, $sandboxIsAvailable, $archiveToolsAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $FilesToArchive, $UserFilename, $UserExtension);
   return array($ArchiveComplete, $ArchiveErrors, $newPathname); }
 // / -----------------------------------------------------------------------------------
 
@@ -5473,7 +5498,7 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
 // / $WaitForStream tells us the conversion is still running & must not be judged by its output.
 function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, $Width, $Rotate, $Bitrate) {
   // / Set variables.
-  global $Verbose, $VirusScan, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $DocumentArray, $ImageArray, $ModelArray, $SCADArray, $DrawingArray, $SVGInputArray, $SVGOutputArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $StreamOutputArray, $MediaInputArray, $MediaOutputArray, $ArchiveArray, $BootableIsoArray, $EbookInputArray, $EbookOutputArray, $SupportedConversionTypes, $Lol, $WaitForStream;
+  global $Verbose, $VirusScan, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $DocumentArray, $ImageArray, $ModelArray, $SCADArray, $DrawingArray, $SVGInputArray, $SVGOutputArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $StreamOutputArray, $MediaInputArray, $MediaOutputArray, $ArchiveArray, $BootableIsoArray, $EbookInputArray, $EbookOutputArray, $SupportedConversionTypes, $Lol, $WaitForStream, $EnableMemoryProtection;
   $MainConversionSuccess = $MainConversionErrors = $virusFound = $skip = $isExtensionSupported = $fileIsVerified = $variableIsSanitized = $outputExists = $ConversionSuccess = $ConversionErrors = $fileConversionSuccess = $anyStreamStarted = $scanComplete = FALSE;
   $clean = $copy = TRUE;
   $pathname = $oldPathname = $oldExtension = $newPathname = $file = $convertedFilename = $extension = '';
@@ -5588,8 +5613,7 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
   // / Restore the aggregate so the core can supervise a stream started by ANY file.
   $WaitForStream = $anyStreamStarted;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $pathname = $oldPathname = $oldExtension = $newPathname = $docarray = $imgarray = $audioarray = $videoarray = $subtitleArray = $modelarray = $scadarray = $drawingarray = $archarray = $streamarray = $arrayArray = $arrArray = $fileIsVerified = $scanComplete = $virusFound = $variableIsSanitized = $arrKey = $clean = $copy = $skip = $isExtensionSupported = $outputExists = $ConversionSuccess = $ConversionErrors = $fileConversionSuccess = $anyStreamStarted = $arrayArrayOut = $convertedFilename = $extension = $ebookarray = $ebookarrayout = NULL;
-  unset($file, $pathname, $oldPathname, $oldExtension, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $subtitleArray, $modelarray, $scadarray, $drawingarray, $archarray, $streamarray, $arrayArray, $arrArray, $fileIsVerified, $scanComplete, $virusFound, $variableIsSanitized, $arrKey, $clean, $copy, $skip, $isExtensionSupported, $outputExists, $ConversionSuccess, $ConversionErrors, $fileConversionSuccess, $anyStreamStarted, $arrayArrayOut, $convertedFilename, $extension, $ebookarray, $ebookarrayout);
+  purgeSensitiveMemory($EnableMemoryProtection, $file, $pathname, $oldPathname, $oldExtension, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $subtitleArray, $modelarray, $scadarray, $drawingarray, $archarray, $streamarray, $arrayArray, $arrArray, $fileIsVerified, $scanComplete, $virusFound, $variableIsSanitized, $arrKey, $clean, $copy, $skip, $isExtensionSupported, $outputExists, $ConversionSuccess, $ConversionErrors, $fileConversionSuccess, $anyStreamStarted, $arrayArrayOut, $convertedFilename, $extension, $ebookarray, $ebookarrayout);
   return array($MainConversionSuccess, $MainConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -5609,7 +5633,7 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
 // / left with no boundary at all.
 function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   // / Set variables.
-  global $Verbose, $VirusScan, $ConvertTempDir, $ConvertDir, $Lol, $Lolol, $Append, $PathToUnoconv, $HomeLoc, $MinimumTesseractVersion, $MinimumPdftotextVersion, $MinimumImageVersion;
+  global $Verbose, $VirusScan, $ConvertTempDir, $ConvertDir, $Lol, $Lolol, $Append, $PathToUnoconv, $HomeLoc, $MinimumTesseractVersion, $MinimumPdftotextVersion, $MinimumImageVersion, $EnableMemoryProtection;
   $OperationSuccessful = $OperationErrors = $multiple = $virusFound = $skip = $variableIsSanitized = FALSE;
   $fileIsVerified = $scanComplete = $documentEngineStarted = $sandboxIsAvailable = $anyFileSucceeded = $loopCheck = FALSE;
   $ocrToolsAreValid = FALSE;
@@ -5858,8 +5882,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   // / Error handler for if any failures happened during file loops.
   if ($anyFileSucceeded) $OperationSuccessful = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $pathname = $oldPathname = $filename = $oldExtension = $newPathname = $doc1array = $img1array = $pdf1array = $pathnameTEMP = $pathnameTEMP0 = $pathnameTEMP1 = $pathnameTEMP3 = $pagedFilesArrRAW = $pagedFile = $cleanFilname = $pageNumber = $readPageData = $writePageData = $multiple = $pathnameTEMPTesseract = $clean = $copy = $skip = $allowedOCR = $variableIsSanitized = $loopCheck = $anyFileSucceeded = $ocrCommand = $sandboxIsAvailable = $fileIsVerified = $scanComplete = $virusFound = $documentEngineStarted = $documentEnginePID = $returnData = $ocrToolsAreValid = $tesseractBinary = $pdftotextBinary = $imageBinary = $PDFWorkSelected = $UserFilename = $UserExtension = $Method = NULL;
-  unset($file, $pathname, $oldPathname, $filename, $oldExtension, $newPathname, $doc1array, $img1array, $pdf1array, $pathnameTEMP, $pathnameTEMP0, $pathnameTEMP1, $pathnameTEMP3, $pagedFilesArrRAW, $pagedFile, $cleanFilname, $pageNumber, $readPageData, $writePageData, $multiple, $pathnameTEMPTesseract, $clean, $copy, $skip, $allowedOCR, $variableIsSanitized, $loopCheck, $anyFileSucceeded, $ocrCommand, $sandboxIsAvailable, $fileIsVerified, $scanComplete, $virusFound, $documentEngineStarted, $documentEnginePID, $returnData, $ocrToolsAreValid, $tesseractBinary, $pdftotextBinary, $imageBinary, $PDFWorkSelected, $UserFilename, $UserExtension, $Method);
+  purgeSensitiveMemory($EnableMemoryProtection, $file, $pathname, $oldPathname, $filename, $oldExtension, $newPathname, $doc1array, $img1array, $pdf1array, $pathnameTEMP, $pathnameTEMP0, $pathnameTEMP1, $pathnameTEMP3, $pagedFilesArrRAW, $pagedFile, $cleanFilname, $pageNumber, $readPageData, $writePageData, $multiple, $pathnameTEMPTesseract, $clean, $copy, $skip, $allowedOCR, $variableIsSanitized, $loopCheck, $anyFileSucceeded, $ocrCommand, $sandboxIsAvailable, $fileIsVerified, $scanComplete, $virusFound, $documentEngineStarted, $documentEnginePID, $returnData, $ocrToolsAreValid, $tesseractBinary, $pdftotextBinary, $imageBinary, $PDFWorkSelected, $UserFilename, $UserExtension, $Method);
   return array($OperationSuccessful, $OperationErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -5907,7 +5930,7 @@ function verifyUserVirusLogs($type) {
 // / Type can be either 'clamav' or 'scancore'.
 function userVirusLogEntry($Entry, $type) {
   // / Set variables.
-  global $Time, $UserClamLogFile, $UserScanCoreLogFile, $SesHash3, $Lol, $Append;
+  global $Time, $UserClamLogFile, $UserScanCoreLogFile, $SesHash3, $Lol, $Append, $EnableMemoryProtection;
   $LogWritten = $logWrittenA = $logWrittenB = FALSE;
   // / Format the input string into a log entry & write it to the $UserClamLogFile.
   if ($type === 'clamav') $logWrittenA = file_put_contents($UserClamLogFile, 'Op-Act, '.$Time.', '.$SesHash3.': '.$Entry.$Lol, $Append);
@@ -5917,8 +5940,7 @@ function userVirusLogEntry($Entry, $type) {
   if ($type === 'clamav') if ($logWrittenA) $LogWritten = TRUE;
   if ($type === 'scancore') if ($logWrittenB) $LogWritten = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $logWrittenA = $logWrittenB = NULL;
-  unset($logWrittenA, $logWrittenB);
+  purgeSensitiveMemory($EnableMemoryProtection, $logWrittenA, $logWrittenB);
   return $LogWritten; }
 // / -----------------------------------------------------------------------------------
 
@@ -5926,7 +5948,7 @@ function userVirusLogEntry($Entry, $type) {
 // / A function to scan a user supplied file on-demand with ClamAV.
 function userClamScan($FilesToScan) {
   // / Set variables.
-  global $Verbose, $ConvertDir, $Lol, $Lolol, $UserClamLogFile;
+  global $Verbose, $ConvertDir, $Lol, $Lolol, $UserClamLogFile, $EnableMemoryProtection;
   $OperationSuccessful = $OperationErrors = $UserVirusFound = $userFilename = $userExtension = $clean = $copy = $userFilename = $userExtension = $variableIsSanitized = FALSE;
   $skip = TRUE;
   $returnData = $txt = $file = $clamLogFileDATA = '';
@@ -5978,8 +6000,7 @@ function userClamScan($FilesToScan) {
   if ($Verbose) logEntry($txt);
   userVirusLogEntry($txt, 'clamav');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $variableIsSanitized = $clean = $copy = $skip = $returnData = $txt = $userFilename = $userExtension = $clamLogFileDATA  = NULL;
-  unset($variableIsSanitized, $clean, $copy, $skip, $returnData, $txt, $userFilename, $userExtension, $clamLogFileDATA);
+  purgeSensitiveMemory($EnableMemoryProtection, $variableIsSanitized, $clean, $copy, $skip, $returnData, $txt, $userFilename, $userExtension, $clamLogFileDATA);
   return array($OperationSuccessful, $OperationErrors, $UserVirusFound); }
 // / -----------------------------------------------------------------------------------
 
@@ -5987,7 +6008,7 @@ function userClamScan($FilesToScan) {
 // / A fuction to prepare the execution environment for ScanCore.
 function startScanCore($pathname, $UserScanCoreLogFile) {
   // / Set variables.
-  global $InstLoc, $ConvertDir, $MaxLogSize, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $DirSep, $ScanCoreVerbose, $ScanCoreDebug, $Date, $SesHash, $SesHash2; 
+  global $InstLoc, $ConvertDir, $MaxLogSize, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $DirSep, $ScanCoreVerbose, $ScanCoreDebug, $Date, $SesHash, $SesHash2, $EnableMemoryProtection;
   $ReturnData = $scVerbose = $scDebug = '';
   $ScanCoreFile = $InstLoc.$DirSep.'Resources'.$DirSep.'ScanCore'.$DirSep.'ScanCore.php';
   $scInc = 0;
@@ -6001,8 +6022,7 @@ function startScanCore($pathname, $UserScanCoreLogFile) {
   // / Run ScanCore with the information supplied.
   $ReturnData = shell_exec('php '.$ScanCoreFile.' '.$pathname.' -m '.$ScanCoreMemoryLimit.' -c '.$ScanCoreChunkSize.' -lf '.$scLogFile.' -rf '.$UserScanCoreLogFile.' -ml '.$MaxLogSize.' -r'.$scVerbose.$scDebug);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $pathname = $scVerbose = $scDebug = $scLogFile = $scInc = NULL;
-  unset($pathname, $scVerbose, $scDebug, $scLogFile, $scInc);
+  purgeSensitiveMemory($EnableMemoryProtection, $pathname, $scVerbose, $scDebug, $scLogFile, $scInc);
   return $ReturnData; }
 // / -----------------------------------------------------------------------------------
 
@@ -6010,7 +6030,7 @@ function startScanCore($pathname, $UserScanCoreLogFile) {
 // / A function to scan a user supplied file on-demand with ScanCore.
 function userScanCoreScan($FilesToScan) {
   // / Set variables.
-  global $Verbose, $ConvertDir, $Lol, $Lolol, $UserScanCoreLogFile;
+  global $Verbose, $ConvertDir, $Lol, $Lolol, $UserScanCoreLogFile, $EnableMemoryProtection;
   $OperationSuccessful = $OperationErrors = $UserVirusFound = $userFilename = $userExtension = $clean = $copy = $variableIsSanitized = FALSE;
   $skip = TRUE;
   $returnData = $txt = $file = $scanCoreLogFileDATA = '';
@@ -6063,8 +6083,7 @@ function userScanCoreScan($FilesToScan) {
   if ($Verbose) logEntry($txt);
   userVirusLogEntry($txt, 'scancore');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $variableIsSanitized = $clean = $copy = $skip = $returnData = $txt = $userFilename = $userExtension = $scanCoreLogFileDATA = NULL;
-  unset($variableIsSanitized, $clean, $copy, $skip, $returnData, $txt, $userFilename, $userExtension, $scanCoreLogFileDATA);
+  purgeSensitiveMemory($EnableMemoryProtection, $variableIsSanitized, $clean, $copy, $skip, $returnData, $txt, $userFilename, $userExtension, $scanCoreLogFileDATA);
   return array($OperationSuccessful, $OperationErrors, $UserVirusFound); }
 // / -----------------------------------------------------------------------------------
 
@@ -6073,6 +6092,7 @@ function userScanCoreScan($FilesToScan) {
 // / Type can be either 'clamav', 'scancore', or 'all'.
 function checkUserVirusScanResults($type, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors) {
   // / Set variables.
+  global $EnableMemoryProtection;
   $ScanComplete = $ScanErrors = FALSE;
   // / Check that all the input check results are valid.
   if (!is_bool($scan1Complete)) $scan1Complete = FALSE;
@@ -6094,8 +6114,7 @@ function checkUserVirusScanResults($type, $scan1Complete, $scan1Errors, $scan2Co
      if ($scan2Complete) $ScanComplete = TRUE;
      if ($scan2Errors) $ScanErrors = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $scan1Complete = $scan1Errors = $scan2Complete = $scan2Errors = NULL;
-  unset($scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors);
+  purgeSensitiveMemory($EnableMemoryProtection, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors);
   return array($ScanComplete, $ScanErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -6127,7 +6146,7 @@ function verifyConsolidatedLogFile() {
 // / Type can be either 'clamav', 'scancore', or 'all'.
 function consolidateLogs($type, $UserClamLogFile, $UserScanCoreLogFile) {
   // / Set variables.
-  global $Verbose, $Lol, $Append, $ConsolidatedLogFile, $UserClamLogFile, $UserScanCoreLogFile, $ConsolidatedLogFile, $ConsolidatedLogFileName;
+  global $Verbose, $Lol, $Append, $ConsolidatedLogFile, $UserClamLogFile, $UserScanCoreLogFile, $ConsolidatedLogFile, $ConsolidatedLogFileName, $EnableMemoryProtection;
   $ConsolidatedLogsExist = $ConsolidatedLogErrors = $logWrittenA = $logWrittenB = $logWrittenC = $logWrittenD = $logWrittenE = FALSE;
   $userClamLogData = $userScanCoreData = $consolidatedLogData = $txt = $userScanCoreLogData = '';
   $spacer = '----------';
@@ -6154,8 +6173,7 @@ function consolidateLogs($type, $UserClamLogFile, $UserScanCoreLogFile) {
   if ($type === 'all') if (!$logWrittenC or !$logWrittenD or !$logWrittenE) $ConsolidatedLogErrors = TRUE;
   if (file_exists($ConsolidatedLogFile)) $ConsolidatedLogsExist = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $type = $txt = $spacer = $logWrittenA = $logWrittenB = $logWrittenC = $logWrittenD = $logWrittenE = $userClamLogData = $userScanCoreLogData = NULL;
-  unset($type, $txt, $spacer, $logWrittenA, $logWrittenB, $logWrittenC, $logWrittenD, $logWrittenE, $userClamLogData, $userScanCoreLogData);
+  purgeSensitiveMemory($EnableMemoryProtection, $type, $txt, $spacer, $logWrittenA, $logWrittenB, $logWrittenC, $logWrittenD, $logWrittenE, $userClamLogData, $userScanCoreLogData);
   return array($ConsolidatedLogsExist, $ConsolidatedLogErrors, $ConsolidatedLogFile, $ConsolidatedLogFileName); }
 // / -----------------------------------------------------------------------------------
 
@@ -6164,7 +6182,7 @@ function consolidateLogs($type, $UserClamLogFile, $UserScanCoreLogFile) {
 // / Type can be either 'clamav', 'scancore', or 'all'.
 function userVirusScan($FilesToScan, $type) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $ApplicationName, $UserClamLogFile, $UserScanCoreLogFile, $ConsolidatedLogFile, $ConsolidatedLogFileName;
+  global $Verbose, $Lol, $Lolol, $ApplicationName, $UserClamLogFile, $UserScanCoreLogFile, $ConsolidatedLogFile, $ConsolidatedLogFileName, $EnableMemoryProtection;
   $ScanComplete = $ScanErrors = $UserVirusFound = $scan1Complete = $scan1Errors = $scan2Complete = $scan2Errors = $ConsolidatedLogsExist = $ConsolidatedLogErrors = FALSE;
   $fileToScan = '';
   // / Check that the $type input variable is valid.
@@ -6191,8 +6209,7 @@ function userVirusScan($FilesToScan, $type) {
   if ($ScanErrors or $ConsolidatedLogErrors) $ScanErrors = TRUE;
   if (!$ConsolidatedLogsExist) $ScanComplete = FALSE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $fileToScan = $path = $type = $scan1Complete = $scan1Errors = $scan2Complete = $scan2Errors = NULL;
-  unset($fileToScan, $returnData ,$path, $type, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors);
+  purgeSensitiveMemory($EnableMemoryProtection, $fileToScan, $path, $type, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors, $returnData);
   return array($ScanComplete, $ScanErrors, $UserVirusFound, $ConsolidatedLogFile, $ConsolidatedLogFileName); }
 // / -----------------------------------------------------------------------------------
 

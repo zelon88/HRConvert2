@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.7.5.
+v3.7.6.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -26,6 +26,50 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+
+--------------------
+COMMIT 8/19/2026
+v3.7.6 - Repair the memory purge & secret obfuscation routines added earlier in v3.7.5.
+
+-v3.7.6.
+-Repair the memory purge & secret obfuscation routines added earlier in v3.7.5.
+  -addSillyString no longer emits bytes outside a PHP tag.
+    -The previous payload placed newlines before <?php & between ?> and <?php.
+    -Those bytes were printed on every require() of secret.php, before any header() call.
+    -This corrupted AJAX responses & broke header delivery, the same way a BOM does.
+    -The payload is now a single unclosed PHP region with an internal comment fence.
+    -There is deliberately no closing ?> tag, per standard practice for include-only files.
+    -Secret files already in the wild are still valid. They just have the old spacing.
+  -purgeSensitiveMemory now throws a real error instead of an oversized warning.
+    -The fatal branch called warningEntry with 3 arguments. warningEntry accepts 1.
+    -PHP discards extra arguments to userland functions, so 40000 & the die flag evaporated.
+    -ERROR!!! 40000 could never fire & the fatal path never halted anything.
+    -That branch now calls errorEntry as the logging tier convention requires.
+  -purgeSensitiveMemory no longer reports an already empty variable as a leak.
+    -NULL matched no type branch, so a NULL target fell through to the failure path.
+    -With the fatal branch repaired this would have killed every first run install.
+  -purgeSensitiveMemory falls back before it errors, per the fallback convention.
+    -An unhandled type now has its reference dropped & warns, rather than erroring outright.
+    -ERROR!!! 40000 now fires only when that fallback has also failed.
+  -purgeSensitiveMemory names the correct culprit from inside a recursive call.
+    -An inner call resolved getChildFunction to purgeSensitiveMemory itself.
+    -The caller name is now resolved once, on the outermost call, & carried down.
+    -This also stops one debug_backtrace call per array element.
+  -purgeSensitiveMemory logs the behaviour it was actually given.
+    -The message read from the global while the decision came from the argument.
+    -It now reports the argument & says so when the two disagree.
+  -purgeSensitiveMemory can report before verifyLogs has run.
+    -It is called by installation code that runs before the logfile exists.
+    -It now falls back to the server error log, or to die, when $LogFile is not usable.
+  -purgeSensitiveMemory returns $MemoryIsPurged, TRUE on success, per convention 8.
+  -Every caller now passes targets DIRECTLY BY REFERENCE instead of inside an array.
+    -array($SecretKey, ...) copied the values. The function shredded the copies.
+    -Every original buffer survived the call fully intact. The feature did nothing.
+  -resolveSecretFile initializes $SecretKey before the require that defines it.
+    -An install that failed to create a file handed an undefined variable to the cleanup.
+  -Remove the unused $secretSillyString variable from resolveSecretFile.
+  -Correct the purgeSensitiveMemory docblock. Argument order & fatal polarity were both inverted.
+  -Document ERROR!!! 40000 in ERROR_DESCRIPTIONS.txt.
 
 --------------------
 COMMIT 8/19/2026

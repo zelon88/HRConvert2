@@ -3452,6 +3452,87 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-25000, <SESSION_IDENTIFIER>: The SVG converter timed out!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Inkscape is not responding.
+  The conversion operation was attempted 5 times but no output file could be created.
+  The user submitted a request to convert a file that does not exist.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+  The user has requested to convert a file that was deleted for exceededing the --File Deletion Age Theshold-- specified in config.php.
+  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
+  The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
+  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs to have read & write access to the Data directory.
+  This may be the result of incorrect file permission levels on the directory where the application is installed.
+  This may be the result of incorrect file permission levels on the directory where Data is stored.
+  This may be the result of incorrect user or group associations for the www-data user or group.
+  The device where data is stored has an insufficient amount of storage space available.
+  The request contained character types or encoded data that are not supported.
+  One of the $_POST or $_GET variables submitted was empty after sanitization.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-25001, <SESSION_IDENTIFIER>: The installed Inkscape version is missing, unidentifiable, or too old!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The Inkscape dependency required to convert SVG files could not be verified.
+  Inkscape may not be installed, or may not be reachable on the system path used by the web server user.
+  The installed Inkscape may be older than the --Minimum Inkscape Version-- setting in config.php.
+  The installed Inkscape may be a development or git build which does not report a parseable version number.
+  HRConvert2 refuses any build it cannot positively identify, because an unknown build cannot be cleared.
+  Verify the installed version by running 'inkscape -version' as the web server user.
+  This minimum exists for feature and format support and is not a security control.
+  SVG conversions read a local file and never fetch anything remote.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-25002, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this SVG conversion cannot be isolated!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  An SVG conversion was refused because the server could not build a sandbox for it.
+  Inkscape parses SVG, which is XML & can reference external entities, remote images &
+  embedded scripts. An SVG parser is a considerably larger attack surface than it appears.
+  Inkscape offers no native restriction on what it may read, so the sandbox is the only
+  boundary available & the conversion is refused rather than run without one.
+  See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
+  Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-26000, <SESSION_IDENTIFIER>: Could not remove the build environment!
 
 FILE
@@ -4308,85 +4389,32 @@ ERROR DESCRIPTION
   This error should not be possible. Something is seriously wrong with the filesystem.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-25000, <SESSION_IDENTIFIER>: The SVG converter timed out!
-
-FILE
-  convertCore.php
-
-FATAL
-  NO
-
-LOGGED
-  YES
-
-ERROR DESCRIPTION
-  Inkscape is not responding.
-  The conversion operation was attempted 5 times but no output file could be created.
-  The user submitted a request to convert a file that does not exist.
-  The user submitted a request that was incorrect, malformed, or corrupt.
-  The user has requested to convert a file that was deleted for exceededing the --File Deletion Age Theshold-- specified in config.php.
-  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
-  This may be the result of incorrect file permission levels on the directory where the application is installed.
-  This may be the result of incorrect file permission levels on the directory where Data is stored.
-  This may be the result of incorrect user or group associations for the www-data user or group.
-  The device where data is stored has an insufficient amount of storage space available.
-  The request contained character types or encoded data that are not supported.
-  One of the $_POST or $_GET variables submitted was empty after sanitization.
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-25001, <SESSION_IDENTIFIER>: The installed Inkscape version is missing, unidentifiable, or too old!
+ ERROR MESSAGE
+   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-40000, <SESSION_IDENTIFIER>: Cannot purge sensitive memory for the <FUNCTION_NAME> function! Memory protection is Enabled. Execution cannot continue!
 
-FILE
-  /convertCore.php
+ FILE
+   convertCore.php
 
-FATAL
-  NO
+ FATAL
+   YES
 
-LOGGED
-  YES
+ LOGGED
+   YES
 
-ERROR DESCRIPTION
-  The Inkscape dependency required to convert SVG files could not be verified.
-  Inkscape may not be installed, or may not be reachable on the system path used by the web server user.
-  The installed Inkscape may be older than the --Minimum Inkscape Version-- setting in config.php.
-  The installed Inkscape may be a development or git build which does not report a parseable version number.
-  HRConvert2 refuses any build it cannot positively identify, because an unknown build cannot be cleared.
-  Verify the installed version by running 'inkscape -version' as the web server user.
-  This minimum exists for feature and format support and is not a security control.
-  SVG conversions read a local file and never fetch anything remote.
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-25002, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this SVG conversion cannot be isolated!
-
-FILE
-  /convertCore.php
-
-FATAL
-  NO
-
-LOGGED
-  YES
-
-ERROR DESCRIPTION
-  An SVG conversion was refused because the server could not build a sandbox for it.
-  Inkscape parses SVG, which is XML & can reference external entities, remote images &
-  embedded scripts. An SVG parser is a considerably larger attack surface than it appears.
-  Inkscape offers no native restriction on what it may read, so the sandbox is the only
-  boundary available & the conversion is refused rather than run without one.
-  See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
-  Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ ERROR DESCRIPTION
+   A sensitive variable could not be destroyed & could not be released by the fallback either.
+   This error only occurs if --Enable Memory Protection-- is set to TRUE in config.php.
+   If --Enable Memory Protection-- is set to FALSE the same condition produces a non-fatal warning.
+   <FUNCTION_NAME> names the function that owned the variable, not the function that reported it.
+   The named function submitted a variable of a type that cannot be shredded, such as an object or a resource.
+   The named function submitted a variable that survived being assigned NULL.
+   This error is in place to maintain the integrity of the fallback contract.
+   Logically this error should never be triggered, because assigning NULL to a variable cannot fail.
+   A preceding WARNING!!! naming the same function will identify the variable type responsible.
+   If this error is logged before the logging environment exists it is written to the server error log instead.
+ ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

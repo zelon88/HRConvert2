@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/15/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/20/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.7.0.
+v3.7.8.
 This file contains a walkthrough guide for installing HRConvert2.
 
 HARDWARE REQUIREMENTS ... 
@@ -116,20 +116,6 @@ In this step we will install dependencies to enable most common file conversions
 8. Run  'sudo -v && wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sudo sh /dev/stdin'
 9. Run  'sudo featherpad /usr/local/etc/ImageMagick-7/policy.xml'
 10. Run 'sudo cp /var/www/html/HRProprietary/HRConvert2/Documentation/Build/policy.xml /etc/ImageMagick-7/policy.xml'
-11. Open a file explorer and navigate to  '/etc/'
-12. If you DO NOT have a file named  'rc.local'  located in the  '/etc/'  directory, or the  'rc.local'  file is blank:
-  12a. Extract the  'rc.local'  file contained in the root of the HRConvert2 repository to your Desktop.
-  12b. Adjust the directory in the following command to reflect your username, then run  'sudo cp /home/USERNAME/Desktop/rc.local /etc/rc.local'
-  12c. Run  'sudo chmod +x /etc/rc.local'
-13. If you DO have a file named  'rc.local'  located in the  '/etc/'  directory and the  'rc.local'  file is NOT blank:
-  13a. Run  'sudo featherpad /etc/rc.local'
-  13b. Add the following line above the  'exit 0'  line:  '/usr/bin/soffice --headless --accept="socket,host=127.0.0.1,port=$soffice_port;urp;" --nofirststartwizard &'
-14. Run  'sudo systemctl enable rc-local.service'
-15. If you encounter errors while running the previous command:
-  15a. Extract the  'rc-local.service'  file contained in the root of the HRConvert2 repository to your Desktop.
-  15b. Adjust the directory in the following command to reflect your username, then run  'sudo cp /home/USERNAME/Desktop/rc-local.service /etc/rc.local /etc/systemd/system/rc-local.service'
-  15c. Run  'sudo chmod +x /etc/rc.local.service'
-  15d. Run  'sudo systemctl enable rc-local.service'
 16. Completely reboot the computer.
 -----------------------------------------------------------------------------------
 

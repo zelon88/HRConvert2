@@ -98,16 +98,27 @@ sudo chown -R www-data:www-data "/the/full/path/that/has/incorrect/permissions"
 sudo chmod 0600 "/DATA/HRConvert2/secret.php"
 ```
 
----
-
 ## Supported Command Line Arguments
 
-| Short Flag | Long Flag | Description | Values / Variations |
-| :--- | :--- | :--- | :--- |
-| `-v` | `--version` | Displays comprehensive diagnostics and version data. | N/A |
-| `-h` | `--help` | Displays the built-in help message. | N/A |
-| `-c` | `--clean` | Sweeps expired sessions from data locations. | `-c` (Default)<br>`-c=<minutes>`<br>`-c=now` |
-| `-u` | `--update` | Updates the application using a configured target. | `-u=latest`<br>`-u=edge`<br>`-u=v#.#.#` |
+| Argument | Description | Requires |
+|---|---|---|
+| `-v`, `--version` | Display version & dependency information. | any user |
+| `-h`, `--help` | Display the built in help message. | any user |
+| `--status` | Report listener, budget & data location state. | any user |
+| `-c`, `--clean` | Sweep expired sessions from both data locations. | root |
+| `-c=<minutes>` | Sweep sessions older than that many minutes. | root |
+| `-c=now` | Sweep every session regardless of age. | root |
+| `-u`, `--update` | Update using the configured target. | root |
+| `-u=latest` | Update to the newest tagged release. | root |
+| `-u=edge` | Update to the current state of the master branch. | root |
+| `-u=v#.#.#` | Update to exactly that tagged release. | root |
+| `-fp`, `--fix-permissions` | Correct ownership, permissions & policy files. | root |
+| `-l`, `--listen` | Start the resource listener. | root or `www-data` |
+| `-k`, `--kill` | Stop the resource listener. | root or `www-data` |
+| `-k <worker-id>` | End one worker by budget token or process identifier. | root or `www-data` |
+| `--kill-all-workers` | End every tracked conversion in progress. | root or `www-data` |
+| `--kill-every-worker` | End every PHP process owned by the web server user. | root or `www-data` |
+| `-y`, `--yes` | Skip the confirmation prompt on the two above. | — |
 
 ---
 
@@ -139,6 +150,100 @@ Displays the built-in help message. It lists every supported argument and refere
 * **Typo Protection:** Values that are neither a whole number nor the word `now` are rejected, falling back to the configured default. A warning is written to the logs and printed to the shell to prevent accidental sweeps.
 * **Scope Isolation:** Nothing outside a designated session directory is ever touched. The log directory, LibreOffice profiles, and update backups live alongside session data but are strictly protected by name validation. Any location not matching its requested name is refused outright.
 * **Privileges:** This argument explicitly requires write access to the data locations.
+
+---
+
+## `--status`
+
+Reports what the resource listener is doing, and what this account is able to see of it — the
+running identity, whether the component is available, the socket directory, each manager's
+process identifier, tracked workers, remaining budget and mapped sessions.
+
+**A standard user cannot read the socket directory and will be told so.** The directory is `0700`
+and belongs to the web server user, so a standard user sees a listener that appears stopped
+whether it is running or not. The report distinguishes the two cases. Run it as root for the true
+picture.
+
+---
+
+## `-fp`, `--fix-permissions`
+
+Corrects everything about an installation that root is required to correct.
+
+- Sets every managed directory to the web server user and `0755`.
+- Sets the secret file to the web server user and `0600`.
+- Sets the socket directory to `0700`.
+- Installs or repairs the ImageMagick policy that permits document coders.
+- Installs or repairs the AppArmor profile bubblewrap needs to build a sandbox.
+- Installs or repairs the AppArmor override a confined OpenSCAD needs.
+- Enables lingering and cgroup delegation for the web server user, when per conversion limits
+  are enabled.
+
+Every step is idempotent. A policy file this application did not write is backed up with a
+timestamp before replacement; if the backup fails, the original is left alone and the step is
+refused.
+
+**Run this after any command line invocation made as root.** A root invocation creates its
+logfile and secret file owned by root, and the web server user cannot read or append to either
+afterwards. This is the most common cause of an installation that worked yesterday and does not
+today.
+
+---
+
+## `-l`, `--listen`
+
+Starts the resource listener — four processes holding a resource budget, deciding which data
+location each session uses, and managing worker lifecycle.
+
+Resource awareness is optional and disabled by default. With no listener running, HRConvert2
+behaves exactly as it always has. `$EnableResourceAwareness` must be `TRUE` before this does
+anything.
+
+Started as root, the listener drops to the web server user before launching, so every socket
+belongs to the account that must reach it. A listener left running as root is unreachable by
+every web request.
+
+The startup key is never printed and never logged. A failed start points at the log rather than
+reproducing the command.
+
+Normally started at boot from `rc.local` or a container entrypoint rather than by hand.
+
+---
+
+## `-k`, `--kill`
+
+With no value, stops the listener and every manager it started. Each is asked to stop, given two
+seconds to unwind, then signalled, then verified. A process that has ended but not yet been
+collected by its parent is not mistaken for a survivor.
+
+With a value, ends one worker by budget token or process identifier.
+
+```
+php convertCore.php -k                  # stop the listener
+php convertCore.php -k 12345            # end the worker running as process 12345
+php convertCore.php -k a1b2c3d4e5f6     # end the worker holding that budget token
+```
+
+A worker that is ended loses whatever it was converting.
+
+---
+
+## `--kill-all-workers` and `--kill-every-worker`
+
+Both prompt for confirmation. Both accept `-y` to skip the prompt, which exists for scripts and
+not for convenience.
+
+**`--kill-all-workers`** ends every *tracked* conversion. Every user mid conversion loses their
+files. Nothing outside HRConvert2 is touched.
+
+**`--kill-every-worker`** ends **every PHP process owned by the web server user**. This reaches
+other applications sharing the host — WordPress, OwnCloud and anything else running as that user
+lose every session in progress. It exists for a server that has become unresponsive and must be
+recovered without a reboot. It is not a cleanup tool. Manager processes are excluded so the
+listener survives its own instruction.
+
+Neither is a substitute for the reaper, which ends overrunning workers automatically without
+ending anything else.
 
 ---
 

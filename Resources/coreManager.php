@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILEINFORMATION ...
-// / v3.7.7.
+// / v3.7.8.
 // / This file contains the core manager resource listener logic of the application.
 // / This file contains logic related to rate planning & resouce management.
 // /
@@ -30,12 +30,15 @@
 
 // / -----------------------------------------------------------------------------------
 // / Refuse direct execution. This file is a component & has no standalone context.
+// / This is the ONE halt in the application that cannot use quickDie. Reaching this line
+// / means convertCore.php was never loaded, so quickDie is not defined & calling it would
+// / replace a clear refusal with an undefined function error.
 if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: This file cannot process your request! Please submit your file to convertCore.php instead!'.PHP_EOL);
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php checks this without executing the file.
-$CoreManagerVersion = 'v3.7.7';
+$CoreManagerVersion = 'v3.7.8';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -356,25 +359,21 @@ function calculateResourceBudget($systemResources, $allocatedBudget) {
 // / A function to decide whether one budget request may proceed.
 // / Accepts the current budget array, the conversion cost & the expected runtime.
 // / Returns an approval boolean & a denial reason string, in that order.
-function evaluateBudgetRequest($resourceBudget, $conversionCost, $expectedRuntime) {
+function evaluateBudgetRequest($resourceBudget, $workerRegistry, $conversionCost, $expectedRuntime) {
   // / Set variables.
   global $MaxConcurrentWorkers, $MaxExpectedRuntime, $EnableMemoryProtection;
   $RequestApproved = FALSE;
   $DenialReason = '';
   $requestedCost = (int)$conversionCost;
   $requestedRuntime = (int)$expectedRuntime;
-  $trackedWorkers = 0;
-  $registryWasRead = FALSE;
-  $workerRegistry = array();
-  if ($requestedCost < 1) $requestedCost = 1;
-  list ($registryWasRead, $workerRegistry) = readManagerState('workers');
   $trackedWorkers = count($workerRegistry);
+  if ($requestedCost < 1) $requestedCost = 1;
   if ($requestedRuntime > (int)$MaxExpectedRuntime) $DenialReason = 'The expected runtime exceeds the configured maximum.';
   else if ((int)$MaxConcurrentWorkers > 0 && $trackedWorkers >= (int)$MaxConcurrentWorkers) $DenialReason = 'The concurrent worker limit has been reached.';
   else if (!isset($resourceBudget['RemainingBudget'])) $DenialReason = 'The resource budget is unavailable.';
   else if ((int)$resourceBudget['RemainingBudget'] < $requestedCost) $DenialReason = 'The remaining resource budget is insufficient.';
   else $RequestApproved = TRUE;
-  purgeSensitiveMemory($EnableMemoryProtection, $requestedCost, $requestedRuntime, $trackedWorkers, $registryWasRead, $workerRegistry, $resourceBudget, $conversionCost, $expectedRuntime);
+  purgeSensitiveMemory($EnableMemoryProtection, $requestedCost, $requestedRuntime, $trackedWorkers, $resourceBudget, $workerRegistry, $conversionCost, $expectedRuntime);
   return array($RequestApproved, $DenialReason); }
 // / -----------------------------------------------------------------------------------
 
@@ -382,14 +381,10 @@ function evaluateBudgetRequest($resourceBudget, $conversionCost, $expectedRuntim
 // / A function to add an approved worker to the tracked registry.
 // / Accepts the worker process identifier, the cost & the expected runtime.
 // / Returns a success boolean & the issued budget token, in that order.
-function registerTrackedWorker($workerPid, $conversionCost, $expectedRuntime) {
+function registerTrackedWorker(&$workerRegistry, $workerPid, $conversionCost, $expectedRuntime) {
   // / Set variables.
-  global $EnableMemoryProtection, $Verbose;
+  global $EnableMemoryProtection;
   $WorkerWasRegistered = FALSE;
-  $BudgetToken = '';
-  $workerRegistry = array();
-  $registryWasRead = FALSE;
-  list ($registryWasRead, $workerRegistry) = readManagerState('workers');
   $BudgetToken = bin2hex(random_bytes(12));
   $workerRegistry[$BudgetToken] = array(
     'WorkerPid' => (int)$workerPid,
@@ -398,9 +393,8 @@ function registerTrackedWorker($workerPid, $conversionCost, $expectedRuntime) {
     'StartTime' => time(),
     'CheckTime' => time(),
     'Extensions' => 0);
-  $WorkerWasRegistered = writeManagerState('workers', $workerRegistry);
-  if ($Verbose && $WorkerWasRegistered) logEntry('Tracked worker '.(int)$workerPid.' registered for '.(int)$expectedRuntime.' second(s) at cost '.(int)$conversionCost.'.');
-  purgeSensitiveMemory($EnableMemoryProtection, $workerRegistry, $registryWasRead, $workerPid, $conversionCost, $expectedRuntime);
+  if (isset($workerRegistry[$BudgetToken])) $WorkerWasRegistered = TRUE;
+  purgeSensitiveMemory($EnableMemoryProtection, $workerPid, $conversionCost, $expectedRuntime);
   return array($WorkerWasRegistered, $BudgetToken); }
 // / -----------------------------------------------------------------------------------
 
@@ -408,18 +402,15 @@ function registerTrackedWorker($workerPid, $conversionCost, $expectedRuntime) {
 // / A function to remove a completed worker from the tracked registry.
 // / Accepts the budget token issued at registration.
 // / Returns TRUE when the worker was found & released.
-function releaseTrackedWorker($budgetToken) {
+function releaseTrackedWorker(&$workerRegistry, $budgetToken) {
   // / Set variables.
   global $EnableMemoryProtection;
   $WorkerWasReleased = FALSE;
-  $workerRegistry = array();
-  $registryWasRead = FALSE;
   $cleanToken = preg_replace('/[^a-f0-9]/', '', (string)$budgetToken);
-  list ($registryWasRead, $workerRegistry) = readManagerState('workers');
   if ($cleanToken !== '' && isset($workerRegistry[$cleanToken])) {
     unset($workerRegistry[$cleanToken]);
-    $WorkerWasReleased = writeManagerState('workers', $workerRegistry); }
-  purgeSensitiveMemory($EnableMemoryProtection, $workerRegistry, $registryWasRead, $cleanToken, $budgetToken);
+    $WorkerWasReleased = TRUE; }
+  purgeSensitiveMemory($EnableMemoryProtection, $cleanToken, $budgetToken);
   return $WorkerWasReleased; }
 // / -----------------------------------------------------------------------------------
 
@@ -427,16 +418,13 @@ function releaseTrackedWorker($budgetToken) {
 // / A function to extend the expected runtime of a tracked worker.
 // / Accepts the budget token & the number of seconds requested.
 // / Returns an approval boolean & the new expected runtime, in that order.
-function extendTrackedWorker($budgetToken, $requestedSeconds) {
+function extendTrackedWorker(&$workerRegistry, $budgetToken, $requestedSeconds) {
   // / Set variables.
   global $MaxRuntimeExtensions, $MaxExpectedRuntime, $EnableMemoryProtection;
   $ExtensionApproved = FALSE;
   $NewExpectedRuntime = 0;
-  $workerRegistry = array();
-  $registryWasRead = $registryWasWritten = FALSE;
   $cleanToken = preg_replace('/[^a-f0-9]/', '', (string)$budgetToken);
   $proposedRuntime = 0;
-  list ($registryWasRead, $workerRegistry) = readManagerState('workers');
   if ($cleanToken !== '' && isset($workerRegistry[$cleanToken])) {
     $NewExpectedRuntime = (int)$workerRegistry[$cleanToken]['ExpectedRuntime'];
     $proposedRuntime = $NewExpectedRuntime + max(1, (int)$requestedSeconds);
@@ -444,11 +432,9 @@ function extendTrackedWorker($budgetToken, $requestedSeconds) {
       $workerRegistry[$cleanToken]['ExpectedRuntime'] = $proposedRuntime;
       $workerRegistry[$cleanToken]['Extensions'] = (int)$workerRegistry[$cleanToken]['Extensions'] + 1;
       $workerRegistry[$cleanToken]['CheckTime'] = time();
-      $registryWasWritten = writeManagerState('workers', $workerRegistry);
-      if ($registryWasWritten) {
-        $NewExpectedRuntime = $proposedRuntime;
-        $ExtensionApproved = TRUE; } } }
-  purgeSensitiveMemory($EnableMemoryProtection, $workerRegistry, $registryWasRead, $registryWasWritten, $cleanToken, $proposedRuntime, $budgetToken, $requestedSeconds);
+      $NewExpectedRuntime = $proposedRuntime;
+      $ExtensionApproved = TRUE; } }
+  purgeSensitiveMemory($EnableMemoryProtection, $cleanToken, $proposedRuntime, $budgetToken, $requestedSeconds);
   return array($ExtensionApproved, $NewExpectedRuntime); }
 // / -----------------------------------------------------------------------------------
 
@@ -457,26 +443,21 @@ function extendTrackedWorker($budgetToken, $requestedSeconds) {
 // / Accepts a grace period in seconds added to every expected runtime.
 // / Returns a scan boolean & an array of stale token to process identifier pairs.
 // / A worker whose process has already exited is reported so its budget can be reclaimed.
-function findStaleWorkers($graceSeconds) {
+function findStaleWorkers($workerRegistry, $graceSeconds) {
   // / Set variables.
   global $EnableMemoryProtection;
-  $ScanCompleted = FALSE;
+  $ScanCompleted = TRUE;
   $StaleWorkers = array();
-  $workerRegistry = array();
-  $registryWasRead = FALSE;
   $workerToken = '';
   $workerRecord = array();
   $workerAge = $workerDeadline = 0;
-  list ($registryWasRead, $workerRegistry) = readManagerState('workers');
-  if ($registryWasRead) {
-    foreach ($workerRegistry as $workerToken => $workerRecord) {
-      $workerAge = time() - (int)$workerRecord['StartTime'];
-      $workerDeadline = (int)$workerRecord['ExpectedRuntime'] + (int)$graceSeconds;
-      // / A process that no longer exists never sent its completion message.
-      if (!file_exists('/proc/'.(int)$workerRecord['WorkerPid'])) $StaleWorkers[$workerToken] = array('WorkerPid' => (int)$workerRecord['WorkerPid'], 'StaleReason' => 'Process has exited');
-      else if ($workerAge > $workerDeadline) $StaleWorkers[$workerToken] = array('WorkerPid' => (int)$workerRecord['WorkerPid'], 'StaleReason' => 'Runtime exceeded by '.($workerAge - $workerDeadline).' second(s)'); }
-    $ScanCompleted = TRUE; }
-  purgeSensitiveMemory($EnableMemoryProtection, $workerRegistry, $registryWasRead, $workerToken, $workerRecord, $workerAge, $workerDeadline, $graceSeconds);
+  foreach ($workerRegistry as $workerToken => $workerRecord) {
+    $workerAge = time() - (int)$workerRecord['StartTime'];
+    $workerDeadline = (int)$workerRecord['ExpectedRuntime'] + (int)$graceSeconds;
+    // / A process that no longer exists never sent its completion message.
+    if (!managerProcessIsAlive((int)$workerRecord['WorkerPid'])) $StaleWorkers[$workerToken] = array('WorkerPid' => (int)$workerRecord['WorkerPid'], 'StaleReason' => 'Process has exited');
+    else if ($workerAge > $workerDeadline) $StaleWorkers[$workerToken] = array('WorkerPid' => (int)$workerRecord['WorkerPid'], 'StaleReason' => 'Runtime exceeded by '.($workerAge - $workerDeadline).' second(s)'); }
+  purgeSensitiveMemory($EnableMemoryProtection, $workerToken, $workerRecord, $workerAge, $workerDeadline, $workerRegistry, $graceSeconds);
   return array($ScanCompleted, $StaleWorkers); }
 // / -----------------------------------------------------------------------------------
 
@@ -575,8 +556,11 @@ function runCoreManager() {
             $CoreManagerExitedCleanly = TRUE;
             if ($Verbose) logEntry('Core Manager accepted a stop instruction & is unwinding.');
             $replyPayload = array('Approved' => TRUE, 'Reason' => 'Stopping.'); }
-          else if (in_array($managerMessages[$messageIndex]['RequestType'], array('budget', 'release', 'extend'), TRUE)) $targetSocket = buildManagerSocketPath('resource-manager');
-          else if (in_array($managerMessages[$messageIndex]['RequestType'], array('kill', 'kill-tracked', 'kill-every', 'reap'), TRUE)) $targetSocket = buildManagerSocketPath('worker-manager'); }
+          // / The Resource Manager holds the budget, the registry & the session map, so every
+          // / question about state goes there. Only an instruction to end a process goes to
+          // / the Worker Manager, which is the only component permitted to carry one out.
+          else if (in_array($managerMessages[$messageIndex]['RequestType'], array('budget', 'release', 'extend', 'convertloc', 'status', 'kill-tracked'), TRUE)) $targetSocket = buildManagerSocketPath('resource-manager');
+          else if (in_array($managerMessages[$messageIndex]['RequestType'], array('kill', 'kill-every'), TRUE)) $targetSocket = buildManagerSocketPath('worker-manager'); }
         if ($targetSocket !== '') {
           if ($Verbose) logEntry('Core Manager routed a '.$managerMessages[$messageIndex]['RequestType'].' request to '.basename($targetSocket).'.');
           list ($replyWasDelivered, $routedReply) = sendManagerMessage($targetSocket, $managerMessages[$messageIndex], 'internal', (int)$ManagerSocketTimeout);
@@ -631,7 +615,7 @@ function runRequestManager() {
       $messageIndex = 0;
       while ($messageIndex < $messagesReceived) {
         // / A worker may not issue a manager instruction. Only these three types pass.
-        if (isset($managerMessages[$messageIndex]['RequestType']) && in_array($managerMessages[$messageIndex]['RequestType'], array('budget', 'release', 'extend'), TRUE)) {
+        if (isset($managerMessages[$messageIndex]['RequestType']) && in_array($managerMessages[$messageIndex]['RequestType'], array('budget', 'release', 'extend', 'convertloc'), TRUE)) {
           list ($forwardWasDelivered, $forwardedReply) = sendManagerMessage($coreSocket, $managerMessages[$messageIndex], 'core', (int)$ManagerSocketTimeout * 2);
           if ($forwardWasDelivered && !empty($forwardedReply)) $replyPayload = $forwardedReply;
           else $replyPayload = array('Approved' => FALSE, 'Reason' => 'The Core Manager did not answer.'); 
@@ -647,68 +631,232 @@ function runRequestManager() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / -----------------------------------------------------------------------------------
+// / A function to scale the configured per conversion limits against current load.
+// / Accepts the polled resource array & the number of workers already tracked, in that order.
+// / Returns a success boolean & a table of conversion type to limit string, in that order.
+// / A busy host hands out smaller ceilings, so twenty conversions cannot each claim the
+// / share that was safe for one. Nothing is ever scaled below the configured minimum.
+// / The table is handed to the worker with its budget approval & is used for every file in
+// / that request, so a conversion never has to ask again mid batch.
+function scaleConversionLimits($systemResources, $trackedWorkers) {
+  // / Set variables.
+  global $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $Verbose, $EnableMemoryProtection;
+  $LimitsWereScaled = FALSE;
+  $ScaledLimits = array();
+  $conversionType = $limitString = '';
+  $limitIsValid = $minimumIsValid = FALSE;
+  $cpuPercentage = $memoryMegabytes = $minimumCpu = $minimumMemory = 0;
+  $scaledCpu = $scaledMemory = $concurrentShare = 0;
+  $highestPressure = $pressureFactor = 0.0;
+  $limitTable = array();
+  list ($minimumIsValid, $minimumCpu, $minimumMemory) = parseConversionLimit((string)$MinimumPerConversionResources);
+  if (!$minimumIsValid) {
+    $minimumCpu = 10;
+    $minimumMemory = 128;
+    warningEntry('The configured minimum per conversion resources could not be read. Falling back to 10% and 128M.'); }
+  // / Whichever of load or memory is under more pressure governs the reduction.
+  $highestPressure = 0.0;
+  if (is_array($systemResources)) $highestPressure = max((float)$systemResources['LoadPercentage'], (float)$systemResources['MemoryUsedPercentage']);
+  if ($highestPressure > 95) $highestPressure = 95;
+  if ($highestPressure < 0) $highestPressure = 0;
+  // / A conversion already in flight has taken a share, so the next one is offered less.
+  $concurrentShare = max(1, (int)$trackedWorkers + 1);
+  $pressureFactor = (1 - ($highestPressure / 100)) / $concurrentShare;
+  // / Build the table from the configured maxima, plus the default under its own key.
+  $limitTable = is_array($MaximumPerConversionResources) ? $MaximumPerConversionResources : array();
+  $limitTable['Default'] = (string)$DefaultPerConversionResources;
+  foreach ($limitTable as $conversionType => $limitString) {
+    list ($limitIsValid, $cpuPercentage, $memoryMegabytes) = parseConversionLimit((string)$limitString);
+    if (!$limitIsValid) warningEntry('The configured per conversion limit for '.$conversionType.' could not be read & was left out of the table.');
+    else {
+      $scaledCpu = (int)floor($cpuPercentage * $pressureFactor);
+      $scaledMemory = (int)floor($memoryMegabytes * $pressureFactor);
+      // / The floor is what stops a loaded server handing out a ceiling nothing can run in.
+      if ($scaledCpu < $minimumCpu) $scaledCpu = $minimumCpu;
+      if ($scaledMemory < $minimumMemory) $scaledMemory = $minimumMemory;
+      // / A scaled ceiling never exceeds the configured maximum.
+      if ($scaledCpu > $cpuPercentage) $scaledCpu = $cpuPercentage;
+      if ($scaledMemory > $memoryMegabytes) $scaledMemory = $memoryMegabytes;
+      $ScaledLimits[$conversionType] = $scaledCpu.','.$scaledMemory; } }
+  if (!empty($ScaledLimits)) $LimitsWereScaled = TRUE;
+  if ($Verbose && $LimitsWereScaled) logEntry('Scaled per conversion limits for '.count($ScaledLimits).' type(s). Pressure '.round($highestPressure, 1).'%, in flight '.(int)$trackedWorkers.'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $ScaledLimits is not purged, because it is a return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $conversionType, $limitString, $limitIsValid, $minimumIsValid, $cpuPercentage, $memoryMegabytes, $minimumCpu, $minimumMemory, $scaledCpu, $scaledMemory, $concurrentShare, $highestPressure, $pressureFactor, $limitTable, $systemResources, $trackedWorkers);
+  return array($LimitsWereScaled, $ScaledLimits); }
+// / -----------------------------------------------------------------------------------
+
+// / A function to decide which data location a session uses & remember the answer.
+// / Accepts the session map BY REFERENCE, the daily hash & the session hash.
+// / Returns the absolute path as a string.
+// / THE MAP IS A CACHE, NOT THE RECORD. resolveConvertLoc discovers an existing session
+// / directory before it distributes anything, so a Resource Manager that restarted in the
+// / middle of a session still returns the location that actually holds the files.
+// / Load balancing happens here, once, when a session is first seen. Never again.
+function resolveSessionLocation(&$sessionLocations, $dailyHash, $sessionHash) {
+  // / Set variables.
+  global $Verbose, $EnableMemoryProtection;
+  $SessionConvertLoc = '';
+  $cleanDaily = preg_replace('/[^A-Za-z0-9]/', '', (string)$dailyHash);
+  $cleanSession = preg_replace('/[^A-Za-z0-9]/', '', (string)$sessionHash);
+  $mapKey = $cleanDaily.'|'.$cleanSession;
+  $entryIsCached = FALSE;
+  if ($cleanSession === '') $SessionConvertLoc = resolveConvertLoc('', '');
+  else if (isset($sessionLocations[$mapKey])) {
+    $SessionConvertLoc = (string)$sessionLocations[$mapKey]['Path'];
+    $sessionLocations[$mapKey]['LastSeen'] = time();
+    $entryIsCached = TRUE; }
+  else {
+    $SessionConvertLoc = resolveConvertLoc($cleanDaily, $cleanSession);
+    $sessionLocations[$mapKey] = array('Path' => $SessionConvertLoc, 'LastSeen' => time()); }
+  if ($Verbose) logEntry('Session Location: '.$SessionConvertLoc.', Session: '.($cleanSession === '' ? 'NONE' : $cleanSession).', Source: '.($entryIsCached ? 'MAP' : 'RESOLVED').'.');
+  purgeSensitiveMemory($EnableMemoryProtection, $cleanDaily, $cleanSession, $mapKey, $entryIsCached, $dailyHash, $sessionHash);
+  return $SessionConvertLoc; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to drop session map entries that no session can still be using.
+// / Accepts the session map BY REFERENCE & the maximum age in seconds.
+// / Returns the number of entries dropped.
+// / The map lives in memory for the life of the process, so it must be bounded or a long
+// / running listener grows one entry per session it has ever seen.
+function evictExpiredSessionLocations(&$sessionLocations, $maximumAgeSeconds) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $EntriesDropped = 0;
+  $mapKey = '';
+  $mapEntry = array();
+  $expiredKeys = array();
+  foreach ($sessionLocations as $mapKey => $mapEntry) { if ((time() - (int)$mapEntry['LastSeen']) > (int)$maximumAgeSeconds) $expiredKeys[] = $mapKey; }
+  foreach ($expiredKeys as $mapKey) {
+    unset($sessionLocations[$mapKey]);
+    $EntriesDropped++; }
+  purgeSensitiveMemory($EnableMemoryProtection, $mapKey, $mapEntry, $expiredKeys, $maximumAgeSeconds);
+  return $EntriesDropped; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to sweep every configured data location on a schedule.
+// / Accepts no arguments.
+// / Returns a completion boolean & the number of locations swept, in that order.
+// / This uses cleanDataLoc, the same function the stock clean calls use. Those calls remain
+// / in convertCore.php & are what a standalone installation with no listener relies on.
+// / Only the shared data locations are swept. The temporary location lives inside the
+// / installation directory, so it belongs to one front end & each one cleans its own.
+function cleanEveryConvertLoc() {
+  // / Set variables.
+  global $DeleteThreshold, $Verbose, $EnableMemoryProtection;
+  $SweepCompleted = TRUE;
+  $LocationsSwept = 0;
+  $convertLocPool = $poolEntry = array();
+  $locationCleaned = $locationDeepCleaned = FALSE;
+  $convertLocPool = enumerateConvertLocs();
+  foreach ($convertLocPool as $poolEntry) {
+    if (!is_dir($poolEntry['Path'])) warningEntry('The '.$poolEntry['Type'].' data location at '.$poolEntry['Path'].' does not exist & was not swept.');
+    else {
+      list ($locationCleaned, $locationDeepCleaned) = cleanDataLoc($poolEntry['Path'], 'ConvertLocPool', $DeleteThreshold);
+      if (!$locationCleaned) $SweepCompleted = FALSE;
+      else {
+        $LocationsSwept++;
+        if ($Verbose) logEntry('Scheduled sweep: '.$poolEntry['Path'].', Type: '.$poolEntry['Type'].', Expired sessions removed: '.($locationDeepCleaned ? 'YES' : 'NO').'.'); } } }
+  purgeSensitiveMemory($EnableMemoryProtection, $convertLocPool, $poolEntry, $locationCleaned, $locationDeepCleaned);
+  return array($SweepCompleted, $LocationsSwept); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to run the Resource Manager loop.
 // / Accepts no arguments & does not return until the process is terminated.
 // / Returns TRUE when the loop exited cleanly.
 // / Resource Manager owns the budget. Nothing else may adjust it.
 function runResourceManager() {
   // / Set variables.
-  global $ResourcePollInterval, $ManagerSocketTimeout, $ManagerMessageBatchSize, $Verbose, $EnableMemoryProtection;
+  global $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $StorageCleanupInterval, $DeleteThreshold, $ManagerSocketTimeout, $ManagerMessageBatchSize, $Verbose, $EnableMemoryProtection;
   $ResourceManagerExitedCleanly = FALSE;
   $socketServer = FALSE;
   $serverIsOpen = $keepRunning = $resourcesPolled = $budgetCalculated = FALSE;
   $requestApproved = $workerWasRegistered = $workerWasReleased = $extensionApproved = FALSE;
-  $socketPath = $denialReason = $budgetToken = '';
-  $systemResources = $resourceBudget = $managerMessages = $managerConnections = $replyPayload = $workerRegistry = array();
-  $messagesReceived = $messageIndex = $allocatedBudget = $lastPollTime = $newExpectedRuntime = 0;
-  $registryWasRead = FALSE;
-  $workerRecord = array();
+  $sweepCompleted = $messageWasDelivered = $limitsWereScaled = FALSE;
+  $scaledLimits = array();
+  $socketPath = $denialReason = $budgetToken = $sessionConvertLoc = $staleToken = '';
+  $systemResources = $resourceBudget = $workerRegistry = $sessionLocations = array();
+  $managerMessages = $managerConnections = $replyPayload = $staleWorkers = $staleRecord = $workerRecord = $killReply = array();
+  $messagesReceived = $messageIndex = $allocatedBudget = $newExpectedRuntime = 0;
+  $lastPollTime = $lastReapTime = $lastSweepTime = $locationsSwept = $entriesDropped = 0;
   $socketPath = buildManagerSocketPath('resource-manager');
   list ($serverIsOpen, $socketServer) = openManagerSocketServer($socketPath);
   if (!$serverIsOpen) errorEntry('The Resource Manager could not open its socket!', 31002, TRUE);
   else {
-    logEntry('Resource Manager started.');
+    logEntry('Resource Manager started. Budget, worker registry & session map are held in memory.');
+    // / A session map entry is kept a little longer than a session can survive a sweep.
     $keepRunning = TRUE;
-    if ($Verbose) logEntry('Resource Manager is watching the host. Poll interval '.(int)$ResourcePollInterval.' second(s).');
     while ($keepRunning) {
-      // / Repoll the host on the configured interval & recompute the budget from the registry.
+      // / Repoll the host on the configured interval & recompute from the live registry.
       if ((time() - $lastPollTime) >= (int)$ResourcePollInterval) {
         $allocatedBudget = 0;
-        list ($registryWasRead, $workerRegistry) = readManagerState('workers');
         foreach ($workerRegistry as $workerRecord) $allocatedBudget = $allocatedBudget + (int)$workerRecord['ConversionCost'];
         list ($resourcesPolled, $systemResources) = pollSystemResources();
         list ($budgetCalculated, $resourceBudget) = calculateResourceBudget($systemResources, $allocatedBudget);
         if (!$resourcesPolled) warningEntry('The Resource Manager could not poll system resources. The budget was not adjusted.');
-        if ($budgetCalculated) writeManagerState('budget', $resourceBudget);
-        $lastPollTime = time(); 
-        if ($Verbose && $budgetCalculated) logEntry('Resource Manager recalculated the budget. Load '.$systemResources['LoadPercentage'].'%, memory '.$systemResources['MemoryUsedPercentage'].'%, remaining '.$resourceBudget['RemainingBudget'].' of '.$resourceBudget['TotalBudget'].'.'); }
+        if ($Verbose && $budgetCalculated) logEntry('Resource Manager recalculated the budget. Load '.$systemResources['LoadPercentage'].'%, memory '.$systemResources['MemoryUsedPercentage'].'%, remaining '.$resourceBudget['RemainingBudget'].' of '.$resourceBudget['TotalBudget'].', tracked '.count($workerRegistry).'.');
+        $lastPollTime = time(); }
+      // / Find what has outlived its runtime & hand each one to the Worker Manager.
+      if ((time() - $lastReapTime) >= (int)$WorkerReapInterval) {
+        list ($sweepCompleted, $staleWorkers) = findStaleWorkers($workerRegistry, (int)$WorkerStaleGracePeriod);
+        foreach ($staleWorkers as $staleToken => $staleRecord) {
+          warningEntry('Reaping worker '.$staleRecord['WorkerPid'].'. '.$staleRecord['StaleReason'].'.');
+          sendManagerMessage(buildManagerSocketPath('worker-manager'), array('RequestType' => 'kill', 'WorkerPid' => (int)$staleRecord['WorkerPid']), 'internal', (int)$ManagerSocketTimeout);
+          releaseTrackedWorker($workerRegistry, $staleToken); }
+        // / Bound the session map so a listener that runs for months does not grow forever.
+        $entriesDropped = evictExpiredSessionLocations($sessionLocations, ((int)$DeleteThreshold * 60) + 3600);
+        if ($Verbose && $entriesDropped > 0) logEntry('Dropped '.$entriesDropped.' expired session location entr(ies). '.count($sessionLocations).' remain.');
+        $lastReapTime = time(); }
+      // / Sweep every configured data location on the storage interval.
+      if ((int)$StorageCleanupInterval > 0 && (time() - $lastSweepTime) >= (int)$StorageCleanupInterval) {
+        list ($sweepCompleted, $locationsSwept) = cleanEveryConvertLoc();
+        if (!$sweepCompleted) warningEntry('A scheduled data location sweep did not complete cleanly.');
+        else logEntry('Scheduled sweep completed across '.$locationsSwept.' data location(s).');
+        $lastSweepTime = time(); }
       list ($messagesReceived, $managerMessages, $managerConnections) = receiveManagerMessages($socketServer, 'internal', (int)$ManagerMessageBatchSize, (int)$ManagerSocketTimeout);
       $messageIndex = 0;
       while ($messageIndex < $messagesReceived) {
         $replyPayload = array('Approved' => FALSE, 'Reason' => 'Unrecognized resource request.');
         if (isset($managerMessages[$messageIndex]['RequestType'])) {
+          // / A data location request. Sticky for the life of the session.
+          if ($managerMessages[$messageIndex]['RequestType'] === 'convertloc') {
+            $sessionConvertLoc = resolveSessionLocation($sessionLocations, ($managerMessages[$messageIndex]['DailyHash'] ?? ''), ($managerMessages[$messageIndex]['SessionHash'] ?? ''));
+            $replyPayload = array('Approved' => TRUE, 'Reason' => 'Resolved.', 'ConvertLoc' => $sessionConvertLoc); }
           // / A budget request. Approve, register & issue a token the worker returns later.
-          if ($managerMessages[$messageIndex]['RequestType'] === 'budget') {
-            list ($requestApproved, $denialReason) = evaluateBudgetRequest($resourceBudget, ($managerMessages[$messageIndex]['ConversionCost'] ?? 0), ($managerMessages[$messageIndex]['ExpectedRuntime'] ?? 0));
-            if ($requestApproved) {
-              list ($workerWasRegistered, $budgetToken) = registerTrackedWorker(($managerMessages[$messageIndex]['WorkerPid'] ?? 0), ($managerMessages[$messageIndex]['ConversionCost'] ?? 0), ($managerMessages[$messageIndex]['ExpectedRuntime'] ?? 0));
-              if ($workerWasRegistered) $replyPayload = array('Approved' => TRUE, 'Reason' => 'Approved.', 'BudgetToken' => $budgetToken);
-              else $replyPayload = array('Approved' => FALSE, 'Reason' => 'The worker registry could not be written.'); 
-              if ($Verbose && $workerWasRegistered) logEntry('Resource Manager approved worker '.(int)($managerMessages[$messageIndex]['WorkerPid'] ?? 0).' at cost '.(int)($managerMessages[$messageIndex]['ConversionCost'] ?? 0).'. Token '.$budgetToken.'.'); }
-            else $replyPayload = array('Approved' => FALSE, 'Reason' => $denialReason); }
+          else if ($managerMessages[$messageIndex]['RequestType'] === 'budget') {
+            list ($requestApproved, $denialReason) = evaluateBudgetRequest($resourceBudget, $workerRegistry, ($managerMessages[$messageIndex]['ConversionCost'] ?? 0), ($managerMessages[$messageIndex]['ExpectedRuntime'] ?? 0));
+            if (!$requestApproved) $replyPayload = array('Approved' => FALSE, 'Reason' => $denialReason);
+            else {
+              list ($workerWasRegistered, $budgetToken) = registerTrackedWorker($workerRegistry, ($managerMessages[$messageIndex]['WorkerPid'] ?? 0), ($managerMessages[$messageIndex]['ConversionCost'] ?? 0), ($managerMessages[$messageIndex]['ExpectedRuntime'] ?? 0));
+              if (!$workerWasRegistered) $replyPayload = array('Approved' => FALSE, 'Reason' => 'The worker registry could not be updated.');
+              else {
+                list ($limitsWereScaled, $scaledLimits) = scaleConversionLimits($systemResources, count($workerRegistry));
+                $replyPayload = array('Approved' => TRUE, 'Reason' => 'Approved.', 'BudgetToken' => $budgetToken, 'Limits' => ($limitsWereScaled ? $scaledLimits : array()));
+                if ($Verbose) logEntry('Resource Manager approved worker '.(int)($managerMessages[$messageIndex]['WorkerPid'] ?? 0).' at cost '.(int)($managerMessages[$messageIndex]['ConversionCost'] ?? 0).'. Token '.$budgetToken.'.'); } } }
           // / A completion notice. The budget is reclaimed immediately.
           else if ($managerMessages[$messageIndex]['RequestType'] === 'release') {
-            $workerWasReleased = releaseTrackedWorker(($managerMessages[$messageIndex]['BudgetToken'] ?? ''));
-            $replyPayload = array('Approved' => $workerWasReleased, 'Reason' => $workerWasReleased ? 'Released.' : 'That budget token is not tracked.'); 
-            if ($Verbose) logEntry('Resource Manager released token '.(string)($managerMessages[$messageIndex]['BudgetToken'] ?? '').'. Reclaimed '.($workerWasReleased ? 'yes' : 'no').'.'); }
-          // / A runtime extension. Granted against the configured ceiling & extension count.
+            $workerWasReleased = releaseTrackedWorker($workerRegistry, ($managerMessages[$messageIndex]['BudgetToken'] ?? ''));
+            $replyPayload = array('Approved' => $workerWasReleased, 'Reason' => $workerWasReleased ? 'Released.' : 'That budget token is not tracked.');
+            if ($Verbose) logEntry('Resource Manager released a token. Reclaimed: '.($workerWasReleased ? 'yes' : 'no').'. Tracked now '.count($workerRegistry).'.'); }
+          // / A runtime extension, against the configured ceiling & extension count.
           else if ($managerMessages[$messageIndex]['RequestType'] === 'extend') {
-            list ($extensionApproved, $newExpectedRuntime) = extendTrackedWorker(($managerMessages[$messageIndex]['BudgetToken'] ?? ''), ($managerMessages[$messageIndex]['RequestedSeconds'] ?? 0));
-            $replyPayload = array('Approved' => $extensionApproved, 'Reason' => $extensionApproved ? 'Extended.' : 'The extension was refused.', 'ExpectedRuntime' => $newExpectedRuntime); } }
+            list ($extensionApproved, $newExpectedRuntime) = extendTrackedWorker($workerRegistry, ($managerMessages[$messageIndex]['BudgetToken'] ?? ''), ($managerMessages[$messageIndex]['RequestedSeconds'] ?? 0));
+            $replyPayload = array('Approved' => $extensionApproved, 'Reason' => $extensionApproved ? 'Extended.' : 'The extension was refused.', 'ExpectedRuntime' => $newExpectedRuntime); }
+          // / A command line request for live figures. Nothing on disk can answer this.
+          else if ($managerMessages[$messageIndex]['RequestType'] === 'status') {
+            list ($limitsWereScaled, $scaledLimits) = scaleConversionLimits($systemResources, count($workerRegistry));
+            $replyPayload = array('Approved' => TRUE, 'Reason' => 'Reported.', 'TrackedWorkers' => count($workerRegistry), 'SessionLocations' => count($sessionLocations), 'Budget' => $resourceBudget, 'Limits' => ($limitsWereScaled ? $scaledLimits : array())); }
+          // / A command line request to end every tracked worker.
+          else if ($managerMessages[$messageIndex]['RequestType'] === 'kill-tracked') {
+            $replyPayload = array('Approved' => TRUE, 'Reason' => 'Ended '.killTrackedWorkers($workerRegistry).' tracked worker(s).'); } }
         replyToManagerMessage($managerConnections[$messageIndex], $replyPayload, 'internal');
         $messageIndex++; } }
     $ResourceManagerExitedCleanly = TRUE; }
-  purgeSensitiveMemory($EnableMemoryProtection, $serverIsOpen, $keepRunning, $resourcesPolled, $budgetCalculated, $requestApproved, $workerWasRegistered, $workerWasReleased, $extensionApproved, $socketPath, $denialReason, $budgetToken, $systemResources, $resourceBudget, $managerMessages, $managerConnections, $replyPayload, $workerRegistry, $messagesReceived, $messageIndex, $allocatedBudget, $lastPollTime, $newExpectedRuntime, $registryWasRead, $workerRecord);
+  purgeSensitiveMemory($EnableMemoryProtection, $serverIsOpen, $keepRunning, $resourcesPolled, $budgetCalculated, $requestApproved, $workerWasRegistered, $workerWasReleased, $extensionApproved, $sweepCompleted, $messageWasDelivered, $socketPath, $denialReason, $budgetToken, $sessionConvertLoc, $staleToken, $systemResources, $resourceBudget, $workerRegistry, $sessionLocations, $managerMessages, $managerConnections, $replyPayload, $staleWorkers, $staleRecord, $workerRecord, $killReply, $scaledLimits, $limitsWereScaled, $messagesReceived, $messageIndex, $allocatedBudget, $newExpectedRuntime, $lastPollTime, $lastReapTime, $lastSweepTime, $locationsSwept, $entriesDropped);
   return $ResourceManagerExitedCleanly; }
 // / -----------------------------------------------------------------------------------
 
@@ -719,30 +867,20 @@ function runResourceManager() {
 // / Worker Manager is the only component that may end a process without negotiation.
 function runWorkerManager() {
   // / Set variables.
-  global $WorkerReapInterval, $WorkerStaleGracePeriod, $ManagerSocketTimeout, $ManagerMessageBatchSize, $EnableMemoryProtection, $Verbose;
+  global $ManagerSocketTimeout, $ManagerMessageBatchSize, $Verbose, $EnableMemoryProtection;
   $WorkerManagerExitedCleanly = FALSE;
   $socketServer = FALSE;
-  $serverIsOpen = $keepRunning = $scanCompleted = $processWasTerminated = FALSE;
-  $socketPath = $workerToken = '';
-  $staleWorkers = $managerMessages = $managerConnections = $replyPayload = $staleRecord = array();
-  $messagesReceived = $messageIndex = $lastReapTime = $killedCount = 0;
+  $serverIsOpen = $keepRunning = $processWasTerminated = FALSE;
+  $socketPath = '';
+  $managerMessages = $managerConnections = $replyPayload = array();
+  $messagesReceived = $messageIndex = $killedCount = 0;
   $socketPath = buildManagerSocketPath('worker-manager');
   list ($serverIsOpen, $socketServer) = openManagerSocketServer($socketPath);
   if (!$serverIsOpen) errorEntry('The Worker Manager could not open its socket!', 31003, TRUE);
   else {
     logEntry('Worker Manager started.');
     $keepRunning = TRUE;
-    if ($Verbose) logEntry('Worker Manager is tracking worker lifecycle. Reap interval '.(int)$WorkerReapInterval.' second(s).');
     while ($keepRunning) {
-      // / Reap on the configured interval. A dead process & an overrunning one are both stale.
-      if ((time() - $lastReapTime) >= (int)$WorkerReapInterval) {
-        list ($scanCompleted, $staleWorkers) = findStaleWorkers((int)$WorkerStaleGracePeriod);
-        foreach ($staleWorkers as $workerToken => $staleRecord) {
-          warningEntry('Reaping worker '.$staleRecord['WorkerPid'].'. '.$staleRecord['StaleReason'].'.');
-          terminateWorkerProcess($staleRecord['WorkerPid'], TRUE);
-          releaseTrackedWorker($workerToken); }
-        $lastReapTime = time(); 
-        if ($Verbose) logEntry('Worker Manager completed a reap sweep. '.count($staleWorkers).' stale worker(s) found.'); }
       list ($messagesReceived, $managerMessages, $managerConnections) = receiveManagerMessages($socketServer, 'internal', (int)$ManagerMessageBatchSize, (int)$ManagerSocketTimeout);
       $messageIndex = 0;
       while ($messageIndex < $messagesReceived) {
@@ -750,21 +888,15 @@ function runWorkerManager() {
         if (isset($managerMessages[$messageIndex]['RequestType'])) {
           if ($managerMessages[$messageIndex]['RequestType'] === 'kill') {
             $processWasTerminated = terminateWorkerProcess(($managerMessages[$messageIndex]['WorkerPid'] ?? 0), TRUE);
-            if (isset($managerMessages[$messageIndex]['BudgetToken'])) releaseTrackedWorker($managerMessages[$messageIndex]['BudgetToken']);
+            if ($Verbose) logEntry('Worker Manager ended process '.(int)($managerMessages[$messageIndex]['WorkerPid'] ?? 0).'. Result: '.($processWasTerminated ? 'OK' : 'FAILED').'.');
             $replyPayload = array('Approved' => $processWasTerminated, 'Reason' => $processWasTerminated ? 'Terminated.' : 'The process could not be terminated.'); }
-          else if ($managerMessages[$messageIndex]['RequestType'] === 'kill-tracked') {
-            $killedCount = killTrackedWorkers();
-            $replyPayload = array('Approved' => TRUE, 'Reason' => 'Terminated '.$killedCount.' tracked worker(s).', 'KilledCount' => $killedCount); }
           else if ($managerMessages[$messageIndex]['RequestType'] === 'kill-every') {
             $killedCount = killEveryWorker();
-            $replyPayload = array('Approved' => TRUE, 'Reason' => 'Terminated '.$killedCount.' process(es).', 'KilledCount' => $killedCount); }
-          else if ($managerMessages[$messageIndex]['RequestType'] === 'reap') {
-            list ($scanCompleted, $staleWorkers) = findStaleWorkers((int)$WorkerStaleGracePeriod);
-            $replyPayload = array('Approved' => $scanCompleted, 'Reason' => count($staleWorkers).' stale worker(s) found.', 'StaleWorkers' => $staleWorkers); } }
+            $replyPayload = array('Approved' => TRUE, 'Reason' => 'Terminated '.$killedCount.' process(es).', 'KilledCount' => $killedCount); } }
         replyToManagerMessage($managerConnections[$messageIndex], $replyPayload, 'internal');
         $messageIndex++; } }
     $WorkerManagerExitedCleanly = TRUE; }
-  purgeSensitiveMemory($EnableMemoryProtection, $serverIsOpen, $keepRunning, $scanCompleted, $processWasTerminated, $socketPath, $workerToken, $staleWorkers, $managerMessages, $managerConnections, $replyPayload, $staleRecord, $messagesReceived, $messageIndex, $lastReapTime, $killedCount);
+  purgeSensitiveMemory($EnableMemoryProtection, $serverIsOpen, $keepRunning, $processWasTerminated, $socketPath, $managerMessages, $managerConnections, $replyPayload, $messagesReceived, $messageIndex, $killedCount);
   return $WorkerManagerExitedCleanly; }
 // / -----------------------------------------------------------------------------------
 
@@ -772,20 +904,19 @@ function runWorkerManager() {
 // / A function to terminate every tracked worker.
 // / Accepts no arguments.
 // / Returns the number of processes terminated.
-function killTrackedWorkers() {
+function killTrackedWorkers(&$workerRegistry) {
   // / Set variables.
-  global $EnableMemoryProtection;
+  global $ManagerSocketTimeout, $EnableMemoryProtection;
   $WorkersKilled = 0;
-  $workerRegistry = array();
-  $registryWasRead = FALSE;
   $workerToken = '';
-  $workerRecord = array();
-  list ($registryWasRead, $workerRegistry) = readManagerState('workers');
+  $workerRecord = $replyPayload = array();
+  $messageWasDelivered = FALSE;
   foreach ($workerRegistry as $workerToken => $workerRecord) {
-    if (terminateWorkerProcess((int)$workerRecord['WorkerPid'], TRUE)) $WorkersKilled++; }
-  writeManagerState('workers', array());
-  warningEntry('Every tracked worker was terminated on request. '.$WorkersKilled.' process(es) ended.');
-  purgeSensitiveMemory($EnableMemoryProtection, $workerRegistry, $registryWasRead, $workerToken, $workerRecord);
+    list ($messageWasDelivered, $replyPayload) = sendManagerMessage(buildManagerSocketPath('worker-manager'), array('RequestType' => 'kill', 'WorkerPid' => (int)$workerRecord['WorkerPid']), 'internal', (int)$ManagerSocketTimeout);
+    if ($messageWasDelivered && isset($replyPayload['Approved']) && $replyPayload['Approved'] === TRUE) $WorkersKilled++; }
+  $workerRegistry = array();
+  warningEntry('Every tracked worker was ended on request. '.$WorkersKilled.' process(es) ended.');
+  purgeSensitiveMemory($EnableMemoryProtection, $workerToken, $workerRecord, $replyPayload, $messageWasDelivered);
   return $WorkersKilled; }
 // / -----------------------------------------------------------------------------------
 
@@ -796,7 +927,7 @@ function killTrackedWorkers() {
 // / This ends unrelated applications sharing the host. It is never called automatically.
 function killEveryWorker() {
   // / Set variables.
-  global $ApacheUser, $EnableMemoryProtection;
+  global $ApacheUser, $ManagerSocketTimeout, $EnableMemoryProtection;
   $ProcessesKilled = 0;
   $processOutput = array();
   $processExitCode = 1;
@@ -815,7 +946,9 @@ function killEveryWorker() {
     $processPid = (int)trim($processLine);
     if ($processPid > 1 && !in_array($processPid, $protectedPids, TRUE)) {
       if (terminateWorkerProcess($processPid, TRUE)) $ProcessesKilled++; } }
-  writeManagerState('workers', array());
+  // / The registry lives in Resource Manager memory, so it is told to forget rather than
+  // / having a file emptied underneath it.
+  sendManagerMessage(buildManagerSocketPath('resource-manager'), array('RequestType' => 'kill-tracked'), 'internal', (int)$ManagerSocketTimeout);
   warningEntry('Every process owned by '.$ApacheUser.' was terminated on request. '.$ProcessesKilled.' process(es) ended. Unrelated applications on this host were affected.');
   purgeSensitiveMemory($EnableMemoryProtection, $processOutput, $processExitCode, $processLine, $processPid, $protectedPids, $managerState, $stateWasRead);
   return $ProcessesKilled; }
@@ -887,9 +1020,13 @@ function startCoreManagerListener() {
       if (count($listenerStatus['Subordinates']) < 3) print('One or more subordinate managers did not start. See the log.'.$Lol.$Lol); }
     else {
       errorEntry('The Core Manager listener could not be started!', 31005, FALSE);
+      // / The startup key is NEVER printed & never written to the log. It authorizes a
+      // / manager process for the length of a key window, & anything that captures console
+      // / output or a logfile would be handed a working one.
       print($Lol.'The listener did not record itself within five seconds.'.$Lol);
-      print('Run the start command by hand to see why.'.$Lol);
-      print('  su -s /bin/sh '.$ApacheUser.' -c "php '.$InstLoc.DIRECTORY_SEPARATOR.'convertCore.php --start-core-manager '.$startupKey.'"'.$Lol.$Lol); } }
+      print('Check the log for the reason. A manager that started records itself there.'.$Lol);
+      print('Confirm '.$ApacheUser.' can read the install secret & write the logfile,'.$Lol);
+      print('then run the -fp argument as root & try again.'.$Lol.$Lol); } }
   purgeSensitiveMemory($EnableMemoryProtection, $managerState, $chownOutput, $listenerStatus, $stateWasRead, $directoryIsReady, $listenerIsRunning, $startupKey, $spawnCommand, $innerCommand, $managerRole, $chownExitCode, $listenerPid, $waitCounter, $managerPid);
   return $ListenerWasStarted; }
 // / -----------------------------------------------------------------------------------
@@ -1029,20 +1166,25 @@ function dispatchManagerRole($managerRole, $suppliedKey) {
 // / Returns a running boolean & a status array, in that order.
 function reportListenerStatus() {
   // / Set variables.
-  global $EnableMemoryProtection;
+  global $ManagerSocketTimeout, $EnableMemoryProtection;
   $ListenerIsRunning = FALSE;
-  $ListenerStatus = array('CoreManagerPid' => 0, 'Subordinates' => array(), 'TrackedWorkers' => 0, 'Budget' => array());
-  $managerState = $budgetState = $workerRegistry = array();
-  $stateWasRead = FALSE;
+  $ListenerStatus = array('CoreManagerPid' => 0, 'Subordinates' => array(), 'TrackedWorkers' => 0, 'SessionLocations' => 0, 'Budget' => array(), 'Answered' => FALSE);
+  $managerState = $replyPayload = array();
+  $stateWasRead = $messageWasDelivered = FALSE;
   list ($stateWasRead, $managerState) = readManagerState('managers');
   if ($stateWasRead && isset($managerState['CoreManagerPid'])) {
     $ListenerStatus['CoreManagerPid'] = (int)$managerState['CoreManagerPid'];
-    if (file_exists('/proc/'.(int)$managerState['CoreManagerPid'])) $ListenerIsRunning = TRUE;
+    if (managerProcessIsAlive((int)$managerState['CoreManagerPid'])) $ListenerIsRunning = TRUE;
     if (isset($managerState['Subordinates'])) $ListenerStatus['Subordinates'] = $managerState['Subordinates']; }
-  list ($stateWasRead, $workerRegistry) = readManagerState('workers');
-  $ListenerStatus['TrackedWorkers'] = count($workerRegistry);
-  list ($stateWasRead, $budgetState) = readManagerState('budget');
-  $ListenerStatus['Budget'] = $budgetState;
-  purgeSensitiveMemory($EnableMemoryProtection, $managerState, $budgetState, $workerRegistry, $stateWasRead);
+  if ($ListenerIsRunning) {
+    list ($messageWasDelivered, $replyPayload) = sendManagerMessage(buildManagerSocketPath('core-manager'), array('RequestType' => 'status'), 'core', (int)$ManagerSocketTimeout * 3);
+    if ($messageWasDelivered && isset($replyPayload['TrackedWorkers'])) {
+      $ListenerStatus['TrackedWorkers'] = (int)$replyPayload['TrackedWorkers'];
+      $ListenerStatus['SessionLocations'] = (int)($replyPayload['SessionLocations'] ?? 0);
+      $ListenerStatus['Budget'] = (isset($replyPayload['Budget']) && is_array($replyPayload['Budget'])) ? $replyPayload['Budget'] : array();
+      $ListenerStatus['Answered'] = TRUE; } }
+  purgeSensitiveMemory($EnableMemoryProtection, $managerState, $replyPayload, $stateWasRead, $messageWasDelivered);
   return array($ListenerIsRunning, $ListenerStatus); }
 // / -----------------------------------------------------------------------------------
+
+

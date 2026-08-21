@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/19/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/20/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.7.5.
+v3.7.8.
 This file contains detailed information about the coding & quality conventions in-use 
 in the HRConvert2 codebase.
 
@@ -57,6 +57,7 @@ developed in the open, alongside the code they are designed to safeguard.
 3. Upper case first letter variables are global in scope. Only variables with upper-case can
   transcend multiple functions. Upper case first letter variables can be used as Globals or
   function returns.
+  The only allowed & documented exception is $SecretKey. Please don't touch.
   When followed, this technique will reduce the applications exposure to PHP memory leakage.
   For more information, see `Documentation/ABOUT_DEFENSIVE_MEMORY_MANAGEMENT.md`.
 
@@ -66,11 +67,17 @@ developed in the open, alongside the code they are designed to safeguard.
   For more information, see `Documentation/ABOUT_DEFENSIVE_MEMORY_MANAGEMENT.md`.
 
 5. Lower case variables must be initialized only within the function where they are used,
-  and destroyed via purgeSensitiveMemory($Array) function immediately afterwards.
+  and destroyed via purgeSensitiveMemory() immediately afterwards. 
+  Pass every target as its own argument. 
+  Never collect targets into an array first, because that copies the values.
   When followed, this technique will reduce the applications exposure to PHP memory leakage.
   For more information, see `Documentation/ABOUT_DEFENSIVE_MEMORY_MANAGEMENT.md`.
 
-6. Do not redeclare lower case, narrow scope variables!
+6. Try not redeclare lower case, narrow scope variables where possible.
+  Try to use redeclare() where possible.
+  Developers; use your best judgement here.
+  The spirit of this rule is; Keep track of your variable scope. Do not take function scope for granted to protect your data. 
+  -Assume the interpreter is always compromised.
   When followed, this technique will reduce the applications exposure to PHP memory leakage.
   For more information, see `Documentation/ABOUT_DEFENSIVE_MEMORY_MANAGEMENT.md`.
 
@@ -80,8 +87,11 @@ developed in the open, alongside the code they are designed to safeguard.
 8. If a function is complex or longer than approximately 35 lines of code, then it must
   return a sanity check in addition to it's usual output.
 
-9. If a function has a sanity check bundled with it's return, the calling code must 
-  ensure that the sanity check has passed.
+9. Calling code must consume a returned check from a called function that has one.
+  When consuming a returned check from a called function, stronly consider validating it.
+  Calling code need not log a failure the callee has already logged under the caller's name.
+  Duplicating the entry misreports the origin & doubles the log volume.
+  Developers may utilize best judgment.
 
 10. If a sanity check could alter behavior; failing the check must be logged.
 

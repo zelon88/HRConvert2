@@ -107,12 +107,23 @@ exclusive — an argument supplied on the command line disables the web interfac
 that invocation, creates no session & touches no user data.
 
 ```
-php convertCore.php -v          Report every component version & every dependency.
-php convertCore.php -h          Display help & point at the relevant documentation.
-php convertCore.php -c          Sweep expired sessions from both data locations.
-php convertCore.php -c=now      Sweep every session regardless of age.
-php convertCore.php -u          Update the application from the configured source.
-php convertCore.php -u=v3.6.7   Update to exactly that release.
+  -v, --version               Display version & dependency information.
+  -h, --help                  Display the built in help message.
+  --status                    Report listener, budget & data location state.
+  -c, --clean                 Sweep expired sessions from both data locations.
+  -c=<minutes>                Sweep sessions older than that many minutes.
+  -c=now                      Sweep every session regardless of age.
+  -u, --update                Update the application using the configured target.
+  -u=latest                   Update to the newest tagged release.
+  -u=edge                     Update to the current state of the master branch.
+  -u=v#.#.#                   Update to exactly that tagged release.
+  -fp, --fix-permissions      Correct ownership, permissions & policy files.
+  -l, --listen                Start the resource listener.
+  -k, --kill                  Stop the resource listener.
+  -k <worker-id>              End one worker by budget token or process identifier.
+  --kill-all-workers          End every tracked conversion in progress.
+  --kill-every-worker         End every PHP process owned by the web server user.
+  -y, --yes                   Skip the confirmation prompt on the two above.
 ```
 
 `-v` is the useful one. It is not an echo of a version number — it runs every dependency
@@ -124,8 +135,11 @@ is a different question from *what is configured*.
 installation atomically, then asks the new core to report its own version. An installation
 that cannot answer is rolled back automatically & the previous version is preserved.
 
+`-fp` is a powerful repair utility that will correct most permissions issues, if run as root.
+This also repairs apparmor policy & IM7 policy files.
+
 Full details in
-[USING_COMMAND_LINE.txt](https://github.com/zelon88/HRConvert2/blob/master/Documentation/USING_COMMAND_LINE.txt).
+[USING_COMMAND_LINE.txt](https://github.com/zelon88/HRConvert2/blob/master/Documentation/USING_COMMAND_LINE.txt) or [USING_COMMAND_LINE.md](https://github.com/zelon88/HRConvert2/blob/master/Documentation/USING_COMMAND_LINE.md).
 
 <p align="center">
   <img src="https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/command-line-version-argument-small.png" alt="The HRConvert2 interface options menu"/>
@@ -135,6 +149,33 @@ Full details in
   <img src="https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/command-line-help-argument-small.png" alt="The HRConvert2 interface options menu"/>
 </p>
 
+## Optional Resource Awareness
+
+-**Resource Awareness is Disabled by Default** HRConvert2 will accept every conversion it is offered, in stock form. This is considered "*Standalone*" mode.
+-**When Optional Resource Awareness is Enabled** HRConvert2 will attempt to connect to a local resource listener through memory sockets to request resources to perform the conversion.
+-**Fails Open By Default** HRConvert2 will proceed with a conversion in stock form when no resource listener is available to service it's request for resources.
+-**When Resource Awareness is Enabled** Running `sudo php convertCore.php --listen` will start four "*Manager*" processes. HRConvert2 worker processes switch from "*Standalone*" mode to "*Worker*" mode.
+-**The Resource Manager** holds a budget derived from processor count, load average and memory pressure.
+-**A Worker Asks Permission** before it consumes budget, and returns its budget upon completion.
+-**An Idle Server Throttles Nothing.** A loaded server eventually stop accepting work before it falls over. This is entirely configurable in a variety of ways.
+-**Individual Conversions Are Resource Limited** By dynamically capping CPU and RAM consumption on a per-conversion basis based on load.
+-**Number Of Concurrent Sessions Are Limited** By dynamically preventing the server from accepting more work than it can handle. And by throttlling back operations that it's taking in.
+-**Workers Are Reaped Automatically** Workers lifecycle is managed by the "*Worker Manager*". Runaway workers are detected and detroyed. 
+-**Fails Open - Even More** A missing component, a version mismatch, a dead listener, an unreachable socket or an unanswered request all let the conversion proceed with a warning.
+-**Only Explicit Refusals From The Budget Throttle Conversions, Unless Configured Otherwise** Refusal logic can be inverted to *Force* Resource Awareness, and refuse when it is unavailable.
+-**Load Balanced Or Redundant Storage** Sessions can be spread across several storage paths, chosen round robin, by least active, or with a standby held in reserve. A session is assigned a location once and keeps it for life, so a load balanced deployment never loses track of a user's files. Build high-accessibility, high-performance storage arrays from file paths directly in `config.php`. 
+-**Resource Awareness Means Disk Drive Awareness** The "Resource Manager" maintains performance of the *Entire Server*. Including storage devices.
+
+**Useful Commands**
+```
+sudo php convertCore.php -l         # start the listener
+php convertCore.php --status        # see what it is doing
+sudo php convertCore.php -k         # stop it
+sudo php convertCore.php -fp        # fix permissions, repair common problems
+
+Full detail is in [About Resource Rate Limiting.txt](https://github.com/zelon88/HRConvert2/blob/master/Documentation/ABOUT_RESOURCE_RATE_LIMITING.txt) or [About Resource Rate Limiting.md](https://github.com/zelon88/HRConvert2/blob/master/Documentation/ABOUT_RESOURCE_RATE_LIMITING.md).
+```
+
 ---
 
 ## Requirements
@@ -143,11 +184,12 @@ Debian or Ubuntu Linux, Apache 2.4 & PHP 8 or later. Everything else is a packag
 
 A Raspberry Pi Model B+ is enough to run it. Anything x86 or x64 will be comfortable.
 
-**Bubblewrap is required.** Debian 12 & Ubuntu 24.04 restrict unprivileged user namespaces
-by default, so a fresh installation needs an AppArmor profile before conversions will run.
-The [Installation Instructions](https://github.com/zelon88/HRConvert2/blob/master/Documentation/INSTALLATION_INSTRUCTIONS.txt)
-cover it. A [Docker image](https://hub.docker.com/r/zelon88/hrconvert2) is also available &
-has its own sandbox considerations, documented on Docker Hub.
+**Bubblewrap is required.** Debian 12 & Ubuntu 24.04 restrict unprivileged user namespaces by
+default. Running `sudo php convertCore.php -fp` installs the AppArmor profile that lifts the 
+restriction, repairs the ImageMagick policy, and corrects ownership across the installation.
+Run it once after installing, and again after any command line invocation made as root.
+The [Installation Instructions](https://github.com/zelon88/HRConvert2/blob/master/Documentation/INSTALLATION_INSTRUCTIONS.txt) cover the rest.
+[Docker](https://hub.docker.com/r/zelon88/hrconvert2) version is also available.
 
 ---
 

@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/15/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/20/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.7.0.
+v3.7.8.
 This plain text file describes the command line arguments HRConvert2 accepts & how to use them.
 
 HARDWARE REQUIREMENTS ... 
@@ -112,6 +112,7 @@ Do not run the above against the data location without restoring the secret file
 
   -v, --version               Display version & dependency information.
   -h, --help                  Display the built in help message.
+  --status                    Report listener, budget & data location state.
   -c, --clean                 Sweep expired sessions from both data locations.
   -c=<minutes>                Sweep sessions older than that many minutes.
   -c=now                      Sweep every session regardless of age.
@@ -119,6 +120,17 @@ Do not run the above against the data location without restoring the secret file
   -u=latest                   Update to the newest tagged release.
   -u=edge                     Update to the current state of the master branch.
   -u=v#.#.#                   Update to exactly that tagged release.
+  -fp, --fix-permissions      Correct ownership, permissions & policy files.
+  -l, --listen                Start the resource listener.
+  -k, --kill                  Stop the resource listener.
+  -k <worker-id>              End one worker by budget token or process identifier.
+  --kill-all-workers          End every tracked conversion in progress.
+  --kill-every-worker         End every PHP process owned by the web server user.
+  -y, --yes                   Skip the confirmation prompt on the two above.
+
+The -c, -u & -fp arguments require root.
+The -l, -k, --kill-all-workers & --kill-every-worker arguments require root or the web server user.
+The -v, -h & --status arguments work when run as any user.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -274,6 +286,135 @@ THE PREVIOUS VERSION.
 DOCKER USERS SHOULD NOT USE THIS.
   A container is disposable. Update it by pulling a new image, not by updating in place.
   An in place update would be discarded by the next pull anyway.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About  --status--
+
+Reports what the resource listener is doing, & what this account is able to see of it.
+
+It reports the following.
+
+  The account this invocation is running as & whether it may operate the listener.
+  Whether resource awareness is enabled, & whether the component is available.
+  The socket directory, & whether this account can read it.
+  Whether the listener is running, & the process identifier of each manager.
+  The number of tracked workers & the remaining resource budget.
+  The number of sessions currently mapped to a data location.
+
+A STANDARD USER CANNOT READ THE SOCKET DIRECTORY & WILL BE TOLD SO.
+The directory is 0700 & belongs to the web server user, so a standard user sees a listener that
+appears stopped whether it is running or not. The report says which case it is in rather than
+collapsing the two into one word. Run it as root for the true picture.
+
+This argument works when run as any user.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About  -fp  and  --fix-permissions--
+
+Corrects everything about an installation that root is required to correct.
+
+It performs the following.
+
+  Sets every managed directory to the web server user & 0755.
+  Sets the secret file to the web server user & 0600.
+  Sets the socket directory to 0700, whatever the sweep above set it to.
+  Installs or repairs the ImageMagick policy that permits document coders.
+  Installs or repairs the AppArmor profile bubblewrap needs to build a sandbox.
+  Installs or repairs the AppArmor override a confined OpenSCAD needs.
+  Enables lingering & cgroup delegation for the web server user, when per conversion limits are on.
+
+Every step is idempotent & is safe to run again.
+
+A policy file that was not written by this application is backed up with a timestamp before it is
+replaced. If the backup cannot be written, the original is left alone & the step is refused.
+
+RUN THIS AFTER ANY COMMAND LINE INVOCATION MADE AS ROOT.
+A root invocation creates its logfile & its secret file owned by root, & the web server user
+cannot read or append to either afterwards. This is the single most common cause of an
+installation that worked yesterday & does not today.
+
+This argument requires root.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About  -l  and  --listen--
+
+Starts the resource listener, which is four processes that hold a resource budget, decide which
+data location each session uses & manage worker lifecycle.
+
+Resource awareness is entirely optional & is disabled by default. With no listener running,
+HRConvert2 behaves exactly as it always has. Nothing is checked & nothing is refused.
+
+--Enable Resource Awareness-- must be TRUE in config.php before this will do anything.
+
+Started as root, the listener drops to the web server user before launching, so every socket it
+creates belongs to the account that has to reach them. A listener left running as root is
+unreachable by every web request.
+
+The listener records its own process identifier once it is up. This argument waits five seconds
+for that record & reports failure if it does not appear. The startup key is never printed & is
+never written to the log, so a failure points at the log rather than reproducing the command.
+
+The listener runs until it is stopped. It is normally started at boot from rc.local or from a
+container entrypoint rather than by hand.
+
+This argument requires root or the web server user.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About  -k  and  --kill--
+
+Supplied with no value, stops the listener & every manager it started.
+
+Each manager is asked to stop first, given two seconds to unwind on its own, then signalled, then
+verified. A process is only reported as surviving after it has been checked several times, & a
+process that has ended but not yet been collected by its parent is not mistaken for a survivor.
+
+Supplied with a value, ends one worker. The value may be a budget token or a process identifier.
+
+  -k                          Stop the listener.
+  -k 12345                    End the worker running as process 12345.
+  -k a1b2c3d4e5f6             End the worker holding that budget token.
+
+A worker that is ended loses whatever it was converting. The user sees a failed conversion.
+
+This argument requires root or the web server user.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About  --kill-all-workers  and  --kill-every-worker--
+
+Two arguments that end conversions in bulk. Both prompt for confirmation. Both accept -y to skip
+the prompt, which exists for a script & not for convenience.
+
+  --kill-all-workers          Ends every TRACKED conversion.
+                              Every user mid conversion loses their files.
+                              Nothing outside HRConvert2 is touched.
+
+  --kill-every-worker         Ends EVERY PHP PROCESS owned by the web server user.
+                              This reaches other applications sharing this host.
+                              WordPress, OwnCloud & anything else running as that user lose
+                              every session in progress.
+
+--kill-every-worker exists for a server that has become unresponsive & must be recovered without
+a reboot. It is not a cleanup tool. Every manager process is excluded so the listener survives
+its own instruction.
+
+Neither argument is a substitute for the reaper, which ends workers that outlive their expected
+runtime automatically & without ending anything else.
+
+These arguments require root or the web server user.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 

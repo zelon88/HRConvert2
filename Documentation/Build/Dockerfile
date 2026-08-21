@@ -79,7 +79,7 @@ RUN apt install -y libreoffice-common
 RUN apt --fix-broken install
 RUN apt install -y libreoffice-java-common
 RUN apt install -y poppler-utils
-RUN apt install -y clamav unoconv p7zip-full p7zip-rar
+RUN apt install -y clamav p7zip-full p7zip-rar
 RUN apt install -y dia pandoc python3 zip unzip
 RUN apt install -y xpdf mkisofs
 RUN apt install -y libx11-6

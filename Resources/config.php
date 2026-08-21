@@ -557,6 +557,47 @@ $AppendLogHashToLogFiles = TRUE;
 // /   Do not use a path with whitespace.
 // /   Default is $ConvertLoc.'/Logs'
 $UniqueDailyLogHash = TRUE;
+// /  --Additional Data Locations--
+// /   Extra locations are used to load balance sessions across multiple --Convert Location--.
+// /   Each entry is an array of a path & a type, in that order.
+// /   Leave this as an empty array to keep a single data location.
+// /   This setting only has any effect if --Enable Resource Awareness-- is also set.
+// /   If --Enable Resource Awareness-- is not set, HRConvert2 will fall back to the --Convert Data Location--.
+// /   If a resource listener is not running, HRConvert2 will fall back to the --Convert Data Location--. 
+// /   The listener decides. Every front end sharing the install secret gets the same answer.
+// /   With no listener running, --Convert Location-- is always used.
+// /   Every location must be readable & writable by the web server user.
+// /   Every location must be OUTSIDE the web root.
+// /   A location that does not exist is skipped rather than created.
+// /   Valid storage types.
+// /     roundrobin   Joins the distribution. New sessions are spread across the pool by
+// /                  session identifier, which needs no shared counter between servers.
+// /     leastactive  Joins the distribution. If ANY location declares this type, the whole
+// /                  pool is selected by fewest sessions held instead of by identifier.
+// /     redundant    A standby. Takes a session only when every other location is unusable.
+// /   Example.
+// /     $AdditionalConvertLocs = array(
+// /       array('/DATA2/HRConvert2', 'roundrobin'),
+// /       array('/DATA3/HRConvert2', 'leastactive'),
+// /       array('/DATA4/HRConvert2', 'redundant'));
+// /   The second element of the array must be a string containing the storage type.
+// /   The first element of the array must be a string containing a valid directory path.
+// /   Default is an empty array.
+$AdditionalConvertLocs = array(
+  array('/DATA2/HRConvert2', 'roundrobin'),
+  array('/DATA3/HRConvert2', 'leastactive'),
+  array('/DATA4/HRConvert2', 'redundant'));
+// /  --Storage Cleanup Interval--
+// /   How often the Resource Manager sweeps every configured data location, in seconds.
+// /   The sweep uses --Delete Threshold-- to decide what has expired.
+// /   Set to 0 to disable the scheduled sweep entirely.
+// /   Stanalone installations, or installs where no listener is available are unaffected by this setting.
+// /   Stanalone workers also sweep for stale files at runtime.
+// /   If a stanalone worker encounters stale files, the worker will also sweep them.
+// /   This setting ONLY sets the Manager cleanup CHECK interval.
+// /   Valid options are integers 0 and larger.
+// /   Default is 300.
+$StorageCleanupInterval = 300;
 // / ------------------------------
 
 // / ------------------------------
@@ -792,6 +833,59 @@ $RetryCount = 5;
 // / ------------------------------
 // / ---Resource Management Information---
 // / 
+// /  --Enable Per Conversion Limits--
+// /   Runs every conversion inside a transient systemd scope carrying a processor & memory
+// /   ceiling, so one conversion cannot starve the host.
+// /   THIS REQUIRES PERMISSION THE WEB SERVER USER DOES NOT HAVE BY DEFAULT.
+// /   Creating a transient scope on the system bus is a privileged operation. HRConvert2
+// /   proves it can create one before it relies on it, & falls back to running unlimited
+// /   with a warning when it cannot. To grant the permission, install a polkit rule
+// /   allowing the web server user to manage transient units, then restart the web server.
+// /   A conversion that reaches its memory ceiling is killed by the kernel & is reported as
+// /   a failed conversion rather than as a memory error. Keep the ceilings generous.
+// /   Valid options are TRUE or FALSE.
+// /   Default is FALSE.
+$EnablePerConversionLimits = TRUE;
+// /  --Maximum Per Conversion Resources--
+// /   The ceiling one conversion of each type may claim, as 'processor,memory'.
+// /   The processor figure is a percentage of ONE core. 200 is two whole cores.
+// /   If you have an 8 core processor, 800 is all 8 cores.
+// /   The memory figure is a hard ceiling in megabytes.
+// /   These are MAXIMA. With a listener running they are scaled down against current load
+// /   & against how many conversions are already in flight, & never below
+// /   --Minimum Per Conversion Resources--. With no listener they are used unchanged.
+// /   A type that is not listed falls back to --Default Per Conversion Resources--.
+// /   An entry that cannot be read is reported & falls back to the default.
+// /   Valid keys are Document, Spreadsheet, Presentation, Image, Video, Audio, Archive,
+// /   Model, Scad, Drawing, SVG, Subtitle, Stream, OCR & Ebook.
+$MaximumPerConversionResources = array(
+  'Document'     => '50,512',
+  'Spreadsheet'  => '50,512',
+  'Presentation' => '50,768',
+  'Image'        => '75,1024',
+  'Video'        => '90,2048',
+  'Audio'        => '50,512',
+  'Archive'      => '50,512',
+  'Model'        => '75,2048',
+  'Scad'         => '75,1024',
+  'Drawing'      => '50,512',
+  'SVG'          => '50,512',
+  'Subtitle'     => '25,256',
+  'Stream'       => '90,2048',
+  'OCR'          => '75,1024',
+  'Ebook'        => '50,768');
+// /  --Default Per Conversion Resources--
+// /   The ceiling used for any conversion type not named above.
+// /   Same 'processor,memory' format.
+// /   Default is '50,512'.
+$DefaultPerConversionResources = '50,512';
+// /  --Minimum Per Conversion Resources--
+// /   The floor a scaled ceiling is never reduced below.
+// /   A loaded server must still hand out a ceiling a conversion can actually run inside,
+// /   or it refuses work by starving it instead of by refusing it, which is worse.
+// /   Same 'processor,memory' format.
+// /   Default is '10,128'.
+$MinimumPerConversionResources = '10,128';
 // /  --Enable Resource Awareness--
 // /   Allows HRConvert2 to check a resource budget before starting a conversion.
 // /   Requires the coreManager.php component & a running listener.

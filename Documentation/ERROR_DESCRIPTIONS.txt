@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.7.7.
+v3.7.8.
 This plain text file contains descriptions of all the native error messages contained in or produced by the HRConvert2 Diablo engine. 
 These descriptions should give administrators a starting point for debugging problems with HRConvert2 installations. 
 Each section in this file contains information about a different error message. The first one is an example to demonstrate the structure of this file.
@@ -920,6 +920,32 @@ ERROR DESCRIPTION
   Running document conversions unprotected is not recommended on a public server.
   This error is not fatal but the file that causes it will be skipped.
   The same error number is raised when an XPS conversion cannot be sandboxed.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-2005, <SESSION_IDENTIFIER>: An XPS conversion was refused because no sandbox could be built!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Bubblewrap is missing or non functional & sandboxing is required by config.php.
+  This error only occurs if --Require Sandbox-- is set to TRUE in config.php.
+  This error only occurs if --Require Sandbox On Docker-- is set to TRUE when running in a container.
+  An XPS or OXPS file is converted by xpstopdf, which parses a document format from an untrusted upload.
+  The sandbox removes the network namespace, which is what stops a linked resource being fetched.
+  This error was previously reported as 2004 & was separated so the two conversions can be told apart.
+  ERROR 2004 is the same condition raised for every other document conversion.
+  Install bubblewrap, or set the relevant setting to FALSE to run conversions unprotected.
+  This error is not fatal but the file that causes it will be skipped.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -4731,6 +4757,81 @@ ERROR DESCRIPTION
   no install secret is available, while --Require Resource Awareness-- is TRUE.
   Set --Require Resource Awareness-- to FALSE to run without resource awareness instead of refusing.
   Install or repair the component to run with it.
+  This error halts the application, because the administrator has declared that this server must
+  never accept work it cannot account for.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31011, <SESSION_IDENTIFIER>: Conversion limits can only be enabled while running as root!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The enableConversionLimits function was reached by an account other than root.
+  Enabling lingering & writing a systemd delegation drop-in both require root.
+  This is normally reached through the -fp argument, which is already refused to a standard user.
+  Re-run the command with sudo.
+  This error was previously reported as 31008 & was separated so the two conditions can be told apart.
+  ERROR 31008 is raised when permissions cannot be corrected for the same reason.
+  This error is not fatal. Per conversion limits simply remain unavailable & fall back to scheduling priority.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31012, <SESSION_IDENTIFIER>: A subordinate manager start was requested but the component is unavailable!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The --start-manager argument was used while the Core Manager component was missing or invalid.
+  The coreManager.php file was removed or replaced between the launch & the start.
+  The component version does not exactly match the version this core requires.
+  --Enable Resource Awareness-- was set to FALSE in config.php between the launch & the start.
+  The install secret was rotated, so the component could not be loaded on the new process.
+  This error was previously reported as 31009 & was separated so the two entry points can be told apart.
+  ERROR 31009 is the same condition raised for the --start-core-manager argument.
+  The Core Manager will attempt to restart the subordinate & will raise this again if nothing changed.
+  This error halts the launched process only. The web interface is unaffected.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31013, <SESSION_IDENTIFIER>: Resource awareness is required by config.php but is disabled or has no install secret!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  --Require Resource Awareness-- is TRUE while --Enable Resource Awareness-- is FALSE.
+  These two settings contradict each other & the application refuses rather than guessing which was meant.
+  No install secret is available, so the component could not be loaded even if it were enabled.
+  A secret is unavailable when the secret file belongs to another account, which -fp corrects.
+  This error was previously reported as 31010 & was separated so the two causes can be told apart.
+  ERROR 31010 is raised when the component itself is missing or does not match this core.
+  Set --Enable Resource Awareness-- to TRUE, or set --Require Resource Awareness-- to FALSE.
   This error halts the application, because the administrator has declared that this server must
   never accept work it cannot account for.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

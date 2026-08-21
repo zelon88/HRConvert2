@@ -29,6 +29,43 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia
 
 --------------------
 COMMIT 8/20/2026
+v3.7.8 - Add scalable per-conversion CPU/RAM limits, rate controlled by server pressure.
+
+-v3.7.8.
+-Credit goes out to Dickson Massawe (Github user @archnexus707) for reporting a Security Advisory!
+  -https://github.com/archnexus707
+  -SSRF via unsandboxed LibreOffice document conversion (network isolation missing on the document path) 
+  -https://github.com/zelon88/HRConvert2/security/advisories/GHSA-4jp5-8jhf-cmgw
+  -GHSA-4jp5-8jhf-cmgw
+  -His POC directly contributed to the LibreOffice / Document Pipeline improvements in v3.7.7.
+  -Improvements include; 
+    -Retiring Unoconv.
+    -Sandboxxing document conversions with bwrap.
+    -Creating custom tooling for sandbox validation.
+      -Located at `Documentation/Build/bisect.sh`.
+      -This file can be modifiied to test a target dependency for Bubblewrap sandbox compatibility.
+      -The `bisect.sh` file will run a sample conversion using a supplied dependency in a variety of different sandboxes.
+      -The test runs sandboxxes that are very permissive to very aggressive, and reports what the dependency will accept.
+      -The goal of this tooling is to determine the LEAST PERMISSIVE environment that our dependencies will accept.
+  -Thanks for making HRConvert2 better for everyone!
+-Work on scalable per-conversion resouce limits.
+  -These are scalable according to server pressure.
+  -A server under low pressure provides more resources to the few conversions it gets.
+  -A very busy server provides less per-conversion resources, to protect overall resource availability.
+-Add documentation.
+  -ABOUT_RESOURCE_RATE_LIMITING  .txt & .md.
+-Added apparmor check to core listener.
+-Added imagemagick policy check to convert core.
+-Added apparmor & imagemagick policy repair routine.
+-Found and fixed mutliple bugs, logEntry, errorEntry, warningEntry being called before they are available.
+-Added quickDie() function to solve this and proceduralize the process of erroring before the logging environment is ready.
+  -This will hopefully prevent this kind of bug from happening again.
+  -Now I guess we have 4 tiers of logging. With the 4th being graceful shutdown without any logging at all.
+-Update README.md, ABOUT_COMMAND_LINE.md, ABOUT_COMMAND_LINE.txt, & ERROR_DESCRIPTIONS.txt.
+
+
+--------------------
+COMMIT 8/20/2026
 v3.7.7 - Functioanl rate limiting. Sandbox Document Conversions. Remove Unoconv. First functional resource listener!
 
 -v3.7.7.

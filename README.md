@@ -153,20 +153,20 @@ Full details in
 
 ## Optional Resource Awareness
 
--**Resource Awareness is Disabled by Default** HRConvert2 will accept every conversion it is offered, in stock form. This is considered "*Standalone*" mode.
--**When Optional Resource Awareness is Enabled** HRConvert2 will attempt to connect to a local resource listener through memory sockets to request resources to perform the conversion.
--**Fails Open By Default** HRConvert2 will proceed with a conversion in stock form when no resource listener is available to service it's request for resources.
--**When Resource Awareness is Enabled** Running `sudo php convertCore.php --listen` will start four "*Manager*" processes. HRConvert2 worker processes switch from "*Standalone*" mode to "*Worker*" mode.
--**The Resource Manager** holds a budget derived from processor count, load average and memory pressure.
--**A Worker Asks Permission** before it consumes budget, and returns its budget upon completion.
--**An Idle Server Throttles Nothing.** A loaded server eventually stop accepting work before it falls over. This is entirely configurable in a variety of ways.
--**Individual Conversions Are Resource Limited** By dynamically capping CPU and RAM consumption on a per-conversion basis based on load.
--**Number Of Concurrent Sessions Are Limited** By dynamically preventing the server from accepting more work than it can handle. And by throttlling back operations that it's taking in.
--**Workers Are Reaped Automatically** Workers lifecycle is managed by the "*Worker Manager*". Runaway workers are detected and detroyed. 
--**Fails Open - Even More** A missing component, a version mismatch, a dead listener, an unreachable socket or an unanswered request all let the conversion proceed with a warning.
--**Only Explicit Refusals From The Budget Throttle Conversions, Unless Configured Otherwise** Refusal logic can be inverted to *Force* Resource Awareness, and refuse when it is unavailable.
--**Load Balanced Or Redundant Storage** Sessions can be spread across several storage paths, chosen round robin, by least active, or with a standby held in reserve. A session is assigned a location once and keeps it for life, so a load balanced deployment never loses track of a user's files. Build high-accessibility, high-performance storage arrays from file paths directly in `config.php`. 
--**Resource Awareness Means Disk Drive Awareness** The "Resource Manager" maintains performance of the *Entire Server*. Including storage devices.
+- **Resource Awareness is Disabled by Default** HRConvert2 will accept every conversion it is offered, in stock form. This is considered "*Standalone*" mode.
+- **When Optional Resource Awareness is Enabled** HRConvert2 will attempt to connect to a local resource listener through memory sockets to request resources to perform the conversion.
+- **Fails Open By Default** HRConvert2 will proceed with a conversion in stock form when no resource listener is available to service it's request for resources.
+- **When Resource Awareness is Enabled** Running `sudo php convertCore.php --listen` will start four "*Manager*" processes. HRConvert2 worker processes switch from "*Standalone*" mode to "*Worker*" mode.
+- **The Resource Manager** holds a budget derived from processor count, load average and memory pressure.
+- **A Worker Asks Permission** before it consumes budget, and returns its budget upon completion.
+- **An Idle Server Throttles Nothing.** A loaded server eventually stop accepting work before it falls over. This is entirely configurable in a variety of ways.
+- **Individual Conversions Are Resource Limited** By dynamically capping CPU and RAM consumption on a per-conversion basis based on load.
+- **Number Of Concurrent Sessions Are Limited** By dynamically preventing the server from accepting more work than it can handle. And by throttlling back operations that it's taking in.
+- **Workers Are Reaped Automatically** Workers lifecycle is managed by the "*Worker Manager*". Runaway workers are detected and detroyed. 
+- **Fails Open - Even More** A missing component, a version mismatch, a dead listener, an unreachable socket or an unanswered request all let the conversion proceed with a warning.
+- **Only Explicit Refusals From The Budget Throttle Conversions, Unless Configured Otherwise** Refusal logic can be inverted to *Force* Resource Awareness, and refuse when it is unavailable.
+- **Load Balanced Or Redundant Storage** Sessions can be spread across several storage paths, chosen round robin, by least active, or with a standby held in reserve. A session is assigned a location once and keeps it for life, so a load balanced deployment never loses track of a user's files. Build high-accessibility, high-performance storage arrays from file paths directly in `config.php`. 
+- **Resource Awareness Means Disk Drive Awareness** The "Resource Manager" maintains performance of the *Entire Server*. Including storage devices.
 
 **Useful Commands**
 ```

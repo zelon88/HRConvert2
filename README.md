@@ -45,9 +45,11 @@ no trace. It will run on a Raspberry Pi.
 **488 file formats** across documents, ebooks, comics, spreadsheets, presentations, images, audio, video,
 streams, 3D models, CAD drawings, vector graphics, subtitles & archives.
 
-**Bootable disk images.** Builds MBR, UEFI & hybrid ISO images from uploaded files, for
+- **Resource Aware** Throttles conversions to available CPU & RAM. Stops accepting requests before falling over.
+- **Load Balanced, Redundant Storage Locations** Optionally `leastactive`, `roundrobin`, or `redundant` storage configuration.
+- **Capable Of Handling An _Enormous Amount of Web Traffic_** HRConvert2 responds intelligently to heavy loads.
+- **Bootable disk images.** Builds MBR, UEFI & hybrid ISO images from uploaded files, for
   x86, x86-64, ARM32 & ARM64. Bundled bootloaders are hash-pinned & verified before use.
-
 - **Conversions run inside their own sandbox.** Called dependencies cannot see the filesystem.
 - **A command line interface** for updating, diagnostics & maintenance.
 - **Creates bootable iso images** from any archive format. Supports 5 system architecture types automatically.

@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILEINFORMATION ...
-// / v3.7.6.
+// / v3.7..
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -601,7 +601,7 @@ function resolveSecretFile($secretFile, $requiredSecretVersion) {
 // / Any other combination gets no secret at all & fails verification.
 function verifyInstallation() {
   // / Set variables.
-  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $LogFile, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $SecretFile, $RequiredSecretVersion, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumImageVersion, $UsePyMeshLab, $MinimumMeshlabVersion, $MinimumAssimpVersion, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $Minimum7zVersion, $MinimumZipVersion, $MinimumRarVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumDiaVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection, $ResourceAwarenessActive, $EnableResourceAwareness, $RequireResourceAwareness, $ManagerSocketDir, $DirSep, $RequiredCoreManagerVersion, $CoreManagerVersion, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $CoreLoaded, $HomeLoc;
+  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $LogFile, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $SecretFile, $RequiredSecretVersion, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumImageVersion, $UsePyMeshLab, $MinimumMeshlabVersion, $MinimumAssimpVersion, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $Minimum7zVersion, $MinimumZipVersion, $MinimumRarVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumDiaVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection, $ResourceAwarenessActive, $EnableResourceAwareness, $RequireResourceAwareness, $ManagerSocketDir, $DirSep, $RequiredCoreManagerVersion, $CoreManagerVersion, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $CoreLoaded;
   putenv('HOME='.$HomeLoc);
   $CoreLoaded = TRUE;
   $InstallationIsVerified = $RunningFromCLI = $RunningAsRoot = $RunningInContainer = FALSE;
@@ -634,16 +634,24 @@ function verifyInstallation() {
   // / given a secret of their own. It lets them run diagnostics without ever reading the
   // / install wide secret, & it cannot be used to derive or forge a web session.
   if ($RunningFromCLI && !$secretAuthorized) $userSecretAuthorized = TRUE;
+  // / A manager process is the web server user on the command line, which the rules above
+  // / deliberately deny the install secret. It is granted here for the two internal entry
+  // / points only, because a per user secret cannot validate a startup key the listener was
+  // / launched with, nor decrypt a socket message from a web worker.
+  // / argv is read directly because parseCommandLine() has not run yet.
+  if ($RunningFromCLI && $CurrentUser === $ApacheUser && isset($_SERVER['argv'][1]) && in_array($_SERVER['argv'][1], array('--start-core-manager', '--start-manager'), TRUE)) {
+    $secretAuthorized = TRUE;
+    $userSecretAuthorized = FALSE; }
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
-  $HRConvertVersion = 'v3.7.6';
+  $HRConvertVersion = 'v3.7.7';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
   // / A release that changes no settings leaves this alone, so existing config files keep working.
   // / Any config.php version that is greater (newer) than the version listed below is considered acceptable.
-  $RequiredConfigVersion = 'v3.7.6';
+  $RequiredConfigVersion = 'v3.7.7';
   $RequiredConfigVersion = ltrim($RequiredConfigVersion, 'vV');
   // / Define the minimum acceptable GUI version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
@@ -659,13 +667,13 @@ function verifyInstallation() {
   $RequiredLanguageVersion = ltrim($RequiredLanguageVersion, 'vV');
   // / The Core Manager component version this core requires.
   // / This is an EXACT match. A component built for another core may not be called safely.
-  $RequiredCoreManagerVersion = 'v3.7.6';
+  $RequiredCoreManagerVersion = 'v3.7.7';
   $RequiredCoreManagerVersion = ltrim($RequiredCoreManagerVersion, 'vV');
   // / The secret file version this core requires.
   // / This is an EXACT match. A secret file reporting anything else is deleted & rewritten.
   // / Raise this to force every installation in the wild off an exposed or outdated secret.
   // / Raising it invalidates every active session on the next request. That is the point.
-  $RequiredSecretVersion = 'v3.7.6';
+  $RequiredSecretVersion = 'v3.7.y';
   $RequiredSecretVersion = ltrim($RequiredSecretVersion, 'vV');
   // / Define absolute paths for files that we only have relative paths for.
   $configFile = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'config.php');
@@ -802,7 +810,7 @@ function verifySesHash($Token1) {
 // / The rotation condition compares the file size directly against the configured maximum.
 function verifyLogs() {
   // / Set variables.
-  global $LogDir, $LogFile, $MaxLogSize, $InstLoc, $SesHash, $SesHash4, $DefaultLogDir, $DefaultLogSize, $Time, $Date, $LogInc, $LogInc2, $VirusScan, $ApplicationName, $ConvertLoc, $AppendLogHashToLogFiles, $ApacheUser, $PermissionLevels, $EnableMemoryProtection;
+  global $LogDir, $LogFile, $MaxLogSize, $InstLoc, $SesHash, $SesHash4, $DefaultLogDir, $DefaultLogSize, $Time, $Date, $LogInc, $LogInc2, $VirusScan, $ApplicationName, $ConvertLoc, $AppendLogHashToLogFiles, $ApacheUser, $PermissionLevels, $EnableMemoryProtection, $RunningAsRoot;
   $LogExists = $logWritten = FALSE;
   $logHashAppend = '';
   $LogInc = $LogInc2 = 0;
@@ -842,7 +850,14 @@ function verifyLogs() {
   while (file_exists($LogFile) && filesize($LogFile) > $MaxLogSize) {
     $LogInc++;
     $LogFile = str_replace('..', '', $LogDir.'/'.$ApplicationName.'_'.$LogInc.'_'.$Date.$logHashAppend.'.txt'); }
-  if (!file_exists($LogFile)) $logWritten = file_put_contents($LogFile, 'OP-Act, '.$Time.': Logfile created using method 1.'.PHP_EOL, FILE_APPEND);
+    if (!file_exists($LogFile)) {
+    $logWritten = file_put_contents($LogFile, 'OP-Act, '.$Time.': Logfile created using method 1.'.PHP_EOL, FILE_APPEND);
+    // / A logfile created by root in a shared location must belong to the web server user,
+    // / or every later web request & manager process is locked out of its own log.
+    if ($RunningAsRoot) {
+      @chown($LogFile, $ApacheUser);
+      @chgrp($LogFile, $ApacheUser);
+      @chmod($LogFile, 0664); } }
   if (file_exists($LogFile)) $LogExists = TRUE;
   // / Set a clamlog file depending on whether or not the max filesize has been reached.
   // / The ClamAV log file is not created here, only named.
@@ -1245,7 +1260,7 @@ function verifyGlobals() {
   // / Directories at the root of a data location that are never sessions & must never be swept.
   // / The LibreOffice profile lives here because HOME resolves to the data location.
   // / Rebuilding that profile is expensive, so it is deliberately preserved between requests.
-  $ProtectedRootDirs = array('.cache', '.config', 'Logs', 'ScadTemp', 'StreamTemp', 'lost+found', 'Last-Installed-Version', 'Sockets');
+  $ProtectedRootDirs = array('.cache', '.config', 'Logs', 'ScadTemp', 'StreamTemp', 'lost+found', 'Last-Installed-Version', 'Sockets', $ManagerSocketDir);
   // / Stream related variables.
   // / The two stream timeouts are deliberately left in their documented units here.
   // / Do not convert them in this function.
@@ -1267,6 +1282,13 @@ function verifyGlobals() {
   $ManagerMessageBatchSize = 32;
   $ManagerMessageSkew = 30;
   $StartupKeyWindow = 10;
+  // / Core Manager related variables.
+  // / The socket directory lives in the data location & is never inside the web root.
+  $ManagerSocketDir = $ConvertLoc.$DirSep.'Sockets';
+  $ManagerSocketTimeout = 2;
+  $ManagerMessageBatchSize = 32;
+  $ManagerMessageSkew = 30;
+  $StartupKeyWindow = 10;
   list ($convertDir0, $sanitizeGlobalCheckA) = sanitize($ConvertLoc.$DirSep.$SesHash, FALSE);
   list ($ConvertDir, $sanitizeGlobalCheckB) = sanitize($convertDir0.$DirSep.$SesHash2.$DirSep, FALSE);
   list ($ConvertTemp, $sanitizeGlobalCheckC) = sanitize($InstLoc.$DirSep.'DATA', FALSE);
@@ -1279,11 +1301,10 @@ function verifyGlobals() {
   $ScadTemp = $ConvertDir.'ScadTemp';
   $RequiredDirs = array($HomeLoc, $convertDir0, $ConvertDir, $ConvertTemp, $convertTempDir0, $ConvertTempDir, $StreamTemp, $ScadTemp, $LogDir);
   $RequiredIndexes = array($ConvertTemp, $convertTempDir0, $ConvertTempDir);
+  $PathToUnoconv = $InstLoc.$DirSep.'Resources'.$DirSep.'Unoconv';
   // / Create a list of directories that will be emptied & remove if found.
   // / These folders are artifacts specifically from previous versions of HRConvert2 that are no longer required.
-  $RequiredCleanupFolders = array($webRoot.$DirSep.'.cache', $webRoot.$DirSep.'.config', $InstLoc.$DirSep.'Logs', $InstLoc.$DirSep.'.cache', $InstLoc.$DirSep.'.config', $ProprietaryLoc.$DirSep.'.cache', $ProprietaryLoc.$DirSep.'.config', $InstLoc.$DirSep.'.github'.$DirSep.'workflows', $InstLoc.$DirSep.'.github', $InstLoc.$DirSep.'.git');
-  $PathToUnoconv = $InstLoc.$DirSep.'Resources'.$DirSep.'Unoconv'.$DirSep.'unoconv';
-  if (!$UsePatchedDocumentEngine) $PathToUnoconv = $DirSep.'usr'.$DirSep.'bin'.$DirSep.'unoconv';
+  $RequiredCleanupFolders = array($PathToUnoconv, $webRoot.$DirSep.'.cache', $webRoot.$DirSep.'.config', $InstLoc.$DirSep.'Logs', $InstLoc.$DirSep.'.cache', $InstLoc.$DirSep.'.config', $ProprietaryLoc.$DirSep.'.cache', $ProprietaryLoc.$DirSep.'.config', $InstLoc.$DirSep.'.github'.$DirSep.'workflows', $InstLoc.$DirSep.'.github', $InstLoc.$DirSep.'.git');
   // / A/V related variables.
   $UserClamLogFileName = 'User_ClamScan_Virus_Scan_Report.txt';
   $UserClamLogFile = $ConvertDir.$UserClamLogFileName;
@@ -1996,12 +2017,13 @@ function verifyBwrap() {
 // / file, because loading twenty version files would overwrite the variable each time.
 function showVersionInfo() {
   // / Set variables.
-  global $InstLoc, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $MinimumInkscapeVersion, $MinimumDiaVersion, $MinimumSCADVersion, $MinimumImageVersion, $MinimumAssimpVersion, $MinimumMeshlabVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $RunningAsRoot, $RunningFromCLI, $CurrentUser, $EnableMemoryProtection;
+  global $InstLoc, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $MinimumInkscapeVersion, $MinimumDiaVersion, $MinimumSCADVersion, $MinimumImageVersion, $MinimumAssimpVersion, $MinimumMeshlabVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $RunningAsRoot, $RunningFromCLI, $CurrentUser, $EnableMemoryProtection, $EnableResourceAwareness, $RequireResourceAwareness, $ResourceAwarenessActive, $RequiredCoreManagerVersion, $CoreManagerVersion, $ManagerSocketDir, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod;
   $VersionInfoDisplayed = $modelsAreValid = $ocrToolsAreValid = $archiveToolsAreValid = $libreOfficeIsValid = FALSE;
   $ffmpegBinary = $streamFfmpegBinary = $inkscapeBinary = $diaBinary = $scadBinary = $imageBinary = $ebookBinary = FALSE;
   $assimpBinary = $meshlabBinary = $tesseractBinary = $pdftotextBinary = FALSE;
   $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = $isoHybridBinary = FALSE;
-  $bwrapBinary = FALSE;
+  $listenerIsRunning = $bwrapBinary = FALSE;
+  $listenerStatus = array();
   $installedGui = $installedLang = $installedEndonym = $checkDir = $checkFile = $foundVersion = $langLine = '';
   $guiMatches = $langMatches = array();
   $langOk = $langTotal = 0;
@@ -2100,6 +2122,29 @@ function showVersionInfo() {
       else $langLine .= ' '.$installedLang; }
     print('  '.str_pad($installedGui, 28).$langOk.' of '.$langTotal.' OK'.($langLine === '' ? '' : ', failed:'.$langLine).$Lol); }
   print($Lol);
+  // / Report the resource awareness component & the listener it depends on.
+  print('Resource awareness'.$Lol);
+  if (!$EnableResourceAwareness) print('  '.str_pad('Configured', 28).'DISABLED in config.php'.$Lol);
+  else if (!$ResourceAwarenessActive) print('  '.str_pad('Component', 28).'FAILED, requires '.$RequiredCoreManagerVersion.' exactly'.$Lol);
+  else {
+    print('  '.str_pad('Component', 28).'OK, '.ltrim((string)$CoreManagerVersion, 'vV').', requires '.$RequiredCoreManagerVersion.' exactly'.$Lol);
+    print('  '.str_pad('Enforced', 28).($RequireResourceAwareness ? 'YES, the core refuses to run without it' : 'NO, the core falls back to no resource checking').$Lol);
+    print('  '.str_pad('Socket directory', 28).$ManagerSocketDir.$Lol);
+    print('  '.str_pad('Total budget', 28).((int)$TotalResourceBudget < 1 ? 'AUTO, derived from the processor count' : (int)$TotalResourceBudget.' cost units').$Lol);
+    print('  '.str_pad('Reserved share', 28).(int)$ReserveResourcePercentage.'%'.$Lol);
+    print('  '.str_pad('Concurrent worker limit', 28).((int)$MaxConcurrentWorkers < 1 ? 'NONE, the budget decides alone' : (int)$MaxConcurrentWorkers).$Lol);
+    print('  '.str_pad('Maximum runtime', 28).(int)$MaxExpectedRuntime.' second(s)'.$Lol);
+    print('  '.str_pad('Supervisor interval', 28).(int)$CoreManagerSubprocessPollInterval.'s, resource '.(int)$ResourcePollInterval.'s, reap '.(int)$WorkerReapInterval.'s'.$Lol);
+    print('  '.str_pad('Stale grace period', 28).(int)$WorkerStaleGracePeriod.' second(s)'.$Lol);
+    list ($listenerIsRunning, $listenerStatus) = reportListenerStatus();
+    print('  '.str_pad('Listener', 28).($listenerIsRunning ? 'RUNNING as process '.$listenerStatus['CoreManagerPid'] : 'STOPPED').$Lol);
+    if ($listenerIsRunning) {
+      print('  '.str_pad('Subordinate managers', 28).count($listenerStatus['Subordinates']).' of 3'.$Lol);
+      print('  '.str_pad('Tracked workers', 28).$listenerStatus['TrackedWorkers'].$Lol);
+      if (isset($listenerStatus['Budget']['RemainingBudget'])) print('  '.str_pad('Remaining budget', 28).$listenerStatus['Budget']['RemainingBudget'].' of '.$listenerStatus['Budget']['TotalBudget'].$Lol); }
+    else print('  '.str_pad('', 28).'Start it with -l. Conversions run unchecked until it is up.'.$Lol); }
+  print($Lol);
+
   // / Report which conversion types config.php has enabled.
   print('Enabled conversion types'.$Lol);
   print('  '.implode(', ', $SupportedConversionTypes).$Lol);
@@ -2113,7 +2158,7 @@ function showVersionInfo() {
   print($Lol);
   $VersionInfoDisplayed = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $modelsAreValid, $ocrToolsAreValid, $archiveToolsAreValid, $libreOfficeIsValid, $ffmpegBinary, $streamFfmpegBinary, $inkscapeBinary, $diaBinary, $scadBinary, $imageBinary, $assimpBinary, $meshlabBinary, $tesseractBinary, $pdftotextBinary, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary, $bwrapBinary, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $guiMatches, $langMatches, $langOk, $langTotal, $ebookBinary);
+  purgeSensitiveMemory($EnableMemoryProtection, $modelsAreValid, $ocrToolsAreValid, $archiveToolsAreValid, $libreOfficeIsValid, $ffmpegBinary, $streamFfmpegBinary, $inkscapeBinary, $diaBinary, $scadBinary, $imageBinary, $assimpBinary, $meshlabBinary, $tesseractBinary, $pdftotextBinary, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary, $bwrapBinary, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $guiMatches, $langMatches, $langOk, $langTotal, $ebookBinary, $listenerStatus, $listenerIsRunning);
   return $VersionInfoDisplayed; }
 // / -----------------------------------------------------------------------------------
 
@@ -2139,6 +2184,27 @@ function showHelpInfo() {
   print('  -h, --help                  Display this message.'.$Lol);
   print('  -c, --clean                 Sweep expired sessions from both data locations.'.$Lol);
   print('  -u, --update                Update the application from the configured source.'.$Lol);
+  print('  -l, --listen                Start the resource listener.'.$Lol);
+  print('  -k, --kill                  Stop the resource listener.'.$Lol);
+  print('  --status                    Report listener & resource budget state.'.$Lol);
+  print('  -fp, --fix-permissions      Correct ownership & permissions on managed paths.'.$Lol);
+  print($Lol);
+  print('Listener targets'.$Lol);
+  print('  -k                          Stop the listener & every manager it started.'.$Lol);
+  print('  -k <worker-id>              End one worker by budget token or process id.'.$Lol);
+  print('  --kill-all-workers          End EVERY tracked conversion in progress.'.$Lol);
+  print('                              Every user mid conversion loses their files.'.$Lol);
+  print('  --kill-every-worker         End EVERY PHP process owned by the web server user.'.$Lol);
+  print('                              This reaches other applications on this host, such'.$Lol);
+  print('                              as WordPress or OwnCloud. They lose every session.'.$Lol);
+  print('  -y, --yes                   Skip the confirmation prompt on the two above.'.$Lol);
+  print($Lol);
+  print('Listener notes'.$Lol);
+  print('  Listener commands require root or the web server user.'.$Lol);
+  print('  A standard user holds a per user secret, which cannot derive a valid startup'.$Lol);
+  print('  key, so a listener started that way could never be reached by a worker.'.$Lol);
+  print('  Resource awareness must be enabled in config.php before -l will do anything.'.$Lol);
+  print('  With no listener running the core converts exactly as it did before, unchecked.'.$Lol);
   print($Lol);
   print('Clean targets'.$Lol);
   print('  -c                          Sweep using the configured Delete Threshold.'.$Lol);
@@ -2178,18 +2244,9 @@ function showHelpInfo() {
   return $HelpInfoDisplayed; }
 // / -----------------------------------------------------------------------------------
 
-// / -----------------------------------------------------------------------------------
-// / A function to handle a command line invocation of HRConvert2.
-// / This function returns TRUE, 'cli' when it has handled an invocation.
-// / This function returns FALSE, 'web' only when there is no command line
-// / If this function fires, the core should immediately stop afterward.
-// / php_sapi_name() is the most reliable test for CLI arguments.
-// / Checking $argv alone can be populated by a query string in some cases.
-// / All command line arguments must be run as the web server user.
-// / To run as the web server user, use command  'sudo -u www-data php convertCore.php '
 function parseCommandLine() {
   // / Set variables.
-  global $Verbose, $Lol, $DeleteThreshold, $ConvertLoc, $ConvertTempDir, $RunningFromCLI, $RunningAsRoot, $CurrentUser, $ApacheUser, $ResourceAwarenessActive, $ManagerSocketDir, $EnableMemoryProtection;
+  global $Verbose, $Lol, $DeleteThreshold, $ConvertLoc, $ConvertTempDir, $RunningFromCLI, $RunningAsRoot, $CurrentUser, $ApacheUser, $ResourceAwarenessActive, $EnableMemoryProtection;
   $CommandLineHandled = $cliTempCleaned = $cliTempDeepCleaned = $cliDataCleaned = $cliDataDeepCleaned = FALSE;
   $UserType = 'web';
   $cliArgumentCount = $cliThreshold = $cliPathsCorrected = 0;
@@ -2220,7 +2277,7 @@ function parseCommandLine() {
       $cliParts = explode('=', $rawFirstArg, 2);
       $cliCommand = strtolower(trim($cliParts[0]));
       // / Resolve the target from an equal sign first & from the next argument second.
-      if (isset($cliParts[1])) $cliTarget = trim($cliParts[1]);
+      if (isset($cliParts[1])) $cliTarget = strtolower(trim($cliParts[1]));
       else $cliTarget = isset($cliArguments[1]) ? trim($cliArguments[1]) : '';
       $cliSecondTarget = isset($cliArguments[2]) ? trim($cliArguments[2]) : '';
       // / Handle the -v or --version arguments.
@@ -2245,46 +2302,27 @@ function parseCommandLine() {
         if (!$ResourceAwarenessActive) errorEntry('A manager start was requested but the component is unavailable!', 31009, TRUE);
         else dispatchManagerRole($cliTarget, $cliSecondTarget);
         $CommandLineHandled = TRUE; }
-      // / Handle the --status argument. Available to any user & reports the context that
-      // / decides whether every other listener command will be accepted.
+      // / Handle the --status argument. Available to any user, reports what is running.
       else if ($cliCommand === '--status') {
-        print($Lol.'Security context'.$Lol);
-        print('  Current user       '.($CurrentUser === '' ? '(undetected)' : $CurrentUser).$Lol);
-        print('  Running as root    '.($RunningAsRoot ? 'yes' : 'no').$Lol);
-        print('  Web server user    '.$ApacheUser.$Lol);
-        print('  Listener commands  '.($cliListenerAuthorized ? 'AUTHORIZED' : 'REFUSED, run as root or '.$ApacheUser).$Lol);
-        print($Lol.'Resource awareness'.$Lol);
-        if (!$ResourceAwarenessActive) print('  Component          UNAVAILABLE, missing or version mismatched'.$Lol);
+        if (!$ResourceAwarenessActive) print($Lol.'Resource awareness is unavailable. The Core Manager component is missing or does not match this core.'.$Lol);
         else {
-          print('  Component          available'.$Lol);
-          print('  Socket directory   '.$ManagerSocketDir.$Lol);
           list ($cliListenerRunning, $cliStatus) = reportListenerStatus();
-          print('  Listener           '.($cliListenerRunning ? 'RUNNING as process '.$cliStatus['CoreManagerPid'] : 'STOPPED').$Lol);
-          print('  Subordinates       '.count($cliStatus['Subordinates']).$Lol);
-          print('  Tracked workers    '.$cliStatus['TrackedWorkers'].$Lol);
-          if (isset($cliStatus['Budget']['RemainingBudget'])) print('  Remaining budget   '.$cliStatus['Budget']['RemainingBudget'].' of '.$cliStatus['Budget']['TotalBudget'].$Lol); }
-        print($Lol);
+          print($Lol.'Listener            '.($cliListenerRunning ? 'RUNNING as process '.$cliStatus['CoreManagerPid'] : 'STOPPED').$Lol);
+          print('Subordinates        '.count($cliStatus['Subordinates']).$Lol);
+          print('Tracked workers     '.$cliStatus['TrackedWorkers'].$Lol);
+          if (isset($cliStatus['Budget']['RemainingBudget'])) print('Remaining budget    '.$cliStatus['Budget']['RemainingBudget'].' of '.$cliStatus['Budget']['TotalBudget'].$Lol);
+          print($Lol); }
         $CommandLineHandled = TRUE; }
-      // / Handle the -l or --listen arguments.
-      // / The command is matched before authorization is tested, so a refused user is told
-      // / why rather than being told the argument does not exist.
-      else if ($cliCommand === '-l' or $cliCommand === '--listen') {
-        if (!$cliListenerAuthorized) {
-          warningEntry('An unauthorized user attempted to start the Core Manager listener.');
-          print($Lol.'Only root or '.$ApacheUser.' may start the listener.'.$Lol);
-          print('Detected user '.($CurrentUser === '' ? '(undetected)' : $CurrentUser).', running as root '.($RunningAsRoot ? 'yes' : 'no').'.'.$Lol);
-          print('Run  php convertCore.php --status  for the full context.'.$Lol.$Lol); }
-        else if (!$ResourceAwarenessActive) print($Lol.'Resource awareness is unavailable. The Core Manager component is missing or does not match this core.'.$Lol.$Lol);
+      // / Gate listener operation behind the authorized user check.
+      else if ($cliListenerAuthorized && ($cliCommand === '-l' or $cliCommand === '--listen')) {
+        if (!$ResourceAwarenessActive) print($Lol.'Resource awareness is unavailable. The Core Manager component is missing or does not match this core.'.$Lol);
         else {
           logEntry('Command line invocation. Starting the Core Manager listener.');
           startCoreManagerListener(); }
         $CommandLineHandled = TRUE; }
       // / Handle -k with no target as a listener stop & with a target as a worker kill.
-      else if ($cliCommand === '-k' or $cliCommand === '--kill') {
-        if (!$cliListenerAuthorized) {
-          warningEntry('An unauthorized user attempted to operate the Core Manager listener.');
-          print($Lol.'Only root or '.$ApacheUser.' may operate the listener.'.$Lol.$Lol); }
-        else if (!$ResourceAwarenessActive) print($Lol.'Resource awareness is unavailable. There is no listener to stop.'.$Lol.$Lol);
+      else if ($cliListenerAuthorized && ($cliCommand === '-k' or $cliCommand === '--kill')) {
+        if (!$ResourceAwarenessActive) print($Lol.'Resource awareness is unavailable. There is no listener to stop.'.$Lol);
         else if ($cliTarget === '') {
           logEntry('Command line invocation. Stopping the Core Manager listener.');
           stopCoreManagerListener(); }
@@ -2293,56 +2331,40 @@ function parseCommandLine() {
           killTargetedWorker($cliTarget); }
         $CommandLineHandled = TRUE; }
       // / Handle --kill-all-workers. Ends every TRACKED worker.
-      else if ($cliCommand === '--kill-all-workers') {
-        if (!$cliListenerAuthorized) {
-          warningEntry('An unauthorized user attempted to terminate tracked workers.');
-          print($Lol.'Only root or '.$ApacheUser.' may operate the listener.'.$Lol.$Lol); }
-        else if (!$ResourceAwarenessActive) print($Lol.'Resource awareness is unavailable, so no worker is tracked.'.$Lol.$Lol);
+      else if ($cliListenerAuthorized && $cliCommand === '--kill-all-workers') {
+        if (!$ResourceAwarenessActive) print($Lol.'Resource awareness is unavailable, so no worker is tracked.'.$Lol);
         else {
           $cliActionConfirmed = confirmDestructiveAction('This ends every tracked conversion in progress. Users will lose work.', $cliConfirmed);
           if ($cliActionConfirmed) {
             warningEntry('Command line invocation. Terminating every tracked worker.');
-            print($Lol.'Terminated '.killTrackedWorkers().' tracked worker(s).'.$Lol.$Lol); } }
+            print($Lol.'Terminated '.killTrackedWorkers().' tracked worker(s).'.$Lol); } }
         $CommandLineHandled = TRUE; }
       // / Handle --kill-every-worker. Ends every PHP process owned by the web server user.
       // / This reaches unrelated applications sharing the host & says so before it runs.
-      else if ($cliCommand === '--kill-every-worker') {
-        if (!$cliListenerAuthorized) {
-          warningEntry('An unauthorized user attempted to terminate every worker.');
-          print($Lol.'Only root or '.$ApacheUser.' may operate the listener.'.$Lol.$Lol); }
-        else if (!$ResourceAwarenessActive) print($Lol.'Resource awareness is unavailable, so no worker registry exists.'.$Lol.$Lol);
+      else if ($cliListenerAuthorized && $cliCommand === '--kill-every-worker') {
+        if (!$ResourceAwarenessActive) print($Lol.'Resource awareness is unavailable, so no worker registry exists.'.$Lol);
         else {
           $cliActionConfirmed = confirmDestructiveAction('This ends EVERY PHP process owned by '.$ApacheUser.' on this host. Other applications sharing this server, such as WordPress or OwnCloud, will lose every session in progress.', $cliConfirmed);
           if ($cliActionConfirmed) {
             warningEntry('Command line invocation. Terminating every process owned by the web server user.');
-            print($Lol.'Terminated '.killEveryWorker().' process(es).'.$Lol.$Lol); } }
+            print($Lol.'Terminated '.killEveryWorker().' process(es).'.$Lol); } }
         $CommandLineHandled = TRUE; }
-      // / Handle the -fp or --fix-permissions arguments. Root only, because it chowns.
-      else if ($cliCommand === '-fp' or $cliCommand === '--fix-permissions') {
-        if (!$RunningAsRoot) {
-          warningEntry('A non root user attempted to correct managed permissions.');
-          print($Lol.'Permissions can only be corrected while running as root.'.$Lol.$Lol); }
-        else {
+      // / Gate root-only, filesystem breaking command line operations behind a security context awareness check.
+      else if ($RunningAsRoot) {
+        // / Handle the -fp or --fix-permissions arguments.
+        if ($cliCommand === '-fp' or $cliCommand === '--fix-permissions') {
           logEntry('Command line invocation. Correcting managed permissions.');
           print($Lol.'Correcting permissions on managed paths.'.$Lol);
           list ($cliPermissionsFixed, $cliPathsCorrected) = fixManagedPermissions();
-          print($Lol.($cliPermissionsFixed ? 'Corrected '.$cliPathsCorrected.' path(s).' : 'Permissions could not be corrected.').$Lol.$Lol); }
-        $CommandLineHandled = TRUE; }
-      // / Handle the -u or --update arguments. Root only, because it swaps the installation.
-      else if ($cliCommand === '-u' or $cliCommand === '--update') {
-        if (!$RunningAsRoot) {
-          warningEntry('A non root user attempted to update the application.');
-          print($Lol.'An update can only be performed while running as root.'.$Lol.$Lol); }
-        else {
+          print($Lol.($cliPermissionsFixed ? 'Corrected '.$cliPathsCorrected.' path(s).' : 'Permissions could not be corrected.').$Lol.$Lol);
+          $CommandLineHandled = TRUE; }
+        // / Handle the -u or --update arguments.
+        else if ($cliCommand === '-u' or $cliCommand === '--update') {
           logEntry('Command line invocation. Performing an application update.');
-          updateApplication(strtolower($cliTarget)); }
-        $CommandLineHandled = TRUE; }
-      // / Handle the -c or --clean arguments. Root only, because it removes user data.
-      else if ($cliCommand === '-c' or $cliCommand === '--clean') {
-        if (!$RunningAsRoot) {
-          warningEntry('A non root user attempted to clean a data location.');
-          print($Lol.'A clean can only be performed while running as root.'.$Lol.$Lol); }
-        else {
+          updateApplication(strtolower($cliTarget));
+          $CommandLineHandled = TRUE; }
+        // / Handle the -c or --clean arguments.
+        else if ($cliCommand === '-c' or $cliCommand === '--clean') {
           logEntry('Command line invocation. Performing a manual clean.');
           $cliTarget = strtolower($cliTarget);
           $cliThreshold = $DeleteThreshold;
@@ -2361,10 +2383,15 @@ function parseCommandLine() {
           list ($cliDataCleaned, $cliDataDeepCleaned) = cleanDataLoc($ConvertLoc, 'ConvertLoc', $cliThreshold);
           print('  Data location        '.($cliDataCleaned ? 'OK' : 'FAILED').($cliDataDeepCleaned ? ', removed expired sessions' : ', nothing was expired').$Lol);
           if (!$cliTempCleaned or !$cliDataCleaned) print($Lol.'One or more locations could not be cleaned. See the log for the reason.'.$Lol);
-          print($Lol); }
-        $CommandLineHandled = TRUE; }
+          print($Lol);
+          $CommandLineHandled = TRUE; }
+        // / An unrecognized argument from root is still a mistake & must not fall through.
+        else {
+          warningEntry('Command line invocation with an unrecognized argument.');
+          print($Lol.'Unrecognized argument.'.$Lol);
+          showHelpInfo();
+          $CommandLineHandled = TRUE; } }
       // / An unrecognized argument is a mistake, not a web request.
-      // / Falling through to the web logic would be the worst possible response.
       else {
         warningEntry('Command line invocation with an unrecognized argument.');
         print($Lol.'Unrecognized argument.'.$Lol);
@@ -2540,6 +2567,57 @@ function isDirEmptyOfUserFiles($path) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to supply the sandbox flags one dependency needs & no other should have.
+// / Accepts a profile name naming the dependency about to run.
+// / Returns the extra bwrap flags for that profile, or an empty string for an unknown one.
+// / The base sandbox carries only what every dependency needs. Anything specific to one
+// / tool belongs here, so a converter is not handed mounts belonging to another converter.
+// / An unrecognized profile gets nothing extra rather than everything, because a missing
+// / mount fails loudly & a spare one fails silently.
+function sandboxProfileFlags($sandboxProfile) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $ProfileFlags = '';
+  $cleanProfile = preg_replace('/[^a-z]/', '', strtolower((string)$sandboxProfile));
+  // / LibreOffice keeps its bootstrap configuration outside the program directory on
+  // / Debian & Ubuntu. sofficerc & bootstraprc under /usr/lib/libreoffice/program are
+  // / symlinks into /etc/libreoffice, so binding only /usr leaves them dangling & the
+  // / configuration backend aborts with Signal 6 before it opens a file.
+  // / This single mount was proven sufficient by bisection. /var/lib/libreoffice was
+  // / tested & is NOT required, so it is deliberately absent.
+  // / /etc/java is not required either. It is bound so the Java backed filters work &
+  // / so javaldx stops warning. Remove it if this installation has no use for Java.
+  if ($cleanProfile === 'libreoffice') $ProfileFlags = ' --ro-bind-try /etc/libreoffice /etc/libreoffice'
+    .' --ro-bind-try /etc/java /etc/java'
+    .' --setenv SAL_USE_VCLPLUGIN svp'
+    .' --setenv SAL_DISABLE_OPENCL 1';
+  // / ImageMagick reads its policy & delegate configuration from a versioned directory.
+  else if ($cleanProfile === 'imagemagick') $ProfileFlags = ' --ro-bind-try /etc/ImageMagick-7 /etc/ImageMagick-7'
+    .' --ro-bind-try /etc/ImageMagick-6 /etc/ImageMagick-6'
+    .' --ro-bind-try /usr/share/ImageMagick-7 /usr/share/ImageMagick-7'
+    .' --ro-bind-try /usr/share/ImageMagick-6 /usr/share/ImageMagick-6';
+  // / Tesseract needs its trained language data, which is large & belongs to nothing else.
+  else if ($cleanProfile === 'tesseract') $ProfileFlags = ' --ro-bind-try /usr/share/tesseract-ocr /usr/share/tesseract-ocr'
+    .' --ro-bind-try /usr/share/tessdata /usr/share/tessdata';
+  // / Inkscape carries its own share tree & keeps preferences under the config home.
+  else if ($cleanProfile === 'inkscape') $ProfileFlags = ' --ro-bind-try /usr/share/inkscape /usr/share/inkscape'
+    .' --ro-bind-try /etc/inkscape /etc/inkscape';
+  else if ($cleanProfile === 'dia') $ProfileFlags = ' --ro-bind-try /usr/share/dia /usr/share/dia';
+  else if ($cleanProfile === 'calibre') $ProfileFlags = ' --ro-bind-try /usr/share/calibre /usr/share/calibre';
+  else if ($cleanProfile === 'meshlab') $ProfileFlags = ' --ro-bind-try /usr/share/meshlab /usr/share/meshlab'
+    .' --ro-bind-try /usr/share/pymeshlab /usr/share/pymeshlab';
+  else if ($cleanProfile === 'openscad') $ProfileFlags = ' --ro-bind-try /usr/share/openscad /usr/share/openscad';
+  // / ffmpeg, the archivers & poppler need nothing beyond the base sandbox.
+  else if ($cleanProfile === 'ffmpeg' or $cleanProfile === 'archive' or $cleanProfile === 'poppler' or $cleanProfile === 'generic') $ProfileFlags = '';
+  else warningEntry('An unrecognized sandbox profile named '.$cleanProfile.' was requested, so no dependency specific mounts were added.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $ProfileFlags is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $cleanProfile, $sandboxProfile);
+  return $ProfileFlags; }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
 // / A function to wrap a dependency invocation in a bubblewrap sandbox.
 // / Accepts a finished command, the real path of the input, the real path of the output,
 // / & a boolean granting network access.
@@ -2563,7 +2641,7 @@ function isDirEmptyOfUserFiles($path) {
 // / The mounts are derived from the supplied paths, so the caller never names one.
 // / Network access is unshared unless requested, which closes every URL handler at once.
 // / OpenSCAD does NOT use this. It needs a whole directory visible to resolve includes.
-function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork) {
+function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandboxProfile) {
   // / Set variables.
   global $Verbose, $RequireSandbox, $RequireSandboxOnDocker, $ThrowSandboxWarning, $RunningInContainer, $EnableMemoryProtection;
   $CommandMayRun = FALSE;
@@ -2571,9 +2649,11 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork) {
   // / This initializes TRUE rather than FALSE, because for this variable TRUE is the safe
   // / state. It is overwritten unconditionally below & the initial value is never read.
   $sandboxIsRequired = TRUE;
-  $SandboxedCommand = $networkFlag = $mountFlags = $workingDir = '';
+  $SandboxedCommand = $networkFlag = $mountFlags = $workingDir = $profileFlags = '';
   $inputDir = $outputDir = $sandboxInput = $sandboxOutput = '';
   $bwrapBinary = verifyBwrap();
+  // / Collect the mounts this one dependency needs. Nothing else receives them.
+  $profileFlags = sandboxProfileFlags($sandboxProfile);
   // / A container that CAN build a sandbox still gets one. This only decides what happens
   // / when it cannot.
   $sandboxIsRequired = $RunningInContainer ? $RequireSandboxOnDocker : $RequireSandbox;
@@ -2624,16 +2704,33 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork) {
       .' --ro-bind-try /sbin /sbin'
       .' --ro-bind-try /etc/alternatives /etc/alternatives'
       .' --ro-bind-try /etc/fonts /etc/fonts'
-      .' --ro-bind-try /etc/ImageMagick-7 /etc/ImageMagick-7'
-      .' --ro-bind-try /etc/ImageMagick-6 /etc/ImageMagick-6'
       .' --ro-bind-try /etc/ld.so.cache /etc/ld.so.cache'
       .' --ro-bind-try /etc/ssl/certs /etc/ssl/certs'
-      .' --ro-bind-try /usr/share/tesseract-ocr /usr/share/tesseract-ocr'
       .' --ro-bind-try /opt /opt'
       .' --proc /proc'
       .' --dev /dev'
       .' --tmpfs /tmp'
+      .' --tmpfs /run'
+      // / A dependency resolves the running user with getpwuid() during startup & throws
+      // / out of its configuration backend when the lookup fails. --unshare-all unshares
+      // / the user namespace, so without these the lookup has nothing to read & LibreOffice
+      // / aborts with Signal 6 before it opens a file.
+      .' --ro-bind-try /etc/passwd /etc/passwd'
+      .' --ro-bind-try /etc/group /etc/group'
+      .' --ro-bind-try /etc/machine-id /etc/machine-id'
+      .' --ro-bind-try /etc/localtime /etc/localtime'
+      // / --dev builds a minimal device tree with no /dev/shm, which several dependencies
+      // / require for shared memory. A tmpfs is enough & stays inside the namespace.
+      .' --tmpfs /dev/shm'
       .' --setenv HOME /tmp'
+      // / Every writable location a dependency reaches for is pointed at the tmpfs, so
+      // / nothing tries to create state outside the namespace & fail.
+      .' --setenv XDG_RUNTIME_DIR /tmp'
+      .' --setenv XDG_CONFIG_HOME /tmp/.config'
+      .' --setenv XDG_CACHE_HOME /tmp/.cache'
+      .' --setenv XDG_DATA_HOME /tmp/.local'
+      // / Headless rendering with no display server & no OpenCL probing.
+      .$profileFlags
       .$mountFlags
       .' --chdir '.$workingDir
       .' '
@@ -2643,7 +2740,7 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork) {
         $command);
     if ($Verbose) logEntry('Sandbox prepared for a dependency invocation.'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $bwrapBinary, $sandboxIsRequired, $networkFlag, $mountFlags, $workingDir, $inputDir, $outputDir, $sandboxInput, $sandboxOutput, $command, $inputPath, $outputPath, $allowNetwork);
+  purgeSensitiveMemory($EnableMemoryProtection, $bwrapBinary, $sandboxIsRequired, $networkFlag, $mountFlags, $profileFlags, $workingDir, $inputDir, $outputDir, $sandboxInput, $sandboxOutput, $command, $inputPath, $outputPath, $allowNetwork, $sandboxProfile);
   return array($CommandMayRun, $SandboxedCommand); }
 // / -----------------------------------------------------------------------------------
 
@@ -3251,66 +3348,189 @@ function updateApplication($requestedVersion) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to neutralize external references inside an uploaded document.
+// / Accepts the absolute path of the document to sanitize.
+// / Returns a sanitization boolean & the number of references neutralized, in that order.
+// / LibreOffice resolves a linked image, an INCLUDEPICTURE field & an external relationship
+// / target by fetching the URL, which turns a document upload into a server side request.
+// / The sandbox is what actually stops that fetch. This runs in front of it so an operator
+// / who has disabled sandboxing is not left completely unprotected.
+// / A reference is blanked rather than removed, because deleting the element that carries it
+// / leaves a dangling identifier & some readers refuse the whole file.
+// / A format this function does not recognize is reported as unsanitized rather than clean.
+function sanitizeDocumentLinks($documentPath) {
+  // / Set variables.
+  global $Verbose, $EnableMemoryProtection;
+  $DocumentIsSanitized = FALSE;
+  $ReferencesRemoved = 0;
+  $documentExtension = $entryName = $entryContents = $cleanContents = $flatContents = '';
+  $zipArchive = FALSE;
+  $entryIndex = $entryCount = $replacementCount = 0;
+  $packagedFormats = array('docx', 'docm', 'dotx', 'dotm', 'xlsx', 'xlsm', 'xltx', 'xltm', 'pptx', 'pptm', 'potx', 'potm', 'odt', 'ods', 'odp', 'odg', 'odf', 'ott', 'ots', 'otp');
+  $flatFormats = array('fodt', 'fods', 'fodp', 'xml', 'rtf');
+  $documentExtension = strtolower((string)pathinfo($documentPath, PATHINFO_EXTENSION));
+  // / A packaged format is a zip. Every part that can carry a reference is rewritten in place.
+  if (in_array($documentExtension, $packagedFormats, TRUE)) {
+    if (!class_exists('ZipArchive')) warningEntry('The PHP zip extension is unavailable, so '.basename($documentPath).' could not be checked for external references. The sandbox remains the only protection.');
+    else {
+      $zipArchive = new ZipArchive();
+      if ($zipArchive->open($documentPath) !== TRUE) warningEntry('Could not open '.basename($documentPath).' to check it for external references.');
+      else {
+        $entryCount = $zipArchive->numFiles;
+        while ($entryIndex < $entryCount) {
+          $entryName = (string)$zipArchive->getNameIndex($entryIndex);
+          // / Only the XML parts carry references. Media & binary parts are left untouched.
+          if (substr($entryName, -4) === '.xml' or substr($entryName, -5) === '.rels') {
+            $entryContents = (string)$zipArchive->getFromIndex($entryIndex);
+            $cleanContents = neutralizeDocumentReferences($entryContents, $replacementCount);
+            if ($cleanContents !== $entryContents) {
+              $zipArchive->addFromString($entryName, $cleanContents);
+              $ReferencesRemoved = $ReferencesRemoved + $replacementCount; } }
+          $entryIndex++; }
+        $zipArchive->close();
+        $DocumentIsSanitized = TRUE; } } }
+  // / A flat format is a single file. The same rewrite applies to the whole of it.
+  else if (in_array($documentExtension, $flatFormats, TRUE)) {
+    $flatContents = (string)@file_get_contents($documentPath);
+    if ($flatContents === '') warningEntry('Could not read '.basename($documentPath).' to check it for external references.');
+    else {
+      $cleanContents = neutralizeDocumentReferences($flatContents, $replacementCount);
+      if ($cleanContents !== $flatContents) {
+        @file_put_contents($documentPath, $cleanContents, LOCK_EX);
+        $ReferencesRemoved = $replacementCount; }
+      $DocumentIsSanitized = TRUE; } }
+  // / Every other format reaches the converter unexamined & relies on the sandbox alone.
+  else $DocumentIsSanitized = FALSE;
+  if ($Verbose) logEntry('Document Sanitization: '.basename($documentPath).', Format: '.($documentExtension === '' ? 'NONE' : $documentExtension).', Examined: '.($DocumentIsSanitized ? 'YES' : 'NO').', References Neutralized: '.$ReferencesRemoved.'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $documentExtension, $entryName, $entryContents, $cleanContents, $flatContents, $entryIndex, $entryCount, $replacementCount, $packagedFormats, $flatFormats, $documentPath);
+  return array($DocumentIsSanitized, $ReferencesRemoved); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to blank every external reference in one XML or flat document part.
+// / Accepts the part contents & a counter that receives the number of replacements made.
+// / Returns the rewritten contents.
+// / Three carriers are handled. An OOXML relationship marked external, a field instruction
+// / that names a fetching command & an ODF or SVG style link attribute.
+// / A relative target is left alone, because it cannot leave the document package.
+function neutralizeDocumentReferences($partContents, &$replacementCount) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $CleanContents = (string)$partContents;
+  $runningCount = $stepCount = 0;
+  $remoteSchemes = 'https?|ftps?|file|smb|ldap|gopher|dict|jar|mailto';
+  // / An OOXML relationship that declares itself external. The target is emptied in place.
+  $CleanContents = preg_replace('/(<Relationship\b(?=[^>]*TargetMode\s*=\s*"External")[^>]*?\sTarget\s*=\s*")[^"]*(")/i', '$1$2', $CleanContents, -1, $stepCount);
+  $runningCount = $runningCount + (int)$stepCount;
+  // / A relationship target carrying a remote scheme, whether or not it declares itself external.
+  $CleanContents = preg_replace('/(<Relationship\b[^>]*?\sTarget\s*=\s*")(?:'.$remoteSchemes.'):[^"]*(")/i', '$1$2', $CleanContents, -1, $stepCount);
+  $runningCount = $runningCount + (int)$stepCount;
+  // / A field instruction that tells the renderer to go and fetch something.
+  // / The instruction text is emptied & the element is left in place so the run stays valid.
+  $CleanContents = preg_replace('/(<w:instrText\b[^>]*>)[^<]*\b(?:INCLUDEPICTURE|INCLUDETEXT|IMPORT|LINK|DDEAUTO|DDE|HYPERLINK)\b[^<]*(<\/w:instrText>)/i', '$1$2', $CleanContents, -1, $stepCount);
+  $runningCount = $runningCount + (int)$stepCount;
+  // / The same instruction expressed as an attribute rather than as element text.
+  $CleanContents = preg_replace('/(\sw:instr\s*=\s*")[^"]*\b(?:INCLUDEPICTURE|INCLUDETEXT|IMPORT|LINK|DDEAUTO|DDE)\b[^"]*(")/i', '$1$2', $CleanContents, -1, $stepCount);
+  $runningCount = $runningCount + (int)$stepCount;
+  // / An ODF, SVG or generic xlink reference pointing off the machine.
+  $CleanContents = preg_replace('/(\sxlink:href\s*=\s*")(?:'.$remoteSchemes.'):[^"]*(")/i', '$1$2', $CleanContents, -1, $stepCount);
+  $runningCount = $runningCount + (int)$stepCount;
+  // / A spreadsheet external workbook reference.
+  $CleanContents = preg_replace('/(<externalReference\b[^>]*\sr:id\s*=\s*")[^"]*(")/i', '$1$2', $CleanContents, -1, $stepCount);
+  $runningCount = $runningCount + (int)$stepCount;
+  $replacementCount = $runningCount;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $CleanContents is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $runningCount, $stepCount, $remoteSchemes, $partContents);
+  return $CleanContents; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to convert one document with LibreOffice inside a sandbox.
+// / Accepts the input path, the intended output path & the target extension, in that order.
+// / Returns a completion boolean & whatever the converter printed, in that order.
+// / This replaces the persistent unoconv listener for every document conversion.
+// / The listener parsed hostile documents in a long lived process with full network access,
+// / so sandboxing the client that talked to it protected nothing. A per conversion process
+// / inside sandboxCommand has no network at all, which closes every URL handler at once.
+// / LibreOffice names its own output from the input basename, so the result is renamed when
+// / the caller asked for something else.
+// / The output directory is a bare dot, because sandboxCommand changes into the writable
+// / mount before running. When no sandbox could be built the directory is named outright.
+function convertWithLibreOffice($inputPath, $outputPath, $targetExtension) {
+  // / Set variables.
+  global $Verbose, $EnableMemoryProtection;
+  $ConversionCompleted = FALSE;
+  $ReturnData = '';
+  $sofficeBinary = $sofficeCommand = $sandboxedCommand = $producedPath = $cleanExtension = '';
+  $commandMayRun = $documentIsSanitized = FALSE;
+  $referencesRemoved = 0;
+  // / A filter may be appended to a format with a colon, so a colon is permitted here.
+  $cleanExtension = preg_replace('/[^A-Za-z0-9_:.\-]/', '', (string)$targetExtension);
+  $sofficeBinary = locateDependency('soffice');
+  if ($sofficeBinary === '') $sofficeBinary = locateDependency('libreoffice');
+  if ($sofficeBinary === '') errorEntry('LibreOffice could not be located for a document conversion!', 2002, FALSE);
+  else if ($cleanExtension === '') errorEntry('A document conversion was requested with an unusable target format!', 2003, FALSE);
+  else {
+    // / Neutralize external references before the converter ever opens the file.
+    list ($documentIsSanitized, $referencesRemoved) = sanitizeDocumentLinks($inputPath);
+    if ($referencesRemoved > 0) warningEntry('Document Sanitization neutralized '.$referencesRemoved.' external reference(s) in '.basename($inputPath).' before conversion. A document requesting a remote resource is worth investigating.');
+    // / Every flag here suppresses a prompt, a lock file or a recovery dialog that would
+    // / otherwise hang a headless process forever.
+    // / The user profile is written inside the sandbox tmpfs, so no state survives the run &
+    // / no two conversions can ever share a profile.
+    $sofficeCommand = escapeshellarg($sofficeBinary)
+      .' --headless --norestore --invisible --nolockcheck --nodefault --nofirststartwizard --nologo'
+      .' -env:UserInstallation=file:///tmp/hrc2-libreoffice'
+      .' --convert-to '.escapeshellarg($cleanExtension)
+      .' --outdir .'
+      .' '.escapeshellarg($inputPath);
+    list ($commandMayRun, $sandboxedCommand) = sandboxCommand($sofficeCommand, $inputPath, $outputPath, FALSE, 'libreoffice');
+    // / sandboxCommand returns the command untouched when no sandbox could be built.
+    // / A bare output directory only works because the sandbox changes into it, so it is
+    // / named outright on the unsandboxed path rather than writing wherever PHP happens to be.
+    if ($sandboxedCommand === $sofficeCommand) $sandboxedCommand = str_replace(' --outdir . ', ' --outdir '.escapeshellarg(dirname($outputPath)).' ', $sandboxedCommand);
+    if (!$commandMayRun) errorEntry('A document conversion was refused because no sandbox could be built!', 2004, FALSE);
+    else {
+      $ReturnData = (string)shell_exec('LANG=C.UTF-8 LC_ALL=C.UTF-8 '.$sandboxedCommand.' 2>&1');
+      // / LibreOffice derives the output name from the input, so rename when it differs.
+      $producedPath = dirname($outputPath).DIRECTORY_SEPARATOR.pathinfo($inputPath, PATHINFO_FILENAME).'.'.$cleanExtension;
+      if ($producedPath !== $outputPath && file_exists($producedPath) && !file_exists($outputPath)) @rename($producedPath, $outputPath);
+      if (file_exists($outputPath)) $ConversionCompleted = TRUE; } }
+  if ($Verbose) logEntry('LibreOffice Conversion: '.basename($inputPath).' to '.$cleanExtension.', Sandboxed: '.($sandboxedCommand === $sofficeCommand ? 'NO' : 'YES').', Result: '.($ConversionCompleted ? 'OK' : 'FAILED').'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $ReturnData is not purged, because it is a return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $sofficeBinary, $sofficeCommand, $sandboxedCommand, $producedPath, $cleanExtension, $commandMayRun, $documentIsSanitized, $referencesRemoved, $inputPath, $outputPath, $targetExtension);
+  return array($ConversionCompleted, $ReturnData); }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
 // / A function to verify that the Document Conversion Engine is installed & running.
-// / The engine is a bundled fork of unoconv which starts a LibreOffice listener, soffice.bin.
+// / LibreOffice is version checked here, because every document conversion depends on it.
 // / LibreOffice itself is version checked here, because every document conversion depends on it.
 // / The listener is only started once the installation & the version have both been cleared.
 function verifyDocumentConversionEngine() {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $ApacheUser, $DocumentEngineSleepTimer, $PathToUnoconv, $HomeLoc, $MinimumLibreOfficeVersion, $EnableMemoryProtection;
+  global $Verbose, $MinimumLibreOfficeVersion, $EnableMemoryProtection;
   $DocEnginePID = 0;
-  $docEnginePIDCheck = $docEngineUserCheck = $DocumentEngineStarted = $installCheck = $okToStart = $libreOfficeVersionIsValid = FALSE;
-  $returnData = $docEngineUser = '';
-  // / Determine if the Document Conversion Engine (Unoconv) is installed.
-  // / This flag must be set regardless of the logging verbosity setting.
-  // / Setting it inside a verbosity check would disable document conversion on every quiet install.
-  if (!file_exists($PathToUnoconv)) errorEntry('Could not verify the Document Conversion Engine installation at '.$PathToUnoconv.'!', 2000, TRUE);
-  else {
-    $installCheck = TRUE;
-    if ($Verbose) logEntry('Verified the Document Conversion Engine installation.'); }
-  // / Confirm the installed LibreOffice meets the minimum version HRConvert2 requires.
+  $DocumentEngineStarted = $libreOfficeVersionIsValid = FALSE;
+  $sofficeBinary = '';
   // / LibreOffice is the engine behind every document, spreadsheet & presentation conversion.
-  if ($installCheck) {
-    $libreOfficeVersionIsValid = verifyLibreOfficeVersion($MinimumLibreOfficeVersion);
-    if (!$libreOfficeVersionIsValid) errorEntry('The installed LibreOffice version is missing, unidentifiable, or too old!', 2001, TRUE); }
-  // / If Unoconv is installed & LibreOffice is new enough, check that the listener is running.
-  if ($installCheck && $libreOfficeVersionIsValid) {
-    // / Try to determine the PID for soffice.bin using pgrep.
-    // / head -n 1 keeps a single PID when more than one listener process is running.
-    // / Concatenating several PIDs would produce a number that matches no process at all.
-    $DocEnginePID = trim(shell_exec('pgrep soffice.bin | head -n 1'));
-    if ($Verbose) logEntry('The Document Conversion Engine PID is: '.$DocEnginePID.'.');
-    // / Parse the results of the pgrep call.
-    if ($DocEnginePID !== '' && (int)$DocEnginePID > 0) $docEnginePIDCheck = TRUE;
-    // / Try to determine who owns the Unoconv Listener (soffice.bin) process using ps.
-    // / We need whoever owns the process to have read & write access to HRConvert2 data locations.
-    // / If the included rc.local script is used, this process should run at system startup as the root user.
-    // / For more information, please see the included INSTALLATION_INSTRUCTIONS.txt file.
-    if ($docEnginePIDCheck) {
-      $docEngineUser = trim(shell_exec('ps -o user= -p '.(int)$DocEnginePID));
-      if ($Verbose) logEntry('The Document Conversion Engine owner is: '.$docEngineUser.'.');
-      if ($docEngineUser === $ApacheUser or $docEngineUser === 'root') $docEngineUserCheck = TRUE; }
-    // / We should only try to start the Document Conversion Engine under certain circumstances.
-    // / When the PID check is FALSE the listener is not running at all.
-    // / When the PID check is TRUE but the user check is FALSE the listener is running as the wrong user.
-    if (!$docEnginePIDCheck) $okToStart = TRUE;
-    if ($docEnginePIDCheck && !$docEngineUserCheck) $okToStart = TRUE;
-    // / Only start the Document Conversion Engine if it is not running, or running as the incorrect user.
-    if ($okToStart) {
-      // / Try to start the Document Conversion Engine.
-      if ($Verbose) logEntry('Starting the Document Conversion Engine.');
-      $returnData = exec('LANG=C.UTF-8 LC_ALL=C.UTF-8 python3 '.$PathToUnoconv.' -l --verbose --user-profile='.$HomeLoc.' > /dev/null 2>&1 &');
-      sleep($DocumentEngineSleepTimer);
-      if ($Verbose && trim($returnData) !== '') logEntry('The Document Conversion Engine returned the following: '.str_replace($Lol, '', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); }
-    // / Re-check the PID after any attempt to start the listener.
-    $DocEnginePID = trim(shell_exec('pgrep soffice.bin | head -n 1'));
-    if ($Verbose) logEntry('The Document Conversion Engine PID is: '.$DocEnginePID.'.');
-    // / Write the status of the Document Conversion Engine to the log file.
-    if ($DocEnginePID !== '' && (int)$DocEnginePID > 0) {
-      $DocumentEngineStarted = TRUE;
-      if ($Verbose) logEntry('The Document Conversion Engine is running.'); } }
+  $libreOfficeVersionIsValid = verifyLibreOfficeVersion($MinimumLibreOfficeVersion);
+  if (!$libreOfficeVersionIsValid) errorEntry('The installed LibreOffice version is missing, unidentifiable, or too old!', 2001, TRUE);
+  else {
+    $sofficeBinary = locateDependency('soffice');
+    if ($sofficeBinary === '') $sofficeBinary = locateDependency('libreoffice');
+    if ($sofficeBinary === '') errorEntry('Could not locate the LibreOffice binary!', 2000, TRUE);
+    else $DocumentEngineStarted = TRUE; }
+  // / Report a leftover listener. It is an open parsing surface that nothing needs any more.
+  $DocEnginePID = (int)trim((string)shell_exec('pgrep soffice.bin | head -n 1'));
+  if ($DocEnginePID > 0) warningEntry('A persistent LibreOffice listener is running as process '.$DocEnginePID.'. It is no longer used & is an unsandboxed parsing surface. Remove it from rc.local or the container entrypoint.');
+  if ($Verbose && $DocumentEngineStarted) logEntry('Verified the Document Conversion Engine. Conversions run sandboxed, one process each.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $docEnginePIDCheck, $docEngineUserCheck, $docEngineUser, $installCheck, $okToStart, $libreOfficeVersionIsValid);
+  purgeSensitiveMemory($EnableMemoryProtection, $libreOfficeVersionIsValid, $sofficeBinary);
   return array($DocumentEngineStarted, $DocEnginePID); }
 // / -----------------------------------------------------------------------------------
 
@@ -3318,14 +3538,14 @@ function verifyDocumentConversionEngine() {
 // / A function to convert document formats.
 function convertDocuments($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $XPSInputArray, $PathToUnoconv, $HomeLoc, $EnableMemoryProtection;
-  $ConversionSuccess = $ConversionErrors = FALSE;
-  $returnData = '';
-  $stopper = 0;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $XPSInputArray, $EnableMemoryProtection;
+  $ConversionSuccess = $ConversionErrors = $documentEngineStarted = $conversionCompleted = $commandMayRun = FALSE;
+  $returnData = $xpsCommand = $sandboxedCommand = '';
+  $stopper = $documentEnginePID = 0;
   $sleepTime = $SleepTimer;
   $arrayxpsi = array('xps', 'oxps');
-  $oldExtension =  getExtension($pathname);
-  // / The following code verifies that the Document Conversion Engine is installed & running.
+  $oldExtension = getExtension($pathname);
+  // / The following code verifies that the Document Conversion Engine is installed & usable.
   list ($documentEngineStarted, $documentEnginePID) = verifyDocumentConversionEngine();
   if (!$documentEngineStarted) {
     $ConversionErrors = TRUE;
@@ -3338,9 +3558,15 @@ function convertDocuments($pathname, $newPathname, $extension) {
     while (!file_exists($newPathname) && $stopper <= $StopCounter) {
       // / If the last conversion attempt failed, wait a moment before trying again.
       if ($stopper !== 0) sleep($sleepTime++);
-      if (in_array(strtolower($oldExtension), $arrayxpsi)) $returnData = shell_exec('xpstopdf '.$pathname.' '.$newPathname);
-      // / Attempt the conversion using Unoconv for all other files.
-      if (!in_array(strtolower($oldExtension), $arrayxpsi)) $returnData = shell_exec('LANG=C.UTF-8 LC_ALL=C.UTF-8 python3 '.$PathToUnoconv.' --verbose --user-profile='.$HomeLoc.' -o '.$newPathname.' -f '.$extension.' '.$pathname);
+      // / An XPS file is handled by xpstopdf, which is also sandboxed & also has no network.
+      // / Both arguments are escaped. An unescaped filename here was a command injection.
+      if (in_array(strtolower($oldExtension), $arrayxpsi)) {
+        $xpsCommand = 'xpstopdf '.escapeshellarg($pathname).' '.escapeshellarg($newPathname);
+        list ($commandMayRun, $sandboxedCommand) = sandboxCommand($xpsCommand, $pathname, $newPathname, FALSE, 'poppler');
+        if (!$commandMayRun) errorEntry('An XPS conversion was refused because no sandbox could be built!', 2004, FALSE);
+        else $returnData = (string)shell_exec($sandboxedCommand.' 2>&1'); }
+      // / Everything else goes to LibreOffice, one sandboxed process per conversion.
+      else list ($conversionCompleted, $returnData) = convertWithLibreOffice($pathname, $newPathname, $extension);
       // / Count the number of conversions to avoid infinite loops.
       $stopper++;
       // / Stop attempting the conversion after $StopCounter number of attempts.
@@ -3348,10 +3574,10 @@ function convertDocuments($pathname, $newPathname, $extension) {
         $ConversionErrors = TRUE;
         errorEntry('The document converter timed out!', 7001, FALSE); } }
     // / Log the output of the operation to the logfile, if it is not blank.
-    if ($Verbose && trim($returnData) !== '') logEntry('Unoconv returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); }
+    if ($Verbose && trim($returnData) !== '') logEntry('The document converter returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); }
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $stopper, $pathname, $returnData, $documentEngineStarted, $documentEnginePID, $sleepTime, $oldExtension, $arrayxpsi);
+  purgeSensitiveMemory($EnableMemoryProtection, $stopper, $pathname, $returnData, $documentEngineStarted, $documentEnginePID, $conversionCompleted, $commandMayRun, $xpsCommand, $sandboxedCommand, $sleepTime, $oldExtension, $arrayxpsi);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension); }
 // / -----------------------------------------------------------------------------------
 
@@ -3399,7 +3625,7 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
     // / The input comes FIRST. -alpha remove is an operation & needs an image already
     // / loaded, so a settings block placed before the input fails with no images found.
     $magickCommand = escapeshellarg($imageBinary).' '.escapeshellarg($pathname).' '.$bgSwitch.$wh.$rotate.escapeshellarg($newPathname);
-    list ($sandboxIsAvailable, $magickCommand) = sandboxCommand($magickCommand, $pathname, $newPathname, FALSE);
+    list ($sandboxIsAvailable, $magickCommand) = sandboxCommand($magickCommand, $pathname, $newPathname, FALSE, 'imagemagick');
     if (!$sandboxIsAvailable) {
       $ConversionErrors = TRUE;
       errorEntry('Bubblewrap is missing or non functional, so this image conversion cannot be isolated!', 8002, FALSE); }
@@ -3477,25 +3703,25 @@ function convertModels($pathname, $newPathname, $extension) {
       if (in_array($inputExt, $meshlabOnly)) {
         if ($UsePyMeshLab) $meshlabCommand = 'python3 -c "import sys; sys.path.insert(0, '.escapeshellarg($pyMeshLabDir).'); import pymeshlab; ms = pymeshlab.MeshSet(); ms.load_new_mesh('.escapeshellarg($pathname).'); ms.save_current_mesh('.escapeshellarg($intermediatePathname).');"';
         else $meshlabCommand = 'xvfb-run -a /usr/bin/meshlabserver -i '.escapeshellarg($pathname).' -o '.escapeshellarg($intermediatePathname);
-        list ($sandboxIsAvailable, $meshlabCommand) = sandboxCommand($meshlabCommand, $pathname, $intermediatePathname, FALSE);
+        list ($sandboxIsAvailable, $meshlabCommand) = sandboxCommand($meshlabCommand, $pathname, $intermediatePathname, FALSE, 'meshlab');
         if (!$sandboxIsAvailable) warningEntry('Bubblewrap is unavailable. A model conversion ran unsandboxed.');
         $returnData = shell_exec($meshlabCommand);
         // / If the first stage produced nothing, hand Assimp the original rather than nothing.
         $assimpInput = file_exists($intermediatePathname) ? $intermediatePathname : $pathname;
         $assimpCommand = escapeshellarg($assimpBinary).' export '.escapeshellarg($assimpInput).' '.escapeshellarg($newPathname);
-        list ($sandboxIsAvailable, $assimpCommand) = sandboxCommand($assimpCommand, $assimpInput, $newPathname, FALSE);
+        list ($sandboxIsAvailable, $assimpCommand) = sandboxCommand($assimpCommand, $assimpInput, $newPathname, FALSE, 'meshlab');
         $assimpData = shell_exec($assimpCommand); }
       // / Route 2. A scene format goes straight to Assimp & bypasses MeshLab entirely.
       else if (in_array($inputExt, $assimpSupported)) {
         $assimpCommand = escapeshellarg($assimpBinary).' export '.escapeshellarg($pathname).' '.escapeshellarg($newPathname);
-        list ($sandboxIsAvailable, $assimpCommand) = sandboxCommand($assimpCommand, $pathname, $newPathname, FALSE);
+        list ($sandboxIsAvailable, $assimpCommand) = sandboxCommand($assimpCommand, $pathname, $newPathname, FALSE, 'meshlab');
         if (!$sandboxIsAvailable) warningEntry('Bubblewrap is unavailable. A model conversion ran unsandboxed.');
         $assimpData = shell_exec($assimpCommand); }
       // / Route 3. An unrecognized extension is attempted with MeshLab alone.
       else {
         if ($UsePyMeshLab) $meshlabCommand = 'python3 -c "import sys; sys.path.insert(0, '.escapeshellarg($pyMeshLabDir).'); import pymeshlab; ms = pymeshlab.MeshSet(); ms.load_new_mesh('.escapeshellarg($pathname).'); ms.save_current_mesh('.escapeshellarg($newPathname).');"';
         else $meshlabCommand = 'xvfb-run -a '.escapeshellarg($meshlabBinary).' -i '.escapeshellarg($pathname).' -o '.escapeshellarg($newPathname);
-        list ($sandboxIsAvailable, $meshlabCommand) = sandboxCommand($meshlabCommand, $pathname, $newPathname, FALSE);
+        list ($sandboxIsAvailable, $meshlabCommand) = sandboxCommand($meshlabCommand, $pathname, $newPathname, FALSE, 'meshlab');
         if (!$sandboxIsAvailable) warningEntry('Bubblewrap is unavailable. A model conversion ran unsandboxed.');
         $returnData = shell_exec($meshlabCommand); }
       // / Count the number of conversions to avoid infinite loops.
@@ -3898,7 +4124,25 @@ function convertSCAD($pathname, $newPathname, $extension) {
       .' --proc /proc'
       .' --dev /dev'
       .' --tmpfs /tmp'
+      .' --tmpfs /run'
+      // / A dependency resolves the running user with getpwuid() during startup & throws
+      // / out of its configuration backend when the lookup fails. --unshare-all unshares
+      // / the user namespace, so without these the lookup has nothing to read & LibreOffice
+      // / aborts with Signal 6 before it opens a file.
+      .' --ro-bind-try /etc/passwd /etc/passwd'
+      .' --ro-bind-try /etc/group /etc/group'
+      .' --ro-bind-try /etc/machine-id /etc/machine-id'
+      .' --ro-bind-try /etc/localtime /etc/localtime'
+      // / --dev builds a minimal device tree with no /dev/shm, which several dependencies
+      // / require for shared memory. A tmpfs is enough & stays inside the namespace.
+      .' --tmpfs /dev/shm'
       .' --setenv HOME /tmp'
+      // / Every writable location a dependency reaches for is pointed at the tmpfs, so
+      // / nothing tries to create state outside the namespace & fail.
+      .' --setenv XDG_RUNTIME_DIR /tmp'
+      .' --setenv XDG_CONFIG_HOME /tmp/.config'
+      .' --setenv XDG_CACHE_HOME /tmp/.cache'
+      .' --setenv XDG_DATA_HOME /tmp/.local'
       .' --bind '.escapeshellarg($ScadTemp).' /work'
       .' --chdir /work'
       .' '.escapeshellarg($scadBinary).' -o '.escapeshellarg('/work/'.$sandboxOutputName)
@@ -3962,7 +4206,7 @@ function convertDrawings($pathname, $newPathname, $extension) {
   else {
     // / Build & sandbox the command once. It does not change between retries.
     $diaCommand = escapeshellarg($drawingBinary).' '.escapeshellarg($pathname).' -e '.escapeshellarg($newPathname);
-    list ($sandboxIsAvailable, $diaCommand) = sandboxCommand($diaCommand, $pathname, $newPathname, FALSE);
+    list ($sandboxIsAvailable, $diaCommand) = sandboxCommand($diaCommand, $pathname, $newPathname, FALSE, 'dia');
     if (!$sandboxIsAvailable) {
       $ConversionErrors = TRUE;
       errorEntry('Bubblewrap is missing or non functional, so this drawing conversion cannot be isolated!', 10001, FALSE); }
@@ -4015,7 +4259,7 @@ function convertSVG($pathname, $newPathname, $extension, $height, $width) {
   else {
     // / Build & sandbox the command once. It does not change between retries.
     $inkscapeCommand = escapeshellarg($svgBinary).' '.$argEcho.'--export-filename='.escapeshellarg($newPathname).' '.escapeshellarg($pathname);
-    list ($sandboxIsAvailable, $inkscapeCommand) = sandboxCommand($inkscapeCommand, $pathname, $newPathname, FALSE);
+    list ($sandboxIsAvailable, $inkscapeCommand) = sandboxCommand($inkscapeCommand, $pathname, $newPathname, FALSE, 'inkscape');
     if (!$sandboxIsAvailable) {
       $ConversionErrors = TRUE;
       errorEntry('Bubblewrap is missing or non functional, so this SVG conversion cannot be isolated!', 25002, FALSE); }
@@ -4073,7 +4317,7 @@ function convertEbooks($pathname, $newPathname, $extension) {
     // / Build & sandbox the command once. It does not change between retries.
     // / The output extension IS the format selector, so no format flag is passed.
     $ebookCommand = escapeshellarg($ebookBinary).' '.escapeshellarg($pathname).' '.escapeshellarg($newPathname);
-    list ($sandboxIsAvailable, $ebookCommand) = sandboxCommand($ebookCommand, $pathname, $newPathname, FALSE);
+    list ($sandboxIsAvailable, $ebookCommand) = sandboxCommand($ebookCommand, $pathname, $newPathname, FALSE, 'calibre');
     if (!$sandboxIsAvailable) {
       $ConversionErrors = TRUE;
       errorEntry('Bubblewrap is missing or non functional, so this e-book conversion cannot be isolated!', 30002, FALSE); }
@@ -4123,7 +4367,7 @@ function convertVideos($pathname, $newPathname, $extension) {
   else {
     // / Build & sandbox the command once. It does not change between retries.
     $ffmpegCommand = escapeshellarg($ffmpegBinary).' -y -i '.escapeshellarg($pathname).' -c:v libx264 '.escapeshellarg($newPathname);
-    list ($sandboxIsAvailable, $ffmpegCommand) = sandboxCommand($ffmpegCommand, $pathname, $newPathname, FALSE);
+    list ($sandboxIsAvailable, $ffmpegCommand) = sandboxCommand($ffmpegCommand, $pathname, $newPathname, FALSE, 'ffmpeg');
     if (!$sandboxIsAvailable) {
       $ConversionErrors = TRUE;
       errorEntry('Bubblewrap is missing or non functional, so this video conversion cannot be isolated!', 11002, FALSE); }
@@ -4170,7 +4414,7 @@ function convertSubtitles($pathname, $newPathname, $extension) {
   else {
     // / Build & sandbox the command once. It does not change between retries.
     $ffmpegCommand = escapeshellarg($ffmpegBinary).' -y -i '.escapeshellarg($pathname).' '.escapeshellarg($newPathname);
-    list ($sandboxIsAvailable, $ffmpegCommand) = sandboxCommand($ffmpegCommand, $pathname, $newPathname, FALSE);
+    list ($sandboxIsAvailable, $ffmpegCommand) = sandboxCommand($ffmpegCommand, $pathname, $newPathname, FALSE, 'ffmpeg');
     if (!$sandboxIsAvailable) {
       $ConversionErrors = TRUE;
       errorEntry('Bubblewrap is missing or non functional, so this subtitle conversion cannot be isolated!', 22001, FALSE); }
@@ -4911,7 +5155,7 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
   else {
     // / Build & sandbox the command once. It does not change between retries.
     $ffmpegCommand = escapeshellarg($ffmpegBinary).' -y -vn -i '.escapeshellarg($pathname).$br.escapeshellarg($newPathname);
-    list ($sandboxIsAvailable, $ffmpegCommand) = sandboxCommand($ffmpegCommand, $pathname, $newPathname, FALSE);
+    list ($sandboxIsAvailable, $ffmpegCommand) = sandboxCommand($ffmpegCommand, $pathname, $newPathname, FALSE, 'ffmpeg');
     if (!$sandboxIsAvailable) {
       $ConversionErrors = TRUE;
       errorEntry('Bubblewrap is missing or non functional, so this audio conversion cannot be isolated!', 12002, FALSE); }
@@ -5164,7 +5408,7 @@ function convertArchives($pathname, $newPathname, $extension) {
     if (in_array(strtolower($oldExtension), $array7zo2)) $extractCommand = escapeshellarg($sevenZipBinary).' x -y '.escapeshellarg($pathname).' -o'.escapeshellarg($safedir2);
     else if (in_array(strtolower($oldExtension), $arrayzipo) or in_array(strtolower($oldExtension), $array7zo) or in_array(strtolower($oldExtension), $arrayraro) or in_array(strtolower($oldExtension), $arraytaro)) $extractCommand = escapeshellarg($sevenZipBinary).' x -aoa '.escapeshellarg($pathname).' -o'.escapeshellarg($safedir2);
     if ($extractCommand !== '') {
-      list ($sandboxIsAvailable, $extractCommand) = sandboxCommand($extractCommand, $pathname, $safedir2, FALSE);
+      list ($sandboxIsAvailable, $extractCommand) = sandboxCommand($extractCommand, $pathname, $safedir2, FALSE, 'archive');
       if (!$sandboxIsAvailable) {
         $ConversionErrors = TRUE;
         errorEntry('Bubblewrap is missing or non functional, so this archive extraction cannot be isolated!', 13006, FALSE); }
@@ -5223,7 +5467,7 @@ function convertArchives($pathname, $newPathname, $extension) {
       // / The loop exits as soon as the output exists. Without that test it always ran the
       // / full count & always reported a timeout, even on a conversion that succeeded.
       if ($archiveCommand !== '') {
-        list ($sandboxIsAvailable, $archiveCommand) = sandboxCommand($archiveCommand, $safedir2, $newPathname, FALSE);
+        list ($sandboxIsAvailable, $archiveCommand) = sandboxCommand($archiveCommand, $safedir2, $newPathname, FALSE, 'archive');
         if (!$sandboxIsAvailable) {
           $ConversionErrors = TRUE;
           errorEntry('Bubblewrap is missing or non functional, so this archive operation cannot be isolated!', 13006, FALSE); }
@@ -5249,7 +5493,7 @@ function convertArchives($pathname, $newPathname, $extension) {
           // / file & sandboxCommand() mounts their shared directory once at /work.
           if ($hybridCommand !== '' && file_exists($newPathname)) {
             if ($Verbose) logEntry('Post processing the hybrid image with isohybrid.');
-            list ($sandboxIsAvailable, $hybridCommand) = sandboxCommand($hybridCommand, $newPathname, $newPathname, FALSE);
+            list ($sandboxIsAvailable, $hybridCommand) = sandboxCommand($hybridCommand, $newPathname, $newPathname, FALSE, 'archive');
             if (!$sandboxIsAvailable) {
               $ConversionErrors = TRUE;
               errorEntry('Bubblewrap is missing or non functional, so this hybrid image cannot be isolated!', 13006, FALSE); }
@@ -5658,7 +5902,7 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
     // / An archiver reads a file the user supplied & writes a structure it controls, so it
     // / is isolated for the same reason every other dependency is.
     if ($archiveCommand !== '') {
-      list ($sandboxIsAvailable, $archiveCommand) = sandboxCommand($archiveCommand, $pathname, $newPathname, FALSE);
+      list ($sandboxIsAvailable, $archiveCommand) = sandboxCommand($archiveCommand, $pathname, $newPathname, FALSE, 'archive');
       if (!$sandboxIsAvailable) {
         $ArchiveErrors = TRUE;
         errorEntry('Bubblewrap is missing or non functional, so this archive operation cannot be isolated!', 13006, FALSE); }
@@ -5825,8 +6069,8 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
 // / left with no boundary at all.
 function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   // / Set variables.
-  global $Verbose, $VirusScan, $ConvertTempDir, $ConvertDir, $Lol, $Lolol, $Append, $PathToUnoconv, $HomeLoc, $MinimumTesseractVersion, $MinimumPdftotextVersion, $MinimumImageVersion, $EnableMemoryProtection;
-  $OperationSuccessful = $OperationErrors = $multiple = $virusFound = $skip = $variableIsSanitized = FALSE;
+  global $Verbose, $VirusScan, $ConvertTempDir, $ConvertDir, $Lol, $Lolol, $Append, $MinimumTesseractVersion, $MinimumPdftotextVersion, $MinimumImageVersion, $EnableMemoryProtection;
+  $documentConverted = $OperationSuccessful = $OperationErrors = $multiple = $virusFound = $skip = $variableIsSanitized = FALSE;
   $fileIsVerified = $scanComplete = $documentEngineStarted = $sandboxIsAvailable = $anyFileSucceeded = $loopCheck = FALSE;
   $ocrToolsAreValid = FALSE;
   $tesseractBinary = $pdftotextBinary = $imageBinary = FALSE;
@@ -5893,7 +6137,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
               if ($Verbose) logEntry('Performing OCR using method 1.');
               // / Perform the conversion using PDFTOTEXT.
               $ocrCommand = escapeshellarg($pdftotextBinary).' -layout '.escapeshellarg($pathname).' '.escapeshellarg($pathnameTEMP);
-              list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathname, $pathnameTEMP, FALSE);
+              list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathname, $pathnameTEMP, FALSE, 'tesseract');
               // / pdftotext has no native control of its own, so an unavailable sandbox leaves
               // / no boundary at all & the operation is refused rather than run without one.
               if (!$sandboxIsAvailable) {
@@ -5921,7 +6165,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
               if ($Verbose) logEntry('Performing OCR intermediate operation using method 2.');
               // / Perform the conversion using ImageMagick.
               $ocrCommand = escapeshellarg($imageBinary).' '.escapeshellarg($pathname).' '.escapeshellarg($pathnameTEMP1);
-              list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathname, $pathnameTEMP1, FALSE);
+              list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathname, $pathnameTEMP1, FALSE, 'tesseract');
               // / ImageMagick has policy.xml, so an unavailable sandbox is a downgrade to a
               // / weaker control rather than to no control at all. The operation continues.
               if (!$sandboxIsAvailable) warningEntry('Bubblewrap is unavailable. This OCR page split will run unsandboxed & is protected only by policy.xml.');
@@ -5951,7 +6195,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
                   // / Tesseract appends .txt to the output argument, so what is passed is a
                   // / prefix rather than a filename. The sandbox mounts its directory either way.
                   $ocrCommand = escapeshellarg($tesseractBinary).' '.escapeshellarg($pathnameTEMP1).' '.escapeshellarg($pathnameTEMPTesseract);
-                  list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathnameTEMP1, $pathnameTEMPTesseract, FALSE);
+                  list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathnameTEMP1, $pathnameTEMPTesseract, FALSE, 'tesseract');
                   // / Tesseract has no native control of its own, so an unavailable sandbox
                   // / leaves no boundary & the operation is refused rather than run without one.
                   if (!$sandboxIsAvailable) {
@@ -5976,7 +6220,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
                 $pathnameTEMPTesseract = str_replace('..', '', str_replace('.txt', '', $pathnameTEMP));
                 if ($Verbose) logEntry('Performing OCR final operation using method 2.');
                 $ocrCommand = escapeshellarg($tesseractBinary).' '.escapeshellarg($pathnameTEMP1).' '.escapeshellarg($pathnameTEMPTesseract);
-                list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathnameTEMP1, $pathnameTEMPTesseract, FALSE);
+                list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathnameTEMP1, $pathnameTEMPTesseract, FALSE, 'tesseract');
                 if (!$sandboxIsAvailable) {
                   $OperationErrors = TRUE;
                   errorEntry('Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!', 15012, FALSE); }
@@ -5992,10 +6236,10 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
             $OperationErrors = TRUE;
             errorEntry('Could not verify the Document Conversion Engine!', 15007, FALSE); }
           else {
-            // / Perform the conversion using Unoconv.
+            // / Perform the conversion with LibreOffice, sandboxed, one process per file.
             // / The document conversion engine is a persistent listener rather than a process
             // / launched per conversion, so it cannot be sandboxed the way the others are.
-            $returnData = shell_exec('LANG=C.UTF-8 LC_ALL=C.UTF-8 python3 '.escapeshellarg($PathToUnoconv).' --verbose --user-profile='.escapeshellarg($HomeLoc).' -o '.escapeshellarg($newPathname).' -f pdf '.escapeshellarg($pathname));
+            list ($documentConverted, $returnData) = convertWithLibreOffice($pathname, $newPathname, 'pdf');
             // / Log the output of the operation to the logfile, if it is not blank.
             if ($Verbose && trim($returnData) !== '') logEntry('The converter (U-1) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); } } }
       // / Code to convert an image to text.
@@ -6008,7 +6252,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
           if ($Verbose) logEntry('Reading the image with Tesseract.');
           // / Perform the conversion using Tesseract.
           $ocrCommand = escapeshellarg($tesseractBinary).' '.escapeshellarg($pathname).' '.escapeshellarg($pathnameTEMPTesseract);
-          list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathname, $pathnameTEMPTesseract, FALSE);
+          list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathname, $pathnameTEMPTesseract, FALSE, 'tesseract');
           if (!$sandboxIsAvailable) {
             $OperationErrors = TRUE;
             errorEntry('Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!', 15012, FALSE); }
@@ -6028,13 +6272,13 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
             errorEntry('The installed pdftotext version is missing, unidentifiable, or too old!', 15014, FALSE); }
           else {
             if ($Verbose) logEntry('Tesseract produced nothing. Converting the image to PDF instead.');
-            // / Perform the conversion using Unoconv.
-            $returnData = shell_exec('LANG=C.UTF-8 LC_ALL=C.UTF-8 python3 '.escapeshellarg($PathToUnoconv).' --verbose --user-profile='.escapeshellarg($HomeLoc).' -o '.escapeshellarg($pathnameTEMP3).' -f pdf '.escapeshellarg($pathname));
+            // / Perform the conversion with LibreOffice, sandboxed, one process per file.
+            list ($documentConverted, $returnData) = convertWithLibreOffice($pathname, $pathnameTEMP3, 'pdf');
             // / Log the output of the operation to the logfile, if it is not blank.
             if ($Verbose && trim($returnData) !== '') logEntry('The converter (U-2) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
             // / Perform the conversion using PDFTOTEXT.
             $ocrCommand = escapeshellarg($pdftotextBinary).' -layout '.escapeshellarg($pathnameTEMP3).' '.escapeshellarg($pathnameTEMP);
-            list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathnameTEMP3, $pathnameTEMP, FALSE);
+            list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathnameTEMP3, $pathnameTEMP, FALSE, 'tesseract');
             if (!$sandboxIsAvailable) {
               $OperationErrors = TRUE;
               errorEntry('Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!', 15012, FALSE); }
@@ -6050,7 +6294,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
         if (file_exists($pathnameTEMP)) {
           rename($pathnameTEMP, $newPathname);
           if ($Verbose) logEntry('Renamed file '.$pathnameTEMP.' to '.$newPathname.'.'); } }
-      // / If the output file is not a txt file we convert it with Unoconv.
+      // / If the output file is not a txt file we convert it with LibreOffice.
       else {
         // / The following code verifies that the Document Conversion Engine is installed & running.
         list ($documentEngineStarted, $documentEnginePID) = verifyDocumentConversionEngine();
@@ -6058,8 +6302,8 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
           $OperationErrors = TRUE;
           errorEntry('Could not verify the Document Conversion Engine!', 15010, FALSE); }
         else {
-          // / Perform the conversion using Unoconv.
-          $returnData = shell_exec('LANG=C.UTF-8 LC_ALL=C.UTF-8 python3 '.escapeshellarg($PathToUnoconv).' --verbose --user-profile='.escapeshellarg($HomeLoc).' -o '.escapeshellarg($newPathname).' -f '.escapeshellarg($UserExtension).' '.escapeshellarg($pathnameTEMP));
+          // / Perform the conversion with LibreOffice, sandboxed, one process per file.
+          list ($documentConverted, $returnData) = convertWithLibreOffice($pathnameTEMP, $newPathname, $UserExtension);
           // / Log the output of the operation to the logfile, if it is not blank.
           if ($Verbose && trim($returnData) !== '') logEntry('The converter (U-3) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); } }
       // / Error handler for if the output file does not exist.
@@ -6074,7 +6318,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   // / Error handler for if any failures happened during file loops.
   if ($anyFileSucceeded) $OperationSuccessful = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $file, $pathname, $oldPathname, $filename, $oldExtension, $newPathname, $doc1array, $img1array, $pdf1array, $pathnameTEMP, $pathnameTEMP0, $pathnameTEMP1, $pathnameTEMP3, $pagedFilesArrRAW, $pagedFile, $cleanFilname, $pageNumber, $readPageData, $writePageData, $multiple, $pathnameTEMPTesseract, $clean, $copy, $skip, $allowedOCR, $variableIsSanitized, $loopCheck, $anyFileSucceeded, $ocrCommand, $sandboxIsAvailable, $fileIsVerified, $scanComplete, $virusFound, $documentEngineStarted, $documentEnginePID, $returnData, $ocrToolsAreValid, $tesseractBinary, $pdftotextBinary, $imageBinary, $PDFWorkSelected, $UserFilename, $UserExtension, $Method);
+  purgeSensitiveMemory($EnableMemoryProtection, $file, $pathname, $oldPathname, $filename, $oldExtension, $newPathname, $doc1array, $img1array, $pdf1array, $pathnameTEMP, $pathnameTEMP0, $pathnameTEMP1, $pathnameTEMP3, $pagedFilesArrRAW, $pagedFile, $cleanFilname, $pageNumber, $readPageData, $writePageData, $multiple, $pathnameTEMPTesseract, $clean, $copy, $skip, $allowedOCR, $variableIsSanitized, $loopCheck, $anyFileSucceeded, $ocrCommand, $sandboxIsAvailable, $fileIsVerified, $scanComplete, $virusFound, $documentEngineStarted, $documentEnginePID, $returnData, $ocrToolsAreValid, $tesseractBinary, $pdftotextBinary, $imageBinary, $PDFWorkSelected, $UserFilename, $UserExtension, $Method, $documentConverted);
   return array($OperationSuccessful, $OperationErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -6200,7 +6444,7 @@ function userClamScan($FilesToScan) {
 // / A fuction to prepare the execution environment for ScanCore.
 function startScanCore($pathname, $UserScanCoreLogFile) {
   // / Set variables.
-  global $InstLoc, $ConvertDir, $MaxLogSize, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $DirSep, $ScanCoreVerbose, $ScanCoreDebug, $Date, $SesHash, $SesHash2, $EnableMemoryProtection;
+  global $InstLoc, $ConvertDir, $MaxLogSize, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $DirSep, $Date, $SesHash, $SesHash2, $EnableMemoryProtection;
   $ReturnData = $scVerbose = $scDebug = '';
   $ScanCoreFile = $InstLoc.$DirSep.'Resources'.$DirSep.'ScanCore'.$DirSep.'ScanCore.php';
   $scInc = 0;
@@ -6338,7 +6582,7 @@ function verifyConsolidatedLogFile() {
 // / Type can be either 'clamav', 'scancore', or 'all'.
 function consolidateLogs($type, $UserClamLogFile, $UserScanCoreLogFile) {
   // / Set variables.
-  global $Verbose, $Lol, $Append, $ConsolidatedLogFile, $UserClamLogFile, $UserScanCoreLogFile, $ConsolidatedLogFile, $ConsolidatedLogFileName, $EnableMemoryProtection;
+  global $Verbose, $Lol, $Append, $ConsolidatedLogFile, $UserClamLogFile, $UserScanCoreLogFile, $ConsolidatedLogFileName, $EnableMemoryProtection;
   $ConsolidatedLogsExist = $ConsolidatedLogErrors = $logWrittenA = $logWrittenB = $logWrittenC = $logWrittenD = $logWrittenE = FALSE;
   $userClamLogData = $userScanCoreData = $consolidatedLogData = $txt = $userScanCoreLogData = '';
   $spacer = '----------';
@@ -6487,7 +6731,7 @@ function verifyCoreManagerComponent($requiredCoreManagerVersion) {
 // / core behaves exactly as it did before this component existed.
 function requestConversionBudget($conversionCost, $expectedRuntime) {
   // / Set variables.
-  global $ResourceAwarenessActive, $ManagerSocketTimeout, $EnableMemoryProtection;
+  global $ResourceAwarenessActive, $ManagerSocketTimeout, $EnableMemoryProtection, $Verbose;
   $BudgetWasApproved = FALSE;
   $BudgetToken = '';
   $requestPayload = $replyPayload = array();
@@ -6501,15 +6745,25 @@ function requestConversionBudget($conversionCost, $expectedRuntime) {
       'ConversionCost' => (int)$conversionCost,
       'ExpectedRuntime' => (int)$expectedRuntime,
       'WorkerPid' => getmypid());
-    list ($messageWasDelivered, $replyPayload) = sendManagerMessage($requestSocket, $requestPayload, 'worker', (int)$ManagerSocketTimeout);
+    // / The worker waits longer than the chain it is waiting on. The request crosses three
+    // / processes & each inner hop waits less than the one outside it, so a slow manager
+    // / times out inside rather than leaving the worker with half an answer.
+    list ($messageWasDelivered, $replyPayload) = sendManagerMessage($requestSocket, $requestPayload, 'worker', (int)$ManagerSocketTimeout * 3);
     // / A listener that cannot be reached must not stop a conversion that would have run.
     if (!$messageWasDelivered) {
       warningEntry('The Core Manager listener did not answer a budget request. Proceeding without resource awareness.');
       $BudgetWasApproved = TRUE; }
-    else if (isset($replyPayload['Approved']) && $replyPayload['Approved'] === TRUE) {
+    // / A delivered message with no usable reply is a listener that is slow or broken rather
+    // / than a budget that declined. Refusing here would stop a conversion nothing refused.
+    // / Only an explicit answer is allowed to refuse a conversion.
+    else if (!isset($replyPayload['Approved'])) {
+      warningEntry('The Core Manager listener returned no usable answer to a budget request. Proceeding without resource awareness.');
+      $BudgetWasApproved = TRUE; }
+    else if ($replyPayload['Approved'] === TRUE) {
       $BudgetWasApproved = TRUE;
-      $BudgetToken = isset($replyPayload['BudgetToken']) ? (string)$replyPayload['BudgetToken'] : ''; }
-    else logEntry('A conversion was refused by the resource budget. '.(isset($replyPayload['Reason']) ? $replyPayload['Reason'] : '')); }
+      $BudgetToken = isset($replyPayload['BudgetToken']) ? (string)$replyPayload['BudgetToken'] : ''; 
+      if ($Verbose) logEntry('Worker '.getmypid().' was granted budget token '.$BudgetToken.'.'); }
+    else logEntry('A conversion was refused by the resource budget. '.(isset($replyPayload['Reason']) && $replyPayload['Reason'] !== '' ? $replyPayload['Reason'] : 'No reason was supplied.')); }
   purgeSensitiveMemory($EnableMemoryProtection, $requestPayload, $replyPayload, $messageWasDelivered, $requestSocket, $conversionCost, $expectedRuntime);
   return array($BudgetWasApproved, $BudgetToken); }
 // / -----------------------------------------------------------------------------------
@@ -6520,16 +6774,17 @@ function requestConversionBudget($conversionCost, $expectedRuntime) {
 // / Returns TRUE when the release was acknowledged, or when there was nothing to release.
 function releaseConversionBudget($budgetToken) {
   // / Set variables.
-  global $ResourceAwarenessActive, $ManagerSocketTimeout, $EnableMemoryProtection;
+  global $ResourceAwarenessActive, $ManagerSocketTimeout, $EnableMemoryProtection, $Verbose;
   $BudgetWasReleased = FALSE;
   $requestPayload = $replyPayload = array();
   $messageWasDelivered = FALSE;
   if (!$ResourceAwarenessActive or (string)$budgetToken === '') $BudgetWasReleased = TRUE;
   else {
     $requestPayload = array('RequestType' => 'release', 'BudgetToken' => (string)$budgetToken, 'WorkerPid' => getmypid());
-    list ($messageWasDelivered, $replyPayload) = sendManagerMessage(buildManagerSocketPath('request-manager'), $requestPayload, 'worker', (int)$ManagerSocketTimeout);
+    list ($messageWasDelivered, $replyPayload) = sendManagerMessage(buildManagerSocketPath('request-manager'), $requestPayload, 'worker', (int)$ManagerSocketTimeout * 3);
     if ($messageWasDelivered && isset($replyPayload['Approved']) && $replyPayload['Approved'] === TRUE) $BudgetWasReleased = TRUE;
-    else warningEntry('A budget token could not be released. The reaper will reclaim it.'); }
+    else warningEntry('A budget token could not be released. The reaper will reclaim it.'); 
+    if ($Verbose && $BudgetWasReleased) logEntry('Worker '.getmypid().' released budget token '.(string)$budgetToken.'.'); }
   purgeSensitiveMemory($EnableMemoryProtection, $requestPayload, $replyPayload, $messageWasDelivered, $budgetToken);
   return $BudgetWasReleased; }
 // / -----------------------------------------------------------------------------------
@@ -6547,8 +6802,10 @@ function requestRuntimeExtension($budgetToken, $requestedSeconds) {
   if (!$ResourceAwarenessActive or (string)$budgetToken === '') $ExtensionWasGranted = TRUE;
   else {
     $requestPayload = array('RequestType' => 'extend', 'BudgetToken' => (string)$budgetToken, 'RequestedSeconds' => (int)$requestedSeconds, 'WorkerPid' => getmypid());
-    list ($messageWasDelivered, $replyPayload) = sendManagerMessage(buildManagerSocketPath('request-manager'), $requestPayload, 'worker', (int)$ManagerSocketTimeout);
-    if ($messageWasDelivered && isset($replyPayload['Approved']) && $replyPayload['Approved'] === TRUE) $ExtensionWasGranted = TRUE;
+    list ($messageWasDelivered, $replyPayload) = sendManagerMessage(buildManagerSocketPath('request-manager'), $requestPayload, 'worker', (int)$ManagerSocketTimeout * 3);
+    // / An extension that was never answered is granted, for the same reason a budget request is.
+    if (!isset($replyPayload['Approved'])) $ExtensionWasGranted = TRUE;
+    else if ($replyPayload['Approved'] === TRUE) $ExtensionWasGranted = TRUE;
     else warningEntry('A runtime extension was refused. This worker may be reaped.'); }
   purgeSensitiveMemory($EnableMemoryProtection, $requestPayload, $replyPayload, $messageWasDelivered, $budgetToken, $requestedSeconds);
   return $ExtensionWasGranted; }

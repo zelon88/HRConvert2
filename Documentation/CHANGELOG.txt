@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/19/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/20/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.7.6.
+v3.7.7.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -26,6 +26,134 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+
+--------------------
+COMMIT 8/20/2026
+v3.7.7 - Functioanl rate limiting. Sandbox Document Conversions. Remove Unoconv. First functional resource listener!
+
+-v3.7.7.
+  -The good stuff first!
+-----
+  -To enable resource awareness...
+  
+  -Set `$AllowResourceAwareness` to `TRUE` in `config.php`.
+  -Review and set other `$Resource` related `config.php` settings.
+  -In a command line, start the listener with...
+    `sudo php /var/www/html/HRProprietary/HRConvert2/convertCore.php --listen`
+  -Check listener status with...
+    `sudo php /var/www/html/HRProprietary/HRConvert2/convertCore.php --status`
+  -Kill the listener with...
+    `sudo php /var/www/html/HRProprietary/HRConvert2/convertCore.php --kill`
+  -Review the help documentation!
+    `sudo php /var/www/html/HRProprietary/HRConvert2/convertCore.php --help`
+  -Perform a copmprehensive diagnostic & status report for each included component & all managed dependencies.
+    `sudo php /var/www/html/HRProprietary/HRConvert2/convertCore.php --version`
+  -Some commands require `sudo`, some don't. Some commands give different output as `sudo`. 
+  -Commands are context aware, so they tell you when sudo is required.
+  -If you plough sudo into everything (I see you. Heathen) it will safely reduce it's own context to www-data.
+
+-----
+-Ok, now the boring stuff.
+-Rename the secret.php file with `$ApplicationName` from config.php.
+  -We also version pin it and replace it when it gets outdated.
+  -This ensures bugs that slip may into it are repairable from a programatic standpoint.
+  -And that it's always valid to the current version of the core.
+  -This can be manually checked by running `sudo php convertCore.php --status`.
+-Added an EXTREMELY helpful `-fp` or `--fix-permissions` CLI argument.
+  -When run as root, repairs the installation & all managed folders automatically.
+  -`sudo php /var/www/html/HRProprietary/HRConvert2/convertCore.php --fix-permissions`
+-Sandbox document conversions in the same way that all other conversion pipelines are sandboxxed.
+  -Add a document rectifier that checks for and removes external references from docs that run through the document converter.
+  -This was reported by a user and is being processed under a pending security advisory.
+  -The security advisory will be published shortly.
+  -Use bubblewrap with no network and specified namespaces.
+  -Use only the least permissive settings we can achieve.
+  -I will attach the tooling I used to determine the least permissive sandbox LibreOffice will accept in a comment under the security advisory.
+  -Previously the Unoconv Listener + Soffice Listener prevented us from sandboxing document conversions like all the other conversion pipelines.
+  -We now send commands directly to libreoffice, and (currently) absorb the cold-cache startup cost when applicable.
+  -This means we can bwrap libreoffice with no-network and smaller namespace exposure.
+-Remove Unoconv as a dependency.
+  -This is huge.
+  -Official Unoconv Github repo... https://github.com/unoconv/unoconv
+  -Unoconv was of the oldest dependencies in HRConvert2.
+  -It was introduced into the (then proprietary) "HRConvert" (no "2") in 2013.
+  -Unoconv was supersceded by "Unoserver" by the same developer.
+  -Unoconv has been deprecated and unmaintained since Mar 31, 2025.
+  -Earier this year I (@zelon88) forked Unoconv and tweaked it to run with modern LibreOffice.
+    -Specifically so we could keep using it.
+    -I bundled UnoConv into HRConvert2 and shipped our modified version as our own.
+    -The option existed for a time in config.php to pick which unoconv to use.
+      -apt-get unoconv gives you a version that does not work with apt-get libreoffice
+    -When we introduced dependency validation, $PathToUnoconv was removed from config.php & decided by the core at runtime.
+  -Now we send our commands straight to LibreOffice instead. Directly.
+  --PROS--
+    -We can shut down the persistent listeners that used to run all the time.
+    -We remove Unoconv as a dependency and no longer need to bundle it.
+    -We get to run sandboxing directly on LibreOffice with no-network & sane amounts of namespace.
+    -We can remove the rc.local setup COMPLETELY fom the `INSTALLATION_INSTRUCTIONS.txt` & `Dockerfile` builds.
+  --CONS--
+    -We (currently) do not have LibreOffice cache warming.
+    -Document conversions are take considerably longer to complete.
+    -LibreOffice must start with a fresh cache for every session.
+    -Expect to observe considerable amounts of disk IO for every document conversion. Even when converting small files.
+    -The cache creation cost is static. There's no avoiding it. a 1kb conversion means LibreOffice builds a fresh `.cache` and `.config` for every conversion.
+  -I plan on integrating the libreoffice cache warming process into the `coreManager` somehow.
+    -This is a secondary priority to getting the `coreManager` to actually run consistently and be stable.
+    -The official "birthday" for `coreManager` is today. This commit marks the first time it actually works.
+    -Please be paitient with it.
+-ALL FOUR `coreManager` LISTENERS RUN!!!!
+  -Resource awareness is live.
+  -Four processes, started by one command. `convertCore.php -l` (root or www-data only).
+    -Derives a time-bucketed HMAC startup key from the install secret and shell_execs `convertCore.php --start-core-manager <key>`.
+    -Dropping to `www-data` via `su` if you ran it as root.
+    -That process validates the key, becomes Core Manager, then spawns three subordinates the same way: 
+      -Request Manager, 
+      -Resource Manager, 
+      -or Worker Manager.
+    -Each `Manager` a full `convertCore` boot that enters its `Manager` role and never returns. Into the abyss...
+    -Think of `convertCore` as the mothership. Or the queen of an ant colony.
+    -Every `Manager` and every `Worker` starts as a clone of `convertCore`. 
+  -Uses UDS Sockets for communication.
+    -Unix domain sockets in `$ConvertLoc/Sockets`, `0700`, owned by `www-data`. 
+    -Every message is AES-256-GCM encrypted with a key derived from the install secret per channel, carrying a timestamp and nonce.
+    -Anything outside the skew window is discarded as a replay.
+  -Request flow, ONE-WAY ONLY.
+    -A worker can address exactly one socket — Request Manager's.
+    -Request Manager sends budget, release, or extend; anything else is refused as a request type a worker may not issue.
+    -Request Manager forwards to Core Manager, which routes by type: 
+    -`budget/`release`/`extend` to Resource Manager, 
+    -`kill`/`reap` to Worker Manager.
+    -The verdict returns back down the same open connection.
+    -No worker is addressable by anything, so there is no path from one worker to another.
+  -The Resource Budget.
+    -Resource Manager owns the resource budget and nothing else adjusts it.
+    -Every $ResourcePollInterval it reads load average and available memory, then recomputes:
+      -a base of $TotalResourceBudget (or 100 units per core when zero),
+      -minus a reserve percentage,
+      -minus a penalty scaled to whichever of load or memory is under more pressure.
+    -An idle server throttles nothing; a loaded one stops accepting before it falls over.
+    -An approved request registers the worker with its cost and expected runtime and returns a budget token, which the worker hands back on completion.
+  -Reaping.
+    -Worker Manager sweeps every $WorkerReapInterval.
+    -A tracked worker whose process has exited, or which has outrun ExpectedRuntime + $WorkerStaleGracePeriod, is killed and its budget reclaimed.
+    -It is the only component permitted to end a process without negotiation.
+    -Core Manager separately restarts any subordinate it finds dead.
+  -Failure is open by design.
+    -No component, a version mismatch, a dead listener, an unreachable socket, or a delivered request with no usable reply — all of these approve the conversion and warn.
+    -The core then behaves exactly as it did before any of this existed.
+    -$RequireResourceAwareness = TRUE inverts that for operators who'd rather refuse than run unaccounted.
+  -Stopping.
+    -The `-k` argument asks Core Manager to stop, waits for a clean unwind, then signals what remains and verifies via /proc/<pid>/stat
+    -Checks process state rather than directory existence, so a zombie isn't mistaken for a survivor.
+    -The `-k <id>` argument ends one worker;
+    -The `--kill-all-workers` argument ends every tracked one;
+    -The `--kill-every-worker` argument ends every PHP process owned by www-data, including other applications on the host.
+  -State that crosses processes:
+    -manager PIDs,
+    -the worker registry,
+    -the current budget — lives in JSON files beside the sockets.
+    -That's the weakest part: last-write-wins, so a busy server could drop a registration between read and write.
+      -We will eventually implement an in-memory cache for bookeeping this to remove the reliance on the filesystem.
 
 --------------------
 COMMIT 8/19/2026

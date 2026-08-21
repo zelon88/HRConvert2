@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/16/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/20/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.7.3.
+v3.7.7.
 This plain text file contains descriptions of all the native error messages contained in or produced by the HRConvert2 Diablo engine. 
 These descriptions should give administrators a starting point for debugging problems with HRConvert2 installations. 
 Each section in this file contains information about a different error message. The first one is an example to demonstrate the structure of this file.
@@ -845,6 +845,81 @@ ERROR DESCRIPTION
   HRConvert2 refuses any build it cannot positively identify, because an unknown build cannot be cleared.
   Check the installed version by running 'libreoffice --version' as the web server user.
   The listener is only started once both the installation check & the version check have passed.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-2002, <SESSION_IDENTIFIER>: LibreOffice could not be located for a document conversion!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Neither the soffice binary nor the libreoffice binary could be found on this server.
+  LibreOffice is installed but its binary is outside every directory HRConvert2 searches.
+  LibreOffice was removed or its package was broken after this installation was verified.
+  The web server user cannot execute the binary due to file permission levels.
+  Install LibreOffice, or confirm that soffice appears in the output of the -v argument.
+  This error is not fatal but the file that causes it will be skipped.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-2003, <SESSION_IDENTIFIER>: A document conversion was requested with an unusable target format!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The requested output format contained no character that could be used as a format name.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+  A 3rd party application is imporperly attempting to submit data to the API.
+  The application is being fuzzed or scanned for vulnerabilities.
+  The format is filtered to letters, numbers, a dot, a dash, an underscore & a colon before use.
+  A colon is permitted because LibreOffice accepts a filter name appended to a format.
+  This error is not fatal but the file that causes it will be skipped.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-2004, <SESSION_IDENTIFIER>: A document conversion was refused because no sandbox could be built!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Bubblewrap is missing or non functional & sandboxing is required by config.php.
+  This error only occurs if --Require Sandbox-- is set to TRUE in config.php.
+  This error only occurs if --Require Sandbox On Docker-- is set to TRUE when running in a container.
+  A document is the single most dangerous input this application accepts.
+  LibreOffice will resolve a linked image, an INCLUDEPICTURE field & an external relationship
+  target by fetching the URL, which turns a document upload into a request made by this server.
+  The sandbox removes the network namespace, which is what stops that fetch.
+  Install bubblewrap, or set the relevant setting to FALSE to run conversions unprotected.
+  Running document conversions unprotected is not recommended on a public server.
+  This error is not fatal but the file that causes it will be skipped.
+  The same error number is raised when an XPS conversion cannot be sandboxed.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -4391,30 +4466,303 @@ ERROR DESCRIPTION
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
- ERROR MESSAGE
-   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-40000, <SESSION_IDENTIFIER>: Cannot purge sensitive memory for the <FUNCTION_NAME> function! Memory protection is Enabled. Execution cannot continue!
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31000, <SESSION_IDENTIFIER>: The Core Manager could not open its socket!
 
- FILE
-   convertCore.php
+FILE
+  Resources/coreManager.php
 
- FATAL
-   YES
+FATAL
+  YES
 
- LOGGED
-   YES
+LOGGED
+  YES
 
- ERROR DESCRIPTION
-   A sensitive variable could not be destroyed & could not be released by the fallback either.
-   This error only occurs if --Enable Memory Protection-- is set to TRUE in config.php.
-   If --Enable Memory Protection-- is set to FALSE the same condition produces a non-fatal warning.
-   <FUNCTION_NAME> names the function that owned the variable, not the function that reported it.
-   The named function submitted a variable of a type that cannot be shredded, such as an object or a resource.
-   The named function submitted a variable that survived being assigned NULL.
-   This error is in place to maintain the integrity of the fallback contract.
-   Logically this error should never be triggered, because assigning NULL to a variable cannot fail.
-   A preceding WARNING!!! naming the same function will identify the variable type responsible.
-   If this error is logged before the logging environment exists it is written to the server error log instead.
- ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR DESCRIPTION
+  The Core Manager process could not bind a unix domain socket in the socket directory.
+  The socket directory does not exist or is not writable by the web server user.
+  A previous listener left a socket file behind that could not be removed.
+  The socket directory lives inside the data location & is named by the --status argument.
+  Run the -fp argument as root to correct ownership & permissions on every managed path.
+  This error only occurs if --Enable Resource Awareness-- is set to TRUE in config.php.
+  This error halts the Core Manager process only. Conversions continue without resource awareness.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31001, <SESSION_IDENTIFIER>: The Request Manager could not open its socket!
+
+FILE
+  Resources/coreManager.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The Request Manager process could not bind the worker facing unix domain socket.
+  The socket directory does not exist or is not writable by the web server user.
+  A previous listener left a socket file behind that could not be removed.
+  The Request Manager is the only socket a worker is permitted to address.
+  Without it no conversion can request a resource budget & every request fails open.
+  Run the -fp argument as root to correct ownership & permissions on every managed path.
+  This error only occurs if --Enable Resource Awareness-- is set to TRUE in config.php.
+  This error halts the Request Manager process only. The Core Manager will restart it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31002, <SESSION_IDENTIFIER>: The Resource Manager could not open its socket!
+
+FILE
+  Resources/coreManager.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The Resource Manager process could not bind its unix domain socket.
+  The socket directory does not exist or is not writable by the web server user.
+  A previous listener left a socket file behind that could not be removed.
+  The Resource Manager owns the resource budget & nothing else may adjust it.
+  Without it every budget request is answered by nothing & conversions run unchecked.
+  Run the -fp argument as root to correct ownership & permissions on every managed path.
+  This error only occurs if --Enable Resource Awareness-- is set to TRUE in config.php.
+  This error halts the Resource Manager process only. The Core Manager will restart it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31003, <SESSION_IDENTIFIER>: The Worker Manager could not open its socket!
+
+FILE
+  Resources/coreManager.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The Worker Manager process could not bind its unix domain socket.
+  The socket directory does not exist or is not writable by the web server user.
+  A previous listener left a socket file behind that could not be removed.
+  The Worker Manager is the only component permitted to end a worker process.
+  Without it a worker that outlives its expected runtime will never be reaped.
+  Run the -fp argument as root to correct ownership & permissions on every managed path.
+  This error only occurs if --Enable Resource Awareness-- is set to TRUE in config.php.
+  This error halts the Worker Manager process only. The Core Manager will restart it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31004, <SESSION_IDENTIFIER>: The Core Manager socket directory could not be prepared!
+
+FILE
+  Resources/coreManager.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The Sockets directory inside the data location could not be created or is not writable.
+  The data location itself is missing, read only, or owned by the wrong user.
+  The listener was started by root & the directory belongs to another account.
+  The directory is created 0700 & is handed to the web server user when root starts the listener.
+  Run the -fp argument as root to correct ownership & permissions on every managed path.
+  This error only occurs when the -l or --listen argument is used.
+  This error is not fatal. The listener simply does not start.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31005, <SESSION_IDENTIFIER>: The Core Manager listener could not be started!
+
+FILE
+  Resources/coreManager.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The Core Manager process was launched but did not record itself within five seconds.
+  The launched process died before it validated its startup key.
+  The web server user cannot read the install secret, so no valid startup key could be derived.
+  The web server user cannot write the logfile, so the process failed silently.
+  PHP is not on the PATH of the account the listener was launched under.
+  The su command is unavailable, which is required when root starts the listener.
+  The command needed to reproduce the failure by hand is printed when this error occurs.
+  Run that command without the output redirection to see why the process is dying.
+  This error only occurs when the -l or --listen argument is used.
+  This error is not fatal. The listener simply does not start.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31006, <SESSION_IDENTIFIER>: A manager process was started with an invalid startup key!
+
+FILE
+  Resources/coreManager.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A manager process was launched without a key derived from the install secret.
+  A command line user attempted to start a listener component by hand.
+  The supplied key was derived from a per user secret rather than the install wide secret.
+  The supplied key was derived more than two key windows ago & has expired.
+  The install secret was rotated between the launch & the validation.
+  The application is being fuzzed or scanned for vulnerabilities.
+  The --start-core-manager & --start-manager arguments are internal & are not documented in -h.
+  They are invoked by the -l argument & are refused without a valid key.
+  A standard user cannot start a valid listener, because a per user secret cannot derive this key.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31007, <SESSION_IDENTIFIER>: An unrecognized manager role was requested!
+
+FILE
+  Resources/coreManager.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The --start-manager argument was supplied with a role that does not exist.
+  The four valid roles are core-manager, request-manager, resource-manager & worker-manager.
+  The Core Manager component & convertCore.php are from different releases.
+  A command line user attempted to start a listener component by hand.
+  This error is in place to maintain syntactical integrity of the codebase.
+  Logically this error should never be triggered, because the role is supplied by the Core Manager
+  itself & the startup key would already have been refused for any other caller.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31008, <SESSION_IDENTIFIER>: Permissions can only be corrected while running as root!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The -fp or --fix-permissions argument was used by an account other than root.
+  Correcting ownership on the data location requires root, because the files belong to another user.
+  Re-run the command with sudo.
+  This error is not fatal. No path is altered.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31009, <SESSION_IDENTIFIER>: A Core Manager start was requested but the component is unavailable!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A manager process was launched while the Core Manager component was missing or invalid.
+  The coreManager.php file was removed or replaced between the launch & the start.
+  The component version does not exactly match the version this core requires.
+  --Enable Resource Awareness-- was set to FALSE in config.php between the launch & the start.
+  The install secret was rotated, so the component could not be loaded on the new process.
+  The same error number is raised for both the --start-core-manager & --start-manager arguments.
+  This error halts the launched process only. The web interface is unaffected.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31010, <SESSION_IDENTIFIER>: Resource awareness is required by config.php & the Core Manager component is unavailable!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The coreManager.php component is missing, unreadable, or reports no version.
+  The component version does not exactly match the version this core requires.
+  This error only occurs if --Require Resource Awareness-- is set to TRUE in config.php.
+  A second wording of this error is raised when --Enable Resource Awareness-- is FALSE, or when
+  no install secret is available, while --Require Resource Awareness-- is TRUE.
+  Set --Require Resource Awareness-- to FALSE to run without resource awareness instead of refusing.
+  Install or repair the component to run with it.
+  This error halts the application, because the administrator has declared that this server must
+  never accept work it cannot account for.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-40000, <SESSION_IDENTIFIER>: Cannot purge sensitive memory for the <FUNCTION_NAME> function! Memory protection is Enabled. Execution cannot continue!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A sensitive variable could not be destroyed & could not be released by the fallback either.
+  This error only occurs if --Enable Memory Protection-- is set to TRUE in config.php.
+  If --Enable Memory Protection-- is set to FALSE the same condition produces a non-fatal warning.
+  <FUNCTION_NAME> names the function that owned the variable, not the function that reported it.
+  A preceding WARNING!!! naming the same function identifies the variable type responsible.
+  The named function submitted a variable that survived being assigned NULL.
+  This error is in place to maintain syntactical integrity of the codebase.
+  Logically this error should never be triggered, because assigning NULL to a variable cannot fail.
+  This error is written to the log, then printed to the page, then the connection is closed.
+  It is passed to errorEntry with a FALSE fatal flag so that control returns for the print & the
+  close. Execution is halted immediately afterwards, so the error is fatal despite that flag.
+  If this error occurs before the logging environment exists it is written to the server error log.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

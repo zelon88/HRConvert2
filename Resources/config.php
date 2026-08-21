@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/19/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/20/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.7.6.
+// / v3.7.7.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -37,7 +37,7 @@
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. Replacing config.php with a newer one is the correct fix.
-$ConfigVersion = 'v3.7.6';
+$ConfigVersion = 'v3.7.7';
 
 // / ---Security Informations---
 // /
@@ -787,22 +787,6 @@ $RARArchiveMethod = 'rar';
 // /   Valid options are integers smaller than 10.
 // /   Default is 5.
 $RetryCount = 5;
-// / --Document Engine Sleep Timer--
-// /   Set this to the number of seconds to wait after attempting to start the Document Conversion Engine for it to start.
-// /   Try increasing this value if Logs indicate that the Document Conversion Engine won't start.
-// /   Valid options are integers smaller than 60.
-// /   Do not set this timer longer than the Execution Time specified in php.ini.
-// /   Default is 5.
-$DocumentEngineSleepTimer = 5;
-// / --Substitute Patched Conversion Engine--
-// /   The developer of HRConvert2 maintains an alternative fork of the "Unoconv" package.
-// /   HRConvert2 can use the included copy of Unoconv, or the system copy of Unoconv.
-// /   If your system uses Python 3.12 or later, set this to TRUE.
-// /   If your system uses Python 3.11 or earlier, this can be set to either TRUE or FALSE.
-// /   If set to TRUE, the included "zelon88 patched" version of Unoconv will be used for document conversions.
-// /   If set to FALSE, the system version of Unoconv will be used for document conversins.
-// /   Default is TRUE.
-$UsePatchedDocumentEngine = TRUE;
 // / ------------------------------
 
 // / ------------------------------

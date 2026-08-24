@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/20/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/22/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.l
 // /
 // / FILE INFORMATION ...
-// / v3.7.8.
+// / v3.7.9.
 // / This file contains the current HRConvert2 version for update verification purposes.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -27,9 +27,16 @@
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
 
+// / -----------------------------------------------------------------------------------
+// / Refuse direct execution. This file is a component & has no standalone context.
+// / This halt cannot use quickDie. Reaching this line means convertCore.php was never
+// / loaded, so quickDie is not defined & calling it would replace a clear refusal with an
+// / undefined function error.
+if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: This file cannot process your request! Please submit your file to convertCore.php instead!'.PHP_EOL);
+// / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / The version of this HRConvert2 installation.
-$Version = 'v3.7.8';
+$Version = 'v3.7.9';
 $Version = ltrim($Version, 'vV');
 // / -----------------------------------------------------------------------------------

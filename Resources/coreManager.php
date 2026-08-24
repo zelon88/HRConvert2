@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/20/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/21/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILEINFORMATION ...
-// / v3.7.8.
+// / v3.7.9.
 // / This file contains the core manager resource listener logic of the application.
 // / This file contains logic related to rate planning & resouce management.
 // /
@@ -38,7 +38,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php checks this without executing the file.
-$CoreManagerVersion = 'v3.7.8';
+$CoreManagerVersion = 'v3.7.9';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -955,15 +955,65 @@ function killEveryWorker() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to start the listener from an authorized command line invocation.
+// / A function to run the Core Manager in the FOREGROUND, for a supervisor to own.
+// / Accepts no arguments & does not return until the listener is stopped.
+// / Returns TRUE when the loop exited on a stop instruction rather than a failure.
+// / THIS IS THE ENTRY POINT A SERVICE MANAGER USES. It does not fork & does not return, so
+// / systemd can watch the actual process, restart it when it dies & report its true state.
+// / startCoreManagerListener spawns & returns instead, which leaves nothing watching Core
+// / Manager itself. Core Manager supervises its three subordinates either way.
+// / The startup key is derived here rather than supplied, because a service manager has no
+// / way to compute one. The authorization it proves is preserved regardless. A standard
+// / user holds a per user secret, so the key they derive cannot validate & this refuses.
+function runCoreManagerForeground() {
+  // / Set variables.
+  global $ApacheUser, $CurrentUser, $RunningAsRoot, $EnableMemoryProtection;
+  $ListenerExitedCleanly = FALSE;
+  $startupKey = '';
+  $callerIsAuthorized = FALSE;
+  if ($RunningAsRoot or $CurrentUser === $ApacheUser) $callerIsAuthorized = TRUE;
+  if (!$callerIsAuthorized) errorEntry('The foreground listener was started by an account that may not operate it!', 31014, TRUE);
+  else {
+    // / Running as root would leave every socket owned by root & unreachable by a worker.
+    // / A service manager should set User in the unit. This is the last line of defence.
+    if ($RunningAsRoot) warningEntry('The foreground listener is running as root. Every socket it creates will be owned by root & no web worker will be able to reach it. Set User to '.$ApacheUser.' in the service unit.');
+    $startupKey = deriveStartupKey('start-core-manager');
+    if ($startupKey === '') errorEntry('The foreground listener could not derive a startup key. No install secret is available!', 31015, TRUE);
+    else {
+      logEntry('The Core Manager listener was started in the foreground as process '.getmypid().'.');
+      prepareManagerSocketDir();
+      $ListenerExitedCleanly = dispatchManagerRole('core-manager', $startupKey); } }
+  purgeSensitiveMemory($EnableMemoryProtection, $startupKey, $callerIsAuthorized);
+  return $ListenerExitedCleanly; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to report whether a service unit owns this listener.
 // / Accepts no arguments.
-// / Returns TRUE when the Core Manager process was launched & recorded itself.
-// / A listener that is already running is not started twice.
+// / Returns TRUE when a unit named hrconvert2-listener is installed & enabled.
+// / Two ways to start one listener produces two listeners. When a unit owns the lifecycle,
+// / the -l argument defers to it rather than starting a second one beside it.
+function listenerUnitIsInstalled() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $UnitIsInstalled = FALSE;
+  $systemctlBinary = '';
+  $commandOutput = array();
+  $commandExitCode = 1;
+  $systemctlBinary = locateDependency('systemctl');
+  if ($systemctlBinary !== '') {
+    exec(escapeshellarg($systemctlBinary).' is-enabled hrconvert2-listener 2>/dev/null', $commandOutput, $commandExitCode);
+    if ($commandExitCode === 0) $UnitIsInstalled = TRUE; }
+  purgeSensitiveMemory($EnableMemoryProtection, $systemctlBinary, $commandOutput, $commandExitCode);
+  return $UnitIsInstalled; }
+// / -----------------------------------------------------------------------------------
+
 // / -----------------------------------------------------------------------------------
 // / A function to start the listener from an authorized command line invocation.
 // / Accepts no arguments.
 // / Returns TRUE when the Core Manager process was launched & recorded itself.
 // / A listener that is already running is not started twice.
+// / A service unit that owns this listener is started through the service manager instead.
 function startCoreManagerListener() {
   // / Set variables.
   global $InstLoc, $ManagerSocketDir, $ApacheUser, $CurrentUser, $RunningAsRoot, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $Verbose, $Lol, $EnableMemoryProtection;
@@ -971,13 +1021,26 @@ function startCoreManagerListener() {
   $managerState = $chownOutput = $listenerStatus = array();
   $stateWasRead = $directoryIsReady = $listenerIsRunning = FALSE;
   $startupKey = $spawnCommand = $innerCommand = $managerRole = '';
-  $chownExitCode = $listenerPid = $waitCounter = $managerPid = 0;
-  $directoryIsReady = prepareManagerSocketDir();
+  $chownExitCode = $listenerPid = $waitCounter = $managerPid = $unitExitCode = 0;
+  $unitOwnsListener = FALSE;
+  $unitOutput = array();
+  // / A service unit that owns this listener is the only thing that should start it.
+  // / Starting a second one beside it produces two Core Managers fighting over one socket.
+  if (listenerUnitIsInstalled()) {
+    $unitOwnsListener = TRUE;
+    print($Lol.'A service unit owns this listener, so it is started through the service manager.'.$Lol);
+    exec('systemctl start hrconvert2-listener 2>&1', $unitOutput, $unitExitCode);
+    if ($unitExitCode === 0) print('  systemctl start hrconvert2-listener'.$Lol.$Lol);
+    else {
+      print('  systemctl start hrconvert2-listener FAILED'.$Lol);
+      print('  '.implode($Lol.'  ', $unitOutput).$Lol.$Lol); } }
+  else $directoryIsReady = prepareManagerSocketDir();
   // / Hand the socket directory to the web server user before anything binds inside it.
   // / A root owned directory is unreachable to the workers that must connect.
-  if ($directoryIsReady && $RunningAsRoot) exec('chown -R '.escapeshellarg($ApacheUser).':'.escapeshellarg($ApacheUser).' '.escapeshellarg($ManagerSocketDir).' 2>&1', $chownOutput, $chownExitCode);
+  if (!$unitOwnsListener && $directoryIsReady && $RunningAsRoot) exec('chown -R '.escapeshellarg($ApacheUser).':'.escapeshellarg($ApacheUser).' '.escapeshellarg($ManagerSocketDir).' 2>&1', $chownOutput, $chownExitCode);
   list ($stateWasRead, $managerState) = readManagerState('managers');
-  if ($stateWasRead && isset($managerState['CoreManagerPid']) && file_exists('/proc/'.(int)$managerState['CoreManagerPid'])) {
+  if ($unitOwnsListener) $ListenerWasStarted = TRUE;
+  else if ($stateWasRead && isset($managerState['CoreManagerPid']) && managerProcessIsAlive((int)$managerState['CoreManagerPid'])) {
     print($Lol.'The listener is already running as process '.(int)$managerState['CoreManagerPid'].'.'.$Lol);
     print('Stop it with -k before starting another.'.$Lol.$Lol); }
   else if (!$directoryIsReady) errorEntry('The Core Manager socket directory could not be prepared!', 31004, FALSE);
@@ -1027,7 +1090,7 @@ function startCoreManagerListener() {
       print('Check the log for the reason. A manager that started records itself there.'.$Lol);
       print('Confirm '.$ApacheUser.' can read the install secret & write the logfile,'.$Lol);
       print('then run the -fp argument as root & try again.'.$Lol.$Lol); } }
-  purgeSensitiveMemory($EnableMemoryProtection, $managerState, $chownOutput, $listenerStatus, $stateWasRead, $directoryIsReady, $listenerIsRunning, $startupKey, $spawnCommand, $innerCommand, $managerRole, $chownExitCode, $listenerPid, $waitCounter, $managerPid);
+  purgeSensitiveMemory($EnableMemoryProtection, $managerState, $chownOutput, $listenerStatus, $stateWasRead, $directoryIsReady, $listenerIsRunning, $startupKey, $spawnCommand, $innerCommand, $managerRole, $chownExitCode, $listenerPid, $waitCounter, $managerPid, $unitOwnsListener, $unitOutput, $unitExitCode);
   return $ListenerWasStarted; }
 // / -----------------------------------------------------------------------------------
 
@@ -1186,5 +1249,3 @@ function reportListenerStatus() {
   purgeSensitiveMemory($EnableMemoryProtection, $managerState, $replyPayload, $stateWasRead, $messageWasDelivered);
   return array($ListenerIsRunning, $ListenerStatus); }
 // / -----------------------------------------------------------------------------------
-
-

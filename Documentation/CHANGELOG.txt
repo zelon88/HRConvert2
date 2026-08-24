@@ -28,6 +28,45 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia
 
 
 --------------------
+COMMIT 8/23/2026
+v3.7.9 - Add one command install. CLI install, configure, & dependency management arguments.
+
+-v3.7.9.
+-Administrators with root CLI access can now.....
+  -Install, uninstall, update, & repair the application via CLI --setup commands (and child commands).
+  -Install, uninstall, update, check status of ALL dependencies via CLI --setup commands (and child commands).
+  -Output a supply chain audit of EVERY dependency.
+  -Mange dependencies by subsystem.
+  -Modify config.php via CLI arguments, completely without a text editor.
+-The installtion & configuration of HRConvert2 is now fully done via CLI argument to commandCore.php.
+  -See --config  and  --setup commands for more information.
+-The -v argument is even more powerful.
+-Formalized 'component' architecture.
+  -Components are parts of HRConvert2 that are detachable, or may fail without taking down the entire application.
+  -Components include, GUIs, Language Packs, config.php, dependencyCore, setupCore, coreManager.
+  -The main 'Component' of HRConvert2 that cannot be replaced is convertCore.php. And always will be.
+  -convertCore.php must be fully executable on it's own. Even if it has no components to operate with.
+  -By breaking the application into well defined, well structured 'components' we increase quality, reliability, security, scalability, and auditability.
+-Dependencies are now managed by a component called dependencyCore.php.
+  -Managed as a version controlled component. Like a GUI, Language Pack, config.php, ect...
+  -Logic moved from convertCore and coreManager.php, consolidated in dependencyCore.php.
+-Dependency manifest is stored in Resources/depends.php.
+  -This is also a version controlled component.
+-Installation and configuration is now managed by a component called setupCore.php.
+  -Managed as a version controlled component. Like a GUI, Language Pack, config.php, ect...
+-Improve listener startup routine, move main logic to enable functioning as a linux service.
+  -Add --run-core-manager command for starting the listener as a foreground service for this purpose.
+  -When starting a listener manually via CLI, continue using -l or --listen.
+-Strengthened $CoreLoaded logic. Added it to config, depends, and other components as a structural piece of a valid component.
+  -This logic prevents any other logic from being executed when the main convertCore.php file is not the entrypoint.
+-I am aware of a bug that affects bundled PyMeshLab detection. 
+  -The dependency check will currently report 1 warning for PyMeshLab and claim that it is absent, even though it is present.
+  -This is the only dependency that currently does not get reported correctly.
+  -I am aware of the issue and it will be fixed very soon (before this gets pushed to docker).
+-I am planning on doing a quality pass on this commit and having it up on DockerHub by the end of this week as v3.8.0.
+  -Fingers crossed! Wish me luck, or venmo me and I'll work even faster! ;)  @zelon88 
+
+--------------------
 COMMIT 8/20/2026
 v3.7.8 - Add scalable per-conversion CPU/RAM limits, rate controlled by server pressure.
 

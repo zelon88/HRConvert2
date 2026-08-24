@@ -1,4 +1,5 @@
 <?php
+
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
 // / HRConvert2, Copyright on 8/20/2026 by Justin Grimes, www.github.com/zelon88
@@ -30,15 +31,23 @@
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
 
+// / -----------------------------------------------------------------------------------
+// / Refuse direct execution. This file is a component & has no standalone context.
+// / This halt cannot use quickDie. Reaching this line means convertCore.php was never
+// / loaded, so quickDie is not defined & calling it would replace a clear refusal with an
+// / undefined function error.
+if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: This file cannot process your request! Please submit your file to convertCore.php instead!'.PHP_EOL);
+// / -----------------------------------------------------------------------------------
 
 // / ------------------------------
-
 // /  --Config Version--
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. Replacing config.php with a newer one is the correct fix.
 $ConfigVersion = 'v3.7.7';
+// / ------------------------------
 
+// / ------------------------------
 // / ---Security Informations---
 // /
 // /  --Server URL--

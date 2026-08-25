@@ -79,7 +79,7 @@ RUN php /var/www/html/HRProprietary/HRConvert2/convertCore.php -v || true
 RUN a2enmod rewrite headers || true
 EXPOSE 80
 
-COPY docker-entrypoint.sh /docker-entrypoint.sh
+COPY Documentation/entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["apache2-foreground"]

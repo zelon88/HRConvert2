@@ -61,6 +61,7 @@ VOLUME /DATA/HRConvert2
 # / Hand the whole installation to the account the web server runs as, once, before setup.
 RUN chown -R www-data:www-data /var/www /DATA
 
+
 # / THE INSTALL IS THE SAME ONE A BARE METAL HOST RUNS.
 # / --install-complete installs every dependency in the manifest, creates the data
 # / locations, corrects permissions, writes the PHP drop in, writes the ImageMagick policy
@@ -79,7 +80,10 @@ RUN php /var/www/html/HRProprietary/HRConvert2/convertCore.php -v || true
 RUN a2enmod rewrite headers || true
 EXPOSE 80
 
-COPY /var/www/html/HRProprietary/HRConvert2/Documentation/Build/entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
-ENTRYPOINT ["/docker-entrypoint.sh"]
+# / Copy the entrypoint script from the repository into the root of the Docker filesystem.
+COPY ./Documentation/Build/entrypoint.sh /entrypoint.sh
+
+# / Run the entrypoint script.
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["apache2-foreground"]

@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/21/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/24/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILEINFORMATION ...
-// / v3.7.9.
+// / v3.8.0.
 // / This file contains the core manager resource listener logic of the application.
 // / This file contains logic related to rate planning & resouce management.
 // /
@@ -38,7 +38,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php checks this without executing the file.
-$CoreManagerVersion = 'v3.7.9';
+$CoreManagerVersion = 'v3.8.0';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -737,6 +737,72 @@ function evictExpiredSessionLocations(&$sessionLocations, $maximumAgeSeconds) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to validate the bootstrap script & disable it when it no longer matches.
+// / Accepts no arguments.
+// / Returns a validity boolean & a status word, in that order.
+// / The status is 'ok', 'disabled', 'absent', 'unreadable' or 'unwritable'.
+// / The bootstrap script hands arguments to a core it does not understand. A script from
+// / another release may pass an argument this core has dropped, or fail to pass one it now
+// / needs, & the operator running it has no way to know that has happened.
+// / When the versions differ the DisabledByCore line is rewritten, so the script refuses to
+// / run & says why. It is never deleted & is not otherwise altered, so an operator can read
+// / exactly what was disabled & reinstall the matching one.
+// / A script that matches is left alone, including one disabled earlier that has since been
+// / replaced with a matching version, which is re-enabled.
+function verifyBootstrapScript() {
+  // / Set variables.
+  global $InstLoc, $DirSep, $RequiredConfigScript, $Verbose, $EnableMemoryProtection;
+  $ScriptIsValid = FALSE;
+  $ScriptStatus = 'absent';
+  $scriptPath = $scriptContents = $updatedContents = $detectedVersion = $cleanDetected = $cleanRequired = '';
+  $versionMatches = array();
+  $bytesWritten = 0;
+  $scriptIsDisabled = FALSE;
+  $scriptPath = $InstLoc.$DirSep.'Documentation'.$DirSep.'Build'.$DirSep.'hrconvert2-setup.sh';
+  if (!file_exists($scriptPath)) {
+    // / No script is not a fault. An installation that never used one is perfectly normal.
+    $ScriptIsValid = TRUE;
+    $ScriptStatus = 'absent'; }
+  else {
+    $scriptContents = (string)@file_get_contents($scriptPath);
+    if ($scriptContents === '') $ScriptStatus = 'unreadable';
+    else {
+      if (preg_match('/^SCRIPT_VERSION="([^"]+)"/m', $scriptContents, $versionMatches)) $detectedVersion = $versionMatches[1];
+      $scriptIsDisabled = (preg_match('/^DisabledByCore="TRUE"/m', $scriptContents) === 1);
+      $cleanDetected = ltrim(trim($detectedVersion), 'vV');
+      $cleanRequired = ltrim(trim((string)$RequiredConfigScript), 'vV');
+      // / A script that matches is left alone, & is re-enabled if it was disabled before.
+      if ($cleanDetected !== '' && $cleanDetected === $cleanRequired) {
+        $ScriptIsValid = TRUE;
+        $ScriptStatus = 'ok';
+        if ($scriptIsDisabled) {
+          $updatedContents = preg_replace('/^DisabledByCore="TRUE"/m', 'DisabledByCore="FALSE"', $scriptContents, 1);
+          $bytesWritten = @file_put_contents($scriptPath, $updatedContents);
+          if ($bytesWritten === strlen($updatedContents)) warningEntry('The bootstrap script now matches this core & was re-enabled.');
+          else warningEntry('The bootstrap script matches this core but could not be re-enabled. Edit DisabledByCore by hand.'); } }
+      // / A script that does not match is disabled where it stands.
+      else if ($scriptIsDisabled) $ScriptStatus = 'disabled';
+      else {
+        $updatedContents = preg_replace('/^DisabledByCore="FALSE"/m', 'DisabledByCore="TRUE"', $scriptContents, 1);
+        if ($updatedContents === $scriptContents) {
+          $ScriptStatus = 'unwritable';
+          warningEntry('The bootstrap script reports v'.($cleanDetected === '' ? 'none' : $cleanDetected).' & this core requires v'.$cleanRequired.', but it carries no DisabledByCore line to set. Remove it by hand.'); }
+        else {
+          $bytesWritten = @file_put_contents($scriptPath, $updatedContents);
+          if ($bytesWritten !== strlen($updatedContents)) {
+            $ScriptStatus = 'unwritable';
+            warningEntry('The bootstrap script reports v'.($cleanDetected === '' ? 'none' : $cleanDetected).' & this core requires v'.$cleanRequired.', but it could not be disabled. Remove it by hand.'); }
+          else {
+            $ScriptStatus = 'disabled';
+            warningEntry('The bootstrap script reports v'.($cleanDetected === '' ? 'none' : $cleanDetected).' & this core requires v'.$cleanRequired.'. It has been disabled. Reinstall the script from the matching release.'); } } } } }
+  if ($Verbose) logEntry('Bootstrap Script: '.$scriptPath.', Reports: '.($detectedVersion === '' ? 'none' : $detectedVersion).', Status: '.$ScriptStatus.'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $scriptPath, $scriptContents, $updatedContents, $detectedVersion, $cleanDetected, $cleanRequired, $versionMatches, $bytesWritten, $scriptIsDisabled);
+  return array($ScriptIsValid, $ScriptStatus); }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
 // / A function to sweep every configured data location on a schedule.
 // / Accepts no arguments.
 // / Returns a completion boolean & the number of locations swept, in that order.
@@ -783,6 +849,8 @@ function runResourceManager() {
   $managerMessages = $managerConnections = $replyPayload = $staleWorkers = $staleRecord = $workerRecord = $killReply = array();
   $messagesReceived = $messageIndex = $allocatedBudget = $newExpectedRuntime = 0;
   $lastPollTime = $lastReapTime = $lastSweepTime = $locationsSwept = $entriesDropped = 0;
+  $environmentIsReady = FALSE;
+  $environmentFindings = array();
   $socketPath = buildManagerSocketPath('resource-manager');
   list ($serverIsOpen, $socketServer) = openManagerSocketServer($socketPath);
   if (!$serverIsOpen) errorEntry('The Resource Manager could not open its socket!', 31002, TRUE);
@@ -816,6 +884,17 @@ function runResourceManager() {
         list ($sweepCompleted, $locationsSwept) = cleanEveryConvertLoc();
         if (!$sweepCompleted) warningEntry('A scheduled data location sweep did not complete cleanly.');
         else logEntry('Scheduled sweep completed across '.$locationsSwept.' data location(s).');
+        // / Check the bootstrap script on the same schedule. A script left behind by an
+        // / older release hands arguments to a core that may no longer accept them.
+        verifyBootstrapScript();
+        // / Revalidate the operating environment on the same schedule. A package upgrade, a
+        // / kernel change or an administrator editing a policy can break the sandbox under a
+        // / listener that has been running for weeks, & nothing else would notice until a
+        // / conversion failed for a reason that looked unrelated.
+        // / This REPORTS only. The listener runs as the web server user & cannot repair.
+        list ($environmentIsReady, $environmentFindings) = validateOperatingEnvironment();
+        if (!$environmentIsReady) warningEntry('The operating environment has degraded. The sandbox is unavailable & conversions requiring it will be refused. Run the -fp argument as root.');
+        else if ($Verbose) logEntry('Operating environment revalidated. '.count($environmentFindings).' check(s) passed.');
         $lastSweepTime = time(); }
       list ($messagesReceived, $managerMessages, $managerConnections) = receiveManagerMessages($socketServer, 'internal', (int)$ManagerMessageBatchSize, (int)$ManagerSocketTimeout);
       $messageIndex = 0;
@@ -856,7 +935,7 @@ function runResourceManager() {
         replyToManagerMessage($managerConnections[$messageIndex], $replyPayload, 'internal');
         $messageIndex++; } }
     $ResourceManagerExitedCleanly = TRUE; }
-  purgeSensitiveMemory($EnableMemoryProtection, $serverIsOpen, $keepRunning, $resourcesPolled, $budgetCalculated, $requestApproved, $workerWasRegistered, $workerWasReleased, $extensionApproved, $sweepCompleted, $messageWasDelivered, $socketPath, $denialReason, $budgetToken, $sessionConvertLoc, $staleToken, $systemResources, $resourceBudget, $workerRegistry, $sessionLocations, $managerMessages, $managerConnections, $replyPayload, $staleWorkers, $staleRecord, $workerRecord, $killReply, $scaledLimits, $limitsWereScaled, $messagesReceived, $messageIndex, $allocatedBudget, $newExpectedRuntime, $lastPollTime, $lastReapTime, $lastSweepTime, $locationsSwept, $entriesDropped);
+  purgeSensitiveMemory($EnableMemoryProtection, $serverIsOpen, $keepRunning, $resourcesPolled, $budgetCalculated, $requestApproved, $workerWasRegistered, $workerWasReleased, $extensionApproved, $sweepCompleted, $messageWasDelivered, $socketPath, $denialReason, $budgetToken, $sessionConvertLoc, $staleToken, $systemResources, $resourceBudget, $workerRegistry, $sessionLocations, $managerMessages, $managerConnections, $replyPayload, $staleWorkers, $staleRecord, $workerRecord, $killReply, $scaledLimits, $limitsWereScaled, $environmentIsReady, $environmentFindings, $messagesReceived, $messageIndex, $allocatedBudget, $newExpectedRuntime, $lastPollTime, $lastReapTime, $lastSweepTime, $locationsSwept, $entriesDropped);
   return $ResourceManagerExitedCleanly; }
 // / -----------------------------------------------------------------------------------
 
@@ -968,9 +1047,10 @@ function killEveryWorker() {
 function runCoreManagerForeground() {
   // / Set variables.
   global $ApacheUser, $CurrentUser, $RunningAsRoot, $EnableMemoryProtection;
-  $ListenerExitedCleanly = FALSE;
+  $ListenerExitedCleanly = $environmentIsReady = FALSE;
   $startupKey = '';
   $callerIsAuthorized = FALSE;
+  $environmentFindings = array();
   if ($RunningAsRoot or $CurrentUser === $ApacheUser) $callerIsAuthorized = TRUE;
   if (!$callerIsAuthorized) errorEntry('The foreground listener was started by an account that may not operate it!', 31014, TRUE);
   else {
@@ -981,9 +1061,14 @@ function runCoreManagerForeground() {
     if ($startupKey === '') errorEntry('The foreground listener could not derive a startup key. No install secret is available!', 31015, TRUE);
     else {
       logEntry('The Core Manager listener was started in the foreground as process '.getmypid().'.');
+      // / Report the environment once at startup. A listener metering a server that cannot
+      // / convert anything is worth knowing about before the first request arrives, not
+      // / after. This never refuses to start, because the listener is not what is broken.
+      list ($environmentIsReady, $environmentFindings) = validateOperatingEnvironment();
+      if (!$environmentIsReady) warningEntry('The listener is starting into a degraded environment. The sandbox is unavailable & conversions requiring it will be refused. Run the -fp argument as root.');
       prepareManagerSocketDir();
       $ListenerExitedCleanly = dispatchManagerRole('core-manager', $startupKey); } }
-  purgeSensitiveMemory($EnableMemoryProtection, $startupKey, $callerIsAuthorized);
+  purgeSensitiveMemory($EnableMemoryProtection, $startupKey, $callerIsAuthorized, $environmentIsReady, $environmentFindings);
   return $ListenerExitedCleanly; }
 // / -----------------------------------------------------------------------------------
 

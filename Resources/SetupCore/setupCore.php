@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/21/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/24/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILEINFORMATION ...
-// / v3.7.9.
+// / v3.8.0.
 // / HRConvert2 Setup Core.
 // / A detachable installation & configuration component. convertCore.php runs without it.
 // / This file defines functions only. convertCore.php dispatches into them.
@@ -40,7 +40,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$SetupCoreVersion = 'v3.7.9';
+$SetupCoreVersion = 'v3.8.0';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -135,6 +135,7 @@ function setupConfigModel() {
       'ScanCoreVerbose' => array('Type' => 'bool', 'Default' => 'TRUE', 'Depends' => '', 'Description' => 'User Virus Scanning ScanCore Enhanced Verbosity'),
       'DeleteBuildEnvironment' => array('Type' => 'bool', 'Default' => 'FALSE', 'Depends' => '', 'Description' => 'Delete Build Environment'),
       'DeleteDevelopmentDocumentation' => array('Type' => 'bool', 'Default' => 'FALSE', 'Depends' => '', 'Description' => 'Delete Development Documentation'),
+      'AllowUnprivilegedNamespaces' => array('Type' => 'bool', 'Default' => 'TRUE', 'Depends' => '', 'Description' => 'Allow Unprivileged Namespaces'),
       'RequireSandbox' => array('Type' => 'bool', 'Default' => 'TRUE', 'Depends' => '', 'Description' => 'Require Sandbox'),
       'RequireSandboxOnDocker' => array('Type' => 'bool', 'Default' => 'FALSE', 'Depends' => 'RequireSandbox', 'Description' => 'Require Sandbox On Docker'),
       'ThrowSandboxWarning' => array('Type' => 'bool', 'Default' => 'TRUE', 'Depends' => '', 'Description' => 'Throw Sandbox Warning'),
@@ -188,8 +189,6 @@ function setupConfigModel() {
     );
   purgeSensitiveMemory($EnableMemoryProtection);
   return $ConfigModel; }
-// / -----------------------------------------------------------------------------------
-
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -482,23 +481,6 @@ function formatConfigValue($valueType, $rawValue) {
   return array($ValueIsValid, $FormattedValue); }
 // / -----------------------------------------------------------------------------------
 
-// / -----------------------------------------------------------------------------------
-// / A function to read one line of input from the operator.
-// / Accepts the prompt to display.
-// / Returns the trimmed response, or an empty string when input is unavailable.
-function askOperator($promptText) {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $OperatorResponse = '';
-  $inputHandle = FALSE;
-  print($promptText);
-  $inputHandle = @fopen('php://stdin', 'r');
-  if ($inputHandle !== FALSE) {
-    $OperatorResponse = trim((string)fgets($inputHandle));
-    @fclose($inputHandle); }
-  purgeSensitiveMemory($EnableMemoryProtection, $promptText);
-  return $OperatorResponse; }
-// / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to display one section & everything known about it.
@@ -1065,6 +1047,16 @@ function runCompleteInstall($authorizationToken, $operatorConfirmed) {
   $dependencyFindings = array();
   print($Lol.'HRConvert2 Complete Installation'.$Lol);
   print('Six stages. Dependencies, locations, permissions, configuration, service, checks.'.$Lol);
+  // / Stage one lives in Dependency Core. The --setup gate loads it before this is reached,
+  // / so this is insurance rather than a check that is expected to fire. A missing function
+  // / is a fatal error with a stack trace, & a component that is simply absent should be
+  // / reported the same way every other absent component is.
+  if (!function_exists('installDepends')) {
+    print($Lol.'The Dependency Core component is unavailable, so dependencies cannot be installed.'.$Lol);
+    print('Install it, or run the stages by hand with -fp & --config.'.$Lol.$Lol);
+    warningEntry('A complete installation was requested without the Dependency Core component.');
+    purgeSensitiveMemory($EnableMemoryProtection, $authorizationToken, $operatorConfirmed);
+    return array(FALSE, 0); }
   if (!$operatorConfirmed) {
     print($Lol.'This installs packages, creates directories, writes system policy files,'.$Lol);
     print('rewrites config.php & installs a service unit.'.$Lol);
@@ -1122,8 +1114,6 @@ function runCompleteInstall($authorizationToken, $operatorConfirmed) {
           print('  A web server virtual host, if the installation is not already served.'.$Lol.$Lol); } } } }
   purgeSensitiveMemory($EnableMemoryProtection, $stageSucceeded, $permissionsWereFixed, $locationsAreReady, $serviceWasInstalled, $dependenciesReady, $stageCount, $pathsCorrected, $locationsCreated, $optionalProblems, $operatorChoice, $serviceStatus, $dependencyFindings, $authorizationToken, $operatorConfirmed);
   return array($InstallCompleted, $StagesCompleted); }
-// / -----------------------------------------------------------------------------------
-
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

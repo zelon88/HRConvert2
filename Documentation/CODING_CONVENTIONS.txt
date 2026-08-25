@@ -77,7 +77,7 @@ developed in the open, alongside the code they are designed to safeguard.
   Try to use redeclare() where possible.
   Developers; use your best judgement here.
   The spirit of this rule is; Keep track of your variable scope. Do not take function scope for granted to protect your data. 
-  -Assume the interpreter is always compromised.
+  Assume the interpreter is always compromised.
   When followed, this technique will reduce the applications exposure to PHP memory leakage.
   For more information, see `Documentation/ABOUT_DEFENSIVE_MEMORY_MANAGEMENT.md`.
 
@@ -145,34 +145,171 @@ when the administrator's value is invalid.
 
 -----LOGGING TIERS-----
 
-  logEntry()        Op-Act        Normal activity. Suppressed when $Verbose is FALSE.
-  warningEntry()    WARNING!!!    Always written. Carries no error number.
-  errorEntry()      ERROR!!!      Always written. Sometimes fatal. Carries a documented error number.
+  logEntry()        Op-Act        Normal activity. Suppressed by the caller when $Verbose is FALSE.
+  warningEntry()    WARNING!!!    Always written. Carries no error number. Can never halt.
+  errorEntry()      ERROR!!!      Always written. Carries a documented error number. Sometimes fatal.
+  quickDie()        ERROR!!!      Reports & halts. The only place the application stops on an error.
 
 A log is for normal operational activity. `logEntry('This will be logged.');`
 
-A warning is something the administrator should know is happening. It does not
-necessarily mean anything needs to change. It can never halt execution. `warningEntry('This will be logged.');`
+A warning is something the administrator should know is happening. It does not necessarily
+mean anything needs to change. `warningEntry('This will be logged.');`
 
-An error is for reporting critical operational failures that alter HRConvert2 behaviour. Can sometimes be fatal, but not always. `logEntry('This will be logged.', 123, FALSE);` where `123` is the documented error number & `FALSE` is a bool representing if the error is fatal or not. If fatal is detected, errorEntry stops execution. 
+An error reports a critical failure that alters behaviour. `errorEntry('Text.', 123, FALSE);`
+where 123 is the documented number & FALSE says whether it is fatal.
 
-Anything an attacker caused that HRConvert2 handled correctly is a warning, not an error.
+Anything an attacker caused that HRConvert2 handled correctly is a WARNING, not an error.
 A blocked SSRF attempt, a removed file reference & a refused stream are all warnings.
+
+ALL FOUR HANDLE A MISSING LOGFILE THEMSELVES. DO NOT GUARD A CALL.
+Each tests $LogFile before writing & falls back to the server error log. An earlier release
+required every caller to check first, which meant eight functions reachable before
+verifyLogs() each carried the same guard, & the ninth to be written did not. Writing to an
+unset path produces a raw PHP warning on the page naming an absolute path outside the web
+root, which is how that class of bug announced itself.
+
+quickDie() IS THE ONLY HALT. Every die in the core routes through it, so a halt is formatted
+the same way, closes the connection the same way & is recorded the same way, whichever stage
+of boot it happens in. errorEntry() with a TRUE fatal flag hands off to it. The single
+exception is the $CoreLoaded guard at the top of a component, where quickDie is not yet
+defined.
+-----------------------------------------------------------------------------------
+
+
+-----EARLY BOOT ORDER-----
+
+THE CORE BOOTS IN A FIXED ORDER & MOST OF IT IS NOT AVAILABLE AT THE START.
+
+  verifyTime()          Sets $Time & $Date.
+  verifyInstallation()  Reads config.php & versionInfo.php. Resolves the install secret.
+  verifySession()       Establishes the session.
+  verifySesHash()       Derives the session identifiers.
+  verifyLogs()          Creates the logfile. NOTHING BEFORE THIS POINT HAS A LOG TO WRITE TO.
+  verifyGlobals()       Derives every path & every convenience variable.
+
+NOTHING CALLED BEFORE verifyGlobals() MAY USE A VARIABLE verifyGlobals() SETS.
+$Lol & $DirSep are the two that catch people. Use PHP_EOL & DIRECTORY_SEPARATOR instead.
+Writing a file with $Lol before it exists concatenates an empty string, which once produced
+a secret file with no whitespace after its opening tag. PHP treated the entire file as
+inline HTML & printed the real secret into the page source.
+
+A FUNCTION THAT REQUIRES A GUARDED FILE MUST DECLARE global $CoreLoaded.
+A require inside a function reads that file in the function's scope. A component guard
+testing an undefined local halts, & the message names the component rather than the caller,
+which sends an operator to the wrong file entirely.
+-----------------------------------------------------------------------------------
+
 
 -----VERSION CHECKING-----
 
   config.php        MINIMUM match. A newer config carrying every required setting is fine.
+  Components        EXACT match. See ABOUT_COMPONENTS.txt.
   UI folders        EXACT match. Newer or older may render incorrectly in either direction.
   Language packs    EXACT match. Same reasoning.
   Dependencies      MINIMUM match, compared NUMERICALLY, never as strings.
 
-Compare version numbers numerically. A string comparison ranks 24.2 below 7.6 & ranks
-3.10 below 3.9. Split on the dot, cast each part to an integer, compare major then minor.
-
-Strip a leading v before comparing. Casting 'v3' to an integer yields 0, which silently
-reduces a three part comparison to a two part one.
+USE compareVersionMinimum() TO COMPARE TWO VERSIONS. IT IS THE ONLY CORRECT WAY.
+A string comparison ranks 24.2 below 7.6 & ranks 3.10 below 3.9. Split on the dot, cast each
+part to an integer, compare major then minor then patch. Strip a leading v before comparing.
+Casting 'v3' to an integer yields 0, which silently reduces a three part comparison to a two
+part one.
 
 A build that reports no parseable version is REFUSED. An unknown build cannot be cleared.
+
+A COMPONENT VERSION IS READ WITHOUT EXECUTING THE FILE. A mismatched component may define
+functions this core cannot call safely, so it is judged before it is loaded, never after.
+-----------------------------------------------------------------------------------
+
+
+-----DIAGNOSING FAILURES-----
+
+REPORT WHY, NOT ONLY THAT.
+
+A check that reports failure without the reason is worse than no check, because it looks
+like a diagnosis & is not. Every one of the following cost real hours before it was fixed.
+
+  A sandbox probe ending in  > /dev/null 2>&1  discarded the one line naming the cause.
+  A dependency reported absent without showing what its version command printed.
+  A version pattern that did not match reported unknown-version & not what it read.
+  A permissions run that repaired a policy & never re-tested what the policy was for.
+
+CAPTURE STDERR. A tool that failed usually said why.
+SHOW WHAT WAS ACTUALLY READ when a pattern did not match. The pattern is the bug, not the
+dependency, & nobody can correct a pattern they cannot see the input to.
+DISTINGUISH NOT ASKED FROM NOT ANSWERED. A check with nothing to ask reports n/a. A check
+that asked & got nothing reports unknown. Only the second is a fault.
+
+TEST AS THE ACCOUNT THAT WILL DO THE WORK.
+A check run as root proves what root can do. The web server user is what converts files. A
+sandbox probe run by -fp passed as root & reported a working sandbox while every web request
+was refused. Re-run the probe as the web server user & say which account was tested.
+
+VERIFY A REPAIR RATHER THAN ASSUMING IT.
+-fp writes a policy & then re-tests what the policy was for. Writing an AppArmor profile &
+never re-testing the sandbox is how an operator ends up with a green permissions run & a
+server that refuses every conversion.
+
+A CHECK THAT CACHES MUST CACHE THE ANSWER, NOT THE ATTEMPT.
+A profile on disk is not a profile in force. Read the loaded set from securityfs rather than
+trusting that a file matching means a policy applied.
+-----------------------------------------------------------------------------------
+
+
+-----SHELL EXECUTION-----
+
+EVERY ARGUMENT IS ESCAPED WITH escapeshellarg(). EVERY ONE. NO EXCEPTIONS.
+A filename is the one thing a user fully controls, & it reaches clamscan, ScanCore & every
+converter. Cast a numeric setting before escaping it rather than trusting its type.
+
+A COMMAND IS BUILT ONCE & WRAPPED, NEVER ASSEMBLED IN PIECES ACROSS FUNCTIONS.
+sandboxCommand() takes a finished command & returns a sandboxed one. limitCommand() takes
+that & returns a resource limited one. Each wrapper knows nothing about the command inside
+it, which is why adding the resource ceiling touched one line & covered all twenty three
+call sites at once.
+
+A SANDBOX PROFILE NAMES ONE DEPENDENCY. The base sandbox carries what every dependency
+needs. Anything specific to one tool belongs in its profile, so a converter is never handed
+mounts belonging to another converter. An unrecognized profile gets nothing extra rather
+than everything, because a missing mount fails loudly & a spare one fails silently.
+-----------------------------------------------------------------------------------
+
+
+-----SYSTEM CONFIGURATION-----
+
+HRConvert2 WRITES SYSTEM FILES. ALL OF IT HAPPENS IN -fp & NOWHERE ELSE.
+
+  A PHP drop in at conf.d/99-hrconvert2.ini, for every SAPI present.
+  An AppArmor local include, extending the distribution profile for bubblewrap.
+  An ImageMagick policy, at the prefix the binary reports rather than a guessed path.
+  A sysctl drop in permitting the unprivileged namespaces the sandbox needs.
+  A systemd service unit, generated from the live configuration.
+  A systemd drop in delegating cgroup controllers to the web server user.
+
+REPAIR NEEDS ROOT. EVERYTHING ELSE VALIDATES & REPORTS.
+The listener runs as the web server user & cannot repair anything, so a validator that tried
+would fail on every pass & fill the log. validateOperatingEnvironment() is read only & is
+called at listener startup, on the Resource Manager sweep, & at the end of -fp.
+
+NEVER EDIT A FILE A PACKAGE MANAGER OWNS. Write a drop in instead.
+php.ini edited in place is reverted by the next PHP upgrade, months later, with no obvious
+cause. A second AppArmor profile beside the distribution one leaves two attachments for one
+binary & no defined outcome. Use the extension point the package already provides.
+
+ASK A TOOL WHERE ITS CONFIGURATION LIVES. DO NOT GUESS.
+A distribution package puts the ImageMagick policy in /etc. A build from source puts it
+under its prefix. Guessing from a hardcoded list wrote a version 7 policy into a version 6
+directory that the running version 7 never read, so the policy did nothing & the one being
+read went on refusing every document coder.
+
+BACK UP ANYTHING NOT WRITTEN BY THIS APPLICATION BEFORE REPLACING IT.
+A file carrying no HRCONVERT2-POLICY-MARKER belongs to the distribution or the
+administrator. Copy it with a timestamp first, & refuse the write if the backup fails.
+
+UNLOAD BEFORE DELETING. Reloading AppArmor loads what is on disk & never unloads what is
+not. Deleting a profile first strands it in the kernel until a reboot, still attached to the
+binary & invisible to anything that only lists files.
+-----------------------------------------------------------------------------------
+
 
 -----LANGUAGE PACKS-----
 

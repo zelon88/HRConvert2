@@ -1,0 +1,212 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 8/25/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v3.7.9.
+This plain text file describes how HRConvert2 is divided into components, how each one is verified, and what happens when one is missing or does not match.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+A component requires nothing this application does not already require. Every component is optional & the core runs without all of them.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Components--
+
+HRConvert2 is one core & a small number of detachable components.
+
+convertCore.php is the core. It converts files, serves the interface & answers the command
+line. It is the only file a web request ever reaches, & it runs on its own.
+
+A COMPONENT ADDS A CAPABILITY. IT IS NEVER LOAD BEARING FOR CONVERSION.
+Every component can be deleted from an installation & every conversion still works. What is
+lost is the capability that component provides, & the loss is reported rather than silent.
+
+  Resources/coreManager.php                     Resource awareness & the listener.
+  Resources/SetupCore/setupCore.php             Installation & configuration.
+  Resources/DependencyCore/dependencyCore.php   Dependency management & the supply chain audit.
+
+Each core lives in a folder of its own, the same way ScanCore does. Configuration files do
+not. config.php, depends.php & versionInfo.php stay in Resources beside each other, because
+a configuration file is data an administrator edits & is not part of a component.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Rules Every Component Follows--
+
+FOUR RULES, & ALL FOUR ARE ENFORCED IN CODE RATHER THAN BY CONVENTION.
+
+  1  A COMPONENT DEFINES FUNCTIONS & DOES NOTHING ELSE.
+     No component runs anything at load. The core decides when to call into it. A component
+     that acted on being loaded would act during an installation check, a version report &
+     every other place a version is read.
+
+  2  A COMPONENT REFUSES TO RUN ON ITS OWN.
+     Every component begins by testing $CoreLoaded & halting when it is not set. A component
+     reached directly over HTTP refuses rather than executing with no configuration, no
+     secret & no session.
+     THIS ONE HALT CANNOT USE quickDie. Reaching that line means convertCore.php was never
+     loaded, so quickDie is not defined & calling it would replace a clear refusal with an
+     undefined function error.
+
+  3  A COMPONENT DECLARES ITS VERSION IN A VARIABLE THE CORE CAN READ WITHOUT EXECUTING IT.
+     The core reads the version out of the file with a regular expression. A mismatched
+     component may define functions this core cannot call safely, so it must be judged
+     before it is loaded, never after.
+
+  4  A COMPONENT IS MATCHED EXACTLY.
+     Not a minimum. The same rule a GUI folder & a language pack follow. A component built
+     for another release may accept an argument this core has dropped, or omit one it now
+     needs, & neither is detectable at runtime.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About How A Component Is Loaded--
+
+verifyCoreComponent() does all of it, for every component, in one place.
+
+  Accepts   the component name, its path relative to Resources, the name of the variable it
+            declares its version in, & the version this core requires.
+  Returns   an availability boolean & the detected version.
+
+The sequence is always the same.
+
+  1  Test that the file exists. Absent is reported & is not an error.
+  2  Read the file as text. Never execute it.
+  3  Extract the version with a regular expression.
+  4  Refuse a component that reports no version. An unknown build cannot be cleared.
+  5  Refuse a component whose version is not an exact match.
+  6  require_once the file.
+  7  Publish the detected version as a global under the name the component uses.
+
+STEP SEVEN EXISTS BECAUSE A require INSIDE A FUNCTION LANDS ITS ASSIGNMENTS IN THAT FUNCTION.
+A component sets its version variable at the top of its own file. Loaded from inside a
+function, that assignment is local to the function & is invisible everywhere else, so the -v
+argument reported an empty version for a component that was loaded & working perfectly.
+
+Three components once had three near identical copies of this logic. Collapsing them into
+one function is what surfaced that bug.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About When A Component Is Loaded--
+
+NOT AT BOOT. ON DEMAND, BY WHATEVER NEEDS IT.
+
+A web request never installs, configures or manages dependencies, so it never pays to read a
+component it will not call. Only the Core Manager is resolved during verifyInstallation, &
+only because resource awareness affects a conversion.
+
+  coreManager.php        Resolved during verifyInstallation when resource awareness is on.
+  setupCore.php          Loaded by --config, & by -fp when it installs the service unit.
+  dependencyCore.php     Loaded by --setup.
+
+EACH COMMAND LOADS ONLY WHAT IT NEEDS.
+--config needs Setup Core. --setup needs Dependency Core. Only --install-complete &
+--reinstall-existing need both. An operator asking what is installed must not be stopped
+because a component they are not using is absent, which is exactly what an earlier release
+did by loading Setup Core before every --setup option.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Version Pins--
+
+EIGHT PINS. EVERY ONE OF THEM IS AN EXACT MATCH EXCEPT WHERE NOTED.
+
+  $RequiredConfigVersion           config.php                    MINIMUM. A newer config carrying
+                                                                 every required setting is fine.
+  $RequiredCoreManagerVersion      coreManager.php               EXACT.
+  $RequiredSetupCoreVersion        setupCore.php                 EXACT.
+  $RequiredDependencyCoreVersion   dependencyCore.php            EXACT.
+  $RequiredDependsVersion          depends.php                   EXACT.
+  $RequiredSecretVersion           the install secret file       EXACT.
+  $RequiredGuiVersion              every UI folder               EXACT.
+  $RequiredLanguageVersion         every language pack           EXACT.
+  $RequiredConfigScript            the bootstrap script          EXACT.
+
+RAISE $RequiredSetupCoreVersion WHENEVER $RequiredConfigVersion IS RAISED.
+Setup Core holds the model of every setting config.php declares. Forgetting does not break
+anything immediately, which is the point. A setting the model does not know is reported as
+unaccounted, can still be edited by hand, & simply cannot be reset.
+
+RAISING $RequiredSecretVersion ROTATES THE SECRET & INVALIDATES EVERY SESSION IN PROGRESS.
+Do it deliberately, not as part of a routine version bump.
+
+Compare version numbers NUMERICALLY, never as strings. A string comparison ranks 24.2 below
+7.6 & ranks 3.10 below 3.9. Strip a leading v first. Casting 'v3' to an integer yields 0,
+which silently reduces a three part comparison to a two part one. compareVersionMinimum()
+does all of this & is the only correct way to compare two versions in this application.
+
+Run  php convertCore.php -v  to see every pin, with what is required beside what was found.
+A mismatch does not stop the core. It silently removes whatever that component provides, &
+that report is the only place the loss becomes visible.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About What Happens When A Component Is Missing--
+
+THE CORE DEGRADES. IT DOES NOT BREAK.
+
+  No Core Manager       Conversions run without resource awareness. Every budget request is
+                        approved by default. --status, -l & -k report the component missing.
+  No Setup Core         --config refuses & explains why. Everything else is unaffected.
+  No Dependency Core    --setup refuses & explains why. Conversions are unaffected.
+  No depends.php        Dependency management is unavailable. Conversions are unaffected.
+  No bootstrap script   Nothing at all. It is a convenience, not a dependency.
+
+--Require Resource Awareness-- inverts this for the Core Manager only, for an operator who
+would rather refuse work than accept work they cannot account for.
+
+A COMPONENT THAT IS PRESENT BUT MISMATCHED IS TREATED EXACTLY LIKE ONE THAT IS ABSENT.
+There is no partial acceptance & no attempt to work around a version difference.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Bootstrap Script--
+
+Documentation/Build/hrconvert2-setup.sh is a component in every sense except that it is not
+PHP & cannot be version checked the same way.
+
+It does ONE job. It makes sure PHP exists, then hands every argument to convertCore.php.
+Every decision about installing, configuring, updating or repairing lives in Setup Core.
+
+A CONFIGURATION UTILITY WRITTEN IN BASH WOULD BE A SECOND IMPLEMENTATION OF THE SAME
+UNDERSTANDING, KEPT IN STEP BY HAND. That is the whole reason it is this thin.
+
+It carries a SCRIPT_VERSION & a DisabledByCore line. The Resource Manager compares the
+version against $RequiredConfigScript on its sweep. A script that does not match has
+DisabledByCore rewritten to TRUE, so it refuses to run & says why. It is never deleted & is
+not otherwise altered, so an operator can read exactly what was disabled. A script that is
+later replaced with a matching version is re-enabled on the next sweep.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Adding A Component--
+
+Five things, in this order.
+
+  1  Create Resources/YourCore/yourCore.php.
+  2  Open it with the $CoreLoaded guard, copied from any existing component.
+  3  Declare $YourCoreVersion near the top, where it can be seen.
+  4  Add $RequiredYourCoreVersion to verifyInstallation, with a comment saying what raises it.
+  5  Call verifyCoreComponent() from whatever needs it, on demand.
+
+Nothing else. No registry, no manifest & no change to any existing component. Step five is
+one line, which is the entire point of collapsing the three loaders into one.
+
+Then add it to showVersionInfo, so -v reports it beside the others. A component nobody can
+see the version of is a component nobody can diagnose.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

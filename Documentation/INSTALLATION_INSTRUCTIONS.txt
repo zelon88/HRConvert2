@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/20/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/25/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -8,210 +8,237 @@ https://www.gnu.org/licenses/gpl-3.0.html
 
 APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats
-on a server for users of any web browser without authentication. 
+on a server for users of any web browser without authentication.
 
 FILE INFORMATION ...
-v3.7.8.
+v3.7.9.
 This file contains a walkthrough guide for installing HRConvert2.
 
-HARDWARE REQUIREMENTS ... 
+HARDWARE REQUIREMENTS ...
 This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
-DEPENDENCY REQUIREMENTS ... 
-This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
-Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Calibre,
-Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia & xvfb-run.
+DEPENDENCY REQUIREMENTS ...
+Nothing is listed here on purpose. Resources/depends.php is the manifest & the installer
+reads it, so a dependency added there is installed without anybody editing this guide.
+Run  php convertCore.php --setup --check-depends  to see the current list & its state.
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
 
+-----------------------------------------------------------------------------------
+-----THE SHORT VERSION-----
 
------PREFACE-----
-For this guide, it is assumed that the user is installing HRConvert2 on a PC which meets the above conditions.
-This document contains instructions for installing HRConvert2 on a fresh deployment of Lubuntu 21.04 LTS with no dependencies. 
+Three commands. This is the whole installation.
 
-For a walkthrough of installing a Ubuntu distro, visit:
-  https://www.ubuntu.com/download/desktop/install-ubuntu-desktop
+  git clone https://github.com/zelon88/HRConvert2
+  cd HRConvert2
+  sudo bash Documentation/Build/hrconvert2-setup.sh
+
+The script installs PHP if it is missing, then hands over to convertCore.php, which does
+everything else. Answer YES once, or pass -y to answer it in advance.
+
+Then visit  http://YOUR-IP/HRProprietary/HRConvert2/convertCore.php
+
+If that worked, read STEP 4 & STEP 5 & skip everything else. The long version exists for
+an administrator who wants to know what was done to their machine, or who is installing
+somewhere the automatic route cannot reach.
 -----------------------------------------------------------------------------------
 
 
------STEP 0 - DOWNLOAD & CONFIGURE INSTALLATION FILES-----
-In this step we will obtain a copy of HRConvert2. There are several options available.
-Please take a moment to read through the documentation to familiarize yourself with the application.
+-----------------------------------------------------------------------------------
+-----WHAT THE INSTALLER ACTUALLY DOES-----
 
-  Option 1. Download the Docker image.
-    a. For more information visit  'https://hub.docker.com/r/zelon88/hrconvert2'
-    b. The procedure contained in this document DOES NOT apply to this installation option.
+Six stages, in the order an installation depends on. A stage that fails stops the ones
+after it, because continuing produces an installation that looks finished & is not.
 
-  Option 2. Download HRConvert2 directly from the official Github repository.
-    a. For more information visit  'https://github.com/zelon88/HRConvert2'
-    b. The procedure contained in this document ONLY applies to this installation option.
+  1  DEPENDENCIES
+     Installs every entry in Resources/depends.php, in the order that file lists them.
+     A dependency whose own requirements are missing is skipped rather than attempted.
+     RAR is never installed automatically. Its licence forbids redistribution.
 
-1. Grab a cup of coffee.
-2. Download the desired HRConvert2 version from the official Github repository.
-  2a. Downloads available at  'https://github.com/zelon88/HRConvert2'
-3. Adjust the directory in the following command to reflect your username, then run  'mkdir /home/USERNAME/Desktop/Temp'
-4. Navigate to your  'Downloads'  directory and locate the HRConvert2 archive.
-5. Adjust the directory in the following path to reflect your username, then extract the HRConvert2 archive to  '/home/USERNAME/Desktop/Temp'
-6. Adjust the directory in the following command to reflect your username, then run  'sudo featherpad /home/USERNAME/Desktop/Temp/Resources/config.php'
-7. Carefully read and completely fill out the  'config.php'  file, changing the values of each variable to reflect the desired environment.
-8. Select a path to use as the  '$ConvertLoc'  where HRConvert2 can store temporary files during conversions.
-  8a. When selecting the  '$ConvertLoc'  choose a directory path that is not hosted with plenty of space. 
-  8b. The  '$ConvertLoc'  must be a freshly created directory that has never been used before.
-9. Adjust the directory in the following command to reflect the selected  '$ConvertLoc' then run  'sudo mkdir /Path/To/ConvertLoc'
-10. Adjust the directory in the following command to reflect the selected  '$ConvertLoc' then run  'sudo chmod -R 0755 /Path/To/ConvertLoc'
-11. Adjust the directory in the following command to reflect the selected  '$ConvertLoc' then run  'sudo chown -R www-data:Www-data /Path/To/ConvertLoc'
+  2  DATA LOCATIONS
+     Creates the data location, the log directory, the backup location & the socket
+     directory, & hands each to the web server user.
+
+  3  PERMISSIONS & POLICIES
+     Corrects ownership across every managed path & the secret file.
+     Writes the ImageMagick policy at whatever prefix this build actually reads, which is
+     asked of the binary rather than guessed. A build from source does not use /etc.
+     Extends the distribution AppArmor profile for bubblewrap through its local include.
+     Permits the unprivileged user namespaces bubblewrap needs, & persists that.
+     Writes the PHP settings HRConvert2 needs as a drop in, never editing php.ini.
+     Enables systemd lingering & cgroup delegation for per conversion resource limits.
+     Installs the listener service unit, generated from this configuration.
+
+  4  CONFIGURATION
+     Walks config.php section by section. With -y it keeps the shipped defaults instead.
+
+  5  LISTENER SERVICE
+     Installs & enables hrconvert2-listener, if resource awareness is enabled.
+
+  6  VERIFICATION
+     Reports what actually works rather than what was attempted.
+
+Every stage is idempotent. Run the installer again whenever anything looks wrong.
 -----------------------------------------------------------------------------------
 
 
------STEP 1 - INSTALL APACHE 2.4-----
-In this step we will install the Apache web server application that will host HRConvert2.
+-----------------------------------------------------------------------------------
+-----STEP 1 - GET THE SOURCE-----
 
-1. Run  'sudo apt-get update'
-2. Run  'sudo apt-get install apache2'
+There are three ways to obtain HRConvert2.
+
+  Option 1. The Docker image.
+    a. Visit  'https://hub.docker.com/r/zelon88/hrconvert2'
+    b. Run  'docker run -d -p 8080:80 --cap-add SYS_ADMIN zelon88/hrconvert2'
+    c. SYS_ADMIN is required. Without it a container cannot create the namespace every
+       conversion is sandboxed in, & every conversion is refused.
+    d. This guide does not otherwise apply to that option.
+
+  Option 2. Clone the repository. This is the supported route & the rest of this guide.
+    a. Run  'git clone https://github.com/zelon88/HRConvert2'
+
+  Option 3. Download a release archive & extract it.
+    a. Visit  'https://github.com/zelon88/HRConvert2'
+    b. Everything below applies unchanged.
 -----------------------------------------------------------------------------------
 
 
------STEP 2 - INSTALL & CONFIGURE FEATHERPAD, PHP & PLUGINS-----
-In this step we will install the Featherpad text editor to make configuring the server easier. 
-Then we will install and configure PHP and required plugins.
+-----------------------------------------------------------------------------------
+-----STEP 2 - PLACE IT WHERE THE WEB SERVER WILL SERVE IT-----
 
-1. Run  'sudo apt-get install featherpad'
-2. Run  'sudo apt-get install php libapache2-mod-php && sudo apt-get install php-all-dev'
-3. Run  'php -v'  and note the PHP version number reported, for example 8.3.
-  3a. Adjust every path listed below to match the PHP version you installed. For example 8.3.
-  3b. NOTE: Ubuntu 24.04 installs PHP 8.3. Ubuntu 22.04 installs PHP 8.1. Ubuntu 26.04 installs PHP 8.5.
-4. Run  'sudo apt-get install php8.3-zip && sudo apt-get install php8.3-gd'
-5. Run  'sudo featherpad /etc/php/8.3/apache2/php.ini'
-6. Use Featherpad to search for the following lines in the 'php.ini' file and adjust the values to match the ones displayed below.
-  max_execution_time = 1200
-    ;This must exceed the Stream Duration Timeout in config.php, which defaults to 15 minutes.
-    ;HRConvert2 holds a PHP worker for the full duration of a backgrounded stream conversion.
-    ;A value below that leaves FFMPEG running with nothing left to terminate it.
-  max_input_time = 90
-  memory_limit = 512M
-    ;Use 256 - 384M for Raspberry Pis.
-  display_errors = Off
-    ;Set display_errors = On only when debugging HRConvert2 yourself.
-  post_max_size = 5000M
-  upload_max_filesize = 5000M
-  max_file_uploads = 100
-  zlib.output_compression = On
-6. Save the modified 'php.ini' file and close Featherpad.
-7. Run  'sudo service apache2 restart'
+The installer does not choose this for you, because only you know how this host serves.
+
+1. Run  'sudo mkdir -p /var/www/html/HRProprietary'
+2. Run  'sudo cp -a HRConvert2 /var/www/html/HRProprietary/'
+
+That path is the default every setting in config.php expects. Installing elsewhere is
+supported, but --Installation Location-- must be corrected afterwards with --config.
+
+Do not place the data location inside the web root. The installer creates it at
+/DATA/HRConvert2 by default, which is outside anything Apache serves.
 -----------------------------------------------------------------------------------
 
 
------STEP 3 - INSTALL BASIC FEATURE DEPENDENCIES-----
-In this step we will install dependencies to enable most common file conversions.
+-----------------------------------------------------------------------------------
+-----STEP 3 - RUN THE INSTALLER-----
 
-1. Grab another cup of coffee.
-2. Run  'sudo apt-get install libreoffice-common && sudo apt-get install libreoffice-java-common && sudo apt-get install tar && sudo apt-get install libxcb-cursor0'
-3. Run  'sudo apt-get install clamav && sudo apt-get install unoconv && sudo apt-get install default-jre && sudo apt-get install genisoimage && sudo apt-get install curl'
-4. Run  'sudo apt-get install rar && sudo apt-get install unrar && sudo apt-get install p7zip-rar && sudo apt-get install ghostscript && sudo apt-get install assimp-utils'
-5. Run  'sudo apt-get install imagemagick && sudo apt-get install tesseract-ocr && sudo apt-get install inkscape && sudo apt-get install isohybrid'
-6. Run  'sudo apt-get install meshlab && sudo apt-get install dia && sudo apt-get install bubblewrap && sudo apt-get install pandoc && sudo apt-get install mkisofs'
-7. Run  'sudo apt-get install poppler-utils && sudo apt-get install nodejs && sudo apt-get install gnuplot && sudo apt-get install libgxps-utils && sudo apt-get install xvfb'
-8. Run  'sudo -v && wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sudo sh /dev/stdin'
-9. Run  'sudo featherpad /usr/local/etc/ImageMagick-7/policy.xml'
-10. Run 'sudo cp /var/www/html/HRProprietary/HRConvert2/Documentation/Build/policy.xml /etc/ImageMagick-7/policy.xml'
-16. Completely reboot the computer.
+1. Run  'cd /var/www/html/HRProprietary/HRConvert2'
+2. Run  'sudo bash Documentation/Build/hrconvert2-setup.sh'
+3. Answer YES when asked, or pass -y to answer in advance.
+4. Read the verification table it prints at the end.
+
+A dependency reported as absent & optional means that subsystem is unavailable & the rest
+of the application works. A REQUIRED dependency reported absent means conversions using it
+will refuse, & the table names which.
+
+To install without any prompt at all, for a scripted deployment.
+
+  sudo bash Documentation/Build/hrconvert2-setup.sh -y
 -----------------------------------------------------------------------------------
 
 
------STEP 4 - CONFIGURE THE OPENSCAD SANDBOX-----
-In this step we will permit HRConvert2 to isolate OpenSCAD renders from the rest of the server.
-OpenSCAD reads any file the web server user can read and provides no sandbox of its own.
-Unlike FFMPEG it cannot be given one through its arguments.
-HRConvert2 therefore renders every model inside a Bubblewrap namespace whose only visible
-path is that session's own working directory.
-Bubblewrap is required. There is no fallback and Scad conversions are refused without it.
-1. Run  'ls /etc/apparmor.d/abi/'  and note the highest numbered file present.
-2. Run  'sudo featherpad /etc/apparmor.d/bwrap'
-3. Enter the following into the file, replacing 4.0 with the number noted in step 1.
-  abi <abi/4.0>,
+-----------------------------------------------------------------------------------
+-----STEP 4 - CONFIGURE-----
 
-  include <tunables/global>
+1. Run  'sudo php convertCore.php --config'
 
-  profile bwrap /usr/bin/bwrap flags=(unconfined) {
-    userns,
-    include if exists <local/bwrap>
-  }
-4. Save the file and close Featherpad.
-5. Run  'sudo apparmor_parser -r /etc/apparmor.d/bwrap'
-  5a. No output means the profile loaded successfully.
+Walk each section & set what matters for this deployment. The two settings the installer
+cannot decide for you are the public URL, which share links need, & the data location, if
+the default does not suit this machine.
+
+  show comment block <Variable>   Explains any setting, with its type & default.
+  --config --view                 Displays everything without changing anything.
+  --config --backup=/tmp/cfg.bak  Takes a copy before you start.
+
+Nothing is written until you have walked every section, & a timestamped backup is taken
+first whether or not you asked for one.
 -----------------------------------------------------------------------------------
 
 
------STEP 5 - INSTALL ADVANCED FEATURE DEPENDENCIES-----
-In this step we will build dependencies from source to enable advanced file conversions.
+-----------------------------------------------------------------------------------
+-----STEP 5 - VERIFY-----
 
-1. Run  'cd /home/USERNAME/Desktop/Temp/Documentation/Build'
-2. Run  'chmod +x ffmpeg-build.sh'
-3. Run  './ffmpeg-build.sh'  then follow the instructions to download & build FFMPEG from source.
-4. Run  'rm -r ffmpeg-build'  to delete the FFMPEG build environment.
-5. Run  'chmod +x build-imagemagick-v7.sh'
-6. Run  'sudo ./build-imagemagick-v7.sh'
-7. Completely reboot the computer.
+1. Run  'php convertCore.php -v'
+   Reports every dependency, every component version & every subsystem, with what is
+   required beside what was found. This is the diagnostic to read first when anything
+   behaves unexpectedly.
+
+2. Run  'php convertCore.php --status'
+   Reports the resource listener, the budget & the data locations.
+
+3. Visit  'http://YOUR-IP-OR-HOSTNAME/HRProprietary/HRConvert2/convertCore.php'
+
+4. Convert something. A conversion that fails writes the reason to the log, which is in
+   the data location under Logs.
 -----------------------------------------------------------------------------------
 
 
------STEP 6 - INSTALL HRCONVERT2-----
-In this step we will install the HRConvert2 files configured earlier.
+-----------------------------------------------------------------------------------
+-----WHEN SOMETHING IS WRONG-----
 
-1. Run  'sudo mkdir /var/www/html/HRProprietary'
-2. Run  'sudo mkdir /var/www/html/HRProprietary/HRConvert2'
-3. Adjust the username in the following command to reflect your username, then run  'sudo cp -a /home/USERNAME/Desktop/Temp/. /var/www/html/HRProprietary/HRConvert2/'
-4. Run  'sudo chmod -R 0755 /var/www'
-5. Run  'sudo chown -R www-data:www-data /var/www'
-7. (Optional) Adjust the username in the following command to reflect your username, then run  'sudo useradd -g www-data USERNAME'
-8. To correct permissions later (after manual file or permission modifications):
-  8a. Run  'sudo chmod -R 0755 /var/www'
-  8b. Run  'sudo chown -R www-data:www-data /var/www'
+RUN  'sudo php convertCore.php -fp'  FIRST. It is idempotent, it repairs everything the
+installer set up, & it verifies the result rather than assuming it worked.
+
+RUN IT AFTER ANY COMMAND YOU RAN AS ROOT. A root invocation creates its logfile & its
+secret file owned by root, & the web server user cannot read either afterwards. This is
+the single most common cause of an installation that worked yesterday & does not today.
+
+  Conversions refuse & the log names bubblewrap.
+    The sandbox cannot create a namespace. -fp reports which of the three causes it is.
+    Kernel restriction, missing AppArmor permission, or a namespace budget of zero.
+
+  Nothing appears in the log at all.
+    The logfile belongs to another account. -fp corrects it.
+
+  A conversion works from a terminal & refuses from a browser.
+    The two run as different accounts. -fp corrects ownership across both.
+
+  The listener will not start, or does not answer.
+    Run  'php convertCore.php --status'  as root, not as a standard user. A standard user
+    cannot read the socket directory & is told the listener is stopped whether it is or not.
+
+  An upload larger than a few megabytes fails.
+    PHP refuses it before HRConvert2 sees it. -fp writes the drop in that permits it, &
+    the web server must be restarted afterwards.
 -----------------------------------------------------------------------------------
 
 
------STEP 7 - VISIT YOUR CONVERTER!!!-----
-In this step we visit the converter using a browser for the first time.
+-----------------------------------------------------------------------------------
+-----STEP 6 - NETWORK ACCESS-----
 
-Go to 'http://YOUR-IP-OR-HOSTNAME/HRProprietary/HRConvert2/convertCore.php' to view your Converter! 
-The computer you install HRConvert2 onto should be considered a staitionary server that you can safely direct traffic at. 
-The server will only be available on LAN networks unless additional firewall, router, or ISP configuration is provided.
+HRConvert2 is only reachable on the local network until a router is configured.
+
+1. Find the administration address of your broadband router. Try  '192.168.1.1'  or
+   '10.10.1.1'  in a browser, or consult the manual.
+2. Give this machine a static address, either on the router or on the machine.
+3. Forward port 80, or port 443 once HTTPS is configured, to this machine.
+4. For HTTPS, visit  'https://letsencrypt.org'
+5. Optionally register a domain name & point an A record at the address.
+
+DO NOT EXPOSE AN UNENCRYPTED INSTALLATION TO THE INTERNET. Files are uploaded in the
+clear & share links are guessable over plain HTTP.
 -----------------------------------------------------------------------------------
 
 
------STEP 8 - CONFIGURE STATIC IP, PORT FORWARDING, & FIREWALL EXCEPTIONS ON YOUR ROUTER-----
-In this step we will configure a router to route traffic to the HRConvert2 server.
-
-1. Maybe just one more cup of coffee.
-2. According to the manual for the manufacturer of your broadband router, find the local IP address where you can make changes to it's configuration. 
-  1a. Try entering  '192.168.1.1'  or  '10.10.1.1'  into a browser. 
-  1b. If you are greeted with a login screen, check the bottom of your router or ask your administrator for the required information. 
-  1c. If you are not greeted with any tangible login screen seek the owners manual for the specific make and manual for your router.
-3. Once you have gained access to your router, seek the settings which control Firewall Exceptions and Port Forwarding settings.
-  2a. You should seek a way to enter the a Static IP address of the machine running HRConvert2.
-  2b. You should also seek a way to forward ports 80 (unencrypted) or 443 (encrypted) to the machine running HRConvert2.
-  2c. To configure HTTPS encryption please visit letsencrypt.com for additional instructions.
-4. You and your users should now be able to access your server via any standard web browser by entering the Static IP from your ISP into the address bar. 
-5. (Optional) Purchase a domain name & point the DNS A record at your Static IP address to make accessing your server easier for users.
-6. Great work! Time for a celebratory cup of coffee!
 -----------------------------------------------------------------------------------
-
-
 -----NOTES-----
-1. HRConvert2 will create and maintain complete separation of user files during operation and will not impose restrictions on user uploads.
-  1a. However PHP will restrict uploads, so verify that your php.ini file is set correctly.
-2. Please respect the terms of the GPLv3 license.
-3. Please reciprocate any changes which improve HRConvert2 back to the community by submitting Pull Request on Github.
-4. It is not recommended to use HRConvert2 in a public-facing environment without HTTPS encryption. 
-5. If you have any problems with HRConvert2 please create an issue at  'http://github.com/zelon88/HRConvert2'
-6. Don't forget to delete any temporary files or folders created during this installation process.
-8. HRConvert2 does not update or patch any dependencies automatically.
-  8a. Administrators are responsible for monitoring and maintaining locally installed dependencies for updates.
-9. HRConvert2 is designed to be run on a dedicated server.
-10. HRConvert2 will only be available on LAN networks unless a Static IP and port forwarding are configured.
-11. When performing Stream Conversions, HRConvert2 must hold a PHP worker & an FFMPEG worker for the duration of a users stream.
-12. If your server needs to handle many concurrent streams at once, consider bumping the pm.max_children variable in php.ini.
-12. Psst... Hey... You look like you could use a cup of coffee.....
+
+1. HRConvert2 keeps user files completely separate & imposes no restriction on uploads.
+   PHP does impose one. -fp writes the settings that permit large uploads.
+2. HRConvert2 is designed to run on a dedicated server.
+3. HRConvert2 does not update or patch dependencies automatically.
+   Run  '--setup --update-depends'  to upgrade them, & '--setup --output-supply-chain'
+   to produce an audit template of everything installed, with licences & sources.
+4. A stream conversion holds a PHP worker & an FFMPEG worker for the whole stream.
+   Consider raising pm.max_children if many concurrent streams are expected.
+5. rc.local is no longer used. The document conversion listener it started no longer
+   exists, & the resource listener is a systemd unit the installer writes.
+6. unoconv is no longer used or required. Documents are converted by LibreOffice directly,
+   one sandboxed process per conversion.
+7. Please respect the terms of the GPLv3 license.
+8. Please reciprocate improvements back to the community with a Pull Request.
+9. Report problems at  'https://github.com/zelon88/HRConvert2'
+10. Psst... Hey... You look like you could use a cup of coffee.....
 -----------------------------------------------------------------------------------

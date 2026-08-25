@@ -127,11 +127,113 @@ Do not run the above against the data location without restoring the secret file
   --kill-all-workers          End every tracked conversion in progress.
   --kill-every-worker         End every PHP process owned by the web server user.
   -y, --yes                   Skip the confirmation prompt on the two above.
+  --config <argument>         An entire suite of commands for configuring HRConvert2 installations.
+  --setup <argument>          An entire suite of commands for installing & managing HRConvert2 installations.
 
 The -c, -u & -fp arguments require root.
 The -l, -k, --kill-all-workers & --kill-every-worker arguments require root or the web server user.
 The -v, -h & --status arguments work when run as any user.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About   --config----
+ 
+Configures this installation without opening config.php in a text editor.
+ 
+Requires the Setup Core component, which holds a model of every setting config.php declares.
+Requires root, except for a backup, which any account that can write the destination may take.
+ 
+  --config                                 Walk every section & queue changes. Nothing is written until the end.
+  --config --view                          Display every setting, its value, its default & what it depends on.
+  --config --repair                        Restore only the settings that are absent or unreadable.
+  --config --reset-all-defaults            Restore every setting this utility holds a default for.
+  --config --reset-default-section=<Name>  Restore one section.
+  --config --reset-default-variable=<Var>  Restore one setting.
+  --config --backup=<path>                 Copy config.php somewhere before changing anything.
+  -y, --yes                                Skip the confirmation prompt.
+ 
+Inside a section, the following commands are available.
+ 
+  show info                    Display the comment block for every variable in the section.
+  show comment block <Var>     Display the comment block for one variable, with its type & default.
+  show <Var>                   The same thing, typed shorter.
+  reset all                    Queue a reset of every variable in the section.
+  reset <Var>                  Queue a reset of one variable.
+  set <Var>                    Enter a new value for one variable.
+  done                         Keep everything as it is & move on. Pressing Enter does the same.
+ 
+NOTHING IS WRITTEN UNTIL EVERY SECTION HAS BEEN WALKED.
+Changes are collected & applied in a single write at the end, so an operator who changes their
+mind halfway has changed nothing. A timestamped backup is taken first, whether or not one was
+asked for. The new file is staged beside the original, checked with php -l, & only then moved
+into place, so a configuration that would not parse never reaches the installation.
+ 
+A SETTING THIS UTILITY DOES NOT KNOW IS STILL EDITABLE.
+It is reported as unaccounted, can be set by hand, & cannot be reset, because nothing in the
+model knows what it should be. This is how the utility survives a release that adds a setting
+before anybody updates Setup Core.
+ 
+NOTHING IS WRITTEN IF ANY SECTION FAILS VALIDATION.
+A section holding fewer than half, or more than one and a half times, the settings the model
+expects is treated as a parse failure rather than as a configuration problem. A file that cannot
+be read correctly cannot be edited safely, & a partial edit is worse than no edit.
+ 
+A section header in config.php is three dashes either side of the name. A variable label is two
+dashes indented by two spaces. Those two forms are what the parser relies on.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About   --setup----
+ 
+Installs, checks & audits everything this installation depends on.
+ 
+Requires the Dependency Core component & the dependency manifest. The two options that also
+configure & repair additionally require Setup Core.
+ 
+  --setup                                  List every option --setup accepts.
+  --setup --check-depends                  Report the state of every dependency. Needs no privileges.
+  --setup --install-depends                Install everything absent or too old, in manifest order.
+  --setup --update-depends                 Upgrade everything already installed. Installs nothing new.
+  --setup --uninstall-depends              Remove a subsystem. REQUIRES --subsystem.
+  --setup --output-supply-chain[=path]     Write a supply chain audit template.
+  --setup --install-service                Install the listener service unit from this configuration.
+  --setup --install-complete               Install HRConvert2 & every dependency. Six stages.
+  --setup --reinstall-existing             Reinstall this installation in place.
+  --setup --subsystem=<Name>               Restrict the operation to one subsystem.
+  -y, --yes                                Skip the confirmation prompt.
+ 
+EVERY OPTION ABOVE IS USED WITH --setup & NEVER ON ITS OWN.
+An option typed alone is not a command. The core recognizes it, names the command it belongs to
+& shows the correct invocation rather than reporting an unrecognized argument.
+ 
+READING NEEDS NO AUTHORIZATION. WRITING NEEDS TWO.
+--check-depends & --output-supply-chain read the machine & are safe to run from anywhere.
+Every operation that changes the machine requires root AND a token derived from the install
+secret, which proves the request arrived through convertCore.php rather than by another route.
+ 
+--uninstall-depends REFUSES TO RUN WITHOUT A SUBSYSTEM.
+Removing every dependency in the manifest would take PHP, Apache & the package manager with it,
+& leave a host that cannot be recovered without physical access. A dependency belonging to the
+Core subsystem, or a required part of the Sandbox subsystem, is never removed at all.
+ 
+--install-complete runs six stages, in the order an installation actually depends on.
+ 
+  1  Dependencies.          Nothing below can be verified until the tools exist.
+  2  Data locations.        A policy cannot be written into a directory that is not there.
+  3  Permissions & policies. A converter cannot run until its policy permits it.
+  4  Configuration.         Written as a file the web server user has to read.
+  5  Listener service.      Generated from the configuration stage four settled.
+  6  Verification.          Reports what works rather than what was attempted.
+ 
+A stage that fails stops the ones after it. With -y nothing prompts & stage four keeps whatever
+config.php already declares, which for a fresh clone is the shipped defaults.
+ 
+The supply chain report is comma separated & opens in any spreadsheet. It carries one dependency
+per row with its licence, upstream source, purpose & detected version filled in, & eight columns
+left deliberately blank. Those columns are the audit.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ 
 
 
 

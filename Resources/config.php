@@ -2,7 +2,7 @@
 
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/20/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/24/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.7.7.
+// / v3.8.0.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -44,7 +44,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. Replacing config.php with a newer one is the correct fix.
-$ConfigVersion = 'v3.7.7';
+$ConfigVersion = 'v3.8.0';
 // / ------------------------------
 
 // / ------------------------------
@@ -1047,3 +1047,20 @@ $UserEbookInputArray = array('epub', 'mobi', 'azw', 'azw3', 'azw4', 'fb2', 'fbz'
 // /   Add 'pdf' here only after confirming it actually works on your server.
 $UserEbookOutputArray = array('epub', 'mobi', 'azw3', 'fb2', 'lit', 'lrf', 'pdb', 'pml', 'rb', 'snb', 'tcr', 'txt', 'txtz', 'rtf', 'oeb', 'docx', 'pdf');
 // / ------------------------------
+// /  --Allow Unprivileged Namespaces--
+// /   Permits HRConvert2 to switch off kernel.apparmor_restrict_unprivileged_userns during
+// /   the -fp argument, so bubblewrap can create the namespace every sandbox is built in.
+// /
+// /   THE DEFAULT IS TRUE & THAT IS THE SAFER SETTING ON A CONVERSION SERVER.
+// /   The restriction protects a general purpose desktop from a hostile local user. This
+// /   machine is a dedicated appliance whose local users are the administrator & the web
+// /   server. Leaving the restriction in force does not make it safer, it disables the
+// /   sandbox that isolates every hostile FILE the machine exists to process, which is the
+// /   threat that actually arrives here.
+// /
+// /   Set this to FALSE on a shared host carrying untrusted local users, where the
+// /   restriction is doing real work. Conversions will then refuse unless --Require
+// /   Sandbox-- is also FALSE, which runs them unprotected & is worse again.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$AllowUnprivilegedNamespaces = TRUE;

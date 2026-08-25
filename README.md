@@ -40,6 +40,34 @@ no trace. It will run on a Raspberry Pi.
 
 ---
 
+## Quick Start
+
+```bash
+git clone https://github.com/zelon88/HRConvert2
+sudo bash HRConvert2/Documentation/Build/hrconvert2-setup.sh
+```
+
+That is it. The installer pulls every dependency, creates its storage, writes its own
+AppArmor profile, ImageMagick policy, PHP settings & systemd unit, then tells you what
+works. Add `-y` if you would rather it not ask.
+
+Then open `http://your-server/HRProprietary/HRConvert2/convertCore.php` and drag a file
+onto it.
+
+Prefer containers?
+
+```bash
+docker run -d -p 8080:80 --cap-add SYS_ADMIN zelon88/hrconvert2
+```
+
+`SYS_ADMIN` is not optional. It is what lets the container build the sandbox every
+conversion runs inside. Without it, conversions are refused rather than run unprotected.
+
+Something not working? `sudo php convertCore.php -fp` fixes most of it and tells you what
+it could not.
+
+---
+
 ## Features
 
 **488 file formats** across documents, ebooks, comics, spreadsheets, presentations, images, audio, video,
@@ -119,8 +147,11 @@ that invocation, creates no session & touches no user data.
   -u=latest                   Update to the newest tagged release.
   -u=edge                     Update to the current state of the master branch.
   -u=v#.#.#                   Update to exactly that tagged release.
-  -fp, --fix-permissions      Correct ownership, permissions & policy files.
+  -fp, --fix-permissions      Repair permissions, policies, kernel settings & the service unit.
+  --config                    Configure the server without opening a text editor.
+  --setup                     Install, check & audit dependencies.
   -l, --listen                Start the resource listener.
+  --run-core-manager          Run the listener in the foreground, for a service unit.
   -k, --kill                  Stop the resource listener.
   -k <worker-id>              End one worker by budget token or process identifier.
   --kill-all-workers          End every tracked conversion in progress.
@@ -137,8 +168,20 @@ is a different question from *what is configured*.
 installation atomically, then asks the new core to report its own version. An installation
 that cannot answer is rolled back automatically & the previous version is preserved.
 
-`-fp` is a powerful repair utility that will correct most permissions issues, if run as root.
-This also repairs apparmor policy & IM7 policy files.
+`-fp` is the big hammer. Run it as root and it corrects ownership everywhere, writes the
+ImageMagick policy at whatever prefix your build actually reads, extends the AppArmor
+profile bubblewrap needs, permits the kernel namespaces it cannot work without, writes the
+PHP settings large uploads require, and installs the systemd unit. Then it re-tests the
+sandbox and tells you whether any of that worked. It is idempotent — run it whenever
+something looks wrong.
+
+`--config` walks `config.php` section by section so you never have to open it. Type
+`show comment block <Variable>` and it explains any setting, with its type and default.
+Nothing is written until you have finished, and it backs the file up first regardless.
+
+`--setup --check-depends` reports every dependency and what is missing.
+`--setup --output-supply-chain` writes a CSV audit template of everything installed, with
+licences and upstream sources, for the annual paperwork nobody enjoys.
 
 Full details in
 [USING_COMMAND_LINE.txt](https://github.com/zelon88/HRConvert2/blob/master/Documentation/USING_COMMAND_LINE.txt) or [USING_COMMAND_LINE.md](https://github.com/zelon88/HRConvert2/blob/master/Documentation/USING_COMMAND_LINE.md).
@@ -153,45 +196,57 @@ Full details in
 
 ## Optional Resource Awareness
 
-- **Resource Awareness is Disabled by Default** HRConvert2 will accept every conversion it is offered, in stock form. This is considered "*Standalone*" mode.
-- **When Optional Resource Awareness is Enabled** HRConvert2 will attempt to connect to a local resource listener through memory sockets to request resources to perform the conversion.
-- **Fails Open By Default** HRConvert2 will proceed with a conversion in stock form when no resource listener is available to service it's request for resources.
-- **When Resource Awareness is Enabled** Running `sudo php convertCore.php --listen` will start four "*Manager*" processes. HRConvert2 worker processes switch from "*Standalone*" mode to "*Worker*" mode.
-- **The Resource Manager** holds a budget derived from processor count, load average and memory pressure.
-- **A Worker Asks Permission** before it consumes budget, and returns its budget upon completion.
-- **An Idle Server Throttles Nothing.** A loaded server eventually stop accepting work before it falls over. This is entirely configurable in a variety of ways.
-- **Individual Conversions Are Resource Limited** By dynamically capping CPU and RAM consumption on a per-conversion basis based on load.
-- **Number Of Concurrent Sessions Are Limited** By dynamically preventing the server from accepting more work than it can handle. And by throttlling back operations that it's taking in.
-- **Workers Are Reaped Automatically** Workers lifecycle is managed by the "*Worker Manager*". Runaway workers are detected and detroyed. 
-- **Fails Open - Even More** A missing component, a version mismatch, a dead listener, an unreachable socket or an unanswered request all let the conversion proceed with a warning.
-- **Only Explicit Refusals From The Budget Throttle Conversions, Unless Configured Otherwise** Refusal logic can be inverted to *Force* Resource Awareness, and refuse when it is unavailable.
-- **Load Balanced Or Redundant Storage** Sessions can be spread across several storage paths, chosen round robin, by least active, or with a standby held in reserve. A session is assigned a location once and keeps it for life, so a load balanced deployment never loses track of a user's files. Build high-accessibility, high-performance storage arrays from file paths directly in `config.php`. 
-- **Resource Awareness Means Disk Drive Awareness** The "Resource Manager" maintains performance of the *Entire Server*. Including storage devices.
+Off by default. Leave it off and HRConvert2 accepts every conversion it is offered, which
+is the right answer for a home server or a machine nobody is hammering.
 
-**Useful Commands**
-```
-sudo php convertCore.php -l         # start the listener
+Turn it on and four manager processes start up behind the converter. They hold a budget
+derived from your processor count, load average and memory pressure. A conversion asks
+before it starts and hands the budget back when it finishes. An idle server throttles
+nothing. A loaded one stops accepting work *before* it falls over instead of after.
+
+```bash
+sudo php convertCore.php -l         # start it
 php convertCore.php --status        # see what it is doing
 sudo php convertCore.php -k         # stop it
-sudo php convertCore.php -fp        # fix permissions, repair common problems
-
-Full detail is in [About Resource Rate Limiting.txt](https://github.com/zelon88/HRConvert2/blob/master/Documentation/ABOUT_RESOURCE_RATE_LIMITING.txt) or [About Resource Rate Limiting.md](https://github.com/zelon88/HRConvert2/blob/master/Documentation/ABOUT_RESOURCE_RATE_LIMITING.md).
 ```
+
+**Everything fails open.** No listener, dead socket, version mismatch, no answer — the
+conversion runs anyway and logs a warning. You have to explicitly ask it to refuse work it
+cannot account for. Nothing about this subsystem can take your converter offline.
+
+What you get for turning it on:
+
+- **Per-conversion CPU & memory caps**, scaled down as the box gets busier, so one enormous
+  video cannot starve everything else.
+- **Runaway conversions get reaped.** A worker that outlives its expected runtime is ended
+  and its budget reclaimed, automatically.
+- **Storage that spans disks.** Point it at several paths — round robin, least-active, or
+  one held in reserve. A session picks a location once and keeps it for life, so nothing
+  gets lost. Build a storage array out of directory paths in `config.php`.
+- **A watchdog for the whole box**, storage included, not just for PHP.
+
+Full detail in
+[ABOUT_RESOURCE_RATE_LIMITING.txt](https://github.com/zelon88/HRConvert2/blob/master/Documentation/ABOUT_RESOURCE_RATE_LIMITING.txt).
 
 ---
 
 ## Requirements
 
-Debian or Ubuntu Linux, Apache 2.4 & PHP 8 or later. Everything else is a package install.
+Debian or Ubuntu Linux, Apache 2.4 and PHP 8 or later. A Raspberry Pi Model B+ is enough.
+Anything x86 or x64 will be comfortable. Everything else the installer handles.
 
-A Raspberry Pi Model B+ is enough to run it. Anything x86 or x64 will be comfortable.
+**Bubblewrap is required and it is not negotiable.** It is the sandbox every conversion runs
+inside. Debian 12 and Ubuntu 24.04 both block the unprivileged namespaces it needs, in three
+different ways depending on which you are on. `sudo php convertCore.php -fp` sorts out all
+three, extends your distribution's AppArmor profile through its own include so a package
+update cannot undo it, and then actually re-tests the sandbox as the web server user rather
+than assuming it worked.
 
-**Bubblewrap is required.** Debian 12 & Ubuntu 24.04 restrict unprivileged user namespaces by
-default. Running `sudo php convertCore.php -fp` installs the AppArmor profile that lifts the 
-restriction, repairs the ImageMagick policy, and corrects ownership across the installation.
-Run it once after installing, and again after any command line invocation made as root.
-The [Installation Instructions](https://github.com/zelon88/HRConvert2/blob/master/Documentation/INSTALLATION_INSTRUCTIONS.txt) cover the rest.
-[Docker](https://hub.docker.com/r/zelon88/hrconvert2) version is also available.
+If the sandbox cannot be built, conversions are **refused**. HRConvert2 will not quietly run
+an untrusted file through ImageMagick with no isolation and hope for the best.
+
+[Installation Instructions](https://github.com/zelon88/HRConvert2/blob/master/Documentation/INSTALLATION_INSTRUCTIONS.txt)
+· [Docker image](https://hub.docker.com/r/zelon88/hrconvert2)
 
 ---
 

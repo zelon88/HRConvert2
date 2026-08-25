@@ -1,7 +1,7 @@
 <?php if (php_sapi_name() !== 'cli') print('<!DOCTYPE HTML>'.PHP_EOL);
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/20/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/24/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,8 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILEINFORMATION ...
-// / v3.7.8.
+// / v3.8.0.
+// / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -501,7 +502,7 @@ function addSillyString($Secret, $secretVersion) {
 // / It is a function local here regardless of its case & is shredded before this function returns.
 function resolveSecretFile($secretFile, $requiredSecretVersion) {
   // / Set variables.
-  global $LogFile, $RunningAsRoot, $ApacheUser, $CurrentUser, $EnableMemoryProtection;
+  global $LogFile, $RunningAsRoot, $ApacheUser, $CurrentUser, $EnableMemoryProtection, $CoreLoaded;
   $SecretIsReady = FALSE;
   $ResolvedSecretKey = $secret = $secretFileContent = '';
   $detectedSecretVersion = $cleanRequiredVersion = $rotationNotice = $strayOutput = '';
@@ -622,7 +623,7 @@ function resolveSecretFile($secretFile, $requiredSecretVersion) {
 // / Any other combination gets no secret at all & fails verification.
 function verifyInstallation() {
   // / Set variables.
-  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $LogFile, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $SecretFile, $RequiredSecretVersion, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumImageVersion, $UsePyMeshLab, $MinimumMeshlabVersion, $MinimumAssimpVersion, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $Minimum7zVersion, $MinimumZipVersion, $MinimumRarVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumDiaVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection, $ResourceAwarenessActive, $EnableResourceAwareness, $RequireResourceAwareness, $ManagerSocketDir, $DirSep, $RequiredCoreManagerVersion, $CoreManagerVersion, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $CoreLoaded, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources;
+  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $LogFile, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $SecretFile, $RequiredSecretVersion, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumImageVersion, $UsePyMeshLab, $MinimumMeshlabVersion, $MinimumAssimpVersion, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $Minimum7zVersion, $MinimumZipVersion, $MinimumRarVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumDiaVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection, $ResourceAwarenessActive, $EnableResourceAwareness, $RequireResourceAwareness, $ManagerSocketDir, $DirSep, $RequiredCoreManagerVersion, $CoreManagerVersion, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $CoreLoaded, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $RequiredSetupCoreVersion, $RequiredConfigScript, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $AllowUnprivilegedNamespaces;
   putenv('HOME='.$HomeLoc);
   $CoreLoaded = TRUE;
   $InstallationIsVerified = $RunningFromCLI = $RunningAsRoot = $RunningInContainer = FALSE;
@@ -660,25 +661,29 @@ function verifyInstallation() {
   // / points only, because a per user secret cannot validate a startup key the listener was
   // / launched with, nor decrypt a socket message from a web worker.
   // / argv is read directly because parseCommandLine() has not run yet.
-  if ($RunningFromCLI && $CurrentUser === $ApacheUser && isset($_SERVER['argv'][1]) && in_array($_SERVER['argv'][1], array('--start-core-manager', '--start-manager'), TRUE)) {
+  if ($RunningFromCLI && $CurrentUser === $ApacheUser && isset($_SERVER['argv'][1]) && in_array($_SERVER['argv'][1], array('--start-core-manager', '--start-manager', '--run-core-manager'), TRUE)) {
+    // / --run-core-manager is how a service unit starts the listener. Leaving it out of
+    // / this list sent the unit down the per user secret path, so every socket key it
+    // / derived differed from the ones the web workers use & every message was discarded
+    // / as undecryptable. The listener ran perfectly & answered nobody.
     $secretAuthorized = TRUE;
     $userSecretAuthorized = FALSE; }
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
-  $HRConvertVersion = 'v3.7.8';
+  $HRConvertVersion = 'v3.8.0';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
   // / A release that changes no settings leaves this alone, so existing config files keep working.
   // / Any config.php version that is greater (newer) than the version listed below is considered acceptable.
-  $RequiredConfigVersion = 'v3.7.6';
+  $RequiredConfigVersion = 'v3.8.0';
   $RequiredConfigVersion = ltrim($RequiredConfigVersion, 'vV');
   // / Define the minimum acceptable GUI version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / Gui version that do not exactly match the version listed below are not considered acceptable.
   // / This is because Guis are not always guaranteed to be forward or reverse compatible.
-  $RequiredGuiVersion = 'v3.7.4';
+  $RequiredGuiVersion = 'v3.8.0';
   $RequiredGuiVersion = ltrim($RequiredGuiVersion, 'vV');
   // / Define the minimum acceptable Language Pack version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
@@ -688,8 +693,28 @@ function verifyInstallation() {
   $RequiredLanguageVersion = ltrim($RequiredLanguageVersion, 'vV');
   // / The Core Manager component version this core requires.
   // / This is an EXACT match. A component built for another core may not be called safely.
-  $RequiredCoreManagerVersion = 'v3.7.8';
+  $RequiredCoreManagerVersion = 'v3.8.0';
   $RequiredCoreManagerVersion = ltrim($RequiredCoreManagerVersion, 'vV');
+  // / The Setup Core component version this core requires.
+  // / This is an EXACT match. A component built for another core may not be called safely.
+  // / Setup Core holds the configuration model, so this MUST be raised whenever
+  // / $RequiredConfigVersion is raised. Forgetting does not break anything immediately.
+  // / The utility reports a variable it does not know as unaccounted & carries on.
+  $RequiredSetupCoreVersion = 'v3.8.0';
+  $RequiredSetupCoreVersion = ltrim($RequiredSetupCoreVersion, 'vV');
+  // / The Dependency Core component version this core requires.
+  // / This is an EXACT match. A component built for another core may not be called safely.
+  $RequiredDependencyCoreVersion = 'v3.8.0';
+  $RequiredDependencyCoreVersion = ltrim($RequiredDependencyCoreVersion, 'vV');
+  // / The dependency manifest version this core requires.
+  // / Raise this whenever a dependency is added, removed, or its minimum version moves.
+  // / A manifest from another release may name a package that no longer exists.
+  $RequiredDependsVersion = 'v3.8.0';
+  $RequiredDependsVersion = ltrim($RequiredDependsVersion, 'vV');
+  // / The bootstrap script version this core expects.
+  // / A manager compares the script against this & disables the script when it differs.
+  $RequiredConfigScript = 'v3.8.0';
+  $RequiredConfigScript = ltrim($RequiredConfigScript, 'vV');
   // / The secret file version this core requires.
   // / This is an EXACT match. A secret file reporting anything else is deleted & rewritten.
   // / Raise this to force every installation in the wild off an exposed or outdated secret.
@@ -751,7 +776,7 @@ function verifyInstallation() {
   $ResourceAwarenessActive = FALSE;
   $ManagerSocketDir = $ConvertLoc.DIRECTORY_SEPARATOR.'Sockets';
   if ($secretIsReady && $EnableResourceAwareness) {
-    list ($componentIsAvailable, $detectedCoreManagerVersion) = verifyCoreManagerComponent($RequiredCoreManagerVersion);
+    list ($componentIsAvailable, $detectedCoreManagerVersion) = verifyCoreComponent('Core Manager', 'coreManager.php', 'CoreManagerVersion', $RequiredCoreManagerVersion);
     if ($componentIsAvailable) $ResourceAwarenessActive = TRUE;
     // / An administrator may refuse to run without resource awareness.
     else if ($RequireResourceAwareness) errorEntry('Resource awareness is required by config.php & the Core Manager component is unavailable!', 31010, TRUE); }
@@ -907,7 +932,15 @@ function verifyLogs() {
 function quickDie($entry, $errorNumber) {
   // / Set variables.
   global $Time, $LogFile, $SesHash3, $ApplicationName, $RunningFromCLI;
-  $timeLabel = (isset($Time) && $Time !== '') ? (string)$Time : 'Unknown Time';
+  // / The timestamp is recomputed HERE, at the moment the entry is written, rather than
+  // / taken from $Time. $Time is set once by verifyTime during boot, which is correct for a
+  // / web request that lives half a second & wrong for a manager process that runs for
+  // / weeks. A listener started at three in the morning stamped every entry it ever wrote
+  // / with three in the morning, which reads as a clock fault in one process & is not.
+  // / $Time itself is left alone, because a session directory is named from it & must not
+  // / change underneath a request.
+  // / An empty $Time means verifyTime has not run, so no timezone is set & no time is known.
+  $timeLabel = (isset($Time) && $Time !== '') ? date('F j, Y, g:i a') : 'Unknown Time';
   $sessionLabel = (isset($SesHash3) && $SesHash3 !== '') ? (string)$SesHash3 : 'No Session';
   $applicationLabel = (isset($ApplicationName) && is_string($ApplicationName) && $ApplicationName !== '') ? $ApplicationName : 'HRConvert2';
   $errorLabel = is_numeric($errorNumber) ? $applicationLabel.'-'.$errorNumber : $applicationLabel.'-###';
@@ -938,7 +971,15 @@ function logEntry($entry) {
   // / Set variables.
   global $Time, $LogFile, $SesHash3;
   $LogWritten = FALSE;
-  $timeLabel = (isset($Time) && $Time !== '') ? (string)$Time : 'Unknown Time';
+  // / The timestamp is recomputed HERE, at the moment the entry is written, rather than
+  // / taken from $Time. $Time is set once by verifyTime during boot, which is correct for a
+  // / web request that lives half a second & wrong for a manager process that runs for
+  // / weeks. A listener started at three in the morning stamped every entry it ever wrote
+  // / with three in the morning, which reads as a clock fault in one process & is not.
+  // / $Time itself is left alone, because a session directory is named from it & must not
+  // / change underneath a request.
+  // / An empty $Time means verifyTime has not run, so no timezone is set & no time is known.
+  $timeLabel = (isset($Time) && $Time !== '') ? date('F j, Y, g:i a') : 'Unknown Time';
   $sessionLabel = (isset($SesHash3) && $SesHash3 !== '') ? (string)$SesHash3 : 'No Session';
   $formattedEntry = 'Op-Act, '.$timeLabel.', '.$sessionLabel.': '.$entry;
   $logIsWritable = (isset($LogFile) && is_string($LogFile) && $LogFile !== '');
@@ -960,7 +1001,15 @@ function warningEntry($entry) {
   // / Set variables.
   global $Time, $LogFile, $SesHash3;
   $LogWritten = FALSE;
-  $timeLabel = (isset($Time) && $Time !== '') ? (string)$Time : 'Unknown Time';
+  // / The timestamp is recomputed HERE, at the moment the entry is written, rather than
+  // / taken from $Time. $Time is set once by verifyTime during boot, which is correct for a
+  // / web request that lives half a second & wrong for a manager process that runs for
+  // / weeks. A listener started at three in the morning stamped every entry it ever wrote
+  // / with three in the morning, which reads as a clock fault in one process & is not.
+  // / $Time itself is left alone, because a session directory is named from it & must not
+  // / change underneath a request.
+  // / An empty $Time means verifyTime has not run, so no timezone is set & no time is known.
+  $timeLabel = (isset($Time) && $Time !== '') ? date('F j, Y, g:i a') : 'Unknown Time';
   $sessionLabel = (isset($SesHash3) && $SesHash3 !== '') ? (string)$SesHash3 : 'No Session';
   $formattedEntry = 'WARNING!!! '.$timeLabel.', '.$sessionLabel.': '.$entry;
   $logIsWritable = (isset($LogFile) && is_string($LogFile) && $LogFile !== '');
@@ -982,7 +1031,15 @@ function errorEntry($entry, $errorNumber, $die) {
   // / Set variables.
   global $Time, $LogFile, $SesHash3, $ApplicationName;
   $LogWritten = FALSE;
-  $timeLabel = (isset($Time) && $Time !== '') ? (string)$Time : 'Unknown Time';
+  // / The timestamp is recomputed HERE, at the moment the entry is written, rather than
+  // / taken from $Time. $Time is set once by verifyTime during boot, which is correct for a
+  // / web request that lives half a second & wrong for a manager process that runs for
+  // / weeks. A listener started at three in the morning stamped every entry it ever wrote
+  // / with three in the morning, which reads as a clock fault in one process & is not.
+  // / $Time itself is left alone, because a session directory is named from it & must not
+  // / change underneath a request.
+  // / An empty $Time means verifyTime has not run, so no timezone is set & no time is known.
+  $timeLabel = (isset($Time) && $Time !== '') ? date('F j, Y, g:i a') : 'Unknown Time';
   $sessionLabel = (isset($SesHash3) && $SesHash3 !== '') ? (string)$SesHash3 : 'No Session';
   $applicationLabel = (isset($ApplicationName) && is_string($ApplicationName) && $ApplicationName !== '') ? $ApplicationName : 'HRConvert2';
   $errorLabel = is_numeric($errorNumber) ? $applicationLabel.'-'.$errorNumber : $applicationLabel.'-###';
@@ -1148,7 +1205,7 @@ function verifyColors($ButtonStyle) {
 // / A function to set the GUI to use for the session.
 function verifyGui() {
   // / Set variables.
-  global $GUI, $DefaultGui, $SupportedGuis, $AllowUserSelectableGui, $GuiFiles, $GuiDir, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $OrangeButtonCode, $PurpleButtonCode, $DarkButtonCode, $DefaultButtonCode, $Font, $GuiVersion, $RequiredGuiVersion, $EnableMemoryProtection;
+  global $GUI, $DefaultGui, $SupportedGuis, $AllowUserSelectableGui, $GuiFiles, $GuiDir, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $OrangeButtonCode, $PurpleButtonCode, $DarkButtonCode, $DefaultButtonCode, $Font, $GuiVersion, $RequiredGuiVersion, $EnableMemoryProtection, $CoreLoaded;
   $reqFile = $GuiIsSet = FALSE;
   $GuiToUse = $defaultGui = 'Default';
   $GuiFiles = $guiFiles = array();
@@ -1468,7 +1525,7 @@ function requestConvertLoc($dailyHash, $sessionHash) {
 // / Converting here as well produced a fifteen hour watch timeout & a ten million second connect timeout.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $ProtectedRootDirs, $ResourcesDir, $BootloadersDir, $AllowBootableIsoImage, $UserBootableIsoArray, $BootableIsoArray, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $ManagerSocketDir, $ManagerSocketTimeout, $ManagerMessageBatchSize, $ManagerMessageSkew, $StartupKeyWindow, $ResourceAwarenessActive, $CoreManagerVersion, $RequiredCoreManagerVersion, $EnableResourceAwareness, $RequireResourceAwareness, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EffectiveConversionLimits, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources;
+  global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $ProtectedRootDirs, $ResourcesDir, $BootloadersDir, $AllowBootableIsoImage, $UserBootableIsoArray, $BootableIsoArray, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $ManagerSocketDir, $ManagerSocketTimeout, $ManagerMessageBatchSize, $ManagerMessageSkew, $StartupKeyWindow, $ResourceAwarenessActive, $CoreManagerVersion, $RequiredCoreManagerVersion, $EnableResourceAwareness, $RequireResourceAwareness, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EffectiveConversionLimits, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $AllowUnprivilegedNamespaces;
   // / Application related variables.
   $GlobalsAreVerified = $sanitizeGlobalCheck = $sanitizeGlobalCheckA = $sanitizeGlobalCheckB = $sanitizeGlobalCheckC = $sanitizeGlobalCheckD = $sanitizeGlobalCheckE = FALSE;
   $SleepTimer = 0;
@@ -1765,6 +1822,41 @@ function imageMagickPolicyContents() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to hold the additions a distribution profile needs to run our sandbox.
+// / Accepts no arguments.
+// / Returns the contents of an AppArmor local include.
+// / A DISTRIBUTION PROFILE IS EXTENDED, NEVER COMPETED WITH.
+// / Ubuntu ships /etc/apparmor.d/bwrap ending in an include of <local/bwrap>. That include
+// / is the supported extension point. Writing there means our additions are pulled into
+// / THEIR profile, one attachment governs the binary, & a package update that replaces
+// / their file leaves ours untouched because it lives in a different directory.
+// / Installing a second profile for the same executable, which an earlier release did,
+// / leaves two attachments for one path & no defined outcome.
+function sandboxApparmorLocalContents() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $LocalContents = '';
+  $LocalContents = '# / Written by HRConvert2. Do not edit by hand.'.PHP_EOL
+    .'# / HRCONVERT2-POLICY-MARKER'.PHP_EOL
+    .'# / Included by /etc/apparmor.d/bwrap through its local include.'.PHP_EOL
+    .'# / A package update replaces that profile & never touches this file, so these'.PHP_EOL
+    .'# / additions survive an upgrade of the distribution profile.'.PHP_EOL
+    .PHP_EOL
+    .'  # / Permit the unprivileged user namespace every sandboxed conversion is built in.'.PHP_EOL
+    .'  userns,'.PHP_EOL
+    .PHP_EOL
+    .'  # / Permit the network namespace & the loopback interface set up inside it.'.PHP_EOL
+    .'  # / Without these a namespace is created & then fails configuring its own loopback.'.PHP_EOL
+    .'  capability net_admin,'.PHP_EOL
+    .'  capability sys_admin,'.PHP_EOL
+    .'  capability setuid,'.PHP_EOL
+    .'  capability setgid,'.PHP_EOL
+    .'  network netlink raw,'.PHP_EOL;
+  purgeSensitiveMemory($EnableMemoryProtection);
+  return $LocalContents; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to hold the AppArmor profile that lets bubblewrap create a namespace.
 // / Accepts no arguments.
 // / Returns the complete contents of an AppArmor profile.
@@ -1876,12 +1968,55 @@ function verifyPolicyFile($policyName, $policyPath, $policyContents, $mayRepair)
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to ask ImageMagick where its configuration actually lives.
+// / Accepts no arguments.
+// / Returns the absolute configuration directory, or an empty string when none is found.
+// / GUESSING THIS WAS WRONG & SILENTLY BROKE THE POLICY.
+// / A distribution package puts policy.xml in /etc/ImageMagick-7. A build from source puts
+// / it under its prefix, usually /usr/local/etc/ImageMagick-7. Picking the first guessed
+// / path that happened to exist wrote a version 7 policy into a version 6 directory that a
+// / source built version 7 never reads, so the policy did nothing & the stock policy that
+// / actually was being read went on refusing every document coder.
+// / ImageMagick reports its own configuration path, so it is asked rather than guessed.
+function resolveImageMagickConfigDir() {
+  // / Set variables.
+  global $Verbose, $EnableMemoryProtection;
+  static $cachedDirectory = NULL;
+  $ConfigDirectory = '';
+  $magickBinary = $outputLine = '';
+  $commandOutput = $pathMatches = $candidateDirectories = array();
+  $commandExitCode = 1;
+  $candidateDirectory = '';
+  if ($cachedDirectory !== NULL) $ConfigDirectory = $cachedDirectory;
+  else {
+    $magickBinary = locateDependency('magick');
+    if ($magickBinary === '') $magickBinary = locateDependency('convert');
+    // / -list configure prints CONFIGURE_PATH, which is where this build reads policy.xml.
+    if ($magickBinary !== '') {
+      exec(escapeshellarg($magickBinary).' -list configure 2>&1', $commandOutput, $commandExitCode);
+      if ($commandExitCode === 0) {
+        foreach ($commandOutput as $outputLine) {
+          if ($ConfigDirectory === '' && preg_match('/^CONFIGURE_PATH\s+(\S.*?)\s*$/', (string)$outputLine, $pathMatches)) $ConfigDirectory = rtrim(trim($pathMatches[1]), DIRECTORY_SEPARATOR); } } }
+    // / A build that will not say is looked for in the usual places, newest first.
+    if ($ConfigDirectory === '') {
+      $candidateDirectories = array('/usr/local/etc/ImageMagick-7', '/etc/ImageMagick-7', '/usr/local/etc/ImageMagick-6', '/etc/ImageMagick-6');
+      foreach ($candidateDirectories as $candidateDirectory) {
+        if ($ConfigDirectory === '' && is_dir($candidateDirectory)) $ConfigDirectory = $candidateDirectory; }
+      if ($ConfigDirectory !== '') warningEntry('ImageMagick would not report its configuration path, so '.$ConfigDirectory.' was located by search. Confirm it is the directory this build actually reads.'); }
+    if ($Verbose) logEntry('ImageMagick configuration path: '.($ConfigDirectory === '' ? 'NOT FOUND' : $ConfigDirectory).'.');
+    $cachedDirectory = $ConfigDirectory; }
+  purgeSensitiveMemory($EnableMemoryProtection, $magickBinary, $outputLine, $commandOutput, $pathMatches, $candidateDirectories, $commandExitCode, $candidateDirectory);
+  return $ConfigDirectory; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to validate or repair the ImageMagick policy.
 // / Accepts a boolean permitting a write.
 // / Returns a validity boolean & a status word, in that order.
-// / The policy directory is named for the major version, so the installed major version is
-// / located rather than assumed. An installation with no policy directory is left alone,
-// / because writing one for a version that is not installed helps nobody.
+// / The directory is resolved from the binary rather than guessed, so a build from source
+// / is corrected where it actually reads rather than somewhere it never looks.
+// / An installation with no configuration directory is left alone, because writing a policy
+// / for a version that is not installed helps nobody.
 // / The result is cached for the request. This is called from the image pipeline, which
 // / runs once per file, & the policy cannot change underneath a running request.
 function verifyImageMagickPolicy($mayRepair) {
@@ -1891,22 +2026,21 @@ function verifyImageMagickPolicy($mayRepair) {
   static $cachedStatus = 'unchecked';
   $PolicyIsValid = FALSE;
   $PolicyStatus = 'unchecked';
-  $policyPath = $majorVersion = '';
-  $candidateDirectories = array('/etc/ImageMagick-7', '/etc/ImageMagick-6');
-  $candidateDirectory = '';
+  $policyPath = $configDirectory = '';
   if ($cachedValid !== NULL) {
     $PolicyIsValid = $cachedValid;
     $PolicyStatus = $cachedStatus; }
   else {
-    foreach ($candidateDirectories as $candidateDirectory) {
-      if ($policyPath === '' && is_dir($candidateDirectory)) $policyPath = $candidateDirectory.'/policy.xml'; }
-    if ($policyPath === '') {
+    $configDirectory = resolveImageMagickConfigDir();
+    if ($configDirectory === '') {
       $PolicyStatus = 'absent';
-      if ($Verbose) logEntry('Policy Check: ImageMagick, Status: absent, no policy directory is installed.'); }
-    else list ($PolicyIsValid, $PolicyStatus) = verifyPolicyFile('ImageMagick', $policyPath, imageMagickPolicyContents(), $mayRepair);
+      if ($Verbose) logEntry('Policy Check: ImageMagick, Status: absent, no configuration directory is installed.'); }
+    else {
+      $policyPath = $configDirectory.DIRECTORY_SEPARATOR.'policy.xml';
+      list ($PolicyIsValid, $PolicyStatus) = verifyPolicyFile('ImageMagick', $policyPath, imageMagickPolicyContents(), $mayRepair); }
     $cachedValid = $PolicyIsValid;
     $cachedStatus = $PolicyStatus; }
-  purgeSensitiveMemory($EnableMemoryProtection, $policyPath, $majorVersion, $candidateDirectories, $candidateDirectory, $mayRepair);
+  purgeSensitiveMemory($EnableMemoryProtection, $policyPath, $configDirectory, $mayRepair);
   return array($PolicyIsValid, $PolicyStatus); }
 // / -----------------------------------------------------------------------------------
 
@@ -1950,6 +2084,141 @@ function verifyOpenScadPolicy($mayRepair) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to check, & optionally correct, the kernel settings a sandbox needs.
+// / Accepts a boolean permitting a write.
+// / Returns a readiness boolean & an array of findings, in that order.
+// /
+// / THREE SEPARATE THINGS BLOCK AN UNPRIVILEGED USER NAMESPACE & ONLY ONE IS AppArmor.
+// / An AppArmor profile granting userns covers Ubuntu 23.10 & later. It does nothing on a
+// / Debian host, where the blocker is kernel.unprivileged_userns_clone reading zero, & it
+// / does nothing where user.max_user_namespaces has been set to zero.
+// /
+// / A host that blocks the namespace makes bubblewrap fall back to its setuid path, where
+// / it can unshare the network but has already dropped the privilege needed to configure
+// / loopback inside it. That surfaces as a loopback error rather than a namespace error,
+// / which points an operator at networking when the cause is the namespace.
+// / A correction is written to /etc/sysctl.d so it survives a reboot.
+function verifySandboxKernel($mayRepair) {
+  // / Set variables.
+  global $RunningAsRoot, $AllowUnprivilegedNamespaces, $Verbose, $EnableMemoryProtection;
+  $KernelIsReady = TRUE;
+  $KernelFindings = array();
+  $sysctlPath = $sysctlValue = $persistPath = $persistContents = $bwrapBinary = '';
+  $commandOutput = array();
+  $commandExitCode = 0;
+  $bytesWritten = 0;
+  $profileIsLoaded = FALSE;
+  $profileLoadStatus = '';
+  // / Debian gates unprivileged namespaces behind this. Ubuntu does not ship it at all.
+  $sysctlPath = '/proc/sys/kernel/unprivileged_userns_clone';
+  if (file_exists($sysctlPath)) {
+    $sysctlValue = trim((string)@file_get_contents($sysctlPath));
+    if ($sysctlValue === '1') $KernelFindings[] = array('Check' => 'unprivileged_userns_clone', 'Status' => 'ok', 'Detail' => 'Unprivileged user namespaces are permitted.');
+    else if (!$mayRepair or !$RunningAsRoot) {
+      $KernelIsReady = FALSE;
+      $KernelFindings[] = array('Check' => 'unprivileged_userns_clone', 'Status' => 'BLOCKED', 'Detail' => 'Reads '.$sysctlValue.'. Bubblewrap cannot build a namespace. Run -fp as root.'); }
+    else {
+      @file_put_contents($sysctlPath, '1');
+      $sysctlValue = trim((string)@file_get_contents($sysctlPath));
+      if ($sysctlValue !== '1') {
+        $KernelIsReady = FALSE;
+        $KernelFindings[] = array('Check' => 'unprivileged_userns_clone', 'Status' => 'FAILED', 'Detail' => 'Could not be set to 1.'); }
+      else $KernelFindings[] = array('Check' => 'unprivileged_userns_clone', 'Status' => 'corrected', 'Detail' => 'Set to 1 & persisted.'); } }
+  // / A namespace budget of zero refuses every namespace whatever else is permitted.
+  $sysctlPath = '/proc/sys/user/max_user_namespaces';
+  if (file_exists($sysctlPath)) {
+    $sysctlValue = trim((string)@file_get_contents($sysctlPath));
+    if ((int)$sysctlValue > 0) $KernelFindings[] = array('Check' => 'max_user_namespaces', 'Status' => 'ok', 'Detail' => $sysctlValue.' namespaces permitted.');
+    else if (!$mayRepair or !$RunningAsRoot) {
+      $KernelIsReady = FALSE;
+      $KernelFindings[] = array('Check' => 'max_user_namespaces', 'Status' => 'BLOCKED', 'Detail' => 'Reads 0. No namespace can be created. Run -fp as root.'); }
+    else {
+      @file_put_contents($sysctlPath, '15000');
+      if ((int)trim((string)@file_get_contents($sysctlPath)) < 1) {
+        $KernelIsReady = FALSE;
+        $KernelFindings[] = array('Check' => 'max_user_namespaces', 'Status' => 'FAILED', 'Detail' => 'Could not be raised.'); }
+      else $KernelFindings[] = array('Check' => 'max_user_namespaces', 'Status' => 'corrected', 'Detail' => 'Raised & persisted.'); } }
+  // / Ubuntu gates the namespace behind AppArmor rather than behind a clone sysctl, so the
+  // / two checks above can both read fine while this one is what refuses.
+  $sysctlPath = '/proc/sys/kernel/apparmor_restrict_unprivileged_userns';
+  if (file_exists($sysctlPath)) {
+    $sysctlValue = trim((string)@file_get_contents($sysctlPath));
+    if ($sysctlValue !== '1') $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'ok', 'Detail' => 'Not restricting unprivileged namespaces.');
+    else {
+      // / Restricted. A namespace is only permitted to a binary carrying a profile that
+      // / grants userns, so whether ours is LOADED is the whole question.
+      list ($profileIsLoaded, $profileLoadStatus) = apparmorProfileIsLoaded('hrconvert2-bwrap');
+      if ($profileIsLoaded) $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'ok', 'Detail' => 'Restricted, & the hrconvert2-bwrap profile is loaded.');
+      else {
+        $KernelIsReady = FALSE;
+        $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'BLOCKED', 'Detail' => 'Restricted & the hrconvert2-bwrap profile is '.$profileLoadStatus.'. Run -fp as root.'); } } }
+  // / A competing profile for the same binary is undefined behaviour. Name it rather than
+  // / adding a second one beside it & hoping the right one wins.
+  // / A profile loaded with no file behind it is an orphan from an earlier release. It is
+  // / still attached to the binary & is invisible to anything that only lists /etc.
+  list ($profileIsLoaded, $profileLoadStatus) = apparmorProfileIsLoaded('hrconvert2-bwrap');
+  if ($profileIsLoaded && !file_exists('/etc/apparmor.d/hrconvert2-bwrap')) {
+    if ($mayRepair && $RunningAsRoot) {
+      unloadApparmorProfile('/etc/apparmor.d/hrconvert2-bwrap', 'hrconvert2-bwrap');
+      list ($profileIsLoaded, $profileLoadStatus) = apparmorProfileIsLoaded('hrconvert2-bwrap');
+      $KernelFindings[] = array('Check' => 'orphaned profile', 'Status' => ($profileIsLoaded ? 'STILL LOADED' : 'removed'), 'Detail' => ($profileIsLoaded ? 'hrconvert2-bwrap is loaded with no file behind it & would not unload. Reboot to clear it.' : 'An orphaned hrconvert2-bwrap profile was unloaded.')); }
+    else $KernelFindings[] = array('Check' => 'orphaned profile', 'Status' => 'WARNING', 'Detail' => 'hrconvert2-bwrap is loaded with no file behind it. Run -fp as root to unload it.'); }
+  // / THIS IS THE SETTING THAT REFUSES THE NAMESPACE ON UBUNTU 23.10 & LATER.
+  // / With it at 1 the kernel demands an AppArmor profile granting userns before an
+  // / unprivileged process may create one, & bubblewrap fails writing its uid map long
+  // / before it reaches anything to do with networking.
+  // /
+  // / HRConvert2 SETS THIS TO ZERO, DELIBERATELY, & THAT IS A NET SECURITY GAIN.
+  // / The restriction protects a general purpose desktop from a hostile local user. This
+  // / machine is a dedicated conversion appliance whose local users are the administrator
+  // / & the web server. Leaving it at 1 does not make that machine safer, it disables the
+  // / sandbox that isolates every hostile FILE the machine exists to process, which is the
+  // / threat that actually arrives here. A hardening measure that switches off the primary
+  // / isolation mechanism is a loss, not a gain.
+  // / Set --Allow Unprivileged Namespaces-- to FALSE in config.php to leave it alone.
+  $sysctlPath = '/proc/sys/kernel/apparmor_restrict_unprivileged_userns';
+  if (file_exists($sysctlPath)) {
+    $sysctlValue = trim((string)@file_get_contents($sysctlPath));
+    if ($sysctlValue === '0') $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'ok', 'Detail' => 'Not restricting. Bubblewrap can create a namespace.');
+    else if (isset($AllowUnprivilegedNamespaces) && !$AllowUnprivilegedNamespaces) {
+      $KernelIsReady = FALSE;
+      $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'BLOCKED', 'Detail' => 'Restricted & config.php forbids changing it. The sandbox cannot work.'); }
+    else if (!$mayRepair or !$RunningAsRoot) {
+      $KernelIsReady = FALSE;
+      $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'BLOCKED', 'Detail' => 'Reads 1. Bubblewrap cannot write a uid map. Run -fp as root.'); }
+    else {
+      @file_put_contents($sysctlPath, '0');
+      $sysctlValue = trim((string)@file_get_contents($sysctlPath));
+      if ($sysctlValue !== '0') {
+        $KernelIsReady = FALSE;
+        $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'FAILED', 'Detail' => 'Could not be set to 0.'); }
+      else $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'corrected', 'Detail' => 'Set to 0 & persisted. The sandbox can now build a namespace.'); } }
+  // / A setuid bubblewrap is a symptom rather than a cause. It is how a distribution shipped
+  // / a working sandbox on a host that forbids the namespace, & it is the configuration that
+  // / produces the loopback error. Report it so the cause is not mistaken for networking.
+  $bwrapBinary = locateDependency('bwrap');
+  if ($bwrapBinary !== '' && file_exists($bwrapBinary) && (fileperms($bwrapBinary) & 0x800)) $KernelFindings[] = array('Check' => 'bubblewrap mode', 'Status' => 'setuid', 'Detail' => 'Running setuid, which cannot configure loopback in a new network namespace. Permitting unprivileged namespaces lets it stop.');
+  // / Persist whatever was corrected, so a reboot does not undo it.
+  if ($mayRepair && $RunningAsRoot && is_dir('/etc/sysctl.d')) {
+    $persistPath = '/etc/sysctl.d/99-hrconvert2-userns.conf';
+    $persistContents = '# / Written by HRConvert2. Permits the unprivileged user namespaces bubblewrap needs.'.PHP_EOL
+      .'# / Remove this file & reboot to restore the distribution default.'.PHP_EOL
+      .'kernel.unprivileged_userns_clone = 1'.PHP_EOL
+      .'user.max_user_namespaces = 15000'.PHP_EOL
+      .'kernel.apparmor_restrict_unprivileged_userns = 0'.PHP_EOL;
+    if ((string)@file_get_contents($persistPath) !== $persistContents) {
+      $bytesWritten = @file_put_contents($persistPath, $persistContents);
+      if ($bytesWritten === strlen($persistContents)) {
+        @chmod($persistPath, 0644);
+        logEntry('Wrote '.$persistPath.' so the sandbox settings survive a reboot.'); } } }
+  if ($Verbose) logEntry('Sandbox kernel check completed across '.count($KernelFindings).' setting(s). Ready: '.($KernelIsReady ? 'YES' : 'NO').'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $sysctlPath, $sysctlValue, $persistPath, $persistContents, $bwrapBinary, $commandOutput, $commandExitCode, $bytesWritten, $profileIsLoaded, $profileLoadStatus, $mayRepair);
+  return array($KernelIsReady, $KernelFindings); }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
 // / A function to validate or repair the AppArmor profile bubblewrap needs.
 // / Accepts a boolean permitting a write.
 // / Returns a validity boolean & a status word, in that order.
@@ -1958,14 +2227,15 @@ function verifyOpenScadPolicy($mayRepair) {
 // / A kernel that does not restrict unprivileged user namespaces needs no profile at all.
 function verifySandboxPolicy($mayRepair) {
   // / Set variables.
-  global $Verbose, $EnableMemoryProtection;
+  global $Verbose, $EnableMemoryProtection, $RunningAsRoot;
   static $cachedValid = NULL;
   static $cachedStatus = 'unchecked';
   $PolicyIsValid = FALSE;
   $PolicyStatus = 'unchecked';
   $restrictionPath = '/proc/sys/kernel/apparmor_restrict_unprivileged_userns';
   $profilePath = '/etc/apparmor.d/hrconvert2-bwrap';
-  $restrictionIsActive = FALSE;
+  $restrictionIsActive = $profileIsLoaded = FALSE;
+  $profileLoadStatus = $distributionProfile = $localIncludePath = '';
   if ($cachedValid !== NULL) {
     $PolicyIsValid = $cachedValid;
     $PolicyStatus = $cachedStatus; }
@@ -1976,17 +2246,128 @@ function verifySandboxPolicy($mayRepair) {
       $PolicyIsValid = TRUE;
       $PolicyStatus = 'unrestricted';
       if ($Verbose) logEntry('Policy Check: Sandbox AppArmor, Status: unrestricted, this kernel does not restrict unprivileged user namespaces.'); }
+    // / A DISTRIBUTION PROFILE FOR THE SAME BINARY IS NOT SOMETHING TO COMPETE WITH.
+    // / Ubuntu ships /etc/apparmor.d/bwrap granting userns, which is the whole reason the
+    // / restriction is survivable there. Adding a second profile attached to the same
+    // / executable leaves two attachments for one path, which AppArmor does not define an
+    // / outcome for. Defer to theirs & remove ours if an earlier release installed one.
+    else if (file_exists('/etc/apparmor.d/bwrap') && strpos((string)@file_get_contents('/etc/apparmor.d/bwrap'), '/usr/bin/bwrap') !== FALSE) {
+      // / Extend the distribution profile through its own include rather than beside it.
+      $distributionProfile = (string)@file_get_contents('/etc/apparmor.d/bwrap');
+      $localIncludePath = '/etc/apparmor.d/local/bwrap';
+      if (strpos($distributionProfile, 'local/bwrap') === FALSE) warningEntry('The distribution profile at /etc/apparmor.d/bwrap does not include <local/bwrap>, so HRConvert2 cannot extend it. Add the include by hand, or remove the profile & let -fp manage its own.');
+      else {
+        if (!is_dir('/etc/apparmor.d/local')) @mkdir('/etc/apparmor.d/local', 0755, TRUE);
+        list ($PolicyIsValid, $PolicyStatus) = verifyPolicyFile('Sandbox AppArmor local', $localIncludePath, sandboxApparmorLocalContents(), $mayRepair);
+        // / Reload THEIR profile, because that is the one the include belongs to.
+        if ($PolicyStatus === 'installed' or $PolicyStatus === 'repaired') reloadApparmorProfile('/etc/apparmor.d/bwrap'); }
+      $PolicyIsValid = TRUE;
+      $PolicyStatus = 'distribution';
+      if (file_exists($profilePath) && strpos((string)@file_get_contents($profilePath), 'HRCONVERT2-POLICY-MARKER') !== FALSE) {
+        if (!$mayRepair or !$RunningAsRoot) warningEntry('This installation added '.$profilePath.' beside the distribution profile at /etc/apparmor.d/bwrap. Two profiles for one binary is undefined. Run -fp as root to remove ours.');
+        else {
+          // / UNLOAD BEFORE DELETING. Reloading AppArmor loads what is on disk & never
+          // / unloads what is not. Deleting the file first leaves the profile resident in
+          // / the kernel until a reboot, still attached to the binary, still competing
+          // / with the distribution profile & invisible to anything that only lists files.
+          unloadApparmorProfile($profilePath, 'hrconvert2-bwrap');
+          @unlink($profilePath);
+          if (!file_exists($profilePath)) {
+            $PolicyStatus = 'removed, distribution profile kept';
+            warningEntry('Removed '.$profilePath.'. The distribution already ships a profile for this binary & two attachments for one path is undefined.'); }
+          else warningEntry('Could not remove '.$profilePath.'. Delete it by hand, then run apparmor_parser -R against it.'); } }
+      if ($Verbose) logEntry('Policy Check: Sandbox AppArmor, Status: '.$PolicyStatus.', the distribution profile at /etc/apparmor.d/bwrap governs this binary.'); }
     else if (!is_dir('/etc/apparmor.d')) {
       $PolicyStatus = 'absent';
       warningEntry('This kernel restricts unprivileged user namespaces & AppArmor is not installed, so bubblewrap cannot build a sandbox.'); }
     else {
       list ($PolicyIsValid, $PolicyStatus) = verifyPolicyFile('Sandbox AppArmor', $profilePath, sandboxApparmorContents(), $mayRepair);
-      if ($PolicyStatus === 'installed' or $PolicyStatus === 'repaired') reloadApparmorProfile($profilePath); }
+      // / A matching file that is not loaded is enforcing nothing. Load it whatever the
+      // / file status was, because on disk & in force are different questions.
+      list ($profileIsLoaded, $profileLoadStatus) = apparmorProfileIsLoaded('hrconvert2-bwrap');
+      if ($PolicyStatus === 'installed' or $PolicyStatus === 'repaired' or !$profileIsLoaded) {
+        if (!$profileIsLoaded && $PolicyStatus === 'ok') warningEntry('The sandbox AppArmor profile matches this release but is '.$profileLoadStatus.'. Loading it now.');
+        reloadApparmorProfile($profilePath);
+        list ($profileIsLoaded, $profileLoadStatus) = apparmorProfileIsLoaded('hrconvert2-bwrap'); }
+      // / A profile that will not load is reported as a failure rather than as ok.
+      if (!$profileIsLoaded && $profileLoadStatus === 'NOT LOADED') {
+        $PolicyIsValid = FALSE;
+        $PolicyStatus = 'not loaded'; } }
     $cachedValid = $PolicyIsValid;
     $cachedStatus = $PolicyStatus; }
-  purgeSensitiveMemory($EnableMemoryProtection, $restrictionPath, $profilePath, $restrictionIsActive, $mayRepair);
+  purgeSensitiveMemory($EnableMemoryProtection, $restrictionPath, $profilePath, $restrictionIsActive, $profileIsLoaded, $profileLoadStatus, $distributionProfile, $localIncludePath, $mayRepair);
   return array($PolicyIsValid, $PolicyStatus); }
 // / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to report whether an AppArmor profile is loaded into the kernel.
+// / Accepts the profile name as it is declared inside the profile file.
+// / Returns a loaded boolean & a status word, in that order.
+// / A PROFILE ON DISK IS NOT A PROFILE IN FORCE.
+// / Writing one & running apparmor_parser only at the moment it is written means a load
+// / that failed, or a host that rebooted before AppArmor read it, leaves a file that
+// / matches perfectly & is enforcing nothing. The check reported ok & the sandbox stayed
+// / broken, which is the worst combination a diagnostic can produce.
+// / The loaded set is read from securityfs, which is what the kernel is actually using.
+function apparmorProfileIsLoaded($profileName) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $ProfileIsLoaded = FALSE;
+  $ProfileStatus = 'unknown';
+  $profilesPath = '/sys/kernel/security/apparmor/profiles';
+  $loadedProfiles = '';
+  if (!file_exists($profilesPath)) $ProfileStatus = 'apparmor not active';
+  else if (!is_readable($profilesPath)) $ProfileStatus = 'not readable by this account';
+  else {
+    $loadedProfiles = (string)@file_get_contents($profilesPath);
+    if (strpos($loadedProfiles, (string)$profileName) !== FALSE) {
+      $ProfileIsLoaded = TRUE;
+      $ProfileStatus = 'loaded'; }
+    else $ProfileStatus = 'NOT LOADED'; }
+  purgeSensitiveMemory($EnableMemoryProtection, $profilesPath, $loadedProfiles, $profileName);
+  return array($ProfileIsLoaded, $ProfileStatus); }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / A function to unload an AppArmor profile from the kernel.
+// / Accepts the profile file path & the profile name it declares, in that order.
+// / Returns TRUE when the profile is no longer loaded.
+// / A profile is unloaded from its FILE, so this must run BEFORE the file is deleted.
+// / Reloading AppArmor loads what is on disk & never unloads what is not, so deleting
+// / first strands the profile in the kernel until a reboot, still attached to the binary.
+// / aa-remove-unknown is the fallback for a profile whose file has already gone.
+function unloadApparmorProfile($profilePath, $profileName) {
+  // / Set variables.
+  global $RunningAsRoot, $EnableMemoryProtection;
+  $ProfileWasUnloaded = FALSE;
+  $parserBinary = $removeBinary = '';
+  $commandOutput = array();
+  $commandExitCode = 1;
+  $profileIsLoaded = FALSE;
+  $profileLoadStatus = '';
+  $parserBinary = locateDependency('apparmor_parser');
+  if (!$RunningAsRoot) warningEntry('An AppArmor profile could not be unloaded, because unloading one requires root.');
+  else if ($parserBinary === '') warningEntry('An AppArmor profile could not be unloaded, because apparmor_parser is not installed.');
+  else {
+    // / -R removes the profile the named file declares.
+    if (file_exists($profilePath)) exec(escapeshellarg($parserBinary).' -R '.escapeshellarg($profilePath).' 2>&1', $commandOutput, $commandExitCode);
+    list ($profileIsLoaded, $profileLoadStatus) = apparmorProfileIsLoaded($profileName);
+    // / The file was already gone, so the parser had nothing to read. Sweep the orphan.
+    if ($profileIsLoaded) {
+      $removeBinary = locateDependency('aa-remove-unknown');
+      if ($removeBinary !== '') {
+        $commandOutput = array();
+        exec(escapeshellarg($removeBinary).' 2>&1', $commandOutput, $commandExitCode);
+        list ($profileIsLoaded, $profileLoadStatus) = apparmorProfileIsLoaded($profileName); } }
+    if (!$profileIsLoaded) {
+      $ProfileWasUnloaded = TRUE;
+      logEntry('The AppArmor profile '.$profileName.' was unloaded.'); }
+    else warningEntry('The AppArmor profile '.$profileName.' is still loaded & its file is gone. Run aa-remove-unknown as root, or reboot.'); }
+  purgeSensitiveMemory($EnableMemoryProtection, $parserBinary, $removeBinary, $commandOutput, $commandExitCode, $profileIsLoaded, $profileLoadStatus, $profilePath, $profileName);
+  return $ProfileWasUnloaded; }
+// / -----------------------------------------------------------------------------------
+
 
 // / -----------------------------------------------------------------------------------
 // / A function to load an AppArmor profile that has just been written.
@@ -2546,8 +2927,9 @@ function verifyIsoHybridVersion($MinimumVersion) {
 // / FALSE from this function is the strongest signal the application produces.
 function verifyBwrap() {
   // / Set variables.
-  global $Verbose, $EnableMemoryProtection;
+  global $Verbose, $RunningAsRoot, $CurrentUser, $ApacheUser, $EnableMemoryProtection;
   $BwrapBinary = FALSE;
+  $bwrapReason = '';
   $locatedBinary = $bwrapCommand = '';
   $bwrapOutput = array();
   $bwrapExitCode = 1;
@@ -2566,12 +2948,22 @@ function verifyBwrap() {
       .' --proc /proc'
       .' --dev /dev'
       .' --tmpfs /tmp'
-      .' /usr/bin/true > /dev/null 2>&1';
+      .' /usr/bin/true 2>&1';
+    // / A probe run as root proves nothing. Root can always create a namespace, so a check
+    // / made by -fp would report a working sandbox while every web request still failed.
+    // / When this is running as root the probe is re-run as the account that will actually
+    // / run conversions, which is the only answer worth reporting.
+    if ($RunningAsRoot && $CurrentUser !== $ApacheUser) $bwrapCommand = 'su -s /bin/sh '.escapeshellarg($ApacheUser).' -c '.escapeshellarg($bwrapCommand).' 2>&1';
+    // / stderr is KEPT. bwrap names the exact reason it could not build a namespace, &
+    // / discarding it left an operator with an exit code & nothing to act on. The usual
+    // / cause is a kernel restricting unprivileged user namespaces, which -fp corrects.
     exec($bwrapCommand, $bwrapOutput, $bwrapExitCode);
-    if ($bwrapExitCode === 0) $BwrapBinary = $locatedBinary; }
-  if ($Verbose) logEntry('Bubblewrap Sandbox Check: '.($BwrapBinary === FALSE ? 'FAILED' : 'PASSED').', Exit code: '.$bwrapExitCode.($BwrapBinary === FALSE ? '' : ', Using: '.$BwrapBinary).'.');
+    if ($bwrapExitCode === 0) $BwrapBinary = $locatedBinary;
+    else $bwrapReason = trim((string)(isset($bwrapOutput[0]) ? $bwrapOutput[0] : 'no reason was reported')); }
+  if ($BwrapBinary === FALSE && $bwrapReason !== '') warningEntry('Bubblewrap could not build a sandbox'.(($RunningAsRoot && $CurrentUser !== $ApacheUser) ? ' as '.$ApacheUser : '').'. '.$bwrapReason.' Run the -fp argument as root to install the AppArmor profile an unprivileged user namespace needs.');
+  if ($Verbose) logEntry('Bubblewrap Sandbox Check: '.($BwrapBinary === FALSE ? 'FAILED' : 'PASSED').', Exit code: '.$bwrapExitCode.($BwrapBinary === FALSE ? ', Reason: '.$bwrapReason : ', Using: '.$BwrapBinary).'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $bwrapCommand, $bwrapOutput, $bwrapExitCode);
+  purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $bwrapCommand, $bwrapOutput, $bwrapExitCode, $bwrapReason);
   return $BwrapBinary; }
 // / -----------------------------------------------------------------------------------
 
@@ -2590,7 +2982,7 @@ function verifyBwrap() {
 // / file, because loading twenty version files would overwrite the variable each time.
 function showVersionInfo() {
   // / Set variables.
-  global $InstLoc, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $MinimumInkscapeVersion, $MinimumDiaVersion, $MinimumSCADVersion, $MinimumImageVersion, $MinimumAssimpVersion, $MinimumMeshlabVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EnableResourceAwareness, $RequireResourceAwareness, $ResourceAwarenessActive, $RequiredCoreManagerVersion, $CoreManagerVersion, $ManagerSocketDir, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod;
+  global $InstLoc, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredSecretVersion, $RequiredConfigScript, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $MinimumInkscapeVersion, $MinimumDiaVersion, $MinimumSCADVersion, $MinimumImageVersion, $MinimumAssimpVersion, $MinimumMeshlabVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EnableResourceAwareness, $RequireResourceAwareness, $ResourceAwarenessActive, $RequiredCoreManagerVersion, $CoreManagerVersion, $ManagerSocketDir, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod;
   $VersionInfoDisplayed = $modelsAreValid = $ocrToolsAreValid = $archiveToolsAreValid = $libreOfficeIsValid = FALSE;
   $ffmpegBinary = $streamFfmpegBinary = $inkscapeBinary = $diaBinary = $scadBinary = $imageBinary = $ebookBinary = FALSE;
   $assimpBinary = $meshlabBinary = $tesseractBinary = $pdftotextBinary = FALSE;
@@ -2622,6 +3014,18 @@ function showVersionInfo() {
   print('  Config version required     '.$RequiredConfigVersion.' or later'.$Lol);
   print('  GUI version required        '.$RequiredGuiVersion.' exactly'.$Lol);
   print('  Language version required   '.$RequiredLanguageVersion.' exactly'.$Lol);
+  print($Lol.'Detachable components'.$Lol);
+  // / Every component is version pinned to an EXACT match. A mismatch does not stop the
+  // / core, it silently removes whatever that component provides. Reporting the detected
+  // / version beside the required one is the only place that becomes visible.
+  // / Each version is read from its file WITHOUT loading it, so this reports what is on
+  // / disk rather than what happens to be loaded in this process.
+  print('  Core Manager                '.str_pad(readComponentVersion('coreManager.php', 'CoreManagerVersion'), 16).'requires '.$RequiredCoreManagerVersion.' exactly'.$Lol);
+  print('  Setup Core                  '.str_pad(readComponentVersion('SetupCore'.$DirSep.'setupCore.php', 'SetupCoreVersion'), 16).'requires '.$RequiredSetupCoreVersion.' exactly'.$Lol);
+  print('  Dependency Core             '.str_pad(readComponentVersion('DependencyCore'.$DirSep.'dependencyCore.php', 'DependencyCoreVersion'), 16).'requires '.$RequiredDependencyCoreVersion.' exactly'.$Lol);
+  print('  Dependency manifest         '.str_pad(readComponentVersion('depends.php', 'DependsVersion'), 16).'requires '.$RequiredDependsVersion.' exactly'.$Lol);
+  print('  Secret file                 '.str_pad('', 16).'requires '.$RequiredSecretVersion.' exactly'.$Lol);
+  print('  Bootstrap script            '.str_pad('', 16).'requires '.$RequiredConfigScript.' exactly'.$Lol);
   print($Lol);
   // / Report the environment this installation is running in.
   print('Environment'.$Lol);
@@ -2758,9 +3162,12 @@ function showHelpInfo() {
   print('  -c, --clean                 Sweep expired sessions from both data locations.'.$Lol);
   print('  -u, --update                Update the application from the configured source.'.$Lol);
   print('  -l, --listen                Start the resource listener.'.$Lol);
+  print('  --run-core-manager          Run the listener in the foreground. For a service unit.'.$Lol);
   print('  -k, --kill                  Stop the resource listener.'.$Lol);
   print('  --status                    Report listener & resource budget state.'.$Lol);
-  print('  -fp, --fix-permissions      Correct ownership & permissions on managed paths.'.$Lol);
+  print('  -fp, --fix-permissions      Correct ownership, permissions & policy files.'.$Lol);
+  print('  --config                    Configure this installation without a text editor.'.$Lol);
+  print('  --setup                     Install, check & audit dependencies.'.$Lol);
   print($Lol);
   print('Listener targets'.$Lol);
   print('  -k                          Stop the listener & every manager it started.'.$Lol);
@@ -2789,6 +3196,7 @@ function showHelpInfo() {
   print('  -u                          Install the target set in config.php.'.$Lol);
   print('  -u=latest                   Install the newest tagged release.'.$Lol);
   print('  -u=edge                     Install the current state of the master branch.'.$Lol);
+  print('  -u=v#.#.#                   Install exactly that tagged release.'.$Lol);
   print('                              Edge is not a release. It carries whatever version'.$Lol);
   print('                              stamp master holds & may match no release at all.'.$Lol);
   print('  -u=v3.6.8                   Install exactly that tag. Fails if it does not exist.'.$Lol);
@@ -2819,13 +3227,18 @@ function showHelpInfo() {
 
 function parseCommandLine() {
   // / Set variables.
-  global $Lol, $DeleteThreshold, $ConvertLoc, $ConvertTempDir, $RunningFromCLI, $RunningAsRoot, $CurrentUser, $ApacheUser, $ResourceAwarenessActive, $EnableMemoryProtection;
+  global $Lol, $DeleteThreshold, $ConvertLoc, $ConvertTempDir, $RunningFromCLI, $RunningAsRoot, $CurrentUser, $ApacheUser, $ResourceAwarenessActive, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $EnableMemoryProtection;
   $CommandLineHandled = $cliTempCleaned = $cliTempDeepCleaned = $cliDataCleaned = $cliDataDeepCleaned = FALSE;
   $UserType = 'web';
   $cliArgumentCount = $cliThreshold = $cliPathsCorrected = 0;
-  $cliArguments = $cliParts = $cliStatus = array();
-  $cliCommand = $rawFirstArg = $cliTarget = $cliSecondTarget = '';
-  $cliConfirmed = $cliListenerAuthorized = $cliActionConfirmed = $cliPermissionsFixed = $cliListenerRunning = FALSE;
+  $cliArguments = $cliParts = $cliStatus = $listenerCommands = $setupCommands = array();
+  $cliCommand = $rawFirstArg = $cliTarget = $cliSecondTarget = $cliWhoami = $cliSetupVersion = '';
+  $cliConfirmed = $cliListenerAuthorized = $cliActionConfirmed = $cliPermissionsFixed = $cliListenerRunning = $cliSetupIsAvailable = FALSE;
+  $cliDependencyIsAvailable = $cliDependenciesReady = $cliSetupSucceeded = FALSE;
+  $cliDependencyVersion = $cliSubsystem = $cliDependencyToken = '';
+  $cliDependencyFindings = $subOptionOwners = array();
+  $cliOptionalProblems = 0;
+  $cliSetupCount = 0;
   // / A web request has no command line & must return immediately.
   // / This is the ONLY path that returns FALSE. Every other path handles & stops.
   if (!$RunningFromCLI) $CommandLineHandled = FALSE;
@@ -2839,6 +3252,22 @@ function parseCommandLine() {
     // / Only the web server user & root may operate the listener.
     // / A standard user holds a per user secret, which cannot derive a valid startup key.
     if ($RunningAsRoot or $CurrentUser === $ApacheUser) $cliListenerAuthorized = TRUE;
+    $cliWhoami = ($CurrentUser === '' ? 'an unidentified user' : $CurrentUser);
+    // / Every command the listener owns. Recognized for all users & refused for the wrong one.
+    $listenerCommands = array('-l', '--listen', '-k', '--kill', '--kill-all-workers', '--kill-every-worker');
+    // / Every command Setup Core owns. The component decides what each one requires.
+    $setupCommands = array('--config', '--setup');
+    // / An option belongs to a command. Typed on its own it is not a command, & saying only
+    // / that it is unrecognized sends an operator hunting for a typo that is not there.
+    // / Naming the parent is the difference between a dead end & an answer.
+    $subOptionOwners = array(
+      '--check-depends' => '--setup', '--install-depends' => '--setup', '--install-deps' => '--setup',
+      '--update-depends' => '--setup', '--uninstall-depends' => '--setup', '--output-supply-chain' => '--setup',
+      '--install-complete' => '--setup', '--reinstall-existing' => '--setup', '--subsystem' => '--setup',
+      '--install-service' => '--setup',
+      '--reset-all-defaults' => '--config', '--reset-default-section' => '--config',
+      '--reset-default-variable' => '--config', '--backup' => '--config', '--repair' => '--config',
+      '--view' => '--config');
     // / A command line invocation with no argument is a request for help.
     if ($cliArgumentCount < 1) {
       logEntry('Command line invocation with no argument. Displaying help.');
@@ -2870,53 +3299,178 @@ function parseCommandLine() {
         if (!$ResourceAwarenessActive) errorEntry('A Core Manager start was requested but the component is unavailable!', 31009, TRUE);
         else dispatchManagerRole('core-manager', $cliTarget);
         $CommandLineHandled = TRUE; }
+      // / Handle the foreground listener entry point.
+      // / A service manager runs this. It does not fork & does not return, so systemd can
+      // / watch the real process, restart it when it dies & report its true state.
+      // / It derives its own key rather than being handed one, because a unit file cannot
+      // / compute a time bucketed HMAC. Authorization is unchanged. A standard user holds
+      // / a per user secret & the key they derive will not validate.
+      else if ($cliCommand === '--run-core-manager') {
+        if (!$ResourceAwarenessActive) errorEntry('The foreground listener was requested but the Core Manager component is unavailable!', 31009, TRUE);
+        else runCoreManagerForeground();
+        $CommandLineHandled = TRUE; }
       // / Handle the internal subordinate manager entry point.
       else if ($cliCommand === '--start-manager') {
         if (!$ResourceAwarenessActive) errorEntry('A subordinate manager start was requested but the component is unavailable!', 31012, TRUE);
         else dispatchManagerRole($cliTarget, $cliSecondTarget);
         $CommandLineHandled = TRUE; }
       // / Handle the --status argument. Available to any user, reports what is running.
+      // / The identity is reported because a standard user cannot read the socket directory
+      // / & would otherwise be told the listener is stopped whether it is or not.
       else if ($cliCommand === '--status') {
-        if (!$ResourceAwarenessActive) print($Lol.'Resource awareness is unavailable. The Core Manager component is missing or does not match this core.'.$Lol);
+        print($Lol.'Running as          '.$cliWhoami.($RunningAsRoot ? ' (root)' : '').$Lol);
+        print('Listener commands   '.($cliListenerAuthorized ? 'AVAILABLE' : 'NOT AVAILABLE to this user').$Lol);
+        if (!$ResourceAwarenessActive) print('Resource awareness  UNAVAILABLE, the Core Manager component is missing or does not match this core.'.$Lol);
         else {
           list ($cliListenerRunning, $cliStatus) = reportListenerStatus();
-          print($Lol.'Listener            '.($cliListenerRunning ? 'RUNNING as process '.$cliStatus['CoreManagerPid'] : 'STOPPED').$Lol);
+          print('Listener            '.($cliListenerRunning ? 'RUNNING as process '.$cliStatus['CoreManagerPid'] : 'STOPPED').$Lol);
           print('Subordinates        '.count($cliStatus['Subordinates']).$Lol);
           print('Tracked workers     '.$cliStatus['TrackedWorkers'].$Lol);
+          if (isset($cliStatus['SessionLocations'])) print('Mapped sessions     '.$cliStatus['SessionLocations'].$Lol);
           if (isset($cliStatus['Budget']['RemainingBudget'])) print('Remaining budget    '.$cliStatus['Budget']['RemainingBudget'].' of '.$cliStatus['Budget']['TotalBudget'].$Lol);
-          print($Lol); }
+          if (!$cliListenerRunning && !$cliListenerAuthorized) print($Lol.'STOPPED may be wrong. This user cannot read the socket directory.'.$Lol); }
+        print($Lol);
         $CommandLineHandled = TRUE; }
-      // / Gate listener operation behind the authorized user check.
-      else if ($cliListenerAuthorized && ($cliCommand === '-l' or $cliCommand === '--listen')) {
-        if (!$ResourceAwarenessActive) print($Lol.'Resource awareness is unavailable. The Core Manager component is missing or does not match this core.'.$Lol);
+      // / Handle every Setup Core & Dependency Core command through one gate.
+      // / EACH COMMAND LOADS ONLY WHAT IT ACTUALLY NEEDS.
+      // / --config needs Setup Core. --setup needs Dependency Core. An operator asking what
+      // / is installed must not be stopped because a component they are not using is absent.
+      else if (in_array($cliCommand, $setupCommands, TRUE)) {
+        // / The configuration utility. Setup Core owns the model, so it is the only
+        // / component this path requires.
+        if ($cliCommand === '--config') {
+          list ($cliSetupIsAvailable, $cliSetupVersion) = verifyCoreComponent('Setup Core', 'SetupCore'.DIRECTORY_SEPARATOR.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
+          if (!$cliSetupIsAvailable) {
+            print($Lol.'The Setup Core component is unavailable.'.$Lol);
+            if ($cliSetupVersion === '') print('Resources/SetupCore/setupCore.php is missing, unreadable, or reports no version.'.$Lol.$Lol);
+            else print('It reports v'.ltrim($cliSetupVersion, 'vV').' & this core requires v'.ltrim((string)$RequiredSetupCoreVersion, 'vV').'.'.$Lol.$Lol); }
+          else {
+            logEntry('Command line invocation. Running the configuration utility.');
+            // / Every mode is resolved from the argument list, so the order they were typed
+            // / in does not matter.
+            if (in_array('--reset-all-defaults', $cliArguments, TRUE)) runConfigUtility('', 'reset-all', '', $cliConfirmed);
+            else if (extractCliOption($cliArguments, '--reset-default-section') !== '') runConfigUtility('', 'reset-section', extractCliOption($cliArguments, '--reset-default-section'), $cliConfirmed);
+            else if (extractCliOption($cliArguments, '--reset-default-variable') !== '') runConfigUtility('', 'reset-variable', extractCliOption($cliArguments, '--reset-default-variable'), $cliConfirmed);
+            else if (extractCliOption($cliArguments, '--backup') !== '') runConfigUtility('', 'backup', extractCliOption($cliArguments, '--backup'), $cliConfirmed);
+            else if (in_array('--repair', $cliArguments, TRUE)) runConfigUtility('', 'repair', '', $cliConfirmed);
+            else if (in_array('--view', $cliArguments, TRUE)) runConfigUtility('', 'view', '', $cliConfirmed);
+            else runConfigUtility('', 'interactive', '', $cliConfirmed); } }
+        // / Everything --setup owns. Dependency Core is required. Setup Core is loaded only
+        // / by the two options that also configure & repair.
         else {
+          list ($cliDependencyIsAvailable, $cliDependencyVersion) = verifyCoreComponent('Dependency Core', 'DependencyCore'.DIRECTORY_SEPARATOR.'dependencyCore.php', 'DependencyCoreVersion', $RequiredDependencyCoreVersion);
+          $cliSubsystem = extractCliOption($cliArguments, '--subsystem');
+          if (!$cliDependencyIsAvailable) {
+            print($Lol.'The Dependency Core component is unavailable.'.$Lol);
+            if ($cliDependencyVersion === '') print('Resources/DependencyCore/dependencyCore.php is missing, unreadable, or reports no version.'.$Lol.$Lol);
+            else print('It reports v'.ltrim($cliDependencyVersion, 'vV').' & this core requires v'.ltrim((string)$RequiredDependencyCoreVersion, 'vV').'.'.$Lol.$Lol); }
+          // / Reading the machine needs no authorization at all.
+          else if (in_array('--check-depends', $cliArguments, TRUE)) {
+            logEntry('Command line invocation. Checking dependencies.');
+            list ($cliDependenciesReady, $cliDependencyFindings, $cliOptionalProblems) = checkDepends($cliSubsystem);
+            showDependencyFindings($cliDependencyFindings);
+            print(($cliDependenciesReady ? 'Every REQUIRED dependency is present & current.' : 'One or more REQUIRED dependencies are missing or too old.').$Lol);
+            // / An optional problem is still a problem. Reporting that every requirement is
+            // / met & stopping there reads as though the failures printed above it do not
+            // / matter, which is how two broken entries went unnoticed under a green summary.
+            if ($cliOptionalProblems > 0) print($cliOptionalProblems.' OPTIONAL dependenc(ies) are missing or too old. The subsystems that use them will refuse.'.$Lol);
+            print($Lol); }
+          else if (in_array('--output-supply-chain', $cliArguments, TRUE) or extractCliOption($cliArguments, '--output-supply-chain') !== '') {
+            logEntry('Command line invocation. Writing a supply chain report.');
+            outputSupplyChain(extractCliOption($cliArguments, '--output-supply-chain')); }
+          // / Everything below rewrites the machine & carries a token derived from the
+          // / install secret. The token proves the request came through this core.
+          else if (in_array('--install-depends', $cliArguments, TRUE) or in_array('--install-deps', $cliArguments, TRUE)) {
+            logEntry('Command line invocation. Installing dependencies.');
+            $cliDependencyToken = deriveStartupKey('dependency-write');
+            list ($cliSetupSucceeded, $cliSetupCount) = installDepends($cliDependencyToken, $cliSubsystem, $cliConfirmed); }
+          else if (in_array('--update-depends', $cliArguments, TRUE)) {
+            logEntry('Command line invocation. Upgrading dependencies.');
+            $cliDependencyToken = deriveStartupKey('dependency-write');
+            list ($cliSetupSucceeded, $cliSetupCount) = updateDepends($cliDependencyToken, $cliSubsystem, $cliConfirmed); }
+          else if (in_array('--uninstall-depends', $cliArguments, TRUE)) {
+            warningEntry('Command line invocation. Removing dependencies.');
+            $cliDependencyToken = deriveStartupKey('dependency-write');
+            list ($cliSetupSucceeded, $cliSetupCount) = uninstallDepends($cliDependencyToken, $cliSubsystem, $cliConfirmed); }
+          // / The listener service unit, generated from the live configuration.
+          // / Setup Core owns it. Dependency Core is already loaded by the time we get here.
+          else if (in_array('--install-service', $cliArguments, TRUE)) {
+            list ($cliSetupIsAvailable, $cliSetupVersion) = verifyCoreComponent('Setup Core', 'SetupCore'.DIRECTORY_SEPARATOR.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
+            if (!$cliSetupIsAvailable) print($Lol.'This operation needs the Setup Core component, which is unavailable.'.$Lol.$Lol);
+            else if (!$RunningAsRoot) {
+              warningEntry('A service unit installation was refused for an unauthorized user.');
+              print($Lol.'Installing a service unit is only available to root.'.$Lol);
+              print($Lol.'  sudo php convertCore.php --setup --install-service'.$Lol.$Lol); }
+            else {
+              logEntry('Command line invocation. Installing the listener service unit.');
+              print($Lol.'Installing the listener service unit.'.$Lol);
+              installListenerService(TRUE);
+              print($Lol); } }
+          // / These two install dependencies AND configure, so both components are needed.
+          else if (in_array('--install-complete', $cliArguments, TRUE) or in_array('--reinstall-existing', $cliArguments, TRUE)) {
+            list ($cliSetupIsAvailable, $cliSetupVersion) = verifyCoreComponent('Setup Core', 'SetupCore'.DIRECTORY_SEPARATOR.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
+            if (!$cliSetupIsAvailable) {
+              print($Lol.'This operation also needs the Setup Core component, which is unavailable.'.$Lol);
+              print('Dependencies can still be managed with --setup --check-depends & --install-depends.'.$Lol.$Lol); }
+            else {
+              $cliDependencyToken = deriveStartupKey('dependency-write');
+              if (in_array('--install-complete', $cliArguments, TRUE)) {
+                logEntry('Command line invocation. Performing a complete installation.');
+                runCompleteInstall($cliDependencyToken, $cliConfirmed); }
+              else {
+                logEntry('Command line invocation. Reinstalling in place.');
+                runReinstallExisting($cliTarget, $cliConfirmed); } } }
+          // / --setup with no option is a request to see what --setup can do.
+          else {
+            print($Lol.'Setup options'.$Lol);
+            print('  --check-depends              Report the state of every dependency.'.$Lol);
+            print('  --install-depends            Install everything absent or too old.'.$Lol);
+            print('  --update-depends             Upgrade everything already installed.'.$Lol);
+            print('  --uninstall-depends          Remove a subsystem. Requires --subsystem.'.$Lol);
+            print('  --output-supply-chain[=path] Write a supply chain audit template.'.$Lol);
+            print('  --install-service            Install the listener service unit from this configuration.'.$Lol);
+            print('  --install-complete           Install HRConvert2 & every dependency.'.$Lol);
+            print('  --reinstall-existing         Reinstall this installation in place.'.$Lol);
+            print('  --subsystem=<Name>           Restrict the operation to one subsystem.'.$Lol);
+            print('  -y, --yes                    Skip the confirmation prompt.'.$Lol);
+            print($Lol.'Every option above is used WITH --setup, never on its own.'.$Lol);
+            print('  sudo php convertCore.php --setup --check-depends'.$Lol.$Lol); } }
+        $CommandLineHandled = TRUE; }
+
+      // / Handle every listener command through one gate.
+      // / Refusing here rather than falling through means a real command is never reported
+      // / as an unrecognized one, which sent an authorized user hunting for a typo.
+      else if (in_array($cliCommand, $listenerCommands, TRUE)) {
+        if (!$cliListenerAuthorized) {
+          warningEntry('A listener command was refused for an unauthorized user.');
+          print($Lol.'The '.$cliCommand.' command is only available to root or '.$ApacheUser.'.'.$Lol);
+          print('You are running as '.$cliWhoami.'.'.$Lol);
+          print($Lol.'  sudo php convertCore.php '.$cliCommand.$Lol);
+          print('  sudo -u '.$ApacheUser.' php convertCore.php '.$cliCommand.$Lol.$Lol);
+          print('A standard user holds a per user secret, which cannot derive a valid'.$Lol);
+          print('startup key, so a listener started that way could never be reached.'.$Lol.$Lol); }
+        else if (!$ResourceAwarenessActive) print($Lol.'Resource awareness is unavailable. The Core Manager component is missing or does not match this core.'.$Lol.$Lol);
+        // / Start the listener.
+        else if ($cliCommand === '-l' or $cliCommand === '--listen') {
           logEntry('Command line invocation. Starting the Core Manager listener.');
           startCoreManagerListener(); }
-        $CommandLineHandled = TRUE; }
-      // / Handle -k with no target as a listener stop & with a target as a worker kill.
-      else if ($cliListenerAuthorized && ($cliCommand === '-k' or $cliCommand === '--kill')) {
-        if (!$ResourceAwarenessActive) print($Lol.'Resource awareness is unavailable. There is no listener to stop.'.$Lol);
-        else if ($cliTarget === '') {
-          logEntry('Command line invocation. Stopping the Core Manager listener.');
-          stopCoreManagerListener(); }
-        else {
-          logEntry('Command line invocation. Terminating worker '.$cliTarget.'.');
-          killTargetedWorker($cliTarget); }
-        $CommandLineHandled = TRUE; }
-      // / Handle --kill-all-workers. Ends every TRACKED worker.
-      else if ($cliListenerAuthorized && $cliCommand === '--kill-all-workers') {
-        if (!$ResourceAwarenessActive) print($Lol.'Resource awareness is unavailable, so no worker is tracked.'.$Lol);
-        else {
+        // / Stop the listener with no target, or end one worker with a target.
+        else if ($cliCommand === '-k' or $cliCommand === '--kill') {
+          if ($cliTarget === '') {
+            logEntry('Command line invocation. Stopping the Core Manager listener.');
+            stopCoreManagerListener(); }
+          else {
+            logEntry('Command line invocation. Terminating worker '.$cliTarget.'.');
+            killTargetedWorker($cliTarget); } }
+        // / End every TRACKED worker.
+        else if ($cliCommand === '--kill-all-workers') {
           $cliActionConfirmed = confirmDestructiveAction('This ends every tracked conversion in progress. Users will lose work.', $cliConfirmed);
           if ($cliActionConfirmed) {
             warningEntry('Command line invocation. Terminating every tracked worker.');
             print($Lol.'Terminated '.killTrackedWorkers().' tracked worker(s).'.$Lol); } }
-        $CommandLineHandled = TRUE; }
-      // / Handle --kill-every-worker. Ends every PHP process owned by the web server user.
-      // / This reaches unrelated applications sharing the host & says so before it runs.
-      else if ($cliListenerAuthorized && $cliCommand === '--kill-every-worker') {
-        if (!$ResourceAwarenessActive) print($Lol.'Resource awareness is unavailable, so no worker registry exists.'.$Lol);
-        else {
+        // / End every PHP process owned by the web server user.
+        // / This reaches unrelated applications sharing the host & says so before it runs.
+        else if ($cliCommand === '--kill-every-worker') {
           $cliActionConfirmed = confirmDestructiveAction('This ends EVERY PHP process owned by '.$ApacheUser.' on this host. Other applications sharing this server, such as WordPress or OwnCloud, will lose every session in progress.', $cliConfirmed);
           if ($cliActionConfirmed) {
             warningEntry('Command line invocation. Terminating every process owned by the web server user.');
@@ -2961,21 +3515,70 @@ function parseCommandLine() {
         // / An unrecognized argument from root is still a mistake & must not fall through.
         else {
           warningEntry('Command line invocation with an unrecognized argument.');
-          print($Lol.'Unrecognized argument.'.$Lol);
-          showHelpInfo();
+          reportUnrecognizedArgument($cliCommand, $subOptionOwners);
           $CommandLineHandled = TRUE; } }
+      // / A root only command issued by a standard user is named rather than dismissed.
+      else if (in_array($cliCommand, array('-fp', '--fix-permissions', '-u', '--update', '-c', '--clean'), TRUE)) {
+        warningEntry('A root only command was refused for an unauthorized user.');
+        print($Lol.'The '.$cliCommand.' command is only available to root.'.$Lol);
+        print('You are running as '.$cliWhoami.'.'.$Lol);
+        print($Lol.'  sudo php convertCore.php '.$cliCommand.$Lol.$Lol);
+        $CommandLineHandled = TRUE; }
       // / An unrecognized argument is a mistake, not a web request.
       else {
         warningEntry('Command line invocation with an unrecognized argument.');
-        print($Lol.'Unrecognized argument.'.$Lol);
-        showHelpInfo();
+        reportUnrecognizedArgument($cliCommand, $subOptionOwners);
         $CommandLineHandled = TRUE; } } }
   // / Determine if the user is using the application via command line (CLI) or Apache+PHP through a web browser.
   if ($CommandLineHandled === TRUE) $UserType = 'cli';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $cliArguments, $cliCommand, $cliArgumentCount, $rawFirstArg, $cliParts, $cliTarget, $cliSecondTarget, $cliThreshold, $cliTempCleaned, $cliTempDeepCleaned, $cliDataCleaned, $cliDataDeepCleaned, $cliConfirmed, $cliListenerAuthorized, $cliActionConfirmed, $cliPermissionsFixed, $cliListenerRunning, $cliPathsCorrected, $cliStatus);
+  purgeSensitiveMemory($EnableMemoryProtection, $cliArguments, $cliCommand, $cliArgumentCount, $rawFirstArg, $cliParts, $cliTarget, $cliSecondTarget, $cliThreshold, $cliTempCleaned, $cliTempDeepCleaned, $cliDataCleaned, $cliDataDeepCleaned, $cliConfirmed, $cliListenerAuthorized, $cliActionConfirmed, $cliPermissionsFixed, $cliListenerRunning, $cliPathsCorrected, $cliStatus, $cliWhoami, $cliSetupIsAvailable, $cliSetupVersion, $listenerCommands, $setupCommands, $cliDependencyIsAvailable, $cliDependencyVersion, $cliSubsystem, $cliDependencyToken, $cliDependencyFindings, $cliDependenciesReady, $cliSetupSucceeded, $cliSetupCount, $subOptionOwners, $cliOptionalProblems);
   return array($CommandLineHandled, $UserType); }
 // / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to read the value of a --option=value argument.
+// / Accepts the argument list & the option name, in that order.
+// / Returns the value, or an empty string when the option was not supplied.
+// / The value is returned exactly as typed. A path is case sensitive & a section name may
+// / carry spaces, so nothing is lowercased or stripped here.
+function extractCliOption($cliArguments, $optionName) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $OptionValue = '';
+  $argumentText = '';
+  $optionPrefix = trim((string)$optionName).'=';
+  foreach ($cliArguments as $argumentText) {
+    if (strpos((string)$argumentText, $optionPrefix) === 0) $OptionValue = substr((string)$argumentText, strlen($optionPrefix)); }
+  purgeSensitiveMemory($EnableMemoryProtection, $argumentText, $optionPrefix, $cliArguments, $optionName);
+  return $OptionValue; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to explain an argument this core does not recognize.
+// / Accepts the argument that was typed & the map of options to their owning command.
+// / Returns TRUE when the argument was an option belonging to a command.
+// / An option typed on its own is the most common command line mistake there is, & telling
+// / an operator only that it is unrecognized sends them looking for a typo that is not
+// / there. Naming the command it belongs to answers the question instead of restating it.
+function reportUnrecognizedArgument($cliCommand, $subOptionOwners) {
+  // / Set variables.
+  global $Lol, $EnableMemoryProtection;
+  $ArgumentWasAnOption = FALSE;
+  $owningCommand = '';
+  if (isset($subOptionOwners[$cliCommand])) {
+    $owningCommand = (string)$subOptionOwners[$cliCommand];
+    $ArgumentWasAnOption = TRUE;
+    print($Lol.$cliCommand.' is an option of '.$owningCommand.', not a command of its own.'.$Lol);
+    print($Lol.'  sudo php convertCore.php '.$owningCommand.' '.$cliCommand.$Lol);
+    print($Lol.'Run '.$owningCommand.' on its own to list every option it accepts.'.$Lol.$Lol); }
+  else {
+    print($Lol.'Unrecognized argument.'.$Lol);
+    showHelpInfo(); }
+  purgeSensitiveMemory($EnableMemoryProtection, $owningCommand, $cliCommand, $subOptionOwners);
+  return $ArgumentWasAnOption; }
+// / -----------------------------------------------------------------------------------
+
 
 // / -----------------------------------------------------------------------------------
 // / A function to remove the build & development environments when config.php asks for it.
@@ -4017,6 +4620,8 @@ function updateApplication($requestedVersion) {
   // / Set variables.
   global $InstLoc, $ProprietaryLoc, $DirSep, $HRConvertVersion, $AutoUpdateTargetVersion, $EnableAutoUpdates, $BackupLoc, $RunningAsRoot, $ApacheUser, $PermissionLevels, $ConvertDir, $Lol, $EnableMemoryProtection;
   $UpdateSucceeded = $targetResolved = $packageDownloaded = $configMerged = $installationIsValid = FALSE;
+  $updatePermissionsFixed = FALSE;
+  $updatePathsCorrected = 0;
   $swapCompleted = $rolledBack = FALSE;
   $targetVersion = $targetURL = $workDir = $downloadPath = $extractedDir = $stagedDir = $oldDir = $backupOutput = '';
   $preservedSettings = $changedArrays = $extractOutput = $extractedRoots = array();
@@ -4123,6 +4728,14 @@ function updateApplication($requestedVersion) {
     else warningEntry('Could not preserve the previous installation at '.$BackupLoc.'. It will be discarded.');
     // / The previous installation must not remain inside the web root under any outcome.
     exec('rm -rf '.escapeshellarg($oldDir).' 2>&1'); }
+  // / Correct everything the new files arrived with. An update ships a fresh tree owned by
+  // / whoever unpacked it, & a release that changes a policy, a service unit or a required
+  // / version leaves the installed copies behind. Running the repair here is the difference
+  // / between an update that works & one that needs an operator to know to run -fp next.
+  if ($UpdateSucceeded) {
+    print($Lol.'Correcting permissions, policies & the service unit for the new release.'.$Lol);
+    list ($updatePermissionsFixed, $updatePathsCorrected) = fixManagedPermissions();
+    if (!$updatePermissionsFixed) warningEntry('The update completed but permissions & policies could not be corrected. Run the -fp argument as root.'); }
   // / Report the outcome.
   if ($UpdateSucceeded) {
     logEntry('Application updated to '.$targetVersion.' from '.$HRConvertVersion.'.');
@@ -4138,7 +4751,7 @@ function updateApplication($requestedVersion) {
   // / Remove the temporary working directory whatever the outcome.
   if ($workDir !== '' && is_dir($workDir)) exec('rm -rf '.escapeshellarg($workDir).' 2>&1');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $targetResolved, $packageDownloaded, $configMerged, $installationIsValid, $swapCompleted, $rolledBack, $targetVersion, $targetURL, $workDir, $downloadPath, $extractedDir, $stagedDir, $oldDir, $preservedSettings, $changedArrays, $extractOutput, $extractedRoots, $extractExitCode, $requestedVersion, $Lol);
+  purgeSensitiveMemory($EnableMemoryProtection, $targetResolved, $packageDownloaded, $configMerged, $installationIsValid, $swapCompleted, $rolledBack, $targetVersion, $targetURL, $workDir, $downloadPath, $extractedDir, $stagedDir, $oldDir, $preservedSettings, $changedArrays, $extractOutput, $extractedRoots, $extractExitCode, $requestedVersion, $Lol, $updatePermissionsFixed, $updatePathsCorrected);
   return $UpdateSucceeded; }
 // / -----------------------------------------------------------------------------------
 
@@ -7497,37 +8110,115 @@ function validateStartupKey($keyPurpose, $suppliedKey) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to verify & load the Core Manager component.
-// / Accepts the component version this core requires.
+// / A function to compare two version numbers numerically & report a minimum match.
+// / Accepts the detected version & the minimum version required, in that order.
+// / Returns TRUE when the detected version is the same as, or newer than, the required one.
+// / A leading v is stripped before comparison, because casting 'v3' to an integer yields 0
+// / & silently reduces a three part comparison to a two part one.
+// / Comparison is numeric part by part, because a string comparison ranks 24.2 below 7.6 &
+// / ranks 3.10 below 3.9.
+// / A version that cannot be parsed is REFUSED. An unknown build cannot be cleared.
+function compareVersionMinimum($detectedVersion, $requiredVersion) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $VersionIsCurrent = FALSE;
+  $cleanDetected = $cleanRequired = '';
+  $detectedParts = $requiredParts = array();
+  $detectedMajor = $detectedMinor = $detectedPatch = 0;
+  $requiredMajor = $requiredMinor = $requiredPatch = 0;
+  $cleanDetected = ltrim(trim((string)$detectedVersion), 'vV');
+  $cleanRequired = ltrim(trim((string)$requiredVersion), 'vV');
+  // / A blank requirement means any version will do.
+  if ($cleanRequired === '') $VersionIsCurrent = TRUE;
+  else if ($cleanDetected === '') $VersionIsCurrent = FALSE;
+  else {
+    $detectedParts = explode('.', $cleanDetected);
+    $requiredParts = explode('.', $cleanRequired);
+    // / A version whose leading part is not a number is not a version.
+    if (!ctype_digit(trim($detectedParts[0]))) $VersionIsCurrent = FALSE;
+    else {
+      $detectedMajor = (int)$detectedParts[0];
+      $detectedMinor = isset($detectedParts[1]) ? (int)$detectedParts[1] : 0;
+      $detectedPatch = isset($detectedParts[2]) ? (int)$detectedParts[2] : 0;
+      $requiredMajor = (int)$requiredParts[0];
+      $requiredMinor = isset($requiredParts[1]) ? (int)$requiredParts[1] : 0;
+      $requiredPatch = isset($requiredParts[2]) ? (int)$requiredParts[2] : 0;
+      if ($detectedMajor > $requiredMajor) $VersionIsCurrent = TRUE;
+      else if ($detectedMajor === $requiredMajor) {
+        if ($detectedMinor > $requiredMinor) $VersionIsCurrent = TRUE;
+        else if ($detectedMinor === $requiredMinor && $detectedPatch >= $requiredPatch) $VersionIsCurrent = TRUE; } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $cleanDetected, $cleanRequired, $detectedParts, $requiredParts, $detectedMajor, $detectedMinor, $detectedPatch, $requiredMajor, $requiredMinor, $requiredPatch, $detectedVersion, $requiredVersion);
+  return $VersionIsCurrent; }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / A function to read the version a component declares, without loading it.
+// / Accepts the path relative to Resources & the name of the version variable.
+// / Returns the version, 'not installed' or 'no version', so a caller can print it.
+// / verifyCoreComponent loads a component when it matches, which is right when something
+// / is about to be called & wrong when a version report is all that was asked for.
+function readComponentVersion($componentRelativePath, $versionVariableName) {
+  // / Set variables.
+  global $InstLoc, $EnableMemoryProtection;
+  $DetectedVersion = 'not installed';
+  $componentPath = $componentContents = '';
+  $versionMatches = array();
+  $componentPath = $InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.$componentRelativePath;
+  if (file_exists($componentPath)) {
+    $componentContents = @file_get_contents($componentPath);
+    $DetectedVersion = 'no version';
+    if (is_string($componentContents) && preg_match('/\$'.preg_quote($versionVariableName, '/').'\s*=\s*\'([^\']+)\'/', $componentContents, $versionMatches)) $DetectedVersion = ltrim($versionMatches[1], 'vV'); }
+  purgeSensitiveMemory($EnableMemoryProtection, $componentPath, $componentContents, $versionMatches, $componentRelativePath, $versionVariableName);
+  return $DetectedVersion; }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / A function to verify & load one detachable component.
+// / Accepts the component name, its path relative to Resources, the name of the variable
+// / it declares its version in, & the version this core requires, in that order.
 // / Returns an availability boolean & the detected version, in that order.
 // / The version is read from the file WITHOUT executing it, because a mismatched component
 // / defines functions this core may not be able to call safely.
 // / This is an EXACT match, the same rule applied to a GUI or a language pack.
-function verifyCoreManagerComponent($requiredCoreManagerVersion) {
+// / The detected version is published as a global under the name the component uses, so
+// / the -v argument can report it. A require inside a function lands its assignments in
+// / that function, not in global scope, so a component version read this way would
+// / otherwise be invisible to everything outside this call.
+// / Every core lives in a folder of its own under Resources, the same way ScanCore does.
+function verifyCoreComponent($componentName, $componentRelativePath, $versionVariableName, $requiredComponentVersion) {
   // / Set variables.
-  global $InstLoc, $EnableMemoryProtection, $CoreLoaded;
+  global $InstLoc, $CoreLoaded, $EnableMemoryProtection;
   $ComponentIsAvailable = FALSE;
-  $DetectedCoreManagerVersion = '';
+  $DetectedComponentVersion = '';
   $componentPath = $componentContents = $cleanDetected = $cleanRequired = '';
   $versionMatches = array();
-  $componentPath = $InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'coreManager.php';
-  if (!file_exists($componentPath)) warningEntry('The Core Manager component is not installed. Resource awareness is unavailable.');
+  $componentPath = $InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.$componentRelativePath;
+  if (!file_exists($componentPath)) warningEntry('The '.$componentName.' component is not installed at '.$componentPath.'.');
   else {
     $componentContents = @file_get_contents($componentPath);
-    if (!is_string($componentContents) or $componentContents === '') warningEntry('The Core Manager component could not be read. Resource awareness is unavailable.');
+    if (!is_string($componentContents) or $componentContents === '') warningEntry('The '.$componentName.' component at '.$componentPath.' could not be read.');
     else {
-      if (preg_match('/\$CoreManagerVersion\s*=\s*\'([^\']+)\'/', $componentContents, $versionMatches)) $DetectedCoreManagerVersion = $versionMatches[1];
-      $cleanDetected = ltrim(trim($DetectedCoreManagerVersion), 'vV');
-      $cleanRequired = ltrim(trim((string)$requiredCoreManagerVersion), 'vV');
+      if (preg_match('/\$'.preg_quote($versionVariableName, '/').'\s*=\s*\'([^\']+)\'/', $componentContents, $versionMatches)) $DetectedComponentVersion = $versionMatches[1];
+      $cleanDetected = ltrim(trim($DetectedComponentVersion), 'vV');
+      $cleanRequired = ltrim(trim((string)$requiredComponentVersion), 'vV');
       // / A component that reports no version is refused. An unknown build cannot be cleared.
-      if ($cleanDetected === '') warningEntry('The Core Manager component reports no version. Resource awareness is unavailable.');
-      else if ($cleanDetected !== $cleanRequired) warningEntry('The Core Manager component reports v'.$cleanDetected.' & this core requires v'.$cleanRequired.'. Resource awareness is unavailable.');
+      if ($cleanDetected === '') warningEntry('The '.$componentName.' component reports no version & was refused.');
+      else if ($cleanDetected !== $cleanRequired) warningEntry('The '.$componentName.' component reports v'.$cleanDetected.' & this core requires v'.$cleanRequired.'. It was refused.');
       else {
-        require ($componentPath);
+        require_once ($componentPath);
+        // / Publish the version globally under the name the component declares it with.
+        $GLOBALS[$versionVariableName] = $DetectedComponentVersion;
         $ComponentIsAvailable = TRUE; } } }
-  purgeSensitiveMemory($EnableMemoryProtection, $componentPath, $componentContents, $cleanDetected, $cleanRequired, $versionMatches, $requiredCoreManagerVersion);
-  return array($ComponentIsAvailable, $DetectedCoreManagerVersion); }
+  purgeSensitiveMemory($EnableMemoryProtection, $componentPath, $componentContents, $cleanDetected, $cleanRequired, $versionMatches, $componentName, $componentRelativePath, $versionVariableName, $requiredComponentVersion);
+  return array($ComponentIsAvailable, $DetectedComponentVersion); }
 // / -----------------------------------------------------------------------------------
+
+
+
+
 
 // / -----------------------------------------------------------------------------------
 // / A function to request permission to consume resources before a conversion begins.
@@ -7679,13 +8370,156 @@ function enableConversionLimits() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to write the PHP settings HRConvert2 cannot run without.
+// / Accepts a boolean permitting a write.
+// / Returns a success boolean & the number of configurations written, in that order.
+// /
+// / A DROP IN IS WRITTEN. php.ini ITSELF IS NEVER EDITED.
+// / Every PHP build reads conf.d after php.ini, so a drop in overrides the distribution
+// / value without touching a file the package manager owns. A php.ini edited in place is
+// / reverted by the next PHP upgrade & leaves an administrator wondering why uploads
+// / started failing months later.
+// / EVERY SAPI IS WRITTEN. The web server & the command line read different directories,
+// / & a limit set for one while the other keeps the default is how a conversion that works
+// / from a terminal refuses from a browser.
+// / max_execution_time is derived from --Stream Duration Timeout--, because HRConvert2
+// / holds a PHP worker for the whole of a backgrounded stream. A limit below that leaves
+// / FFMPEG running with nothing left to terminate it.
+function verifyPhpConfiguration($mayRepair) {
+  // / Set variables.
+  global $StreamWatchTimeout, $RunningAsRoot, $Lol, $Verbose, $EnableMemoryProtection;
+  $ConfigurationIsValid = TRUE;
+  $ConfigurationsWritten = 0;
+  $dropInContents = $dropInPath = $existingContents = $candidateDir = '';
+  $candidateDirectories = $globResults = array();
+  $executionTime = $bytesWritten = 0;
+  // / Two minutes of headroom over the longest stream this installation permits.
+  $executionTime = (int)$StreamWatchTimeout + 120;
+  if ($executionTime < 1200) $executionTime = 1200;
+  $dropInContents = '; / Written by HRConvert2. Do not edit by hand.'.PHP_EOL
+    .'; / HRCONVERT2-POLICY-MARKER'.PHP_EOL
+    .'; / Re-run  sudo php convertCore.php -fp  to rewrite this file.'.PHP_EOL
+    .'; / php.ini itself is never touched, so a PHP upgrade cannot revert these.'.PHP_EOL
+    .PHP_EOL
+    .'; / A PHP worker is held for the whole of a backgrounded stream conversion.'.PHP_EOL
+    .'max_execution_time = '.$executionTime.PHP_EOL
+    .'max_input_time = 90'.PHP_EOL
+    .'memory_limit = 512M'.PHP_EOL
+    .PHP_EOL
+    .'; / An upload larger than these is refused by PHP before HRConvert2 ever sees it.'.PHP_EOL
+    .'post_max_size = 5000M'.PHP_EOL
+    .'upload_max_filesize = 5000M'.PHP_EOL
+    .'max_file_uploads = 100'.PHP_EOL
+    .PHP_EOL
+    .'; / An error printed into a response corrupts the filename list the interface parses.'.PHP_EOL
+    .'display_errors = Off'.PHP_EOL
+    .'log_errors = On'.PHP_EOL
+    .PHP_EOL
+    .'zlib.output_compression = On'.PHP_EOL;
+  // / Every SAPI this host might be running. A packaged PHP splits them by version & by
+  // / server, an official container image uses one shared directory.
+  $globResults = glob('/etc/php/*/*/conf.d');
+  if (is_array($globResults)) $candidateDirectories = $globResults;
+  if (is_dir('/usr/local/etc/php/conf.d')) $candidateDirectories[] = '/usr/local/etc/php/conf.d';
+  if (empty($candidateDirectories)) {
+    $ConfigurationIsValid = FALSE;
+    warningEntry('No PHP configuration directory was found, so the settings HRConvert2 needs could not be written. Set them in php.ini by hand.'); }
+  else {
+    foreach ($candidateDirectories as $candidateDir) {
+      $dropInPath = $candidateDir.DIRECTORY_SEPARATOR.'99-hrconvert2.ini';
+      $existingContents = file_exists($dropInPath) ? (string)@file_get_contents($dropInPath) : '';
+      if ($existingContents === $dropInContents) print('  '.str_pad('Unchanged', 12).$dropInPath.$Lol);
+      else if (!$mayRepair or !$RunningAsRoot) {
+        $ConfigurationIsValid = FALSE;
+        print('  '.str_pad('Missing', 12).$dropInPath.$Lol); }
+      else {
+        $bytesWritten = @file_put_contents($dropInPath, $dropInContents);
+        if ($bytesWritten !== strlen($dropInContents)) {
+          $ConfigurationIsValid = FALSE;
+          print('  '.str_pad('FAILED', 12).$dropInPath.$Lol); }
+        else {
+          @chmod($dropInPath, 0644);
+          $ConfigurationsWritten++;
+          print('  '.str_pad(($existingContents === '' ? 'Written' : 'Updated'), 12).$dropInPath.$Lol); } } }
+    if ($ConfigurationsWritten > 0) {
+      logEntry('Wrote PHP configuration to '.$ConfigurationsWritten.' location(s). max_execution_time '.$executionTime.'.');
+      print('  '.str_pad('Note', 12).'Restart the web server for these to take effect.'.$Lol); } }
+  if ($Verbose) logEntry('PHP Configuration: '.count($candidateDirectories).' location(s) examined, '.$ConfigurationsWritten.' written.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $dropInContents, $dropInPath, $existingContents, $candidateDir, $candidateDirectories, $globResults, $executionTime, $bytesWritten, $mayRepair);
+  return array($ConfigurationIsValid, $ConfigurationsWritten); }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / A function to check that this host can actually do the work, without changing it.
+// / Accepts no arguments.
+// / Returns a readiness boolean & an array of findings, in that order.
+// / THIS NEVER REPAIRS ANYTHING. Repair needs root & the listener does not have it, so a
+// / validator that tried would fail confusingly on every pass. It reports, & -fp fixes.
+// / Readiness is FALSE only for a condition that stops conversions outright. A policy that
+// / has drifted is reported & does not fail the check, because conversions still run.
+function validateOperatingEnvironment() {
+  // / Set variables.
+  global $RequireSandbox, $RunningInContainer, $RequireSandboxOnDocker, $EnableMemoryProtection;
+  $EnvironmentIsReady = TRUE;
+  $EnvironmentFindings = array();
+  $sandboxIsRequired = $policyIsValid = $kernelIsReady = FALSE;
+  $policyStatus = '';
+  $kernelFindings = $kernelFinding = array();
+  // / The sandbox is the one thing a conversion cannot proceed without when it is required.
+  $sandboxIsRequired = (bool)$RequireSandbox;
+  if ($RunningInContainer && !$RequireSandboxOnDocker) $sandboxIsRequired = FALSE;
+  // / Report the kernel settings first. A sandbox failure is almost always one of these &
+  // / naming the setting is more use than naming the symptom.
+  list ($kernelIsReady, $kernelFindings) = verifySandboxKernel(FALSE);
+  foreach ($kernelFindings as $kernelFinding) $EnvironmentFindings[] = $kernelFinding;
+  if (!$kernelIsReady) $EnvironmentIsReady = FALSE;
+  if (verifyBwrap() === FALSE) {
+    $EnvironmentFindings[] = array('Check' => 'Sandbox', 'Status' => 'FAILED', 'Detail' => 'Bubblewrap cannot build a namespace.'.($sandboxIsRequired ? ' Every conversion will be refused.' : ' Conversions will run unprotected.'));
+    if ($sandboxIsRequired) $EnvironmentIsReady = FALSE; }
+  else $EnvironmentFindings[] = array('Check' => 'Sandbox', 'Status' => 'ok', 'Detail' => 'Bubblewrap can build a namespace.');
+  // / Policies are validated & never repaired here. A drifted policy is reported.
+  list ($policyIsValid, $policyStatus) = verifySandboxPolicy(FALSE);
+  $EnvironmentFindings[] = array('Check' => 'Sandbox AppArmor', 'Status' => ($policyIsValid ? 'ok' : $policyStatus), 'Detail' => ($policyIsValid ? 'The profile matches this release.' : 'Run -fp as root to install or repair it.'));
+  list ($policyIsValid, $policyStatus) = verifyImageMagickPolicy(FALSE);
+  $EnvironmentFindings[] = array('Check' => 'ImageMagick policy', 'Status' => ($policyIsValid ? 'ok' : $policyStatus), 'Detail' => ($policyIsValid ? 'The policy matches this release.' : 'Run -fp as root to install or repair it.'));
+  list ($policyIsValid, $policyStatus) = verifyOpenScadPolicy(FALSE);
+  $EnvironmentFindings[] = array('Check' => 'OpenSCAD AppArmor', 'Status' => ($policyIsValid ? 'ok' : $policyStatus), 'Detail' => ($policyIsValid ? 'Nothing confines OpenSCAD, or the override matches.' : 'Run -fp as root to install or repair it.'));
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $sandboxIsRequired, $policyIsValid, $policyStatus, $kernelIsReady, $kernelFindings, $kernelFinding);
+  return array($EnvironmentIsReady, $EnvironmentFindings); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to print an environment report.
+// / Accepts the findings array.
+// / Returns the number of checks that were not ok.
+function showEnvironmentFindings($environmentFindings) {
+  // / Set variables.
+  global $Lol, $EnableMemoryProtection;
+  $ProblemsFound = 0;
+  $finding = array();
+  foreach ($environmentFindings as $finding) {
+    print('  '.str_pad($finding['Check'], 28).str_pad($finding['Status'], 14).$finding['Detail'].$Lol);
+    if ($finding['Status'] !== 'ok') $ProblemsFound++; }
+  purgeSensitiveMemory($EnableMemoryProtection, $finding, $environmentFindings);
+  return $ProblemsFound; }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
 // / A function to correct ownership & permissions on every managed path.
 // / Accepts no arguments & must be run as root.
 // / Returns a success boolean & the number of paths corrected, in that order.
 function fixManagedPermissions() {
   // / Set variables.
-  global $InstLoc, $ConvertLoc, $ConvertTemp, $LogDir, $HomeLoc, $ProprietaryLoc, $BackupLoc, $ManagerSocketDir, $ApacheUser, $SecretFile, $Lol, $RunningAsRoot, $EnablePerConversionLimits, $EnableMemoryProtection;
-  $PermissionsWereFixed = $limitsWereEnabled = $policyIsValid = FALSE;
+  global $InstLoc, $ConvertLoc, $ConvertTemp, $LogDir, $HomeLoc, $ProprietaryLoc, $BackupLoc, $ManagerSocketDir, $ApacheUser, $SecretFile, $Lol, $RunningAsRoot, $EnablePerConversionLimits, $RequiredSetupCoreVersion, $EnableMemoryProtection;
+  $PermissionsWereFixed = $limitsWereEnabled = $policyIsValid = $setupIsAvailable = $environmentIsReady = FALSE;
+  $setupVersion = '';
+  $environmentFindings = $kernelFindings = array();
+  $kernelIsReady = $phpConfigIsValid = FALSE;
+  $phpConfigsWritten = 0;
   $PathsCorrected = $limitSteps = 0;
   $policyStatus = '';
   $managedPaths = array();
@@ -7712,6 +8546,11 @@ function fixManagedPermissions() {
     // / Install or repair every policy file while we are still root. A conversion pipeline
     // / reports a broken policy on every request & can never fix one, because rewriting a
     // / system policy from a web request is not something this application should ever do.
+    print($Lol.'PHP configuration.'.$Lol);
+    list ($phpConfigIsValid, $phpConfigsWritten) = verifyPhpConfiguration(TRUE);
+    print($Lol.'Sandbox kernel settings.'.$Lol);
+    list ($kernelIsReady, $kernelFindings) = verifySandboxKernel(TRUE);
+    showEnvironmentFindings($kernelFindings);
     print($Lol.'Validating policy files.'.$Lol);
     list ($policyIsValid, $policyStatus) = verifySandboxPolicy(TRUE);
     print('  '.str_pad('Sandbox AppArmor', 22).$policyStatus.$Lol);
@@ -7726,9 +8565,22 @@ function fixManagedPermissions() {
       print($Lol.'Enabling per conversion resource limits.'.$Lol);
       list ($limitsWereEnabled, $limitSteps) = enableConversionLimits();
       if (!$limitsWereEnabled) warningEntry('Per conversion resource limits could not be fully enabled. '.$limitSteps.' step(s) completed.'); }
+    // / The listener service unit, generated from this configuration. Setup Core owns it,
+    // / so it is loaded on demand. An installation without that component simply skips it.
+    print($Lol.'Listener service.'.$Lol);
+    list ($setupIsAvailable, $setupVersion) = verifyCoreComponent('Setup Core', 'SetupCore'.DIRECTORY_SEPARATOR.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
+    if (!$setupIsAvailable) print('  Skipped     The Setup Core component is unavailable.'.$Lol);
+    else installListenerService(TRUE);
+    // / Prove the repairs worked. Writing an AppArmor profile & never re-testing the
+    // / sandbox is how an operator ends up with a green permissions run & a server that
+    // / refuses every conversion.
+    print($Lol.'Verifying the operating environment.'.$Lol);
+    list ($environmentIsReady, $environmentFindings) = validateOperatingEnvironment();
+    showEnvironmentFindings($environmentFindings);
+    if (!$environmentIsReady) print($Lol.'The sandbox is still unavailable. A profile written now may need the AppArmor'.$Lol.'service reloaded, or a reboot, before the kernel honours it.'.$Lol);
     $PermissionsWereFixed = TRUE;
     logEntry('Permissions were corrected on '.$PathsCorrected.' managed path(s).'); }
-  purgeSensitiveMemory($EnableMemoryProtection, $managedPaths, $managedPath, $commandOutput, $commandExitCode, $limitsWereEnabled, $limitSteps, $policyIsValid, $policyStatus);
+  purgeSensitiveMemory($EnableMemoryProtection, $managedPaths, $managedPath, $commandOutput, $commandExitCode, $limitsWereEnabled, $limitSteps, $policyIsValid, $policyStatus, $setupIsAvailable, $setupVersion, $environmentIsReady, $environmentFindings, $kernelIsReady, $kernelFindings, $phpConfigIsValid, $phpConfigsWritten);
   return array($PermissionsWereFixed, $PathsCorrected); }
 // / -----------------------------------------------------------------------------------
 
@@ -7763,6 +8615,30 @@ function killTargetedWorker($workerTarget) {
   purgeSensitiveMemory($EnableMemoryProtection, $requestPayload, $replyPayload, $workerRegistry, $messageWasDelivered, $registryWasRead, $cleanTarget, $targetPid, $targetToken, $workerTarget);
   return $WorkerWasKilled; }
 // / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to read one line of input from the operator.
+// / Accepts the prompt to display.
+// / Returns the trimmed response, or an empty string when input is unavailable.
+// / THIS LIVES IN THE CORE RATHER THAN IN A COMPONENT, BECAUSE MORE THAN ONE COMPONENT
+// / PROMPTS. It began in Setup Core, & Dependency Core calling it meant every dependency
+// / install fataled on an undefined function, because --setup loads Dependency Core & does
+// / not load Setup Core. A helper two components need belongs to neither of them.
+function askOperator($promptText) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $OperatorResponse = '';
+  $inputHandle = FALSE;
+  print($promptText);
+  $inputHandle = @fopen('php://stdin', 'r');
+  if ($inputHandle !== FALSE) {
+    $OperatorResponse = trim((string)fgets($inputHandle));
+    @fclose($inputHandle); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $inputHandle, $promptText);
+  return $OperatorResponse; }
+// / -----------------------------------------------------------------------------------
+
 
 // / -----------------------------------------------------------------------------------
 // / A function to ask for confirmation on a destructive command line action.

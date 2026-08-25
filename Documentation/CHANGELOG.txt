@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/20/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/24/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.7.7.
+v3.8.0.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -26,6 +26,60 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+
+--------------------
+COMMIT 8/23/2026
+v3.8.0 - Polish CLI args --setup & --config. Fix bugs with apparmor, php.ini. Polish self-installer.
+
+-v3.8.0.
+-Fix time handling in listener logfiles.
+  -The time reported in listener logs was confusing, because it was set once when the listener started.
+  -Now we update timestamps every time the listener writes a log.
+  -This is true for every logging tier.
+-Fix apparmor config.
+  -Use official documented include process instead of winging it.
+  -We now include the default file correctly.
+  -The -fp CLI arg now correctly fixes all versions of our apparmor config. 
+  -If you have apparmor problems, run `sudo php convertCore.php -fp` and reboot the host.
+-Fix bubblewrap config.
+-Fix IM7 security profile.
+-Add proper php-zip dependency manifest handling.
+-Add php.ini configuration to --setup routines.
+  -Use official documented include process instead of winging it.
+-All of this is fixed by running the --fix-permissions command   `sudo php convertCore.php -fp` 
+-Update docs.
+  -INSTALLATION_INSTRUCTIONS.txt, ABOUT_COMMAND_LINE.txt, ABOUT_COMPONENTS.txt, README.md are all updated or new.
+-Update dockerfile, entrypoint.sh.
+-Add diagnosis script for bubblewrap.
+  -Located in `Documentation/Build/diagnose-bwap.sh`.
+  -Run with  `sudo bask diagnose-bwrap.sh`.
+-Fix MeshLab / PyMeshlab detection in -v CLI output and Dependency related --setup commands.
+-Make the -v CLI argument even more powerful & capable.
+-Make the --fix-permissions  &  -fp  CLI arguments more powerful.
+-Fix PyMeshLab supply chain audit output in generated `Supply_Chain.xlsx` files.
+-Fix HRConvert2 Listener service handling.
+  -Now installed by -fp command.
+-To stop an old listener...
+  -sudo php convertCore.php --kill
+-To install the new listener as a service which runs at system startup (managed via systemctl command)...
+  -sudo php convertCore.php --fix-permissions
+-Now the listener runs at startup and can be controlled like any other service with systemctl commands.
+-The docker install process is now a little different.
+  -All the install dependency logic has moved into the core.
+  -Dependencies are fully managed. You can install, update, reinstall, remove all from CLI.
+  -You can do all that on a per dependency basis, or a per subsystem basis.
+  -We leverage the self-install feature to simplify the dockerfile build process.
+  -Also, this makes installing on VM or bare metal very easy.
+-The new install process is 2 commands.....
+  git clone https://github.com/zelon88/HRConvert2
+  sudo bash HRConvert2/Documentation/Build/hrconvert2-setup.sh
+-Update Default convertGui2.php UI file with some improved AJAX calls.
+  -This will get improved even more, but it's better than what we had.
+  -Once it's perfect it will get rolled into HRC2-Functions.js.
+  -Previously on-error, the UI would redirect a user to a 404 page.
+  -We fixed that before, but we had a regression due to some architectural changes.
+  -This ajax should solve the problem once and for all, and it will get better.
+-COMING SOON in a future version; iframes with self-reloading content. No more refresh button!
 
 --------------------
 COMMIT 8/23/2026

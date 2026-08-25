@@ -1,175 +1,85 @@
 # -----------------------------------------------------------------------------------
 # COPYRIGHT INFORMATION ...
-# HRConvert2, Copyright on 8/15/2026 by Justin Grimes, https://github.com
-# 
+# HRConvert2, Copyright on 8/25/2026 by Justin Grimes, www.github.com/zelon88
+#
 # LICENSE INFORMATION ...
 # This project is protected by the GNU GPLv3 Open-Source license.
-# https://gnu.org
-# 
+# https://www.gnu.org/licenses/gpl-3.0.html
+#
 # APPLICATION INFORMATION ...
 # This application is designed to provide a web-interface for converting file formats
 # on a server for users of any web browser without authentication.
-# 
+#
 # FILE INFORMATION ...
-# v3.7.0.
+# v3.7.9.
 # This file contains the Docker build file for the project.
+#
 # Build this with...
-#   docker build -t HRConvert2 .
+#   docker build -t hrconvert2 .
+#
 # Run this with...
-#   docker run -d -p 8080:80 -p 8443:443 HRConvert2
-# 
-# HARDWARE REQUIREMENTS ...
-# This application requires at least a Raspberry Pi Model B+ or greater.
-# This application will run on just about any x86 or x64 computer.
-# 
+#   docker run -d -p 8080:80 --cap-add SYS_ADMIN hrconvert2
+#
+# SYS_ADMIN IS REQUIRED FOR THE SANDBOX.
+# Every conversion runs inside a bubblewrap namespace with no network. A container cannot
+# create that namespace without the capability. Without it the sandbox is unavailable &
+# every conversion is refused, unless --Require Sandbox On Docker-- is FALSE in config.php,
+# which runs conversions unprotected & is not recommended for anything public facing.
+# An alternative to the capability is  --security-opt seccomp=unconfined  on some hosts.
+#
 # DEPENDENCY REQUIREMENTS ...
-# This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
-# Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
-# Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap & xvfb-run.
-# 
+# Nothing is listed here on purpose. Resources/depends.php is the manifest & this file
+# installs from it, so a dependency added there arrives here without editing this file.
+#
 # <3 Open-Source
 # -----------------------------------------------------------------------------------
 
-# Build this with...
-#   docker build -t hrconvert2 .
-
-# Run this with...
-#   docker run -d -p 8080:80 -p 8443:443 hrconvert2
-
-# Use the official PHP parent image.
-#FROM php:8.5-apache
 FROM php:8.5-apache-bookworm
 
-# Create required directories.
-RUN mkdir /DATA && \
-  mkdir /DATA/HRConvert2
+# / The reference to build. A tag, a branch, or a commit.
+ARG HRCONVERT2_REF=master
 
-# Create & process a debian.sources file.
-#RUN rm -vf /var/lib/apt/lists/*
-RUN apt update
+# / Everything the bootstrap needs to reach the point where it can take over.
+# / git to fetch the source, ca-certificates so it can, sudo & procps for the setup
+# / routines. Every conversion dependency is installed by --install-complete from the
+# / manifest, so this list does not grow when the manifest does.
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      git ca-certificates sudo procps \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install git and compilation tools.
-RUN apt install -y git sed libtool autoconf automake
-
-# Set the working directory in the container.
 WORKDIR /var/www/html/HRProprietary
 
-# Download the latest HRConvert2 source code from the official repository.
-ARG HRCONVERT2_REF=master
-RUN git clone https://github.com/zelon88/HRConvert2 && \
-    cd HRConvert2 && \
-    git checkout ${HRCONVERT2_REF}
+RUN git clone https://github.com/zelon88/HRConvert2 \
+    && cd HRConvert2 \
+    && git checkout "$HRCONVERT2_REF"
 
-# Add non-free repos to software sources. Required for rar support.
-# There are two options for accomplishing this. 
-# Uncomment the option that suits your needs, and comment out the other.
-#   The first option replaces the debian.sources file.
-#   The second option modifies the existing debian.sources file in-place.
-RUN cp HRConvert2/Documentation/Build/debian.sources /etc/apt/sources.list.d/debian.sources
-#RUN sed -i -e's/ main/ main contrib non-free/g' /etc/apt/sources.list.d/debian.sources
-
-# Install dependencies.
-# The very first thing that must happen is apt-update.
-#RUN apt-get update && apt-get install -y --allow-downgrades zlib1g=1:1.2.13.dfsg-1 zlib1g-dev=1:1.2.13.dfsg-1
-RUN apt-get update && apt-get install -y zlib1g zlib1g-dev
-RUN apt install -y libheif-dev libavif-dev libopenjp2-7-dev libjxl-dev
-RUN apt install -y libpng-dev
-RUN apt install -y libzip-dev
-RUN apt install -y libreoffice-common
-RUN apt --fix-broken install
-RUN apt install -y libreoffice-java-common
-RUN apt install -y poppler-utils
-RUN apt install -y clamav p7zip-full p7zip-rar
-RUN apt install -y dia pandoc python3 zip unzip
-RUN apt install -y xpdf mkisofs
-RUN apt install -y libx11-6
-RUN apt install -y libgl1-mesa-glx 
-RUN apt install -y xvfb
-RUN apt install -y meshlab
-RUN apt install -y openscad
-RUN apt install -y inkscape
-RUN apt install -y bubblewrap
-RUN apt install -y isohybrid
-RUN apt install -y tesseract-ocr tar libgxps-utils
-RUN apt install -y ghostscript genisoimage curl assimp-utils
-RUN apt install -y libxcb-cursor0
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh \
-    | sh /dev/stdin version=6.13 \
- && ebook-convert --version
-
-# FIX: If building for ARM64, bypass source compilation entirely and use apt to prevent 3+ hour emulator crashes
-# ARG TARGETPLATFORM is automatically populated by Docker Buildx
-ARG TARGETPLATFORM
-
-RUN case "${TARGETPLATFORM}" in \
-      "linux/arm64") \
-        echo "ARM64 Core Target: Installing optimized native apt package..." && \
-        apt-get update && apt-get install -y ffmpeg ;; \
-      *) \
-        echo "AMD64 Core Target: Compiling optimized binaries from source..." && \
-        /bin/bash HRConvert2/Documentation/Build/ffmpeg-build2.sh --build --enable-gpl-and-non-free ;; \
-    esac
-
-# FIX: Strip out all 'sudo ' commands from the downloaded script and build ImageMagick v7 from source on all targets
-RUN sed -i 's/sudo //g' HRConvert2/Documentation/Build/build-imagemagick-v7.sh
-RUN /bin/bash HRConvert2/Documentation/Build/build-imagemagick-v7.sh
-
-# This needs to take place AFTER all other zlib related packages are installed.
-RUN docker-php-ext-install gd zip
-RUN apt install -y default-jre
-# I understand that the following line will probably uninstall some previous version of LibreOffice, 
-#  but this seems to be the only way to get soffice.bin to work. I can't explain it.
-RUN apt install -y libreoffice
-RUN rm -rf packages
-RUN rm -rf workspace
-
-## arm64 rar install hack (rar CLI only available for x86/x64 from rar labs)
-RUN DPKG_ARCH="$(dpkg --print-architecture)"; \
-    if [ "${DPKG_ARCH}" = "amd64" ]; then \
-        apt install -y rar; \
-    else \
-        dpkg --add-architecture i386 && \
-        apt install qemu-user-static libc6-i386-cross libstdc++6-i386-cross wget -y && \
-        cp /usr/i686-linux-gnu/lib/libm.so.6 /lib && \
-        cp /usr/i686-linux-gnu/lib/libc.so.6 /lib && \
-        cp /usr/i686-linux-gnu/lib/libpthread.so.0 /lib && \
-        cp /usr/i686-linux-gnu/lib/ld-linux.so.2 /lib && \
-        cp /usr/i686-linux-gnu/lib/libstdc++.so.6 /lib && \
-        cp /usr/i686-linux-gnu/lib/libgcc_s.so.1  /lib && \
-        wget https://www.rarlab.com/rar/rarlinux-x32-700b3.tar.gz  -O /tmp/rarlinux-x32-700b3.tar.gz && \
-        tar -zxvf /tmp/rarlinux-x32-700b3.tar.gz -C /tmp && \
-        cp HRConvert2/Documentation/Build/rar-arm64 /tmp/rar-arm64 && \
-        chmod +x /tmp/rar-arm64 &&  ln -s /tmp/rar-arm64 /usr/bin/rar; \
-    fi
-
-# Copy required files.
-RUN cp HRConvert2/Documentation/Build/php.ini /usr/local/etc/php.ini
-RUN mkdir -p /usr/local/etc/ImageMagick-7
-RUN cp HRConvert2/Documentation/Build/policy.xml /usr/local/etc/ImageMagick-7/policy.xml
-RUN cp HRConvert2/index.html /var/www/html/index.html
-RUN cp HRConvert2/index.html /var/www/html/HRProprietary/index.html
-
-# Create any missing directories safely.
-RUN mkdir -p /DATA
+# / The data location lives outside the web root & is a volume, so conversions survive a
+# / container restart & are never served directly by the web server.
 RUN mkdir -p /DATA/HRConvert2
-RUN mkdir -p /DATA/HRConvert2/Logs
+VOLUME /DATA/HRConvert2
 
-# Set permissions for required directories.
-RUN chmod -R 0755 /DATA && \
-  chmod -R 0755 /var/www && \
-  chown -R www-data:www-data /DATA && \
-  chown -R www-data:www-data /var/www
+# / Hand the whole installation to the account the web server runs as, once, before setup.
+RUN chown -R www-data:www-data /var/www /DATA
 
-# Expose the ports Apache & Unoconv listens on to the host.
-# Set these to whatever ports suits your needs.
-# EXPOSE 80
-EXPOSE 443
+# / THE INSTALL IS THE SAME ONE A BARE METAL HOST RUNS.
+# / --install-complete installs every dependency in the manifest, creates the data
+# / locations, corrects permissions, writes the PHP drop in, writes the ImageMagick policy
+# / at whatever prefix this image actually uses, & verifies the result.
+# / -y answers the confirmation, because a build has nobody to ask.
+# / The listener service unit is not installed. A container has no systemd & the entrypoint
+# / starts the listener directly when the configuration asks for one.
+RUN php /var/www/html/HRProprietary/HRConvert2/convertCore.php --setup --install-complete -y \
+    || echo "Setup reported problems. The image will still build & -v will report what is missing."
 
-# Copy the startup script into the container
-COPY Documentation/Build/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# / Report what the image actually ended up with. This output is part of the build log &
+# / is the record of what this image can convert.
+RUN php /var/www/html/HRProprietary/HRConvert2/convertCore.php -v || true
 
-# Start Apache & Unoconv when the container runs.
-#CMD ["sh", "-c", "apache2-foreground"]
-ENTRYPOINT ["sh", "-c", "mkdir -p /DATA/HRConvert2/Logs && chown -R www-data:www-data /DATA && exec /entrypoint.sh"]
+# / The container serves the application from the web root it was cloned into.
+RUN a2enmod rewrite headers || true
+EXPOSE 80
+
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["apache2-foreground"]

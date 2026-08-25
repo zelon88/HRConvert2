@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/21/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/24/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILEINFORMATION ...
-// / v3.7.9.
+// / v3.8.0.
 // / A detachable dependency management component. convertCore.php runs without it.
 // / This file defines functions only. setupCore.php & convertCore.php dispatch into them.
 // /
@@ -48,7 +48,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependencyCoreVersion = 'v3.7.9';
+$DependencyCoreVersion = 'v3.8.0';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -301,6 +301,23 @@ function installOneDependency($dependencyEntry, $packageManager) {
   else if ((string)$dependencyEntry['Type'] === 'manual') $ReturnData = 'This dependency is never installed automatically. Install it by hand from '.(string)$dependencyEntry['Source'].'.';
   else if ((string)$dependencyEntry['Type'] === 'source') $ReturnData = 'This dependency is built from source & is not handled by this operation.';
   else if ($packageList === '') $ReturnData = 'This dependency names no package to install.';
+  // / A PHP extension is installed differently on a packaged PHP & on an official container
+  // / image. Debian ships a php-NAME metapackage that resolves to the running version. The
+  // / container image builds the extension instead & has no package manager entry for it.
+  else if ((string)$dependencyEntry['Type'] === 'php-extension') {
+    if (locateDependency('docker-php-ext-install') !== '') $installCommand = 'docker-php-ext-install '.escapeshellarg($packageList).' 2>&1';
+    else if ($packageManager === '') $ReturnData = 'No package manager is available on this host.';
+    else $installCommand = dependencyPackageCommand($packageManager, 'php-'.$packageList, 'install').' 2>&1';
+    if ($installCommand !== '') {
+      exec($installCommand, $commandOutput, $commandExitCode);
+      $ReturnData = implode(PHP_EOL, $commandOutput);
+      // / An extension is only installed once PHP can see it. A package that unpacked but
+      // / was never enabled reports success from the package manager & fails every use.
+      if ($commandExitCode === 0) {
+        $commandOutput = array();
+        exec((string)$dependencyEntry['VersionCommand'].' 2>&1', $commandOutput, $commandExitCode);
+        if ($commandExitCode === 0) $InstallSucceeded = TRUE;
+        else $ReturnData = 'The package installed but PHP still cannot load the extension. The web server may need restarting.'; } } }
   else if ((string)$dependencyEntry['Type'] === 'pip') {
     $installCommand = 'pip3 install --break-system-packages '.escapeshellarg($packageList).' 2>&1';
     exec($installCommand, $commandOutput, $commandExitCode);
@@ -463,6 +480,7 @@ function updateDepends($authorizationToken, $subsystemFilter, $operatorConfirmed
         foreach ($dependsManifest as $dependencyEntry) {
           if (trim((string)$subsystemFilter) !== '' && stripos((string)$dependencyEntry['Subsystem'], trim((string)$subsystemFilter)) === FALSE) continue;
           // / A bundled dependency travels with the application & is upgraded by updating it.
+          // / An extension travels with PHP & is upgraded by upgrading PHP.
           if ((string)$dependencyEntry['Type'] !== 'apt' && (string)$dependencyEntry['Type'] !== 'pip') continue;
           list ($dependencyIsPresent, $detectedVersion, $dependencyStatus, $rawOutput) = resolveDependencyState($dependencyEntry);
           if ($dependencyStatus === 'absent') { print('  '.str_pad((string)$dependencyEntry['Name'], 20).'not installed, skipped'.$Lol); continue; }

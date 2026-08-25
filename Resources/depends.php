@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/21/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/24/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILEINFORMATION ...
-// / v3.7.9.
+// / v3.8.0.
 // / HRConvert2 Dependency Manifest.
 // / This file is data. It defines nothing & does nothing.
 // / dependencyCore.php reads it. Nothing else may.
@@ -62,7 +62,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependsVersion = 'v3.7.9';
+$DependsVersion = 'v3.8.0';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -73,6 +73,18 @@ $DependsManifest = array(
     'MinimumVersion' => '8.0', 'VersionCommand' => 'php -v', 'VersionPattern' => '/^PHP (\d+\.\d+)/',
     'Required' => TRUE, 'Subsystem' => 'Core', 'Requires' => array(),
     'License' => 'PHP-3.01', 'Source' => 'https://www.php.net', 'Purpose' => 'Runs the application.'),
+  // / A PHP EXTENSION IS NOT PROVED BY THE PHP BINARY BEING PRESENT.
+  // / php-zip is named in the PHP package list above, but a check that only asks the binary
+  // / for its version reports PHP ok while an extension it needs is missing. An extension
+  // / is asked for by name, from PHP itself, & is its own entry for that reason.
+  array('Name' => 'PHP OpenSSL', 'Binary' => '', 'Type' => 'php-extension', 'Package' => 'openssl',
+    'MinimumVersion' => '', 'VersionCommand' => 'php -r "exit(extension_loaded(\'openssl\') ? 0 : 1);"', 'VersionPattern' => '',
+    'Required' => FALSE, 'Subsystem' => 'Resource Awareness', 'Requires' => array('PHP'),
+    'License' => 'PHP-3.01', 'Source' => 'https://www.php.net/manual/en/book.openssl.php', 'Purpose' => 'Encrypts every message on a manager socket. Resource awareness cannot work without it & fails quietly rather than loudly.'),
+  array('Name' => 'PHP Zip', 'Binary' => '', 'Type' => 'php-extension', 'Package' => 'zip',
+    'MinimumVersion' => '', 'VersionCommand' => 'php -r "exit(extension_loaded(\'zip\') ? 0 : 1);"', 'VersionPattern' => '',
+    'Required' => FALSE, 'Subsystem' => 'Documents', 'Requires' => array('PHP'),
+    'License' => 'PHP-3.01', 'Source' => 'https://www.php.net/manual/en/book.zip.php', 'Purpose' => 'Opens OOXML documents so external references can be stripped before LibreOffice sees them. Without it the sandbox is the only protection.'),
   array('Name' => 'Apache', 'Binary' => 'apache2', 'Type' => 'apt', 'Package' => 'apache2 libapache2-mod-php',
     'MinimumVersion' => '2.4', 'VersionCommand' => 'apache2 -v', 'VersionPattern' => '/Apache\/(\d+\.\d+)/',
     'Required' => TRUE, 'Subsystem' => 'Core', 'Requires' => array('PHP'),

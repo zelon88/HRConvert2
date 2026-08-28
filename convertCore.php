@@ -1,7 +1,7 @@
 <?php if (php_sapi_name() !== 'cli') print('<!DOCTYPE HTML>'.PHP_EOL);
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/24/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/21/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILEINFORMATION ...
-// / v3.8.0.
+// / v3.8.1.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -257,14 +257,22 @@ function verifyContainerEnvironment() {
   $RunningInContainer = FALSE;
   $dockerEnvExists = $cgroupIndicatesContainer = FALSE;
   $cgroupContents = '';
-  // / Docker creates this file in every container it starts.
-  if (file_exists('/.dockerenv')) $dockerEnvExists = TRUE;
+  // / Docker creates this file in every container it starts. Podman creates its own.
+  // / Neither file exists anywhere else, so either one on its own is conclusive.
+  if (file_exists('/.dockerenv') or file_exists('/run/.containerenv')) $dockerEnvExists = TRUE;
+  // / Several runtimes announce themselves in the environment.
+  if (getenv('container') !== FALSE && trim((string)getenv('container')) !== '') $dockerEnvExists = TRUE;
   // / The init process of a container reports a container runtime in its cgroup path.
+  // / UNDER CGROUP VERSION TWO THIS OFTEN READS 0::/ AND NAMES NOTHING AT ALL.
+  // / That is why this can no longer be required. An earlier release demanded that this
+  // / signal AND the file above both agree, which every modern Docker host fails, so a
+  // / container was never once detected & --Require Sandbox On Docker-- never applied.
   $cgroupContents = @file_get_contents('/proc/1/cgroup');
   if (is_string($cgroupContents)) {
-    if (strpos($cgroupContents, 'docker') !== FALSE or strpos($cgroupContents, 'containerd') !== FALSE or strpos($cgroupContents, 'kubepods') !== FALSE) $cgroupIndicatesContainer = TRUE; }
-  // / Both signals must agree. Either one alone is not enough to relax a security control.
-  if ($dockerEnvExists && $cgroupIndicatesContainer) $RunningInContainer = TRUE;
+    if (strpos($cgroupContents, 'docker') !== FALSE or strpos($cgroupContents, 'containerd') !== FALSE or strpos($cgroupContents, 'kubepods') !== FALSE or strpos($cgroupContents, 'lxc') !== FALSE) $cgroupIndicatesContainer = TRUE; }
+  // / ANY ONE OF THESE IS CONCLUSIVE. None of them is true on a host that is not a
+  // / container, so requiring agreement between them only produced false negatives.
+  if ($dockerEnvExists or $cgroupIndicatesContainer) $RunningInContainer = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $dockerEnvExists, $cgroupIndicatesContainer, $cgroupContents);
   return $RunningInContainer; }
@@ -671,19 +679,19 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
-  $HRConvertVersion = 'v3.8.0';
+  $HRConvertVersion = 'v3.8.1';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
   // / A release that changes no settings leaves this alone, so existing config files keep working.
   // / Any config.php version that is greater (newer) than the version listed below is considered acceptable.
-  $RequiredConfigVersion = 'v3.8.0';
+  $RequiredConfigVersion = 'v3.8.1';
   $RequiredConfigVersion = ltrim($RequiredConfigVersion, 'vV');
   // / Define the minimum acceptable GUI version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / Gui version that do not exactly match the version listed below are not considered acceptable.
   // / This is because Guis are not always guaranteed to be forward or reverse compatible.
-  $RequiredGuiVersion = 'v3.8.0';
+  $RequiredGuiVersion = 'v3.8.1';
   $RequiredGuiVersion = ltrim($RequiredGuiVersion, 'vV');
   // / Define the minimum acceptable Language Pack version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
@@ -693,23 +701,23 @@ function verifyInstallation() {
   $RequiredLanguageVersion = ltrim($RequiredLanguageVersion, 'vV');
   // / The Core Manager component version this core requires.
   // / This is an EXACT match. A component built for another core may not be called safely.
-  $RequiredCoreManagerVersion = 'v3.8.0';
+  $RequiredCoreManagerVersion = 'v3.8.1';
   $RequiredCoreManagerVersion = ltrim($RequiredCoreManagerVersion, 'vV');
   // / The Setup Core component version this core requires.
   // / This is an EXACT match. A component built for another core may not be called safely.
   // / Setup Core holds the configuration model, so this MUST be raised whenever
   // / $RequiredConfigVersion is raised. Forgetting does not break anything immediately.
   // / The utility reports a variable it does not know as unaccounted & carries on.
-  $RequiredSetupCoreVersion = 'v3.8.0';
+  $RequiredSetupCoreVersion = 'v3.8.1';
   $RequiredSetupCoreVersion = ltrim($RequiredSetupCoreVersion, 'vV');
   // / The Dependency Core component version this core requires.
   // / This is an EXACT match. A component built for another core may not be called safely.
-  $RequiredDependencyCoreVersion = 'v3.8.0';
+  $RequiredDependencyCoreVersion = 'v3.8.1';
   $RequiredDependencyCoreVersion = ltrim($RequiredDependencyCoreVersion, 'vV');
   // / The dependency manifest version this core requires.
   // / Raise this whenever a dependency is added, removed, or its minimum version moves.
   // / A manifest from another release may name a package that no longer exists.
-  $RequiredDependsVersion = 'v3.8.0';
+  $RequiredDependsVersion = 'v3.8.1';
   $RequiredDependsVersion = ltrim($RequiredDependsVersion, 'vV');
   // / The bootstrap script version this core expects.
   // / A manager compares the script against this & disables the script when it differs.
@@ -1075,7 +1083,7 @@ function verifyEncryption() {
 // / This validation is arithmetic only. 
 function verifyTokens($Token1, $Token2) {
   // / Set variables.
-  global $SecretKey, $EnableMemoryProtection;
+  global $SecretKey, $EnableMemoryProtection, $Verbose;
   $TokensAreValid = $randomCheck = $secretIsUsable = $issueNewSession = FALSE;
   $expectedToken2 = '';
   // / Without the install secret nothing can be validated or signed.
@@ -1091,6 +1099,19 @@ function verifyTokens($Token1, $Token2) {
     if (!empty($Token2) && hash_equals($expectedToken2, (string)$Token2)) $TokensAreValid = TRUE;
     // / The pair did not verify. Do not trust either half. Issue an entirely new session.
     else $issueNewSession = TRUE; }
+  // / A NEW SESSION IS ISSUED SILENTLY, WHICH MAKES A LOST ONE INVISIBLE.
+  // / A request that meant to continue an existing session & arrived without a usable
+  // / Token1 is handed a fresh one, lands in a directory it just created, & reports that
+  // / the user uploaded nothing. Saying which of the two happened is the difference between
+  // / diagnosing that in one line & inferring it from a changing session hash.
+  // / A FIRST VISIT HAS NO TOKEN & THAT IS NOT A WARNING.
+  // / Every new visitor arrives without one, so warning on an absent Token1 would put a
+  // / WARNING in the log for ordinary traffic, which is how a log stops being read.
+  // / A Token1 that ARRIVED and did not verify is different. Something sent a token this
+  // / core would not accept, & that is worth recording once, at the tier that means
+  // / somebody should know rather than the tier that means something is broken.
+  if ($issueNewSession && $secretIsUsable && !empty($Token1)) warningEntry('A session token arrived & did not verify, so a new session was issued. The token was '.strlen((string)$Token1).' characters. A stale bookmark, a rotated install secret, or a request built by something other than this interface will all do this.');
+  else if ($issueNewSession && $secretIsUsable && $Verbose) logEntry('No session token arrived, so a new session was issued. This is a first visit.');
   // / Issue a fresh token pair. This is the only place tokens are ever generated.
   if ($issueNewSession && $secretIsUsable) {
     list ($Token1, $randomCheck) = generateRandomNumber();
@@ -1108,7 +1129,7 @@ function verifyTokens($Token1, $Token2) {
 // / A function to verify that all required POST & GET inputs are properly sanitized.
 function verifyInputs() {
   // / Set variables.
-  global $ShowGUI, $EnableMemoryProtection;
+  global $ShowGUI, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly;
   $var = FALSE;
   $InputsAreVerified = TRUE;
   $GUI = $Color = $Language = $Token1 = $Token2 = $Height = $Width = $Rotate = $Bitrate = $Method = $Download = $UserFilename = $UserExtension = $Archive = $UserScanType = $ScanAll = $UserClamScan = $UserScanCoreScan = $var = '';
@@ -1121,6 +1142,14 @@ function verifyInputs() {
   // / The user can never force enable a full GUI if $ShowGUI is set to FALSE in config.php  
   if (isset($_GET['noGui'])) $ShowGUI = FALSE;
   if (!$ShowGUI) $_GET['noGui'] = TRUE;
+  // / EVERY SUPERGLOBAL THIS APPLICATION READS IS READ HERE & NOWHERE ELSE.
+  // / An interface that reads $_GET defines API surface, & an interface is not entitled to
+  // / define API surface. These three carry no data, only presence, so the value is
+  // / discarded & a boolean is handed on. Nothing downstream needs to sanitize a boolean.
+  // / A GUI receives these through buildGUI & must never look at $_GET for itself.
+  $NoGui = isset($_GET['noGui']);
+  $ShowFiles = isset($_GET['showFiles']);
+  $FileListOnly = isset($_GET['fileListOnly']);
   // / Sanitize each variable as needed & build a list of error check results.
   if (isset($_POST['filesToDelete'])) list ($FilesToDelete, $variableIsSanitized[$key++]) = sanitize($_POST['filesToDelete'], TRUE);
   if (isset($_POST['language'])) list ($Language, $variableIsSanitized[$key++]) = sanitize($_POST['language'], TRUE);
@@ -1489,23 +1518,31 @@ function resolveConvertLoc($dailyHash, $sessionHash) {
 // / location & must not stall waiting on a listener that may not be running.
 function requestConvertLoc($dailyHash, $sessionHash) {
   // / Set variables.
-  global $PrimaryConvertLoc, $ConvertLoc, $ResourceAwarenessActive, $RunningFromCLI, $ManagerSocketTimeout, $DirSep, $Verbose, $EnableMemoryProtection;
+  global $ResourceAwarenessActive, $RunningFromCLI, $ManagerSocketTimeout, $DirSep, $Verbose, $EnableMemoryProtection;
   $ResolvedConvertLoc = '';
   $requestPayload = $replyPayload = array();
   $messageWasDelivered = FALSE;
   $answerSource = 'config.php';
-  // / The fallback is established first, so every path below can only improve on it.
-  $ResolvedConvertLoc = (isset($PrimaryConvertLoc) && is_string($PrimaryConvertLoc) && $PrimaryConvertLoc !== '') ? $PrimaryConvertLoc : (string)$ConvertLoc;
-  $ResolvedConvertLoc = rtrim($ResolvedConvertLoc, $DirSep);
-  if (!$ResourceAwarenessActive) $answerSource = 'config.php, no listener component';
-  else if ($RunningFromCLI) $answerSource = 'config.php, command line context';
+  // / THE FALLBACK IS DISCOVERY, NOT THE CONFIGURED LOCATION.
+  // / An earlier release fell back to whatever config.php named, which is correct for a
+  // / session that does not exist yet & CATASTROPHIC for one that does. A session already
+  // / holding files in a second data location was sent to the first, found an empty
+  // / directory, & reported that the user had uploaded nothing. The files were never lost.
+  // / They were simply no longer where anything was looking.
+  // / resolveConvertLoc reads the pool from disk & returns the location that actually holds
+  // / this session before it distributes anything, so an unanswered request degrades to the
+  // / correct answer rather than to a plausible one.
+  $ResolvedConvertLoc = rtrim(resolveConvertLoc($dailyHash, $sessionHash), $DirSep);
+  if (!$ResourceAwarenessActive) $answerSource = 'discovery, no listener component';
+  else if ($RunningFromCLI) $answerSource = 'discovery, command line context';
   else {
     $requestPayload = array('RequestType' => 'convertloc', 'DailyHash' => (string)$dailyHash, 'SessionHash' => (string)$sessionHash, 'WorkerPid' => getmypid());
     list ($messageWasDelivered, $replyPayload) = sendManagerMessage(buildManagerSocketPath('request-manager'), $requestPayload, 'worker', (int)$ManagerSocketTimeout * 3);
     // / An unanswered request is a listener that is slow or absent, not an instruction to
     // / move this session somewhere else. The configured location is the safe answer.
-    if (!$messageWasDelivered) warningEntry('The Core Manager listener did not answer a data location request. Using the configured location.');
-    else if (!isset($replyPayload['ConvertLoc']) or !is_string($replyPayload['ConvertLoc']) or trim($replyPayload['ConvertLoc']) === '') warningEntry('The Core Manager listener returned no usable data location. Using the configured location.');
+    // / A location discovered on disk is not a guess. It is where this session's files are.
+    if (!$messageWasDelivered) { warningEntry('The Core Manager listener did not answer a data location request. Using '.$ResolvedConvertLoc.', located by searching the configured pool for this session.'); $answerSource = 'discovery, listener silent'; }
+    else if (!isset($replyPayload['ConvertLoc']) or !is_string($replyPayload['ConvertLoc']) or trim($replyPayload['ConvertLoc']) === '') { warningEntry('The Core Manager listener returned no usable data location. Using '.$ResolvedConvertLoc.', located by searching the configured pool for this session.'); $answerSource = 'discovery, listener unusable'; }
     else {
       $ResolvedConvertLoc = rtrim(trim($replyPayload['ConvertLoc']), $DirSep);
       $answerSource = 'listener'; } }
@@ -2072,7 +2109,11 @@ function verifyOpenScadPolicy($mayRepair) {
       // / No profile confines OpenSCAD, so there is nothing to override & nothing is wrong.
       $PolicyIsValid = TRUE;
       $PolicyStatus = 'unconfined';
-      if ($Verbose) logEntry('Policy Check: OpenSCAD, Status: unconfined, no AppArmor profile confines it.'); }
+      // / Logged once per request rather than per conversion. A host where nothing confines
+      // / OpenSCAD reports this on every single model, which is noise about a non event.
+      // / The static cache above already prevents the check running twice, but the entry was
+      // / written before the cache was consulted.
+      if ($Verbose) logEntry('Policy Check: OpenSCAD, Status: unconfined, nothing confines it & the sandbox is what isolates it.'); }
     else {
       $overridePath = '/etc/apparmor.d/local/'.basename($confiningProfile);
       list ($PolicyIsValid, $PolicyStatus) = verifyPolicyFile('OpenSCAD AppArmor', $overridePath, openScadApparmorContents(), $mayRepair);
@@ -2082,6 +2123,49 @@ function verifyOpenScadPolicy($mayRepair) {
   purgeSensitiveMemory($EnableMemoryProtection, $confiningProfile, $overridePath, $candidateProfiles, $candidateProfile, $mayRepair);
   return array($PolicyIsValid, $PolicyStatus); }
 // / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to report whether systemd is actually running this host.
+// / Accepts no arguments.
+// / Returns a usability boolean & the reason, in that order.
+// /
+// / THE BINARY BEING PRESENT PROVES NOTHING. THIS IS THE MISTAKE THIS FUNCTION EXISTS FOR.
+// / An earlier release decided systemd was available because loginctl was on the PATH.
+// / Every official PHP container image ships the systemd client tools & does not run
+// / systemd, so every check passed, a unit file was written, lingering was attempted, & the
+// / listener was then handed to a service manager that was never going to answer. The
+// / error that finally surfaced came from systemctl itself, which is the proof the binary
+// / was there all along.
+// /
+// / /run/systemd/system EXISTS ONLY WHEN SYSTEMD IS PID 1.
+// / This is the test the systemd documentation gives for exactly this question & is what
+// / sd_booted does. It is a directory test, it costs nothing, & it is correct inside a
+// / container, inside a chroot, & on a host running any other init.
+function systemdIsUsable() {
+  // / Set variables.
+  global $Verbose, $EnableMemoryProtection;
+  static $cachedUsable = NULL;
+  static $cachedReason = '';
+  $SystemdIsUsable = FALSE;
+  $SystemdReason = '';
+  if ($cachedUsable !== NULL) {
+    $SystemdIsUsable = $cachedUsable;
+    $SystemdReason = $cachedReason; }
+  else {
+    if (!is_dir('/run/systemd/system')) $SystemdReason = 'systemd is not running this host, whatever tools are installed.';
+    else if (locateDependency('systemctl') === '') $SystemdReason = 'systemd is running but systemctl is not installed.';
+    else {
+      $SystemdIsUsable = TRUE;
+      $SystemdReason = 'systemd is running & systemctl is available.'; }
+    if ($Verbose) logEntry('Systemd Check: '.($SystemdIsUsable ? 'AVAILABLE' : 'UNAVAILABLE').', '.$SystemdReason);
+    $cachedUsable = $SystemdIsUsable;
+    $cachedReason = $SystemdReason; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / Neither value is purged, because both are return values.
+  purgeSensitiveMemory($EnableMemoryProtection);
+  return array($SystemdIsUsable, $SystemdReason); }
+// / -----------------------------------------------------------------------------------
+
 
 // / -----------------------------------------------------------------------------------
 // / A function to check, & optionally correct, the kernel settings a sandbox needs.
@@ -2100,7 +2184,7 @@ function verifyOpenScadPolicy($mayRepair) {
 // / A correction is written to /etc/sysctl.d so it survives a reboot.
 function verifySandboxKernel($mayRepair) {
   // / Set variables.
-  global $RunningAsRoot, $AllowUnprivilegedNamespaces, $Verbose, $EnableMemoryProtection;
+  global $RunningAsRoot, $AllowUnprivilegedNamespaces, $RunningInContainer, $Verbose, $EnableMemoryProtection;
   $KernelIsReady = TRUE;
   $KernelFindings = array();
   $sysctlPath = $sysctlValue = $persistPath = $persistContents = $bwrapBinary = '';
@@ -2109,6 +2193,13 @@ function verifySandboxKernel($mayRepair) {
   $bytesWritten = 0;
   $profileIsLoaded = FALSE;
   $profileLoadStatus = '';
+  // / A CONTAINER INHERITS THESE FROM ITS HOST & CANNOT CHANGE THEM.
+  // / /proc/sys is mounted read only in every unprivileged container, so a repair here can
+  // / only ever fail. Reporting FAILED for something that was never this machine's to fix
+  // / sends an operator hunting inside the container for a setting that lives outside it.
+  // / The values are still READ & reported, because they are exactly what decides whether
+  // / the sandbox works, & knowing them is what tells an operator to go and fix the host.
+  if ($RunningInContainer) $mayRepair = FALSE;
   // / Debian gates unprivileged namespaces behind this. Ubuntu does not ship it at all.
   $sysctlPath = '/proc/sys/kernel/unprivileged_userns_clone';
   if (file_exists($sysctlPath)) {
@@ -2116,7 +2207,7 @@ function verifySandboxKernel($mayRepair) {
     if ($sysctlValue === '1') $KernelFindings[] = array('Check' => 'unprivileged_userns_clone', 'Status' => 'ok', 'Detail' => 'Unprivileged user namespaces are permitted.');
     else if (!$mayRepair or !$RunningAsRoot) {
       $KernelIsReady = FALSE;
-      $KernelFindings[] = array('Check' => 'unprivileged_userns_clone', 'Status' => 'BLOCKED', 'Detail' => 'Reads '.$sysctlValue.'. Bubblewrap cannot build a namespace. Run -fp as root.'); }
+      $KernelFindings[] = array('Check' => 'unprivileged_userns_clone', 'Status' => 'BLOCKED', 'Detail' => 'Reads '.$sysctlValue.'. Bubblewrap cannot build a namespace. '.($RunningInContainer ? 'This is a HOST setting. Correct it on the host, not in this container.' : 'Run -fp as root.')); }
     else {
       @file_put_contents($sysctlPath, '1');
       $sysctlValue = trim((string)@file_get_contents($sysctlPath));
@@ -2131,7 +2222,7 @@ function verifySandboxKernel($mayRepair) {
     if ((int)$sysctlValue > 0) $KernelFindings[] = array('Check' => 'max_user_namespaces', 'Status' => 'ok', 'Detail' => $sysctlValue.' namespaces permitted.');
     else if (!$mayRepair or !$RunningAsRoot) {
       $KernelIsReady = FALSE;
-      $KernelFindings[] = array('Check' => 'max_user_namespaces', 'Status' => 'BLOCKED', 'Detail' => 'Reads 0. No namespace can be created. Run -fp as root.'); }
+      $KernelFindings[] = array('Check' => 'max_user_namespaces', 'Status' => 'BLOCKED', 'Detail' => 'Reads 0. No namespace can be created. '.($RunningInContainer ? 'This is a HOST setting. Correct it on the host, not in this container.' : 'Run -fp as root.')); }
     else {
       @file_put_contents($sysctlPath, '15000');
       if ((int)trim((string)@file_get_contents($sysctlPath)) < 1) {
@@ -2185,7 +2276,7 @@ function verifySandboxKernel($mayRepair) {
       $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'BLOCKED', 'Detail' => 'Restricted & config.php forbids changing it. The sandbox cannot work.'); }
     else if (!$mayRepair or !$RunningAsRoot) {
       $KernelIsReady = FALSE;
-      $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'BLOCKED', 'Detail' => 'Reads 1. Bubblewrap cannot write a uid map. Run -fp as root.'); }
+      $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'BLOCKED', 'Detail' => 'Reads 1. Bubblewrap cannot write a uid map. '.($RunningInContainer ? 'This is a HOST setting. Correct it on the host, or run this container with --cap-add SYS_ADMIN.' : 'Run -fp as root.')); }
     else {
       @file_put_contents($sysctlPath, '0');
       $sysctlValue = trim((string)@file_get_contents($sysctlPath));
@@ -3306,7 +3397,7 @@ function parseCommandLine() {
       // / compute a time bucketed HMAC. Authorization is unchanged. A standard user holds
       // / a per user secret & the key they derive will not validate.
       else if ($cliCommand === '--run-core-manager') {
-        if (!$ResourceAwarenessActive) errorEntry('The foreground listener was requested but the Core Manager component is unavailable!', 31009, TRUE);
+        if (!$ResourceAwarenessActive) errorEntry('The foreground listener was requested but the Core Manager component is unavailable!', 31016, TRUE);
         else runCoreManagerForeground();
         $CommandLineHandled = TRUE; }
       // / Handle the internal subordinate manager entry point.
@@ -7013,7 +7104,7 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
 // / pack is required from inside this function. Nothing outside this call can read them.
 function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   // / Set variables.
-  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection;
+  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $Verbose;
   $GUIDisplayed = FALSE;
   $guiUIFile = $GuiUI1File;
   $fallbackStringsFile = '';
@@ -7032,7 +7123,12 @@ function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   // / Gather a list of files.
   if ($guiType === 2) {
     $Files = getFiles($ConvertDir);
-    $FileCount = count($Files); }
+    $FileCount = count($Files);
+    // / An interface that renders an empty list has either been handed the wrong directory
+    // / or a directory with nothing in it, & those are different faults with different
+    // / fixes. Saying which directory was read, & whether this was the framed request, is
+    // / the difference between diagnosing it & guessing at it.
+    if ($Verbose) logEntry('GUI 2 file list: Directory: '.$ConvertDir.', Files: '.$FileCount.', List only: '.($FileListOnly ? 'YES' : 'NO').', Session: '.$SesHash.'/'.$SesHash2.'.'); }
   // / Load language specific GUI elements, if there are any.
   if (in_array($LanguageStringsFile, $LanguageFiles)) require_once($LanguageStringsFile);
   // / Check to ensure that the selected language is compatible with the rest of the GUI.
@@ -7059,17 +7155,28 @@ function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   // / If the default pack is ALSO out of date then nothing is left to fall back to, & the
   // / GUI is deliberately not built. The warnings above name both packs that failed.
   if ($LanguageVersion === $RequiredLanguageVersion) {
-    // / Load the header.
-    if (in_array($GuiHeaderFile, $GuiFiles)) require_once($GuiHeaderFile);
+    // / A FRAGMENT REQUEST GETS A FRAGMENT. NO HEADER & NO FOOTER.
+    // / --File List Only-- asks for a piece of a page that is about to be placed INSIDE a
+    // / page that already exists. Answering it with a whole document sends a second copy of
+    // / everything the header carries, which is every script this interface defines, & a
+    // / second copy of the footer, which is why the privacy notice appeared twice.
+    // / Worse, the duplicated script redefined the helper & re-ran its ready handler, which
+    // / fetched the fragment again, which redefined the helper again. That is a request
+    // / loop several times a second, & it destroyed every click handler on each pass, which
+    // / is why nothing in the list could be clicked.
+    // / A fragment is not a document & must not be dressed as one.
+    if (!$FileListOnly && in_array($GuiHeaderFile, $GuiFiles)) require_once($GuiHeaderFile);
     // / Build and define the different GUI types that are available.
     if ($guiType === 1) $guiUIFile = $GuiUI1File;
     if ($guiType === 2) $guiUIFile = $GuiUI2File;
     // / Build the specified GUI.
     if (in_array($guiUIFile, $GuiFiles)) require_once($guiUIFile);
     // / Load the footer.
-    if (in_array($GuiFooterFile, $GuiFiles)) require_once($GuiFooterFile);
-    // / Check if the required GUI elements were loaded.
-    if ($HeaderDisplayed && $UIDisplayed && $FooterDisplayed && $LanguageStringsLoaded) $GUIDisplayed = TRUE; }
+    if (!$FileListOnly && in_array($GuiFooterFile, $GuiFiles)) require_once($GuiFooterFile);
+    // / A fragment never loads the header or the footer, so it cannot be judged on whether
+    // / they displayed. It is complete when the interface itself rendered.
+    if ($FileListOnly) { if ($UIDisplayed && $LanguageStringsLoaded) $GUIDisplayed = TRUE; }
+    else if ($HeaderDisplayed && $UIDisplayed && $FooterDisplayed && $LanguageStringsLoaded) $GUIDisplayed = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $guiType, $guiUIFile, $fallbackStringsFile, $ButtonCode);
   return $GUIDisplayed; }
@@ -7079,11 +7186,15 @@ function buildGUI($guiType, $ShowGUI, $ButtonCode) {
 // / A function to display the GUI.
 function showGUI($ShowGUI, $ButtonCode) {
   // / Set variables.
+  global $ShowFiles;
   $GUIDisplayed = FALSE;
+  // / $ShowFiles is read from the superglobal once, in verifyGlobals, & everything after
+  // / that reads the variable. Reading $_GET again here meant the same question was asked
+  // / of two different places, which is how they end up disagreeing.
   // / Call the GUI from the selected language pack after files have been uploaded.
-  if (isset($_GET['showFiles'])) $GUIDisplayed = buildGUI(2, $ShowGUI, $ButtonCode);
+  if ($ShowFiles) $GUIDisplayed = buildGUI(2, $ShowGUI, $ButtonCode);
   // / Call the GUI from the selected language pack before files have been uploaded.
-  if (!isset($_GET['showFiles'])) $GUIDisplayed = buildGUI(1, $ShowGUI, $ButtonCode);
+  else $GUIDisplayed = buildGUI(1, $ShowGUI, $ButtonCode);
   return $GUIDisplayed; }
 // / -----------------------------------------------------------------------------------
 
@@ -8325,14 +8436,21 @@ function requestRuntimeExtension($budgetToken, $requestedSeconds) {
 function enableConversionLimits() {
   // / Set variables.
   global $ApacheUser, $RunningAsRoot, $Lol, $EnableMemoryProtection;
-  $LimitsWereEnabled = FALSE;
+  $LimitsWereEnabled = $limitsSystemdUsable = FALSE;
   $StepsCompleted = 0;
+  $limitsSystemdReason = '';
   $dropInDirectory = $dropInFile = $dropInContents = '';
   $commandOutput = array();
   $commandExitCode = 1;
   $bytesWritten = 0;
   if (!$RunningAsRoot) errorEntry('Conversion limits can only be enabled while running as root!', 31011, FALSE);
-  else if (locateDependency('loginctl') === '') print('  Skipped    systemd is not present on this host, so nothing was enabled.'.$Lol);
+  // / Ask whether systemd is RUNNING, not whether its tools are installed. A container
+  // / ships the tools & runs something else as PID 1, & lingering there writes a file
+  // / nothing will ever read.
+  else if (!systemdIsUsable()[0]) {
+    list ($limitsSystemdUsable, $limitsSystemdReason) = systemdIsUsable();
+    print('  Skipped    '.$limitsSystemdReason.$Lol);
+    print('             Per conversion limits fall back to scheduling priority.'.$Lol); }
   else {
     // / Lingering starts a user manager for the account at boot, with no login session.
     // / Without it there is no user bus for systemd-run --user to reach.
@@ -8365,7 +8483,7 @@ function enableConversionLimits() {
       logEntry('Conversion limits were enabled for '.$ApacheUser.'. '.$StepsCompleted.' step(s) completed.');
       print('  Note       A running user manager must be restarted before delegation applies.'.$Lol);
       print('             systemctl restart user@$(id -u '.$ApacheUser.').service'.$Lol); } }
-  purgeSensitiveMemory($EnableMemoryProtection, $dropInDirectory, $dropInFile, $dropInContents, $commandOutput, $commandExitCode, $bytesWritten);
+  purgeSensitiveMemory($EnableMemoryProtection, $dropInDirectory, $dropInFile, $dropInContents, $commandOutput, $commandExitCode, $bytesWritten, $limitsSystemdUsable, $limitsSystemdReason);
   return array($LimitsWereEnabled, $StepsCompleted); }
 // / -----------------------------------------------------------------------------------
 
@@ -8452,6 +8570,62 @@ function verifyPhpConfiguration($mayRepair) {
 
 
 // / -----------------------------------------------------------------------------------
+// / A function to turn an internal policy status into the word an operator should read.
+// / Accepts the internal status word.
+// / Returns 'ok' when nothing needs doing, or the status unchanged when something does.
+// /
+// / A STATUS COLUMN IS SCANNED, NOT READ. IT MUST ONLY SAY ok WHEN NOTHING IS WRONG.
+// / unrestricted, unconfined & distribution all describe a host that is already correct,
+// / & all three read like something is missing. An administrator skimming a wall of output
+// / for problems should not have to know which of the unusual looking words are the good
+// / ones. The word becomes ok & the sentence beside it explains why.
+// /
+// / A STATE THAT CHANGED SOMETHING KEEPS ITS OWN WORD.
+// / installed, repaired & corrected are not problems, but they did alter this machine, &
+// / an operator is entitled to see that at a glance rather than have it flattened into ok.
+function policyDisplayStatus($policyStatus) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $DisplayStatus = (string)$policyStatus;
+  $benignStatuses = array('ok', 'unchanged', 'unrestricted', 'unconfined', 'distribution', 'absent', 'n/a');
+  if (in_array((string)$policyStatus, $benignStatuses, TRUE)) $DisplayStatus = 'ok';
+  purgeSensitiveMemory($EnableMemoryProtection, $benignStatuses, $policyStatus);
+  return $DisplayStatus; }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / A function to explain a policy status in a sentence.
+// / Accepts the policy name & the status word, in that order.
+// / Returns a sentence saying whether anything needs doing.
+// / A BARE STATUS WORD IS NOT A REPORT.
+// / unrestricted & unconfined & distribution all mean nothing needs doing, & all three read
+// / like something is missing. An operator should never have to ask which of the words on
+// / this screen are the bad ones.
+function describePolicyStatus($policyName, $policyStatus) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $StatusDescription = '';
+  if ($policyStatus === 'ok') $StatusDescription = 'Matches this release. Nothing to do.';
+  else if ($policyStatus === 'installed') $StatusDescription = 'Written for the first time.';
+  else if ($policyStatus === 'repaired') $StatusDescription = 'Rewritten to match this release.';
+  else if ($policyStatus === 'unchanged') $StatusDescription = 'Already correct. Nothing to do.';
+  else if ($policyStatus === 'unrestricted') $StatusDescription = 'This kernel does not restrict unprivileged namespaces, so no profile is needed. Nothing to do.';
+  else if ($policyStatus === 'unconfined') $StatusDescription = 'Nothing on this host confines OpenSCAD, so no override is needed. The bubblewrap sandbox is what isolates it. Nothing to do.';
+  else if ($policyStatus === 'distribution') $StatusDescription = 'The distribution profile governs this binary & has been extended through its own include. Nothing to do.';
+  else if ($policyStatus === 'absent') $StatusDescription = 'Not installed on this host, so there is nothing to write a policy for.';
+  else if ($policyStatus === 'foreign') $StatusDescription = 'Present but not written by this application. Review it, or re-run -fp to replace it.';
+  else if ($policyStatus === 'outdated') $StatusDescription = 'Written by an older release. Re-run -fp as root to repair it.';
+  else if ($policyStatus === 'not loaded') $StatusDescription = 'ON DISK BUT NOT IN FORCE. The kernel is not using it. Reload AppArmor, or reboot.';
+  else if ($policyStatus === 'refused') $StatusDescription = 'REFUSED. The existing file could not be backed up, so it was left alone.';
+  else if ($policyStatus === 'removed, distribution profile kept') $StatusDescription = 'Our competing profile was removed. The distribution profile governs this binary.';
+  else $StatusDescription = 'Reported '.$policyStatus.'.';
+  purgeSensitiveMemory($EnableMemoryProtection, $policyName, $policyStatus);
+  return $StatusDescription; }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
 // / A function to check that this host can actually do the work, without changing it.
 // / Accepts no arguments.
 // / Returns a readiness boolean & an array of findings, in that order.
@@ -8480,12 +8654,15 @@ function validateOperatingEnvironment() {
     if ($sandboxIsRequired) $EnvironmentIsReady = FALSE; }
   else $EnvironmentFindings[] = array('Check' => 'Sandbox', 'Status' => 'ok', 'Detail' => 'Bubblewrap can build a namespace.');
   // / Policies are validated & never repaired here. A drifted policy is reported.
+  // / The status word is reported as it is, rather than flattened to ok, & the sentence
+  // / beside it says whether anything needs doing. Flattening lost the difference between
+  // / a policy that matches & a host that never needed one.
   list ($policyIsValid, $policyStatus) = verifySandboxPolicy(FALSE);
-  $EnvironmentFindings[] = array('Check' => 'Sandbox AppArmor', 'Status' => ($policyIsValid ? 'ok' : $policyStatus), 'Detail' => ($policyIsValid ? 'The profile matches this release.' : 'Run -fp as root to install or repair it.'));
+  $EnvironmentFindings[] = array('Check' => 'Sandbox AppArmor', 'Status' => policyDisplayStatus($policyStatus), 'Detail' => describePolicyStatus('Sandbox AppArmor', $policyStatus));
   list ($policyIsValid, $policyStatus) = verifyImageMagickPolicy(FALSE);
-  $EnvironmentFindings[] = array('Check' => 'ImageMagick policy', 'Status' => ($policyIsValid ? 'ok' : $policyStatus), 'Detail' => ($policyIsValid ? 'The policy matches this release.' : 'Run -fp as root to install or repair it.'));
+  $EnvironmentFindings[] = array('Check' => 'ImageMagick policy', 'Status' => policyDisplayStatus($policyStatus), 'Detail' => describePolicyStatus('ImageMagick', $policyStatus));
   list ($policyIsValid, $policyStatus) = verifyOpenScadPolicy(FALSE);
-  $EnvironmentFindings[] = array('Check' => 'OpenSCAD AppArmor', 'Status' => ($policyIsValid ? 'ok' : $policyStatus), 'Detail' => ($policyIsValid ? 'Nothing confines OpenSCAD, or the override matches.' : 'Run -fp as root to install or repair it.'));
+  $EnvironmentFindings[] = array('Check' => 'OpenSCAD AppArmor', 'Status' => policyDisplayStatus($policyStatus), 'Detail' => describePolicyStatus('OpenSCAD AppArmor', $policyStatus));
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $sandboxIsRequired, $policyIsValid, $policyStatus, $kernelIsReady, $kernelFindings, $kernelFinding);
   return array($EnvironmentIsReady, $EnvironmentFindings); }
@@ -8502,7 +8679,10 @@ function showEnvironmentFindings($environmentFindings) {
   $finding = array();
   foreach ($environmentFindings as $finding) {
     print('  '.str_pad($finding['Check'], 28).str_pad($finding['Status'], 14).$finding['Detail'].$Lol);
-    if ($finding['Status'] !== 'ok') $ProblemsFound++; }
+    // / policyDisplayStatus has already reduced every benign policy state to ok, so the
+    // / column can be trusted. The words left here are the ones that changed something or
+    // / went wrong, & only the second kind is a problem.
+    if (!in_array($finding['Status'], array('ok', 'installed', 'repaired', 'corrected', 'removed'), TRUE)) $ProblemsFound++; }
   purgeSensitiveMemory($EnableMemoryProtection, $finding, $environmentFindings);
   return $ProblemsFound; }
 // / -----------------------------------------------------------------------------------
@@ -8552,12 +8732,14 @@ function fixManagedPermissions() {
     list ($kernelIsReady, $kernelFindings) = verifySandboxKernel(TRUE);
     showEnvironmentFindings($kernelFindings);
     print($Lol.'Validating policy files.'.$Lol);
+    // / Every line says what the status means, because half of these words read like a
+    // / fault & are not one.
     list ($policyIsValid, $policyStatus) = verifySandboxPolicy(TRUE);
-    print('  '.str_pad('Sandbox AppArmor', 22).$policyStatus.$Lol);
+    print('  '.str_pad('Sandbox AppArmor', 22).str_pad(policyDisplayStatus($policyStatus), 14).describePolicyStatus('Sandbox AppArmor', $policyStatus).$Lol);
     list ($policyIsValid, $policyStatus) = verifyImageMagickPolicy(TRUE);
-    print('  '.str_pad('ImageMagick', 22).$policyStatus.$Lol);
+    print('  '.str_pad('ImageMagick', 22).str_pad(policyDisplayStatus($policyStatus), 14).describePolicyStatus('ImageMagick', $policyStatus).$Lol);
     list ($policyIsValid, $policyStatus) = verifyOpenScadPolicy(TRUE);
-    print('  '.str_pad('OpenSCAD AppArmor', 22).$policyStatus.$Lol);
+    print('  '.str_pad('OpenSCAD AppArmor', 22).str_pad(policyDisplayStatus($policyStatus), 14).describePolicyStatus('OpenSCAD AppArmor', $policyStatus).$Lol);
     // / Give the web server user its own systemd manager while we are still root.
     // / This is the only moment the application legitimately holds the privilege needed,
     // / & it is what lets an unprivileged account set a resource ceiling later.

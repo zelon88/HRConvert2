@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/24/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/28/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILEINFORMATION ...
-// / v3.8.0.
+// / v3.8.1.
 // / This file contains the core manager resource listener logic of the application.
 // / This file contains logic related to rate planning & resouce management.
 // /
@@ -38,7 +38,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php checks this without executing the file.
-$CoreManagerVersion = 'v3.8.0';
+$CoreManagerVersion = 'v3.8.1';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1085,7 +1085,10 @@ function listenerUnitIsInstalled() {
   $systemctlBinary = '';
   $commandOutput = array();
   $commandExitCode = 1;
-  $systemctlBinary = locateDependency('systemctl');
+  // / A unit can only own this listener when systemd is actually running. Deferring to a
+  // / service manager that is not there meant the listener never started at all, & the
+  // / start reported success because systemctl was on the PATH.
+  $systemctlBinary = systemdIsUsable()[0] ? locateDependency('systemctl') : '';
   if ($systemctlBinary !== '') {
     exec(escapeshellarg($systemctlBinary).' is-enabled hrconvert2-listener 2>/dev/null', $commandOutput, $commandExitCode);
     if ($commandExitCode === 0) $UnitIsInstalled = TRUE; }

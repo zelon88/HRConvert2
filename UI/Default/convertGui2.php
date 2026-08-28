@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/24/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/28/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.8.0.
+// / v3.8.1.
 // / The files in this UI were submitted by Github user hernandito in Issue #85. Thank you!
 // / https://github.com/hernandito
 // / This file contains the default UI for the application.
@@ -43,13 +43,37 @@ $selectorSide = ($GUIAlignment === 'left') ? 'right' : 'left';
 $selectorSwatches = array(
   'red' => '#c0392b',  'green' => '#27ae60',  'blue' => '#3d71b3',  'grey' => '#7f8c8d',
   'orange' => '#e67e22', 'purple' => '#8e44ad', 'dark' => '#2c3e50');
+// / -----------------------------------------------------------------------------------
 // / Carry the page state so a selection returns to the page the user was already on.
-if (isset($_GET['showFiles'])) $selectorBase .= 'showFiles=1&';
-if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
+// /
+// / $ShowFiles, $FileListOnly & $NoGui ARRIVE FROM THE CORE. THEY ARE NOT READ HERE.
+// / verifyGlobals reads every superglobal this application accepts & buildGUI hands the
+// / result to an interface as an ordinary variable. An interface that read $_GET for
+// / itself would be defining API surface, which is not an interface's to define, & a
+// / second interface reading a different parameter is how two GUIs stop agreeing about
+// / what the application accepts.
+// /
+// / redeclare() rather than .= on every one of these. Appending in place leaves the old
+// / string in the register underneath the new one, which is the whole thing
+// / ABOUT_DEFENSIVE_MEMORY_MANAGEMENT exists to prevent. redeclare shreds the old value
+// / before the new one is written.
+if ($ShowFiles) redeclare($selectorBase, $selectorBase.'showFiles=1&');
+// / A link inside the frame must keep the frame, or a language change loads the bare list
+// / into the whole window instead of back into the panel it came from.
+if ($FileListOnly) redeclare($selectorBase, $selectorBase.'fileListOnly=1&');
+if ($NoGui) redeclare($selectorBase, $selectorBase.'noGui=TRUE&');
 // / -----------------------------------------------------------------------------------
 ?>
   <body>
     <script type='text/javascript' src='<?php echo $JqueryPath; ?>'></script>
+        <?php if (!$FileListOnly) {
+          // / THE HELPER IS DEFINED ONCE, BY THE PAGE, & NEVER BY A FRAGMENT.
+          // / A fragment is injected INTO the page that already defines this. Sending a
+          // / second copy redefines the object mid flight & re-runs its ready handler,
+          // / which fetches the fragment again. That is a request loop, & every pass
+          // / replaced the list & destroyed the click handlers the previous pass had just
+          // / registered. The per file panels below still carry their own handlers, which
+          // / is correct, because those belong to the markup being injected. ?>
         <script type='text/javascript'>
           // / One object. Every operation in this interface goes through it.
           window.HRC2 = {
@@ -141,10 +165,26 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
               // / leave the interface exactly as it behaved before, which is a manual
               // / reload. Guessing wrong here reloads the wrong document & loses the
               // / panel the user was working in.
-              var frame = document.getElementById('hrc2FileListFrame');
-              if (frame && frame.contentWindow) { frame.contentWindow.location.reload(); return; }
-              if (window.frameElement) { window.location.reload(); return; }
+              // / Fetch the list & replace it in place. Same tokens, same call, same shape
+              // / as every conversion this interface already makes.
+              var container = $('#hrc2FileList');
+              if (container.length === 0) return;
+              var data = { Token1: this.tokens.Token1, Token2: this.tokens.Token2 };
+              $.ajax({
+                type: 'POST',
+                url: 'convertCore.php?showFiles=1&fileListOnly=1',
+                data: data
+              }).then(function (returnedHtml) {
+                // / .html rather than innerHTML, because the per file panels carry script
+                // / blocks that register their own click handlers & innerHTML never runs them.
+                container.html(returnedHtml);
+              }, function () {
+                // / A list that could not be refreshed is not worth an alert. The files are
+                // / still there & the next conversion will try again.
+                warningToConsole('The file list could not be refreshed.');
+              });
             },
+
 
             // / THE WHOLE PATTERN, ONCE.
             // / suffix is the ConvertGuiCounter1 value, or an empty string for the bulk
@@ -192,6 +232,17 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
               });
             },
 
+
+            // / Somewhere to put a note that is worth recording & not worth interrupting for.
+            warningToConsole: function (messageText) {
+              if (window.console && window.console.warn) window.console.warn('HRConvert2. ' + messageText);
+            },
+
+            // / Called once when the document is ready. This is what loads the list.
+            init: function () {
+              if (document.getElementById('hrc2FileList')) this.refreshFileList();
+            },
+
             // / Read a form value by element id, safely. A missing element returned
             // / undefined & was posted as the string "undefined".
             value: function (elementId) {
@@ -199,11 +250,14 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
               return element ? element.value : '';
             }
           };
+          $(document).ready(function () { HRC2.init(); });
         </script>
+        <?php } // / End of the helper, which a fragment never carries. ?>
 
+    <?php if (!$FileListOnly) { // / Skipped when only the file list is wanted. ?>
 <div style= 'background-color: #fff; margin: 20px; width: 500px; color: #777777; margin-left:auto; margin-right:auto; padding: 20px; border-radius: 12px; -webkit-box-shadow: 1px 1px 5px 1px rgba(0,0,0,.2);
 box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
-      <?php if (!isset($_GET['noGui'])) { ?><h1><img src='<?php echo $GuiImageDir; ?>convert-banner.png' style='max-height:72px; margin-right: 10px;'/><?php //echo $ApplicationName; ?></h1>
+      <?php if (!$NoGui) { ?><h1><img src='<?php echo $GuiImageDir; ?>convert-banner.png' style='max-height:72px; margin-right: 10px;'/><?php //echo $ApplicationName; ?></h1>
      <hr style="border: 1px solid #eeeeee;"/><?php } ?>
      <b><?php echo $Gui2Text1; ?></b><br>
      <?php echo $Gui2Text30; ?>
@@ -387,6 +441,33 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
       <a id='downloadTarget' href='about:blank' style='display: none;' download></a>
     </div>
     <br />
+    <?php } // / End of the chrome region.
+      // / The chrome opens one wrapper that footer.php closes. In list only mode that
+      // / wrapper is skipped, so a plain one is opened in its place below & the closing tag
+      // / the footer emits still has something to pair with. Both modes emit the same
+      // / number of wrappers, which is what keeps the footer valid in either.
+      // /
+      // / The full page shows the list through a frame, so a conversion can refresh it in
+      // / place without reloading the page & losing every panel the user had open. Nothing
+      // / about the list itself changes. It is the same markup, loaded through its own
+      // / request. In list only mode the frame is not emitted, because that IS the frame.
+      if (!$FileListOnly) { ?>
+    <!-- / THE FILE LIST IS FETCHED, NOT FRAMED.
+       / An iframe cannot POST for itself, so loading one meant building a second way to
+       / authenticate a request, & that second way did not work. The tokens either did not
+       / arrive or did not survive, every load minted a fresh session, & each fresh session
+       / landed in an empty directory it had just created.
+       / HRC2.post already sends these tokens on every conversion & has never failed to.
+       / Fetching the list through the same call reuses the request shape that is known to
+       / work rather than inventing a parallel one to debug.
+       / jQuery .html() executes the script blocks in what it injects, which the per file
+       / panels depend on, & innerHTML would not. -->
+    <div id='hrc2FileList'></div>
+    <?php } else {
+      // / The else branch stays open through the entire file list & closes at the end of
+      // / this file. The list belongs to list only mode. Closing here would end the branch
+      // / immediately & print the list on the full page as well as inside the frame. ?>
+    <div>
     <div style='max-width:500px; margin-left:auto; margin-right:auto; background-color: #fff7e9; padding: 8px; border: 2px solid rgba(0, 0, 0, 0.3); border-radius: 10px;'>
      
 
@@ -1332,6 +1413,8 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
       <?php } ?>
     </div>
   </div>
+    <?php } // / End of the file list. It renders only in list only mode, because the
+      // / full page shows it through the frame above & would otherwise print it twice. ?>
     <?php
     // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
     $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2XpsArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2ScadArr = $selectorBase = $selectorSide = $selectorSwatches = $selectorLang = $selectorLabel = $selectorCurrent = $selectorColor = $selectorSwatch = $selectorGui = $selectorURL = $gui2SvgArr = $gui2ScadArr = $gui2EbookArr = NULL;

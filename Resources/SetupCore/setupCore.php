@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/24/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/28/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILEINFORMATION ...
-// / v3.8.0.
+// / v3.8.1.
 // / HRConvert2 Setup Core.
 // / A detachable installation & configuration component. convertCore.php runs without it.
 // / This file defines functions only. convertCore.php dispatches into them.
@@ -40,7 +40,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$SetupCoreVersion = 'v3.8.0';
+$SetupCoreVersion = 'v3.8.1';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -480,7 +480,6 @@ function formatConfigValue($valueType, $rawValue) {
   purgeSensitiveMemory($EnableMemoryProtection, $cleanValue, $valueType, $rawValue);
   return array($ValueIsValid, $FormattedValue); }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to display one section & everything known about it.
@@ -968,8 +967,9 @@ function generateListenerService() {
 function installListenerService($enableService) {
   // / Set variables.
   global $EnableResourceAwareness, $RunningAsRoot, $Lol, $EnableMemoryProtection;
-  $ServiceWasInstalled = FALSE;
+  $ServiceWasInstalled = $serviceSystemdUsable = FALSE;
   $ServiceStatus = 'skipped';
+  $serviceSystemdReason = '';
   $unitPath = $unitContents = $existingContents = '';
   $commandOutput = array();
   $commandExitCode = 1;
@@ -979,7 +979,13 @@ function installListenerService($enableService) {
     $ServiceStatus = 'failed';
     errorEntry('A service unit can only be installed while running as root!', 32012, FALSE); }
   else if (!$EnableResourceAwareness) print('  '.str_pad('Skipped', 12).'Resource awareness is disabled, so no listener service is needed.'.$Lol);
-  else if (locateDependency('systemctl') === '') print('  '.str_pad('Skipped', 12).'systemd is not present on this host.'.$Lol);
+  // / A unit file written where systemd is not running is a file nothing reads, & worse,
+  // / it makes the listener defer to a service manager that will never answer. Ask whether
+  // / systemd is RUNNING rather than whether its tools happen to be installed.
+  else if (!systemdIsUsable()[0]) {
+    list ($serviceSystemdUsable, $serviceSystemdReason) = systemdIsUsable();
+    print('  '.str_pad('Skipped', 12).$serviceSystemdReason.$Lol);
+    print('  '.str_pad('', 12).'The listener is started directly instead. Nothing else is needed.'.$Lol); }
   else if (!is_dir('/etc/systemd/system')) print('  '.str_pad('Skipped', 12).'/etc/systemd/system does not exist.'.$Lol);
   else {
     $unitContents = generateListenerService();
@@ -1016,7 +1022,7 @@ function installListenerService($enableService) {
           $ServiceWasInstalled = TRUE;
           $ServiceStatus = 'installed';
           print('  '.str_pad('Ready', 12).'systemctl enable --now hrconvert2-listener'.$Lol); } } } }
-  purgeSensitiveMemory($EnableMemoryProtection, $unitPath, $unitContents, $existingContents, $commandOutput, $commandExitCode, $bytesWritten, $enableService);
+  purgeSensitiveMemory($EnableMemoryProtection, $unitPath, $unitContents, $existingContents, $commandOutput, $commandExitCode, $bytesWritten, $serviceSystemdUsable, $serviceSystemdReason, $enableService);
   return array($ServiceWasInstalled, $ServiceStatus); }
 // / -----------------------------------------------------------------------------------
 

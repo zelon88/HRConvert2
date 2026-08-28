@@ -28,7 +28,7 @@
 
 # / This line is written by the Core Manager when the script no longer matches the core.
 # / Do not edit it by hand. Reinstall the script instead.
-DisabledByCore="TRUE"
+DisabledByCore="FALSE"
 
 SCRIPT_VERSION="v3.8.0"
 set -u

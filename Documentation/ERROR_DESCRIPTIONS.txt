@@ -4989,3 +4989,565 @@ ERROR DESCRIPTION
   The application was halted to prevent a potentially hazardous condition.
   The application is being fuzzed, spoofed, or scanned for vulnerabilities.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-30, <SESSION_IDENTIFIER>: The secret file at <PATH> could not be removed by <USER>. Correct its ownership with the -fp argument as root, or delete it by hand.
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The install secret file is unusable & could not be deleted so a new one could be written.
+  The file was created by a different account, which is almost always a root command line run.
+  A root invocation creates the secret owned by root & the web server user can never read it.
+  The file is on a read only mount, or the directory does not permit deletion.
+  Run the -fp argument as root, which corrects ownership on the secret & every managed path.
+  This error is not fatal. Sessions cannot be validated until it is resolved & every request
+  will be issued a new session, so no user will be able to return to their files.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-2005, <SESSION_IDENTIFIER>: An XPS conversion was refused because no sandbox could be built!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Bubblewrap is missing or non functional & sandboxing is required by config.php.
+  This error only occurs if --Require Sandbox-- is set to TRUE in config.php.
+  This error only occurs if --Require Sandbox On Docker-- is set to TRUE when running in a container.
+  An XPS or OXPS file is converted by xpstopdf, which parses a document format from an untrusted upload.
+  The sandbox removes the network namespace, which is what stops a linked resource being fetched.
+  ERROR 2004 is the same condition raised for every other document conversion.
+  Run the -fp argument as root, which corrects every kernel setting & policy the sandbox needs.
+  This error is not fatal but the file that causes it will be skipped.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31011, <SESSION_IDENTIFIER>: Conversion limits can only be enabled while running as root!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The enableConversionLimits routine was reached by an account other than root.
+  Enabling lingering & writing a systemd delegation drop-in both require root.
+  This is normally reached through the -fp argument, which is already refused to a standard user.
+  Re-run the command with sudo.
+  ERROR 31008 is raised when permissions cannot be corrected for the same reason.
+  This error is not fatal. Per conversion limits fall back to scheduling priority.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31012, <SESSION_IDENTIFIER>: A subordinate manager start was requested but the component is unavailable!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The --start-manager argument was used while the Core Manager component was missing or invalid.
+  The coreManager.php file was removed or replaced between the launch & the start.
+  The component version does not exactly match the version this core requires.
+  --Enable Resource Awareness-- was set to FALSE in config.php between the launch & the start.
+  The install secret was rotated, so the component could not be loaded on the new process.
+  ERROR 31009 is the same condition raised for the --start-core-manager argument.
+  The Core Manager will attempt to restart the subordinate & will raise this again if nothing changed.
+  This error halts the launched process only. The web interface is unaffected.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31013, <SESSION_IDENTIFIER>: Resource awareness is required by config.php but is disabled or has no install secret!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  --Require Resource Awareness-- is TRUE while --Enable Resource Awareness-- is FALSE.
+  These two settings contradict each other & the application refuses rather than guessing which was meant.
+  No install secret is available, so the component could not be loaded even if it were enabled.
+  A secret is unavailable when the secret file belongs to another account, which -fp corrects.
+  ERROR 31010 is raised when the component itself is missing or does not match this core.
+  Set --Enable Resource Awareness-- to TRUE, or set --Require Resource Awareness-- to FALSE.
+  This error halts the application, because the administrator has declared that this server must
+  never accept work it cannot account for.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31014, <SESSION_IDENTIFIER>: The foreground listener was started by an account that may not operate it!
+
+FILE
+  Resources/coreManager.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The --run-core-manager argument was used by an account that is neither root nor the web server user.
+  A command line user attempted to start the listener by hand.
+  A service unit was installed with the wrong User setting.
+  --run-core-manager is the entry point a service manager uses. It does not fork & does not return.
+  A standard user holds a per user secret, which cannot derive a valid startup key, so a listener
+  started that way could never be reached by any worker even if this check permitted it.
+  Correct the User setting in the unit, or start the listener with the -l argument instead.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31015, <SESSION_IDENTIFIER>: The foreground listener could not derive a startup key. No install secret is available!
+
+FILE
+  Resources/coreManager.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The install secret could not be read by the account the listener is running as.
+  The secret file belongs to root because a root command line run created it first.
+  The secret file was removed or rotated while the listener was starting.
+  The listener is running as an account that resolves a per user secret rather than the install secret.
+  Run the -fp argument as root, which corrects the ownership of the secret file.
+  A listener without the install secret cannot derive the keys its sockets are encrypted with, so
+  every message a worker sent would be discarded as undecryptable & the listener would answer nobody.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31016, <SESSION_IDENTIFIER>: The foreground listener was requested but the Core Manager component is unavailable!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The --run-core-manager argument was used while the Core Manager component was missing or invalid.
+  The coreManager.php file is absent, unreadable, or reports no version.
+  The component version does not exactly match the version this core requires.
+  --Enable Resource Awareness-- is set to FALSE in config.php.
+  A service unit will restart the process & raise this again until the component is corrected.
+  Disable the hrconvert2-listener unit while the component is unavailable, or repair the component.
+  ERROR 31009 & ERROR 31012 are the same condition raised for the two internal start arguments.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32000, <SESSION_IDENTIFIER>: A configuration backup was requested but the source does not exist!
+
+FILE
+  Resources/SetupCore/setupCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The --config --backup argument was used & config.php could not be found to copy.
+  A path was supplied on the command line & names a file that is not there.
+  No path was supplied & this installation has no Resources/config.php.
+  This error only occurs when the --config argument is used.
+  This error is not fatal. Nothing was copied & nothing was changed.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32001, <SESSION_IDENTIFIER>: A configuration backup was requested but <DIRECTORY> is not writable by this account!
+
+FILE
+  Resources/SetupCore/setupCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The directory named in --backup does not exist, or this account cannot write to it.
+  A backup is the one configuration operation a standard user may perform, so this is
+  frequently a standard user naming a destination only root can write.
+  Name a destination this account owns, such as a path inside its own home directory.
+  This error is not fatal. Nothing was copied & nothing was changed.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32002, <SESSION_IDENTIFIER>: A configuration backup was requested but <PATH> already exists. Nothing was overwritten!
+
+FILE
+  Resources/SetupCore/setupCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The destination named in --backup already exists.
+  A backup NEVER overwrites. The whole purpose of the file is that it is the copy that survives,
+  & silently replacing an earlier backup with a later one destroys the thing being protected.
+  Choose a different destination, or move the existing file aside first.
+  This error is not fatal. Nothing was copied & nothing was changed.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32003, <SESSION_IDENTIFIER>: A configuration backup to <PATH> did not complete!
+
+FILE
+  Resources/SetupCore/setupCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The copy was attempted & the result does not match the source in size.
+  The destination filesystem is full.
+  The destination filesystem was disconnected during the copy.
+  A quota prevented the file being written in full.
+  This error is not fatal. The configuration itself is untouched.
+  A partial backup is left on disk. Delete it rather than trusting it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32004, <SESSION_IDENTIFIER>: A configuration could not be staged at <PATH>!
+
+FILE
+  Resources/SetupCore/setupCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The new configuration could not be written beside the original before being moved into place.
+  The Resources directory is not writable by this account.
+  The filesystem is full or read only.
+  A configuration is NEVER written in place. It is staged, checked, & only then moved, so a
+  configuration that would not parse never reaches the installation.
+  This error is not fatal. The existing configuration is untouched & remains in service.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32005, <SESSION_IDENTIFIER>: The staged configuration does not parse & was discarded. <PARSER OUTPUT>
+
+FILE
+  Resources/SetupCore/setupCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The configuration this utility assembled was checked with php -l & was rejected.
+  A value entered by hand contains a quote or a backslash that was not escaped.
+  An array value was entered that is not valid PHP.
+  The parser output is included in the message & names the line it objected to.
+  This error is in place to maintain syntactical integrity of the codebase.
+  Logically this error should be rare, because every value is formatted before it is written.
+  This error is not fatal & is the check working. The existing configuration is untouched.
+  There is no recovering from a syntax error in config.php from a web request, which is why
+  the file is checked before it is installed rather than after.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32006, <SESSION_IDENTIFIER>: A staged configuration could not be moved into place at <PATH>!
+
+FILE
+  Resources/SetupCore/setupCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The replacement was written & checked but could not replace the original.
+  The original is owned by another account & this one cannot replace it.
+  The Resources directory does not permit the file being replaced.
+  The staged file is removed rather than left behind, so no partial configuration survives.
+  Run the -fp argument as root to correct ownership, then try again.
+  This error is not fatal. The existing configuration is untouched & remains in service.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32007, <SESSION_IDENTIFIER>: The configuration file supplied on the command line does not exist!
+
+FILE
+  Resources/SetupCore/setupCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A path was supplied to the configuration utility & nothing exists at it.
+  The path was mistyped, or names a staging directory that has since been moved.
+  A relative path was supplied & the working directory is not what was assumed.
+  Supply an absolute path.
+  This error is not fatal. Nothing was read & nothing was changed.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32008, <SESSION_IDENTIFIER>: The configuration path supplied on the command line is not a file!
+
+FILE
+  Resources/SetupCore/setupCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A path was supplied to the configuration utility & names a directory rather than a file.
+  The Resources directory was supplied rather than the config.php inside it.
+  Supply the full path to config.php itself.
+  This error is not fatal. Nothing was read & nothing was changed.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32009, <SESSION_IDENTIFIER>: This installation has no configuration file to operate on!
+
+FILE
+  Resources/SetupCore/setupCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  No path was supplied & Resources/config.php does not exist in this installation.
+  The installation is incomplete, or --Installation Location-- does not describe this installation.
+  A call arriving from convertCore.php never supplies a path, so it can only ever operate on the
+  configuration this core is responsible for, & that file is not there.
+  Reinstall config.php from the release that matches this core.
+  This error is not fatal. Nothing was read & nothing was changed.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32010, <SESSION_IDENTIFIER>: Data locations can only be created while running as root!
+
+FILE
+  Resources/SetupCore/setupCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A complete installation was attempted by an account other than root.
+  Creating a data location outside the web root & handing it to the web server user requires root.
+  Re-run the command with sudo.
+  This error is not fatal. The installation stops at this stage & nothing after it is attempted.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32011, <SESSION_IDENTIFIER>: A required data location could not be created at <PATH>!
+
+FILE
+  Resources/SetupCore/setupCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A directory named in config.php could not be created.
+  The parent directory does not exist & could not be created.
+  The path names a mount point that is not mounted.
+  The filesystem is read only or full.
+  An entry in --Additional Data Locations-- names a path on a device that is not attached.
+  verifyRequiredDirs deliberately REFUSES to create the data location at runtime & raises
+  ERROR 1000 instead, because a data location that vanished is a mount that failed & creating
+  an empty one on top of it would hide the fault. This error is the install time equivalent,
+  where there is nothing to hide.
+  This error is not fatal. The installation stops at this stage & nothing after it is attempted.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32012, <SESSION_IDENTIFIER>: A service unit can only be installed while running as root!
+
+FILE
+  Resources/SetupCore/setupCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A service unit installation was attempted by an account other than root.
+  Writing to /etc/systemd/system requires root.
+  This is normally reached through the -fp argument, which is already refused to a standard user.
+  Re-run the command with sudo.
+  This error is not fatal. The listener can still be started with the -l argument.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32013, <SESSION_IDENTIFIER>: The listener service unit could not be written to <PATH>!
+
+FILE
+  Resources/SetupCore/setupCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The unit file could not be written even though this invocation is running as root.
+  /etc/systemd/system is read only, which is normal inside many containers.
+  The filesystem is full.
+  A unit that already matches what would be written is left completely alone & does not reach this.
+  This error is not fatal. The listener can still be started with the -l argument, which is what
+  a host without a running systemd does anyway.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-33000, <SESSION_IDENTIFIER>: A dependency operation was attempted without a valid authorization token!
+
+FILE
+  Resources/DependencyCore/dependencyCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  An install, update or uninstall was called without a token derived from the install secret.
+  The token proves the request arrived through convertCore.php rather than by another route.
+  The install secret was rotated between the token being derived & being validated.
+  The install secret could not be read, so no valid token could be derived.
+  The component was reached some way that does not go through the --setup argument.
+  Reading the machine needs no token at all. --check-depends & --output-supply-chain are
+  unaffected by this & remain available.
+  This error is not fatal. Nothing was installed, updated or removed.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-33001, <SESSION_IDENTIFIER>: A supply chain report could not be written!
+
+FILE
+  Resources/DependencyCore/dependencyCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The comma separated report could not be written to the destination.
+  A path was supplied with --output-supply-chain & names a directory this account cannot write.
+  No path was supplied & the log directory is not writable by this account.
+  The filesystem is full.
+  This error is not fatal. Nothing else is affected & the report may be requested again with a
+  destination this account owns.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

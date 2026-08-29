@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.8.1.
+// / v3.8.2.
 // / The files in this UI were submitted by Github user hernandito in Issue #85. Thank you!
 // / https://github.com/hernandito
 // / This file contains the default UI for the application.
@@ -63,10 +63,51 @@ if ($ShowFiles) redeclare($selectorBase, $selectorBase.'showFiles=1&');
 if ($FileListOnly) redeclare($selectorBase, $selectorBase.'fileListOnly=1&');
 if ($NoGui) redeclare($selectorBase, $selectorBase.'noGui=TRUE&');
 // / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / THE CHROME BUTTONS CARRY THE SESSION. THEY DO NOT NAVIGATE THE BROWSER.
+// /
+// / Which page the core renders is decided by showFiles, & showFiles is read from GET
+// / only. The session is carried by the token pair, & the token pair is read from POST
+// / only. So a control that changes page while staying in the session is a form POST that
+// / carries the tokens in its body & names the destination in its query string. That is
+// / the same shape the selector bar already uses & is the only shape that works.
+// /
+// / window.history.back() did not do that. The page it returns to was itself the result of
+// / a POST, so a browser either refuses to replay it, asks the user to confirm a
+// / resubmission, or serves a cached copy carrying whatever tokens it was rendered with.
+// / A user who landed on the upload page that way had no reliable way back to the files
+// / they had already uploaded.
+// / location.reload(true) had the same problem for the same reason.
+// /
+// / The current interface, language & colour ride along in the query string. A control
+// / that dropped them would silently reset the user to the configured defaults, which
+// / reads as the application forgetting the settings they just chose.
+$sessionParams = '';
+if ($NoGui) redeclare($sessionParams, $sessionParams.'noGui=TRUE&');
+redeclare($sessionParams, $sessionParams.'gui='.$GuiToUse.'&language='.$LanguageToUse.'&color='.$ColorToUse);
+// / No showFiles, so the core renders the upload page & the session stays alive.
+$backURL = 'convertCore.php?'.$sessionParams;
+// / showFiles, so the core renders this page again. Never fileListOnly. That asks for a
+// / fragment, & a fragment loaded into the whole window is a page with no header, no
+// / footer & no script library.
+$refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
+// / -----------------------------------------------------------------------------------
 ?>
+        <?php if (!$FileListOnly) {
+          // / A FRAGMENT OPENS NO BODY & LOADS NO LIBRARY.
+          // / <body> belongs to the document & footer.php is what closes it. A fragment
+          // / loads neither header nor footer, so opening a body here left an unclosed one
+          // / inside the div the fragment gets injected into.
+          // / The script tag was worse. $JqueryPath is assigned by header.php, which a
+          // / fragment never loads, so a fragment emitted src='' & an EMPTY src resolves to
+          // / the CURRENT PAGE. Every list refresh therefore had the browser fetch
+          // / convertCore.php again & try to parse the returned HTML as javascript, which
+          // / throws Unexpected token '<' & burns a whole extra core request doing it.
+          // / The page that receives a fragment has already loaded jQuery. ?>
   <body>
     <script type='text/javascript' src='<?php echo $JqueryPath; ?>'></script>
-        <?php if (!$FileListOnly) {
+        <?php
           // / THE HELPER IS DEFINED ONCE, BY THE PAGE, & NEVER BY A FRAGMENT.
           // / A fragment is injected INTO the page that already defines this. Sending a
           // / second copy redefines the object mid flight & re-runs its ready handler,
@@ -75,182 +116,26 @@ if ($NoGui) redeclare($selectorBase, $selectorBase.'noGui=TRUE&');
           // / registered. The per file panels below still carry their own handlers, which
           // / is correct, because those belong to the markup being injected. ?>
         <script type='text/javascript'>
-          // / One object. Every operation in this interface goes through it.
-          window.HRC2 = {
-
-            // / Supplied once by PHP rather than interpolated into every block.
-            tokens: {
-              Token1: '<?php echo $Token1; ?>',
-              Token2: '<?php echo $Token2; ?>'
-            },
-            dataPath: '<?php echo 'DATA/'.$SesHash3.'/'; ?>',
-            failureText: <?php echo json_encode($Gui2Text71); ?>,
-
-            // / Show a banner & hide it again. The five second life is unchanged.
-            flash: function (elementId) {
-              if (!document.getElementById(elementId)) return;
-              toggle_visibility(elementId);
-              window.setTimeout(function () { toggle_visibility(elementId); }, 5000);
-            },
-
-            // / Show or hide the spinner, without toggling it into the wrong state.
-            // / toggle_visibility flips whatever it finds, so an operation that failed
-            // / early could leave a spinner running forever. This asks for a state.
-            spinner: function (elementId, shouldShow) {
-              var element = document.getElementById(elementId);
-              if (!element) return;
-              var isVisible = (element.style.display !== 'none' && element.style.display !== '');
-              if (isVisible !== shouldShow) toggle_visibility(elementId);
-            },
-
-            // / One POST. Returns a promise so callers read top to bottom.
-            post: function (payload) {
-              var data = { Token1: this.tokens.Token1, Token2: this.tokens.Token2 };
-              for (var key in payload) { if (payload.hasOwnProperty(key)) data[key] = payload[key]; }
-              return $.ajax({ type: 'POST', url: 'convertCore.php', data: data });
-            },
-
-            // / The core reply is a first line we discard, then one filename per line.
-            // / A line carrying ERROR!!! is a failure & is collected rather than alerted
-            // / immediately, so a batch reports once instead of once per file.
-            parseReply: function (replyText) {
-              var lines = String(replyText || '').split(/\r?\n/).slice(1);
-              var result = { files: [], errors: [] };
-              lines.forEach(function (line) {
-                line = line.trim();
-                if (line === '') return;
-                if (line.indexOf('ERROR!!!') !== -1) result.errors.push(line);
-                else result.files.push(line);
-              });
-              return result;
-            },
-
-            // / Ask for one file & hand it to the browser. Sequential by design.
-            // / Ten parallel download requests raced each other & the core answered them
-            // / in whatever order it finished, which is how a batch delivered the wrong
-            // / file for the wrong row.
-            downloadOne: function (fileName) {
-              var self = this;
-              return this.post({ download: fileName }).then(function (replyText) {
-                // / An empty reply means the core produced nothing. That is a failure, &
-                // / it was previously read as a success because the request itself worked.
-                if (String(replyText || '').trim() === '') return $.Deferred().reject(fileName).promise();
-                download_file(self.dataPath, fileName);
-                return fileName;
-              });
-            },
-
-            downloadAll: function (fileNames) {
-              var self = this;
-              var chain = $.Deferred().resolve().promise();
-              var failed = [];
-              fileNames.forEach(function (fileName) {
-                chain = chain.then(function () {
-                  return self.downloadOne(fileName).then(null, function () {
-                    failed.push(fileName);
-                    return $.Deferred().resolve().promise();
-                  });
-                });
-              });
-              return chain.then(function () { return failed; });
-            },
-
-            // / Reload the file list without reloading the page.
-            // / convertCore.php?showFiles=1 already renders exactly this view on its own,
-            // / so the iframe needs nothing new from the core.
-            refreshFileList: function () {
-              // / THE BUTTONS LIVE INSIDE THE LIST, SO THE LIST OFTEN RELOADS ITSELF.
-              // / When this page holds the frame, reload the frame. When this page IS the
-              // / frame, reload this page. When there is no frame at all, do nothing &
-              // / leave the interface exactly as it behaved before, which is a manual
-              // / reload. Guessing wrong here reloads the wrong document & loses the
-              // / panel the user was working in.
-              // / Fetch the list & replace it in place. Same tokens, same call, same shape
-              // / as every conversion this interface already makes.
-              var container = $('#hrc2FileList');
-              if (container.length === 0) return;
-              var data = { Token1: this.tokens.Token1, Token2: this.tokens.Token2 };
-              $.ajax({
-                type: 'POST',
-                url: 'convertCore.php?showFiles=1&fileListOnly=1',
-                data: data
-              }).then(function (returnedHtml) {
-                // / .html rather than innerHTML, because the per file panels carry script
-                // / blocks that register their own click handlers & innerHTML never runs them.
-                container.html(returnedHtml);
-              }, function () {
-                // / A list that could not be refreshed is not worth an alert. The files are
-                // / still there & the next conversion will try again.
-                warningToConsole('The file list could not be refreshed.');
-              });
-            },
-
-
-            // / THE WHOLE PATTERN, ONCE.
-            // / suffix is the ConvertGuiCounter1 value, or an empty string for the bulk
-            // / controls at the top of the page. Everything else is derived from it.
-            run: function (payload, suffix) {
-              var self = this;
-              suffix = (suffix === undefined || suffix === null) ? '' : String(suffix);
-              var loadingId = 'loadingCommandDiv' + suffix;
-              var victoryId = 'victoryCommandDiv' + suffix;
-              var failureId = 'failureCommandDiv' + suffix;
-
-              self.spinner(loadingId, true);
-
-              self.post(payload).then(function (replyText) {
-                var parsed = self.parseReply(replyText);
-
-                // / Nothing came back at all. The operation ran & produced no file.
-                if (parsed.files.length === 0 && parsed.errors.length === 0) {
-                  self.spinner(loadingId, false);
-                  self.flash(failureId);
-                  window.alert(self.failureText);
-                  return;
-                }
-
-                self.downloadAll(parsed.files).then(function (failedDownloads) {
-                  self.spinner(loadingId, false);
-                  var problems = parsed.errors.concat(failedDownloads.map(function (name) {
-                    return name + ' could not be downloaded.';
-                  }));
-
-                  // / One banner & one alert for the whole operation, however many files.
-                  if (problems.length > 0) {
-                    self.flash(failureId);
-                    window.alert(problems.join('\n'));
-                  }
-                  if (parsed.files.length > failedDownloads.length) self.flash(victoryId);
-
-                  // / New files exist now, so show them.
-                  self.refreshFileList();
-                });
-              }, function () {
-                self.spinner(loadingId, false);
-                self.flash(failureId);
-                window.alert(self.failureText);
-              });
-            },
-
-
-            // / Somewhere to put a note that is worth recording & not worth interrupting for.
-            warningToConsole: function (messageText) {
-              if (window.console && window.console.warn) window.console.warn('HRConvert2. ' + messageText);
-            },
-
-            // / Called once when the document is ready. This is what loads the list.
-            init: function () {
-              if (document.getElementById('hrc2FileList')) this.refreshFileList();
-            },
-
-            // / Read a form value by element id, safely. A missing element returned
-            // / undefined & was posted as the string "undefined".
-            value: function (elementId) {
-              var element = document.getElementById(elementId);
-              return element ? element.value : '';
-            }
-          };
-          $(document).ready(function () { HRC2.init(); });
+          // / THE PAGE SUPPLIES VALUES. HRC2-Functions.js SUPPLIES BEHAVIOUR.
+          // / Everything below is something only PHP can know. A session token, a path
+          // / built from a session hash, or a string from the language pack. No
+          // / behaviour is written into this page & none should be added here.
+          if (typeof HRC2 === 'undefined' || typeof HRC2.configure !== 'function') {
+            if (window.console && window.console.error) window.console.error('HRConvert2. HRC2-Functions.js did not load, or is an older copy without configure(). The interface cannot run. Reload with a cleared cache.');
+          } else {
+            HRC2.configure(<?php echo json_encode(array(
+              'tokens' => array('Token1' => (string)$Token1, 'Token2' => (string)$Token2),
+              'dataPath' => 'DATA/'.$SesHash3.'/',
+              'failureText' => $Gui2Text71,
+              'scanFailureText' => $Gui2Text72,
+              'operationFailedText' => $Gui2Text74,
+              'clipboardUnsupportedText' => $GuiFunctionsText1,
+              // / The core refuses some operations BEFORE attempting them & reports that
+              // / refusal by printing an alert string with no error tag on it. A reply
+              // / carrying one of these is a failure even though nothing in it is tagged.
+              'failureStrings' => array($Alert3))); ?>);
+            $(document).ready(function () { HRC2.init(); });
+          }
         </script>
         <?php } // / End of the helper, which a fragment never carries. ?>
 
@@ -264,9 +149,25 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
       <?php echo $Gui2Text31; ?><p>
    
     <div id='compressAll' name='compressAll' style='max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;'>
-      <button id='backButton' name='backButton' style='width:50px;' class='info-button' onclick='window.history.back();'>&#x2190;</button>
-      <button id='userConfigButton' name='userConfigButton' style='width:50px;' class='info-button' onclick='toggle_visibility("uiSelector");'>&#9965;</button>
-      <button id='refreshButton' name='refreshButton' style='width:50px;' class='info-button' onclick='javascript:location.reload(true);'>&#x21BB;</button>
+      <?php // / The form action is the refresh destination, so the refresh button needs no
+            // / formaction of its own. The back button overrides it with one.
+            // / EVERY BUTTON IN HERE DECLARES ITS TYPE. A button inside a form defaults to
+            // / submit, so the settings toggle would submit the form & reload the page
+            // / instead of opening the panel underneath it. These three buttons carried no
+            // / type at all before, which was harmless only because they were not in a
+            // / form. They are now.
+            // / The submit buttons carry no name, so nothing they are called reaches the
+            // / core as POST input. The core reads specific keys & a stray one is noise. ?>
+      <form id='sessionForm' name='sessionForm' method='post' style='display:inline;' action='<?php echo htmlspecialchars($refreshURL, ENT_QUOTES, 'UTF-8'); ?>'>
+        <input type='hidden' name='Token1' value='<?php echo $Token1; ?>'>
+        <input type='hidden' name='Token2' value='<?php echo $Token2; ?>'>
+        <button type='submit' id='backButton' style='width:50px;' class='info-button' formaction='<?php echo htmlspecialchars($backURL, ENT_QUOTES, 'UTF-8'); ?>'>&#x2190;</button>
+        <button type='button' id='userConfigButton' style='width:50px;' class='info-button' onclick='toggle_visibility("uiSelector");'>&#9965;</button>
+        <button type='submit' id='refreshButton' style='width:50px;' class='info-button'>&#x21BB;</button>
+      </form>
+      <?php // / The selector panel holds a form of its own, so it stays OUTSIDE the one
+            // / above. HTML does not allow a form inside a form & a browser silently drops
+            // / the inner one, which would take every selector button with it. ?>
       <div id='uiSelector' name='uiSelector' style='display:none;'>
         <form id='uiSelectorForm' name='uiSelectorForm' method='post' action='<?php echo htmlspecialchars($selectorBase, ENT_QUOTES, 'UTF-8'); ?>'>
           <input type='hidden' name='Token1' value='<?php echo $Token1; ?>'>
@@ -324,52 +225,8 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
         <p><?php echo $Gui2Text21; ?><input type='checkbox' id='scancoreall' value='scancoreall' name='phpavScan' checked></p>
         <p><input type='submit' id='scanAllButton' name='scanAllButton' class='info-button' value='<?php echo $Gui2Text22; ?>' onclick='toggle_visibility("loadingCommandDiv");'></p>
         <script type='text/javascript'>
-          $(document).ready(function () {
-            $('#scanAllButton').click(function() {
-              var scanfiles = <?php echo json_encode($Files); ?>;
-              var scanType = 'all';
-              
-              if($('input#clamscanall').is(':checked')) { scanType = 'clamav'; }
-              if($('input#scancoreall').is(':checked')) { scanType = 'scancore'; }
-              if($('input#clamscanall').is(':checked') && $('input#scancoreall').is(':checked')) { scanType = 'all'; }
-              
-              $.ajax({
-                type: 'POST',
-                url: 'convertCore.php',
-                data: {
-                  Token1: '<?php echo $Token1; ?>',
-                  Token2: '<?php echo $Token2; ?>',
-                  scantype: scanType,
-                  filesToScan: scanfiles 
-                },
-                success: function(ReturnData) {
-                  $.ajax({
-                    type: 'POST',
-                    url: 'convertCore.php',
-                    data: {
-                      Token1: '<?php echo $Token1; ?>',
-                      Token2: '<?php echo $Token2; ?>',
-                      download: '<?php echo $ConsolidatedLogFileName; ?>' 
-                    },
-                    success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
-                      toggle_visibility('victoryCommandDiv');
-                      setTimeout(function() { toggle_visibility('victoryCommandDiv'); }, 5000);
-                      download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>'); 
-                    },
-                    error: function() {
-                      toggle_visibility('loadingCommandDiv');
-                      alert('<?php echo $Gui2Text72; ?>');
-                    } 
-                  });
-                },
-                error: function() {
-                  toggle_visibility('loadingCommandDiv');
-                  alert('<?php echo $Gui2Text72; ?>');
-                }
-              });
-            });
-          });
+          HRC2.bindScanAll('scanAllButton', '', 'clamscanall', 'scancoreall',
+            <?php echo json_encode(array_values($Files)); ?>, <?php echo json_encode($ConsolidatedLogFileName); ?>);
         </script>
 
 
@@ -386,44 +243,8 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
         </select>
         <input type='submit' id='archallSubmit' name='archallSubmit' class='info-button' value='<?php echo $Gui2Text19; ?>' onclick='toggle_visibility("loadingCommandDiv");'>
         <script type='text/javascript'>
-          $(document).ready(function () {
-            $('#archallSubmit').click(function() {
-              var extension = document.getElementById('archallextension').value;
-              if (extension === '') { extension = 'zip'; }
-              
-              $.ajax({
-                type: 'POST',
-                url: 'convertCore.php',
-                data: {
-                  Token1: '<?php echo $Token1; ?>',
-                  Token2: '<?php echo $Token2; ?>',
-                  archive: '1',
-                  filesToArchive: <?php echo json_encode($Files); ?>,
-                  archextension: extension,
-                  userfilename: document.getElementById('userarchallfilename').value 
-                },
-                success: function(ReturnData) {
-                  $.ajax({
-                    type: 'POST',
-                    url: 'convertCore.php',
-                    data: {
-                      Token1: '<?php echo $Token1; ?>',
-                      Token2: '<?php echo $Token2; ?>',
-                      download: document.getElementById('userarchallfilename').value + '.' + extension 
-                    },
-                    success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
-                      toggle_visibility('victoryCommandDiv');
-                      setTimeout(function() { toggle_visibility('victoryCommandDiv'); }, 5000);
-                      download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', document.getElementById('userarchallfilename').value + '.' + extension); 
-                    },
-                    error: function() {
-                      toggle_visibility('loadingCommandDiv');
-                      toggle_visibility('failureCommandDiv');
-                      setTimeout(function() { toggle_visibility('failureCommandDiv'); }, 5000);
-                      alert('<?php echo $Gui2Text71; ?>');
-                    }
-                  }); } }); }); });
+          HRC2.bindArchiveAll('archallSubmit', '', <?php echo json_encode(array_values($Files)); ?>,
+            'userarchallfilename', 'archallextension', 'zip');
         </script>
 
         <?php } ?>
@@ -497,34 +318,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <img id='downloadfilebutton<?php echo $ConvertGuiCounter1; ?>' name='downloadfilebutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>download.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' onclick='toggle_visibility("loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text5.' '.$File; ?>' alt='<?php echo $Gui2Text5.' '.$File; ?>'/>
 
           <script type='text/javascript'>
-            $(document).ready(function () {
-              $('#downloadfilebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                type: 'POST',
-                url: 'convertCore.php',
-                data: {
-                  Token1:'<?php echo $Token1; ?>',
-                  Token2:'<?php echo $Token2; ?>',
-                  download:'<?php echo $File; ?>' },
-                success: function(ReturnData) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  if (ReturnData.includes('ERROR!!!')) {
-                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() {
-                      toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                    alert(ReturnData); }
-                  else {
-                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                    setTimeout(function() {
-                      toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                    download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $File; ?>');
-                    } },
-                error: function(ReturnData) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  setTimeout(function() {
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                  alert("<?php echo $Gui2Text71; ?>"); } }); }); });
+            HRC2.bindDownload('downloadfilebutton<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>', <?php echo json_encode($File); ?>);
           </script>
 
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
@@ -582,7 +376,10 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
            onclick="toggle_visibility('docOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
           <?php } 
 
-          if (in_array($extension, $EbookInputArray) && in_array('Document', $SupportedConversionTypes)) { ?>
+          // / Gated on Ebook, not Document, so it matches the panel it toggles.
+          // / An administrator who removed Ebook from $SupportedConversionTypes, which
+          // / config.php invites, drew this button with no panel underneath it.
+          if (in_array($extension, $EbookInputArray) && in_array('Ebook', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='ebookButton<?php echo $ConvertGuiCounter1; ?>' name='ebookButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>document.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
@@ -714,16 +511,9 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           
           <input type='submit' id='archfileSubmit<?php echo $ConvertGuiCounter1; ?>' name='archfileSubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo $Gui2Text51; ?>' onclick='toggle_visibility("loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>");'>
           <script type='text/javascript'>
-            $(document).ready(function () {
-              $('#archfileSubmit<?php echo $ConvertGuiCounter1; ?>').click(function () {
-                  HRC2.run({
-                    archive: '<?php echo $File; ?>',
-                    filesToArchive: '<?php echo $File; ?>',
-                    archextension: HRC2.value('archfileextension<?php echo $ConvertGuiCounter1; ?>'),
-                    userfilename: HRC2.value('userarchfilefilename<?php echo $ConvertGuiCounter1; ?>')
-                  }, '<?php echo $ConvertGuiCounter1; ?>');
-                });
-              });
+            HRC2.bindRun('archfileSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('archive' => $File, 'filesToArchive' => $File)); ?>,
+              <?php echo json_encode(array('archextension' => 'archfileextension'.$ConvertGuiCounter1, 'userfilename' => 'userarchfilefilename'.$ConvertGuiCounter1)); ?>);
           </script>
         </div>
 
@@ -736,53 +526,17 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <p id='sharelinkURL<?php echo $ConvertGuiCounter1; ?>' name='sharelinkURL<?php echo $ConvertGuiCounter1; ?>'><?php echo $Gui2Text29; ?><i><?php echo $Gui2Text25; ?></i></p>
           <input type="submit" id="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" name="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text32; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <input type="submit" id="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" name="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text33; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                type: 'POST',
-                url: 'convertCore.php',
-                data: { 
-                  Token1:'<?php echo $Token1; ?>',
-                  Token2:'<?php echo $Token2; ?>',
-                  download:'<?php echo $File; ?>' },
-                success: function(returnFile) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text24; ?><i><?php echo $Gui2Text26; ?></i>';
-                  document.getElementById('shareclipStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text27; ?><i><?php echo $Gui2Text28; ?></i>';
-                  document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text29; ?><i>' + share_file_url('<?php echo $FullURL.'/DATA/'.$SesHash3.'/'; ?>', '<?php echo $File; ?>') + '</i>';
-                  copy_share_link(share_file_url('<?php echo $FullURL.'/DATA/'.$SesHash3.'/'; ?>', '<?php echo $File; ?>'), '<?php echo $GuiFunctionsText1; ?>');
-                  alert("<?php echo $Gui2Text73; ?>");
-                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  setTimeout(function() {
-                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); },
-                error: function(ReturnData) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  setTimeout(function() {
-                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); 
-                  alert("<?php echo $Gui2Text74; ?>"); } }); });
-              $('#sharecopybutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                type: 'POST',
-                url: 'convertCore.php',
-                data: { 
-                  Token1:'<?php echo $Token1; ?>',
-                  Token2:'<?php echo $Token2; ?>',
-                  download:'<?php echo $File; ?>' },
-                success: function(returnFile) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  setTimeout(function() {
-                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); 
-                  document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text24; ?><i><?php echo $Gui2Text26; ?></i>';
-                  document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text29; ?><i>' + share_file_url('<?php echo $FullURL.'/DATA/'.$SesHash3.'/'; ?>', '<?php echo $File; ?>') + '</i>'; },
-                error: function(ReturnData) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  setTimeout(function() {
-                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); 
-                  alert("<?php echo $Gui2Text74; ?>");} }); }); });
+          <script type='text/javascript'>
+            HRC2.bindShare(<?php echo json_encode(array(
+              'generateId' => 'sharegeneratebutton'.$ConvertGuiCounter1,
+              'copyId' => 'sharecopybutton'.$ConvertGuiCounter1,
+              'suffix' => (string)$ConvertGuiCounter1,
+              'fileName' => $File,
+              'shareBaseURL' => $FullURL.'/DATA/'.$SesHash3.'/',
+              'linkGeneratedHtml' => $Gui2Text24.'<i>'.$Gui2Text26.'</i>',
+              'clipCopiedHtml' => $Gui2Text27.'<i>'.$Gui2Text28.'</i>',
+              'linkUrlPrefixHtml' => $Gui2Text29,
+              'copiedText' => $Gui2Text73)); ?>);
           </script>
 
         </div>
@@ -792,22 +546,8 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <p style="max-width:500px;"></p>
           <p><strong><?php echo $Gui2Text69; ?></strong></p>
           <input type='submit' id='confirmdeletefilebutton<?php echo $ConvertGuiCounter1; ?>' name='confirmdeletefilebutton<?php echo $ConvertGuiCounter1; ?>' value='<?php echo $Gui2Text70; ?>' onclick='toggle_visibility("loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>");'>
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#confirmdeletefilebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                type: 'POST',
-                url: 'convertCore.php',
-                data: { 
-                  Token1:'<?php echo $Token1; ?>',
-                  Token2:'<?php echo $Token2; ?>',
-                  filesToDelete:'<?php echo $File; ?>' },
-                success: function(ReturnData) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  location.reload(); },
-                error: function(ReturnData) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  alert("<?php echo $Gui2Text74; ?>"); } }); }); });
+          <script type='text/javascript'>
+            HRC2.bindDelete('confirmdeletefilebutton<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>', <?php echo json_encode($File); ?>);
           </script>
         </div>
 
@@ -818,130 +558,11 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <input type="submit" id="scancorebutton<?php echo $ConvertGuiCounter1; ?>" name="scancorebutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text35; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <input type="submit" id="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" name="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text36; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <input type="submit" id="scanallbutton<?php echo $ConvertGuiCounter1; ?>" name="scanallbutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text37; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-
-              // 1. ScanCore Button
-              $('#scancorebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1: '<?php echo $Token1; ?>',
-                    Token2: '<?php echo $Token2; ?>',
-                    scantype: 'scancore',
-                    filesToScan: '<?php echo $File; ?>' 
-                  },
-                  success: function(ReturnData) {
-                    $.ajax({
-                      type: 'POST',
-                      url: 'convertCore.php',
-                      data: { 
-                        Token1: '<?php echo $Token1; ?>',
-                        Token2: '<?php echo $Token2; ?>',
-                        download: '<?php echo $ConsolidatedLogFileName; ?>' 
-                      },
-                      success: function(ReturnData) {
-                        toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                        if (ReturnData.includes('ERROR!!!')) {
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(ReturnData); 
-                        } else {
-                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
-                        } 
-                      },
-                      error: function(ReturnData) {
-                        toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                        alert("<?php echo $Gui2Text72; ?>"); 
-                      } 
-                    }); } }); });
-
-              // 2. ClamScan Button
-              $('#clamscanbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1: '<?php echo $Token1; ?>',
-                    Token2: '<?php echo $Token2; ?>',
-                    scantype: 'clamav',
-                    filesToScan: '<?php echo $File; ?>' 
-                  },
-                  success: function(ReturnData) {
-                    $.ajax({
-                      type: 'POST',
-                      url: 'convertCore.php',
-                      data: { 
-                        Token1: '<?php echo $Token1; ?>',
-                        Token2: '<?php echo $Token2; ?>',
-                        download: '<?php echo $ConsolidatedLogFileName; ?>' 
-                      },
-                      success: function(ReturnData) {
-                        toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                        if (ReturnData.includes('ERROR!!!')) {
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(ReturnData); 
-                        } else {
-                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
-                        } 
-                      },
-                      error: function(ReturnData) {
-                        toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                        alert("<?php echo $Gui2Text72; ?>"); 
-                      } 
-                    }); } }); });
-
-              // 3. Scan All Button
-              $('#scanallbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1: '<?php echo $Token1; ?>',
-                    Token2: '<?php echo $Token2; ?>',
-                    scantype: 'all',
-                    filesToScan: '<?php echo $File; ?>' 
-                  },
-                  success: function(ReturnData) {
-                    $.ajax({
-                      type: 'POST',
-                      url: 'convertCore.php',
-                      data: { 
-                        Token1: '<?php echo $Token1; ?>',
-                        Token2: '<?php echo $Token2; ?>',
-                        download: '<?php echo $ConsolidatedLogFileName; ?>' 
-                      },
-                      success: function(ReturnData) {
-                        toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                        if (ReturnData.includes('ERROR!!!')) {
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(ReturnData); 
-                        } else {
-                          toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
-                        } 
-                      },
-                      error: function(ReturnData) {
-                        toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                        alert("<?php echo $Gui2Text72; ?>"); 
-                      } 
-                    }); } }); });
-
-            });
+          <script type='text/javascript'>
+            <?php $gui2ScanLog = json_encode($ConsolidatedLogFileName); $gui2ScanFile = json_encode($File); ?>
+            HRC2.bindScan('scancorebutton<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>', 'scancore', <?php echo $gui2ScanFile; ?>, <?php echo $gui2ScanLog; ?>);
+            HRC2.bindScan('clamscanbutton<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>', 'clamav', <?php echo $gui2ScanFile; ?>, <?php echo $gui2ScanLog; ?>);
+            HRC2.bindScan('scanallbutton<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>', 'all', <?php echo $gui2ScanFile; ?>, <?php echo $gui2ScanLog; ?>);
           </script>
 
         </div>
@@ -965,22 +586,22 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
             <?php } ?>
           </select></p>
           <p><input type="submit" id='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' name='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo $Gui2Text52; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');"></p>
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function () {
-                  HRC2.run({
-                    pdfworkSelected: '<?php echo $File; ?>',
-                    method: HRC2.value('pdfmethod<?php echo $ConvertGuiCounter1; ?>'),
-                    pdfextension: HRC2.value('pdfextension<?php echo $ConvertGuiCounter1; ?>'),
-                    userpdfconvertfilename: HRC2.value('userpdffilename<?php echo $ConvertGuiCounter1; ?>')
-                  }, '<?php echo $ConvertGuiCounter1; ?>');
-                });
-              });
+          <script type='text/javascript'>
+            HRC2.bindRun('pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('pdfworkSelected' => $File)); ?>,
+              <?php echo json_encode(array('method' => 'pdfmethod'.$ConvertGuiCounter1, 'pdfextension' => 'pdfextension'.$ConvertGuiCounter1, 'userpdfconvertfilename' => 'userpdffilename'.$ConvertGuiCounter1)); ?>);
           </script>
         </div>
         <?php } 
 
-        if (in_array($extension, $ArchiveArray) && in_array('Archive', $SupportedConversionTypes)) {
+        // / THIS GATE MUST MATCH THE BUTTON THAT TOGGLES IT.
+        // / The button above tests $DearchiveArray & this panel tested $ArchiveArray.
+        // / config.php ships gz, bz, bz2, vhd, vdi, cbr, cbz, tar.gz & tar.bz2 in the
+        // / first & not the second, so those files drew a button that toggled a panel
+        // / which had never been emitted. That threw a TypeError & hid the button.
+        // / $DearchiveArray is what the input can be READ from & is the correct gate.
+        // / $ArchiveArray is what the output can be WRITTEN to & stays the list below.
+        if (in_array($extension, $DearchiveArray) && in_array('Archive', $SupportedConversionTypes)) {
         ?>
         <div id='archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:500px;"></p>
@@ -993,16 +614,10 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
             <?php } ?>
           </select></p>
           <input type="submit" id="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text53; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function () {
-                  HRC2.run({
-                    convertSelected: '<?php echo $File; ?>',
-                    extension: HRC2.value('archiveextension<?php echo $ConvertGuiCounter1; ?>'),
-                    userconvertfilename: HRC2.value('userarchivefilename<?php echo $ConvertGuiCounter1; ?>')
-                  }, '<?php echo $ConvertGuiCounter1; ?>');
-                });
-              });
+          <script type='text/javascript'>
+            HRC2.bindRun('archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'archiveextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userarchivefilename'.$ConvertGuiCounter1)); ?>);
           </script>
 
         </div>
@@ -1021,16 +636,10 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
             <?php } ?>
           </select></p>
           <input type="submit" id="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text54; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#docconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function () {
-                  HRC2.run({
-                    convertSelected: '<?php echo $File; ?>',
-                    extension: HRC2.value('docextension<?php echo $ConvertGuiCounter1; ?>'),
-                    userconvertfilename: HRC2.value('userdocfilename<?php echo $ConvertGuiCounter1; ?>')
-                  }, '<?php echo $ConvertGuiCounter1; ?>');
-                });
-              });
+          <script type='text/javascript'>
+            HRC2.bindRun('docconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'docextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userdocfilename'.$ConvertGuiCounter1)); ?>);
           </script>
         </div>
         <?php }
@@ -1048,16 +657,10 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
             <?php } ?>
           </select></p>
           <input type="submit" id="ebookconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="ebookconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text82; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#ebookconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function () {
-                  HRC2.run({
-                    convertSelected: '<?php echo $File; ?>',
-                    extension: HRC2.value('ebookextension<?php echo $ConvertGuiCounter1; ?>'),
-                    userconvertfilename: HRC2.value('userebookfilename<?php echo $ConvertGuiCounter1; ?>')
-                  }, '<?php echo $ConvertGuiCounter1; ?>');
-                });
-              });
+          <script type='text/javascript'>
+            HRC2.bindRun('ebookconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'ebookextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userebookfilename'.$ConvertGuiCounter1)); ?>);
           </script>
         </div>
         <?php }
@@ -1075,16 +678,10 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
             <?php } ?>
           </select></p>
           <input type="submit" id="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text55; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">        
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function () {
-                  HRC2.run({
-                    convertSelected: '<?php echo $File; ?>',
-                    extension: HRC2.value('spreadextension<?php echo $ConvertGuiCounter1; ?>'),
-                    userconvertfilename: HRC2.value('userspreadfilename<?php echo $ConvertGuiCounter1; ?>')
-                  }, '<?php echo $ConvertGuiCounter1; ?>');
-                });
-              });
+          <script type='text/javascript'>
+            HRC2.bindRun('spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'spreadextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userspreadfilename'.$ConvertGuiCounter1)); ?>);
           </script>
 
         </div>
@@ -1103,16 +700,10 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
             <?php } ?>
           </select></p>
           <input type="submit" id="xpsconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="xpsconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text56; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#xpsconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function () {
-                  HRC2.run({
-                    convertSelected: '<?php echo $File; ?>',
-                    extension: HRC2.value('xpsextension<?php echo $ConvertGuiCounter1; ?>'),
-                    userconvertfilename: HRC2.value('userxpsfilename<?php echo $ConvertGuiCounter1; ?>')
-                  }, '<?php echo $ConvertGuiCounter1; ?>');
-                });
-              });
+          <script type='text/javascript'>
+            HRC2.bindRun('xpsconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'xpsextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userxpsfilename'.$ConvertGuiCounter1)); ?>);
           </script>
 
         </div>
@@ -1130,16 +721,10 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
             <?php } ?>
           </select></p>
           <input type="submit" id="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text56; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function () {
-                  HRC2.run({
-                    convertSelected: '<?php echo $File; ?>',
-                    extension: HRC2.value('presentationextension<?php echo $ConvertGuiCounter1; ?>'),
-                    userconvertfilename: HRC2.value('userpresentationfilename<?php echo $ConvertGuiCounter1; ?>')
-                  }, '<?php echo $ConvertGuiCounter1; ?>');
-                });
-              });
+          <script type='text/javascript'>
+            HRC2.bindRun('presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'presentationextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userpresentationfilename'.$ConvertGuiCounter1)); ?>);
           </script>
 
         </div>
@@ -1159,17 +744,10 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           </select></p>
           <p><?php echo $Gui2Text66; ?><input type="number" size="6" id='bitrate<?php echo $ConvertGuiCounter1; ?>' name='bitrate<?php echo $ConvertGuiCounter1; ?>' value="0" min="0" max="100000"></p>
           <input type="submit" id="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text57; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function () {
-                  HRC2.run({
-                    bitrate: $('#bitrate<?php echo $ConvertGuiCounter1; ?>').val(),
-                    convertSelected: '<?php echo $File; ?>',
-                    extension: HRC2.value('audioextension<?php echo $ConvertGuiCounter1; ?>'),
-                    userconvertfilename: HRC2.value('useraudiofilename<?php echo $ConvertGuiCounter1; ?>')
-                  }, '<?php echo $ConvertGuiCounter1; ?>');
-                });
-              });
+          <script type='text/javascript'>
+            HRC2.bindRun('audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('bitrate' => 'bitrate'.$ConvertGuiCounter1, 'extension' => 'audioextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'useraudiofilename'.$ConvertGuiCounter1)); ?>);
           </script>
 
         </div>
@@ -1188,16 +766,10 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
             <?php } ?>
           </select></p>
           <input type="submit" id="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text58; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function () {
-                  HRC2.run({
-                    convertSelected: '<?php echo $File; ?>',
-                    extension: HRC2.value('videoextension<?php echo $ConvertGuiCounter1; ?>'),
-                    userconvertfilename: HRC2.value('uservideofilename<?php echo $ConvertGuiCounter1; ?>')
-                  }, '<?php echo $ConvertGuiCounter1; ?>');
-                });
-              });
+          <script type='text/javascript'>
+            HRC2.bindRun('videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'videoextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'uservideofilename'.$ConvertGuiCounter1)); ?>);
           </script>
 
         </div>
@@ -1216,16 +788,10 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
             <?php } ?>
           </select></p>
           <input type="submit" id="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text59; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function () {
-                  HRC2.run({
-                    convertSelected: '<?php echo $File; ?>',
-                    extension: HRC2.value('streamextension<?php echo $ConvertGuiCounter1; ?>'),
-                    userconvertfilename: HRC2.value('userstreamfilename<?php echo $ConvertGuiCounter1; ?>')
-                  }, '<?php echo $ConvertGuiCounter1; ?>');
-                });
-              });
+          <script type='text/javascript'>
+            HRC2.bindRun('streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'streamextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userstreamfilename'.$ConvertGuiCounter1)); ?>);
           </script>
 
         </div>
@@ -1244,16 +810,10 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
             <?php } ?>
           </select></p>
           <input type="submit" id="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text60; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function () {
-                  HRC2.run({
-                    convertSelected: '<?php echo $File; ?>',
-                    extension: HRC2.value('modelextension<?php echo $ConvertGuiCounter1; ?>'),
-                    userconvertfilename: HRC2.value('usermodelfilename<?php echo $ConvertGuiCounter1; ?>')
-                  }, '<?php echo $ConvertGuiCounter1; ?>');
-                });
-              });
+          <script type='text/javascript'>
+            HRC2.bindRun('modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'modelextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'usermodelfilename'.$ConvertGuiCounter1)); ?>);
           </script>
 
         </div>
@@ -1272,16 +832,10 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
             <?php } ?>
           </select></p>
           <input type="submit" id="scadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="scadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text80; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#scadconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function () {
-                  HRC2.run({
-                    convertSelected: '<?php echo $File; ?>',
-                    extension: HRC2.value('scadextension<?php echo $ConvertGuiCounter1; ?>'),
-                    userconvertfilename: HRC2.value('userscadfilename<?php echo $ConvertGuiCounter1; ?>')
-                  }, '<?php echo $ConvertGuiCounter1; ?>');
-                });
-              });
+          <script type='text/javascript'>
+            HRC2.bindRun('scadconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'scadextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userscadfilename'.$ConvertGuiCounter1)); ?>);
           </script>
 
         </div>
@@ -1300,16 +854,10 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
             <?php } ?>
           </select></p>
           <input type="submit" id="subtitleconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="subtitleconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text76; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#subtitleconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function () {
-                  HRC2.run({
-                    convertSelected: '<?php echo $File; ?>',
-                    extension: HRC2.value('subtitleextension<?php echo $ConvertGuiCounter1; ?>'),
-                    userconvertfilename: HRC2.value('usersubtitlefilename<?php echo $ConvertGuiCounter1; ?>')
-                  }, '<?php echo $ConvertGuiCounter1; ?>');
-                });
-              });
+          <script type='text/javascript'>
+            HRC2.bindRun('subtitleconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'subtitleextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'usersubtitlefilename'.$ConvertGuiCounter1)); ?>);
           </script>
 
         </div>
@@ -1328,16 +876,10 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
             <?php } ?>
           </select></p>
           <input type="submit" id="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text61; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">     
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function () {
-                  HRC2.run({
-                    convertSelected: '<?php echo $File; ?>',
-                    extension: HRC2.value('drawingextension<?php echo $ConvertGuiCounter1; ?>'),
-                    userconvertfilename: HRC2.value('userdrawingfilename<?php echo $ConvertGuiCounter1; ?>')
-                  }, '<?php echo $ConvertGuiCounter1; ?>');
-                });
-              });
+          <script type='text/javascript'>
+            HRC2.bindRun('drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'drawingextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userdrawingfilename'.$ConvertGuiCounter1)); ?>);
           </script>
 
         </div>
@@ -1358,18 +900,10 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <p><?php echo $Gui2Text64; ?></p>
           <p><input type="number" size="4" value="0" id='width<?php echo $ConvertGuiCounter1; ?>' name='width<?php echo $ConvertGuiCounter1; ?>' min="0" max="10000"> X <input type="number" size="4" value="0" id="height<?php echo $ConvertGuiCounter1; ?>" name="height<?php echo $ConvertGuiCounter1; ?>" min="0"  max="10000"></p> 
           <input type="submit" id="svgconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="svgconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text61; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">     
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#svgconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function () {
-                  HRC2.run({
-                    convertSelected: '<?php echo $File; ?>',
-                    width: $('#width<?php echo $ConvertGuiCounter1; ?>').val(),
-                    height: $('#height<?php echo $ConvertGuiCounter1; ?>').val(),
-                    extension: HRC2.value('svgextension<?php echo $ConvertGuiCounter1; ?>'),
-                    userconvertfilename: HRC2.value('svgfilename<?php echo $ConvertGuiCounter1; ?>')
-                  }, '<?php echo $ConvertGuiCounter1; ?>');
-                });
-              });
+          <script type='text/javascript'>
+            HRC2.bindRun('svgconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('width' => 'width'.$ConvertGuiCounter1, 'height' => 'height'.$ConvertGuiCounter1, 'extension' => 'svgextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'svgfilename'.$ConvertGuiCounter1)); ?>);
           </script>
 
         </div>
@@ -1391,19 +925,10 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <p><input type="number" size="4" value="0" id='width<?php echo $ConvertGuiCounter1; ?>' name='width<?php echo $ConvertGuiCounter1; ?>' min="0" max="10000"> X <input type="number" size="4" value="0" id="height<?php echo $ConvertGuiCounter1; ?>" name="height<?php echo $ConvertGuiCounter1; ?>" min="0"  max="10000"></p> 
           <p><?php echo $Gui2Text65; ?><input type="number" size="3" id='rotate<?php echo $ConvertGuiCounter1; ?>' name='rotate<?php echo $ConvertGuiCounter1; ?>' value="0" min="0" max="359"></p>
           <input type="submit" id='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' name='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo $Gui2Text62; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>').click(function () {
-                  HRC2.run({
-                    convertSelected: '<?php echo $File; ?>',
-                    rotate: $('#rotate<?php echo $ConvertGuiCounter1; ?>').val(),
-                    width: $('#width<?php echo $ConvertGuiCounter1; ?>').val(),
-                    height: $('#height<?php echo $ConvertGuiCounter1; ?>').val(),
-                    extension: HRC2.value('photoextension<?php echo $ConvertGuiCounter1; ?>'),
-                    userconvertfilename: HRC2.value('userphotofilename<?php echo $ConvertGuiCounter1; ?>')
-                  }, '<?php echo $ConvertGuiCounter1; ?>');
-                });
-              });
+          <script type='text/javascript'>
+            HRC2.bindRun('convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('rotate' => 'rotate'.$ConvertGuiCounter1, 'width' => 'width'.$ConvertGuiCounter1, 'height' => 'height'.$ConvertGuiCounter1, 'extension' => 'photoextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userphotofilename'.$ConvertGuiCounter1)); ?>);
           </script>
 
           </div>
@@ -1417,5 +942,5 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
       // / full page shows it through the frame above & would otherwise print it twice. ?>
     <?php
     // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-    $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2XpsArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2ScadArr = $selectorBase = $selectorSide = $selectorSwatches = $selectorLang = $selectorLabel = $selectorCurrent = $selectorColor = $selectorSwatch = $selectorGui = $selectorURL = $gui2SvgArr = $gui2ScadArr = $gui2EbookArr = NULL;
-    unset($gui2AudArr, $gui2VidArr, $gui2StreamArr, $gui2DocArr, $gui2SpreadArr, $gui2XpsArr, $gui2PresArr, $gui2ArchArr, $gui2ImaArr, $gui2ModArr, $gui2SubArr, $gui2DraArr, $gui2OcrArr, $gui2ScadArr, $gui2SvgArr, $selectorBase, $selectorSide, $selectorSwatches, $selectorLang, $selectorLabel, $selectorCurrent, $selectorColor, $selectorSwatch, $selectorGui, $selectorURL, $gui2ScadArr, $gui2EbookArr);
+    $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2XpsArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2ScadArr = $selectorBase = $selectorSide = $selectorSwatches = $selectorLang = $selectorLabel = $selectorCurrent = $selectorColor = $selectorSwatch = $selectorGui = $selectorURL = $gui2SvgArr = $gui2EbookArr = $sessionParams = $backURL = $refreshURL = $extension = $FileNoExt = NULL;
+    unset($gui2AudArr, $gui2VidArr, $gui2StreamArr, $gui2DocArr, $gui2SpreadArr, $gui2XpsArr, $gui2PresArr, $gui2ArchArr, $gui2ImaArr, $gui2ModArr, $gui2SubArr, $gui2DraArr, $gui2OcrArr, $gui2ScadArr, $gui2SvgArr, $selectorBase, $selectorSide, $selectorSwatches, $selectorLang, $selectorLabel, $selectorCurrent, $selectorColor, $selectorSwatch, $selectorGui, $selectorURL, $gui2EbookArr, $sessionParams, $backURL, $refreshURL, $extension, $FileNoExt);

@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.7.0.
+v3.8.2.
 This plain text file describes the process for creating, formatting, and installing additional GUIs into HRConvert2.
 
 HARDWARE REQUIREMENTS ... 
@@ -262,6 +262,51 @@ The HRConvert2 core will define the following variables which map to subdirector
   $GuiImageDir, Maps to 'Resources/Images' folder.
   $GuiCSSDir, Maps to 'Resources/CSS' folder.
   $GuiJSDir, Maps to 'Resources/JS' folder.
+
+The included GUIs keep their client side script library at 'Resources/JS/HRC2-Functions.js'.
+header.php points $JsLibraryPath at it & loads it before anything that calls into it.
+That file is static javascript & CANNOT read a language pack, so every string it shows a
+user is passed in as an argument by the PHP that calls it. Pass those strings through
+json_encode() rather than echoing them into a quoted javascript literal. A translation
+containing an apostrophe will otherwise end the literal early & break the whole script.
+
+It also carries the one definition of what a core reply means, which every interface must
+use rather than testing a reply for itself;
+  reply_is_error($replyText, $failureStrings), Whether a reply reports a failure.
+  line_is_filename($line), Whether one line of a reply names a file.
+  download_file($basePath, $fileName), Points the hidden anchor at a file & triggers it.
+
+AN INTERFACE MUST NOT DEPEND ON THE SCRIPT LIBRARY BEING THE CURRENT COPY.
+A GUI page is generated fresh on every request. The script library beside it is a static
+asset that a browser, a proxy or a CDN caches for as long as it is permitted to. The two
+update at different moments, so a user WILL at some point run a new page against an old
+library. Treat that as a normal operating condition & not as a fault.
+
+Call the library through a wrapper that tests for the function & falls back to a local copy
+when it is absent, exactly as the rest of the application falls back. Try the requested
+thing, warn, use the default, & only then fail. A GUI that calls a library function
+directly throws a ReferenceError on a stale cache.
+
+This matters far more than it first appears, because of where those calls happen.
+jQuery CATCHES anything thrown inside a .then() handler & converts the promise into a
+rejected one rather than letting it reach the console. That rejection is not seen by the
+failure arm of the same .then(), because that arm belongs to the REQUEST, & the request
+succeeded. So an exception inside a success handler is silent. The spinner runs forever,
+the error is never displayed, & the user has nothing to report.
+
+Give every operation exactly one teardown path that stops its spinner, guard it so it
+cannot run twice, & call it from a catch as well as from every planned exit.
+A spinner that never stops is the worst outcome available. It tells a user that work is
+still happening & leaves them nothing to describe.
+
+A CORE ERROR ARRIVES WITH AN HTTP 200 & A BODY.
+The request succeeds, so the success handler is the one that runs & the body is the only
+thing that separates a failure from a success. Every reply must be tested before it is
+acted on. An error carries the ERROR!!! tag, & a refusal the core makes BEFORE attempting
+an operation carries no tag at all, only the alert string. Both are failures.
+Never treat an empty reply as a failure. A successful download prints no filename.
+Never accept a line of a reply by its position. The core opens every reply with a doctype
+& prints a line break after every error message, & both of those are lines.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -272,13 +317,22 @@ This GUI only has access to certain variables. Variables that are available to t
   $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, 
   $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $StreamArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, 
   $SubtitleOutputArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $GuiCSSDir, 
-  $StreamOutputArray, $SCADArray, $SCADOutputArray, $SVGInputArray, $SVGOutputArray, $ImageArray, $AllowUserSelectableColor, $AllowUserSelectableGui, 
-  $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $LanguageFlagFile, 
-  $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, 
-  $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, 
-  $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, 
-  $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, 
-  $GuiJSDir, $GuiImageDir
+  $StreamOutputArray, $SCADArray, $SCADOutputArray, $SVGInputArray, $SVGOutputArray, $ImageArray, $AllowUserSelectableColor, $AllowUserSelectableGui,
+  $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $LanguageFlagFile,
+  $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural,
+  $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir,
+  $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath,
+  $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed,
+  $GuiJSDir, $GuiImageDir, $EbookInputArray, $EbookOutputArray, $BootableIsoArray, $AllowBootableIsoImage, $ShowFiles, $FileListOnly, $NoGui,
+  $EnableMemoryProtection, $Verbose
+This list is the whole contract & it is the list buildGui() declares. A GUI that reads
+anything not named here is reading a variable that does not exist in its scope, which is a
+PHP warning printed into the page & an empty string where the value should have been.
+$ShowFiles, $FileListOnly & $NoGui carry the request state the core has already resolved.
+An interface reads those rather than reaching into $_GET or $_POST for itself. Reading a
+superglobal directly defines API surface, which is not an interface's to define, & a second
+interface reading a different parameter is how two GUIs stop agreeing about what the
+application accepts.
 Every language string is a function local of buildGUI(), not a global.
 The GUI files can read Language Strings because the Language Strings file is required from inside the buildGui() that calls all other GUI elements.
 Nothing outside the buildGui() call can read Language Strings variables. This is deliberate.
@@ -326,6 +380,12 @@ were already on.
 --About Uploaded Files--
 
 The $Files variable contains an array of all valid uploaded filenames that exist in the users scratch space.
+$FileCount carries how many there are.
+BOTH interfaces receive these, not only convertGui2.php. buildGui() reads the scratch space
+before either one is loaded, so convertGui1.php can tell a first visit apart from a return
+visit & can offer controls that only make sense when the session already holds something.
+An upload page that renders a destructive control to a visitor with nothing to lose is
+inviting them to press it, so gate such a control on $FileCount.
 The GUI must iterate through this array, determine what format it is, & display the correct options.
 When submitting a file as input, only submit it's name with extension. HRConver2 will determine the path.
 When redirecting the user to a download you must send them to the proper filename and hosted file path.
@@ -373,6 +433,19 @@ The following is a list of supported GET inputs with description & supported val
       Tell the GUI to display uploaded files (convertGui2.php).
       If this is not specified, the upload page is displayed instead (convertGui1.php).
       Valid tokens must be supplied via POST along with this request.
+
+  fileListOnly
+      Return the file list as a FRAGMENT rather than as a whole document.
+      Set this input to any value to ask for the list on its own.
+      Valid tokens must be supplied via POST, & showFiles must be set as well.
+      A fragment carries no header & no footer. buildGui() skips both.
+      This exists so a conversion can refresh the list in place without reloading the page
+      & closing every panel the user had open.
+      A fragment is injected INTO a page that has already loaded the interface helper & the
+      script library, so it must never carry a second copy of either. Sending one redefines
+      the helper mid flight & re-runs its ready handler, which fetches the fragment again.
+      That is a request loop, & every pass destroys the click handlers the previous pass
+      registered. Reachable through GET or POST. GET always takes precedence.
 
   gui
       GUI Operation, with all GUI features
@@ -478,10 +551,11 @@ The following is a list of supported POST inputs, organized into sections based 
           String.
           This input is used during Archive Operations (excluding conversions).
           Set this input to the name to use for the output file.
-      archExtension
+      archextension
           String.
           This input is used during Archive Operations (excluding conversions).
           Set this input to an extension to use for the output file.
+          This name is all lower case. The core reads $_POST['archextension'] & nothing else.
       filesToArchive
           String or JSON Array.
           This input is used during Archive Operations (excluding conversions).
@@ -514,10 +588,11 @@ The following is a list of supported POST inputs, organized into sections based 
           Set this input to 'clamav' to perform a virus scan with ClamAV Virus Scanner.
           Set this input to 'scancore' to perform a virus scan with ScanCore Virus Scanner.
           Set this input to 'all' to perform a virus scan with all installed Virus Scanners.
-      filestoscan
+      filesToScan
           String or JSON Array.
           This input is used during Virus Scanning Operations.
           Set this input to a name or list of names to use for input files.
+          This name is camel case. The core reads $_POST['filesToScan'] & nothing else.
       clamScanButton
           String.
           This input is used during Virus Scanning Operations to scan all files with ClamAV.

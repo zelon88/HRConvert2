@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILEINFORMATION ...
-// / v3.8.1.
+// / v3.8.2.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -679,7 +679,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
-  $HRConvertVersion = 'v3.8.1';
+  $HRConvertVersion = 'v3.8.2';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
@@ -3758,11 +3758,26 @@ function getFiles($pathToFiles) {
   // / Iterate through each detected file & make sure it's not dangerous before adding it to the output array.
   foreach ($dirtyFileArr as $dirtyFile) {
     $dirtyExt = getExtension($pathToFiles.$DirSep.$dirtyFile);
+    // / THIS FILTER COMPARED TWO DIFFERENT SHAPES & THEREFORE NEVER FIRED.
+    // / getExtension() returns an extension with NO leading dot, & $DangerousFiles holds
+    // / dotted extensions such as .html alongside bare filenames such as index.html. A
+    // / dotless extension matches neither form, so every dangerous file this list exists to
+    // / hide was handed to the caller anyway. The only entry it ever matched was NULL, which
+    // / a file with no extension matches loosely, & that is why the fault was not obvious.
+    // / convertGui2.php hid the result a second time by filtering on $Allowed, so the list
+    // / looked correct on screen. Anything that trusted this function instead got index.html
+    // / back & then tried to work with it.
+    // / All three forms are tested now. The dotless form is kept so that a file with no
+    // / extension is still excluded exactly as it was before.
+    $dirtyIsDangerous = FALSE;
+    if (in_array(strtolower($dirtyExt), $DangerousFiles)) $dirtyIsDangerous = TRUE;
+    if (in_array('.'.strtolower($dirtyExt), $DangerousFiles)) $dirtyIsDangerous = TRUE;
+    if (in_array(strtolower($dirtyFile), $DangerousFiles)) $dirtyIsDangerous = TRUE;
     // / Add the selected file to the array of clean files only if it is safe to handle.
-    if (!in_array(strtolower($dirtyExt), $DangerousFiles) && !is_dir($pathToFiles.$DirSep.$dirtyFile)) array_push($Files, $dirtyFile);
+    if (!$dirtyIsDangerous && !is_dir($pathToFiles.$DirSep.$dirtyFile)) array_push($Files, $dirtyFile);
     else if ($dirtyExt === '.' or $dirtyExt === '..') errorEntry('Could not display file '.$dirtyFile.'!', 400, FALSE); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $dirtyFile, $pathToFiles, $dirtyFileArr, $dirtyExt);
+  purgeSensitiveMemory($EnableMemoryProtection, $dirtyFile, $pathToFiles, $dirtyFileArr, $dirtyExt, $dirtyIsDangerous);
   return $Files; }
 // / -----------------------------------------------------------------------------------
 
@@ -7121,14 +7136,21 @@ function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   $PacmanLoc = $GuiImageDir.'pacman'.$SpinnerStyle.strtolower($SpinnerColor).'.gif';
   if (!file_exists($PacmanLoc)) $PacmanLoc = $GuiImageDir.'pacman1grey.gif';
   // / Gather a list of files.
-  if ($guiType === 2) {
-    $Files = getFiles($ConvertDir);
-    $FileCount = count($Files);
-    // / An interface that renders an empty list has either been handed the wrong directory
-    // / or a directory with nothing in it, & those are different faults with different
-    // / fixes. Saying which directory was read, & whether this was the framed request, is
-    // / the difference between diagnosing it & guessing at it.
-    if ($Verbose) logEntry('GUI 2 file list: Directory: '.$ConvertDir.', Files: '.$FileCount.', List only: '.($FileListOnly ? 'YES' : 'NO').', Session: '.$SesHash.'/'.$SesHash2.'.'); }
+  // / BOTH INTERFACES GET THE FILE LIST, NOT ONLY THE SECOND.
+  // / CREATING_GUIS.txt documents $Files & $FileCount as available to a GUI & does not
+  // / qualify which one, so populating them for only one interface contradicted the
+  // / contract every interface is written against. An upload page that cannot see whether
+  // / the session already holds files cannot offer to clear them, & cannot tell a first
+  // / visit apart from a return visit.
+  // / getFiles() is a filtered scandir with no side effects, so this costs the upload page
+  // / one directory listing & nothing else.
+  $Files = getFiles($ConvertDir);
+  $FileCount = count($Files);
+  // / An interface that renders an empty list has either been handed the wrong directory
+  // / or a directory with nothing in it, & those are different faults with different
+  // / fixes. Saying which directory was read, & whether this was the framed request, is
+  // / the difference between diagnosing it & guessing at it.
+  if ($Verbose) logEntry('GUI '.$guiType.' file list: Directory: '.$ConvertDir.', Files: '.$FileCount.', List only: '.($FileListOnly ? 'YES' : 'NO').', Session: '.$SesHash.'/'.$SesHash2.'.');
   // / Load language specific GUI elements, if there are any.
   if (in_array($LanguageStringsFile, $LanguageFiles)) require_once($LanguageStringsFile);
   // / Check to ensure that the selected language is compatible with the rest of the GUI.
@@ -7302,12 +7324,23 @@ function deleteFiles($FilesToDelete) {
   global $DangerousFiles, $Verbose, $ConvertDir, $ConvertTempDir, $EnableMemoryProtection;
   $DeleteComplete = $DeleteErrors = $variableIsSanitized = FALSE;
   $file = $f0 = $f1 = '';
+  // / THE RESULT DESCRIBES THE OPERATION, NOT THE LAST FILE IN THE LIST.
+  // / $DeleteComplete was previously reset to FALSE at the top of every iteration & set
+  // / TRUE only by a successful one, so the value that survived the loop was whatever
+  // / happened to the LAST entry. A list whose final entry was refused reported total
+  // / failure even though every other file had been deleted, & the caller answers a
+  // / failure here with a fatal error 21 that prints ERROR!!! to the page. Deleting nine
+  // / files out of ten looked to a user exactly like deleting none of them.
+  // / Counting instead. An entry that is refused before it is attempted is recorded as an
+  // / error for the caller but is not counted as an attempt, because refusing input the
+  // / application was right to refuse is not a failure of the deletion.
+  $filesAttempted = $filesDeleted = 0;
   list ($FilesToDelete, $variableIsSanitized) = sanitize($FilesToDelete, FALSE);
   // / Make sure the input files are formatted into an array.
+  // / A single filename & a list of them are the same operation with a different count.
   if (!is_array($FilesToDelete)) $FilesToDelete = array($FilesToDelete);
   // / Iterate through the array of input files.
   foreach ($FilesToDelete as $file) {
-    $DeleteComplete = FALSE;
     // / Make sure the file is sanitized before processing it.
     list ($file, $variableIsSanitized) = sanitize($file, TRUE);
     if (!$variableIsSanitized or !is_string($file) or $file === '' or $file === '.' or $file === '..' or $file === 'index.html') {
@@ -7317,9 +7350,12 @@ function deleteFiles($FilesToDelete) {
     if ($Verbose) logEntry('User selected to Delete file '.$file.'.');
     $f0 = getExtension($file);
     // / Make sure the file is not in the list of dangerous formats.
-    if (in_array(strtolower($f0), $DangerousFiles)) {
+    if (in_array(strtolower($f0), $DangerousFiles) or in_array('.'.strtolower($f0), $DangerousFiles) or in_array(strtolower($file), $DangerousFiles)) {
+      $DeleteErrors = TRUE;
       errorEntry('Unsupported file format, '.$f0.'!', 23001, FALSE);
       continue; }
+    // / Past this point the file is one this function agreed to act on, so it counts.
+    $filesAttempted++;
     // / Remove the selected file from the hosted location.
     list ($f0, $variableIsSanitized) = sanitize($ConvertTempDir.pathinfo($file, PATHINFO_BASENAME), FALSE);
     if (file_exists($f0)) @unlink($f0);
@@ -7329,12 +7365,17 @@ function deleteFiles($FilesToDelete) {
     // / Check that the selected files were deleted.
     if (!file_exists($f0) && !file_exists($f1)) {
       if ($Verbose) logEntry('Deleted file '.$file.'.');
-      $DeleteComplete = TRUE; }
+      $filesDeleted++; }
     else {
       $DeleteErrors = TRUE;
       errorEntry('Could not delete file '.$file.'!', 23002, FALSE); } }
+  // / The operation is complete when every file it agreed to act on is gone.
+  // / An empty list is complete because there was nothing to remove, & reporting a fatal
+  // / failure for asking to delete nothing would be a worse answer than doing nothing.
+  $DeleteComplete = ($filesDeleted === $filesAttempted);
+  if ($Verbose) logEntry('Delete result: Attempted: '.$filesAttempted.', Deleted: '.$filesDeleted.', Errors: '.($DeleteErrors ? 'YES' : 'NO').'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $file, $f0, $f1, $variableIsSanitized);
+  purgeSensitiveMemory($EnableMemoryProtection, $file, $f0, $f1, $variableIsSanitized, $filesAttempted, $filesDeleted);
   return array($DeleteComplete, $DeleteErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -8327,10 +8368,6 @@ function verifyCoreComponent($componentName, $componentRelativePath, $versionVar
   return array($ComponentIsAvailable, $DetectedComponentVersion); }
 // / -----------------------------------------------------------------------------------
 
-
-
-
-
 // / -----------------------------------------------------------------------------------
 // / A function to request permission to consume resources before a conversion begins.
 // / Accepts the conversion cost & the expected runtime in seconds.
@@ -8397,6 +8434,44 @@ function releaseConversionBudget($budgetToken) {
     else warningEntry('A budget token could not be released. The reaper will reclaim it.'); 
     if ($Verbose && $BudgetWasReleased) logEntry('Worker '.getmypid().' released budget token '.(string)$budgetToken.'.'); }
   purgeSensitiveMemory($EnableMemoryProtection, $requestPayload, $replyPayload, $messageWasDelivered, $budgetToken);
+  return $BudgetWasReleased; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to return a conversion budget token however the request ends.
+// / Registered as a shutdown handler the moment a budget is approved, & also called
+// / directly on the normal completion path. The guard makes it safe to run twice.
+// /
+// / A CONVERSION HAS THREE FATAL EXITS BETWEEN TAKING A BUDGET & RETURNING IT.
+// / Error 21 when the conversion itself fails, & errors 5002 & 5003 when the virus scan of
+// / the result cannot run or finds something. Each calls errorEntry with a fatal flag,
+// / which reaches quickDie & then die(), so the release that sits AFTER the conversion in
+// / the request handler was simply never reached.
+// / Nothing was lost permanently, because findStaleWorkers() tests whether the process is
+// / still alive & reclaims a token whose worker has exited. But that happens on the next
+// / sweep, so a failed conversion held its share of the budget for up to one
+// / $WorkerReapInterval, & on a small machine that is enough to refuse the next
+// / conversion that arrives. It also announced every ordinary failure as a warning about
+// / a worker that had to be reaped, which is not what happened & not what an
+// / administrator reading that warning should go looking for.
+// / A conversion that fails is a normal outcome. It returns what it borrowed on the way
+// / out, & the reaper goes back to being the fallback it was written to be.
+// /
+// / PHP runs a registered shutdown function after die(), so this is reached from a fatal
+// / exit as well as from a clean one. It writes to the log & to the manager socket only.
+// / Nothing here prints, because the connection to the user is already closed by then.
+function releaseBudgetOnShutdown() {
+  // / Set variables.
+  global $BudgetToken, $BudgetTokenIsReleased;
+  $BudgetWasReleased = TRUE;
+  // / Already returned, or there was never one to return.
+  if (!empty($BudgetTokenIsReleased)) return TRUE;
+  if (!isset($BudgetToken) or (string)$BudgetToken === '') return TRUE;
+  // / The flag is set BEFORE the attempt, not after. A release that fails has already
+  // / warned & handed the token to the reaper, & a second attempt from the other caller
+  // / would warn about the same token all over again.
+  $BudgetTokenIsReleased = TRUE;
+  $BudgetWasReleased = releaseConversionBudget($BudgetToken);
   return $BudgetWasReleased; }
 // / -----------------------------------------------------------------------------------
 
@@ -8929,7 +9004,17 @@ if (!$CommandLineHandled && $UserType === 'web') {
     else if ($Verbose) logEntry('Cleaned convert location.');
 
     // / The following code displays the appropriate GUI for the session.
-    if (!isset($_POST['filesToArchive']) && !isset($_POST['convertSelected']) && !isset($_POST['pdfworkSelected']) && !isset($_POST['download']) && !isset($_POST['upload']) && !isset($_POST['filesToScan'])) {
+    // / EVERY FILE OPERATION ANSWERS WITH A TERSE REPLY. filesToDelete WAS MISSING.
+    // / Archive, convert, OCR, download, upload & scan all suppress the interface here so
+    // / their caller receives a short answer it can read. A delete did not, so it was
+    // / answered with a whole rendered page.
+    // / That is not merely wasteful. A caller has no way to tell a failure from a success
+    // / except by reading the body, & a body containing an entire interface contains all of
+    // / that interface's SCRIPT, including whatever literal that script uses to recognise a
+    // / core error. The reply therefore matched the very marker the caller was searching
+    // / for & every delete reported failure, no matter how well it had gone.
+    // / A file operation returns a filename or an error. It does not return a page.
+    if (!isset($_POST['filesToArchive']) && !isset($_POST['convertSelected']) && !isset($_POST['pdfworkSelected']) && !isset($_POST['download']) && !isset($_POST['upload']) && !isset($_POST['filesToScan']) && !isset($_POST['filesToDelete'])) {
 
       // / The following code sets the GUI for the session.
       list ($GuiIsSet, $GuiToUse, $GuiDir, $GuiFiles) = verifyGui();
@@ -9001,12 +9086,21 @@ if (!$CommandLineHandled && $UserType === 'web') {
           warningEntry('A conversion was refused because the server is at its resource budget.');
           print($Alert3.$Lol); }
         else {
+          // / THE TOKEN IS OUT FROM HERE. REGISTER ITS RETURN BEFORE ANYTHING CAN DIE.
+          // / Everything below this line can end the request without reaching the bottom
+          // / of this block, so the release cannot live only at the bottom of this block.
+          $BudgetTokenIsReleased = FALSE;
+          register_shutdown_function('releaseBudgetOnShutdown');
           logEntry('Initiating Converter.');
           list ($ConversionComplete, $ConversionErrors) = convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, $Width, $Rotate, $Bitrate);
           if (!$ConversionComplete) errorEntry('Conversion Failed!', 21, TRUE);
           if ($ConversionErrors) logEntry('Conversion finished with errors.');
           if ($Verbose) logEntry('Conversion Complete.'); }
-        releaseConversionBudget($BudgetToken); }
+        // / One guarded release path, so the direct call & the shutdown handler cannot
+        // / both act on the same token. releaseConversionBudget() has already warned if it
+        // / could not deliver, so a failure here is noted at the normal activity tier only.
+        $BudgetWasReleased = releaseBudgetOnShutdown();
+        if ($Verbose && !$BudgetWasReleased) logEntry('The conversion budget token was not confirmed as returned. The reaper remains as the fallback.'); }
 
       // / The following code is performed when a user performs OCR on a selection of files.
       if (isset($_POST['pdfworkSelected'])) {

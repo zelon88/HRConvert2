@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.8.1.
+v3.8.2.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -27,6 +27,29 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia
 -----------------------------------------------------------------------------------
 
 
+--------------------
+COMMIT 8/28/2026
+v3.8.2 - Work on UI, bug fixes & changes to Default/English so far.
+
+-v3.8.2.
+-Update Gui, move JS logic to Resources/JS/HRC2-Functions.js.
+-Make JS follow the CODING_CONVENTIONS.txt.
+-Improve load times, reduce network usage during operation.
+convertGui2.php 1420 lines  934
+convertGui1.php 283 395
+HRC2-Functions.js 78  645
+rendered gui2 49 KB 20.5 KB
+rendered fragment 28.6 KB 13.9 KB
+-Add worker budget token release/return at the worker level.
+  -Previously failed conversions would never return a budget token.
+  -The manager would reap every failed conversion worker, even the ones that ended successfully.
+  -Now workers correctly return tokens on success or failure.
+  -Only truly 'dead' workers will be reaped.
+-Add session management buttons, improve 'back' and reload functionality.
+  -convertGui1.php now has buttons for refreshing existing / starting new session.
+  -Starting a new session automatically deleted any uploaded files from an existing session.
+  -This deletes files voulountarily without requireing cleanup at $DeleteThreshold.
+-Need to implement GUI changes in Original/Wide GUIs & all other language packs.
 
 --------------------
 COMMIT 8/28/2026

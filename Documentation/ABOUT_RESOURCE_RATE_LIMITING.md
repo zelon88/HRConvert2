@@ -139,7 +139,11 @@ System assets are calculated in **arbitrary cost units** and updated every \--Re
 
 ## **⏱️ Lifecycle of a Job Request**
 
-Before a conversion begins, it must declare its **estimated cost** and **expected runtime**. \[9\]
+**Four operations take a budget: conversion, archiving, OCR, and the user virus scan.** Only conversion did so originally. The other three ran unmetered, which understated the load twice over: they were never held back on a full machine, and because they took nothing they also counted for nothing, so a machine saturated by them still reported itself idle and kept approving conversions on top.
+
+Each declares the same `--Default Conversion Cost` and `--Default Expected Runtime`. They are deliberately **not** weighted against each other, because there are no measurements behind a number claiming an archive costs half of an OCR, and an invented constant in a limiter is worse than an honest uniform one.
+
+Before an operation begins, it must declare its **estimated cost** and **expected runtime**. \[9\]
 
 *\- The Request is REFUSED if:*  
 *\- ❌ The runtime exceeds \`--Maximum Expected Runtime\`*  
@@ -150,6 +154,9 @@ Before a conversion begins, it must declare its **estimated cost** and **expecte
 \+  The job fits within the safety margins.  
 \+  System issues an official Budget Token.  
 \+  The worker returns the token upon completion, instantly reclaiming resources.
+\+  The return is registered as a shutdown handler the moment the token is issued, so an operation that dies part way through still returns what it borrowed rather than leaving it for the reaper.
+
+A **refused** operation is not an error. Nothing failed and nothing was attempted. The core writes a warning naming the operation and prints the same alert string a refused conversion prints, which carries **no `ERROR!!!` tag**. An interface recognises it by the alert string rather than by the tag.
 
 ---
 
@@ -217,6 +224,24 @@ The Resource Manager sweeps every configured data location every \--Storage Clea
 **🛡️ About Per-Conversion Resource Ceilings**
 
 Enabling \--Enable Per Conversion Limits runs every conversion inside a transient **systemd scope** carrying an isolated CPU and memory ceiling. This prevents a single heavy file from starving the host system.
+
+**Every expensive operation runs inside a ceiling, not only format conversion.** Anything routed through `sandboxCommand()` has always been wrapped. Three pipelines built their own command and walked around the wrapper with it, and each is among the most expensive things the application does:
+
+| Pipeline | Previously | Now |
+| --- | --- | --- |
+| ClamAV | Ran raw. A signature database exceeds a gigabyte once loaded. | Wrapped, type `Scan`. |
+| ScanCore | Ran raw, carrying a PHP `memory_limit` and nothing else. | Wrapped, type `Scan`. |
+| OpenSCAD | Fixed `nice -n 19`, no memory ceiling at all. | Wrapped, type `Scad`. |
+
+A PHP `memory_limit` is **not** a ceiling and does not replace one — it is a budget a child interpreter imposes on itself, honours only while it is behaving, and which never sees the allocations PHP does not count. A cgroup ceiling is imposed from outside and holds whatever the process does.
+
+For the scanners the ceiling wraps the **scanner**, not the shell pipeline it sits in; putting the pipe inside the scope would measure a shell rather than a scanner.
+
+Replacing OpenSCAD's hardcoded `nice -n 19` with the configured ceiling is **not strictly stronger on every host**. Where a scope can be created it is far stronger, because a CPUQuota is enforced against a cgroup instead of requested from the scheduler. Where no scope can be created, niceness is derived from the configured processor share, so the stock `'Scad' => '75,1024'` yields less than a fixed 19 did. Set a smaller processor share for `Scad` to get a larger niceness back.
+
+**A built-in ceiling exists for any type the core knows the general default would break.** `config.php` is accepted at or above a minimum version, so a server can take a newer core and keep the configuration file it already had — meaning a type the core learned about after that file was written is a type the file cannot name. For `Scan` the general 512M default is not merely tight, it is fatal: the kernel kills the scan rather than slowing it, and every virus scan fails from the moment the core is updated. The core carries its own `Scan` ceiling, uses it when `config.php` names none, and warns with the value it used and how to set it yourself. Anything an administrator **does** set always wins.
+
+Resolution order: the listener's scaled table → `--Maximum Per Conversion Resources` → the core's built-in for that type → `--Default Per Conversion Resources`.
 
 ## **📊 Configuring Ceilings**
 

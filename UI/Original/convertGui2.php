@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.8.2.
+// / v3.8.3.
 // / This file contains language specific GUI elements for performing file conversions.
 // / This file was created by Github user hernandito as part of his forked repo, available 
 // / at https://github.com/hernandito/HRConvert2/tree/master. Thank you, hernandito!
@@ -164,10 +164,10 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
             // / The submit buttons carry no name, so nothing they are called reaches the
             // / core as POST input. The core reads specific keys & a stray one is noise. ?>
       <form id='sessionForm' name='sessionForm' method='post' style='display:inline;' action='<?php echo htmlspecialchars($refreshURL, ENT_QUOTES, 'UTF-8'); ?>'>
-        <input type='hidden' name='Token1' value='<?php echo $Token1; ?>'>
-        <input type='hidden' name='Token2' value='<?php echo $Token2; ?>'>
+        <input type='hidden' name='Token1' value='<?php echo htmlspecialchars($Token1, ENT_QUOTES, 'UTF-8'); ?>'>
+        <input type='hidden' name='Token2' value='<?php echo htmlspecialchars($Token2, ENT_QUOTES, 'UTF-8'); ?>'>
         <button type='submit' id='backButton' style='width:50px;' class='info-button' formaction='<?php echo htmlspecialchars($backURL, ENT_QUOTES, 'UTF-8'); ?>'>&#x2190;</button>
-        <button type='button' id='userConfigButton' style='width:50px;' class='info-button' title='<?php echo $GuiSelectorText4; ?>' aria-label='<?php echo $GuiSelectorText4; ?>' onclick='toggle_visibility("uiSelector");'>&#9965;</button>
+        <button type='button' id='userConfigButton' style='width:50px;' class='info-button' title='<?php echo htmlspecialchars($GuiSelectorText4, ENT_QUOTES, 'UTF-8'); ?>' aria-label='<?php echo htmlspecialchars($GuiSelectorText4, ENT_QUOTES, 'UTF-8'); ?>' onclick='toggle_visibility("uiSelector");'>&#9965;</button>
         <button type='submit' id='refreshButton' style='width:50px;' class='info-button'>&#x21BB;</button>
       </form>
       <?php // / The selector panel holds a form of its own, so it stays OUTSIDE the one
@@ -175,19 +175,19 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
             // / the inner one, which would take every selector button with it. ?>
       <div id='uiSelector' name='uiSelector' style='display:none;'>
         <form id='uiSelectorForm' name='uiSelectorForm' method='post' action='<?php echo htmlspecialchars($selectorBase, ENT_QUOTES, 'UTF-8'); ?>'>
-          <input type='hidden' name='Token1' value='<?php echo $Token1; ?>'>
-          <input type='hidden' name='Token2' value='<?php echo $Token2; ?>'>
+          <input type='hidden' name='Token1' value='<?php echo htmlspecialchars($Token1, ENT_QUOTES, 'UTF-8'); ?>'>
+          <input type='hidden' name='Token2' value='<?php echo htmlspecialchars($Token2, ENT_QUOTES, 'UTF-8'); ?>'>
           <?php if ($AllowUserSelectableLanguage) { ?>
           <p style='margin:4px 0;'><strong><?php echo $GuiSelectorText1; ?></strong></p>
           <p style='margin:4px 0;'>
             <?php foreach ($SupportedLanguages as $selectorLang => $selectorLabel) {
               $selectorCurrent = ($selectorLang === $LanguageToUse);
               $selectorURL = htmlspecialchars($selectorBase.'language='.$selectorLang.'&color='.$ColorToUse.'&gui='.$GuiToUse, ENT_QUOTES, 'UTF-8'); ?>
-            <button type='submit' lang='<?php echo $selectorLang; ?>'
+            <button type='submit' lang='<?php echo htmlspecialchars($selectorLang, ENT_QUOTES, 'UTF-8'); ?>'
               style='margin:2px; padding:2px; <?php if ($selectorCurrent) echo 'outline:2px solid #000;'; ?>'
               formaction='<?php echo $selectorURL; ?>'
-              title='<?php echo $selectorLabel; ?>'
-              <?php if ($selectorCurrent) echo "aria-current='true'"; ?>><img src='<?php echo $GuiDir.'Languages/'.$selectorLang.'/flag.png'; ?>' alt='<?php echo $selectorLabel; ?>' style='height:16px; display:block;'/></button>
+              title='<?php echo htmlspecialchars($selectorLabel, ENT_QUOTES, 'UTF-8'); ?>'
+              <?php if ($selectorCurrent) echo "aria-current='true'"; ?>><img src='<?php echo $GuiDir.'Languages/'.$selectorLang.'/flag.png'; ?>' alt='<?php echo htmlspecialchars($selectorLabel, ENT_QUOTES, 'UTF-8'); ?>' style='height:16px; display:block;'/></button>
             <?php } ?>
           </p>
           <?php } if ($AllowUserSelectableColor) { ?>
@@ -200,7 +200,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
             <button type='submit'
               style='margin:2px; padding:2px; <?php if ($selectorCurrent) echo 'outline:2px solid #000;'; ?>'
               formaction='<?php echo $selectorURL; ?>'
-              title='<?php echo ucfirst($selectorColor); ?>' aria-label='<?php echo ucfirst($selectorColor); ?>'
+              title='<?php echo htmlspecialchars(ucfirst($selectorColor), ENT_QUOTES, 'UTF-8'); ?>' aria-label='<?php echo htmlspecialchars(ucfirst($selectorColor), ENT_QUOTES, 'UTF-8'); ?>'
               <?php if ($selectorCurrent) echo "aria-current='true'"; ?>><span class='swatch' style='background-color:<?php echo $selectorSwatch; ?>; width:24px; height:16px; display:block;'></span></button>
             <?php } ?>
           </p>
@@ -213,7 +213,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
             <button type='submit' class='txtbtn'
               style='margin:2px; <?php if ($selectorCurrent) echo 'font-weight:700; text-decoration:underline;'; ?>'
               formaction='<?php echo $selectorURL; ?>'
-              title='<?php echo $selectorGui; ?>' aria-label='<?php echo $selectorGui; ?>'
+              title='<?php echo htmlspecialchars($selectorGui, ENT_QUOTES, 'UTF-8'); ?>' aria-label='<?php echo htmlspecialchars($selectorGui, ENT_QUOTES, 'UTF-8'); ?>'
               <?php if ($selectorCurrent) echo "aria-current='true'"; ?>><?php echo $selectorGui; ?></button>
             <?php } ?>
           </p>
@@ -228,7 +228,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         <p><strong><?php echo $Gui2Text3; ?></strong></p>
         <p><?php echo $Gui2Text20; ?><input type='checkbox' id='clamscanall' value='clamscanall' name='clamScan' checked></p>
         <p><?php echo $Gui2Text21; ?><input type='checkbox' id='scancoreall' value='scancoreall' name='phpavScan' checked></p>
-        <p><input type='submit' id='scanAllButton' name='scanAllButton' class='info-button' value='<?php echo $Gui2Text22; ?>' onclick='toggle_visibility("loadingCommandDiv");'></p>
+        <p><input type='submit' id='scanAllButton' name='scanAllButton' class='info-button' value='<?php echo htmlspecialchars($Gui2Text22, ENT_QUOTES, 'UTF-8'); ?>' onclick='toggle_visibility("loadingCommandDiv");'></p>
         <script type='text/javascript'>
           HRC2.bindScanAll('scanAllButton', '', 'clamscanall', 'scancoreall',
             <?php echo json_encode(array_values($Files)); ?>, <?php echo json_encode($ConsolidatedLogFileName); ?>);
@@ -243,10 +243,10 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         <select id='archallextension' name='archallextension'>
           <option value='zip'><?php echo $Gui2Text18; ?></option>
           <?php foreach ($ArchiveArray as $gui2ArchArr) { ?>
-          <option value='<?php echo $gui2ArchArr; ?>'><?php echo $gui2ArchArr; ?></option>
+          <option value='<?php echo htmlspecialchars($gui2ArchArr, ENT_QUOTES, 'UTF-8'); ?>'><?php echo $gui2ArchArr; ?></option>
           <?php } ?>
         </select>
-        <input type='submit' id='archallSubmit' name='archallSubmit' class='info-button' value='<?php echo $Gui2Text19; ?>' onclick='toggle_visibility("loadingCommandDiv");'>
+        <input type='submit' id='archallSubmit' name='archallSubmit' class='info-button' value='<?php echo htmlspecialchars($Gui2Text19, ENT_QUOTES, 'UTF-8'); ?>' onclick='toggle_visibility("loadingCommandDiv");'>
         <script type='text/javascript'>
           HRC2.bindArchiveAll('archallSubmit', '', <?php echo json_encode(array_values($Files)); ?>,
             'userarchallfilename', 'archallextension', 'zip');
@@ -320,7 +320,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         <div id='buttonDiv<?php echo $ConvertGuiCounter1; ?>' name='buttonDiv<?php echo $ConvertGuiCounter1; ?>' style='height:25px;'>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;&nbsp;&nbsp;&nbsp;</a>
 
-          <img id='downloadfilebutton<?php echo $ConvertGuiCounter1; ?>' name='downloadfilebutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>download.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' onclick='toggle_visibility("loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text5.' '.$File; ?>' alt='<?php echo $Gui2Text5.' '.$File; ?>'/>
+          <img id='downloadfilebutton<?php echo $ConvertGuiCounter1; ?>' name='downloadfilebutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>download.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' onclick='toggle_visibility("loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text5.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text5.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
 
           <script type='text/javascript'>
             HRC2.bindDownload('downloadfilebutton<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>', <?php echo json_encode($File); ?>);
@@ -328,57 +328,57 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
 
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
           <img id='deletefilebutton<?php echo $ConvertGuiCounter1; ?>' name='deletefilebutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>delete.png' style='float:<?php echo $GUIAlignment; ?>; display:block;'
-           onclick='toggle_visibility("deletefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("deletefilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("deleteXfilebutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text67.' '.$File; ?>' alt='<?php echo $Gui2Text67.' '.$File; ?>'/>
+           onclick='toggle_visibility("deletefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("deletefilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("deleteXfilebutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text67.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text67.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id='deleteXfilebutton<?php echo $ConvertGuiCounter1; ?>' name='deleteXfilebutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
-           onclick='toggle_visibility("deletefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("deletefilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("deleteXfilebutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text68; ?>' alt='<?php echo $Gui2Text68; ?>'/>
+           onclick='toggle_visibility("deletefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("deletefilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("deleteXfilebutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text68, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text68, ENT_QUOTES, 'UTF-8'); ?>'/>
 
           <?php if ($AllowUserShare) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
           <img id='sharefilebutton<?php echo $ConvertGuiCounter1; ?>' name='sharefilebutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>link.png' style='float:<?php echo $GUIAlignment; ?>; display:block;'
-           onclick='toggle_visibility("sharefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("sharefilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("shareXfilebutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text6.' '.$File; ?>' alt='<?php echo $Gui2Text6.' '.$File; ?>'/>
+           onclick='toggle_visibility("sharefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("sharefilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("shareXfilebutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text6.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text6.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id='shareXfilebutton<?php echo $ConvertGuiCounter1; ?>' name='shareXfilebutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
-           onclick='toggle_visibility("sharefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("sharefilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("shareXfilebutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text7; ?>' alt='<?php echo $Gui2Text7; ?>'/>
+           onclick='toggle_visibility("sharefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("sharefilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("shareXfilebutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text7, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text7, ENT_QUOTES, 'UTF-8'); ?>'/>
 
           <?php } if ($AllowUserVirusScan) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
           <img id='scanfilebutton<?php echo $ConvertGuiCounter1; ?>' name='scanfilebutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>scan.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
-           onclick='toggle_visibility("scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scanfilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scanfileXbutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text8.' '.$File; ?>' alt='<?php echo $Gui2Text8.' '.$File; ?>'/>
+           onclick='toggle_visibility("scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scanfilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scanfileXbutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text8.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text8.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id='scanfileXbutton<?php echo $ConvertGuiCounter1; ?>' name='scanfileXbutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
-           onclick='toggle_visibility("scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scanfilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scanfileXbutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text9; ?>' alt='<?php echo $Gui2Text9; ?>'/>
+           onclick='toggle_visibility("scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scanfilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scanfileXbutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text9, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text9, ENT_QUOTES, 'UTF-8'); ?>'/>
 
           <?php } ?>
           
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
           <img id='archfileButton<?php echo $ConvertGuiCounter1; ?>' name='archfileButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>archive.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
-           onclick='toggle_visibility("archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archfileButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archfileXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text10.' '.$File; ?>' alt='<?php echo $Gui2Text10.' '.$File; ?>'/>
+           onclick='toggle_visibility("archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archfileButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archfileXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text10.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text10.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id='archfileXButton<?php echo $ConvertGuiCounter1; ?>' name='archfileXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
-           onclick='toggle_visibility("archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archfileButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archfileXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text11; ?>' alt='<?php echo $Gui2Text11; ?>'/>
+           onclick='toggle_visibility("archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archfileButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archfileXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text11, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text11, ENT_QUOTES, 'UTF-8'); ?>'/>
 
           <?php if (in_array($extension, $PDFWorkArr) && in_array('OCR', $SupportedConversionTypes)) { ?>          
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
           
           <img id='docscanButton<?php echo $ConvertGuiCounter1; ?>' name='docscanButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>docscan.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
-           onclick='toggle_visibility("pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("docscanButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("docscanXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text12.' '.$File; ?>' alt='<?php echo $Gui2Text12.' '.$File; ?>'/>
+           onclick='toggle_visibility("pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("docscanButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("docscanXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text12.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text12.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id="docscanXButton<?php echo $ConvertGuiCounter1; ?>" name="docscanXButton<?php echo $ConvertGuiCounter1; ?>" src='<?php echo $GuiImageDir; ?>x.png' style="float:<?php echo $GUIAlignment; ?>; display:none;" 
-           onclick="toggle_visibility('pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('docscanButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('docscanXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text13; ?>' alt='<?php echo $Gui2Text13; ?>'/>
+           onclick="toggle_visibility('pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('docscanButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('docscanXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo htmlspecialchars($Gui2Text13, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text13, ENT_QUOTES, 'UTF-8'); ?>'/>
           <?php } 
 
           if (in_array($extension, $DearchiveArray) && in_array('Archive', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='archiveButton<?php echo $ConvertGuiCounter1; ?>' name='archiveButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>convert.png' style='float:<?php echo $GUIAlignment; ?>; display:block;'
-           onclick='toggle_visibility("archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archiveButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archiveXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+           onclick='toggle_visibility("archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archiveButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archiveXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id="archiveXButton<?php echo $ConvertGuiCounter1; ?>" name="archiveXButton<?php echo $ConvertGuiCounter1; ?>" src='<?php echo $GuiImageDir; ?>x.png' style="float:<?php echo $GUIAlignment; ?>; display:none;" 
-           onclick="toggle_visibility('archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archiveButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archiveXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+           onclick="toggle_visibility('archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archiveButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archiveXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
           <?php } 
 
           if (in_array($extension, $DocumentArray) && in_array('Document', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='documentButton<?php echo $ConvertGuiCounter1; ?>' name='documentButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>document.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
-           onclick='toggle_visibility("docOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("documentButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("documentXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+           onclick='toggle_visibility("docOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("documentButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("documentXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id="documentXButton<?php echo $ConvertGuiCounter1; ?>" name="documentXButton<?php echo $ConvertGuiCounter1; ?>" src='<?php echo $GuiImageDir; ?>x.png' style="float:<?php echo $GUIAlignment; ?>; display:none;" 
-           onclick="toggle_visibility('docOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+           onclick="toggle_visibility('docOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
           <?php } 
 
           // / Gated on Ebook, not Document, so it matches the panel it toggles.
@@ -388,133 +388,133 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='ebookButton<?php echo $ConvertGuiCounter1; ?>' name='ebookButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>document.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
-           onclick='toggle_visibility("ebookOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("ebookButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("ebookXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+           onclick='toggle_visibility("ebookOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("ebookButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("ebookXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id="ebookXButton<?php echo $ConvertGuiCounter1; ?>" name="ebookXButton<?php echo $ConvertGuiCounter1; ?>" src='<?php echo $GuiImageDir; ?>x.png' style="float:<?php echo $GUIAlignment; ?>; display:none;" 
-           onclick="toggle_visibility('ebookOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('ebookButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('ebookXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+           onclick="toggle_visibility('ebookOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('ebookButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('ebookXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
           <?php } 
 
           if (in_array($extension, $SpreadsheetArray) && in_array('Document', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='spreadsheetButton<?php echo $ConvertGuiCounter1; ?>' name='spreadsheetButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>spreadsheet.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
-           onclick='toggle_visibility("spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("spreadsheetButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+           onclick='toggle_visibility("spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("spreadsheetButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id="spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>" name="spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>" src='<?php echo $GuiImageDir; ?>x.png' style="float:<?php echo $GUIAlignment; ?>; display:none;" 
-           onclick="toggle_visibility('spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+           onclick="toggle_visibility('spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('spreadsheetXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
           <?php }
 
           if (in_array($extension, $XPSInputArray) && in_array('Document', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='xpsButton<?php echo $ConvertGuiCounter1; ?>' name='xpsButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>document.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
-           onclick='toggle_visibility("xpsOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("xpsButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("xpsXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+           onclick='toggle_visibility("xpsOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("xpsButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("xpsXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id='xpsXButton<?php echo $ConvertGuiCounter1; ?>' name='xpsXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;'
-           onclick='toggle_visibility("xpsOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("xpsButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("xpsXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+           onclick='toggle_visibility("xpsOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("xpsButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("xpsXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
           <?php }
 
           if (in_array($extension, $PresentationInputArray) && in_array('Document', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='presentationButton<?php echo $ConvertGuiCounter1; ?>' name='presentationButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>presentation.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
-           onclick='toggle_visibility("presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("presentationButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("presentationXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+           onclick='toggle_visibility("presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("presentationButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("presentationXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id='presentationXButton<?php echo $ConvertGuiCounter1; ?>' name='presentationXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;'
-           onclick='toggle_visibility("presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("presentationButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("presentationXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+           onclick='toggle_visibility("presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("presentationButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("presentationXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
           <?php }
 
           if (in_array($extension, $ImageArray) && in_array('Image', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='imageButton<?php echo $ConvertGuiCounter1; ?>' name='imageButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>photo.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
-           onclick='toggle_visibility("imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("imageButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("imageXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+           onclick='toggle_visibility("imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("imageButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("imageXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id="imageXButton<?php echo $ConvertGuiCounter1; ?>" name="imageXButton<?php echo $ConvertGuiCounter1; ?>" src='<?php echo $GuiImageDir; ?>x.png' style="float:<?php echo $GUIAlignment; ?>; display:none;" 
-           onclick='toggle_visibility("imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("imageButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("imageXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+           onclick='toggle_visibility("imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("imageButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("imageXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
           <?php }
 
           if (in_array($extension, $MediaInputArray) && in_array('Audio', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='mediaButton<?php echo $ConvertGuiCounter1; ?>' name='mediaButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>media.png' style='float:<?php echo $GUIAlignment; ?>; display:block;'
-           onclick='toggle_visibility("audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("mediaButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("mediaXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+           onclick='toggle_visibility("audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("mediaButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("mediaXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id='mediaXButton<?php echo $ConvertGuiCounter1; ?>' name='mediaXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;'
-           onclick='toggle_visibility("audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("mediaButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("mediaXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+           onclick='toggle_visibility("audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("mediaButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("mediaXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
           <?php } 
 
           if (in_array($extension, $VideoInputArray) && in_array('Video', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='videoButton<?php echo $ConvertGuiCounter1; ?>' name='videoButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>video.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
-           onclick='toggle_visibility("videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("videoButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("videoXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+           onclick='toggle_visibility("videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("videoButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("videoXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id='videoXButton<?php echo $ConvertGuiCounter1; ?>' name='videoXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;'
-           onclick='toggle_visibility("videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("videoButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("videoXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+           onclick='toggle_visibility("videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("videoButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("videoXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
           <?php } 
 
           if (in_array($extension, $StreamArray) && in_array('Stream', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='streamButton<?php echo $ConvertGuiCounter1; ?>' name='streamButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>stream.png' style='float:<?php echo $GUIAlignment; ?>; display:block;'
-           onclick='toggle_visibility("streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("streamButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("streamXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+           onclick='toggle_visibility("streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("streamButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("streamXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id='streamXButton<?php echo $ConvertGuiCounter1; ?>' name='streamXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
-           onclick='toggle_visibility("streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("streamButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("streamXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+           onclick='toggle_visibility("streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("streamButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("streamXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
           <?php } 
 
           if (in_array($extension, $DrawingArray) && in_array('Drawing', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='drawingButton<?php echo $ConvertGuiCounter1; ?>' name='drawingButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>convert.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
-           onclick='toggle_visibility("drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("drawingButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("drawingXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+           onclick='toggle_visibility("drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("drawingButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("drawingXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id='drawingXButton<?php echo $ConvertGuiCounter1; ?>' name='drawingXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
-           onclick='toggle_visibility("drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("drawingButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("drawingXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+           onclick='toggle_visibility("drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("drawingButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("drawingXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
           <?php } 
 
           if (in_array($extension, $SVGInputArray) && in_array('SVG', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='svgButton<?php echo $ConvertGuiCounter1; ?>' name='svgButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>convert.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
-           onclick='toggle_visibility("svgOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("svgButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("svgXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+           onclick='toggle_visibility("svgOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("svgButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("svgXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id='svgXButton<?php echo $ConvertGuiCounter1; ?>' name='svgXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
-           onclick='toggle_visibility("svgOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("svgButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("svgXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+           onclick='toggle_visibility("svgOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("svgButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("svgXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
           <?php } 
 
           if (in_array($extension, $ModelArray) && in_array('Model', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='modelButton<?php echo $ConvertGuiCounter1; ?>' name='modelButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>convert.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
-           onclick='toggle_visibility("modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("modelButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("modelXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+           onclick='toggle_visibility("modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("modelButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("modelXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id='modelXButton<?php echo $ConvertGuiCounter1; ?>' name='modelXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;'
-           onclick='toggle_visibility("modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("modelButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("modelXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+           onclick='toggle_visibility("modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("modelButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("modelXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
           <?php } 
 
           if ($extension === 'scad' && in_array('Scad', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='scadButton<?php echo $ConvertGuiCounter1; ?>' name='scadButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>convert.png' style='float:<?php echo $GUIAlignment; ?>; display:block;'
-           onclick='toggle_visibility("scadOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scadButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scadXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+           onclick='toggle_visibility("scadOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scadButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scadXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id='scadXButton<?php echo $ConvertGuiCounter1; ?>' name='scadXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;'
-           onclick='toggle_visibility("scadOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scadButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scadXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+           onclick='toggle_visibility("scadOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scadButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scadXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
           <?php }
 
           if (in_array($extension, $SubtitleInputArray) && in_array('Subtitle', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='subtitleButton<?php echo $ConvertGuiCounter1; ?>' name='subtitleButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>subtitle.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
-           onclick='toggle_visibility("subtitleOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("subtitleButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("subtitleXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text14.' '.$File; ?>' alt='<?php echo $Gui2Text14.' '.$File; ?>'/>
+           onclick='toggle_visibility("subtitleOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("subtitleButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("subtitleXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id='subtitleXButton<?php echo $ConvertGuiCounter1; ?>' name='subtitleXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
-           onclick='toggle_visibility("subtitleOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("subtitleButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("subtitleXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
+           onclick='toggle_visibility("subtitleOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("subtitleButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("subtitleXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
           <?php } ?>
 
         </div>
 
-        <div id='archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style='max-width:750px; display:none;'>
+        <div id='archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style='max-width:750px; display:none;'>
           <p style='max-width:1000px;'></p>
           <p><strong><?php echo $Gui2Text16; ?></strong></p>
-          <p><?php echo $Gui2Text17; ?><input type='text' id='userarchfilefilename<?php echo $ConvertGuiCounter1; ?>' name='userarchfilefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><?php echo $Gui2Text17; ?><input type='text' id='userarchfilefilename<?php echo $ConvertGuiCounter1; ?>' name='userarchfilefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='archfileextension<?php echo $ConvertGuiCounter1; ?>' name='archfileextension<?php echo $ConvertGuiCounter1; ?>'> 
             <option value='zip'><?php echo $Gui2Text18; ?></option>
             <?php foreach ($ArchiveArray as $gui2ArchArr) { ?>
-            <option value='<?php echo $gui2ArchArr; ?>'><?php echo $gui2ArchArr; ?></option>
+            <option value='<?php echo htmlspecialchars($gui2ArchArr, ENT_QUOTES, 'UTF-8'); ?>'><?php echo $gui2ArchArr; ?></option>
             <?php } ?>
           </select></p>
           
-          <input type='submit' id='archfileSubmit<?php echo $ConvertGuiCounter1; ?>' name='archfileSubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo $Gui2Text51; ?>' onclick='toggle_visibility("loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>");'>
+          <input type='submit' id='archfileSubmit<?php echo $ConvertGuiCounter1; ?>' name='archfileSubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars($Gui2Text51, ENT_QUOTES, 'UTF-8'); ?>' onclick='toggle_visibility("loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>");'>
           <script type='text/javascript'>
             HRC2.bindRun('archfileSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
               <?php echo json_encode(array('archive' => $File, 'filesToArchive' => $File)); ?>,
@@ -523,14 +523,14 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         </div>
 
         <?php if ($AllowUserShare) { ?>
-        <div id='sharefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='sharefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+        <div id='sharefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='sharefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong><?php echo $Gui2Text23; ?></strong></p>
           <p id='sharelinkStatus<?php echo $ConvertGuiCounter1; ?>' name='sharelinkStatus<?php echo $ConvertGuiCounter1; ?>'><?php echo $Gui2Text24; ?><i><?php echo $Gui2Text25; ?></i></p>
           <p id='shareclipStatus<?php echo $ConvertGuiCounter1; ?>' name='shareclipStatus<?php echo $ConvertGuiCounter1; ?>'><?php echo $Gui2Text27; ?><i><?php echo $Gui2Text25; ?></i></p>
           <p id='sharelinkURL<?php echo $ConvertGuiCounter1; ?>' name='sharelinkURL<?php echo $ConvertGuiCounter1; ?>'><?php echo $Gui2Text29; ?><i><?php echo $Gui2Text25; ?></i></p>
-          <input type="submit" id="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" name="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text32; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <input type="submit" id="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" name="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text33; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" name="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text32, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" name="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text33, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindShare(<?php echo json_encode(array(
               'generateId' => 'sharegeneratebutton'.$ConvertGuiCounter1,
@@ -547,22 +547,22 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         </div>
         <?php } ?>
 
-        <div id='deletefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='deletefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+        <div id='deletefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='deletefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong><?php echo $Gui2Text69; ?></strong></p>
-          <input type='submit' id='confirmdeletefilebutton<?php echo $ConvertGuiCounter1; ?>' name='confirmdeletefilebutton<?php echo $ConvertGuiCounter1; ?>' value='<?php echo $Gui2Text70; ?>' onclick='toggle_visibility("loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>");'>
+          <input type='submit' id='confirmdeletefilebutton<?php echo $ConvertGuiCounter1; ?>' name='confirmdeletefilebutton<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars($Gui2Text70, ENT_QUOTES, 'UTF-8'); ?>' onclick='toggle_visibility("loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>");'>
           <script type='text/javascript'>
             HRC2.bindDelete('confirmdeletefilebutton<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>', <?php echo json_encode($File); ?>);
           </script>
         </div>
 
         <?php if ($AllowUserVirusScan) { ?>
-        <div id='scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+        <div id='scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong><?php echo $Gui2Text34; ?></strong></p>
-          <input type="submit" id="scancorebutton<?php echo $ConvertGuiCounter1; ?>" name="scancorebutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text35; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <input type="submit" id="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" name="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text36; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <input type="submit" id="scanallbutton<?php echo $ConvertGuiCounter1; ?>" name="scanallbutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text37; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="scancorebutton<?php echo $ConvertGuiCounter1; ?>" name="scancorebutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text35, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" name="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text36, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="scanallbutton<?php echo $ConvertGuiCounter1; ?>" name="scanallbutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text37, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             <?php $gui2ScanLog = json_encode($ConsolidatedLogFileName); $gui2ScanFile = json_encode($File); ?>
             HRC2.bindScan('scancorebutton<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>', 'scancore', <?php echo $gui2ScanFile; ?>, <?php echo $gui2ScanLog; ?>);
@@ -575,10 +575,10 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
 
         if (in_array($extension, $PDFWorkArr) && in_array('OCR', $SupportedConversionTypes)) { 
         ?>
-        <div id='pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+        <div id='pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong><?php echo $Gui2Text38; ?></strong></p>
-          <p><?php echo $Gui2Text17; ?><input type="text" id='userpdffilename<?php echo $ConvertGuiCounter1; ?>' name='userpdffilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='userpdffilename<?php echo $ConvertGuiCounter1; ?>' name='userpdffilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='pdfmethod<?php echo $ConvertGuiCounter1; ?>' name='pdfmethod<?php echo $ConvertGuiCounter1; ?>'>   
             <option value="0"><?php echo $Gui2Text39; ?></option>  
             <option value="1"><?php echo $Gui2Text39; ?> 1 (<?php echo $Gui2Text40; ?>)</option>
@@ -590,7 +590,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
             <option value="<?php echo $gui2OcrArr; ?>"><?php echo $gui2OcrArr; ?></option>   
             <?php } ?>
           </select></p>
-          <p><input type="submit" id='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' name='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo $Gui2Text52; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');"></p>
+          <p><input type="submit" id='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' name='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars($Gui2Text52, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');"></p>
           <script type='text/javascript'>
             HRC2.bindRun('pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
               <?php echo json_encode(array('pdfworkSelected' => $File)); ?>,
@@ -608,17 +608,17 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         // / $ArchiveArray is what the output can be WRITTEN to & stays the list below.
         if (in_array($extension, $DearchiveArray) && in_array('Archive', $SupportedConversionTypes)) {
         ?>
-        <div id='archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+        <div id='archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong><?php echo $Gui2Text42; ?></strong></p>
-          <p><?php echo $Gui2Text17; ?><input type="text" id='userarchivefilename<?php echo $ConvertGuiCounter1; ?>' name='userarchivefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='userarchivefilename<?php echo $ConvertGuiCounter1; ?>' name='userarchivefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='archiveextension<?php echo $ConvertGuiCounter1; ?>' name='archiveextension<?php echo $ConvertGuiCounter1; ?>'> 
             <option value="zip"><?php echo $Gui2Text18; ?></option>
             <?php foreach ($ArchiveArray as $gui2ArchArr) { ?>
             <option value="<?php echo $gui2ArchArr; ?>"><?php echo $gui2ArchArr; ?></option>
             <?php } ?>
           </select></p>
-          <input type="submit" id="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text53; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text53, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
               <?php echo json_encode(array('convertSelected' => $File)); ?>,
@@ -630,17 +630,17 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
 
         if (in_array($extension, $DocumentArray) && in_array('Document', $SupportedConversionTypes)) {
         ?>
-        <div id='docOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='docOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+        <div id='docOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='docOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong><?php echo $Gui2Text43; ?></strong></p>
-          <p><?php echo $Gui2Text17; ?><input type="text" id='userdocfilename<?php echo $ConvertGuiCounter1; ?>' name='userdocfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='userdocfilename<?php echo $ConvertGuiCounter1; ?>' name='userdocfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='docextension<?php echo $ConvertGuiCounter1; ?>' name='docextension<?php echo $ConvertGuiCounter1; ?>'> 
             <option value="txt"><?php echo $Gui2Text18; ?></option>
             <?php foreach ($DocumentArray as $gui2DocArr) { ?>
             <option value="<?php echo $gui2DocArr; ?>"><?php echo $gui2DocArr; ?></option>
             <?php } ?>
           </select></p>
-          <input type="submit" id="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text54; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text54, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('docconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
               <?php echo json_encode(array('convertSelected' => $File)); ?>,
@@ -651,17 +651,17 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
 
         if (in_array($extension, $EbookInputArray) && in_array('Ebook', $SupportedConversionTypes)) {
         ?>
-        <div id='ebookOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='ebookOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+        <div id='ebookOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='ebookOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong><?php echo $Gui2Text81; ?></strong></p>
-          <p><?php echo $Gui2Text17; ?><input type="text" id='userebookfilename<?php echo $ConvertGuiCounter1; ?>' name='userebookfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='userebookfilename<?php echo $ConvertGuiCounter1; ?>' name='userebookfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='ebookextension<?php echo $ConvertGuiCounter1; ?>' name='ebookextension<?php echo $ConvertGuiCounter1; ?>'> 
             <option value="epub"><?php echo $Gui2Text18; ?></option>
             <?php foreach ($EbookOutputArray as $gui2EbookArr) { ?>
             <option value="<?php echo $gui2EbookArr; ?>"><?php echo $gui2EbookArr; ?></option>
             <?php } ?>
           </select></p>
-          <input type="submit" id="ebookconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="ebookconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text82; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="ebookconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="ebookconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text82, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('ebookconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
               <?php echo json_encode(array('convertSelected' => $File)); ?>,
@@ -672,17 +672,17 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
 
         if (in_array($extension, $SpreadsheetArray) && in_array('Document', $SupportedConversionTypes)) {
         ?>
-        <div id='spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+        <div id='spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong><?php echo $Gui2Text44; ?></strong></p>
-          <p><?php echo $Gui2Text17; ?><input type="text" id='userspreadfilename<?php echo $ConvertGuiCounter1; ?>' name='userspreadfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='userspreadfilename<?php echo $ConvertGuiCounter1; ?>' name='userspreadfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='spreadextension<?php echo $ConvertGuiCounter1; ?>' name='spreadextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="ods"><?php echo $Gui2Text18; ?></option> 
             <?php foreach ($SpreadsheetArray as $gui2SpreadArr) { ?>
             <option value="<?php echo $gui2SpreadArr; ?>"><?php echo $gui2SpreadArr; ?></option>
             <?php } ?>
           </select></p>
-          <input type="submit" id="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text55; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">        
+          <input type="submit" id="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text55, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">        
           <script type='text/javascript'>
             HRC2.bindRun('spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
               <?php echo json_encode(array('convertSelected' => $File)); ?>,
@@ -694,17 +694,17 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
 
         if (in_array($extension, $XPSInputArray) && in_array('Document', $SupportedConversionTypes)) {
         ?>
-        <div id='xpsOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='xpsOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+        <div id='xpsOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='xpsOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong><?php echo $Gui2Text78; ?></strong></p>
-          <p><?php echo $Gui2Text17; ?><input type="text" id='userxpsfilename<?php echo $ConvertGuiCounter1; ?>' name='userxpsfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='userxpsfilename<?php echo $ConvertGuiCounter1; ?>' name='userxpsfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='xpsextension<?php echo $ConvertGuiCounter1; ?>' name='xpsextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="pdf"><?php echo $Gui2Text18; ?></option>
             <?php foreach ($XPSOutputArray as $gui2XpsArr) { ?>
             <option value="<?php echo $gui2XpsArr; ?>"><?php echo $gui2XpsArr; ?></option>
             <?php } ?>
           </select></p>
-          <input type="submit" id="xpsconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="xpsconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text56; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="xpsconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="xpsconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text56, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('xpsconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
               <?php echo json_encode(array('convertSelected' => $File)); ?>,
@@ -715,17 +715,17 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         <?php }
         if (in_array($extension, $PresentationInputArray) && in_array('Document', $SupportedConversionTypes)) {
         ?>
-        <div id='presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+        <div id='presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong><?php echo $Gui2Text77; ?></strong></p>
-          <p><?php echo $Gui2Text17; ?><input type="text" id='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' name='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' name='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='presentationextension<?php echo $ConvertGuiCounter1; ?>' name='presentationextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="odp"><?php echo $Gui2Text18; ?></option>
             <?php foreach ($PresentationOutputArray as $gui2PresArr) { ?>
             <option value="<?php echo $gui2PresArr; ?>"><?php echo $gui2PresArr; ?></option>
             <?php } ?>
           </select></p>
-          <input type="submit" id="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text56; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text56, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
               <?php echo json_encode(array('convertSelected' => $File)); ?>,
@@ -737,10 +737,10 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
 
         if (in_array($extension, $MediaInputArray) && in_array('Audio', $SupportedConversionTypes)) {
         ?>
-        <div id='audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+        <div id='audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong><?php echo $Gui2Text45; ?></strong></p>
-          <p><?php echo $Gui2Text17; ?><input type="text" id='useraudiofilename<?php echo $ConvertGuiCounter1; ?>' name='useraudiofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='useraudiofilename<?php echo $ConvertGuiCounter1; ?>' name='useraudiofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='audioextension<?php echo $ConvertGuiCounter1; ?>' name='audioextension<?php echo $ConvertGuiCounter1; ?>'> 
             <option value="mp3"><?php echo $Gui2Text18; ?></option>
             <?php foreach ($MediaOutputArray as $gui2AudArr) { ?>
@@ -748,7 +748,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
             <?php } ?>
           </select></p>
           <p><?php echo $Gui2Text66; ?><input type="number" size="6" id='bitrate<?php echo $ConvertGuiCounter1; ?>' name='bitrate<?php echo $ConvertGuiCounter1; ?>' value="0" min="0" max="100000"></p>
-          <input type="submit" id="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text57; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text57, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
               <?php echo json_encode(array('convertSelected' => $File)); ?>,
@@ -760,17 +760,17 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
 
         if (in_array($extension, $VideoInputArray) && in_array('Video', $SupportedConversionTypes)) {
         ?>
-        <div id='videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+        <div id='videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong><?php echo $Gui2Text46; ?></strong></p>
-          <p><?php echo $Gui2Text17; ?><input type="text" id='uservideofilename<?php echo $ConvertGuiCounter1; ?>' name='uservideofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='uservideofilename<?php echo $ConvertGuiCounter1; ?>' name='uservideofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='videoextension<?php echo $ConvertGuiCounter1; ?>' name='videoextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="mp4"><?php echo $Gui2Text18; ?></option> 
             <?php foreach ($VideoOutputArray as $gui2VidArr) { ?>
             <option value="<?php echo $gui2VidArr; ?>"><?php echo $gui2VidArr; ?></option>
             <?php } ?>
           </select></p>
-          <input type="submit" id="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text58; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text58, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
               <?php echo json_encode(array('convertSelected' => $File)); ?>,
@@ -782,17 +782,17 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
 
         if (in_array($extension, $StreamArray) && in_array('Stream', $SupportedConversionTypes)) {
         ?>
-        <div id='streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+        <div id='streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong><?php echo $Gui2Text47; ?></strong></p>
-          <p><?php echo $Gui2Text17; ?><input type="text" id='userstreamfilename<?php echo $ConvertGuiCounter1; ?>' name='userstreamfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='userstreamfilename<?php echo $ConvertGuiCounter1; ?>' name='userstreamfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='streamextension<?php echo $ConvertGuiCounter1; ?>' name='streamextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="mp4"><?php echo $Gui2Text18; ?></option>
             <?php foreach ($StreamOutputArray as $gui2StreamArr) { ?>
             <option value="<?php echo $gui2StreamArr; ?>"><?php echo $gui2StreamArr; ?></option>
             <?php } ?>
           </select></p>
-          <input type="submit" id="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text59; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text59, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
               <?php echo json_encode(array('convertSelected' => $File)); ?>,
@@ -804,17 +804,17 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
 
         if (in_array($extension, $ModelArray) && in_array('Model', $SupportedConversionTypes)) {
         ?>
-        <div id='modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+        <div id='modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong><?php echo $Gui2Text48; ?></strong></p>
-          <p><?php echo $Gui2Text17; ?><input type="text" id='usermodelfilename<?php echo $ConvertGuiCounter1; ?>' name='usermodelfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='usermodelfilename<?php echo $ConvertGuiCounter1; ?>' name='usermodelfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='modelextension<?php echo $ConvertGuiCounter1; ?>' name='modelextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="3ds"><?php echo $Gui2Text18; ?></option>
             <?php foreach ($ModelArray as $gui2ModArr) { ?>
             <option value="<?php echo $gui2ModArr; ?>"><?php echo $gui2ModArr; ?></option>
             <?php } ?>
           </select></p>
-          <input type="submit" id="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text60; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text60, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
               <?php echo json_encode(array('convertSelected' => $File)); ?>,
@@ -826,17 +826,17 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
 
         if ($extension === 'scad' && in_array('Scad', $SupportedConversionTypes)) {
         ?>
-        <div id='scadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='scadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+        <div id='scadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='scadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong><?php echo $Gui2Text79; ?></strong></p>
-          <p><?php echo $Gui2Text17; ?><input type="text" id='userscadfilename<?php echo $ConvertGuiCounter1; ?>' name='userscadfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='userscadfilename<?php echo $ConvertGuiCounter1; ?>' name='userscadfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='scadextension<?php echo $ConvertGuiCounter1; ?>' name='scadextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value=""><?php echo $Gui2Text18; ?></option>
             <?php foreach ($SCADOutputArray as $gui2ScadArr) { ?>
             <option value="<?php echo $gui2ScadArr; ?>"><?php echo $gui2ScadArr; ?></option>
             <?php } ?>
           </select></p>
-          <input type="submit" id="scadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="scadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text80; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="scadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="scadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text80, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('scadconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
               <?php echo json_encode(array('convertSelected' => $File)); ?>,
@@ -848,17 +848,17 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
 
         if (in_array($extension, $SubtitleInputArray) && in_array('Subtitle', $SupportedConversionTypes)) {
         ?>
-        <div id='subtitleOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='subtitleOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+        <div id='subtitleOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='subtitleOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong><?php echo $Gui2Text75; ?></strong></p>
-          <p><?php echo $Gui2Text17; ?><input type="text" id='usersubtitlefilename<?php echo $ConvertGuiCounter1; ?>' name='usersubtitlefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='usersubtitlefilename<?php echo $ConvertGuiCounter1; ?>' name='usersubtitlefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='subtitleextension<?php echo $ConvertGuiCounter1; ?>' name='subtitleextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value=""><?php echo $Gui2Text18; ?></option>
             <?php foreach ($SubtitleOutputArray as $gui2SubArr) { ?>
             <option value="<?php echo $gui2SubArr; ?>"><?php echo $gui2SubArr; ?></option>
             <?php } ?>
           </select></p>
-          <input type="submit" id="subtitleconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="subtitleconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text76; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id="subtitleconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="subtitleconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text76, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('subtitleconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
               <?php echo json_encode(array('convertSelected' => $File)); ?>,
@@ -870,17 +870,17 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
 
         if (in_array($extension, $DrawingArray) && in_array('Drawing', $SupportedConversionTypes)) {
         ?>
-        <div id='drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+        <div id='drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong><?php echo $Gui2Text49; ?></strong></p>
-          <p><?php echo $Gui2Text17; ?><input type="text" id='userdrawingfilename<?php echo $ConvertGuiCounter1; ?>' name='userdrawingfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='userdrawingfilename<?php echo $ConvertGuiCounter1; ?>' name='userdrawingfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='drawingextension<?php echo $ConvertGuiCounter1; ?>' name='drawingextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="jpg"><?php echo $Gui2Text18; ?></option>
             <?php foreach ($DrawingArray as $gui2DraArr) { ?>
             <option value="<?php echo $gui2DraArr; ?>"><?php echo $gui2DraArr; ?></option>
             <?php } ?>
           </select></p>
-          <input type="submit" id="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text61; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">     
+          <input type="submit" id="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text61, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">     
           <script type='text/javascript'>
             HRC2.bindRun('drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
               <?php echo json_encode(array('convertSelected' => $File)); ?>,
@@ -892,10 +892,10 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
 
         if (in_array($extension, $SVGInputArray) && in_array('SVG', $SupportedConversionTypes)) {
         ?>
-        <div id='svgOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='svgOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
+        <div id='svgOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='svgOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
           <p><strong><?php echo $Gui2Text49; ?></strong></p>
-          <p><?php echo $Gui2Text17; ?><input type="text" id='svgfilename<?php echo $ConvertGuiCounter1; ?>' name='usersvgfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='svgfilename<?php echo $ConvertGuiCounter1; ?>' name='usersvgfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='svgextension<?php echo $ConvertGuiCounter1; ?>' name='svgextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="png"><?php echo $Gui2Text18; ?></option>
             <?php foreach ($SVGOutputArray as $gui2SvgArr) { ?>
@@ -904,7 +904,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
           </select></p>
           <p><?php echo $Gui2Text64; ?></p>
           <p><input type="number" size="4" value="0" id='width<?php echo $ConvertGuiCounter1; ?>' name='width<?php echo $ConvertGuiCounter1; ?>' min="0" max="10000"> X <input type="number" size="4" value="0" id="height<?php echo $ConvertGuiCounter1; ?>" name="height<?php echo $ConvertGuiCounter1; ?>" min="0"  max="10000"></p> 
-          <input type="submit" id="svgconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="svgconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text61; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">     
+          <input type="submit" id="svgconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="svgconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text61, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">     
           <script type='text/javascript'>
             HRC2.bindRun('svgconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
               <?php echo json_encode(array('convertSelected' => $File)); ?>,
@@ -916,10 +916,10 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
 
         if (in_array($extension, $ImageArray) && in_array('Image', $SupportedConversionTypes)) {
         ?>
-        <div id='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display: block; padding-left: 10px; background-color: #edf9ff; padding-top: 10px;padding-bottom: 10px; margin-bottom: 10px;margin-left: 10px;border: 1px solid #bfbfbf; border-radius: 7px; margin-top: 3px; display:none;">
+        <div id='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           
           <strong><?php echo $Gui2Text50; ?></strong>
-          <p><?php echo $Gui2Text17; ?><input type="text" id='userphotofilename<?php echo $ConvertGuiCounter1; ?>' name='userphotofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='userphotofilename<?php echo $ConvertGuiCounter1; ?>' name='userphotofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='photoextension<?php echo $ConvertGuiCounter1; ?>' name='photoextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="jpg"><?php echo $Gui2Text18; ?></option>
             <?php foreach ($ImageArray as $gui2ImaArr) { ?>
@@ -929,7 +929,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
           <p><?php echo $Gui2Text64; ?></p>
           <p><input type="number" size="4" value="0" id='width<?php echo $ConvertGuiCounter1; ?>' name='width<?php echo $ConvertGuiCounter1; ?>' min="0" max="10000"> X <input type="number" size="4" value="0" id="height<?php echo $ConvertGuiCounter1; ?>" name="height<?php echo $ConvertGuiCounter1; ?>" min="0"  max="10000"></p> 
           <p><?php echo $Gui2Text65; ?><input type="number" size="3" id='rotate<?php echo $ConvertGuiCounter1; ?>' name='rotate<?php echo $ConvertGuiCounter1; ?>' value="0" min="0" max="359"></p>
-          <input type="submit" id='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' name='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo $Gui2Text62; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <input type="submit" id='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' name='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars($Gui2Text62, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
               <?php echo json_encode(array('convertSelected' => $File)); ?>,

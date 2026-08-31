@@ -17,3 +17,29 @@ select::-ms-expand {
   select {
     background:none\9;
     padding: 5px\9; } }
+
+/* / -----------------------------------------------------------------------------------
+   / EVERY FILE OPERATION PANEL IS ONE CARD.
+   / The image conversion panel carried this appearance as an inline style & no other
+   / operation carried it at all, so one operation out of twenty looked designed & the rest
+   / looked like loose form controls dropped under a filename. It was one panel's local
+   / decoration rather than a rule about what a panel looks like.
+   /
+   / It lives here rather than in styleCore.php because styleCore.php holds one block per
+   / colour scheme, so a rule that does not vary by colour would have to be written seven
+   / times to live there. It is not repeated inline either, for the same reason in the other
+   / direction; twenty copies of a style string is twenty places to edit it.
+   /
+   / Panels keep their own max-width & their inline display:none. Width is content driven &
+   / differs legitimately between panels, & toggle_visibility() reads the INLINE display
+   / value, so moving that into the class would break the first click on every panel.
+   /
+   / Margins are symmetric rather than left only. The original indented with margin-left &
+   / padding-left, which puts the inset on the wrong side of a right to left interface.
+   / ----------------------------------------------------------------------------------- */
+.file-operation-panel {
+  padding: 10px;
+  margin: 3px 10px 10px 10px;
+  background-color: #edf9ff;
+  border: 1px solid #bfbfbf;
+  border-radius: 7px; }

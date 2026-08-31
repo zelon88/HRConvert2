@@ -13,7 +13,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ... 
-// / v3.8.1.
+// / v3.8.3.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -40,13 +40,14 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 // / -----------------------------------------------------------------------------------
 
 // / ------------------------------
-
 // /  --Config Version--
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. Replacing config.php with a newer one is the correct fix.
-$ConfigVersion = 'v3.8.1';
+$ConfigVersion = 'v3.8.3';
+// / ------------------------------
 
+// / ------------------------------
 // / ---Security Informations---
 // /
 // /  --Server URL--
@@ -456,6 +457,17 @@ $MinimumDiaVersion = '0.97';
 // /   Format is major.minor.
 // /   Default is '4.0'.
 $MinimumTesseractVersion = '4.0';
+// /  --Minimum Clam Version--
+// /   clamscan is the ClamAV command line scanner.
+// /   HRConvert2 locates & verifies this binary before every scan. A scanner that is
+// /   missing, too old, or unusable makes the scan REFUSE rather than report a clean file,
+// /   because an absent scanner produces exactly the same silence a clean scan produces.
+// /   0.103 is the long term support series carried by older stable distributions.
+// /   1.0 & later are the current series. Either satisfies this floor.
+// /   Check the installed version by running 'clamscan --version' in a terminal.
+// /   Format is major.minor.
+// /   Default is '0.103'.
+$MinimumClamVersion = '0.103';
 // /  --Minimum Pdftotext Version--
 // /   pdftotext extracts an existing text layer from a PDF & is part of poppler-utils.
 // /   It cannot read a scanned page. A PDF with no text layer produces nothing at all,
@@ -865,7 +877,13 @@ $EnablePerConversionLimits = TRUE;
 // /   A type that is not listed falls back to --Default Per Conversion Resources--.
 // /   An entry that cannot be read is reported & falls back to the default.
 // /   Valid keys are Document, Spreadsheet, Presentation, Image, Video, Audio, Archive,
-// /   Model, Scad, Drawing, SVG, Subtitle, Stream, OCR & Ebook.
+// /   Model, Scad, Drawing, SVG, Subtitle, Stream, OCR, Ebook & Scan.
+// /   Scan covers BOTH virus scanners, ClamAV & ScanCore.
+// /   Be generous with Scan & treat its memory figure as a floor rather than a target.
+// /   A ClamAV signature database is well over a gigabyte once it is loaded, so a ceiling
+// /   that is merely tight does not slow a scan down, it has the kernel kill it, & the
+// /   scan is then reported as a failed scan rather than as a memory problem.
+// /   If scans begin failing on a server where they used to work, raise this first.
 $MaximumPerConversionResources = array(
   'Document'     => '50,512',
   'Spreadsheet'  => '50,512',
@@ -881,7 +899,8 @@ $MaximumPerConversionResources = array(
   'Subtitle'     => '25,256',
   'Stream'       => '90,2048',
   'OCR'          => '75,1024',
-  'Ebook'        => '50,768');
+  'Ebook'        => '50,768',
+  'Scan'         => '50,2048');
 // /  --Default Per Conversion Resources--
 // /   The ceiling used for any conversion type not named above.
 // /   Same 'processor,memory' format.

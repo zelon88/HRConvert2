@@ -751,6 +751,33 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-502, <SESSION_IDENTIFIER>: ClamAV is missing, too old, or unusable, so <FILE_PATH> was NOT scanned!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  clamscan could not be located on the server.
+  clamscan was located but reported a version older than --Minimum Clam Version-- in config.php.
+  clamscan was located but did not report a version that could be read at all.
+  The file named was NOT scanned. No clean result is implied by this error & none should be inferred.
+  The scan reports failure rather than a clean result, because an absent scanner produces the
+  same silence a clean scan produces & the two must never be confused.
+  The caller answers this with a fatal 'Could not perform a virus scan!' error, so a server with
+  --Virus Scanning-- enabled & no usable scanner refuses to process files rather than processing
+  them unscanned.
+  Install ClamAV, or disable --Virus Scanning-- in config.php if scanning is not wanted.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-1000, <SESSION_IDENTIFIER>: The specified Data Storage Directory does not exist at <FILE_PATH>!
 
 FILE
@@ -3136,6 +3163,32 @@ ERROR DESCRIPTION
   The user has requested to convert a file that was deleted for exceededing the --File Deletion Age Theshold-- specified in config.php.
   This error is not fatal but the file that causes it will be skipped.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-17002, <SESSION_IDENTIFIER>: ClamAV is missing, too old, or unusable, so the user virus scan could not run!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A user requested an on-demand ClamAV scan & clamscan could not be located on the server.
+  A user requested an on-demand ClamAV scan & clamscan reported a version older than
+  --Minimum Clam Version-- in config.php.
+  A user requested an on-demand ClamAV scan & clamscan did not report a version that could be read.
+  NO FILE WAS SCANNED. No clean result is implied by this error & none should be inferred.
+  The scan log the user downloads carries a matching line saying the scan did not run, so the user
+  is told plainly rather than being shown an empty report that reads as a clean one.
+  The scan is reported to the user as a failed operation.
+  Install ClamAV, or disable --User Virus Scanning-- in config.php if on-demand scanning is not wanted.
+
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

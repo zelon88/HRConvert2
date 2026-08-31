@@ -32,7 +32,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.8.3';
+$LanguageVersion = 'v3.7.4';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -343,5 +343,5 @@ $GuiFunctionsText1 = 'आपका ब्राउज़र क्लिपब�
 // / -----------------------------------------------------------------------------------
 // / Set GUI - Footer Related Variables.
 // / 'Check out our <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Terms of Service</a> and <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Privacy Policy'
-$GuiFooterText1 = 'हमारी <a href=\''.$TOSURL.' target=\'_blank\' rel=\'noopener noreferrer\'>सेवा की शर्तें</a> और <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>गोपनीयता नीति';
+$GuiFooterText1 = 'हमारी <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>सेवा की शर्तें</a> और <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>गोपनीयता नीति';
 // / -----------------------------------------------------------------------------------

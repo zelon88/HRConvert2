@@ -1,7 +1,7 @@
 <?php if (php_sapi_name() !== 'cli') print('<!DOCTYPE HTML>'.PHP_EOL);
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/31/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/21/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILEINFORMATION ...
-// / v3.8.3.
+// / v3.8.4.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -679,7 +679,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
-  $HRConvertVersion = 'v3.8.3';
+  $HRConvertVersion = 'v3.8.4';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
@@ -1552,7 +1552,6 @@ function resolveConvertLoc($dailyHash, $sessionHash) {
   return $ResolvedConvertLoc; }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to ask the listener which data location this session must use.
 // / Accepts the daily hash & the session hash, in that order.
@@ -1598,7 +1597,6 @@ function requestConvertLoc($dailyHash, $sessionHash) {
   purgeSensitiveMemory($EnableMemoryProtection, $requestPayload, $replyPayload, $messageWasDelivered, $answerSource, $dailyHash, $sessionHash);
   return $ResolvedConvertLoc; }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to set the global variables for the session.
@@ -2212,7 +2210,6 @@ function systemdIsUsable() {
   return array($SystemdIsUsable, $SystemdReason); }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to check, & optionally correct, the kernel settings a sandbox needs.
 // / Accepts a boolean permitting a write.
@@ -2354,7 +2351,6 @@ function verifySandboxKernel($mayRepair) {
   return array($KernelIsReady, $KernelFindings); }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to validate or repair the AppArmor profile bubblewrap needs.
 // / Accepts a boolean permitting a write.
@@ -2465,7 +2461,6 @@ function apparmorProfileIsLoaded($profileName) {
   return array($ProfileIsLoaded, $ProfileStatus); }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to unload an AppArmor profile from the kernel.
 // / Accepts the profile file path & the profile name it declares, in that order.
@@ -2505,7 +2500,6 @@ function unloadApparmorProfile($profilePath, $profileName) {
   return $ProfileWasUnloaded; }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to load an AppArmor profile that has just been written.
 // / Accepts the absolute path of the profile.
@@ -2531,7 +2525,6 @@ function reloadApparmorProfile($profilePath) {
   purgeSensitiveMemory($EnableMemoryProtection, $parserBinary, $parserOutput, $parserExitCode, $profilePath);
   return $ProfileWasLoaded; }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to confirm the installed ImageMagick meets the minimum version required.
@@ -2892,6 +2885,62 @@ function verifyEbookVersion($MinimumVersion) {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
   return $EbookBinary; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to verify the ClamAV scanner.
+// / Accepts the minimum acceptable version, or an empty string to use the built-in floor.
+// / Returns the absolute path of a verified clamscan, or FALSE.
+// /
+// / A SCANNER THAT IS NOT THERE MUST NOT LOOK LIKE A SCANNER THAT FOUND NOTHING.
+// / clamscan was the one dependency in this application invoked as a bare command name &
+// / never verified at all. That is worse here than it would be anywhere else. Every other
+// / dependency announces its own absence, because a converter that cannot run produces no
+// / output file & the caller notices. A scanner announces absence as SILENCE, & silence is
+// / byte for byte what a clean scan looks like; the pipeline greps for FOUND, an absent
+// / binary writes no FOUND, & the core reported 'No infection detected' for a file nothing
+// / had ever opened. An administrator who enabled scanning was told their uploads were
+// / clean by a server with no scanner installed on it.
+// / Locating & verifying the binary up front is what converts that silence into a refusal.
+// /
+// / The version banner is 'ClamAV 1.0.3/27222/Tue Aug 22 08:29:16 2023', so the pattern
+// / anchors on the product name & takes only the first two parts. The trailing figures are
+// / the signature database revision & its build date, & both carry digits that an
+// / unanchored pattern would match instead of the version.
+function verifyClamVersion($MinimumVersion) {
+  // / Set variables.
+  global $Verbose, $EnableMemoryProtection;
+  $ClamBinary = FALSE;
+  $locatedBinary = $detectedVersion = '';
+  $versionOutput = $versionMatches = $minimumParts = array();
+  $versionExitCode = 1;
+  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
+  // / A local floor the configuration cannot remove by omission. config.php is accepted at
+  // / or above a minimum version, so an installation can take this core & keep a
+  // / configuration file written before --Minimum Clam Version-- existed. Refusing to scan
+  // / because the administrator's file predates the setting would be a worse answer than
+  // / scanning against a sensible floor. Any value they DO set wins.
+  $minimumClamVersion = '0.103';
+  if ((string)$MinimumVersion === '') $MinimumVersion = $minimumClamVersion;
+  $locatedBinary = locateDependency('clamscan');
+  if ($locatedBinary !== '') {
+    exec(escapeshellarg($locatedBinary).' --version 2>&1', $versionOutput, $versionExitCode);
+    if (!empty($versionOutput)) {
+      if (preg_match('/ClamAV\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
+        $detectedMajor = (int)$versionMatches[1];
+        $detectedMinor = (int)$versionMatches[2];
+        $detectedVersion = $detectedMajor.'.'.$detectedMinor;
+        $minimumParts = explode('.', $MinimumVersion);
+        $minimumMajor = (int)($minimumParts[0] ?? 0);
+        $minimumMinor = (int)($minimumParts[1] ?? 0);
+        // / Compare numerically, never as strings. A string comparison ranks 0.103 above
+        // / 1.0 & ranks 1.10 below 1.9, & ClamAV has shipped every one of those numbers.
+        if ($detectedMajor > $minimumMajor) $ClamBinary = $locatedBinary;
+        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $ClamBinary = $locatedBinary; } } }
+  if ($Verbose) logEntry('ClamAV Version Check: '.($ClamBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later'.($ClamBinary === FALSE ? '' : ', Using: '.$ClamBinary).'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $minimumClamVersion, $MinimumVersion);
+  return $ClamBinary; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -3716,7 +3765,6 @@ function reportUnrecognizedArgument($cliCommand, $subOptionOwners) {
   return $ArgumentWasAnOption; }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to remove the build & development environments when config.php asks for it.
 // / This runs from the core after verifyGlobals() so every global it needs already exists.
@@ -4011,6 +4059,10 @@ function conversionTypeForProfile($sandboxProfile) {
   else if ($cleanProfile === 'openscad') $ConversionType = 'Scad';
   else if ($cleanProfile === 'archive') $ConversionType = 'Archive';
   else if ($cleanProfile === 'poppler') $ConversionType = 'Document';
+  // / Both scanners answer to one type, the same way libreoffice & poppler both answer to
+  // / Document. An administrator tunes what a scan may claim, not which scanner claimed it.
+  else if ($cleanProfile === 'clamav') $ConversionType = 'Scan';
+  else if ($cleanProfile === 'scancore') $ConversionType = 'Scan';
   purgeSensitiveMemory($EnableMemoryProtection, $cleanProfile, $sandboxProfile);
   return $ConversionType; }
 // / -----------------------------------------------------------------------------------
@@ -4030,6 +4082,20 @@ function resolveConversionLimit($sandboxProfile) {
   $CpuPercentage = 0;
   $MemoryMegabytes = 0;
   $conversionType = $limitString = $limitSource = '';
+  // / A ceiling this core knows a type cannot run below, consulted only when the
+  // / administrator has named no ceiling for that type at all. Anything they DO set wins.
+  // /
+  // / THIS EXISTS BECAUSE A CORE CAN BE UPDATED WITHOUT config.php BEING UPDATED.
+  // / config.php is accepted at or above a minimum version, so an installation that takes a
+  // / newer core keeps whatever configuration file it already had. A type this core has
+  // / learned about since that file was written is therefore a type the file does not name,
+  // / & the general default is what it would fall to.
+  // / For Scan that default is fatal rather than merely tight. A ClamAV signature database
+  // / is well over a gigabyte once it is loaded, so handing a scan the 512M general default
+  // / does not slow it down, it has the kernel kill it, & every virus scan on that server
+  // / fails from the moment the core is updated. A local fallback the configuration cannot
+  // / lower by omission is what stops a version skew from turning a working scanner off.
+  $builtInLimits = array('Scan' => '50,2048');
   $conversionType = conversionTypeForProfile($sandboxProfile);
   // / A table supplied by the listener wins, because it reflects the host right now.
   if (is_array($EffectiveConversionLimits) && isset($EffectiveConversionLimits[$conversionType])) {
@@ -4038,6 +4104,10 @@ function resolveConversionLimit($sandboxProfile) {
   else if (is_array($MaximumPerConversionResources) && isset($MaximumPerConversionResources[$conversionType])) {
     $limitString = (string)$MaximumPerConversionResources[$conversionType];
     $limitSource = 'config.php'; }
+  else if (isset($builtInLimits[$conversionType])) {
+    $limitString = (string)$builtInLimits[$conversionType];
+    $limitSource = 'core built-in';
+    warningEntry('config.php names no per conversion ceiling for '.$conversionType.'. Using this core\'s built-in '.$limitString.' rather than the general default, which is too small for that type. Add a '.$conversionType.' entry to --Maximum Per Conversion Resources-- to set this yourself.'); }
   else {
     $limitString = (string)$DefaultPerConversionResources;
     $limitSource = 'config.php default'; }
@@ -4048,7 +4118,7 @@ function resolveConversionLimit($sandboxProfile) {
     list ($LimitIsValid, $CpuPercentage, $MemoryMegabytes) = parseConversionLimit((string)$DefaultPerConversionResources);
     $limitSource = 'config.php default'; }
   if ($Verbose && $LimitIsValid) logEntry('Conversion Limit: '.$conversionType.', CPU '.$CpuPercentage.'%, Memory '.$MemoryMegabytes.'M, Source: '.$limitSource.'.');
-  purgeSensitiveMemory($EnableMemoryProtection, $conversionType, $limitString, $limitSource, $sandboxProfile);
+  purgeSensitiveMemory($EnableMemoryProtection, $conversionType, $limitString, $limitSource, $builtInLimits, $sandboxProfile);
   return array($LimitIsValid, $CpuPercentage, $MemoryMegabytes); }
 // / -----------------------------------------------------------------------------------
 
@@ -4104,7 +4174,6 @@ function limitCommand($command, $sandboxProfile) {
   return $LimitedCommand; }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to supply the sandbox flags one dependency needs & no other should have.
 // / Accepts a profile name naming the dependency about to run.
@@ -4154,7 +4223,6 @@ function sandboxProfileFlags($sandboxProfile) {
   purgeSensitiveMemory($EnableMemoryProtection, $cleanProfile, $sandboxProfile);
   return $ProfileFlags; }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to wrap a dependency invocation in a bubblewrap sandbox.
@@ -4333,23 +4401,48 @@ function locateDependency($binaryName) {
 // / A function to scan an input file or folder for viruses with ClamAV.
 function virusScan($path) {
   // / Set variables.
-  global $ClamLogFile, $AllowUserVirusScan, $Lol, $Lolol, $EnableMemoryProtection;
-  $ScanComplete = TRUE;
+  global $ClamLogFile, $AllowUserVirusScan, $MinimumClamVersion, $Lol, $Lolol, $EnableMemoryProtection;
+  $ScanComplete = FALSE;
   $VirusFound = FALSE;
-  $returnData = '';
-  // / Every argument is escaped. A filename carrying a shell metacharacter would otherwise
-  // / be executed rather than scanned, & a filename is the one thing a user controls here.
-  $returnData = shell_exec('clamscan -r '.escapeshellarg($path).' | grep FOUND >> '.escapeshellarg($ClamLogFile));
-  $clamLogFileDATA = @file_get_contents($ClamLogFile);
+  $returnData = $scanCommand = $clamLogFileDATA = '';
+  $clamBinary = FALSE;
+  // / Locate & verify the scanner before trusting anything this function is about to say.
+  // / A scan that cannot run reports FAILURE, never a clean result. $ScanComplete therefore
+  // / starts FALSE & is earned, where it used to start TRUE & be assumed. Every caller
+  // / already answers a FALSE with a fatal 'Could not perform a virus scan!', so refusing
+  // / here lands in handling that already exists & already behaves correctly.
+  $clamBinary = verifyClamVersion(isset($MinimumClamVersion) ? (string)$MinimumClamVersion : '');
+  if ($clamBinary === FALSE) errorEntry('ClamAV is missing, too old, or unusable, so '.$path.' was NOT scanned!', 502, FALSE);
+  else {
+    $ScanComplete = TRUE;
+    // / Every argument is escaped. A filename carrying a shell metacharacter would otherwise
+    // / be executed rather than scanned, & a filename is the one thing a user controls here.
+    // / The binary is the verified path rather than a bare command name, so the clamscan
+    // / whose version was checked is provably the clamscan that runs.
+    // / The scan runs under the same resource ceiling every conversion runs under. A scan is
+    // / one of the most expensive things this application does & it was the only expensive
+    // / thing running with nothing above it.
+    // / The ceiling wraps clamscan ALONE & not the pipeline. grep costs nothing worth
+    // / measuring, & wrapping the pipe would put a shell inside the scope rather than the
+    // / scanner, which measures the wrong process & keeps the unit alive for the wrong reason.
+    $scanCommand = limitCommand(escapeshellarg($clamBinary).' -r '.escapeshellarg($path), 'clamav');
+    $returnData = shell_exec($scanCommand.' | grep FOUND >> '.escapeshellarg($ClamLogFile));
+    $clamLogFileDATA = @file_get_contents($ClamLogFile); }
   // / Check if ClamAV found an infection in the specified file.
   if (strpos($clamLogFileDATA, 'Virus Detected') !== FALSE or strpos($clamLogFileDATA, 'FOUND') !== FALSE) {
-    $ScanComplete = $virusFound = TRUE;
+    // / $virusFound, lower case, was assigned here instead of the $VirusFound this function
+    // / returns. A lower case name cannot leave the function it is written in, so the
+    // / detection was recorded into a local that nothing ever read & the function reported
+    // / VirusFound as FALSE for a file it had just found a virus in. Error 501 is fatal, so
+    // / execution stopped anyway & the fault never surfaced, which is exactly how it
+    // / survived. The caller's own 'Virus detected!' branch has never once run.
+    $ScanComplete = $VirusFound = TRUE;
     // / If the specified file exists, is infected, is not a directory, & $AllowUserVirusScan is set to FALSE then delete the infected file. 
     if (file_exists($path)) if (is_file($path) && !is_dir($path) && !$AllowUserVirusScan) @unlink($path);
     errorEntry('There were potentially infected files detected at '.$path.'!', 500, FALSE);
     errorEntry('ClamAV output the following: '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))), 501, TRUE); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $clamLogFileDATA, $path);
+  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $scanCommand, $clamBinary, $clamLogFileDATA, $path);
   return array($ScanComplete, $VirusFound); }
 // / -----------------------------------------------------------------------------------
 
@@ -5065,7 +5158,6 @@ function convertWithLibreOffice($inputPath, $outputPath, $targetExtension) {
   return array($ConversionCompleted, $ReturnData); }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to verify that the Document Conversion Engine is installed & running.
 // / LibreOffice is version checked here, because every document conversion depends on it.
@@ -5668,9 +5760,10 @@ function convertSCAD($pathname, $newPathname, $extension) {
     // / /work is the ONLY writable path & the ONLY path from the data location that exists.
     // / --chdir /work is what makes a resolved include work. rectifySCAD() rewrites an
     // / include to a bare filename, & every sanitized copy lives in this one directory.
-    // / nice yields the render to everything else on the server.
     // / timeout enforces a wall clock limit because OpenSCAD will not stop on its own.
-    $openscadCommand = 'nice -n 19 timeout '.(int)$SCADConversionTimeout
+    // / The render is wrapped in its resource ceiling below, in place of the fixed
+    // / nice -n 19 this used to carry. See the note under the command.
+    $openscadCommand = 'timeout '.(int)$SCADConversionTimeout
       .' '.escapeshellarg($bwrapBinary)
       .' --unshare-all'
       .' --die-with-parent'
@@ -5708,6 +5801,20 @@ function convertSCAD($pathname, $newPathname, $extension) {
       .' '.escapeshellarg($scadBinary).' -o '.escapeshellarg('/work/'.$sandboxOutputName)
       .' '.escapeshellarg('/work/'.basename($sanitizedPath))
       .' 2>&1';
+    // / Wrap the render in the ceiling configured for its type, exactly as every pipeline
+    // / that goes through sandboxCommand() is wrapped. This one builds its own sandbox
+    // / because it needs a whole directory visible for includes to resolve, & in doing so
+    // / it had walked around the limiter as well as around the sandbox builder.
+    // /
+    // / THIS REPLACES A FIXED nice -n 19 & IS NOT STRICTLY STRONGER ON EVERY HOST.
+    // / Where a scope can be created the ceiling is far stronger; a CPUQuota is enforced
+    // / against a cgroup rather than requested from the scheduler. Where no scope can be
+    // / created limitCommand() falls back to niceness derived from the configured share, so
+    // / the stock 'Scad' => '75,1024' yields less than the old hardcoded 19 did. That is the
+    // / configured policy being honoured rather than overridden, which is the point, but an
+    // / administrator running without systemd who wants the old behaviour back sets a
+    // / smaller processor share for Scad & gets a larger niceness from it.
+    $openscadCommand = limitCommand($openscadCommand, 'openscad');
     exec($openscadCommand, $openscadOutput, $openscadExitCode);
     // / An exit code of 124 is the timeout command reporting that it killed the render.
     if ($openscadExitCode === 124) {
@@ -7319,36 +7426,63 @@ function uploadFiles() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to upload a selection of files.
+// / A function to stage a selection of files for download.
 function downloadFiles($Download) {
   // / Set variables.
   global $DangerousFiles, $Verbose, $ConsolidatedLogFileName, $Allowed, $EnableMemoryProtection;
   $DownloadComplete = $DownloadErrors = $clean = $copy = $skip = $variableIsSanitized = FALSE;
-  $file = $f0 = '';
+  $fileIsVerified = FALSE;
+  $file = $f0 = $pathname = $oldPathname = $oldExtension = $newPathname = $UserFilename = '';
+  // / THE RESULT DESCRIBES THE OPERATION, NOT THE LAST FILE IN THE LIST.
+  // / This carried the same fault deleteFiles() carried. $DownloadComplete was reset to
+  // / FALSE at the top of every iteration & set TRUE only by a successful one, so the value
+  // / that survived the loop described whatever happened to the LAST entry. Nine files
+  // / staged out of ten reported total failure if the tenth was refused, & the caller
+  // / answers a failure here with a fatal error 19 that prints ERROR!!! to the page.
+  // / Counting instead, on the same terms as deleteFiles(). An entry refused before it is
+  // / attempted is recorded as an error for the caller but is not counted as an attempt,
+  // / because refusing input the application was right to refuse is not a failure of the
+  // / download.
+  $filesAttempted = $filesStaged = 0;
   list ($Download, $variableIsSanitized) = sanitize($Download, FALSE);
   // / Make sure the input files are formatted into an array.
+  // / A single filename & a list of them are the same operation with a different count.
   if (!is_array($Download)) $Download = array($Download);
   // / Iterate through the array of input files.
   foreach ($Download as $file) {
-    $DownloadComplete = FALSE;
+    // / Every iteration decides these for itself. They previously carried over from the
+    // / previous file, so one log file in a list left every later file flagged to skip.
+    $clean = $copy = $skip = FALSE;
     // / Make sure the file is sanitized before processing it.
     list ($file, $variableIsSanitized) = sanitize($file, TRUE);
     if (!$variableIsSanitized or !is_string($file) or $file === '' or $file === '.' or $file === '..' or $file === 'index.html') {
-      $OperationErrors = TRUE;
-      errorEntry('Could not sanitize the input file!', 3000, FALSE); 
+      // / This wrote to $OperationErrors, which this function does not declare, does not
+      // / read & does not return. A refused filename therefore reported no error at all.
+      $DownloadErrors = TRUE;
+      errorEntry('Could not sanitize the input file!', 3000, FALSE);
       continue; }
     if ($Verbose) logEntry('User selected to Download file '.$file.'.');
     if ($file === $ConsolidatedLogFileName) $skip = TRUE;
     else $clean = $copy = TRUE;
     $f0 = getExtension($file);
     // / Make sure the file is not in the list of dangerous formats.
-    if (in_array(strtolower($f0), $DangerousFiles) or !in_array(strtolower($f0), $Allowed)) {
+    // / getExtension() returns an extension with no leading dot & $DangerousFiles holds
+    // / dotted extensions alongside bare filenames, so the dangerous half of this test could
+    // / never match. $Allowed happens to exclude every dangerous format today, which is the
+    // / only reason this was not a hole. Testing both spellings removes the dependency on
+    // / that coincidence surviving the next edit of the supported format list.
+    if (in_array(strtolower($f0), $DangerousFiles) or in_array('.'.strtolower($f0), $DangerousFiles) or in_array(strtolower($file), $DangerousFiles) or !in_array(strtolower($f0), $Allowed)) {
+      $DownloadErrors = TRUE;
       errorEntry('Unsupported file format, '.$f0.'!', 3004, FALSE);
       continue; }
+    // / Past this point the file is one this function agreed to act on, so it counts.
+    $filesAttempted++;
     // / Make sure all iteration specific required variables are properly sanitized.
     list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname, $UserFilename) = verifyFile($file, FALSE, FALSE, $clean, $copy, $skip);
     if (!$fileIsVerified) {
-      $ArchiveErrors = TRUE;
+      // / This wrote to $ArchiveErrors, which belongs to archiveFiles(). A file that failed
+      // / verification here reported success to the caller.
+      $DownloadErrors = TRUE;
       errorEntry('Could not verify the input file.', 3001, FALSE);
       continue; }
     // / Make sure that the file exists.
@@ -7356,12 +7490,31 @@ function downloadFiles($Download) {
       $DownloadErrors = TRUE;
       errorEntry('File '.$file.' does not exist!', 3002, FALSE);
       continue; }
-    if (!file_exists($pathname)) errorEntry('Could not verify the input file.', 3003, FALSE);
-    else {
-      if (!$DownloadErrors) $DownloadComplete = TRUE;
-      if ($Verbose) logEntry('Verified file'.$newPathname.'.'); } }
+    // / A staged file that is not where it was staged to is a failure of this operation.
+    // / This logged error 3003 & then fell through to report the file as staged anyway.
+    if (!file_exists($pathname)) {
+      $DownloadErrors = TRUE;
+      errorEntry('Could not verify the input file.', 3003, FALSE);
+      continue; }
+    $filesStaged++;
+    // / Report the path that was actually staged, which is $pathname.
+    // / This reported $newPathname & printed 'Verified file .' on every download.
+    // / verifyFile() initialises $NewPathname to FALSE & only fills it inside its own
+    // / if ($UserFilename && $UserExtension) branch, which builds the RENAMED destination an
+    // / operation is about to write to. A download renames nothing, so this is the one caller
+    // / that passes FALSE for both of those, the branch never runs, & FALSE concatenates into
+    // / a log line as an empty string rather than as anything a reader would notice.
+    // / The archive, conversion & OCR callers all pass a real filename & extension, so the
+    // / same line reads correctly for them & the fault looked like it belonged to the log
+    // / rather than to this one call.
+    if ($Verbose) logEntry('Verified file '.$pathname.'.'); }
+  // / The operation is complete when every file it agreed to act on was staged.
+  // / An empty list is complete because there was nothing to stage, & reporting a fatal
+  // / failure for asking to download nothing would be a worse answer than doing nothing.
+  $DownloadComplete = ($filesStaged === $filesAttempted);
+  if ($Verbose) logEntry('Download result: Attempted: '.$filesAttempted.', Staged: '.$filesStaged.', Errors: '.($DownloadErrors ? 'YES' : 'NO').'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $file, $f0, $clean, $copy, $skip, $variableIsSanitized);
+  purgeSensitiveMemory($EnableMemoryProtection, $file, $f0, $clean, $copy, $skip, $variableIsSanitized, $fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname, $UserFilename, $filesAttempted, $filesStaged);
   return array($DownloadComplete, $DownloadErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -7993,13 +8146,28 @@ function userVirusLogEntry($Entry, $type) {
 // / A function to scan a user supplied file on-demand with ClamAV.
 function userClamScan($FilesToScan) {
   // / Set variables.
-  global $Verbose, $ConvertDir, $Lol, $Lolol, $UserClamLogFile, $EnableMemoryProtection;
+  global $Verbose, $ConvertDir, $MinimumClamVersion, $Lol, $Lolol, $UserClamLogFile, $EnableMemoryProtection;
   $OperationSuccessful = $OperationErrors = $UserVirusFound = $userFilename = $userExtension = $clean = $copy = $userFilename = $userExtension = $variableIsSanitized = FALSE;
   $skip = TRUE;
-  $returnData = $txt = $file = $clamLogFileDATA = '';
+  $returnData = $txt = $file = $clamLogFileDATA = $scanCommand = '';
+  $clamBinary = FALSE;
   $txt = 'Initiating User Virus Scan with ClamAV.';
   userVirusLogEntry($txt, 'clamav');
   if ($Verbose) logEntry($txt);
+  // / Locate & verify the scanner ONCE, before the loop rather than inside it.
+  // / A user scanning twenty files wants one version check, not twenty.
+  $clamBinary = verifyClamVersion(isset($MinimumClamVersion) ? (string)$MinimumClamVersion : '');
+  // / A SCAN THAT CANNOT RUN REPORTS FAILURE, NEVER A CLEAN RESULT.
+  // / Without this the loop below ran a command that was not there, collected nothing, found
+  // / no FOUND in nothing, & told the user every file was clean. The report went into the
+  // / user's own downloadable scan log saying so. Refusing is the only honest answer, & the
+  // / refusal is written to that same log so the user sees why rather than seeing nothing.
+  if ($clamBinary === FALSE) {
+    $OperationErrors = TRUE;
+    $txt = 'ClamAV is missing, too old, or unusable. NO FILE WAS SCANNED.';
+    userVirusLogEntry($txt, 'clamav');
+    errorEntry('ClamAV is missing, too old, or unusable, so the user virus scan could not run!', 17002, FALSE);
+    $FilesToScan = array(); }
   // / Make sure the input files are formatted into an array.
   if (!is_array($FilesToScan)) $FilesToScan = array($FilesToScan);
   // / Iterate through the array of input files.
@@ -8025,7 +8193,12 @@ function userClamScan($FilesToScan) {
     // / Scan the selected file with ClamAV.
     // / Every argument is escaped. $file is a user supplied name & must never be able to
     // / end the clamscan argument & start a command of its own.
-    $returnData = shell_exec('clamscan -r '.escapeshellarg($ConvertDir.$file).' | grep FOUND >> '.escapeshellarg($UserClamLogFile));
+    // / The scan runs under its resource ceiling, & the ceiling wraps clamscan rather than
+    // / the pipeline, for the reasons given in virusScan().
+    // / The verified path runs, not a bare command name, so the clamscan whose version was
+    // / checked is provably the clamscan that scans.
+    $scanCommand = limitCommand(escapeshellarg($clamBinary).' -r '.escapeshellarg($ConvertDir.$file), 'clamav');
+    $returnData = shell_exec($scanCommand.' | grep FOUND >> '.escapeshellarg($UserClamLogFile));
     // / Write the full ClamAV output to the normal $LogFile.
     // / Normally we don't write dependency output if it is blank, but for virus scans we do. 
     // / Blank virus scan output means scanner malfunction or potential tampering of the results. 
@@ -8043,11 +8216,12 @@ function userClamScan($FilesToScan) {
       $txt = 'No infection detected in '.$file.'.';
       if ($Verbose) logEntry($txt);
       userVirusLogEntry($txt, 'clamav'); } }
-  $txt = 'ClamAV Virus Scan Complete.';
+  // / A refusal does not get to end with the word Complete. The user reads this log.
+  $txt = ($clamBinary === FALSE) ? 'ClamAV Virus Scan DID NOT RUN.' : 'ClamAV Virus Scan Complete.';
   if ($Verbose) logEntry($txt);
   userVirusLogEntry($txt, 'clamav');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $variableIsSanitized, $clean, $copy, $skip, $returnData, $txt, $userFilename, $userExtension, $clamLogFileDATA);
+  purgeSensitiveMemory($EnableMemoryProtection, $variableIsSanitized, $clean, $copy, $skip, $returnData, $scanCommand, $clamBinary, $txt, $userFilename, $userExtension, $clamLogFileDATA);
   return array($OperationSuccessful, $OperationErrors, $UserVirusFound); }
 // / -----------------------------------------------------------------------------------
 
@@ -8056,7 +8230,7 @@ function userClamScan($FilesToScan) {
 function startScanCore($pathname, $UserScanCoreLogFile) {
   // / Set variables.
   global $InstLoc, $ConvertDir, $MaxLogSize, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $DirSep, $Date, $SesHash, $SesHash2, $EnableMemoryProtection;
-  $ReturnData = $scVerbose = $scDebug = '';
+  $ReturnData = $scVerbose = $scDebug = $scanCommand = '';
   $ScanCoreFile = $InstLoc.$DirSep.'Resources'.$DirSep.'ScanCore'.$DirSep.'ScanCore.php';
   $scInc = 0;
   if ($ScanCoreVerbose) $scVerbose = ' -v';
@@ -8069,16 +8243,25 @@ function startScanCore($pathname, $UserScanCoreLogFile) {
   // / Run ScanCore with the information supplied.
   // / Every argument is escaped. $pathname is a user supplied path & the numeric settings
   // / are cast, so nothing in this command line can be turned into a second command.
-  $ReturnData = shell_exec('php '.escapeshellarg($ScanCoreFile)
+  // /
+  // / The scan runs under the same resource ceiling every conversion runs under.
+  // / --Scan Core Memory Limit-- is NOT that ceiling & does not replace it. It is a PHP
+  // / memory_limit handed to the child interpreter, which is a self imposed budget the
+  // / child honours only while it is behaving. A cgroup ceiling is imposed from outside &
+  // / holds whatever the child does, including the allocations PHP never counts against
+  // / memory_limit in the first place. The two are complementary & this had only the
+  // / weaker of them.
+  $scanCommand = limitCommand('php '.escapeshellarg($ScanCoreFile)
     .' '.escapeshellarg($pathname)
     .' -m '.escapeshellarg((string)$ScanCoreMemoryLimit)
     .' -c '.escapeshellarg((string)$ScanCoreChunkSize)
     .' -lf '.escapeshellarg($scLogFile)
     .' -rf '.escapeshellarg($UserScanCoreLogFile)
     .' -ml '.escapeshellarg((string)$MaxLogSize)
-    .' -r'.$scVerbose.$scDebug);
+    .' -r'.$scVerbose.$scDebug, 'scancore');
+  $ReturnData = shell_exec($scanCommand);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $pathname, $scVerbose, $scDebug, $scLogFile, $scInc);
+  purgeSensitiveMemory($EnableMemoryProtection, $pathname, $scVerbose, $scDebug, $scLogFile, $scInc, $scanCommand);
   return $ReturnData; }
 // / -----------------------------------------------------------------------------------
 
@@ -8240,23 +8423,36 @@ function userVirusScan($FilesToScan, $type) {
   // / Set variables.
   global $UserClamLogFile, $UserScanCoreLogFile, $ConsolidatedLogFile, $ConsolidatedLogFileName, $EnableMemoryProtection;
   $ScanComplete = $ScanErrors = $UserVirusFound = $scan1Complete = $scan1Errors = $scan2Complete = $scan2Errors = $ConsolidatedLogsExist = $ConsolidatedLogErrors = FALSE;
-  $fileToScan = '';
+  $clamVirusFound = $scanCoreVirusFound = FALSE;
   // / Check that the $type input variable is valid.
   if ($type !== 'all' && $type !== 'clamav' && $type !== 'scancore') $type = 'all';
   // / Make sure the input files are formatted into an array.
   if (!is_array($FilesToScan)) $FilesToScan = array($FilesToScan);
   list ($LogsExist, $UserClamLogFile, $UserScanCoreLogFile) = verifyUserVirusLogs($type);
-  // / Iterate through the array of input files.
-  foreach ($FilesToScan as $fileToScan) {
-    $ScanComplete = $scan1Complete = $scan2Complete = FALSE;
-    // / Perform a User Virus Scan using ClamAV if required.
-    if ($type === 'clamav' or $type === 'all') {
-      // / Prepare to run a ClamAV Scan.
-      list ($scan1Complete, $scan1Errors, $UserVirusFound) = userClamScan($FilesToScan); }
-    // / Perform a User Virus Scan using ScanCore if required.
-    if ($type === 'scancore' or $type === 'all') {
-      // / Prepare to run a ScanCore Scan.
-      list ($scan2Complete, $scan2Errors, $UserVirusFound) = userScanCoreScan($FilesToScan); } }
+  // / EACH SCANNER IS RUN ONCE, OVER THE WHOLE LIST.
+  // / This used to sit inside a foreach over $FilesToScan while handing each scanner the
+  // / ENTIRE array every time, so a scan of five files ran five scans of five files. The
+  // / loop variable was never read by anything inside it, which is what hid the fault; the
+  // / results were identical & only the time & the load told the truth. Twenty files meant
+  // / four hundred file scans, & a virus scan is now something that draws on a resource
+  // / budget & runs under a ceiling, so the cost is no longer only this session's problem.
+  //
+  // / A DETECTION FROM EITHER SCANNER IS A DETECTION.
+  // / Both scanners wrote their result into the SAME $UserVirusFound, so in 'all' mode
+  // / ScanCore's answer landed on top of ClamAV's. A file ClamAV identified as infected was
+  // / reported to the user as clean whenever ScanCore did not also recognise it, which is
+  // / the normal case, because the two carry different definitions & that is the entire
+  // / reason for offering both. Each scanner now reports into its own variable & the answer
+  // / the user is given is the OR of them.
+  if ($type === 'clamav' or $type === 'all') {
+    // / Prepare to run a ClamAV Scan.
+    list ($scan1Complete, $scan1Errors, $clamVirusFound) = userClamScan($FilesToScan);
+    if ($clamVirusFound) $UserVirusFound = TRUE; }
+  // / Perform a User Virus Scan using ScanCore if required.
+  if ($type === 'scancore' or $type === 'all') {
+    // / Prepare to run a ScanCore Scan.
+    list ($scan2Complete, $scan2Errors, $scanCoreVirusFound) = userScanCoreScan($FilesToScan);
+    if ($scanCoreVirusFound) $UserVirusFound = TRUE; }
   // / Check the results of the virus scan for failures or errors.
   list ($ScanComplete, $ScanErrors) = checkUserVirusScanResults($type, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors);
   // / Consolidate the log files created during the scan into the $ConvertTempDir so the user can access them.
@@ -8265,7 +8461,7 @@ function userVirusScan($FilesToScan, $type) {
   if ($ScanErrors or $ConsolidatedLogErrors) $ScanErrors = TRUE;
   if (!$ConsolidatedLogsExist) $ScanComplete = FALSE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $fileToScan, $path, $type, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors, $returnData);
+  purgeSensitiveMemory($EnableMemoryProtection, $clamVirusFound, $scanCoreVirusFound, $path, $type, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors, $returnData);
   return array($ScanComplete, $ScanErrors, $UserVirusFound, $ConsolidatedLogFile, $ConsolidatedLogFileName); }
 // / -----------------------------------------------------------------------------------
 
@@ -8353,7 +8549,6 @@ function compareVersionMinimum($detectedVersion, $requiredVersion) {
   return $VersionIsCurrent; }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to read the version a component declares, without loading it.
 // / Accepts the path relative to Resources & the name of the version variable.
@@ -8374,7 +8569,6 @@ function readComponentVersion($componentRelativePath, $versionVariableName) {
   purgeSensitiveMemory($EnableMemoryProtection, $componentPath, $componentContents, $versionMatches, $componentRelativePath, $versionVariableName);
   return $DetectedVersion; }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to verify & load one detachable component.
@@ -8521,6 +8715,64 @@ function releaseBudgetOnShutdown() {
   // / would warn about the same token all over again.
   $BudgetTokenIsReleased = TRUE;
   $BudgetWasReleased = releaseConversionBudget($BudgetToken);
+  return $BudgetWasReleased; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to take a resource budget for an expensive operation & arm its return.
+// / Accepts a human readable operation name used only for logging.
+// / Returns TRUE when the operation may proceed.
+// /
+// / EVERY EXPENSIVE OPERATION TAKES A BUDGET, NOT ONLY CONVERSION.
+// / Resource awareness existed to stop a machine from accepting more expensive work than it
+// / can carry, but only convertFiles() ever asked permission. Archiving, OCR & the user
+// / virus scan ran unmetered. That is not a small gap. Tesseract on a large PDF, 7-Zip on a
+// / multi-gigabyte folder & a ClamAV scan are each as heavy as the conversions the budget
+// / was written to hold back, & because they took nothing they also counted for nothing, so
+// / a machine saturated by them still reported itself idle & kept approving conversions on
+// / top. The limiter was measuring a fraction of the load & guarding against a fraction of
+// / the problem.
+// /
+// / All four operations take the same $DefaultConversionCost & $DefaultExpectedRuntime.
+// / Weighting them separately would be more precise, but precision here would be invented;
+// / there are no measurements behind a number that says an archive costs half of an OCR.
+// / One unit of expensive work is a claim this code can actually support, & an administrator
+// / who needs finer control has the per-conversion limit table already.
+// /
+// / This FAILS OPEN exactly as requestConversionBudget() does. When resource awareness is
+// / unavailable the operation is approved & the core behaves as it did before.
+function takeOperationBudget($operationName) {
+  // / Set variables.
+  global $BudgetToken, $BudgetTokenIsReleased, $DefaultConversionCost, $DefaultExpectedRuntime, $Verbose;
+  $BudgetWasApproved = FALSE;
+  list ($BudgetWasApproved, $BudgetToken) = requestConversionBudget($DefaultConversionCost, $DefaultExpectedRuntime);
+  // / Every message names the operation the same way, so $operationName is a bare noun &
+  // / the sentence supplies the rest. A name of 'OCR operation' rendered 'The OCR operation
+  // / operation holds', & an article written into the sentence rendered 'A OCR'.
+  if (!$BudgetWasApproved) warningEntry('The '.$operationName.' operation was refused because the server is at its resource budget.');
+  else {
+    // / THE TOKEN IS OUT FROM HERE. REGISTER ITS RETURN BEFORE ANYTHING CAN DIE.
+    // / Every one of these operations has a fatal exit between taking a budget & returning
+    // / it, so the release cannot live only at the bottom of the caller's block.
+    $BudgetTokenIsReleased = FALSE;
+    register_shutdown_function('releaseBudgetOnShutdown');
+    if ($Verbose) logEntry('The '.$operationName.' operation holds budget token '.$BudgetToken.'.'); }
+  return $BudgetWasApproved; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to return the resource budget an operation took.
+// / Accepts a human readable operation name used only for logging.
+// / Returns TRUE when the release was acknowledged, or when there was nothing to release.
+// / Safe to call when the budget was refused & safe to call twice, because the guard inside
+// / releaseBudgetOnShutdown() is what decides whether there is anything to do.
+function giveBackOperationBudget($operationName) {
+  // / Set variables.
+  global $Verbose;
+  $BudgetWasReleased = releaseBudgetOnShutdown();
+  // / releaseConversionBudget() has already warned if it could not deliver, so a failure
+  // / here is noted at the normal activity tier only.
+  if ($Verbose && !$BudgetWasReleased) logEntry('The '.$operationName.' operation budget token was not confirmed as returned. The reaper remains as the fallback.');
   return $BudgetWasReleased; }
 // / -----------------------------------------------------------------------------------
 
@@ -8692,7 +8944,6 @@ function verifyPhpConfiguration($mayRepair) {
   return array($ConfigurationIsValid, $ConfigurationsWritten); }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to turn an internal policy status into the word an operator should read.
 // / Accepts the internal status word.
@@ -8716,7 +8967,6 @@ function policyDisplayStatus($policyStatus) {
   purgeSensitiveMemory($EnableMemoryProtection, $benignStatuses, $policyStatus);
   return $DisplayStatus; }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to explain a policy status in a sentence.
@@ -8747,7 +8997,6 @@ function describePolicyStatus($policyName, $policyStatus) {
   purgeSensitiveMemory($EnableMemoryProtection, $policyName, $policyStatus);
   return $StatusDescription; }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to check that this host can actually do the work, without changing it.
@@ -8810,7 +9059,6 @@ function showEnvironmentFindings($environmentFindings) {
   purgeSensitiveMemory($EnableMemoryProtection, $finding, $environmentFindings);
   return $ProblemsFound; }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to correct ownership & permissions on every managed path.
@@ -8944,7 +9192,6 @@ function askOperator($promptText) {
   purgeSensitiveMemory($EnableMemoryProtection, $inputHandle, $promptText);
   return $OperatorResponse; }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to ask for confirmation on a destructive command line action.
@@ -9121,53 +9368,53 @@ if (!$CommandLineHandled && $UserType === 'web') {
         if ($Verbose) logEntry('Delete Complete.'); }
       
       // / The following code is performed when a user archives a selection of files.
+      // / A refusal prints the same alert a refused conversion prints. It carries no
+      // / ERROR!!! tag because nothing failed, so an interface must recognise it by the
+      // / alert string. That is what the failureStrings list in the GUI is for.
       if (isset($_POST['filesToArchive'])) {
-        logEntry('Initiating Archiver.');
-        list ($ArchiveComplete, $ArchiveErrors) = archiveFiles($FilesToArchive, $UserFilename, $UserExtension);
-        if (!$ArchiveComplete) errorEntry('Archive Failed!', 20, TRUE);
-        if ($ArchiveErrors) logEntry('Archive finished with errors.');
-        if ($Verbose) logEntry('Archive Complete.'); }
+        if (!takeOperationBudget('archive')) print($Alert3.$Lol);
+        else {
+          logEntry('Initiating Archiver.');
+          list ($ArchiveComplete, $ArchiveErrors) = archiveFiles($FilesToArchive, $UserFilename, $UserExtension);
+          if (!$ArchiveComplete) errorEntry('Archive Failed!', 20, TRUE);
+          if ($ArchiveErrors) logEntry('Archive finished with errors.');
+          if ($Verbose) logEntry('Archive Complete.'); }
+        $BudgetWasReleased = giveBackOperationBudget('archive'); }
 
       // / The following code is performed when a user converts a selection of files.
       if (isset($_POST['convertSelected'])) {
-        list ($BudgetWasApproved, $BudgetToken) = requestConversionBudget($DefaultConversionCost, $DefaultExpectedRuntime);
-        if (!$BudgetWasApproved) {
-          warningEntry('A conversion was refused because the server is at its resource budget.');
-          print($Alert3.$Lol); }
+        if (!takeOperationBudget('conversion')) print($Alert3.$Lol);
         else {
-          // / THE TOKEN IS OUT FROM HERE. REGISTER ITS RETURN BEFORE ANYTHING CAN DIE.
-          // / Everything below this line can end the request without reaching the bottom
-          // / of this block, so the release cannot live only at the bottom of this block.
-          $BudgetTokenIsReleased = FALSE;
-          register_shutdown_function('releaseBudgetOnShutdown');
           logEntry('Initiating Converter.');
           list ($ConversionComplete, $ConversionErrors) = convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, $Width, $Rotate, $Bitrate);
           if (!$ConversionComplete) errorEntry('Conversion Failed!', 21, TRUE);
           if ($ConversionErrors) logEntry('Conversion finished with errors.');
           if ($Verbose) logEntry('Conversion Complete.'); }
-        // / One guarded release path, so the direct call & the shutdown handler cannot
-        // / both act on the same token. releaseConversionBudget() has already warned if it
-        // / could not deliver, so a failure here is noted at the normal activity tier only.
-        $BudgetWasReleased = releaseBudgetOnShutdown();
-        if ($Verbose && !$BudgetWasReleased) logEntry('The conversion budget token was not confirmed as returned. The reaper remains as the fallback.'); }
+        $BudgetWasReleased = giveBackOperationBudget('conversion'); }
 
       // / The following code is performed when a user performs OCR on a selection of files.
       if (isset($_POST['pdfworkSelected'])) {
-        logEntry('Initiating Converter.');
-        list ($ConversionComplete, $ConversionErrors) = ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method);
-        if (!$ConversionComplete) errorEntry('OCR Operation Failed!', 22, TRUE);
-        if ($ConversionErrors) logEntry('OCR Operation finished with errors.');
-        if ($Verbose) logEntry('Conversion Complete.'); }
+        if (!takeOperationBudget('OCR')) print($Alert3.$Lol);
+        else {
+          logEntry('Initiating Converter.');
+          list ($ConversionComplete, $ConversionErrors) = ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method);
+          if (!$ConversionComplete) errorEntry('OCR Operation Failed!', 22, TRUE);
+          if ($ConversionErrors) logEntry('OCR Operation finished with errors.');
+          if ($Verbose) logEntry('Conversion Complete.'); }
+        $BudgetWasReleased = giveBackOperationBudget('OCR'); }
 
       // / The following code is performed when a user performs a virus scan on a selection of files.
       if (isset($_POST['filesToScan']) && $AllowUserVirusScan) {
-        logEntry('Initiating User Virus Scannner.');
-        list ($ScanComplete, $ScanErrors, $UserVirusFound) = userVirusScan($FilesToScan, $UserScanType);
-        if (!$ScanComplete) errorEntry('User Virus Scan Failed!', 23, TRUE);
-        if ($UserVirusFound) logEntry('The User Virus Scan detected infected files.');
-        if (!$UserVirusFound) logEntry('The User Virus Scan did not detect any infected files.');
-        if ($ScanErrors) logEntry('User Virus Scan finished with errors.');
-        if ($Verbose) logEntry('User Virus Scan Complete.'); }
+        if (!takeOperationBudget('user virus scan')) print($Alert3.$Lol);
+        else {
+          logEntry('Initiating User Virus Scannner.');
+          list ($ScanComplete, $ScanErrors, $UserVirusFound) = userVirusScan($FilesToScan, $UserScanType);
+          if (!$ScanComplete) errorEntry('User Virus Scan Failed!', 23, TRUE);
+          if ($UserVirusFound) logEntry('The User Virus Scan detected infected files.');
+          if (!$UserVirusFound) logEntry('The User Virus Scan did not detect any infected files.');
+          if ($ScanErrors) logEntry('User Virus Scan finished with errors.');
+          if ($Verbose) logEntry('User Virus Scan Complete.'); }
+        $BudgetWasReleased = giveBackOperationBudget('user virus scan'); }
 
       // / Close the web server connection after all required content has been served.
       if ($Verbose) logEntry('Closing connection.');

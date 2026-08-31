@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
 
 FILE INFORMATION ...
-v3.7.8.
+v3.8.3.
 This plain text file describes resource rate limiting, how it works, and how to make use of it.
 
 HARDWARE REQUIREMENTS ...
@@ -142,13 +142,32 @@ Interval-- seconds from three figures;
 
 An idle server throttles nothing. A loaded server stops accepting work before it falls over.
 
-A conversion requests a budget before it begins, declaring a cost & an expected runtime. The
+FOUR OPERATIONS TAKE A BUDGET. Conversion, archiving, OCR & the user virus scan.
+
+Only conversion did so originally. Archiving, OCR & scanning ran unmetered, which understated
+the load twice over; they were never held back when the machine was full, & because they took
+nothing they also counted for nothing, so a machine saturated by them still reported itself idle
+& kept approving conversions on top of the work already running.
+
+Each declares the same --Default Conversion Cost-- & --Default Expected Runtime--. They are not
+weighted against each other. Weighting would be more precise, but there are no measurements
+behind a number claiming an archive costs half of an OCR, & an invented constant in a limiter is
+worse than an honest uniform one. An administrator needing finer control has the per conversion
+ceiling table.
+
+An operation requests a budget before it begins, declaring a cost & an expected runtime. The
 request is refused when the runtime exceeds --Maximum Expected Runtime--, when the tracked worker
 count has reached --Maximum Concurrent Workers--, or when the remaining budget is smaller than
 the cost requested.
 
+A refused operation is not an error. Nothing failed & nothing was attempted. The core writes a
+warning naming the operation & prints the same alert string a refused conversion prints, which
+carries no ERROR!!! tag. An interface recognises it by the alert string rather than by the tag.
+
 An approved request is registered & is issued a budget token. The worker returns that token when
-the conversion finishes & the budget is reclaimed immediately.
+the operation finishes & the budget is reclaimed immediately. The return is registered as a
+shutdown handler the moment the token is issued, so an operation that dies part way through still
+returns what it borrowed rather than leaving it for the reaper.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -224,10 +243,52 @@ Set --Storage Cleanup Interval-- to 0 to disable the scheduled sweep entirely.
 --Enable Per Conversion Limits-- runs every conversion inside a transient systemd scope carrying
 a processor & memory ceiling, so one conversion cannot starve the host.
 
+EVERY EXPENSIVE OPERATION RUNS INSIDE A CEILING, NOT ONLY FORMAT CONVERSION.
+Anything that goes through sandboxCommand() has always been wrapped, which covers document,
+image, video, audio, archive, model, drawing, SVG, subtitle, stream, OCR & ebook work. Three
+pipelines built their own command & walked around the wrapper along with it, & each of them is
+among the most expensive things the application does;
+
+  ClamAV        Ran raw. A signature database is well over a gigabyte once it is loaded.
+  ScanCore      Ran raw. It carried a PHP memory_limit & nothing else.
+  OpenSCAD      Ran under a fixed nice -n 19 & no memory ceiling at all.
+
+All three now resolve a ceiling the same way every other pipeline does.
+
+A PHP memory_limit is not a ceiling & does not replace one. It is a budget a child interpreter
+imposes on itself & honours only while it is behaving, & it never sees the allocations PHP does
+not count. A cgroup ceiling is imposed from outside & holds whatever the process does. ScanCore
+had the weaker of the two & now has both.
+
+For ClamAV & ScanCore the ceiling wraps the SCANNER & not the shell pipeline it sits in. Putting
+the pipe inside the scope would measure a shell rather than a scanner & would hold the unit open
+for the wrong process.
+
+OpenSCAD previously carried a hardcoded nice -n 19, & replacing it with the configured ceiling is
+not strictly stronger on every host. Where a scope can be created it is far stronger, because a
+CPUQuota is enforced against a cgroup instead of requested from the scheduler. Where no scope can
+be created the niceness is derived from the configured processor share instead, so the stock
+Scad entry of '75,1024' yields less than a fixed 19 did. Set a smaller processor share for Scad
+to get a larger niceness back.
+
 --Maximum Per Conversion Resources-- declares the ceiling for each conversion type as a string of
 a processor percentage & a memory ceiling in megabytes, comma separated. The processor figure is
 a percentage of ONE processor, so 200 is two whole cores. A type that is not listed falls back to
---Default Per Conversion Resources--.
+--Default Per Conversion Resources--, unless the core carries a built-in for it.
+
+A BUILT-IN CEILING EXISTS FOR ANY TYPE THE CORE KNOWS THE GENERAL DEFAULT WOULD BREAK.
+config.php is accepted at or above a minimum version, so a server can take a newer core & keep
+the configuration file it already had. A type the core learned about after that file was written
+is a type the file cannot name, & it would fall to the general default.
+
+For Scan that default is not merely tight, it is fatal. A ClamAV signature database does not fit
+inside 512M, so the kernel kills the scan rather than slowing it, & every virus scan on that
+server fails from the moment the core is updated. The core therefore carries its own Scan ceiling
+& uses it when config.php names none, writing a warning that says which value it used & how to
+set the value yourself. Anything an administrator DOES set always wins.
+
+The resolution order is the listener's scaled table, then --Maximum Per Conversion Resources--,
+then the core's built-in for that type, then --Default Per Conversion Resources--.
 
 These are MAXIMA. With a listener running they are scaled down against current load & against how
 many conversions are already in flight, & never below --Minimum Per Conversion Resources--. With
@@ -258,6 +319,10 @@ The mechanism actually in use is reported by -v & is written to the log for each
 Limits are keyed by conversion type but are resolved from the sandbox profile of the tool being
 run. This is exact for LibreOffice, ImageMagick & Tesseract. It is approximate for FFMPEG, which
 serves audio, video, subtitles & streams, & which is charged at the heaviest of them.
+
+Two profiles can share one type where an administrator would not want to tell them apart. ClamAV
+& ScanCore both resolve to Scan, in the same way LibreOffice & Poppler both resolve to Document.
+What is being tuned is what a scan may claim, not which scanner claimed it.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

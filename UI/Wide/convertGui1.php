@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.8.2.
+// / v3.8.3.
 // / This file contains language specific GUI elements for accepting file uploads.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -95,8 +95,8 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
             // / page. Describe the markup instead of reproducing it. ?>
       <div id='guiChrome' name='guiChrome' style='text-align:center;'>
         <form id='sessionForm' name='sessionForm' method='post' style='display:inline;' action='<?php echo htmlspecialchars($refreshURL, ENT_QUOTES, 'UTF-8'); ?>'>
-          <input type='hidden' name='Token1' value='<?php echo $Token1; ?>'>
-          <input type='hidden' name='Token2' value='<?php echo $Token2; ?>'>
+          <input type='hidden' name='Token1' value='<?php echo htmlspecialchars($Token1, ENT_QUOTES, 'UTF-8'); ?>'>
+          <input type='hidden' name='Token2' value='<?php echo htmlspecialchars($Token2, ENT_QUOTES, 'UTF-8'); ?>'>
           <?php // / Refresh sits to the LEFT of the settings toggle.
                 // / It carries alternate text because it is a glyph with no text of its
                 // / own, so this is the only description a screen reader has & the only
@@ -104,7 +104,7 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
                 // / title & aria-label both, because a title alone is not announced
                 // / reliably & an aria-label alone shows nothing on hover. ?>
           <button type='submit' id='refreshButton' style='width:50px;' class='info-button' title='<?php echo htmlspecialchars(isset($Gui1Text37) ? $Gui1Text37 : 'Refresh', ENT_QUOTES, 'UTF-8'); ?>' aria-label='<?php echo htmlspecialchars(isset($Gui1Text37) ? $Gui1Text37 : 'Refresh', ENT_QUOTES, 'UTF-8'); ?>'>&#x21BB;</button>
-          <button type='button' id='userConfigButton' style='width:50px;' class='info-button' onclick='toggle_visibility("uiSelector");'>&#9965;</button>
+          <button type='button' id='userConfigButton' style='width:50px;' class='info-button' title='<?php echo htmlspecialchars($GuiSelectorText4, ENT_QUOTES, 'UTF-8'); ?>' aria-label='<?php echo htmlspecialchars($GuiSelectorText4, ENT_QUOTES, 'UTF-8'); ?>' onclick='toggle_visibility("uiSelector");'>&#9965;</button>
           <?php // / START OVER IS ONLY OFFERED WHEN THERE IS SOMETHING TO CLEAR.
                 // / A first time visitor has an empty session, so a control that deletes
                 // / everything & issues a new one would do nothing except invite them to
@@ -119,7 +119,7 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
         </form>
       </div>
       <?php if ($FileCount > 0) { ?>
-      <div id='startOverOptionsDiv' name='startOverOptionsDiv' style='display:none; max-width:750px; margin-left:auto; margin-right:auto; text-align:center;'>
+      <div id='startOverOptionsDiv' name='startOverOptionsDiv' class='file-operation-panel' style='display:none; max-width:750px; margin-left:auto; margin-right:auto; text-align:center;'>
         <p><strong><?php echo isset($Gui1Text35) ? $Gui1Text35 : 'Delete every uploaded file &amp; start a new session?'; ?></strong></p>
         <input type='submit' id='startOverConfirm' name='startOverConfirm' class='info-button' value='<?php echo htmlspecialchars(isset($Gui1Text36) ? $Gui1Text36 : 'Start Over', ENT_QUOTES, 'UTF-8'); ?>'>
       </div>
@@ -151,23 +151,23 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
             // / or right, which is what this declaration actually wants. ?>
       <div id='uiSelector' name='uiSelector' style='display:none; margin-left:auto; margin-right:auto; text-align:<?php echo $GUIAlignment; ?>'>
         <form id='uiSelectorForm' name='uiSelectorForm' method='post' action='<?php echo htmlspecialchars($selectorBase, ENT_QUOTES, 'UTF-8'); ?>'>
-          <input type='hidden' name='Token1' value='<?php echo $Token1; ?>'>
-          <input type='hidden' name='Token2' value='<?php echo $Token2; ?>'>
+          <input type='hidden' name='Token1' value='<?php echo htmlspecialchars($Token1, ENT_QUOTES, 'UTF-8'); ?>'>
+          <input type='hidden' name='Token2' value='<?php echo htmlspecialchars($Token2, ENT_QUOTES, 'UTF-8'); ?>'>
           <?php if ($AllowUserSelectableLanguage) { ?>
-          <p style='margin:4px 0;'><strong>Language</strong></p>
+          <p style='margin:4px 0;'><strong><?php echo $GuiSelectorText1; ?></strong></p>
           <p style='margin:4px 0;'>
             <?php foreach ($SupportedLanguages as $selectorLang => $selectorLabel) {
               $selectorCurrent = ($selectorLang === $LanguageToUse);
               $selectorURL = htmlspecialchars($selectorBase.'language='.$selectorLang.'&color='.$ColorToUse.'&gui='.$GuiToUse, ENT_QUOTES, 'UTF-8'); ?>
-            <button type='submit' lang='<?php echo $selectorLang; ?>'
+            <button type='submit' lang='<?php echo htmlspecialchars($selectorLang, ENT_QUOTES, 'UTF-8'); ?>'
               style='margin:2px; padding:2px; <?php if ($selectorCurrent) echo 'outline:2px solid #000;'; ?>'
               formaction='<?php echo $selectorURL; ?>'
-              title='<?php echo $selectorLabel; ?>'
-              <?php if ($selectorCurrent) echo "aria-current='true'"; ?>><img src='<?php echo $GuiDir.'Languages/'.$selectorLang.'/flag.png'; ?>' alt='<?php echo $selectorLabel; ?>' style='height:16px; display:block;'/></button>
+              title='<?php echo htmlspecialchars($selectorLabel, ENT_QUOTES, 'UTF-8'); ?>'
+              <?php if ($selectorCurrent) echo "aria-current='true'"; ?>><img src='<?php echo $GuiDir.'Languages/'.$selectorLang.'/flag.png'; ?>' alt='<?php echo htmlspecialchars($selectorLabel, ENT_QUOTES, 'UTF-8'); ?>' style='height:16px; display:block;'/></button>
             <?php } ?>
           </p>
           <?php } if ($AllowUserSelectableColor) { ?>
-          <p style='margin:4px 0;'><strong>Color</strong></p>
+          <p style='margin:4px 0;'><strong><?php echo $GuiSelectorText2; ?></strong></p>
           <p style='margin:4px 0;'>
             <?php foreach ($SupportedColors as $selectorColor) {
               $selectorSwatch = isset($selectorSwatches[$selectorColor]) ? $selectorSwatches[$selectorColor] : '#cccccc';
@@ -176,12 +176,12 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
             <button type='submit'
               style='margin:2px; padding:2px; <?php if ($selectorCurrent) echo 'outline:2px solid #000;'; ?>'
               formaction='<?php echo $selectorURL; ?>'
-              title='<?php echo ucfirst($selectorColor); ?>' aria-label='<?php echo ucfirst($selectorColor); ?>'
+              title='<?php echo htmlspecialchars(ucfirst($selectorColor), ENT_QUOTES, 'UTF-8'); ?>' aria-label='<?php echo htmlspecialchars(ucfirst($selectorColor), ENT_QUOTES, 'UTF-8'); ?>'
               <?php if ($selectorCurrent) echo "aria-current='true'"; ?>><span class='swatch' style='background-color:<?php echo $selectorSwatch; ?>; width:24px; height:16px; display:block;'></span></button>
             <?php } ?>
           </p>
           <?php } if ($AllowUserSelectableGui) { ?>
-          <p style='margin:4px 0;'><strong>Interface</strong></p>
+          <p style='margin:4px 0;'><strong><?php echo $GuiSelectorText3; ?></strong></p>
           <p style='margin:4px 0;'>
             <?php foreach ($SupportedGuis as $selectorGui) {
               $selectorCurrent = ($selectorGui === $GuiToUse);
@@ -189,7 +189,7 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
             <button type='submit' class='txtbtn'
               style='margin:2px; <?php if ($selectorCurrent) echo 'font-weight:700; text-decoration:underline;'; ?>'
               formaction='<?php echo $selectorURL; ?>'
-              title='<?php echo $selectorGui; ?>' aria-label='<?php echo $selectorGui; ?>'
+              title='<?php echo htmlspecialchars($selectorGui, ENT_QUOTES, 'UTF-8'); ?>' aria-label='<?php echo htmlspecialchars($selectorGui, ENT_QUOTES, 'UTF-8'); ?>'
               <?php if ($selectorCurrent) echo "aria-current='true'"; ?>><?php echo $selectorGui; ?></button>
             <?php } ?>
           </p>
@@ -355,8 +355,8 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
     <div align='center'>
       <div id='dropzone' style='max-height:2000px; max-width:2000px; margin:25px;'>
         <form action='convertCore.php' class='dropzone' id='filesToUpload' name='filesToUpload' method='post' enctype='multipart/form-data'>
-        <input type='hidden' id='token1' name='Token1' value='<?php echo $Token1; ?>'>
-        <input type='hidden' id='token2' name='Token2' value='<?php echo $Token2; ?>'>
+        <input type='hidden' id='token1' name='Token1' value='<?php echo htmlspecialchars($Token1, ENT_QUOTES, 'UTF-8'); ?>'>
+        <input type='hidden' id='token2' name='Token2' value='<?php echo htmlspecialchars($Token2, ENT_QUOTES, 'UTF-8'); ?>'>
         </form>
       </div>
     </div>
@@ -376,9 +376,9 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
               // / Reading $_GET here was the root of it. The core resolves all three of
               // / these & hands them over as $GuiToUse, $LanguageToUse & $ColorToUse. ?>
         <form action='convertCore.php?showFiles=1&<?php echo htmlspecialchars($sessionParams, ENT_QUOTES, 'UTF-8'); ?>' method='post'>
-          <input type='hidden' id='token1' name='Token1' value='<?php echo $Token1; ?>'>
-          <input type='hidden' id='token2' name='Token2' value='<?php echo $Token2; ?>'>
-          <input type='submit' id='continue-button' class='info-button' value='<?php echo $Gui1Text29; ?>'>
+          <input type='hidden' id='token1' name='Token1' value='<?php echo htmlspecialchars($Token1, ENT_QUOTES, 'UTF-8'); ?>'>
+          <input type='hidden' id='token2' name='Token2' value='<?php echo htmlspecialchars($Token2, ENT_QUOTES, 'UTF-8'); ?>'>
+          <input type='submit' id='continue-button' class='info-button' value='<?php echo htmlspecialchars($Gui1Text29, ENT_QUOTES, 'UTF-8'); ?>'>
         </form>
         <br />
         <?php if (!isset($_GET['noGui'])) { ?>

@@ -32,7 +32,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.8.3';
+$LanguageVersion = 'v3.7.4';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -84,7 +84,7 @@ $GuiSelectorText4 = 'Mostra le opzioni di lingua, colore e interfaccia';
 // / Online File Converter, Extractor, Compressor'
 $Gui1Text1 = 'Convertitore di file online, estrattore, compressore';
 // / $ApplicationName.' is based off the open-source web-app <a href=\'https://github.com/zelon88/HRConvert2\'>HRConvert2</a> by <a href=\'https://github.com/zelon88\'>Zelon88</a> that converts files without tracking users across the net or infringing on your intellectual property.'
-$Gui1Text2 = $ApplicationName.' si basa sull’app web open source <a href=\'https://github.com/zelon88/HRConvert2\'>HRConvert2</a> di <a href=\'https://github.com/ zelon88\'>Zelon88</a> che converte i file senza tracciare gli utenti attraverso la rete o violare la tua proprietà intellettuale.';
+$Gui1Text2 = $ApplicationName.' si basa sull’app web open source <a href=\'https://github.com/zelon88/HRConvert2\'>HRConvert2</a> di <a href=\'https://github.com/zelon88\'>Zelon88</a> che converte i file senza tracciare gli utenti attraverso la rete o violare la tua proprietà intellettuale.';
 // / 'More Info ...'
 $Gui1Text3 = 'Ulteriori Informazioni...';
 // / 'Less Info ...'
@@ -342,5 +342,5 @@ $GuiFunctionsText1 = 'Il tuo browser non supporta la copia negli appunti.';
 // / -----------------------------------------------------------------------------------
 // / Set GUI - Footer Related Variables.
 // / 'Check out our <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Terms of Service</a> and <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Privacy Policy'
-$GuiFooterText1 = 'Consulta i nostri <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Termini di servizio</a> e i <a href=\ \''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Informativa sulla privacy';
+$GuiFooterText1 = 'Consulta i nostri <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Termini di servizio</a> e i <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Informativa sulla privacy';
 // / -----------------------------------------------------------------------------------

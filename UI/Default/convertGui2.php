@@ -130,6 +130,13 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
               'scanFailureText' => $Gui2Text72,
               'operationFailedText' => $Gui2Text74,
               'clipboardUnsupportedText' => $GuiFunctionsText1,
+              // / The file list is fetched by a SEPARATE request, so it has to be told the
+              // / interface, language & colour as well. Without them the core answers with
+              // / the configured defaults & the list returns in the wrong language, wearing
+              // / the wrong colours, inside a page that is using the ones the user chose.
+              // / fileListOnly asks for the fragment. showFiles is what selects this
+              // / interface rather than the upload page.
+              'fileListURL' => 'convertCore.php?showFiles=1&fileListOnly=1&'.$sessionParams,
               // / The core refuses some operations BEFORE attempting them & reports that
               // / refusal by printing an alert string with no error tag on it. A reply
               // / carrying one of these is a failure even though nothing in it is tagged.

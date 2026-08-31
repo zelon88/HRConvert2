@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.7.4.
+// / v3.8.2.
 // / This file contains language specific GUI elements for performing file conversions.
 // / This file was created by Github user hernandito as part of his forked repo, available 
 // / at https://github.com/hernandito/HRConvert2/tree/master. Thank you, hernandito!
@@ -41,26 +41,138 @@ $selectorSide = ($GUIAlignment === 'left') ? 'right' : 'left';
 $selectorSwatches = array(
   'red' => '#c0392b',  'green' => '#27ae60',  'blue' => '#3d71b3',  'grey' => '#7f8c8d',
   'orange' => '#e67e22', 'purple' => '#8e44ad', 'dark' => '#2c3e50');
+// / -----------------------------------------------------------------------------------
 // / Carry the page state so a selection returns to the page the user was already on.
-if (isset($_GET['showFiles'])) $selectorBase .= 'showFiles=1&';
-if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
+// /
+// / $ShowFiles, $FileListOnly & $NoGui ARRIVE FROM THE CORE. THEY ARE NOT READ HERE.
+// / verifyGlobals reads every superglobal this application accepts & buildGUI hands the
+// / result to an interface as an ordinary variable. An interface that read $_GET for
+// / itself would be defining API surface, which is not an interface's to define, & a
+// / second interface reading a different parameter is how two GUIs stop agreeing about
+// / what the application accepts.
+// /
+// / redeclare() rather than .= on every one of these. Appending in place leaves the old
+// / string in the register underneath the new one, which is the whole thing
+// / ABOUT_DEFENSIVE_MEMORY_MANAGEMENT exists to prevent. redeclare shreds the old value
+// / before the new one is written.
+if ($ShowFiles) redeclare($selectorBase, $selectorBase.'showFiles=1&');
+// / A link inside the frame must keep the frame, or a language change loads the bare list
+// / into the whole window instead of back into the panel it came from.
+if ($FileListOnly) redeclare($selectorBase, $selectorBase.'fileListOnly=1&');
+if ($NoGui) redeclare($selectorBase, $selectorBase.'noGui=TRUE&');
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / THE CHROME BUTTONS CARRY THE SESSION. THEY DO NOT NAVIGATE THE BROWSER.
+// /
+// / Which page the core renders is decided by showFiles, & showFiles is read from GET
+// / only. The session is carried by the token pair, & the token pair is read from POST
+// / only. So a control that changes page while staying in the session is a form POST that
+// / carries the tokens in its body & names the destination in its query string. That is
+// / the same shape the selector bar already uses & is the only shape that works.
+// /
+// / window.history.back() did not do that. The page it returns to was itself the result of
+// / a POST, so a browser either refuses to replay it, asks the user to confirm a
+// / resubmission, or serves a cached copy carrying whatever tokens it was rendered with.
+// / A user who landed on the upload page that way had no reliable way back to the files
+// / they had already uploaded.
+// / location.reload(true) had the same problem for the same reason.
+// /
+// / The current interface, language & colour ride along in the query string. A control
+// / that dropped them would silently reset the user to the configured defaults, which
+// / reads as the application forgetting the settings they just chose.
+$sessionParams = '';
+if ($NoGui) redeclare($sessionParams, $sessionParams.'noGui=TRUE&');
+redeclare($sessionParams, $sessionParams.'gui='.$GuiToUse.'&language='.$LanguageToUse.'&color='.$ColorToUse);
+// / No showFiles, so the core renders the upload page & the session stays alive.
+$backURL = 'convertCore.php?'.$sessionParams;
+// / showFiles, so the core renders this page again. Never fileListOnly. That asks for a
+// / fragment, & a fragment loaded into the whole window is a page with no header, no
+// / footer & no script library.
+$refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
 // / -----------------------------------------------------------------------------------
 ?>
+        <?php if (!$FileListOnly) {
+          // / A FRAGMENT OPENS NO BODY & LOADS NO LIBRARY.
+          // / <body> belongs to the document & footer.php is what closes it. A fragment
+          // / loads neither header nor footer, so opening a body here left an unclosed one
+          // / inside the div the fragment gets injected into.
+          // / The script tag was worse. $JqueryPath is assigned by header.php, which a
+          // / fragment never loads, so a fragment emitted src='' & an EMPTY src resolves to
+          // / the CURRENT PAGE. Every list refresh therefore had the browser fetch
+          // / convertCore.php again & try to parse the returned HTML as javascript, which
+          // / throws Unexpected token '<' & burns a whole extra core request doing it.
+          // / The page that receives a fragment has already loaded jQuery. ?>
   <body>
     <script type='text/javascript' src='<?php echo $JqueryPath; ?>'></script>
+        <?php
+          // / THE HELPER IS DEFINED ONCE, BY THE PAGE, & NEVER BY A FRAGMENT.
+          // / A fragment is injected INTO the page that already defines this. Sending a
+          // / second copy redefines the object mid flight & re-runs its ready handler,
+          // / which fetches the fragment again. That is a request loop, & every pass
+          // / replaced the list & destroyed the click handlers the previous pass had just
+          // / registered. The per file panels below still carry their own handlers, which
+          // / is correct, because those belong to the markup being injected. ?>
+        <script type='text/javascript'>
+          // / THE PAGE SUPPLIES VALUES. HRC2-Functions.js SUPPLIES BEHAVIOUR.
+          // / Everything below is something only PHP can know. A session token, a path
+          // / built from a session hash, or a string from the language pack. No
+          // / behaviour is written into this page & none should be added here.
+          if (typeof HRC2 === 'undefined' || typeof HRC2.configure !== 'function') {
+            if (window.console && window.console.error) window.console.error('HRConvert2. HRC2-Functions.js did not load, or is an older copy without configure(). The interface cannot run. Reload with a cleared cache.');
+          } else {
+            HRC2.configure(<?php echo json_encode(array(
+              'tokens' => array('Token1' => (string)$Token1, 'Token2' => (string)$Token2),
+              'dataPath' => 'DATA/'.$SesHash3.'/',
+              'failureText' => $Gui2Text71,
+              'scanFailureText' => $Gui2Text72,
+              'operationFailedText' => $Gui2Text74,
+              'clipboardUnsupportedText' => $GuiFunctionsText1,
+              // / The file list is fetched by a SEPARATE request, so it has to be told the
+              // / interface, language & colour as well. Without them the core answers with
+              // / the configured defaults & the list returns in the wrong language, wearing
+              // / the wrong colours, inside a page that is using the ones the user chose.
+              // / fileListOnly asks for the fragment. showFiles is what selects this
+              // / interface rather than the upload page.
+              'fileListURL' => 'convertCore.php?showFiles=1&fileListOnly=1&'.$sessionParams,
+              // / The core refuses some operations BEFORE attempting them & reports that
+              // / refusal by printing an alert string with no error tag on it. A reply
+              // / carrying one of these is a failure even though nothing in it is tagged.
+              'failureStrings' => array($Alert3))); ?>);
+            $(document).ready(function () { HRC2.init(); });
+          }
+        </script>
+        <?php } // / End of the helper, which a fragment never carries. ?>
 
-    <div id='header-text' style='max-width:2000px; margin-left:auto; margin-right:auto; text-align:center;'>
-      <?php if (!isset($_GET['noGui'])) { ?><h1><?php echo $ApplicationName; ?></h1>
+    <?php if (!$FileListOnly) { // / Skipped when only the file list is wanted. ?>
+<div id='header-text' style='max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;'>
+      <?php if (!$NoGui) { ?><h1><?php echo $ApplicationName; ?></h1>
       <hr /><?php } ?>
       <h3><?php echo $Gui2Text1; ?></h3>
       <p><?php echo $Gui2Text30; ?></p>
       <p><?php echo $Gui2Text31; ?></p>
     </div>
-
-    <div id='compressAll' name='compressAll' style='max-width:1000px; margin-left:auto; margin-right: auto; text-align:center;'>
-      <button id='backButton' name='backButton' style='width:50px;' class='info-button' onclick='window.history.back();'>&#x2190;</button>
-      <button id='userConfigButton' name='userConfigButton' title='<?php echo $GuiSelectorText4; ?>' style='width:50px;' class='info-button' onclick='toggle_visibility("uiSelector");'>&#9965;</button>
-      <button id='refreshButton' name='refreshButton' style='width:50px;' class='info-button' onclick='javascript:location.reload(true);'>&#x21BB;</button>
+    <div>
+    <div id='compressAll' name='compressAll' style='max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;'>
+      <?php // / The form action is the refresh destination, so the refresh button needs no
+            // / formaction of its own. The back button overrides it with one.
+            // / EVERY BUTTON IN HERE DECLARES ITS TYPE. A button inside a form defaults to
+            // / submit, so the settings toggle would submit the form & reload the page
+            // / instead of opening the panel underneath it. These three buttons carried no
+            // / type at all before, which was harmless only because they were not in a
+            // / form. They are now.
+            // / The submit buttons carry no name, so nothing they are called reaches the
+            // / core as POST input. The core reads specific keys & a stray one is noise. ?>
+      <form id='sessionForm' name='sessionForm' method='post' style='display:inline;' action='<?php echo htmlspecialchars($refreshURL, ENT_QUOTES, 'UTF-8'); ?>'>
+        <input type='hidden' name='Token1' value='<?php echo $Token1; ?>'>
+        <input type='hidden' name='Token2' value='<?php echo $Token2; ?>'>
+        <button type='submit' id='backButton' style='width:50px;' class='info-button' formaction='<?php echo htmlspecialchars($backURL, ENT_QUOTES, 'UTF-8'); ?>'>&#x2190;</button>
+        <button type='button' id='userConfigButton' style='width:50px;' class='info-button' title='<?php echo $GuiSelectorText4; ?>' aria-label='<?php echo $GuiSelectorText4; ?>' onclick='toggle_visibility("uiSelector");'>&#9965;</button>
+        <button type='submit' id='refreshButton' style='width:50px;' class='info-button'>&#x21BB;</button>
+      </form>
+      <?php // / The selector panel holds a form of its own, so it stays OUTSIDE the one
+            // / above. HTML does not allow a form inside a form & a browser silently drops
+            // / the inner one, which would take every selector button with it. ?>
       <div id='uiSelector' name='uiSelector' style='display:none;'>
         <form id='uiSelectorForm' name='uiSelectorForm' method='post' action='<?php echo htmlspecialchars($selectorBase, ENT_QUOTES, 'UTF-8'); ?>'>
           <input type='hidden' name='Token1' value='<?php echo $Token1; ?>'>
@@ -118,43 +230,11 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
         <p><?php echo $Gui2Text21; ?><input type='checkbox' id='scancoreall' value='scancoreall' name='phpavScan' checked></p>
         <p><input type='submit' id='scanAllButton' name='scanAllButton' class='info-button' value='<?php echo $Gui2Text22; ?>' onclick='toggle_visibility("loadingCommandDiv");'></p>
         <script type='text/javascript'>
-          $(document).ready(function () {
-            $('#scanAllButton').click(function() {
-              var scanfiles = <?php echo json_encode($Files); ?>;
-              var scanType = 'all';
-              if($('input#clamscanall').is(':checked')) {
-                var scanType = 'clamav'; }
-              if($('input#scancoreall').is(':checked')) {
-                var scanType = 'scancore'; }
-              if($('input#clamscanall').is(':checked') && $('input#scancoreall').is(':checked')) {
-                var scanType = 'all'; }
-              $.ajax({
-                type: 'POST',
-                url: 'convertCore.php',
-                data: {
-                  Token1:'<?php echo $Token1; ?>',
-                  Token2:'<?php echo $Token2; ?>',
-                  scantype:scanType,
-                  filesToScan:scanfiles },
-                  success: function(ReturnData) {
-                    $.ajax({
-                    type: 'POST',
-                    url: 'convertCore.php',
-                    data: {
-                      Token1:'<?php echo $Token1; ?>',
-                      Token2:'<?php echo $Token2; ?>',
-                      download:'<?php echo $ConsolidatedLogFileName; ?>' },
-                    success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
-                      toggle_visibility('victoryCommandDiv');
-                      setTimeout(function() {
-                        toggle_visibility('victoryCommandDiv'); }, 5000);
-                      download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>'); } }); },
-                    error: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv');
-
-                      alert('<?php echo $Gui2Text72; ?>'); } }); }); });
+          HRC2.bindScanAll('scanAllButton', '', 'clamscanall', 'scancoreall',
+            <?php echo json_encode(array_values($Files)); ?>, <?php echo json_encode($ConsolidatedLogFileName); ?>);
         </script>
+
+
       <?php } ?>
         <hr style='width: 50%;'/>
         <?php if (in_array('Archive', $SupportedConversionTypes)) { ?>
@@ -168,42 +248,10 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
         </select>
         <input type='submit' id='archallSubmit' name='archallSubmit' class='info-button' value='<?php echo $Gui2Text19; ?>' onclick='toggle_visibility("loadingCommandDiv");'>
         <script type='text/javascript'>
-          $(document).ready(function () {
-            $('#archallSubmit').click(function() {
-              var extension = document.getElementById('archallextension').value;
-              if (extension === '') {
-                extension = 'zip'; }
-              $.ajax({
-                type: 'POST',
-                url: 'convertCore.php',
-                data: {
-                  Token1:'<?php echo $Token1; ?>',
-                  Token2:'<?php echo $Token2; ?>',
-                  archive:'1',
-                  filesToArchive:<?php echo json_encode($Files); ?>,
-                  archextension:extension,
-                  userfilename:document.getElementById('userarchallfilename').value },
-                  success: function(ReturnData) {
-                    $.ajax({
-                    type: 'POST',
-                    url: 'convertCore.php',
-                    data: {
-                      Token1:'<?php echo $Token1; ?>',
-                      Token2:'<?php echo $Token2; ?>',
-                      download:document.getElementById('userarchallfilename').value+'.'+extension },
-                    success: function(returnFile) {
-                      toggle_visibility('loadingCommandDiv');
-                      toggle_visibility('victoryCommandDiv');
-                      setTimeout(function() {
-                        toggle_visibility('victoryCommandDiv'); }, 5000);
-                      download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', document.getElementById('userarchallfilename').value+'.'+extension); } }); },
-                    error: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv');
-                      toggle_visibility('failureCommandDiv');
-                      setTimeout(function() {
-                        toggle_visibility('failureCommandDiv'); }, 5000);
-                      alert('<?php echo $Gui2Text71; ?>'); } }); }); });
+          HRC2.bindArchiveAll('archallSubmit', '', <?php echo json_encode(array_values($Files)); ?>,
+            'userarchallfilename', 'archallextension', 'zip');
         </script>
+
         <?php } ?>
         <hr style='width: 50%;'/>
       </div>
@@ -219,8 +267,35 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
       <a id='downloadTarget' href='about:blank' style='display: none;' download></a>
     </div>
     <br />
-    <div style='max-width:1000px; margin-left:auto; margin-right:auto;'>
-      <hr />
+    <?php } // / End of the chrome region.
+      // / The chrome opens one wrapper that footer.php closes. In list only mode that
+      // / wrapper is skipped, so a plain one is opened in its place below & the closing tag
+      // / the footer emits still has something to pair with. Both modes emit the same
+      // / number of wrappers, which is what keeps the footer valid in either.
+      // /
+      // / The full page shows the list through a frame, so a conversion can refresh it in
+      // / place without reloading the page & losing every panel the user had open. Nothing
+      // / about the list itself changes. It is the same markup, loaded through its own
+      // / request. In list only mode the frame is not emitted, because that IS the frame.
+      if (!$FileListOnly) { ?>
+    <!-- / THE FILE LIST IS FETCHED, NOT FRAMED.
+       / An iframe cannot POST for itself, so loading one meant building a second way to
+       / authenticate a request, & that second way did not work. The tokens either did not
+       / arrive or did not survive, every load minted a fresh session, & each fresh session
+       / landed in an empty directory it had just created.
+       / HRC2.post already sends these tokens on every conversion & has never failed to.
+       / Fetching the list through the same call reuses the request shape that is known to
+       / work rather than inventing a parallel one to debug.
+       / jQuery .html() executes the script blocks in what it injects, which the per file
+       / panels depend on, & innerHTML would not. -->
+    <div id='hrc2FileList'></div>
+    <?php } else {
+      // / The else branch stays open through the entire file list & closes at the end of
+      // / this file. The list belongs to list only mode. Closing here would end the branch
+      // / immediately & print the list on the full page as well as inside the frame. ?>
+    <div>
+    <div style='max-width:1000px; margin-left:auto; margin-right:auto; background-color: #fff7e9; padding: 8px; border: 2px solid rgba(0, 0, 0, 0.3); border-radius: 10px;'>
+     
 
       <?php
       foreach ($Files as $File) {
@@ -248,27 +323,7 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
           <img id='downloadfilebutton<?php echo $ConvertGuiCounter1; ?>' name='downloadfilebutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>download.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' onclick='toggle_visibility("loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo $Gui2Text5.' '.$File; ?>' alt='<?php echo $Gui2Text5.' '.$File; ?>'/>
 
           <script type='text/javascript'>
-            $(document).ready(function () {
-              $('#downloadfilebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                type: 'POST',
-                url: 'convertCore.php',
-                data: {
-                  Token1:'<?php echo $Token1; ?>',
-                  Token2:'<?php echo $Token2; ?>',
-                  download:'<?php echo $File; ?>' },
-                success: function(returnFile) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  setTimeout(function() {
-                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                  download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $File; ?>'); },
-                error: function(ReturnData) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  setTimeout(function() {
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                  alert("<?php echo $Gui2Text71; ?>"); } }); }); });
+            HRC2.bindDownload('downloadfilebutton<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>', <?php echo json_encode($File); ?>);
           </script>
 
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
@@ -326,7 +381,10 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
            onclick="toggle_visibility('docOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('documentXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo $Gui2Text15; ?>' alt='<?php echo $Gui2Text15; ?>'/>
           <?php } 
 
-          if (in_array($extension, $EbookInputArray) && in_array('Document', $SupportedConversionTypes)) { ?>
+          // / Gated on Ebook, not Document, so it matches the panel it toggles.
+          // / An administrator who removed Ebook from $SupportedConversionTypes, which
+          // / config.php invites, drew this button with no panel underneath it.
+          if (in_array($extension, $EbookInputArray) && in_array('Ebook', $SupportedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='ebookButton<?php echo $ConvertGuiCounter1; ?>' name='ebookButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>document.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
@@ -457,54 +515,10 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
           </select></p>
           
           <input type='submit' id='archfileSubmit<?php echo $ConvertGuiCounter1; ?>' name='archfileSubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo $Gui2Text51; ?>' onclick='toggle_visibility("loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>");'>
-          
           <script type='text/javascript'>
-            $(document).ready(function () {
-              $('#archfileSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    archive:'<?php echo $File; ?>',
-                    filesToArchive:'<?php echo $File; ?>',
-                    archextension:document.getElementById('archfileextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userfilename:document.getElementById('userarchfilefilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) {
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: {
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
-                              toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+            HRC2.bindRun('archfileSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('archive' => $File, 'filesToArchive' => $File)); ?>,
+              <?php echo json_encode(array('archextension' => 'archfileextension'.$ConvertGuiCounter1, 'userfilename' => 'userarchfilefilename'.$ConvertGuiCounter1)); ?>);
           </script>
         </div>
 
@@ -517,54 +531,19 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
           <p id='sharelinkURL<?php echo $ConvertGuiCounter1; ?>' name='sharelinkURL<?php echo $ConvertGuiCounter1; ?>'><?php echo $Gui2Text29; ?><i><?php echo $Gui2Text25; ?></i></p>
           <input type="submit" id="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" name="sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text32; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <input type="submit" id="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" name="sharecopybutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text33; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#sharegeneratebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                type: 'POST',
-                url: 'convertCore.php',
-                data: { 
-                  Token1:'<?php echo $Token1; ?>',
-                  Token2:'<?php echo $Token2; ?>',
-                  download:'<?php echo $File; ?>' },
-                success: function(returnFile) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text24; ?><i><?php echo $Gui2Text26; ?></i>';
-                  document.getElementById('shareclipStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text27; ?><i><?php echo $Gui2Text28; ?></i>';
-                  document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text29; ?><i>' + share_file_url('<?php echo $FullURL.'/DATA/'.$SesHash3.'/'; ?>', '<?php echo $File; ?>') + '</i>';
-                  copy_share_link(share_file_url('<?php echo $FullURL.'/DATA/'.$SesHash3.'/'; ?>', '<?php echo $File; ?>'), '<?php echo $GuiFunctionsText1; ?>');
-                  alert("<?php echo $Gui2Text73; ?>");
-                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  setTimeout(function() {
-                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); },
-                error: function(ReturnData) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  setTimeout(function() {
-                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); 
-                  alert("<?php echo $Gui2Text74; ?>"); } }); });
-              $('#sharecopybutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                type: 'POST',
-                url: 'convertCore.php',
-                data: { 
-                  Token1:'<?php echo $Token1; ?>',
-                  Token2:'<?php echo $Token2; ?>',
-                  download:'<?php echo $File; ?>' },
-                success: function(returnFile) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  setTimeout(function() {
-                    toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); 
-                  document.getElementById('sharelinkStatus<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text24; ?><i><?php echo $Gui2Text26; ?></i>';
-                  document.getElementById('sharelinkURL<?php echo $ConvertGuiCounter1; ?>').innerHTML = '<?php echo $Gui2Text29; ?><i>' + share_file_url('<?php echo $FullURL.'/DATA/'.$SesHash3.'/'; ?>', '<?php echo $File; ?>') + '</i>'; },
-                error: function(ReturnData) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  setTimeout(function() {
-                    toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); 
-                  alert("<?php echo $Gui2Text74; ?>");} }); }); });
+          <script type='text/javascript'>
+            HRC2.bindShare(<?php echo json_encode(array(
+              'generateId' => 'sharegeneratebutton'.$ConvertGuiCounter1,
+              'copyId' => 'sharecopybutton'.$ConvertGuiCounter1,
+              'suffix' => (string)$ConvertGuiCounter1,
+              'fileName' => $File,
+              'shareBaseURL' => $FullURL.'/DATA/'.$SesHash3.'/',
+              'linkGeneratedHtml' => $Gui2Text24.'<i>'.$Gui2Text26.'</i>',
+              'clipCopiedHtml' => $Gui2Text27.'<i>'.$Gui2Text28.'</i>',
+              'linkUrlPrefixHtml' => $Gui2Text29,
+              'copiedText' => $Gui2Text73)); ?>);
           </script>
+
         </div>
         <?php } ?>
 
@@ -572,22 +551,8 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
           <p style="max-width:1000px;"></p>
           <p><strong><?php echo $Gui2Text69; ?></strong></p>
           <input type='submit' id='confirmdeletefilebutton<?php echo $ConvertGuiCounter1; ?>' name='confirmdeletefilebutton<?php echo $ConvertGuiCounter1; ?>' value='<?php echo $Gui2Text70; ?>' onclick='toggle_visibility("loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>");'>
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#confirmdeletefilebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                type: 'POST',
-                url: 'convertCore.php',
-                data: { 
-                  Token1:'<?php echo $Token1; ?>',
-                  Token2:'<?php echo $Token2; ?>',
-                  filesToDelete:'<?php echo $File; ?>' },
-                success: function(returnFile) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  location.reload(); },
-                error: function(ReturnData) {
-                  toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                  alert("<?php echo $Gui2Text74; ?>"); } }); }); });
+          <script type='text/javascript'>
+            HRC2.bindDelete('confirmdeletefilebutton<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>', <?php echo json_encode($File); ?>);
           </script>
         </div>
 
@@ -598,127 +563,13 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
           <input type="submit" id="scancorebutton<?php echo $ConvertGuiCounter1; ?>" name="scancorebutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text35; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <input type="submit" id="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" name="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text36; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <input type="submit" id="scanallbutton<?php echo $ConvertGuiCounter1; ?>" name="scanallbutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text37; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-        <script type="text/javascript">
-          $(document).ready(function () {
-            // 1. ScanCore Button
-            $('#scancorebutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
-              $.ajax({
-                type: 'POST',
-                url: 'convertCore.php',
-                data: {
-                  Token1: '<?php echo $Token1; ?>',
-                  Token2: '<?php echo $Token2; ?>',
-                  scantype: 'scancore',
-                  filesToScan: '<?php echo $File; ?>' 
-                },
-                success: function(ReturnData) {
-                  $.ajax({
-                    type: 'POST',
-                    url: 'convertCore.php',
-                    data: { 
-                      Token1: '<?php echo $Token1; ?>',
-                      Token2: '<?php echo $Token2; ?>',
-                      download: '<?php echo $ConsolidatedLogFileName; ?>' 
-                    },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      if (ReturnData.includes('ERROR!!!')) {
-                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                        alert(ReturnData); 
-                      } else {
-                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                        setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                        download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
-                      } 
-                    },
-                    error: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                      alert("<?php echo $Gui2Text72; ?>"); 
-                    } 
-                  }); } }); });
-            // 2. ClamScan Button
-            $('#clamscanbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
-              $.ajax({
-                type: 'POST',
-                url: 'convertCore.php',
-                data: {
-                  Token1: '<?php echo $Token1; ?>',
-                  Token2: '<?php echo $Token2; ?>',
-                  scantype: 'clamav',
-                  filesToScan: '<?php echo $File; ?>' 
-                },
-                success: function(ReturnData) {
-                  $.ajax({
-                    type: 'POST',
-                    url: 'convertCore.php',
-                    data: { 
-                      Token1: '<?php echo $Token1; ?>',
-                      Token2: '<?php echo $Token2; ?>',
-                      download: '<?php echo $ConsolidatedLogFileName; ?>' 
-                    },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      if (ReturnData.includes('ERROR!!!')) {
-                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                        alert(ReturnData); 
-                      } else {
-                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                        setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                        download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
-                      } 
-                    },
-                    error: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                      alert("<?php echo $Gui2Text72; ?>"); 
-                    } 
-                  }); } }); });
-            // 3. Scan All Button
-            $('#scanallbutton<?php echo $ConvertGuiCounter1; ?>').click(function() {
-              $.ajax({
-                type: 'POST',
-                url: 'convertCore.php',
-                data: {
-                  Token1: '<?php echo $Token1; ?>',
-                  Token2: '<?php echo $Token2; ?>',
-                  scantype: 'all',
-                  filesToScan: '<?php echo $File; ?>' 
-                },
-                success: function(ReturnData) {
-                  $.ajax({
-                    type: 'POST',
-                    url: 'convertCore.php',
-                    data: { 
-                      Token1: '<?php echo $Token1; ?>',
-                      Token2: '<?php echo $Token2; ?>',
-                      download: '<?php echo $ConsolidatedLogFileName; ?>' 
-                    },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      if (ReturnData.includes('ERROR!!!')) {
-                        toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                        setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                        alert(ReturnData); 
-                      } else {
-                        toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                        setTimeout(function() { toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                        download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', '<?php echo $ConsolidatedLogFileName; ?>');
-                      } 
-                    },
-                    error: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      setTimeout(function() { toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                      alert("<?php echo $Gui2Text72; ?>"); 
-                    } 
-                  }); } }); });
-          });
-        </script>
+          <script type='text/javascript'>
+            <?php $gui2ScanLog = json_encode($ConsolidatedLogFileName); $gui2ScanFile = json_encode($File); ?>
+            HRC2.bindScan('scancorebutton<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>', 'scancore', <?php echo $gui2ScanFile; ?>, <?php echo $gui2ScanLog; ?>);
+            HRC2.bindScan('clamscanbutton<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>', 'clamav', <?php echo $gui2ScanFile; ?>, <?php echo $gui2ScanLog; ?>);
+            HRC2.bindScan('scanallbutton<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>', 'all', <?php echo $gui2ScanFile; ?>, <?php echo $gui2ScanLog; ?>);
+          </script>
+
         </div>
         <?php }
 
@@ -740,58 +591,22 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
             <?php } ?>
           </select></p>
           <p><input type="submit" id='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' name='pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo $Gui2Text52; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');"></p>
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    pdfworkSelected:'<?php echo $File; ?>',
-                    method:document.getElementById('pdfmethod<?php echo $ConvertGuiCounter1; ?>').value,
-                    pdfextension:document.getElementById('pdfextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userpdfconvertfilename:document.getElementById('userpdffilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) {
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: {
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
-                              toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+          <script type='text/javascript'>
+            HRC2.bindRun('pdfconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('pdfworkSelected' => $File)); ?>,
+              <?php echo json_encode(array('method' => 'pdfmethod'.$ConvertGuiCounter1, 'pdfextension' => 'pdfextension'.$ConvertGuiCounter1, 'userpdfconvertfilename' => 'userpdffilename'.$ConvertGuiCounter1)); ?>);
           </script>
         </div>
         <?php } 
 
-        if (in_array($extension, $ArchiveArray) && in_array('Archive', $SupportedConversionTypes)) {
+        // / THIS GATE MUST MATCH THE BUTTON THAT TOGGLES IT.
+        // / The button above tests $DearchiveArray & this panel tested $ArchiveArray.
+        // / config.php ships gz, bz, bz2, vhd, vdi, cbr, cbz, tar.gz & tar.bz2 in the
+        // / first & not the second, so those files drew a button that toggled a panel
+        // / which had never been emitted. That threw a TypeError & hid the button.
+        // / $DearchiveArray is what the input can be READ from & is the correct gate.
+        // / $ArchiveArray is what the output can be WRITTEN to & stays the list below.
+        if (in_array($extension, $DearchiveArray) && in_array('Archive', $SupportedConversionTypes)) {
         ?>
         <div id='archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
           <p style="max-width:1000px;"></p>
@@ -804,53 +619,12 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
             <?php } ?>
           </select></p>
           <input type="submit" id="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text53; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    extension:document.getElementById('archiveextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('userarchivefilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) {
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: {
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
-                              toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+          <script type='text/javascript'>
+            HRC2.bindRun('archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'archiveextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userarchivefilename'.$ConvertGuiCounter1)); ?>);
           </script>
+
         </div>
         <?php } 
 
@@ -867,52 +641,10 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
             <?php } ?>
           </select></p>
           <input type="submit" id="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text54; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#docconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    extension:document.getElementById('docextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('userdocfilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) {
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: {
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
-                              toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+          <script type='text/javascript'>
+            HRC2.bindRun('docconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'docextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userdocfilename'.$ConvertGuiCounter1)); ?>);
           </script>
         </div>
         <?php }
@@ -920,7 +652,7 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
         if (in_array($extension, $EbookInputArray) && in_array('Ebook', $SupportedConversionTypes)) {
         ?>
         <div id='ebookOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='ebookOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
-          <p style="max-width:500px;"></p>
+          <p style="max-width:1000px;"></p>
           <p><strong><?php echo $Gui2Text81; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type="text" id='userebookfilename<?php echo $ConvertGuiCounter1; ?>' name='userebookfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='ebookextension<?php echo $ConvertGuiCounter1; ?>' name='ebookextension<?php echo $ConvertGuiCounter1; ?>'> 
@@ -930,52 +662,10 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
             <?php } ?>
           </select></p>
           <input type="submit" id="ebookconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="ebookconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text82; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#ebookconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    extension:document.getElementById('ebookextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('userebookfilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) { 
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: { 
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
-                              toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+          <script type='text/javascript'>
+            HRC2.bindRun('ebookconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'ebookextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userebookfilename'.$ConvertGuiCounter1)); ?>);
           </script>
         </div>
         <?php }
@@ -993,53 +683,12 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
             <?php } ?>
           </select></p>
           <input type="submit" id="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text55; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">        
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    extension:document.getElementById('spreadextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('userspreadfilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) {
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: {
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
-                              toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+          <script type='text/javascript'>
+            HRC2.bindRun('spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'spreadextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userspreadfilename'.$ConvertGuiCounter1)); ?>);
           </script>
+
         </div>
         <?php }
 
@@ -1056,56 +705,14 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
             <?php } ?>
           </select></p>
           <input type="submit" id="xpsconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="xpsconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text56; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#xpsconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    extension:document.getElementById('xpsextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('userxpsfilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) {
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: {
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
-                              toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+          <script type='text/javascript'>
+            HRC2.bindRun('xpsconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'xpsextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userxpsfilename'.$ConvertGuiCounter1)); ?>);
           </script>
+
         </div>
         <?php }
-
         if (in_array($extension, $PresentationInputArray) && in_array('Document', $SupportedConversionTypes)) {
         ?>
         <div id='presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
@@ -1119,53 +726,12 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
             <?php } ?>
           </select></p>
           <input type="submit" id="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text56; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    extension:document.getElementById('presentationextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('userpresentationfilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) {
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: {
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
-                              toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+          <script type='text/javascript'>
+            HRC2.bindRun('presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'presentationextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userpresentationfilename'.$ConvertGuiCounter1)); ?>);
           </script>
+
         </div>
         <?php }
 
@@ -1183,54 +749,12 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
           </select></p>
           <p><?php echo $Gui2Text66; ?><input type="number" size="6" id='bitrate<?php echo $ConvertGuiCounter1; ?>' name='bitrate<?php echo $ConvertGuiCounter1; ?>' value="0" min="0" max="100000"></p>
           <input type="submit" id="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text57; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    bitrate:$('#bitrate<?php echo $ConvertGuiCounter1; ?>').val(),
-                    convertSelected:'<?php echo $File; ?>',
-                    extension:document.getElementById('audioextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('useraudiofilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) {
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: {
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
-                              toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+          <script type='text/javascript'>
+            HRC2.bindRun('audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('bitrate' => 'bitrate'.$ConvertGuiCounter1, 'extension' => 'audioextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'useraudiofilename'.$ConvertGuiCounter1)); ?>);
           </script>
+
         </div>
         <?php } 
 
@@ -1247,53 +771,12 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
             <?php } ?>
           </select></p>
           <input type="submit" id="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text58; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    extension:document.getElementById('videoextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('uservideofilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) {
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: {
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
-                              toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+          <script type='text/javascript'>
+            HRC2.bindRun('videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'videoextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'uservideofilename'.$ConvertGuiCounter1)); ?>);
           </script>
+
         </div>
         <?php } 
 
@@ -1310,53 +793,12 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
             <?php } ?>
           </select></p>
           <input type="submit" id="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text59; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    extension:document.getElementById('streamextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('userstreamfilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) {
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: {
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
-                              toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+          <script type='text/javascript'>
+            HRC2.bindRun('streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'streamextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userstreamfilename'.$ConvertGuiCounter1)); ?>);
           </script>
+
         </div>
         <?php } 
 
@@ -1373,61 +815,19 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
             <?php } ?>
           </select></p>
           <input type="submit" id="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text60; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    extension:document.getElementById('modelextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('usermodelfilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) {
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: {
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
-                              toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
-
+          <script type='text/javascript'>
+            HRC2.bindRun('modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'modelextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'usermodelfilename'.$ConvertGuiCounter1)); ?>);
           </script>
+
         </div>
         <?php } 
 
         if ($extension === 'scad' && in_array('Scad', $SupportedConversionTypes)) {
         ?>
         <div id='scadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='scadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
-          <p style="max-width:500px;"></p>
+          <p style="max-width:1000px;"></p>
           <p><strong><?php echo $Gui2Text79; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type="text" id='userscadfilename<?php echo $ConvertGuiCounter1; ?>' name='userscadfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='scadextension<?php echo $ConvertGuiCounter1; ?>' name='scadextension<?php echo $ConvertGuiCounter1; ?>'>
@@ -1437,47 +837,12 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
             <?php } ?>
           </select></p>
           <input type="submit" id="scadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="scadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text80; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#scadconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    extension:document.getElementById('scadextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('userscadfilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) {
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: {
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000); } },
-                            error: function(ReturnData) {
-                              toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+          <script type='text/javascript'>
+            HRC2.bindRun('scadconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'scadextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userscadfilename'.$ConvertGuiCounter1)); ?>);
           </script>
+
         </div>
         <?php }
 
@@ -1494,53 +859,12 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
             <?php } ?>
           </select></p>
           <input type="submit" id="subtitleconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="subtitleconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text76; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#subtitleconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    extension:document.getElementById('subtitleextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('usersubtitlefilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) {
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: {
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
-                              toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+          <script type='text/javascript'>
+            HRC2.bindRun('subtitleconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'subtitleextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'usersubtitlefilename'.$ConvertGuiCounter1)); ?>);
           </script>
+
         </div>
         <?php } 
 
@@ -1557,60 +881,19 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
             <?php } ?>
           </select></p>
           <input type="submit" id="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text61; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">     
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    extension:document.getElementById('drawingextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('userdrawingfilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) {
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: {
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
-                              toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+          <script type='text/javascript'>
+            HRC2.bindRun('drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'drawingextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userdrawingfilename'.$ConvertGuiCounter1)); ?>);
           </script>
+
         </div>
         <?php } 
 
         if (in_array($extension, $SVGInputArray) && in_array('SVG', $SupportedConversionTypes)) {
         ?>
         <div id='svgOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='svgOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
-          <p style="max-width:500px;"></p>
+          <p style="max-width:1000px;"></p>
           <p><strong><?php echo $Gui2Text49; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type="text" id='svgfilename<?php echo $ConvertGuiCounter1; ?>' name='usersvgfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='svgextension<?php echo $ConvertGuiCounter1; ?>' name='svgextension<?php echo $ConvertGuiCounter1; ?>'>
@@ -1622,63 +905,20 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
           <p><?php echo $Gui2Text64; ?></p>
           <p><input type="number" size="4" value="0" id='width<?php echo $ConvertGuiCounter1; ?>' name='width<?php echo $ConvertGuiCounter1; ?>' min="0" max="10000"> X <input type="number" size="4" value="0" id="height<?php echo $ConvertGuiCounter1; ?>" name="height<?php echo $ConvertGuiCounter1; ?>" min="0"  max="10000"></p> 
           <input type="submit" id="svgconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="svgconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo $Gui2Text61; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">     
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#svgconvertSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    width:$('#width<?php echo $ConvertGuiCounter1; ?>').val(),
-                    height:$('#height<?php echo $ConvertGuiCounter1; ?>').val(),
-                    extension:document.getElementById('svgextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('svgfilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) { 
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: { 
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
-                              toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+          <script type='text/javascript'>
+            HRC2.bindRun('svgconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('width' => 'width'.$ConvertGuiCounter1, 'height' => 'height'.$ConvertGuiCounter1, 'extension' => 'svgextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'svgfilename'.$ConvertGuiCounter1)); ?>);
           </script>
+
         </div>
-        <?php }
+        <?php } 
 
         if (in_array($extension, $ImageArray) && in_array('Image', $SupportedConversionTypes)) {
         ?>
-        <div id='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"></p>
-          <p><strong><?php echo $Gui2Text50; ?></strong></p>
+        <div id='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' style="max-width:750px; display: block; padding-left: 10px; background-color: #edf9ff; padding-top: 10px;padding-bottom: 10px; margin-bottom: 10px;margin-left: 10px;border: 1px solid #bfbfbf; border-radius: 7px; margin-top: 3px; display:none;">
+          
+          <strong><?php echo $Gui2Text50; ?></strong>
           <p><?php echo $Gui2Text17; ?><input type="text" id='userphotofilename<?php echo $ConvertGuiCounter1; ?>' name='userphotofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo str_replace('.', '', $FileNoExt); ?>'>
           <select id='photoextension<?php echo $ConvertGuiCounter1; ?>' name='photoextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="jpg"><?php echo $Gui2Text18; ?></option>
@@ -1690,62 +930,22 @@ if (isset($_GET['noGui'])) $selectorBase .= 'noGui=TRUE&';
           <p><input type="number" size="4" value="0" id='width<?php echo $ConvertGuiCounter1; ?>' name='width<?php echo $ConvertGuiCounter1; ?>' min="0" max="10000"> X <input type="number" size="4" value="0" id="height<?php echo $ConvertGuiCounter1; ?>" name="height<?php echo $ConvertGuiCounter1; ?>" min="0"  max="10000"></p> 
           <p><?php echo $Gui2Text65; ?><input type="number" size="3" id='rotate<?php echo $ConvertGuiCounter1; ?>' name='rotate<?php echo $ConvertGuiCounter1; ?>' value="0" min="0" max="359"></p>
           <input type="submit" id='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' name='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo $Gui2Text62; ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
-          <script type="text/javascript">
-            $(document).ready(function () {
-              $('#convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>').click(function() {
-                $.ajax({
-                  type: 'POST',
-                  url: 'convertCore.php',
-                  data: {
-                    Token1:'<?php echo $Token1; ?>',
-                    Token2:'<?php echo $Token2; ?>',
-                    convertSelected:'<?php echo $File; ?>',
-                    rotate:$('#rotate<?php echo $ConvertGuiCounter1; ?>').val(),
-                    width:$('#width<?php echo $ConvertGuiCounter1; ?>').val(),
-                    height:$('#height<?php echo $ConvertGuiCounter1; ?>').val(),
-                    extension:document.getElementById('photoextension<?php echo $ConvertGuiCounter1; ?>').value,
-                    userconvertfilename:document.getElementById('userphotofilename<?php echo $ConvertGuiCounter1; ?>').value },
-                    success: function(ReturnData) {
-                      toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                      const ReturnDataArray = ReturnData.split(/\r?\n/);
-                      ReturnDataArray.slice(1).forEach((line, index) => {
-                        if (line.includes('ERROR!!!')) {
-                          toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                          setTimeout(function() {
-                            toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                          alert(line); }
-                        else if (line !== '') {
-                          $.ajax({
-                            type: 'POST',
-                            url: 'convertCore.php',
-                            data: {
-                              Token1:'<?php echo $Token1; ?>',
-                              Token2:'<?php echo $Token2; ?>',
-                              download:line },
-                            success: function(ReturnData) {
-                              if (ReturnData.includes('ERROR!!!')) {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                alert(ReturnData); }
-                              else if (ReturnData !== '') {
-                                download_file('<?php echo 'DATA/'.$SesHash3.'/'; ?>', line);
-                                toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                                setTimeout(function() {
-                                  toggle_visibility('victoryCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                                } },
-                            error: function(ReturnData) {
-                              toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>');
-                              setTimeout(function() {
-                                toggle_visibility('failureCommandDiv<?php echo $ConvertGuiCounter1; ?>'); }, 5000);
-                              alert("<?php echo $Gui2Text71; ?>"); } }); } }); } }); }); });
+          <script type='text/javascript'>
+            HRC2.bindRun('convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('rotate' => 'rotate'.$ConvertGuiCounter1, 'width' => 'width'.$ConvertGuiCounter1, 'height' => 'height'.$ConvertGuiCounter1, 'extension' => 'photoextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userphotofilename'.$ConvertGuiCounter1)); ?>);
           </script>
+
+          </div>
         <?php } ?>
-      </div>
-      <hr />
+
+        <hr />
       <?php } ?>
     </div>
+  </div>
+    <?php } // / End of the file list. It renders only in list only mode, because the
+      // / full page shows it through the frame above & would otherwise print it twice. ?>
     <?php
     // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-    $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2XpsArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2ScadArr = $selectorBase = $selectorSide = $selectorSwatches = $selectorLang = $selectorLabel = $selectorCurrent = $selectorColor = $selectorSwatch = $selectorGui = $selectorURL = $gui2SvgArr = $gui2ScadArr = $gui2EbookArr = NULL;
-    unset($gui2AudArr, $gui2VidArr, $gui2StreamArr, $gui2DocArr, $gui2SpreadArr, $gui2XpsArr, $gui2PresArr, $gui2ArchArr, $gui2ImaArr, $gui2ModArr, $gui2SubArr, $gui2DraArr, $gui2OcrArr, $gui2ScadArr, $gui2SvgArr, $selectorBase, $selectorSide, $selectorSwatches, $selectorLang, $selectorLabel, $selectorCurrent, $selectorColor, $selectorSwatch, $selectorGui, $selectorURL, $gui2ScadArr, $gui2EbookArr);
+    $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2XpsArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2ScadArr = $selectorBase = $selectorSide = $selectorSwatches = $selectorLang = $selectorLabel = $selectorCurrent = $selectorColor = $selectorSwatch = $selectorGui = $selectorURL = $gui2SvgArr = $gui2EbookArr = $sessionParams = $backURL = $refreshURL = $extension = $FileNoExt = NULL;
+    unset($gui2AudArr, $gui2VidArr, $gui2StreamArr, $gui2DocArr, $gui2SpreadArr, $gui2XpsArr, $gui2PresArr, $gui2ArchArr, $gui2ImaArr, $gui2ModArr, $gui2SubArr, $gui2DraArr, $gui2OcrArr, $gui2ScadArr, $gui2SvgArr, $selectorBase, $selectorSide, $selectorSwatches, $selectorLang, $selectorLabel, $selectorCurrent, $selectorColor, $selectorSwatch, $selectorGui, $selectorURL, $gui2EbookArr, $sessionParams, $backURL, $refreshURL, $extension, $FileNoExt);

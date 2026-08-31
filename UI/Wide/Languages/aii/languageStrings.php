@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.7.4.
+// / v3.8.2.
 // / This file contains language specific GUI related text for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -151,6 +151,19 @@ $Gui1Text32 = 'ܫܘܼܚܠܵܦܹܐ ܕ-OpenSCAD';
 $Gui1Text33 = 'ܟܹܐ ܡܥܲܒܸܕ ܡܲܥܝܵܢܵܐ ܕ-OpenSCAD ܠܫܘܼܚܠܵܦܹܐ ܕܛܘܼܦܸܣܵܐ ܕܬܠܵܬܵܐ ܡܫܘܼܚܝܼܢ.';
 // / 'File references inside uploaded sources are removed unless the server allows resolving them.'
 $Gui1Text34 = 'ܐܸܣܵܪܹܐ ܕܦܸܬܩܹܐ ܒܓܵܘ ܡܲܥܝܵܢܹܐ ܕܐܲܣܩܘܼ ܟܹܐ ܡܸܫܬܲܩܠܝܼ ܐܸܠܵܐ ܐܸܢ ܫܵܒܸܩ ܡܫܲܡܫܵܢܵܐ ܠܡܸܫܪܵܐ ܐܸܢܘܿܢ.';
+// / 'Delete every uploaded file & start a new session?'
+// / Shown inside the start over panel on the upload page. That panel is only rendered
+// / when the session already holds at least one file, so this is never shown to a first
+// / time visitor who has nothing to lose.
+$Gui1Text35 = 'ܛܠܘܿܩ ܟܠܗܘܿܢ ܦܸܬܩܹܐ ܕܐܲܣܩܘܼ ܘܫܲܪܹܐ ܡܵܘܬܒ݂ܵܐ ܚܲܕ݂ܬܵܐ؟';
+// / 'Start Over'
+// / Labels the control that opens the panel & the button inside it that confirms.
+$Gui1Text36 = 'ܫܲܪܹܐ ܡܸܢ ܪܹܫܵܐ';
+// / 'Refresh'
+// / Alternate text for the refresh control on the upload page. That control is a glyph
+// / with no text of its own, so this is the only description a screen reader has & the
+// / only thing shown when a browser cannot render the glyph.
+$Gui1Text37 = 'ܚܲܕܸܬ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -256,7 +269,7 @@ $Gui2Text49 = 'ܫܲܚܠܸܦ ܗܵܢܵܐ ܪܸܫܡܵܐ ܝܕܲܥܬܢܵܝܵܐ ܐܵܘ 
 // / 'Convert This Image'
 $Gui2Text50 = 'ܫܲܚܠܸܦ ܗܵܢܵܐ ܨܘܼܪܬܵܐ';
 // / 'Archive File'
-$Gui2Text51 = 'ܓܙܝܼ ܦܸܬܩܵא';
+$Gui2Text51 = 'ܓܙܝܼ ܦܸܬܩܵܐ';
 // / 'Convert Into Document'
 $Gui2Text52 = 'ܫܲܚܠܸܦ ܠܟܬܝܼܒ݂ܬܵܐ';
 // / 'Archive Files'
@@ -290,13 +303,13 @@ $Gui2Text67 = 'ܛܠܘܿܩ';
 // / 'Close Delete Options'
 $Gui2Text68 = 'ܐܲܚܸܕ ܓܘܼܒܵܝܹܐ ܕܛܠܵܩܵܐ';
 // / 'Delete This File'
-$Gui2Text69 = 'ܛܠܘܿܩ ܗܵנܵא ܦܸܬܩܵא';
+$Gui2Text69 = 'ܛܠܘܿܩ ܗܵܢܵܐ ܦܸܬܩܵܐ';
 // / 'Confirm Delete'
 $Gui2Text70 = 'ܚܲܬܸܡ ܛܠܵܩܵܐ';
 // / 'Cannot convert this file! Try changing the name.'
-$Gui2Text71 = 'ܠܹܐ ܡܵܨܹܐ ܠܡܫܲܚܠܘܼܦܹܐ ܗܵנܵא ܦܸܬܩܵא! ܓܪܘܼܒ ܫܲܚܠܸܦ ܫܸܡܵܐ.';
+$Gui2Text71 = 'ܠܹܐ ܡܵܨܹܐ ܠܡܫܲܚܠܘܼܦܹܐ ܗܵܢܵܐ ܦܸܬܩܵܐ! ܓܪܘܼܒ ܫܲܚܠܸܦ ܫܸܡܵܐ.';
 // / 'Cannot perform a virus scan on this file!'
-$Gui2Text72 = 'ܠܹܐ ܡܵܨܹܐ ܠܡܸܥܒܲܕ ܒܨܵܝܬܵܐ ܕܒܝܼܪܘܼܣܹܐ ܥܲܠ ܗܵנܵܐ ܦܸܬܩܵא!';
+$Gui2Text72 = 'ܠܹܐ ܡܵܨܹܐ ܠܡܸܥܒܲܕ ܒܨܵܝܬܵܐ ܕܒܝܼܪܘܼܣܹܐ ܥܲܠ ܗܵܢܵܐ ܦܸܬܩܵܐ!';
 // / 'File Link Copied to Clipboard!'
 $Gui2Text73 = 'ܐܸܣܵܪܵܐ ܕܦܸܬܩܵܐ ܡܘܼܥܬܸܩܵܐ ܝܠܹܗ ܠܕܲܦܵܐ ܕܢܩܵܫܵܐ!';
 // / 'Operation Failed!'
@@ -306,11 +319,11 @@ $Gui2Text75 = 'ܫܲܚܠܸܦ ܟܬܝܼܒ݂ܬܵܐ ܕܠܬܸܚܬ ܗܠܹܝܢ';
 // / 'Convert Subtitles'
 $Gui2Text76 = 'ܫܲܚܠܸܦ ܟܬܝܼܒ݂ܬܵܐ ܕܠܬܸܚܬ';
 // / 'Convert This Presentation'
-$Gui2Text77 = 'ܫܲܚܠܸܦ ܚܘܼܘܵܝܵܐ ܗܵנܵܐ';
+$Gui2Text77 = 'ܫܲܚܠܸܦ ܚܘܼܘܵܝܵܐ ܗܵܢܵܐ';
 // / 'Convert This XPS File'
-$Gui2Text78 = 'ܫܲܚܠܸܦ ܦܸܬܩܵܐ ܕ-XPS ܗܵנܵܐ';
+$Gui2Text78 = 'ܫܲܚܠܸܦ ܦܸܬܩܵܐ ܕ-XPS ܗܵܢܵܐ';
 // / 'Render This OpenSCAD Model'
-$Gui2Text79 = 'ܥܒܸܕ ܛܘܼܦܸܣܵܐ ܕ-OpenSCAD ܗܵנܵܐ';
+$Gui2Text79 = 'ܥܒܸܕ ܛܘܼܦܸܣܵܐ ܕ-OpenSCAD ܗܵܢܵܐ';
 // / 'Render Model'
 $Gui2Text80 = 'ܥܒܸܕ ܛܘܼܦܸܣܵܐ';
 // / 'Convert This E-Book'

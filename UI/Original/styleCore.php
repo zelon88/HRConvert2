@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.5.8.
+// / v3.8.2.
 // / This file contains the dynamic stylesheets for HRConvert2.
 // /
 // / HARDWARE REQUIREMENTS ... 

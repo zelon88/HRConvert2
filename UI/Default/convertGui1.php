@@ -137,6 +137,11 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
           HRC2.configure(<?php echo json_encode(array(
             'tokens' => array('Token1' => (string)$Token1, 'Token2' => (string)$Token2),
             'sessionFiles' => array_values($Files),
+            // / The same URL the refresh button posts to. Refresh POSTS the tokens to it &
+            // / keeps the session. Start Over NAVIGATES to it with no tokens, which is what
+            // / makes the core issue a new one, & the query string carries the interface,
+            // / language & colour across so only the session changes.
+            'newSessionURL' => $refreshURL,
             'operationFailedText' => (isset($Gui2Text74) ? $Gui2Text74 : 'Operation Failed!'))); ?>);
           HRC2.bindStartOver('startOverConfirm');
         }
@@ -381,7 +386,7 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
         </form>
         <br />
         <?php if (!isset($_GET['noGui'])) { ?>
-        <hr style="border: 1px solid #eeeeee;"/>
+		    <hr style="border: 1px solid #eeeeee;"/>
         <?php } ?>
       </div>
     </div>

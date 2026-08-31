@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.7.4.
+// / v3.8.3.
 // / This file contains language specific GUI related text for performing file conversions.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -32,7 +32,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.7.4';
+$LanguageVersion = 'v3.8.3';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -151,6 +151,19 @@ $Gui1Text32 = 'OpenSCAD-formaten';
 $Gui1Text33 = 'Rendert OpenSCAD-bronbestanden naar 3D-modelformaten.';
 // / 'File references inside uploaded sources are removed unless the server allows resolving them.'
 $Gui1Text34 = 'Bestandsreferenties binnen geüploade bronbestanden worden verwijderd, tenzij de server toestaat deze op te lossen.';
+// / 'Delete every uploaded file & start a new session?'
+// / Shown inside the start over panel on the upload page. That panel is only rendered
+// / when the session already holds at least one file, so this is never shown to a first
+// / time visitor who has nothing to lose.
+$Gui1Text35 = 'Alle geüploade bestanden verwijderen en een nieuwe sessie starten?';
+// / 'Start Over'
+// / Labels the control that opens the panel & the button inside it that confirms.
+$Gui1Text36 = 'Opnieuw Beginnen';
+// / 'Refresh'
+// / Alternate text for the refresh control on the upload page. That control is a glyph
+// / with no text of its own, so this is the only description a screen reader has & the
+// / only thing shown when a browser cannot render the glyph.
+$Gui1Text37 = 'Vernieuwen';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

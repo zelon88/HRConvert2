@@ -45,7 +45,7 @@ This document will teach administrator and developers how GUIs are handled and s
 In this document when we refer to a GUI, we refer to a set of files required to render HRConvert2.
 In this document when we refer to a language pack, we refer to the files required to localize a GUI into a specific language.
 
-An HRConvert2 GUI is made up of 8 components. Each component serves a specific function. The 8 components of a GUI are;
+An HRConvert2 GUI is made up of 9 components. Each component serves a specific function. The 9 components of a GUI are;
 
   1. header.php
   2. convertGui1.php
@@ -55,6 +55,7 @@ An HRConvert2 GUI is made up of 8 components. Each component serves a specific f
   6. index.html
   7. A 'Languages' folder with at least one ISO 639-1 supported Language Pack.
   8. uiVersionInfo.php
+  9. A 'Resources' folder containing 'Images', 'CSS' & 'JS' subdirectories.
 
 These components are stored in a folder named after the GUI.
 That folder is placed inside the 'UI' subdirectory of the installation location.
@@ -90,8 +91,26 @@ During operation, HRConvert2 initializes the GUI using the following process;
 --Administration Tips--
 
 Language Packs are contained within GUIs. GUIs typically contain multiple language packs.
-A GUI missing a language pack that config.php lists will fall back to the Default Language for that GUI & write a warning. 
-An error occurs only if the Default Language pack is also missing from that GUI.
+
+config.php lists the languages the INSTALLATION offers. A GUI is not required to carry all
+of them, & is not expected to. Adding a language to --Supported Languages-- makes it
+selectable; it appears for the GUIs that actually carry it & falls back for the ones that
+do not. That is the intended way to add a language: naturalize a pack inside your GUI, list
+the language in config.php, & leave the other GUIs alone.
+
+When a language cannot be served, verifyLanguage() walks a ladder rather than failing;
+  1. The language the user selected.
+  2. $DefaultLanguage from config.php.
+  3. English, which is the core's own built-in floor & cannot be configured away.
+Each rung that is missing or incomplete writes a warning naming the pack & the folder. The
+first rung that is present is used. An error occurs only if the GUI carries no usable pack
+at any of the three.
+
+Whichever pack is used, the core also picks a BASELINE pack from the remaining rungs &
+loads it FIRST, then loads the selected pack over the top of it. A pack therefore only has
+to define the strings it wants to change. Anything it omits keeps the baseline's value
+instead of rendering as an empty string. This is what makes a partially translated or
+out-of-date pack usable rather than broken.
 Errors will occur if an installed GUI does not support the following colors: Red, Green, Blue, Grey, Orange, Purple, Dark.
 Server administrators can; 
   Enable or disable GUIs by modifying the --Supported GUIs-- section of the config.php file.
@@ -249,19 +268,50 @@ This file must be manually copied & pasted into any folders that are manually cr
 The 'Languages' folder must exist in each GUI.
 The 'Languages' folder contains the major language-specific files for the GUI.
 Each subdirectory of the 'Languages' folder represents a different language pack.
+A language pack is a folder named for an ISO 639 code containing two required files;
+  languageStrings.php, Every displayed string, plus $LanguageVersion.
+  flag.png, The flag shown in the language selector.
+A pack missing either file is treated as absent & the fallback ladder continues past it.
+
+A language pack declares $LanguageVersion & the core carries $RequiredLanguageVersion.
+That comparison is REPORTED, NOT ENFORCED. A mismatch writes a warning naming the pack,
+the version it reports, the version the core wants & the baseline pack its missing strings
+are coming from. The pack is still loaded & the interface still renders.
+
+This is deliberate & it differs from the GUI & config.php contracts on purpose.
+A GUI is refused on a version mismatch because a GUI is CODE; it calls functions & reads
+arrays, & the wrong vintage produces a half-drawn page or a PHP notice in the middle of an
+AJAX reply. A language pack is DATA. The only thing a stale pack can get wrong is a string
+it does not define, & the baseline already answers that. Refusing a pack over its version
+would mean an installation that gains one new string loses every translation it has, which
+is a far worse outcome than a handful of English words on an otherwise translated page.
+So the version is a maintenance signal for the administrator's log, not a gate.
+Update $LanguageVersion when you bring a pack up to date. Nothing breaks if you forget.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About 'Resources' Folder--
 
-The 'Resources' folder is optional, but it makes the life of the HRConvert2 developer much easier.
-The 'Resources' folder contains & organizes the scripts, stylesheets, & images required by the GUI.
-The HRConvert2 core will not check for the existence of the 'Resources' folder.
+The 'Resources' folder is REQUIRED. It contains & organizes the scripts, stylesheets, &
+images required by the GUI.
 The HRConvert2 core will define the following variables which map to subdirectories of the 'Resources' folder;
   $GuiResourcesDir, Maps to 'Resources/' folder.
   $GuiImageDir, Maps to 'Resources/Images' folder.
   $GuiCSSDir, Maps to 'Resources/CSS' folder.
   $GuiJSDir, Maps to 'Resources/JS' folder.
+
+verifyGui() checks that all four of those directories exist before it accepts a GUI.
+A GUI missing any one of them is refused with a warning naming the folder, & the core falls
+back to the Default GUI.
+
+This folder was once described as optional. It is not, & it never really was. The core
+hands every GUI a $GuiImageDir, a $GuiCSSDir & a $GuiJSDir & then expects the stylesheet,
+the favicon, the flags & the script library to be found underneath them. header.php builds
+its paths from those variables unconditionally. A GUI without the folder does not degrade
+into an unstyled but working page; it emits a stylesheet link to a directory that does not
+exist, a script tag to a library that does not exist, & an interface whose every control
+calls into that missing library. Checking for the folder up front converts a page that
+silently does nothing into a logged warning & a working Default GUI.
 
 The included GUIs keep their client side script library at 'Resources/JS/HRC2-Functions.js'.
 header.php points $JsLibraryPath at it & loads it before anything that calls into it.

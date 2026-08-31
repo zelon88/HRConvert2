@@ -1,7 +1,7 @@
 <?php if (php_sapi_name() !== 'cli') print('<!DOCTYPE HTML>'.PHP_EOL);
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/21/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 8/31/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILEINFORMATION ...
-// / v3.8.2.
+// / v3.8.3.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -679,7 +679,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
-  $HRConvertVersion = 'v3.8.2';
+  $HRConvertVersion = 'v3.8.3';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
@@ -691,13 +691,13 @@ function verifyInstallation() {
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / Gui version that do not exactly match the version listed below are not considered acceptable.
   // / This is because Guis are not always guaranteed to be forward or reverse compatible.
-  $RequiredGuiVersion = 'v3.8.1';
+  $RequiredGuiVersion = 'v3.8.3';
   $RequiredGuiVersion = ltrim($RequiredGuiVersion, 'vV');
   // / Define the minimum acceptable Language Pack version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / Language version that do not exactly match the version listed below are not considered acceptable.
   // / This is because Language Packs are not always guaranteed to be forward or reverse compatible.
-  $RequiredLanguageVersion = 'v3.7.4';
+  $RequiredLanguageVersion = 'v3.8.3';
   $RequiredLanguageVersion = ltrim($RequiredLanguageVersion, 'vV');
   // / The Core Manager component version this core requires.
   // / This is an EXACT match. A component built for another core may not be called safely.
@@ -1271,17 +1271,33 @@ function verifyGui() {
     $GuiCSSDir = $GuiResourcesDir.'CSS/';
     $GuiJSDir = $GuiResourcesDir.'JS/';
     $guiFiles = array($GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $StyleCoreFile, $GuiVersionFile);
+    // / THE RESOURCES FOLDER IS PART OF A GUI, NOT AN OPTIONAL EXTRA.
+    // / It began as an optional convenience & the documentation still called it optional,
+    // / but the core had quietly come to depend on it. header.php builds five asset paths
+    // / out of these directories on every render & never asks whether they are there, so a
+    // / GUI without them did not fail verification. It rendered, with no stylesheet, no
+    // / script library & a broken favicon, & the first sign of trouble was an interface
+    // / that did nothing when clicked.
+    // / A GUI that cannot be styled or scripted is not a working GUI. Checking here means
+    // / such a GUI is refused while there is still a Default to fall back to, & the log
+    // / says which folder was missing instead of leaving an administrator to infer it from
+    // / a blank looking page.
+    $guiDirs = array($GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir);
     $GuiFiles = array();
+    $guiDirsExist = TRUE;
     // / Verify that the required GUI folder & every required file exists.
     if (is_dir($GuiDir)) {
+      foreach ($guiDirs as $reqDir) if (!is_dir($reqDir)) {
+        $guiDirsExist = FALSE;
+        warningEntry('GUI '.$GuiToUse.' is missing its '.$reqDir.' folder.'); }
       foreach ($guiFiles as $reqFile) if (file_exists($reqFile)) array_push($GuiFiles, $reqFile);
       // / uiVersionInfo.php only assigns variables, so a failed GUI can still be replaced here.
       // / Nothing has printed yet, unlike the language pack case in buildGUI().
-      if (count($guiFiles) === count($GuiFiles)) {
+      if (count($guiFiles) === count($GuiFiles) && $guiDirsExist) {
         require($GuiVersionFile);
         if ($GuiVersion === $RequiredGuiVersion) $GuiIsSet = TRUE;
         else warningEntry('GUI '.$GuiToUse.' reports version '.$GuiVersion.' but this core requires '.$RequiredGuiVersion.'.'); }
-      else warningEntry('GUI '.$GuiToUse.' is missing one or more required files.'); }
+      else if (count($guiFiles) !== count($GuiFiles)) warningEntry('GUI '.$GuiToUse.' is missing one or more required files.'); }
     else warningEntry('GUI '.$GuiToUse.' does not exist at '.$GuiDir.'.');
     // / A usable GUI has been found, so stop looking.
     if ($GuiIsSet) break; }
@@ -1298,7 +1314,7 @@ function verifyGui() {
     $DarkButtonCode = $darkButtonCode;
     $DefaultButtonCode = $defaultButtonCode; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-purgeSensitiveMemory($EnableMemoryProtection, $defaultGuis, $defaultGui, $candidateGuis, $candidateGui, $reqFile, $guiFiles, $StyleCoreFile, $GuiVersionFile, $greenButtonCode, $blueButtonCode, $redButtonCode, $orangeButtonCode, $purpleButtonCode, $darkButtonCode, $defaultButtonCode);
+purgeSensitiveMemory($EnableMemoryProtection, $defaultGuis, $defaultGui, $candidateGuis, $candidateGui, $reqFile, $reqDir, $guiFiles, $guiDirs, $guiDirsExist, $StyleCoreFile, $GuiVersionFile, $greenButtonCode, $blueButtonCode, $redButtonCode, $orangeButtonCode, $purpleButtonCode, $darkButtonCode, $defaultButtonCode);
   return array($GuiIsSet, $GuiToUse, $GuiDir, $GuiFiles); }
 // / -----------------------------------------------------------------------------------
 
@@ -1306,7 +1322,7 @@ purgeSensitiveMemory($EnableMemoryProtection, $defaultGuis, $defaultGui, $candid
 // / A function to set the language to use for the session.
 function verifyLanguage() {
   // / Set variables.
-  global $Language, $DefaultLanguage, $SupportedLanguages, $AllowUserSelectableLanguage, $LanguageFiles, $GuiDir, $LanguageDir, $LanguageStringsFile, $LanguageFlagFile, $EnableMemoryProtection;
+  global $Language, $DefaultLanguage, $SupportedLanguages, $AllowUserSelectableLanguage, $LanguageFiles, $GuiDir, $LanguageDir, $LanguageStringsFile, $LanguageFlagFile, $LanguageBaselineFile, $EnableMemoryProtection;
   $reqFile = $LanguageIsSet = FALSE;
   $LanguageToUse = $defaultLanguage = 'en';
   $LanguageFiles = $languageFiles = array();
@@ -1333,22 +1349,52 @@ function verifyLanguage() {
     if (!$AllowUserSelectableLanguage) {
       $LanguageToUse = $defaultLanguage;
       if (array_key_exists($DefaultLanguage, $SupportedLanguages)) $LanguageToUse = $DefaultLanguage; } }
+  // / A LANGUAGE LISTED IN config.php IS NOT A PROMISE THAT EVERY GUI CARRIES IT.
+  // / config.php lists the languages the INSTALLATION offers. A language pack lives inside
+  // / a GUI, so whether any given GUI has one is a separate question & the answer is
+  // / legitimately no. A GUI author naturalizes the packs they care about & is not obliged
+  // / to ship all of them.
+  // / This function used to answer that no by returning FALSE, & the caller answers FALSE
+  // / with a fatal error 16. Adding a language to config.php therefore broke every GUI
+  // / that did not happen to carry it, the moment a user selected it. A feature meant to
+  // / be additive was load bearing for every interface at once.
+  // / It falls back the way verifyGui() does instead. The selection, then the configured
+  // / default, then English, & the first one actually present wins. A user cannot choose
+  // / their way out of a missing pack, so the fallback is silent to them & noisy here.
+  $candidateLanguages = array($LanguageToUse);
+  if (isset($DefaultLanguage) && !in_array($DefaultLanguage, $candidateLanguages)) array_push($candidateLanguages, $DefaultLanguage);
+  if (!in_array($defaultLanguage, $candidateLanguages)) array_push($candidateLanguages, $defaultLanguage);
+  foreach ($candidateLanguages as $candidateLanguage) {
+    $LanguageFiles = array();
+    $LanguageDir = $GuiDir.'Languages/'.$candidateLanguage.'/';
+    $LanguageStringsFile = $LanguageDir.'languageStrings.php';
+    $LanguageFlagFile = $LanguageDir.'flag.png';
+    $languageFiles = array($LanguageStringsFile, $LanguageFlagFile);
+    // / Verify that the language folder & every required file within it exists.
+    if (is_dir($LanguageDir)) {
+      foreach ($languageFiles as $reqFile) if (file_exists($reqFile)) array_push($LanguageFiles, $reqFile);
+      if (count($languageFiles) === count($LanguageFiles)) $LanguageIsSet = TRUE;
+      else warningEntry('Language pack '.$candidateLanguage.' at '.$LanguageDir.' is missing one or more required files.'); }
+    else warningEntry('The GUI at '.$GuiDir.' does not carry a '.$candidateLanguage.' language pack.');
+    // / A usable pack has been found, so stop looking.
+    if ($LanguageIsSet) {
+      $LanguageToUse = $candidateLanguage;
+      break; } }
+  // / THE BASELINE IS WHAT MAKES A PARTIAL PACK USABLE.
+  // / buildGUI loads this FIRST & then loads the selected pack over the top, so a pack that
+  // / is missing a string inherits it instead of leaving an undefined variable for an
+  // / interface to print. It is only worth loading when it is a different file to the one
+  // / that was selected.
+  $LanguageBaselineFile = '';
+  foreach ($candidateLanguages as $candidateLanguage) {
+    $baselineFile = $GuiDir.'Languages/'.$candidateLanguage.'/languageStrings.php';
+    if ($candidateLanguage !== $LanguageToUse && file_exists($baselineFile)) {
+      $LanguageBaselineFile = $baselineFile;
+      break; } }
   // / Set the $Language variable to whatever the current language is so the next page will use the same one.
   $_GET['language'] = $LanguageToUse;
-  // / Set the variables to required UI files.
-  $LanguageDir = $GuiDir.'Languages/'.$LanguageToUse.'/';
-  $LanguageStringsFile = $LanguageDir.'languageStrings.php';
-  $LanguageFlagFile = $LanguageDir.'flag.png';
-  $languageFiles = array($LanguageStringsFile, $LanguageFlagFile);
-  // / Verify that the required langauge folder exists.
-  if (!is_dir($LanguageDir)) $LanguageIsSet = FALSE;
-  else {
-    // / Verify that required language files exist.
-    if (file_exists($LanguageStringsFile)) {
-      foreach ($languageFiles as $reqFile) if (file_exists($reqFile)) array_push($LanguageFiles, $reqFile);
-      if (count($LanguageFiles) > 0) if (count($languageFiles) === count($LanguageFiles)) $LanguageIsSet = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $defaultLanguages, $reqFile, $languageFiles, $defaultLanguage);
+  purgeSensitiveMemory($EnableMemoryProtection, $defaultLanguages, $reqFile, $languageFiles, $defaultLanguage, $candidateLanguages, $candidateLanguage, $baselineFile);
   return array($LanguageIsSet, $LanguageToUse, $LanguageDir, $LanguageFiles); }
 // / -----------------------------------------------------------------------------------
 
@@ -7119,10 +7165,9 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
 // / pack is required from inside this function. Nothing outside this call can read them.
 function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   // / Set variables.
-  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $Verbose;
+  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $LanguageBaselineFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $Verbose;
   $GUIDisplayed = FALSE;
   $guiUIFile = $GuiUI1File;
-  $fallbackStringsFile = '';
   $Files = array();
   $FileCount = 0;
   // / Make sure the $guiType is valid.
@@ -7151,32 +7196,36 @@ function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   // / fixes. Saying which directory was read, & whether this was the framed request, is
   // / the difference between diagnosing it & guessing at it.
   if ($Verbose) logEntry('GUI '.$guiType.' file list: Directory: '.$ConvertDir.', Files: '.$FileCount.', List only: '.($FileListOnly ? 'YES' : 'NO').', Session: '.$SesHash.'/'.$SesHash2.'.');
+  // / THE BASELINE LOADS FIRST. THE SELECTED PACK LOADS OVER THE TOP.
+  // / A language pack is nothing but variable assignments, so loading two of them in order
+  // / leaves every string set to the later value & every string the later pack does not
+  // / mention set to the earlier one. That is the whole fallback, & it is per string rather
+  // / than per pack.
+  // / This used to run the other way round. The selected pack loaded, its version was
+  // / tested, & on a mismatch the default was loaded over the top of it. That threw the
+  // / user's language away wholesale to fix strings it might only have been missing one of,
+  // / & it could not help at all when the pack was merely incomplete rather than
+  // / mis-versioned, because nothing tested for that. A translator who had done ninety nine
+  // / strings out of a hundred either lied about the version or watched their whole pack
+  // / get discarded.
+  // / Loading the baseline underneath means an incomplete pack shows the strings it HAS in
+  // / the user's language & falls through to the baseline only for the ones it lacks. It
+  // / also means no interface can print an undefined variable, whatever a pack omits.
+  if ($LanguageBaselineFile !== '' && file_exists($LanguageBaselineFile)) require_once($LanguageBaselineFile);
   // / Load language specific GUI elements, if there are any.
   if (in_array($LanguageStringsFile, $LanguageFiles)) require_once($LanguageStringsFile);
-  // / Check to ensure that the selected language is compatible with the rest of the GUI.
-  // / The version lives inside the pack, so the pack has already been loaded by the time
-  // / this can be tested. A mismatched pack cannot be trusted to define every string the
-  // / UI reads, so the default pack is loaded over the top of it instead of failing.
-  // / A language pack is only variable assignments, so a second load simply overwrites
-  // / whatever the first one set, & that includes $LanguageVersion itself.
-  // / A user who cannot read the page cannot report the problem, so this warns & continues.
-  if ($LanguageVersion !== $RequiredLanguageVersion) {
-    warningEntry('Language pack '.$LanguageToUse.' reports version '.$LanguageVersion.' but this core requires '.$RequiredLanguageVersion.'.');
-    // / Falling back to a pack that is already loaded would achieve nothing.
-    if ($LanguageToUse !== $DefaultLanguage) {
-      $fallbackStringsFile = $GuiDir.'Languages/'.$DefaultLanguage.'/languageStrings.php';
-      if (file_exists($fallbackStringsFile)) {
-        warningEntry('Falling back to language pack '.$DefaultLanguage.'.');
-        $LanguageToUse = $DefaultLanguage;
-        $LanguageDir = $GuiDir.'Languages/'.$DefaultLanguage.'/';
-        $LanguageStringsFile = $fallbackStringsFile;
-        $LanguageFlagFile = $LanguageDir.'flag.png';
-        // / require rather than require_once, because this second load is deliberate.
-        require($fallbackStringsFile); } } }
-  // / Only build the GUI once a compatible language pack is loaded.
-  // / If the default pack is ALSO out of date then nothing is left to fall back to, & the
-  // / GUI is deliberately not built. The warnings above name both packs that failed.
-  if ($LanguageVersion === $RequiredLanguageVersion) {
+  // / A version mismatch is now a WARNING & not a refusal.
+  // / The version still says whether a pack was written against this core, & an
+  // / administrator should know when it was not. It no longer decides whether the page can
+  // / be built, because the baseline underneath has already guaranteed that every string
+  // / the interface reads has a value.
+  // / A user who cannot read the page cannot report the problem. A page in the wrong
+  // / language beats no page at all, & a page that is right except for one new button beats
+  // / both.
+  if ($LanguageVersion !== $RequiredLanguageVersion) warningEntry('Language pack '.$LanguageToUse.' reports version '.$LanguageVersion.' but this core requires '.$RequiredLanguageVersion.'. Any string it does not define is being taken from '.($LanguageBaselineFile === '' ? 'nowhere, because no baseline pack was available' : $LanguageBaselineFile).'.');
+  // / Build the GUI as long as a pack actually loaded. A pack sets this flag itself, so it
+  // / is TRUE only if one of the two requires above really ran.
+  if ($LanguageStringsLoaded) {
     // / A FRAGMENT REQUEST GETS A FRAGMENT. NO HEADER & NO FOOTER.
     // / --File List Only-- asks for a piece of a page that is about to be placed INSIDE a
     // / page that already exists. Answering it with a whole document sends a second copy of
@@ -7200,7 +7249,7 @@ function buildGUI($guiType, $ShowGUI, $ButtonCode) {
     if ($FileListOnly) { if ($UIDisplayed && $LanguageStringsLoaded) $GUIDisplayed = TRUE; }
     else if ($HeaderDisplayed && $UIDisplayed && $FooterDisplayed && $LanguageStringsLoaded) $GUIDisplayed = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $guiType, $guiUIFile, $fallbackStringsFile, $ButtonCode);
+  purgeSensitiveMemory($EnableMemoryProtection, $guiType, $guiUIFile, $ButtonCode);
   return $GUIDisplayed; }
 // / -----------------------------------------------------------------------------------
 

@@ -168,6 +168,16 @@ window.HRC2 = {
   operationFailedText: 'Operation Failed!',
   clipboardUnsupportedText: '',
   failureStrings: [],
+  // / Where startOver() lands once the old session has been emptied. The page supplies it
+  // / carrying the interface, language & colour, so a new session keeps the settings the
+  // / user chose. The bare default is a last resort for a page that forgets to set it.
+  newSessionURL: 'convertCore.php',
+  // / Where refreshFileList() fetches the file list from. The page supplies it for the
+  // / same reason. A fragment is rendered by a SEPARATE request, & a request that names
+  // / no interface, language or colour is answered with the configured defaults. The list
+  // / then comes back in the wrong language & the wrong colours, inside a page that is
+  // / using the ones the user picked. The bare default is a last resort.
+  fileListURL: 'convertCore.php?showFiles=1&fileListOnly=1',
   isConfigured: false,
 
   // / Accept the page's values. Every key is optional so a page supplies only what it uses.
@@ -300,7 +310,7 @@ window.HRC2 = {
     if (container.length === 0) return;
     $.ajax({
       type: 'POST',
-      url: 'convertCore.php?showFiles=1&fileListOnly=1',
+      url: this.fileListURL,
       data: { Token1: this.tokens.Token1, Token2: this.tokens.Token2 }
     }).then(function (returnedHtml) {
       try { container.html(returnedHtml); }
@@ -622,7 +632,10 @@ window.HRC2 = {
       // / the very files this control promised to remove.
       if (self.isError(request.responseText)) { window.alert(self.operationFailedText); return; }
       // / A request carrying no tokens is what makes the core issue a new session.
-      window.location.href = 'convertCore.php';
+      // / The URL still carries the interface, language & colour, because a user who
+      // / clears their files has not asked to be moved to a different interface in a
+      // / different language. Only the session is meant to be new.
+      window.location.href = self.newSessionURL;
     };
     request.onerror = function () { window.alert(self.operationFailedText); };
     request.send(requestBody);

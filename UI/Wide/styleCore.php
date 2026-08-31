@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / FILE INFORMATION ...
-// / v3.5.8.
+// / v3.8.2.
 // / This file contains the dynamic stylesheets for HRConvert2.
 // /
 // / HARDWARE REQUIREMENTS ... 
@@ -31,7 +31,28 @@
 // / Set dynamic CSS related variables.
 
 // / Grey color scheme (default).
-$defaultButtonCode = '.info-button {
+$defaultButtonCode = '
+#uiSelectorOptions { width: 300px; }
+#uiSelectorOptions p { margin: 2px 0; }
+#uiSelectorOptions strong { font-size: 11px; text-transform: uppercase; color: #777; }
+#uiSelectorOptions button {
+  display: inline-block !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  padding: 1px !important;
+  margin: 1px !important;
+  background: none !important;
+  border: 1px solid #ccc !important;
+  border-radius: 2px !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  line-height: 0; }
+#uiSelectorOptions button[aria-current] { border: 2px solid #000 !important; }
+#uiSelectorOptions img { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .swatch { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .txtbtn { line-height: 1.4; padding: 1px 5px !important; font-size: 11px; }
+.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #f3f6f4;
   -webkit-box-shadow: 3px 4px 0px 0px #f3f6f4;
   box-shadow: 3px 4px 0px 0px #f3f6f4;
@@ -58,7 +79,7 @@ $defaultButtonCode = '.info-button {
   text-shadow:0px 1px 0px #bcbcbc;
   min-width:100px; 
   width:250px;
-  max-width:1000px; }
+  max-width:2000px; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #bcbcbc), color-stop(1, #eeeeee));
   background:-moz-linear-gradient(top, #bcbcbc 5%, #eeeeee 100%);
@@ -77,7 +98,28 @@ body {
   background-color: #F8F8F8; }';
 
 // / Green color scheme.
-$greenButtonCode = '.info-button {
+$greenButtonCode = '
+#uiSelectorOptions { width: 300px; }
+#uiSelectorOptions p { margin: 2px 0; }
+#uiSelectorOptions strong { font-size: 11px; text-transform: uppercase; color: #777; }
+#uiSelectorOptions button {
+  display: inline-block !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  padding: 1px !important;
+  margin: 1px !important;
+  background: none !important;
+  border: 1px solid #ccc !important;
+  border-radius: 2px !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  line-height: 0; }
+#uiSelectorOptions button[aria-current] { border: 2px solid #000 !important; }
+#uiSelectorOptions img { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .swatch { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .txtbtn { line-height: 1.4; padding: 1px 5px !important; font-size: 11px; }
+.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #b9ccb3;
   -webkit-box-shadow: 3px 4px 0px 0px #b9ccb3;
   box-shadow: 3px 4px 0px 0px #b9ccb3;
@@ -104,7 +146,7 @@ $greenButtonCode = '.info-button {
   text-shadow:0px 1px 0px #1e9409;
   min-width:100px; 
   width:250px;
-  max-width:1000px; }
+  max-width:2000px; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #298040), color-stop(1, #50c20e));
   background:-moz-linear-gradient(top, #298040 5%, #50c20e 100%);
@@ -123,7 +165,28 @@ body {
   background-color: #E8FFE1; }';
 
 // / Blue color scheme.
-$blueButtonCode = '.info-button {
+$blueButtonCode = '
+#uiSelectorOptions { width: 300px; }
+#uiSelectorOptions p { margin: 2px 0; }
+#uiSelectorOptions strong { font-size: 11px; text-transform: uppercase; color: #777; }
+#uiSelectorOptions button {
+  display: inline-block !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  padding: 1px !important;
+  margin: 1px !important;
+  background: none !important;
+  border: 1px solid #ccc !important;
+  border-radius: 2px !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  line-height: 0; }
+#uiSelectorOptions button[aria-current] { border: 2px solid #000 !important; }
+#uiSelectorOptions img { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .swatch { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .txtbtn { line-height: 1.4; padding: 1px 5px !important; font-size: 11px; }
+.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #cfe2f3;
   -webkit-box-shadow: 3px 4px 0px 0px #cfe2f3;
   box-shadow: 3px 4px 0px 0px #cfe2f3;
@@ -150,7 +213,7 @@ $blueButtonCode = '.info-button {
   text-shadow:0px 1px 0px #16537e;
   min-width:100px; 
   width:250px;
-  max-width:1000px; }
+  max-width:2000px; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #295680), color-stop(1, #2d60b2));
   background:-moz-linear-gradient(top, #295680 5%, #2d60b2 100%);
@@ -169,7 +232,28 @@ body {
   background-color: #E1F7FF; }';
 
 // / Red color scheme.
-$redButtonCode = '.info-button {
+$redButtonCode = '
+#uiSelectorOptions { width: 300px; }
+#uiSelectorOptions p { margin: 2px 0; }
+#uiSelectorOptions strong { font-size: 11px; text-transform: uppercase; color: #777; }
+#uiSelectorOptions button {
+  display: inline-block !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  padding: 1px !important;
+  margin: 1px !important;
+  background: none !important;
+  border: 1px solid #ccc !important;
+  border-radius: 2px !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  line-height: 0; }
+#uiSelectorOptions button[aria-current] { border: 2px solid #000 !important; }
+#uiSelectorOptions img { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .swatch { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .txtbtn { line-height: 1.4; padding: 1px 5px !important; font-size: 11px; }
+.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #bcbcbc;
   -webkit-box-shadow: 3px 4px 0px 0px #bcbcbc;
   box-shadow: 3px 4px 0px 0px #bcbcbc;
@@ -196,7 +280,7 @@ $redButtonCode = '.info-button {
   text-shadow:0px 1px 0px #660000;
   min-width:100px; 
   width:250px;
-  max-width:1000px; }
+  max-width:2000px; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #9b443b), color-stop(1, #c20e0e));
   background:-moz-linear-gradient(top, #9b443b 5%, #c20e0e 100%);
@@ -215,7 +299,28 @@ body {
   background-color: #FFE9E1; }';
 
 // / Orange color scheme.
-$orangeButtonCode = '.info-button {
+$orangeButtonCode = '
+#uiSelectorOptions { width: 300px; }
+#uiSelectorOptions p { margin: 2px 0; }
+#uiSelectorOptions strong { font-size: 11px; text-transform: uppercase; color: #777; }
+#uiSelectorOptions button {
+  display: inline-block !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  padding: 1px !important;
+  margin: 1px !important;
+  background: none !important;
+  border: 1px solid #ccc !important;
+  border-radius: 2px !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  line-height: 0; }
+#uiSelectorOptions button[aria-current] { border: 2px solid #000 !important; }
+#uiSelectorOptions img { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .swatch { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .txtbtn { line-height: 1.4; padding: 1px 5px !important; font-size: 11px; }
+.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #ffdcb3;
   -webkit-box-shadow: 3px 4px 0px 0px #ffdcb3;
   box-shadow: 3px 4px 0px 0px #ffdcb3;
@@ -242,7 +347,7 @@ $orangeButtonCode = '.info-button {
   text-shadow:0px 1px 0px #803300;
   min-width:100px; 
   width:250px;
-  max-width:1000px; }
+  max-width:2000px; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #b35900), color-stop(1, #ff9900));
   background:-moz-linear-gradient(top, #b35900 5%, #ff9900 100%);
@@ -261,7 +366,28 @@ body {
   background-color: #fff4e6; }';
 
 // / Purple color scheme.
-$purpleButtonCode = '.info-button {
+$purpleButtonCode = '
+#uiSelectorOptions { width: 300px; }
+#uiSelectorOptions p { margin: 2px 0; }
+#uiSelectorOptions strong { font-size: 11px; text-transform: uppercase; color: #777; }
+#uiSelectorOptions button {
+  display: inline-block !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  padding: 1px !important;
+  margin: 1px !important;
+  background: none !important;
+  border: 1px solid #ccc !important;
+  border-radius: 2px !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  line-height: 0; }
+#uiSelectorOptions button[aria-current] { border: 2px solid #000 !important; }
+#uiSelectorOptions img { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .swatch { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .txtbtn { line-height: 1.4; padding: 1px 5px !important; font-size: 11px; }
+.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #e1cfea;
   -webkit-box-shadow: 3px 4px 0px 0px #e1cfea;
   box-shadow: 3px 4px 0px 0px #e1cfea;
@@ -288,7 +414,7 @@ $purpleButtonCode = '.info-button {
   text-shadow:0px 1px 0px #4a235a;
   min-width:100px; 
   width:250px;
-  max-width:1000px; }
+  max-width:2000px; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #5b2c6f), color-stop(1, #8e44ad));
   background:-moz-linear-gradient(top, #5b2c6f 5%, #8e44ad 100%);
@@ -307,7 +433,28 @@ body {
   background-color: #f5eef8; }';
 
 // / Dark / Night mode color scheme.
-$darkButtonCode = '.info-button {
+$darkButtonCode = '
+#uiSelectorOptions { width: 300px; }
+#uiSelectorOptions p { margin: 2px 0; }
+#uiSelectorOptions strong { font-size: 11px; text-transform: uppercase; color: #777; }
+#uiSelectorOptions button {
+  display: inline-block !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  padding: 1px !important;
+  margin: 1px !important;
+  background: none !important;
+  border: 1px solid #ccc !important;
+  border-radius: 2px !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  line-height: 0; }
+#uiSelectorOptions button[aria-current] { border: 2px solid #000 !important; }
+#uiSelectorOptions img { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .swatch { width: 24px; height: 18px; display: block; }
+#uiSelectorOptions .txtbtn { line-height: 1.4; padding: 1px 5px !important; font-size: 11px; }
+.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #1a1a1a;
   -webkit-box-shadow: 3px 4px 0px 0px #1a1a1a;
   box-shadow: 3px 4px 0px 0px #1a1a1a;
@@ -334,7 +481,7 @@ $darkButtonCode = '.info-button {
   text-shadow:0px 1px 0px #111111;
   min-width:100px; 
   width:250px;
-  max-width:1000px; }
+  max-width:2000px; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #262626), color-stop(1, #454545));
   background:-moz-linear-gradient(top, #262626 5%, #454545 100%);

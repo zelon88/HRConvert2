@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/28/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/31/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.8.2.
+v3.8.3.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -26,6 +26,19 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+
+--------------------
+COMMIT 8/28/2026
+v3.8.3 - Continue work on UI, bug fixes.
+
+-v3.8.3.
+-Fix aii + arc language packs using wrong characters in some places.
+-Fix typo in German language pack.
+-Fix IFrame not respecting color, language, or gui settings.
+-IFrame is no longer an IFrame, but dynamic page elements.
+-Add most recent UI updates to Original / Wide GUIs.
+-Update logo in Default / Wide GUIs.
+-Fix language fallback.
 
 --------------------
 COMMIT 8/28/2026

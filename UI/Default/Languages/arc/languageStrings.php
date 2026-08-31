@@ -54,7 +54,7 @@ if (!isset($ApplicationTitle)) $ApplicationTitle = 'ܫܚܠܦ ܟܠ ܡܕܡ!';
 
 // / -----------------------------------------------------------------------------------
 // / Set GUI Related Logic.
-if (!is_numeric($FileCount)) $FileCount = 'ܡܢܝܢܐ ܠܐ ידיܥܐ ܕ';
+if (!is_numeric($FileCount)) $FileCount = 'ܡܢܝܢܐ ܠܐ ܝܕܝܥܐ ܕ';
 $FCPlural1 = '̈ܐ ܬܪܝܨܐ';
 $FCPlural2 = '̈ܐ ܕܝܠܟ ܥܬܝܕܝܢ ܐܢܘܢ ܗܫܐ';
 if ($FileCount == 1) {
@@ -151,6 +151,19 @@ $Gui1Text32 = 'ܫܘܚܠܦ̈ܐ ܕ-OpenSCAD';
 $Gui1Text33 = 'ܡܥܒܕ ܡܥܝܢܐ ܕ-OpenSCAD ܠܫܘܚܠܦ̈ܐ ܕܛܘܦܣܐ ܕܬܠܬܐ ܡܫܘܚܝܢ.';
 // / 'File references inside uploaded sources are removed unless the server allows resolving them.'
 $Gui1Text34 = 'ܐܣܘܪ̈ܐ ܕܦܬܩ̈ܐ ܒܓܘ ܡܥܝܢ̈ܐ ܕܐܣܩܘ ܡܫܬܩܠܝܢ ܐܠܐ ܐܢ ܫܒܩ ܡܫܡܫܢܐ ܠܡܫܪܐ ܐܢܘܢ.';
+// / 'Delete every uploaded file & start a new session?'
+// / Shown inside the start over panel on the upload page. That panel is only rendered
+// / when the session already holds at least one file, so this is never shown to a first
+// / time visitor who has nothing to lose.
+$Gui1Text35 = 'ܛܠܘܩ ܟܠܗܘܢ ܦܬܩܐ ܕܐܣܩܘ ܘܫܪܐ ܡܘܬܒܐ ܚܕܬܐ؟';
+// / 'Start Over'
+// / Labels the control that opens the panel & the button inside it that confirms.
+$Gui1Text36 = 'ܫܪܐ ܡܢ ܪܫܐ';
+// / 'Refresh'
+// / Alternate text for the refresh control on the upload page. That control is a glyph
+// / with no text of its own, so this is the only description a screen reader has & the
+// / only thing shown when a browser cannot render the glyph.
+$Gui1Text37 = 'ܚܕܬ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -290,13 +303,13 @@ $Gui2Text67 = 'ܛܠܘܩ';
 // / 'Close Delete Options'
 $Gui2Text68 = 'ܐܚܕ ܓܘܒܝ̈ܐ ܕܛܠܩܐ';
 // / 'Delete This File'
-$Gui2Text69 = 'ܛܠܘܩ ܗܢܐ ܦܬܩא';
+$Gui2Text69 = 'ܛܠܘܩ ܗܢܐ ܦܬܩܐ';
 // / 'Confirm Delete'
 $Gui2Text70 = 'ܚܬܡ ܛܠܩܐ';
 // / 'Cannot convert this file! Try changing the name.'
 $Gui2Text71 = 'ܠܹܐ ܡܵܨܹܐ ܠܡܫܲܚܠܘܼܦܹܐ ܗܵܢܵܐ ܦܸܬܩܵܐ! ܓܪܘܼܒ ܫܲܚܠܸܦ ܫܸܡܵܐ.';
 // / 'Cannot perform a virus scan on this file!'
-$Gui2Text72 = 'ܠܹܐ ܡܵܨܹܐ ܠܡܸܥܒܲܕ ܒܨܵܝܬܵܐ ܕܒܝܼܪܘܼܣܹܐ ܥܲܠ ܗܵנܵܐ ܦܸܬܩܵܐ!';
+$Gui2Text72 = 'ܠܹܐ ܡܵܨܹܐ ܠܡܸܥܒܲܕ ܒܨܵܝܬܵܐ ܕܒܝܼܪܘܼܣܹܐ ܥܲܠ ܗܵܢܵܐ ܦܸܬܩܵܐ!';
 // / 'File Link Copied to Clipboard!'
 $Gui2Text73 = 'ܐܣܪܐ ܕܦܬܩܐ ܡܘܥܬܩܐ ܝܠܗ ܠܕܦܐ ܕܢܩܫܐ!';
 // / 'Operation Failed!'

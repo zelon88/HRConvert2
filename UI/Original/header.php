@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.4.3.
+// / v3.8.2.
 // / This file contains language specific GUI elements to be displayed at the top of pages.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -39,6 +39,29 @@ $JsLibraryPath = $GuiJSDir.'HRC2-Functions.js';
 $DropzonePath = $GuiJSDir.'dropzone.js';
 $StylesheetPath = $GuiCSSDir.'HRConvert2.css';
 $DropzoneStylesheetPath = $GuiCSSDir.'dropzone.css';
+// / -----------------------------------------------------------------------------------
+// / A PAGE IS GENERATED EVERY REQUEST. THE FILES BESIDE IT ARE CACHED FOR AS LONG AS A
+// / BROWSER LIKES. THOSE TWO FACTS DISAGREE EVERY TIME EITHER FILE IS EDITED.
+// /
+// / An interface page carries values & calls into the script library for behaviour, so a
+// / new page running against an old cached library is a new caller talking to functions
+// / that do not exist yet. That does not degrade. It throws on the first call & the
+// / interface stops, & the page looks broken to a user who did nothing wrong. An ordinary
+// / reload does not fix it either, because a reload revalidates the document & keeps
+// / serving the script from cache.
+// /
+// / Appending the file's modification time gives the file a NEW URL the moment its
+// / contents change & the same URL for as long as they do not. A browser therefore
+// / refetches exactly when there is something new to fetch & caches normally otherwise.
+// / This is the whole fix for that class of fault. No cache clearing, no version to
+// / remember to bump by hand, & nothing to explain to whoever installs this next.
+// /
+// / Only the files this project edits are stamped. jQuery & Dropzone are third party & are
+// / replaced by swapping the file for a differently named one.
+// / A missing file is left alone so that a broken path still reports as a plain 404
+// / rather than as a 404 with a confusing query string attached to it.
+if (file_exists($JsLibraryPath)) $JsLibraryPath .= '?v='.filemtime($JsLibraryPath);
+if (file_exists($StylesheetPath)) $StylesheetPath .= '?v='.filemtime($StylesheetPath);
 // / -----------------------------------------------------------------------------------
 ?>
 <html dir='<?php echo $GUIDirection; ?>'>

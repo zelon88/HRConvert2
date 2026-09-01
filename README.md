@@ -2,7 +2,7 @@
   <img src="https://github.com/zelon88/HRConvert2/blob/master/UI/Default/Resources/Image/logo.png" alt="HRConvert2" width="200"/>
 </p>
 
-<h1 align="center">HRConvert2</h1>
+<h1 align="center">🔁 HRConvert2</h1>
 
 <p align="center">
   <strong>Convert anything. Keep your data completely private.</strong><br>
@@ -21,7 +21,7 @@
 
 ---
 
-## Why HRConvert2?
+## 🔒 Why HRConvert2?
 
 Every free online file converter is actually a data collection business in disguise. Upload a contract, medical scan, or proprietary CAD file? You just handed it to a stranger with an ad network.
 
@@ -32,7 +32,7 @@ Every free online file converter is actually a data collection business in disgu
 - Runs on a **Raspberry Pi**
 - Workflow: Drag, drop, convert, download
 
-### The Privacy Promise
+### 🛡️ The Privacy Promise
 
 | Feature | What You Get |
 |---------|--------------|
@@ -44,9 +44,9 @@ Every free online file converter is actually a data collection business in disgu
 
 ---
 
-## Quick Start
+## ⚡ Quick Start
 
-### Traditional Install (30 seconds)
+### 🧩 Traditional Install (30 seconds)
 ```bash
 git clone https://github.com/zelon88/HRConvert2
 sudo bash HRConvert2/Documentation/Build/hrconvert2-setup.sh
@@ -63,14 +63,14 @@ Then open `http://your-server/HRProprietary/HRConvert2/convertCore.php` and star
 
 **Pro tip:** Add `-y` to skip confirmations.
 
-### Docker
+### 🐳 Docker
 ```bash
 docker run -d -p 8080:80 --cap-add SYS_ADMIN zelon88/hrconvert2
 ```
 
 **Note:** `SYS_ADMIN` is required for the security sandbox. Without it, HRConvert2 refuses conversions rather than running unprotected.
 
-### Troubleshooting
+### 🛠️ Troubleshooting
 ```bash
 sudo php convertCore.php -fp
 ```
@@ -78,7 +78,7 @@ This fixes 99% of issues and reports exactly what it corrected.
 
 ---
 
-## Supported Formats: 488 Total
+## 📦 Supported Formats: 488 Total
 
 | Category | Examples |
 |----------|----------|
@@ -99,18 +99,18 @@ This fixes 99% of issues and reports exactly what it corrected.
 
 ---
 
-## Security by Design
+## 🔐 Security by Design
 
 HRConvert2 is built for public-facing deployment—which means it's built to be attacked. Every protection is there for a reason.
 
-### Sandboxing
+### 🧰 Sandboxing
 Every conversion dependency runs inside a bubblewrap namespace:
 - ImageMagick, FFmpeg, Inkscape, OpenSCAD—all isolated
 - Each process sees only its input (read-only) and output directories
 - Network is unshared—no external URL handlers
 - **No sandbox = no conversion** (HRConvert2 refuses rather than takes risks)
 
-### Multi-Layer Protections
+### 🛡️ Multi-Layer Protections
 - **Session identifiers** derived from a per-install secret (CSPRNG)
 - **Dependencies version-pinned** and verified at runtime
 - **Uploads sanitized** before any tool touches them
@@ -118,12 +118,12 @@ Every conversion dependency runs inside a bubblewrap namespace:
 - **Updates require shell access** (not guessable secrets)
 - **Every error documented** with cause and solution
 
-### Ransomware-Safe
+### ✅ Ransomware-Safe
 Conversions run with minimal permissions—they can't encrypt your entire disk or exfiltrate data.
 
 ---
 
-## 26 Languages Built In
+## 🌐 26 Languages Built In
 
 Users switch languages instantly from the interface—no language packs to install:
 
@@ -142,7 +142,7 @@ Users switch languages instantly from the interface—no language packs to insta
 
 ---
 
-## Customizable Interfaces & Appearance
+## 🎨 Customizable Interfaces & Appearance
 
 Users can personalize their experience:
 - **3 interface layouts:** Default, Wide, Original
@@ -153,9 +153,9 @@ Admins can lock down preferences in `config.php`. Each interface lives in its ow
 
 ---
 
-## Advanced Features
+## 🚀 Advanced Features
 
-### Resource-Aware Load Management (Optional)
+### ⚙️ Resource-Aware Load Management (Optional)
 Turn on smart resource management to prevent overload:
 - CPU & memory caps scale with system load
 - Runaway conversions auto-terminate
@@ -164,7 +164,7 @@ Turn on smart resource management to prevent overload:
 
 **Key design:** Fails open. No budget socket? Conversion runs anyway. Nothing can take your server offline.
 
-### Command-Line Control
+### 💻 Command-Line Control
 Everything is manageable from the terminal:
 
 ```bash
@@ -180,13 +180,13 @@ php convertCore.php -k              # Stop resource listener
 
 [Full command reference](https://github.com/zelon88/HRConvert2/blob/master/Documentation/USING_COMMAND_LINE.txt)
 
-### Storage Distribution
+### 🗄️ Storage Distribution
 Span storage across multiple drives with your choice of strategy:
 - **Round-robin** for even distribution
 - **Least-active** for dynamic load balancing
 - **Redundant** for failover protection
 
-### Auto-Update with Rollback
+### 🔄 Auto-Update with Rollback
 ```bash
 php convertCore.php -u=latest
 ```
@@ -194,7 +194,7 @@ Updates pull a release, merge your config, swap atomically, then verify. Can't r
 
 ---
 
-## System Requirements
+## 🧾 System Requirements
 
 | Requirement | Minimum |
 |-------------|---------|
@@ -208,7 +208,7 @@ The installer handles all dependencies. Seriously—just run the script.
 
 ---
 
-## Contributing
+## 🤝 Contributing
 
 Contributions are welcome:
 
@@ -221,7 +221,7 @@ The architecture is deliberately modular: a language is a folder, an interface i
 
 ---
 
-## License
+## 📜 License
 
 [GNU General Public License v3.0](https://github.com/zelon88/HRConvert2/blob/master/Documentation/LICENSE)
 

@@ -23,7 +23,7 @@
 
 ## Why HRConvert2?
 
-Every free online file converter is actually a data collection business in disguise. Upload a contract, medical scan, or proprietary CAD file? You just handed it to a stranger with an ad network attached.
+Every free online file converter is actually a data collection business in disguise. Upload a contract, medical scan, or proprietary CAD file? You just handed it to a stranger with an ad network.
 
 **HRConvert2 is different.** Same convenience. Zero compromise.
 

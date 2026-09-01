@@ -5,7 +5,7 @@
 <h1 align="center">🔁 HRConvert2</h1>
 
 <p align="center">
-  <strong>Self-Hosted, resource-aware, public-facing file conversion server.</strong><br>
+  <strong>Self-Hosted, Resource-Aware, Public-Facing File Conversion Server</strong><br>
   No database. No cookies. No tracking. Nothing leaves your server.
 </p>
 

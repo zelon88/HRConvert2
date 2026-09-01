@@ -74,7 +74,14 @@ docker run -d -p 8080:80 --cap-add SYS_ADMIN zelon88/hrconvert2
 ```bash
 sudo php convertCore.php -fp
 ```
+
 This fixes 99% of issues and reports exactly what it corrected.
+
+```bash
+sudo php convertCore.php -v
+```
+
+This validates every installed component, every dependency, everything. A very powerful and comprehensive diagnostic tool.
 
 ---
 

@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.7.8.
+v3.8.5.
 This plain text file contains descriptions of all the native error messages contained in or produced by the HRConvert2 Diablo engine. 
 These descriptions should give administrators a starting point for debugging problems with HRConvert2 installations. 
 Each section in this file contains information about a different error message. The first one is an example to demonstrate the structure of this file.
@@ -40,6 +40,12 @@ The application name will be replaced with 'HRConvert2' from errors in situation
 The log number will be replaced with '###' in the event that the error number supplied by the calling code was invalid.
 If "Enhanced Logging Verbosity" is enabled in config.php; all significant core operations will produce a log entry.
 If "Enhanced Logging Verbosity" is disabled in config.php; only warnings and errors during core operations will produce a log entry.
+As of v3.8.5 every conversion pipeline is a detachable component beneath /Resources/Pipelines/ rather than code inside convertCore.php.
+NO ERROR NUMBER CHANGED VALUE when those pipelines moved. Only the FILE section of each affected entry was updated to name its new location.
+An operator who read a number in an older release reads exactly the same number today.
+The 2000 block is raised by /Resources/Pipelines/Shared/libreOffice.php, which serves the Document pipeline and the OCR pipeline alike, so an operator seeing one of those numbers may have been running either. The log line above it names which.
+Error 2005 stayed with the Document pipeline because the XPS branch that raises it never moved into that shared module. That one number is separated from the rest of its block on purpose.
+The Pipeline Manager component reserves 34000 through 34019. The 32000 and 33000 blocks were already taken by Setup Core and Dependency Core.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -781,7 +787,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-1000, <SESSION_IDENTIFIER>: The specified Data Storage Directory does not exist at <FILE_PATH>!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Audio/pipelineCore.php
 
 FATAL
   YES
@@ -803,7 +809,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-1001, <SESSION_IDENTIFIER>: Could not create a directory at <FILE_PATH>!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Audio/pipelineCore.php
 
 FATAL
   YES
@@ -825,7 +831,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-2000, <SESSION_IDENTIFIER>: Could not verify the Document Conversion Engine installation at <FILE_PATH>!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Shared/libreOffice.php
 
 FATAL
   YES
@@ -851,7 +857,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-2001, <SESSION_IDENTIFIER>: The installed LibreOffice version is missing, unidentifiable, or too old!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Shared/libreOffice.php
 
 FATAL
   YES
@@ -880,7 +886,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-2002, <SESSION_IDENTIFIER>: LibreOffice could not be located for a document conversion!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Shared/libreOffice.php
 
 FATAL
   NO
@@ -903,7 +909,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-2003, <SESSION_IDENTIFIER>: A document conversion was requested with an unusable target format!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Shared/libreOffice.php
 
 FATAL
   NO
@@ -927,7 +933,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-2004, <SESSION_IDENTIFIER>: A document conversion was refused because no sandbox could be built!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Shared/libreOffice.php
 
 FATAL
   NO
@@ -955,7 +961,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-2005, <SESSION_IDENTIFIER>: An XPS conversion was refused because no sandbox could be built!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Document/pipelineCore.php
 
 FATAL
   NO
@@ -1225,7 +1231,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5000, <SESSION_IDENTIFIER>: Could not sanitize the input file!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Image/pipelineCore.php
 
 FATAL
   NO
@@ -1250,7 +1256,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5001, <SESSION_IDENTIFIER>: Could not verify the input file!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Image/pipelineCore.php
 
 FATAL
   NO
@@ -1280,7 +1286,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5002, <SESSION_IDENTIFIER>: Could not perform a virus scan!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Image/pipelineCore.php
 
 FATAL
   YES
@@ -1302,7 +1308,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5003, <SESSION_IDENTIFIER>: Virus detected!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Image/pipelineCore.php
 
 FATAL
   YES
@@ -1324,7 +1330,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5004, <SESSION_IDENTIFIER>: Could not convert the selected <FILE_TYPE>!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Image/pipelineCore.php
 
 FATAL
   NO
@@ -1351,7 +1357,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5006, <SESSION_IDENTIFIER>: The conversion <FILE_EXTENSION> to <FILE_EXTENSION> is not supported!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Image/pipelineCore.php
 
 FATAL
   NO
@@ -1370,7 +1376,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5005, <SESSION_IDENTIFIER>: Could not archive <FILE_NAME> to <FILE_PATH>!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Image/pipelineCore.php
 
 FATAL
   NO
@@ -1510,7 +1516,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-7000, <SESSION_IDENTIFIER>: Could not verify the document conversion engine!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Document/pipelineCore.php
 
 FATAL
   NO
@@ -1531,7 +1537,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-7001, <SESSION_IDENTIFIER>: The document converter timed out!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Document/pipelineCore.php
 
 FATAL
   NO
@@ -1792,7 +1798,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-10000, <SESSION_IDENTIFIER>: The drawing converter timed out!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Drawing/pipelineCore.php
 
 FATAL
   NO
@@ -1824,7 +1830,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-10001, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this drawing conversion cannot be isolated!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Drawing/pipelineCore.php
 
 FATAL
   NO
@@ -1848,7 +1854,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-10002, <SESSION_IDENTIFIER>: The installed Dia version is missing, unidentifiable, or too old!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Drawing/pipelineCore.php
 
 FATAL
   NO
@@ -1882,7 +1888,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-11000, <SESSION_IDENTIFIER>: The video converter timed out!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Video/pipelineCore.php
 
 FATAL
   NO
@@ -1914,7 +1920,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-11001, <SESSION_IDENTIFIER>: The installed FFMPEG version is missing, unidentifiable, or too old!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Video/pipelineCore.php
 
 FATAL
   NO
@@ -1940,7 +1946,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-11002, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this video conversion cannot be isolated!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Video/pipelineCore.php
 
 FATAL
   NO
@@ -2556,7 +2562,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14000, <SESSION_IDENTIFIER>: The file <FILE_NAME> failed first stage validation!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Stream/pipelineCore.php
 
 FATAL
   NO
@@ -2580,7 +2586,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14001, <SESSION_IDENTIFIER>: Could not delete stale file <PATH_NAME>!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Stream/pipelineCore.php
 
 FATAL
   YES
@@ -2602,7 +2608,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14002, <SESSION_IDENTIFIER>: The file <FILE_NAME> failed second stage validation!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Stream/pipelineCore.php
 
 FATAL
   YES
@@ -2624,7 +2630,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14003, <SESSION_IDENTIFIER>: The file <FILE_NAME> failed third stage validation!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Stream/pipelineCore.php
 
 FATAL
   YES
@@ -2648,7 +2654,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14004, <SESSION_IDENTIFIER>: Could not delete stale file <PATH_NAME>!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Stream/pipelineCore.php
 
 FATAL
   YES
@@ -2670,7 +2676,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15000, <SESSION_IDENTIFIER>: Could not sanitize the input file!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/OCR/pipelineCore.php
 
 FATAL
   YES
@@ -2695,7 +2701,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15001, <SESSION_IDENTIFIER>: Could not verify the input file!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/OCR/pipelineCore.php
 
 FATAL
   NO
@@ -2725,7 +2731,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15002, <SESSION_IDENTIFIER>: Could not perform a virus scan!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/OCR/pipelineCore.php
 
 FATAL
   YES
@@ -2747,7 +2753,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15003, <SESSION_IDENTIFIER>: Virus detected!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/OCR/pipelineCore.php
 
 FATAL
   YES
@@ -2769,7 +2775,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15004, <SESSION_IDENTIFIER>: Could not complete the conversion using method 0. Reattempting using method 1.
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/OCR/pipelineCore.php
 
 FATAL
   NO
@@ -2798,7 +2804,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15005, <SESSION_IDENTIFIER>: Could not complete the conversion using method 1.
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/OCR/pipelineCore.php
 
 FATAL
   NO
@@ -2827,7 +2833,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15006, <SESSION_IDENTIFIER>: Could not OCR file!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/OCR/pipelineCore.php
 
 FATAL
   NO
@@ -2856,7 +2862,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15007, <SESSION_IDENTIFIER>: Could not verify the document conversion engine!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/OCR/pipelineCore.php
 
 FATAL
   NO
@@ -2877,7 +2883,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15008, <SESSION_IDENTIFIER>: Could not verify the document conversion engine!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/OCR/pipelineCore.php
 
 FATAL
   NO
@@ -2898,7 +2904,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15009, <SESSION_IDENTIFIER>: Could not create an intermediate directory at <FILE_PATH>!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/OCR/pipelineCore.php
 
 FATAL
   NO
@@ -2921,7 +2927,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15012, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/OCR/pipelineCore.php
 
 FATAL
   NO
@@ -2950,7 +2956,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15013, <SESSION_IDENTIFIER>: The installed Tesseract version is missing, unidentifiable, or too old!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/OCR/pipelineCore.php
 
 FATAL
   NO
@@ -2989,7 +2995,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15014, <SESSION_IDENTIFIER>: The installed pdftotext version is missing, unidentifiable, or too old!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/OCR/pipelineCore.php
 
 FATAL
   NO
@@ -3275,7 +3281,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-20000, <SESSION_IDENTIFIER>: Could not delete stale file <FILE_PATH>!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Model/pipelineCore.php
 
 FATAL
   YES
@@ -3297,7 +3303,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-20001, <SESSION_IDENTIFIER>: Could create a file at <FILE_PATH>!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Model/pipelineCore.php
 
 FATAL
   YES
@@ -3319,7 +3325,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-21000, <SESSION_IDENTIFIER>: The stream converter failed to launch!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Stream/pipelineCore.php
 
 FATAL
   NO
@@ -3344,7 +3350,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-21001, <SESSION_IDENTIFIER>: Stream inspection denied this file. <ADDITIONAL_DATA>.
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Stream/pipelineCore.php
 
 FATAL
   NO
@@ -3374,7 +3380,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-21002, <SESSION_IDENTIFIER>: The installed FFMPEG version is missing, unidentifiable, or vulnerable to stream playlist protocol bypass!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Stream/pipelineCore.php
 
 FATAL
   NO
@@ -3401,7 +3407,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-22000, <SESSION_IDENTIFIER>: The subtitle converter timed out!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Subtitle/pipelineCore.php
 
 FATAL
   NO
@@ -3433,7 +3439,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-22001, <SESSION_IDENTIFIER>: The installed FFMPEG version is missing, unidentifiable, or too old!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Subtitle/pipelineCore.php
 
 FATAL
   NO
@@ -3459,7 +3465,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-22002, <SESSION_IDENTIFIER>: The installed FFMPEG version is missing, unidentifiable, or too old!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Subtitle/pipelineCore.php
 
 FATAL
   NO
@@ -3491,7 +3497,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-22001, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this subtitle conversion cannot be isolated!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Subtitle/pipelineCore.php
 
 FATAL
   NO
@@ -3584,7 +3590,7 @@ ERROR MESSAGE
   ERROR!!! HRConvert2-24000: Could not process the HRConvert2 Version Information file (versionInfo.php)!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Archive/pipelineCore.php
 
 FATAL
   YES
@@ -3609,7 +3615,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-25000, <SESSION_IDENTIFIER>: The SVG converter timed out!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/SVG/pipelineCore.php
 
 FATAL
   NO
@@ -3641,7 +3647,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-25001, <SESSION_IDENTIFIER>: The installed Inkscape version is missing, unidentifiable, or too old!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/SVG/pipelineCore.php
 
 FATAL
   NO
@@ -3666,7 +3672,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-25002, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this SVG conversion cannot be isolated!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/SVG/pipelineCore.php
 
 FATAL
   NO
@@ -3690,7 +3696,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-26000, <SESSION_IDENTIFIER>: Could not remove the build environment!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Stream/pipelineCore.php
 
 FATAL
   NO
@@ -3714,7 +3720,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-26001, <SESSION_IDENTIFIER>: Could not remove the development documentation!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Stream/pipelineCore.php
 
 FATAL
   NO
@@ -3992,7 +3998,7 @@ ERROR MESSAGE
   ERROR!!! HRConvert2-28000: The config.php file is missing <ADDITIONAL_DATA> required setting(s). Config version detected: <ADDITIONAL_DATA>. Config version required: <ADDITIONAL_DATA>. Missing Variables: <ADDITIONAL_DATA>
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Scad/pipelineCore.php
 
 FATAL
   YES
@@ -4028,7 +4034,7 @@ ERROR MESSAGE
   ERROR!!! HRConvert2-28001: The core file reports version <ADDITIONAL_DATA> but the version information file reports version <ADDITIONAL_DATA>. This installation is incomplete or was updated incorrectly.
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Scad/pipelineCore.php
 
 FATAL
   YES
@@ -5073,7 +5079,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-2005, <SESSION_IDENTIFIER>: An XPS conversion was refused because no sandbox could be built!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Document/pipelineCore.php
 
 FATAL
   NO
@@ -5603,4 +5609,195 @@ ERROR DESCRIPTION
   The filesystem is full.
   This error is not fatal. Nothing else is affected & the report may be requested again with a
   destination this account owns.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! HRConvert2-34000, The Pipeline Manager component cannot be loaded directly!
+  ERROR!!! HRConvert2-34000, A pipeline configuration cannot be loaded directly!
+  ERROR!!! HRConvert2-34000, A pipeline converter cannot be loaded directly!
+  ERROR!!! HRConvert2-34000, A pipeline component cannot be loaded directly!
+
+FILE
+  /Resources/Pipelines/pipelineManager.php
+  /Resources/Pipelines/<PIPELINE_NAME>/pipelineConfig.php
+  /Resources/Pipelines/<PIPELINE_NAME>/pipelineCore.php
+  /Resources/Pipelines/Shared/<MODULE_NAME>.php
+
+FATAL
+  YES
+
+LOGGED
+  NO
+
+ERROR DESCRIPTION
+  A file belonging to the pipeline component system was executed directly instead of being loaded by convertCore.php.
+  Every file in that system opens by testing whether the core has already been loaded, and refuses to run when it has not.
+  A component reached directly has no core beneath it, so quickDie() does not exist and cannot be used to halt.
+  This is the one documented case in HRConvert2 where a plain die() is the correct way to stop.
+  Because this error takes place before any logging environment belonging to the request exists; this error is not logged.
+  This is most commonly seen when somebody requests a file under /Resources/Pipelines/ directly in a browser.
+  Confirm that every folder beneath /Resources/Pipelines/ contains the stock index.html file.
+  A folder without one is a readable directory listing on a path a user can reach, which is the usual reason this is ever seen.
+  Do not write a new index.html file. Copy an existing one from elsewhere in the installation.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34001, <SESSION_IDENTIFIER>: The Pipeline Manager could not verify a single conversion pipeline!
+
+FILE
+  /Resources/Pipelines/pipelineManager.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The Pipeline Manager component loaded and passed its own version check, but not one of the pipelines it accepts could be verified.
+  A dispatcher with nothing behind it is worse than no dispatcher at all, so the Pipeline Manager stands itself down when this happens.
+  No conversion of any kind will succeed for the remainder of the request.
+  Uploading, downloading, deleting, archiving and virus scanning all continue to work normally.
+  This error is not fatal because a user who cannot read the page cannot report the problem.
+  Every pipeline that was refused produced its own warning immediately above this line, naming the folder and the reason it was refused.
+  Run the application with the -v argument and read those warnings. A version mismatch names both the version found and the version required.
+  This is most commonly seen when the /Resources/Pipelines/ directory is missing, unreadable by the web server user, or was not deployed.
+  It is also seen when convertCore.php and the pipeline folders come from different releases, because every pipeline is an EXACT version match.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34002, <SESSION_IDENTIFIER>: The <PIPELINE_NAME> pipeline declared the entry point <FUNCTION_NAME>, which does not exist!
+
+FILE
+  /Resources/Pipelines/pipelineManager.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A pipeline named a function in its pipelineConfig.php file that does not exist once its pipelineCore.php file has been loaded.
+  The pipeline cannot be dispatched to. Any lower priority implementation of the same conversion family is tried before the request gives up.
+  This is most commonly caused by copying an existing pipeline folder to create a new one and renaming the entry point in only one of the two files.
+  The value of $PipelineEntryPoint in pipelineConfig.php must match the function actually defined in pipelineCore.php exactly, including case.
+  This is also seen when pipelineCore.php is missing from a folder whose configuration expects one.
+  It is also seen when a shared module the pipeline declared failed to load, taking the functions the converter depends on with it.
+  Check the warnings immediately above this line for a refused shared module before looking anywhere else.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34003, <SESSION_IDENTIFIER>: The <FILE_TYPE> pipeline failed to convert <FILE_TYPE> to <FILE_TYPE> & reported no reason!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34003, <SESSION_IDENTIFIER>: All <ADDITIONAL_DATA> installed <FILE_TYPE> pipelines failed to convert <FILE_TYPE> to <FILE_TYPE> & none reported a reason!
+
+FILE
+  /Resources/Pipelines/pipelineManager.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A pipeline failed to produce the requested output and gave no account of why.
+  THIS ERROR DOES NOT FIRE WHEN A PIPELINE EXPLAINS ITSELF.
+  A pipeline that fails and logs its own error under its own number has already been heard, and restating that here would misreport the origin of the failure and double the volume of the log.
+  A REFUSAL IS NOT A FAILURE. Stream inspection denying a playlist is HRConvert2 working exactly as designed, and the Stream pipeline reports that under its own number with the actual reason attached.
+  This error therefore indicates a genuine defect in the pipeline named in the message rather than a problem with the file being converted.
+  The usual cause is a converter that returned early on a code path carrying no errorEntry() or warningEntry() call.
+  Where two or more implementations of one conversion family are installed, each is tried in priority order and this fires only once the last of them has failed. The message then names how many were tried.
+  Read the warnings immediately above this line first. If there are none at all, the fault is on whichever path the named pipeline took.
+  The request continues after this error and reports the conversion as failed.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34004, <SESSION_IDENTIFIER>: The <PIPELINE_NAME> pipeline declared the entry point <FUNCTION_NAME>, which the <PIPELINE_NAME> pipeline already claimed. It was refused.
+
+FILE
+  /Resources/Pipelines/pipelineManager.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Two installed pipelines declared the same entry point function name. The first pipeline to claim the name keeps it and the second is refused.
+  This is the single most likely mistake made when writing a pipeline by copying an existing one, because the entry point must be renamed in both pipelineConfig.php and pipelineCore.php.
+  The refusal is deliberate and is preferable to the alternative.
+  Two pipelines sharing a function name would fatally redeclare that function the moment both were loaded in one request, which happens whenever a single upload batch spans two conversion families, and again whenever a fallback candidate loads after a primary implementation failed.
+  Give the new pipeline a unique entry point name in both of its files, then raise the version of both the pipeline and the Pipeline Manager that pins it.
+  The message names both folders, so the one to correct is the one reported as refused.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34005, <SESSION_IDENTIFIER>: The <FILE_TYPE> conversion family has no installed pipeline!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A conversion was requested for a family that no installed pipeline serves.
+  The family's pipeline folder is missing, unreadable, or reports a version the Pipeline Manager does not accept, or the family is not named in getAcceptedPipelines() inside pipelineManager.php.
+  Run the application with the -v argument and read the warnings above this line. They name the folder and the reason it was refused.
+  RESTORING A CONVERTER TO convertCore.php IS NOT THE FIX FOR THIS ERROR.
+  convertCore.php carried a built in dispatcher throughout the migration to pipeline components, and each conversion family left that dispatcher individually as its code moved out into its own folder.
+  It became empty once the last family migrated and it has been removed.
+  Pasting a converter back into the core would produce a second implementation that the Pipeline Manager knows nothing about, cannot version check, and cannot rank against the real one.
+  Repair the pipeline folder instead.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: OCR was requested but no OCR pipeline is installed!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: OCR was requested but no OCR pipeline is installed & this core has no built in OCR!
+
+FILE
+  /convertCore.php
+  /Resources/Pipelines/pipelineManager.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  An Optical Character Recognition operation was requested and the OCR pipeline could not be reached.
+  The /Resources/Pipelines/OCR/ folder is missing, unreadable, or reports a version the Pipeline Manager does not accept, or 'OCR' is not named in getAcceptedPipelines() inside pipelineManager.php.
+  It is also raised when the Pipeline Manager component itself failed to verify, because there is no built in OCR left in convertCore.php to fall back to.
+  Run the application with the -v argument and read the warnings above this line.
+  This error is not itself fatal, but error 22 fires immediately after it and that error is fatal.
+  Without this error, an OCR request on an installation with no OCR pipeline would produce an empty result and raise only error 22, which reports that the OCR operation failed and does not report that no OCR was ever attempted.
+  OCR is an operation pipeline rather than a conversion pipeline. It accepts a selection of files, chooses a different route for each one depending on whether it is a PDF, a document or an image, and returns a single verdict for the whole batch along with the list of files it produced.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR NUMBER RESERVATION
+  34007 through 34019 are reserved for the Pipeline Manager component and are currently unused.
+  A conversion pipeline carries its own error block and keeps the numbers it had before it became a component.
+  A new community pipeline must reserve a block in this file before using one.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

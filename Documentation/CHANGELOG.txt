@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.8.4.
+v3.8.5.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -29,6 +29,20 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia
 
 --------------------
 COMMIT 8/31/2026
+v3.8.5 - Archive, A/V Scan, OpenSCAD Resource Ceilings + Awareness.
+
+-v3.8.5.
+-convertCore.php converts nothing on its own any more. 
+ -Thirteen conversion families now live in versioned component folders under Resources/Pipelines.
+ -Each is pinned by a new Pipeline Manager component which is itself pinned EXACTLY by the core.
+ -convertCore.php went from 9434 lines to 7455.
+-Core version v3.8.4 -> v3.8.5. $RequiredPipelineManagerVersion v3.8.1 -> v3.8.5.
+ -$RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion,
+ -$RequiredCoreManagerVersion, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion,
+ -$RequiredDependsVersion & $RequiredSecretVersion are UNCHANGED.
+
+--------------------
+COMMIT 8/31/2026
 v3.8.4 - Archive, A/V Scan, OpenSCAD Resource Ceilings + Awareness.
 
 -v3.8.4.
@@ -36,7 +50,6 @@ v3.8.4 - Archive, A/V Scan, OpenSCAD Resource Ceilings + Awareness.
 -Add resource ceilings / resource awareness to archive, scan, & OpenSCAD operations.
 -Add missing background colors for most file operations.
   -Previously only imageOptionsDiv was getting styled properly.
--
 
 --------------------
 COMMIT 8/31/2026

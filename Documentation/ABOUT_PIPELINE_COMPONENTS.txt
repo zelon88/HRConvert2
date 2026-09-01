@@ -1,0 +1,622 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v3.8.5.
+This file documents the contracts every detachable conversion pipeline obeys.
+This file describes the Pipeline Manager component & the pipeline folders it accepts.
+For the procedure for writing a pipeline, see CREATING_CONVERSION_PIPELINES.txt.
+For general quality & security standards, see CODING_CONVENTIONS.txt.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Vocabulary--
+
+A PIPELINE is the complete path a file takes through the core during one request.
+There are several. Upload, Delete, Download, Conversion, Archive, OCR & Stream.
+
+A BUILTIN PIPELINE is one the core owns & that no installation may replace.
+Upload, Delete & Download are builtin. They are guaranteed identical on every install.
+They are not detachable & are not intended to be modified by anybody but a core developer.
+An installation that modified them would no longer behave like HRConvert2, & the failure
+would appear as a data handling bug rather than as a missing feature.
+
+A DETACHABLE PIPELINE is a conversion pipeline supplied as a versioned component folder.
+Conversion, Archive, OCR & Stream are detachable, or are on their way to becoming so.
+These are the pipelines the community is invited to write, extend & replace.
+
+A PIPELINE FAMILY is the name a detachable pipeline converts under. Document, Image, SVG,
+Ebook & so on. It is the key the interface groups conversion controls by.
+
+A SUBSYSTEM is the dependency a pipeline needs, named as depends.php names it. A family & a
+subsystem are NOT the same thing & four families currently name ffmpeg. Video & Subtitle
+reach it through their own pipelines while Audio & Stream are still built into the core, so
+one installation runs the same binary from two places. That is safe because
+verifyFFMPEGVersion() stays core owned & is the single gate all four pass through. A
+pipeline carrying its own copy of a dependency verifier would be the bug, because four
+copies eventually disagree about the minimum version.
+
+A PIPELINE IMPLEMENTATION is one folder serving one family. Two folders may serve the same
+family, which is how an alternative or a fallback implementation is supplied.
+
+A CONVERSION PIPELINE takes one file, returns the six value contract, & is dispatched by
+convert(). Every family except OCR is one of these.
+
+AN OPERATION PIPELINE takes a SELECTION of files, decides its own route per file, returns
+its own shape, & is dispatched from wherever the core handles that operation. OCR is the
+first & currently the only one. It reports one verdict for a whole batch plus the list of
+filenames it produced, & the six value conversion contract has nowhere to put either. Both kinds are verified, pinned,
+ordered & loaded identically. ONLY DISPATCH DIFFERS.
+
+A SHARED MODULE is a file two or more pipelines both need & neither can own. It is not a
+pipeline, converts nothing, & is never dispatched to. It is version pinned by the manager
+exactly as a pipeline is & is loaded once per request for whichever pipelines declare it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Folder Layout--
+
+  Resources/Pipelines/pipelineManager.php         The component. Pinned EXACTLY by the core.
+  Resources/Pipelines/index.html                  Document root protection. Not optional.
+  Resources/Pipelines/<Family>/pipelineConfig.php Declarations only. Pinned EXACTLY by the manager.
+  Resources/Pipelines/<Family>/pipelineCore.php   The converter. Loaded only when it is about to run.
+  Resources/Pipelines/<Family>/index.html         Document root protection. Not optional.
+  Resources/Pipelines/Shared/<name>.php           Shared module. Pinned EXACTLY by the manager.
+  Resources/Pipelines/Shared/index.html           Document root protection. Not optional.
+
+Every file is UTF-8 with NO byte order mark. A BOM emits three bytes before any output.
+Every folder carries the stock index.html. Copy an existing one. Never write a new one.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Manager Pins Its Pipelines. It Does Not Scan For Them.--
+
+getAcceptedPipelines() inside pipelineManager.php returns the folder names this manager
+accepts & the version it accepts each of them at. A folder that is not named there is never
+read, never required & never enumerated.
+
+THIS IS DELIBERATE & IS NOT AN OVERSIGHT.
+A directory scan would mean that anybody able to write a folder under Resources/Pipelines
+could get code executed by a require. The pin list is the allowlist, & the allowlist is
+what makes a dropped-in folder inert until a human decides otherwise.
+
+Accepting a community pipeline is therefore one line added to getAcceptedPipelines() &
+one version bump on pipelineManager.php. That is the intended amount of friction.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Version Pinning--
+
+  convertCore.php   pins pipelineManager.php     EXACT, via $RequiredPipelineManagerVersion.
+  pipelineManager   pins each pipelineConfig.php EXACT, via getAcceptedPipelines().
+
+Both are EXACT matches, the same rule applied to a GUI, a language pack or any other
+component. A pipeline built against another manager may declare capabilities this manager
+cannot honour or an entry point whose arguments have moved.
+
+A PIPELINE THAT REPORTS NO VERSION IS REFUSED. An unknown build cannot be cleared.
+
+THE VERSION IS READ WITHOUT EXECUTING THE FILE, using the same file_get_contents & regex
+approach readComponentVersion() uses. A mismatched pipeline is judged before it is loaded,
+never after.
+
+pipelineConfig.php carries $PipelineVersion & is the version of the WHOLE FOLDER.
+pipelineCore.php carries no version of its own. The two ship & move together, exactly as a
+GUI folder is versioned by uiVersionInfo.php alone.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Two Files, Two Jobs--
+
+pipelineConfig.php DECLARES. It assigns variables & does nothing else.
+It contains no function definitions, no logic, no output & no side effects.
+It is cheap to read & it is read for EVERY installed pipeline on EVERY request.
+
+pipelineCore.php CONVERTS. It defines the entry point function & its helpers.
+It is loaded ONLY when a conversion is about to be dispatched to it.
+A request that converts an image never loads the Document pipeline's code at all.
+
+THIS SPLIT IS THE WHOLE POINT OF THE ARCHITECTURE.
+Enumeration, upload validation & interface building all need to know what every pipeline
+can do. None of them needs any pipeline's code. Reading declarations from a dozen small
+files is cheap. Requiring a dozen converters on every request is not.
+
+pipelineConfig.php IS REQUIRED WITH require, NOT require_once.
+Enumeration & dispatch happen in different function scopes & each needs the declarations in
+its own scope. A require_once during enumeration would no-op during dispatch, & dispatch
+would find nothing.
+
+pipelineCore.php IS REQUIRED WITH require_once, NEVER require.
+It defines functions. A second load is a fatal redeclare in a request a user is waiting on.
+
+pipelineConfig.php IS NOT ADMINISTRATOR EDITABLE. It is a developer manifest.
+Every administrator facing setting lives in config.php & is owned by Setup Core.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--What pipelineConfig.php Declares--
+
+  $PipelineVersion       String. EXACT match against getAcceptedPipelines(). Required.
+  $PipelineFamily        String. The family this implementation serves. Required.
+  $PipelineDisplayName   String. English fallback label for the interface. Required.
+  $PipelinePriority      Integer. Lower runs first when two implementations compete. Required.
+  $PipelineEntryPoint    String. The function name dispatch calls. Required. UNIQUE.
+  $PipelineSubsystem     String. The depends.php subsystem name. Required.
+  $PipelineRequestFields Array. Request fields this pipeline reads. Required, may be empty.
+  $Capabilities          Array with Input & Output keys, each an array of extensions. Required.
+  $PipelineExclude       Array of 'input>output' pairs to remove from the cross product. Optional.
+  $PipelineKind          'conversion' or 'operation'. Optional. Undeclared means conversion.
+  $PipelineSharedModules Array of shared module file names to load first. Optional.
+
+$PipelineEntryPoint MUST BE UNIQUE ACROSS EVERY INSTALLED PIPELINE.
+A fixed name such as runPipeline() would fatally redeclare the moment two pipelines load in
+one request, which happens whenever one upload batch spans two families & again whenever a
+fallback candidate loads after the primary failed. A copy-pasted pipeline that forgot to
+rename its entry point is refused with a warning naming both folders.
+
+CAPABILITIES ARE A CROSS PRODUCT, NARROWED BY EXCLUSIONS.
+Every input extension is assumed convertible to every output extension unless a pair appears
+in $PipelineExclude. This matches how $arrayArray & $arrayArrayOut already behave. Full pair
+enumeration would make a forty format pipeline unreadable, & the exclusion list keeps the
+handful of nonsense pairs honest without that cost. 'pdf>pdf' is the usual case.
+
+A PIPELINE MAY NEVER NARROW WHAT config.php ALLOWS.
+Under hardcoded-only, which is the default & is what every installation runs today, the
+declared Input & Output lists are INFORMATIONAL and only $PipelineExclude is enforced.
+convertFiles() has already tested the pair against the administrator's format arrays before
+anything reaches the manager, so the pair arrives approved. Testing it again against a list
+a pipeline author wrote by hand would let an incomplete declaration quietly delete a
+conversion the installation has always performed, & an omission in a forty format list is
+not a hypothetical. An exclusion is safe to honour in any mode, because it only removes a
+pair the pipeline states outright that it cannot do.
+The declared lists become authoritative under detected-restrictive & detected-additive.
+That is what they are for, & it is why they are still required, validated & carried in the
+record even while nothing enforces them.
+
+$PipelineRequestFields IS DOCUMENTATION & THE BASIS OF THE SANITY CHECK.
+It is not a dispatch mechanism. Dispatch passes the full argument list in a fixed order &
+PHP discards what the entry point did not declare. A pipeline reports through its sanity
+check whether what it received was usable.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Shared Modules--
+
+A SHARED MODULE EXISTS BECAUSE TWO PIPELINES NEEDED THE SAME CODE & NEITHER COULD OWN IT.
+convertWithLibreOffice() has callers in the Document pipeline & in the OCR pipeline.
+Leaving it in convertCore.php would have kept document conversion logic in the file this
+work exists to get it out of. Putting it in the Document pipeline would have made OCR
+depend on another pipeline being installed, verified & loaded first, which is a coupling no
+pipeline author should have to reason about.
+
+A module carries $SharedModuleVersion & is pinned EXACTLY by getAcceptedSharedModules() in
+pipelineManager.php. It is read without executing & judged before it is loaded, exactly as a
+pipeline is. A module that is not on the pin list is never read.
+
+A MODULE IS LOADED WITH require_once & A PIPELINE CONFIGURATION IS LOADED WITH require.
+The reason is opposite in each case. A module defines functions & is declared by more than
+one pipeline deliberately, so a second load would be a fatal redeclare. A configuration only
+assigns & is needed in two different function scopes, so require_once would no-op in the
+second one.
+
+MODULES LOAD BEFORE THE CONVERTER THAT DECLARED THEM. A converter calling into a module
+would otherwise be parsed & called before the functions it depends on exist.
+
+A DEPENDENCY VERIFIER DOES NOT BELONG IN A SHARED MODULE OR IN A PIPELINE.
+verifyLibreOfficeVersion(), verifyOCRVersions(), verifyImageVersion() & verifyFFMPEGVersion()
+all stay in convertCore.php, because showVersionInfo() reports on them whether or not any
+pipeline that uses them is installed. verifyDocumentConversionEngine() went into the shared
+module because it is not one of those. It starts & inspects an engine rather than reporting
+a version, & showVersionInfo() never calls it.
+
+--The Six Contracts--
+
+Read these before writing code. They are preconditions, not steps.
+Contracts 1 through 3 are unchanged & still live in CREATING_CONVERSION_PIPELINES.txt.
+
+  4. EVERY PIPELINE ENTRY POINT RETURNS SIX VALUES, IN THE SAME ORDER, EVERY TIME.
+
+    4a. $ConversionSuccess  Boolean. The requested output exists, or a worker was launched.
+    4b. $ConversionErrors   Boolean. Something went wrong, whether or not it was fatal.
+    4c. $NewPathname        String. The path actually produced. A disk image rewrites this.
+    4d. $Extension          String. The extension actually produced. A disk image rewrites this.
+    4e. $OutputFilename     String. The name shown to the user. Archive rewrites this.
+    4f. $WorkerPID          Integer. Zero unless a detached worker must be supervised.
+
+    4g. A pipeline that has nothing to say in a slot returns what it was given.
+    4h. $OutputFilename defaults to basename($NewPathname). It is never returned empty.
+    4i. An undefined return value is a PHP warning & a warning corrupts an AJAX response.
+
+  5. A NON-ZERO $WorkerPID MEANS THE CORE MUST STAY ALIVE AFTER SERVING THE USER.
+
+    5a. This is the documented pathway for any dependency that outlives the request.
+    5b. Streaming is the reference implementation. It is not the only permitted one.
+    5c. The core derives $WaitForStream from $WorkerPID being greater than zero.
+    5d. The core derives $StreamOutputPath from the returned $NewPathname.
+    5e. $StreamWatchTimeout in config.php bounds supervision for EVERY such pipeline.
+    5f. That variable keeps its name. Its comment describes the general case now.
+    5g. Nothing may print after the connection closes. The user has already been served.
+    5h. A pipeline returning a PID returns TRUE for success on LAUNCH, not on completion.
+
+  6. A PIPELINE NEVER PRINTS. NOT ONCE. NOT EVER.
+
+    6a. It returns. The core decides what reaches the user.
+    6b. The reply is consumed by an interface that tests it line by line.
+    6c. A stray line from a component is indistinguishable from a filename to that test.
+    6d. Log instead. logEntry, warningEntry & errorEntry all reach the operator safely.
+    6e. A pipeline with something to show the user COLLECTS IT & RETURNS IT.
+    6f. The OCR pipeline is the worked example. It used to print each produced filename
+        directly, which was safe while it lived in convertCore.php & is not safe from a
+        component. It returns an array instead & the core prints it. The reply the
+        interface receives is byte for byte what it was.
+    6g. This is why an operation pipeline returns three values rather than two.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--What Belongs To The Core & What Belongs To A Pipeline--
+
+THE CORE OWNS THE NETWORK. A PIPELINE OWNS ITS FORMAT.
+
+Anything that decides whether an address is safe to contact, or that actually contacts it,
+is core owned. Anything that knows what bytes MEAN belongs to the pipeline that understands
+that format. Those two sentences decided every borderline case in this migration & they are
+the ones to apply to the next.
+
+--The rule that moved almost everything--
+
+A helper moves with its pipeline when convertCore.php has no other caller for it. That is a
+mechanical test & it settled the great majority of cases without a judgement call.
+rectifySCAD() had no other caller & went with Scad. verifyArchiveVersions() is called by
+archiveFiles(), deleteFiles() & showVersionInfo(), so it stayed.
+
+showVersionInfo() runs whether or not a pipeline is installed. Anything it calls is
+therefore core owned by definition, which is why every verify*Version() function stayed
+behind even though its only conversion caller left.
+
+--The deliberate exception, & why it is not a mistake--
+
+Eight functions have NO caller outside the Stream pipeline & stayed in the core anyway.
+
+  isPubliclyRoutableIP             is this address safe to contact
+  dnsLookup                        resolve a host & judge the result
+  gatherRemoteHostInfo             parse & resolve a URL into its parts
+  resolveRemoteURI                 resolve a relative reference against a parent
+  inspectContentForIPs             find IP literals in bytes & flag the reserved ones
+  inspectContentForDomains         find domain references in bytes
+  downloadRemoteFileForInspection  pinned, redirect refusing, size bounded fetch
+  waitForStream                    supervise a detached worker of any kind
+
+A PIPELINE MUST NEVER OWN SSRF PROTECTION.
+Network egress & the judgement about where it is safe to send a request are core owned by
+POLICY, not by caller count. A community author writing a pipeline that fetches something
+gets this for free & must not be able to opt out of it by accident. Somebody writing their
+own curl call will forget to pin the resolved IP, or will follow a redirect, or will not
+bound the read, & the failure is a server that can be aimed at an internal network.
+This is the same reasoning that kept verifyFile() & virusScan() inside convertFiles()
+rather than letting a pipeline own them.
+
+THEY WERE RENAMED OFF THE WORD STREAM SO THE NEXT PIPELINE CAN FIND THEM.
+None of the eight knows anything about playlists. They were called inspectStreamIP() &
+inspectStreamDomain() only because streaming was the first thing that needed them. A name
+that says stream is a name nobody writing a document fetcher will ever search for.
+
+--The same rule applied to Scad--
+
+  MOVED to the pipeline, because each is knowledge about what OpenSCAD source MEANS
+    sanitizeSCAD            reads the source & reports every call it finds
+    resolveSCADInclude      resolves an include against what the same user uploaded
+    rectifySCAD             rewrites the source using what the Sanitizer found
+    sanitizeAllSCADUploads  applies that to every file in the session
+
+  STAYED in the core, because the operating environment is not a converter
+    verifyOpenScadPolicy       writes & checks the AppArmor profile
+    openScadApparmorContents   the contents of that profile
+    verifySCADVersion          showVersionInfo() reports it
+
+fixManagedPermissions() & validateOperatingEnvironment() write that sandbox profile during
+installation, whether or not the Scad pipeline is installed at all. A sandbox profile is
+part of the machine, not part of a converter. The same reasoning keeps the ImageMagick
+policy functions in the core.
+
+--What went to the Stream pipeline instead--
+
+  inspectTSFile           MPEG-TS is 188 byte packets each starting with 0x47
+  classifyStreamContent   an #EXTM3U header, or else ask inspectTSFile
+  inspectStreamFile       what a playlist may reference & what it may not
+  streamFileWalker        how deep to follow a playlist & when to stop
+
+Every one of those is knowledge about a format. None of them touches a network. A future
+pipeline handling a different manifest format writes its own equivalents & calls the same
+core validators underneath.
+
+--A config note for whoever fetches next--
+
+$AllowStreamOverHTTP, $StreamConnectionTimeout, $MaxStreamInspectionFileSize & $StreamTemp
+are named for streaming because streaming was the only caller when they were written. They
+govern EVERY caller of downloadRemoteFileForInspection(), not only the Stream pipeline.
+They were not renamed, for the same reason $StreamWatchTimeout was not. An administrator's
+config.php names them & a rename silently resets them on every installation in the world.
+If a second pipeline starts fetching remote files, that shared governance should be a
+deliberate decision made in advance rather than something discovered afterwards.
+
+--Writing A Detached Worker Pipeline--
+
+READ THIS BEFORE WRITING A PIPELINE THAT LAUNCHES SOMETHING IT DOES NOT WAIT FOR.
+The passthrough already exists, it is four small pieces, & every one of them is already
+written. Building your own instead is how a process gets orphaned on somebody's server.
+Resources/Pipelines/Stream/ is the working reference. Read it alongside this.
+
+--Why the passthrough exists at all--
+
+A normal conversion finishes before the pipeline returns. The output file is on disk, the
+core serves it, & the request ends. Some conversions cannot work that way. A stream is
+fetched over a network for as long as a user keeps watching it. A long render, a large
+transcode & a batch job handed to a queue are all the same shape. The dependency outlives
+the HTTP request that started it.
+
+Two things have to happen for that to be safe. The user has to be served & released rather
+than left watching a spinner, & the process has to be reaped rather than abandoned. The
+passthrough does both. A pipeline that invents its own version of this usually gets the
+first right & the second wrong, & the symptom is a server slowly filling with processes
+nobody is watching.
+
+--The four pieces--
+
+  ONE. THE PIPELINE LAUNCHES & RETURNS IMMEDIATELY.
+  Launch the process detached & capture its process ID. Return that ID as the SIXTH value
+  of the pipeline contract. Return the path the worker will eventually write as the THIRD
+  value, exactly as any other pipeline returns its output path.
+  RETURN TRUE FOR SUCCESS ON LAUNCH, NOT ON COMPLETION. Nothing has been produced yet & the
+  usual file_exists test on the output path would fail. A launched worker IS the success.
+  Do not sleep. Do not poll. Do not wait for the first byte. Return.
+
+  TWO. convert() RECORDS IT.
+  A non-zero sixth value sets $WaitForStream, $StreamPID & $StreamOutputPath. The pipeline
+  does not touch those three & must not. They are set in one place, inside the branch that
+  already knows the conversion was permitted.
+
+  THREE. convertFiles() DOES NOT JUDGE THE OUTPUT.
+  Every other conversion is judged by whether its output file exists. A detached worker has
+  not written one yet, so that test would report failure for a launch that went perfectly.
+  convertFiles() treats a file with a pending worker as present, & it carries that across
+  the whole batch so that a stream started on the third of five files is still pending when
+  the loop reaches the fifth.
+
+  FOUR. THE MAIN LOGIC REAPS IT.
+  After closeHRC2Connection(), with the user already served & the connection already shut,
+  waitForStream() supervises the process for up to $StreamWatchTimeout minutes & terminates
+  it if it outlives that. waitForStream() KNOWS A PROCESS ID & AN OUTPUT PATH & NOTHING
+  ELSE. It is entirely generic. It has never been specific to streaming & every detached
+  worker pipeline uses it unchanged.
+
+--What a pipeline author actually has to do--
+
+Return a non-zero PID in slot six & a real output path in slot three. That is all of it.
+The other three pieces are already written & are not yours to touch.
+
+--Rules that are not optional--
+
+  NOTHING MAY PRINT AFTER THE CONNECTION CLOSES. The user has been served. Output at that
+  point goes nowhere useful & can corrupt a response that has already been sent.
+
+  THE PID MUST BE REAL & MUST BE YOURS. Return zero if the launch failed. A PID that never
+  existed makes the core wait the full timeout for nothing. A PID belonging to something
+  else makes it terminate a process that was never yours to kill.
+
+  ONE WORKER PER REQUEST. The core supervises a single PID. A pipeline needing several must
+  launch a supervisor of its own & return THAT process, not the first of the children.
+
+  THE TIMEOUT IS AN ADMINISTRATOR'S SETTING & NOT A SUGGESTION. $StreamWatchTimeout bounds
+  every detached worker on the installation. Do not read it, do not extend it, & do not
+  implement a second timeout inside your pipeline.
+
+  max_execution_time HAS TO EXCEED IT. A PHP worker is held for the whole supervision
+  window. verifyPhpConfiguration() already derives the limit from $StreamWatchTimeout &
+  writes it, so this is handled, but it is why the limit is what it is.
+
+--The names are historical & are staying that way--
+
+$WaitForStream, $StreamPID, $StreamOutputPath, $StreamWatchTimeout & waitForStream() all
+carry streaming in their names because streaming was the first and for a long time the only
+user of this path. They were NOT renamed when the path became general.
+An administrator's config.php names $StreamWatchTimeout. Renaming it would silently reset
+that setting to a default on every installation in the world the next time they updated,
+& a supervision window quietly changing length is not the kind of surprise this project
+hands people. The comments were rewritten instead. Read them as saying worker wherever they
+say stream.
+
+--Enumeration & Dispatch Are Different Operations--
+
+THE INTERFACE ENUMERATES. IT DOES NOT RESOLVE.
+An rtf file is claimed by Document & by Ebook. Both are shown, each with its own options
+div & its own format list. A file supported by ImageMagick & by 7z shows an image menu & an
+archive menu. Matching more than one family is BY DESIGN & is how a user is offered every
+conversion the installation can actually perform.
+
+describePipelineCapabilities() answers this. It returns every family claiming an input
+extension, with the output formats each can produce. It never stops at the first match &
+it never breaks out of the loop.
+
+DISPATCH RESOLVES. IT PICKS EXACTLY ONE IMPLEMENTATION.
+By the time a conversion request arrives, the user has chosen an output format from one
+specific menu, so the input & output pair together almost always name one family.
+resolvePipelineCandidates() returns the implementations that can serve that pair, ordered
+by $PipelinePriority & then by folder name so the result is deterministic.
+
+A FAMILY MATCHING THE INPUT BUT NOT THE OUTPUT IS SKIPPED, NOT REFUSED.
+That behaviour is what lets overlapping families coexist without special cases & it is
+unchanged from the two map system it replaces.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Fallback Between Implementations--
+
+Two folders may declare the same $PipelineFamily. Document & DocumentPandoc, for example.
+
+  Enumeration MERGES them. The user sees ONE Document menu whose format list is the union.
+  Dispatch RANKS them & tries them in priority order.
+
+A subsystem that can fall back MUST fall back before it errors. The pattern is the one the
+rest of the application already uses. Try the highest priority candidate, warn if it fails,
+try the next, warn again, & only then return failure. The numbered error fires when the LAST
+candidate has also failed.
+
+THE OUTPUT PATH IS UNLINKED BETWEEN ATTEMPTS.
+A failed conversion can leave a partial or empty file behind. Every converter in this
+application decides success by testing file_exists on the output path, so a second attempt
+that did not clear the path first would inherit the corpse of the first attempt & report a
+success that never happened. This is the same failure the retry loops already guard against
+within a single converter.
+
+A CANDIDATE WHOSE DEPENDENCY IS ABSENT IS SKIPPED WITH A WARNING, NOT SILENTLY.
+A silent demotion to a slower or lower quality converter is exactly what an administrator
+needs to see in the log. It is warned once per request, not once per file.
+
+FALLBACK COSTS TIME & THE BUDGET MUST KNOW.
+Worst case runtime is candidates multiplied by $StopCounter. The budget request covers the
+whole attempt, not one conversion.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Capability & Permission Are Different Things--
+
+pipelineConfig.php declares what a pipeline CAN do.
+config.php declares what the administrator PERMITS.
+What actually runs is decided by $SupportedFormatDetectionType.
+
+  hardcoded-only        config.php is authoritative. Declared capability is ignored.
+                        This is the default & it preserves existing behaviour exactly.
+  detected-restrictive  The intersection. A format the administrator listed but no
+                        installed pipeline can produce is dropped. Never widens anything.
+  detected-additive     The union. A format a pipeline can produce becomes available even
+                        though the administrator never listed it. Convenient, & it widens
+                        the accepted format surface past what was approved.
+
+$WarnOnCapabilityMismatch logs a WARNING whenever detection is not hardcoded-only & the
+capability actually used differs from what config.php declared. It names the format, the
+family & which side of the diff it came from.
+
+$Allowed IS BUILT FROM THE RESULT.
+verifyGlobals() builds $Allowed from $allArrays & verifyFile() rejects any extension missing
+from it. A pipeline declared format that never reaches $allArrays cannot be uploaded, so it
+can never be converted. The manager is therefore verified & the declarations enumerated
+BEFORE $allArrays is assembled.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Degradation--
+
+convertCore.php must be fully executable on its own, even with no components at all.
+
+  Manager absent or mismatched   No conversions. Upload, download, delete, archive &
+                                 virus scanning all continue. Warned loudly.
+  One pipeline mismatched        That family is unavailable. Every other family is fine.
+  Family not served at all       Error 34005, naming the family.
+  Every candidate failed         Error 34003, then error 21 above it, after the whole chain.
+  OCR pipeline absent            Error 34006, then error 22 above it.
+
+ACTIVE IS NOT THE SAME QUESTION AS SERVES.
+A manager that verified one pipeline is active, & being active says nothing about whether
+any pipeline claims the conversion in front of it. The core therefore asks
+familyHasPipeline() with the family, the input extension AND the output extension before it
+dispatches anything. A core that asked only whether the component had loaded would hand it
+every conversion & lose the ones no pipeline claims, on an installation whose built in
+converter for that family works perfectly.
+
+THE BUILT IN FALLBACK DISPATCHER IS GONE, BECAUSE EVERY FAMILY HAS MIGRATED.
+It existed for the whole of the migration & it did its job. convert() tried the manager,
+warned, & routed anything unserved through its own copy of the routing. Each family left
+that safety net individually, in the same change that moved its body out, so a mistake
+never cost more than one family at a time.
+
+There is nothing left in it now & keeping an empty block would only invite somebody to
+paste a converter back into convertCore.php. An unserved family raises 34005 instead.
+RESTORING A CONVERTER TO THE CORE IS NOT THE FIX FOR 34005. Repair the pipeline folder.
+
+The fallback that remains is the one that matters, & it is one level down. A family with
+two installed implementations tries them in priority order & only errors once the last has
+failed. That is where a subsystem falling back before it errors now lives.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Error Numbers--
+
+A PIPELINE CARRIES ITS EXISTING ERROR BLOCK WITH IT WHEN IT MOVES OUT OF THE CORE.
+Those numbers are documented & operators have already read them. Relocation is not a reason
+to renumber. 2000 through 2005 stay with Document. 30000 through 30002 stay with Ebook.
+
+The Pipeline Manager reserves 34000 through 34019.
+31000 & 32000 were both proposed for this block & both were taken. 31008 through 31016 are
+called by the Core Manager command line paths, & ERROR_DESCRIPTIONS.txt documents 32000
+through 32013 for Setup Core & 33000 through 33001 for Dependency Core without the code
+having called any of them yet.
+A CODE AUDIT IS NOT A BLOCK RESERVATION AUDIT. Check the document, not only the source.
+
+  34000  The Pipeline Manager was loaded directly rather than by the core.
+  34001  The Pipeline Manager could not enumerate any pipeline at all.
+  34002  A pipeline declared an entry point that does not exist after loading its core.
+  34003  Every candidate implementation for a conversion failed.
+  34004  A pipeline declared an entry point name already claimed by another pipeline.
+  34005  A conversion family has no installed pipeline & no built in converter.
+  34006  OCR was requested & no OCR pipeline is installed.
+  34007 through 34019 are reserved & unused.
+
+31000 WAS PROPOSED FOR THIS BLOCK & IS NOT FREE. The shipping core already calls 31008
+through 31016 from the Core Manager command line paths. Check any block against the code &
+against ERROR_DESCRIPTIONS.txt before reserving it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Staging--
+
+  PHASE 0  These contracts. No code.                                            DONE
+  PHASE 1a Normalize every convert*() in the core to the six value return.       DONE
+  PHASE 1b Add pipelineManager.php & config-only pipeline folders.               DONE
+  PHASE 2  Move converter bodies into real pipelineCore.php files.               DONE
+           All thirteen have migrated. convertCore.php converts nothing on its own.
+           Archive, Audio, Document, Drawing, Ebook, Image, Model, OCR, Scad,
+           Stream, Subtitle, SVG & Video.
+  PHASE 3  Wire interface enumeration to the live capability set.
+  PHASE 4  Capability detection, the cache & a second implementation of one family.
+  PHASE 5  Remaining pipelines, then chaining.
+
+PHASE 1b IS REVERSIBLE & IS MEANT TO BE.
+A pipeline folder containing nothing but pipelineConfig.php, pointing at a function that
+still lives in the core, exercises the entire enumeration, pinning, ordering & dispatch
+machinery while changing nothing about how a file is converted. If it misbehaves, deleting
+the folder restores previous behaviour exactly.
+
+PHASE 2 IS NOT REVERSIBLE THAT WAY & MIGRATES ONE FAMILY AT A TIME FOR THAT REASON.
+Once a converter's body has moved, deleting its folder does not restore anything, because
+the function the built in dispatcher called no longer exists. The branch for that family is
+therefore removed from convert() & the family is removed from $builtInDispatcherFamilies in
+the SAME change that moves the body. Error 34005 covers what is left.
+
+An installation part way through Phase 2 runs both arrangements at once & that is fine.
+Five families dispatch through the manager & the rest go through the built in routing, in
+the same request, on the same install. Migrating one family at a time keeps the blast
+radius of a mistake to that family.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

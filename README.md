@@ -5,8 +5,8 @@
 <h1 align="center">HRConvert2</h1>
 
 <p align="center">
-  <strong>Convert literally anything. Keep all your data completely private.</strong><br>
-  No database. No cookies. No accounts. No tracking. Nothing leaves your server.
+  <strong>Convert anything. Keep all your data completely private.</strong><br>
+  No database. No cookies. No tracking. Nothing leaves your server.
 </p>
 
 <p align="center">

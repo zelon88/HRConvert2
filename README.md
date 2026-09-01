@@ -118,9 +118,6 @@ Every conversion dependency runs inside a bubblewrap namespace:
 - **Updates require shell access** (not guessable secrets)
 - **Every error documented** with cause and solution
 
-### ✅ Ransomware-Safe
-Conversions run with minimal permissions—they can't encrypt your entire disk or exfiltrate data.
-
 ---
 
 ## 🌐 26 Languages Built In

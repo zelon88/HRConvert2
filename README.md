@@ -81,7 +81,7 @@ This fixes 99% of issues and reports exactly what it corrected.
 sudo php convertCore.php -v
 ```
 
-This validates every installed component, every dependency, everything. A very powerful and comprehensive diagnostic tool.
+This validates every installed component, every dependency, every feature. Everything. A very powerful and comprehensive diagnostic tool.
 
 ---
 

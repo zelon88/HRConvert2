@@ -25,6 +25,13 @@
 # / it builds against does not exist in a plain clone. The build argument is gone & the
 # / Dockerfile copies the context.
 # /
+# / ONE REGISTRY, DOCKER HUB.
+# / The GitHub Container Registry was published to as well & has been removed. Pushing to
+# / it needs a package scope the workflow token does not carry by default, & the failure
+# / it produces reads as read_package denied on a push, which points at the wrong thing.
+# / A second registry publishing the same image earns nothing unless somebody pulls from
+# / it. Add it back deliberately, with a token that has the scope, rather than by default.
+# /
 # / WHAT IT DOES NOT DO.
 # / It does not update the version stamps inside the source. Those are still edited by
 # / hand & the tag must match them, or the core will refuse to run against its own config.
@@ -45,7 +52,6 @@ on:
 
 env:
   DOCKERHUB_IMAGE: zelon88/hrconvert2
-  GHCR_IMAGE: ghcr.io/zelon88/hrconvert2
 
 jobs:
   # --- STAGE 1: LOCAL BUILD AND SMOKE TEST ---
@@ -118,9 +124,10 @@ jobs:
     needs: test
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    # / The workflow reads the repository & publishes to Docker Hub with a token held in
+    # / the repository secrets. It needs no permission over GitHub packages.
     permissions:
       contents: read
-      packages: write
 
     steps:
       - name: Check out the repository
@@ -138,13 +145,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       # / A tag publishes the version, the major.minor, the major & latest.
       # / A push to master publishes edge & nothing else, so master is installable for
       # / testing without moving the tag everybody else pulls.
@@ -154,7 +154,6 @@ jobs:
         with:
           images: |
             ${{ env.DOCKERHUB_IMAGE }}
-            ${{ env.GHCR_IMAGE }}
           tags: |
             type=semver,pattern=v{{version}}
             type=semver,pattern={{major}}.{{minor}}

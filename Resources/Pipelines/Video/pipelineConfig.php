@@ -1,23 +1,24 @@
 <?php
 // / -----------------------------------------------------------------------------------
-// / COPYRIGHT INFORMATION ...
+// / Copyright Information ...
 // / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
 // /
-// / LICENSE INFORMATION ...
+// / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
-// / APPLICATION INFORMATION ...
+// / Application Information ...
 // / This application is designed to provide a web-interface for converting file formats on
 // / a server for users of any web browser without authentication.
 // /
-// / FILE INFORMATION ...
-// / v3.8.5.
+// / File Information ...
+// / v3.8.6.
 // / This file declares what the Video conversion pipeline is & what it can do.
 // / It is read by pipelineManager.php on EVERY request & it must stay cheap.
 // / It ASSIGNS VARIABLES & DOES NOTHING ELSE. No functions, no logic, no output.
-// / Error block 11000 through 11002 belongs to this pipeline. Those numbers came with the
-// / code when it moved out of convertCore.php & they did not change.
+// / Error block 11000 through 11002 belongs to this pipeline.
+// / Those numbers came with the code when it moved out of convertCore.php.
+// / They did not change, because operators have already read them.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for what each declaration means.
 // /
 // / <3 Open-Source
@@ -34,7 +35,12 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read WITHOUT executing this file, then matched
 // / EXACTLY against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipelineCore.php beside it ships & moves with this file.
-$PipelineVersion = 'v3.8.5';
+$PipelineVersion = 'v3.8.6';
+
+// / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
+// / the six value contract. An operation pipeline takes a selection & returns its own
+// / shape. An undeclared kind is a conversion pipeline.
+$PipelineKind = 'conversion';
 
 // / The family this implementation serves. The interface groups controls by this name.
 $PipelineFamily = 'Video';
@@ -53,10 +59,16 @@ $PipelinePriority = 500;
 $PipelineEntryPoint = 'convertVideos';
 
 // / The depends.php subsystem this pipeline needs. Dependency Core owns installation.
+// / This string must match a Subsystem name in depends.php exactly.
+// / Naming the subsystem rather than the package keeps one source of truth for the version.
 // / FOUR FAMILIES NAME THIS SAME SUBSYSTEM. Video & Subtitle are pipelines, & Audio &
 // / Stream are still built into convertCore.php. Naming the subsystem rather than restating
 // / the dependency is what keeps that from becoming four disagreeing minimum versions.
-$PipelineSubsystem = 'ffmpeg';
+$PipelineSubsystem = 'Audio, Video & Streams';
+
+// / Shared modules this pipeline needs, loaded before its converter is loaded.
+// / This pipeline needs none.
+$PipelineSharedModules = array();
 
 // / The request fields this pipeline actually reads.
 // / This converter hardcodes libx264 & reads nothing but the output extension. A bitrate,
@@ -66,8 +78,8 @@ $PipelineRequestFields = array('Extension');
 
 // / What this pipeline can read & what it can write.
 // / THESE LISTS ARE INFORMATIONAL WHILE $SupportedFormatDetectionType IS hardcoded-only.
-// / config.php is authoritative in that mode & $UserVideoArray decides what is offered, so
-// / an omission here cannot delete a conversion. They become authoritative in the detected
+// / config.php is authoritative in that mode & $UserVideoArray decides what is offered.
+// / An omission here cannot delete a conversion. They become authoritative in the detected
 // / modes.
 // / FFMPEG reads a great deal more than this. These are the container formats a general
 // / purpose converter can hand back to a browser & expect to be usable.

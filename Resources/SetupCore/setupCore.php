@@ -1,28 +1,28 @@
 <?php
 // / -----------------------------------------------------------------------------------
-// / COPYRIGHT INFORMATION ...
+// / Copyright information ...
 // / HRConvert2, Copyright on 8/28/2026 by Justin Grimes, www.github.com/zelon88
 // /
-// / LICENSE INFORMATION ...
+// / License information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
-// / APPLICATION INFORMATION ...
+// / Application information ...
 // / This application is designed to provide a web-interface for converting file formats
 // / on a server for users of any web browser without authentication.
 // /
-// / FILEINFORMATION ...
-// / v3.8.1.
+// / Fileinformation ...
+// / v3.8.6.
 // / HRConvert2 Setup Core.
 // / A detachable installation & configuration component. convertCore.php runs without it.
 // / This file defines functions only. convertCore.php dispatches into them.
 // / Everything that installs, configures, updates or repairs an installation belongs here.
 // /
-// / HARDWARE REQUIREMENTS ...
+// / Hardware requirements ...
 // / This application requires at least a Raspberry Pi Model B+ or greater.
 // / This application will run on just about any x86 or x64 computer.
 // /
-// / DEPENDENCY REQUIREMENTS ...
+// / Dependency requirements ...
 // / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
 // / Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Calibre,
 // / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap Dia & xvfb-run.
@@ -40,7 +40,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$SetupCoreVersion = 'v3.8.1';
+$SetupCoreVersion = 'v3.8.6';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -125,6 +125,7 @@ function setupConfigModel() {
       'AdditionalConvertLocs' => array('Type' => 'array', 'Default' => 'array( array(\'/DATA2/HRConvert2\', \'roundrobin\'), array(\'/DATA3/HRConvert2\', \'leastactive\'), array(\'/DATA4/HRConvert2\', \'redundant\'))', 'Depends' => '', 'Description' => 'Additional Data Locations'),
       'StorageCleanupInterval' => array('Type' => 'int', 'Default' => '300', 'Depends' => '', 'Description' => 'Storage Cleanup Interval'))),
     'Security Informations' => array('Writable' => TRUE, 'Variables' => array(
+      'MaintainHTAccess' => array('Type' => 'bool', 'Default' => 'TRUE', 'Depends' => '', 'Description' => 'Maintain DATA Directory HTAccess'),
       'URL' => array('Type' => 'string', 'Default' => 'localhost', 'Depends' => '', 'Description' => 'Server URL'),
       'EnableMemoryProtection' => array('Type' => 'bool', 'Default' => 'TRUE', 'Depends' => '', 'Description' => 'Enable Memory Protection'),
       'VirusScan' => array('Type' => 'bool', 'Default' => 'FALSE', 'Depends' => '', 'Description' => 'Virus Scanning'),
@@ -187,6 +188,7 @@ function setupConfigModel() {
       'DefaultExpectedRuntime' => array('Type' => 'int', 'Default' => '120', 'Depends' => '', 'Description' => 'Default Expected Runtime'))),
     'Supported File Format Information' => array('Writable' => FALSE, 'Variables' => array())
     );
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection);
   return $ConfigModel; }
 // / -----------------------------------------------------------------------------------
@@ -196,13 +198,13 @@ function setupConfigModel() {
 // / Accepts the absolute path of the file to read.
 // / Returns a parse boolean & an array of sections, in that order.
 // /
-// / A SECTION HEADER IS THREE DASHES EITHER SIDE OF THE NAME.
+// / A section header is three dashes either side of the name.
 // /   // / ---General Information---
 // / A variable label is TWO dashes, indented by two spaces.
 // /   // /  --Application Name--
 // / Those two are unambiguous & are the only forms this relies on.
 // /
-// / A THIRD FORM IS AMBIGUOUS & IS RESOLVED AGAINST THE MODEL.
+// / A third form is ambiguous & is resolved against the model.
 // / Two dashes indented by ONE space appears in config.php as both. It is the section
 // / header for Supported File Format Information, & it is also how two variable labels
 // / were typed by mistake. A name the model recognizes is a section. Anything else is a
@@ -285,6 +287,7 @@ function parseConfigFile($configPath) {
       // / An unterminated assignment means the file is not shaped the way this expects.
       if ($insideAssignment) warningEntry('The configuration file at '.$configPath.' ends inside an unterminated assignment.');
       else $ParseSucceeded = TRUE; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $configLines, $headerMatch, $variableMatch, $knownSections, $currentSection, $currentComment, $lineText, $assignmentBuffer, $variableName, $candidateName, $lineIndex, $lineCount, $assignmentStart, $insideAssignment, $configPath);
   return array($ParseSucceeded, $DetectedSections); }
 // / -----------------------------------------------------------------------------------
@@ -326,6 +329,7 @@ function validateConfigSections($configModel, $detectedSections) {
   // / Report a section in the file that this utility has never heard of.
   foreach ($detectedSections as $sectionName => $sectionDetected) {
     if ($sectionName !== 'Unsectioned' && !isset($configModel[$sectionName])) $ValidationFindings[] = array('Section' => $sectionName, 'Status' => 'UNACCOUNTED', 'Detail' => count($sectionDetected['Variables']).' variable(s) present. This section is newer than this utility.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $sectionName, $variableName, $sectionModel, $sectionDetected, $expectedCount, $detectedCount, $lowerBound, $upperBound, $configModel, $detectedSections);
   return array($SectionsAreTrusted, $ValidationFindings); }
 // / -----------------------------------------------------------------------------------
@@ -356,6 +360,7 @@ function validateConfigDependencies($configModel, $detectedSections) {
       if ($dependsValue === 'FALSE' or $dependsValue === '0') {
         $ConfigIsCoherent = FALSE;
         $DependencyFindings[] = array('Variable' => $variableName, 'Depends' => $dependsOn, 'Detail' => '$'.$variableName.' is set but $'.$dependsOn.' is FALSE, so it has no effect.'); } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $sectionName, $variableName, $dependsOn, $dependsValue, $sectionModel, $variableModel, $flatValues, $configModel, $detectedSections);
   return array($ConfigIsCoherent, $DependencyFindings); }
 // / -----------------------------------------------------------------------------------
@@ -368,7 +373,7 @@ function validateConfigDependencies($configModel, $detectedSections) {
 // / destination belongs to the administrator taking the backup.
 function backupConfigFile($configPath, $backupPath) {
   // / Set variables.
-  global $EnableMemoryProtection;
+  global $EnableMemoryProtection, $RunningAsRoot, $ApacheUser;
   $BackupSucceeded = FALSE;
   $backupDirectory = '';
   $backupDirectory = dirname($backupPath);
@@ -377,10 +382,16 @@ function backupConfigFile($configPath, $backupPath) {
   else if (file_exists($backupPath)) errorEntry('A configuration backup was requested but '.$backupPath.' already exists. Nothing was overwritten!', 32002, FALSE);
   else {
     @copy($configPath, $backupPath);
+    // / A backup taken while running as root is created owned by root, & it lands in a
+    // / directory the permissions pass manages. Correcting it here rather than leaving it
+    // / for that pass means a backup taken by hand, outside an install, is also correct.
+    if ($RunningAsRoot && $ApacheUser !== '' && file_exists($backupPath)) @chown($backupPath, $ApacheUser);
+    if (file_exists($backupPath)) @chmod($backupPath, 0640);
     if (file_exists($backupPath) && filesize($backupPath) === filesize($configPath)) {
       $BackupSucceeded = TRUE;
       logEntry('The configuration at '.$configPath.' was backed up to '.$backupPath.'.'); }
     else errorEntry('A configuration backup to '.$backupPath.' did not complete!', 32003, FALSE); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $backupDirectory, $configPath, $backupPath);
   return $BackupSucceeded; }
 // / -----------------------------------------------------------------------------------
@@ -423,6 +434,7 @@ function writeConfigFile($configPath, $configContents) {
       else {
         @unlink($temporaryPath);
         errorEntry('A staged configuration could not be moved into place at '.$configPath.'!', 32006, FALSE); } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $temporaryPath, $writeCommand, $lintOutput, $lintExitCode, $bytesWritten, $configPath, $configContents);
   return $WriteSucceeded; }
 // / -----------------------------------------------------------------------------------
@@ -449,9 +461,31 @@ function replaceConfigAssignment(&$configLines, $variableRecord, $variableName, 
       $configLines[$lineOffset] = NULL;
       $lineOffset++; }
     $AssignmentWasReplaced = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $replacementLine, $removalIndex, $lineOffset, $variableRecord, $variableName, $newValue);
   return $AssignmentWasReplaced; }
 // / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to escape a value for a single quoted PHP string.
+// / Accepts the raw value. Returns the escaped value, without its surrounding quotes.
+// / A single quoted PHP string recognizes two escapes & they must be applied in order.
+// / A backslash is escaped FIRST & the quote second. Escaping only the quote left a value
+// / ending in a backslash producing a trailing pair that PHP reads as an escaped quote, so
+// / the string never closed. A Windows style path typed by an administrator was enough to
+// / do it, & the result is a config.php that fails to parse on the very next request.
+// / The same omission let a crafted value close the string & append its own statements to
+// / the file the application requires on every request.
+function escapeConfigString($rawValue) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $EscapedValue = '';
+  $EscapedValue = str_replace(array('\\', "'"), array('\\\\', "\\'"), (string)$rawValue);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $rawValue);
+  return $EscapedValue; }
+// / -----------------------------------------------------------------------------------
+
 
 // / -----------------------------------------------------------------------------------
 // / A function to format a value for writing into a configuration file.
@@ -473,10 +507,11 @@ function formatConfigValue($valueType, $rawValue) {
     // / An array is written exactly as typed, because this utility cannot know its shape.
     if (strpos($cleanValue, 'array(') === 0 or strpos($cleanValue, '[') === 0) { $FormattedValue = $cleanValue; $ValueIsValid = TRUE; } }
   else if ($valueType === 'path') {
-    if ($cleanValue !== '' && strpos($cleanValue, "\n") === FALSE) { $FormattedValue = "'".str_replace("'", "\\'", rtrim($cleanValue, '/'))."'"; $ValueIsValid = TRUE; } }
+    if ($cleanValue !== '' && strpos($cleanValue, "\n") === FALSE) { $FormattedValue = "'".escapeConfigString(rtrim($cleanValue, '/'))."'"; $ValueIsValid = TRUE; } }
   else {
     // / string, csv & version are all written as quoted strings.
-    if (strpos($cleanValue, "\n") === FALSE) { $FormattedValue = "'".str_replace("'", "\\'", $cleanValue)."'"; $ValueIsValid = TRUE; } }
+    if (strpos($cleanValue, "\n") === FALSE) { $FormattedValue = "'".escapeConfigString($cleanValue)."'"; $ValueIsValid = TRUE; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $cleanValue, $valueType, $rawValue);
   return array($ValueIsValid, $FormattedValue); }
 // / -----------------------------------------------------------------------------------
@@ -512,6 +547,7 @@ function showConfigSection($sectionName, $sectionModel, $detectedVariables) {
   // / A variable this utility expects & the file does not carry is worth naming.
   foreach ($sectionModel['Variables'] as $variableName => $variableModel) {
     if (!isset($detectedVariables[$variableName])) print('   $'.str_pad($variableName, 36).'ABSENT FROM THIS FILE'.$Lol); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $variableName, $currentValue, $defaultValue, $dependsNote, $statusNote, $variableModel, $sectionName, $sectionModel, $detectedVariables);
   return $VariablesDisplayed; }
 // / -----------------------------------------------------------------------------------
@@ -606,6 +642,7 @@ function updateConfigSection($sectionName, $sectionModel, $detectedVariables, &$
               $ChangesCollected++;
               print('     Queued $'.$variableName.' = '.$formattedValue.$Lol); } } } }
       else if ($operatorChoice !== 'done' && $operatorChoice !== 'exit') print('   Unrecognized. Type done to move on.'.$Lol); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $operatorChoice, $variableName, $newValue, $formattedValue, $variableModel, $variableRecord, $valueIsValid, $sectionName, $sectionModel, $detectedVariables);
   return $ChangesCollected; }
 // / -----------------------------------------------------------------------------------
@@ -626,6 +663,7 @@ function configVariableCase($typedName, $sectionModel, $detectedVariables) {
     if (strtolower($candidateName) === strtolower($ResolvedName)) $ResolvedName = $candidateName; }
   foreach ($sectionModel['Variables'] as $candidateName => $variableRecord) {
     if (strtolower($candidateName) === strtolower($ResolvedName)) $ResolvedName = $candidateName; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $candidateName, $variableRecord, $typedName, $sectionModel, $detectedVariables);
   return $ResolvedName; }
 // / -----------------------------------------------------------------------------------
@@ -662,6 +700,7 @@ function applyConfigChanges($configPath, $detectedSections, $pendingChanges) {
         print($Lol.'Wrote '.$ChangesApplied.' change(s) to '.$configPath.'.'.$Lol);
         print('The previous configuration is at '.$backupPath.'.'.$Lol); }
       else print($Lol.'The configuration could not be written. The original is untouched.'.$Lol); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $configLines, $variableName, $backupPath, $newContents, $changeRecord, $backupSucceeded, $configPath, $detectedSections, $pendingChanges);
   return array($ChangesWereApplied, $ChangesApplied); }
 // / -----------------------------------------------------------------------------------
@@ -690,6 +729,7 @@ function resolveConfigTarget($suppliedPath) {
     $candidatePath = realpath($InstLoc.$DirSep.'Resources'.$DirSep.'config.php');
     if ($candidatePath === FALSE) errorEntry('This installation has no configuration file to operate on!', 32009, FALSE);
     else { $ConfigTarget = $candidatePath; $TargetWasResolved = TRUE; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $candidatePath, $suppliedPath);
   return array($TargetWasResolved, $ConfigTarget); }
 // / -----------------------------------------------------------------------------------
@@ -713,6 +753,7 @@ function verifyConfigAuthenticity($detectedSections) {
     if (isset($sectionRecord['Variables']['ConfigVersion'])) {
       $DetectedConfigVersion = trim((string)$sectionRecord['Variables']['ConfigVersion']['Value'], " '\"");
       $ConfigIsAuthentic = TRUE; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $sectionName, $sectionRecord, $detectedSections);
   return array($ConfigIsAuthentic, $DetectedConfigVersion); }
 // / -----------------------------------------------------------------------------------
@@ -824,6 +865,7 @@ function runConfigUtility($suppliedPath, $utilityMode, $modeTarget, $operatorCon
               $operatorChoice = askOperator($Lol.'Type YES to write them. Anything else cancels. ');
               if ($operatorChoice !== 'YES') print($Lol.'Cancelled. Nothing was written.'.$Lol.$Lol);
               else { list ($changesWereApplied, $changesApplied) = applyConfigChanges($configTarget, $detectedSections, $pendingChanges); $UtilityCompleted = $changesWereApplied; } } } } } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $configTarget, $detectedConfigVersion, $sectionName, $variableName, $operatorChoice, $configModel, $detectedSections, $validationFindings, $dependencyFindings, $pendingChanges, $sectionModel, $variableModel, $finding, $targetWasResolved, $parseSucceeded, $configIsAuthentic, $sectionsAreTrusted, $configIsCoherent, $valueIsValid, $changesWereApplied, $formattedValue, $changesApplied, $suppliedPath, $utilityMode, $modeTarget, $operatorConfirmed);
   return $UtilityCompleted; }
 // / -----------------------------------------------------------------------------------
@@ -839,11 +881,13 @@ function runConfigUtility($suppliedPath, $utilityMode, $modeTarget, $operatorCon
 // / way. Everything below the data location is created by verifyRequiredDirs as normal.
 function prepareDataLocations() {
   // / Set variables.
-  global $ConvertLoc, $PrimaryConvertLoc, $AdditionalConvertLocs, $LogDir, $BackupLoc, $HomeLoc, $ManagerSocketDir, $ApacheUser, $RunningAsRoot, $Lol, $EnableMemoryProtection;
+  global $ConvertLoc, $PrimaryConvertLoc, $AdditionalConvertLocs, $LogDir, $BackupLoc, $HomeLoc, $ManagerSocketDir, $ConvertTemp, $ApacheUser, $RunningAsRoot, $Lol, $EnableMemoryProtection;
   $LocationsAreReady = TRUE;
   $LocationsCreated = 0;
   $requiredLocations = $additionalEntry = array();
   $requiredLocation = $entryPath = '';
+  $dataPolicyIsValid = $dataIsProtected = FALSE;
+  $dataPolicyStatus = $exposureStatus = $exposureDetail = '';
   if (!$RunningAsRoot) errorEntry('Data locations can only be created while running as root!', 32010, FALSE);
   else {
     // / The primary data location, the log directory, the backup location & the home
@@ -881,8 +925,47 @@ function prepareDataLocations() {
       @chown($ManagerSocketDir, $ApacheUser);
       @chgrp($ManagerSocketDir, $ApacheUser);
       @chmod($ManagerSocketDir, 0700); }
+    // / The DATA tree is the one location that lives inside the web root.
+    // / Every location above is outside it & is reachable only by this application. $ConvertTemp
+    // / is $InstLoc/DATA & is served straight to browsers, because that is how a user fetches a
+    // / converted file. It therefore needs a protection file that none of the others do, & it
+    // / has to exist before the first upload rather than after somebody notices.
+    if ((string)$ConvertTemp !== '') {
+      if (!is_dir($ConvertTemp)) {
+        @mkdir($ConvertTemp, 0755, TRUE);
+        if (is_dir($ConvertTemp)) {
+          $LocationsCreated++;
+          print('  '.str_pad('Created', 12).$ConvertTemp.$Lol); } }
+      else print('  '.str_pad('Present', 12).$ConvertTemp.$Lol);
+      if (!is_dir($ConvertTemp)) {
+        $LocationsAreReady = FALSE;
+        print('  '.str_pad('FAILED', 12).$ConvertTemp.$Lol);
+        errorEntry('The web served DATA location could not be created at '.$ConvertTemp.'!', 32014, FALSE); }
+      else {
+        @chown($ConvertTemp, $ApacheUser);
+        @chgrp($ConvertTemp, $ApacheUser);
+        @chmod($ConvertTemp, 0755);
+        print($Lol.'DATA directory protection.'.$Lol);
+        list ($dataPolicyIsValid, $dataPolicyStatus) = verifyDataProtectionPolicy(TRUE);
+        print('  '.str_pad('Protection file', 22).str_pad(policyDisplayStatus($dataPolicyStatus), 14).describePolicyStatus('DATA Directory', $dataPolicyStatus).$Lol);
+        // / Writing it proved nothing. Ask the server.
+        // / During a --setup run the web server is frequently not listening yet, so an
+        // / unreachable answer here is ordinary & is reported as unestablished rather than
+        // / as either a pass or a failure.
+        list ($dataIsProtected, $exposureStatus, $exposureDetail) = verifyDataExposure();
+        print('  '.str_pad('Live exposure', 22).str_pad(strtoupper($exposureStatus), 14).$exposureDetail.$Lol);
+        if ($exposureStatus === 'exposed') {
+          print($Lol.'  THE DATA DIRECTORY IS EXPOSED. A file a user uploads is served back as a'.$Lol);
+          print('  document rather than as a download, so an uploaded SVG runs its own script'.$Lol);
+          print('  in this origin. The protection file is being ignored; Apache reads one only'.$Lol);
+          print('  where AllowOverride is enabled & nginx never reads one at all. Put the rules'.$Lol);
+          print('  in the server configuration. See Documentation/ABOUT_DATA_DIRECTORY_PROTECTION.txt.'.$Lol.$Lol); }
+        else if ($exposureStatus !== 'protected') {
+          print($Lol.'  Exposure was NOT established, which is not a pass. If the web server is not'.$Lol);
+          print('  running yet this is expected; re-run the -fp argument once it is.'.$Lol.$Lol); } } }
     if ($LocationsAreReady) logEntry('Prepared '.count($requiredLocations).' data location(s). '.$LocationsCreated.' created.'); }
-  purgeSensitiveMemory($EnableMemoryProtection, $requiredLocations, $additionalEntry, $requiredLocation, $entryPath);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $requiredLocations, $additionalEntry, $requiredLocation, $entryPath, $dataPolicyIsValid, $dataPolicyStatus, $dataIsProtected, $exposureStatus, $exposureDetail);
   return array($LocationsAreReady, $LocationsCreated); }
 // / -----------------------------------------------------------------------------------
 
@@ -890,7 +973,7 @@ function prepareDataLocations() {
 // / A function to build a service unit from the live configuration.
 // / Accepts no arguments.
 // / Returns the complete unit file contents.
-// / EVERY PATH IN THE UNIT IS READ FROM THIS INSTALLATION, NEVER TYPED.
+// / Every path in the unit is read from this installation, never typed.
 // / systemd cannot read config.php, so a unit written by hand duplicates the data location,
 // / the installation path & the web server user, & nothing checks that the copies still
 // / agree. Generating it here means moving --Convert Location-- moves the unit with it.
@@ -951,6 +1034,7 @@ function generateListenerService() {
     .PHP_EOL
     .'[Install]'.PHP_EOL
     .'WantedBy=multi-user.target'.PHP_EOL;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $dataLocation, $corePath, $documentationPath, $webServerUnit);
   return $ServiceContents; }
 // / -----------------------------------------------------------------------------------
@@ -1022,6 +1106,7 @@ function installListenerService($enableService) {
           $ServiceWasInstalled = TRUE;
           $ServiceStatus = 'installed';
           print('  '.str_pad('Ready', 12).'systemctl enable --now hrconvert2-listener'.$Lol); } } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $unitPath, $unitContents, $existingContents, $commandOutput, $commandExitCode, $bytesWritten, $serviceSystemdUsable, $serviceSystemdReason, $enableService);
   return array($ServiceWasInstalled, $ServiceStatus); }
 // / -----------------------------------------------------------------------------------
@@ -1030,7 +1115,7 @@ function installListenerService($enableService) {
 // / A function to perform a complete installation.
 // / Accepts the dependency authorization token & a confirmation boolean, in that order.
 // / Returns a completion boolean & the number of stages that succeeded, in that order.
-// / SIX STAGES, IN THE ORDER AN INSTALLATION ACTUALLY DEPENDS ON.
+// / Six stages, in the order an installation actually depends on.
 // /   1  Dependencies. Nothing below can be verified until the tools exist.
 // /   2  Data locations. A policy cannot be written into a directory that is not there.
 // /   3  Permissions & policies. A converter cannot run until its policy permits it.
@@ -1048,11 +1133,15 @@ function runCompleteInstall($authorizationToken, $operatorConfirmed) {
   $StagesCompleted = 0;
   $stageSucceeded = $permissionsWereFixed = $locationsAreReady = $serviceWasInstalled = FALSE;
   $dependenciesReady = FALSE;
+  // / A missing Dependency Core used to leave this function through an early return.
+  // / Every other function in this component has one exit & this one now does too.
+  $componentIsAvailable = TRUE;
   $stageCount = $pathsCorrected = $locationsCreated = $optionalProblems = 0;
   $operatorChoice = $serviceStatus = '';
   $dependencyFindings = array();
   print($Lol.'HRConvert2 Complete Installation'.$Lol);
-  print('Six stages. Dependencies, locations, permissions, configuration, service, checks.'.$Lol);
+  print('Seven stages. Dependencies, locations, permissions, configuration, service,'.$Lol);
+  print('permissions again, checks.'.$Lol);
   // / Stage one lives in Dependency Core. The --setup gate loads it before this is reached,
   // / so this is insurance rather than a check that is expected to fire. A missing function
   // / is a fatal error with a stack trace, & a component that is simply absent should be
@@ -1061,35 +1150,34 @@ function runCompleteInstall($authorizationToken, $operatorConfirmed) {
     print($Lol.'The Dependency Core component is unavailable, so dependencies cannot be installed.'.$Lol);
     print('Install it, or run the stages by hand with -fp & --config.'.$Lol.$Lol);
     warningEntry('A complete installation was requested without the Dependency Core component.');
-    purgeSensitiveMemory($EnableMemoryProtection, $authorizationToken, $operatorConfirmed);
-    return array(FALSE, 0); }
-  if (!$operatorConfirmed) {
+    $componentIsAvailable = FALSE; }
+  if ($componentIsAvailable && !$operatorConfirmed) {
     print($Lol.'This installs packages, creates directories, writes system policy files,'.$Lol);
     print('rewrites config.php & installs a service unit.'.$Lol);
     $operatorChoice = askOperator($Lol.'Type YES to continue. Anything else cancels. ');
     if ($operatorChoice !== 'YES') print($Lol.'Cancelled. Nothing was done.'.$Lol.$Lol); }
-  if ($operatorConfirmed or $operatorChoice === 'YES') {
+  if ($componentIsAvailable && ($operatorConfirmed or $operatorChoice === 'YES')) {
     // / Stage one. Dependencies, in manifest order.
-    print($Lol.'Stage 1 of 6. Dependencies.'.$Lol);
+    print($Lol.'Stage 1 of 7. Dependencies.'.$Lol);
     list ($stageSucceeded, $stageCount) = installDepends($authorizationToken, '', TRUE);
     if (!$stageSucceeded) print($Lol.'Dependency installation did not complete. Stopping here.'.$Lol.'Run --setup --check-depends to see what is missing.'.$Lol.$Lol);
     else {
       $StagesCompleted++;
       // / Stage two. The data locations everything below writes into.
-      print($Lol.'Stage 2 of 6. Data locations.'.$Lol);
+      print($Lol.'Stage 2 of 7. Data locations.'.$Lol);
       list ($locationsAreReady, $locationsCreated) = prepareDataLocations();
       if (!$locationsAreReady) print($Lol.'One or more data locations could not be created. Stopping here.'.$Lol.$Lol);
       else {
         $StagesCompleted++;
         // / Stage three. Ownership, permissions & the policy files those packages need.
-        print($Lol.'Stage 3 of 6. Permissions & policies.'.$Lol);
+        print($Lol.'Stage 3 of 7. Permissions & policies.'.$Lol);
         list ($permissionsWereFixed, $pathsCorrected) = fixManagedPermissions();
         if (!$permissionsWereFixed) print($Lol.'Permissions could not be corrected. Stopping here.'.$Lol.$Lol);
         else {
           $StagesCompleted++;
           // / Stage four. Configuration. Interactive unless the operator pre confirmed,
           // / because an unattended install must not stop for a question.
-          print($Lol.'Stage 4 of 6. Configuration.'.$Lol);
+          print($Lol.'Stage 4 of 7. Configuration.'.$Lol);
           if ($operatorConfirmed) {
             $StagesCompleted++;
             print('  Keeping the configuration this installation already declares.'.$Lol);
@@ -1098,12 +1186,27 @@ function runCompleteInstall($authorizationToken, $operatorConfirmed) {
           else if (runConfigUtility('', 'interactive', '', FALSE)) $StagesCompleted++;
           else print('  Configuration was cancelled. The shipped defaults remain in place.'.$Lol);
           // / Stage five. The service unit, generated from the configuration above.
-          print($Lol.'Stage 5 of 6. Listener service.'.$Lol);
+          print($Lol.'Stage 5 of 7. Listener service.'.$Lol);
           list ($serviceWasInstalled, $serviceStatus) = installListenerService(TRUE);
           if ($serviceWasInstalled or $serviceStatus === 'skipped') $StagesCompleted++;
           // / Stage six. Report what actually works. An installation that says it finished
           // / & then refuses every conversion has helped nobody.
-          print($Lol.'Stage 6 of 6. Verification.'.$Lol);
+          // / Stage six. Permissions again, because stages four & five both wrote files.
+          // / Stage three cannot be the last word on ownership when work happens after it.
+          // / writeConfigFile() chowns & chmods the file it renames into place, so config.php
+          // / itself is correct. backupConfigFile() uses a plain copy with neither, so a
+          // / backup taken during stage four is owned by root & lands inside a path this
+          // / pass manages. Left alone it stays root owned until somebody runs -fp by hand.
+          // / The pass is idempotent, so running it twice costs a directory walk & nothing
+          // / else, & it is cheap insurance against any future stage that writes something.
+          // / It also re-tightens the two paths the whole manager security model rests on.
+          // / The install secret is returned to 0600 & the socket directory to 0700, after
+          // / the recursive sweep above them has finished.
+          print($Lol.'Stage 6 of 7. Permissions, second pass.'.$Lol);
+          list ($permissionsWereFixed, $pathsCorrected) = fixManagedPermissions();
+          if ($permissionsWereFixed) $StagesCompleted++;
+          else warningEntry('The second permissions pass did not complete. Files written by the configuration & service stages may be owned by root.');
+          print($Lol.'Stage 7 of 7. Verification.'.$Lol);
           list ($dependenciesReady, $dependencyFindings, $optionalProblems) = checkDepends('');
           showDependencyFindings($dependencyFindings);
           $StagesCompleted++;
@@ -1118,7 +1221,8 @@ function runCompleteInstall($authorizationToken, $operatorConfirmed) {
           print($Lol.'Two things this cannot decide for you.'.$Lol);
           print('  The public URL, if share links are to work. Set it with --config.'.$Lol);
           print('  A web server virtual host, if the installation is not already served.'.$Lol.$Lol); } } } }
-  purgeSensitiveMemory($EnableMemoryProtection, $stageSucceeded, $permissionsWereFixed, $locationsAreReady, $serviceWasInstalled, $dependenciesReady, $stageCount, $pathsCorrected, $locationsCreated, $optionalProblems, $operatorChoice, $serviceStatus, $dependencyFindings, $authorizationToken, $operatorConfirmed);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $componentIsAvailable, $stageSucceeded, $permissionsWereFixed, $locationsAreReady, $serviceWasInstalled, $dependenciesReady, $stageCount, $pathsCorrected, $locationsCreated, $optionalProblems, $operatorChoice, $serviceStatus, $dependencyFindings, $authorizationToken, $operatorConfirmed);
   return array($InstallCompleted, $StagesCompleted); }
 // / -----------------------------------------------------------------------------------
 
@@ -1134,6 +1238,7 @@ function runDependencyInstall($operatorConfirmed) {
   print($Lol.'Dependency installation is not yet implemented in this release.'.$Lol);
   print('Run the -v argument to see which dependencies are missing or too old.'.$Lol.$Lol);
   warningEntry('A dependency installation was requested & is not implemented in this release.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $operatorConfirmed);
   return $DependenciesInstalled; }
 // / -----------------------------------------------------------------------------------
@@ -1151,6 +1256,7 @@ function runReinstallExisting($targetVersion, $operatorConfirmed) {
   print($Lol.'Reinstallation is not yet implemented in this release.'.$Lol);
   print('Use the -u argument, which performs the same operation today.'.$Lol.$Lol);
   warningEntry('A reinstallation was requested & is not implemented in this release.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $targetVersion, $operatorConfirmed);
   return $ReinstallCompleted; }
 // / -----------------------------------------------------------------------------------

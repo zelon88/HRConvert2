@@ -1,24 +1,24 @@
 <?php
 // / -----------------------------------------------------------------------------------
-// / COPYRIGHT INFORMATION ...
+// / Copyright Information ...
 // / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
 // /
-// / LICENSE INFORMATION ...
+// / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
-// / APPLICATION INFORMATION ...
+// / Application Information ...
 // / This application is designed to provide a web-interface for converting file formats on
 // / a server for users of any web browser without authentication.
 // /
-// / FILE INFORMATION ...
-// / v3.8.5.
+// / File Information ...
+// / v3.8.6.
 // / This file is the converter for the Document pipeline. It is loaded by pipelineManager.php
 // / ONLY when a Document operation is about to be dispatched to it, so a request that does
 // / something else never parses a line of it.
 // / Error block 7000 through 7001, plus 2005 belongs to this pipeline. Those numbers came with the code when it
 // / moved out of convertCore.php & they did not change, because operators have read them.
-// / This pipeline declares the LibreOffice shared module & the manager loads it first, so
+// / This pipeline declares the LibreOffice shared module & the manager loads it first.
 // / convertWithLibreOffice(), sanitizeDocumentLinks() & verifyDocumentConversionEngine()
 // / are all available by the time this file runs. It also calls sandboxCommand(),
 // / locateDependency() & getExtension(), which remain in convertCore.php.

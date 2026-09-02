@@ -1,18 +1,18 @@
 <?php
 // / -----------------------------------------------------------------------------------
-// / COPYRIGHT INFORMATION ...
+// / Copyright Information ...
 // / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
 // /
-// / LICENSE INFORMATION ...
+// / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
-// / APPLICATION INFORMATION ...
+// / Application Information ...
 // / This application is designed to provide a web-interface for converting file formats on
 // / a server for users of any web browser without authentication.
 // /
-// / FILE INFORMATION ...
-// / v3.8.5.
+// / File Information ...
+// / v3.8.6.
 // / This file is the Pipeline Manager component. It owns the detachable conversion
 // / pipelines, their version pins, their capability declarations & their dispatch.
 // / It is pinned EXACTLY by convertCore.php via $RequiredPipelineManagerVersion.
@@ -24,7 +24,7 @@
 
 
 // / -----------------------------------------------------------------------------------
-// / A COMPONENT MAY ONLY BE LOADED BY THE CORE.
+// / A component may only be loaded by the core.
 // / quickDie is not available here, because a component loaded directly has no core to
 // / provide it. This is the one documented exception to quickDie being the only halt.
 if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000, The Pipeline Manager component cannot be loaded directly!'.PHP_EOL);
@@ -33,14 +33,14 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by convertCore.php WITHOUT executing this file.
-$PipelineManagerVersion = 'v3.8.5';
+$PipelineManagerVersion = 'v3.8.6';
 // / -----------------------------------------------------------------------------------
 
 
 // / -----------------------------------------------------------------------------------
 // / A function to report which pipeline folders this manager accepts & at what version.
 // / Accepts no arguments. Returns an array keyed by folder name, valued by exact version.
-// / THIS LIST IS AN ALLOWLIST & NOT A CONVENIENCE.
+// / This list is an allowlist & not a convenience.
 // / A folder present under Resources/Pipelines that is not named here is never read, never
 // / required & never enumerated. A directory scan would hand code execution to anybody able
 // / to write a folder, so the pin list is what keeps an unexpected folder inert.
@@ -48,23 +48,23 @@ $PipelineManagerVersion = 'v3.8.5';
 function getAcceptedPipelines() {
   // / Set variables.
   // / EVERY FAMILY IS LISTED HERE & convertCore.php CONVERTS NOTHING ON ITS OWN.
-  // / A family removed from this list becomes unavailable rather than falling back, because
-  // / there is no built in dispatcher left behind it. Comment one out only to test that.
+  // / A family removed from this list becomes unavailable rather than falling back.
+  // / There is no built in dispatcher left behind it. Comment one out only to test that.
   // / Adding a community pipeline is one line here plus a version bump on this file.
   $AcceptedPipelines = array(
-    'Stream' => 'v3.8.5',
-    'Scad' => 'v3.8.5',
-    'OCR' => 'v3.8.5',
-    'Document' => 'v3.8.5',
-    'Subtitle' => 'v3.8.5',
-    'SVG' => 'v3.8.5',
-    'Drawing' => 'v3.8.5',
-    'Image' => 'v3.8.5',
-    'Model' => 'v3.8.5',
-    'Video' => 'v3.8.5',
-    'Ebook' => 'v3.8.5',
-    'Audio' => 'v3.8.5',
-    'Archive' => 'v3.8.5');
+    'Stream' => 'v3.8.6',
+    'Scad' => 'v3.8.6',
+    'OCR' => 'v3.8.6',
+    'Document' => 'v3.8.6',
+    'Subtitle' => 'v3.8.6',
+    'SVG' => 'v3.8.6',
+    'Drawing' => 'v3.8.6',
+    'Image' => 'v3.8.6',
+    'Model' => 'v3.8.6',
+    'Video' => 'v3.8.6',
+    'Ebook' => 'v3.8.6',
+    'Audio' => 'v3.8.6',
+    'Archive' => 'v3.8.6');
   return $AcceptedPipelines; }
 // / -----------------------------------------------------------------------------------
 
@@ -84,7 +84,7 @@ function getAcceptedPipelines() {
 function getAcceptedSharedModules() {
   // / Set variables.
   $AcceptedSharedModules = array(
-    'libreOffice.php' => 'v3.8.5');
+    'libreOffice.php' => 'v3.8.6');
   return $AcceptedSharedModules; }
 // / -----------------------------------------------------------------------------------
 
@@ -100,14 +100,14 @@ function getAcceptedSharedModules() {
 // / libreOffice.php once between them.
 function loadSharedModule($sharedModuleName) {
   // / Set variables.
-  global $InstLoc, $CoreLoaded, $Verbose, $EnableMemoryProtection;
+  global $InstLoc, $CoreLoaded, $Verbose, $EnableMemoryProtection, $DirSep;
   $ModuleIsReady = FALSE;
   $acceptedModules = $versionMatches = array();
   $modulePath = $moduleContents = $detectedVersion = $cleanDetected = $cleanRequired = '';
   $acceptedModules = getAcceptedSharedModules();
   if (!isset($acceptedModules[$sharedModuleName])) warningEntry('A pipeline asked for the shared module '.$sharedModuleName.', which this Pipeline Manager does not accept.');
   else {
-    $modulePath = $InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'Pipelines'.DIRECTORY_SEPARATOR.'Shared'.DIRECTORY_SEPARATOR.$sharedModuleName;
+    $modulePath = $InstLoc.$DirSep.'Resources'.$DirSep.'Pipelines'.$DirSep.'Shared'.$DirSep.$sharedModuleName;
     if (!file_exists($modulePath)) warningEntry('The shared module '.$sharedModuleName.' is not installed at '.$modulePath.'.');
     else {
       $moduleContents = @file_get_contents($modulePath);
@@ -138,22 +138,22 @@ function loadSharedModule($sharedModuleName) {
 // / declare an entry point whose arguments have moved.
 // / pipelineConfig.php is required with require & NOT require_once, because enumeration &
 // / dispatch run in different scopes & each needs the declarations in its own scope.
-// / EVERY DECLARATION IS NULLED IMMEDIATELY BEFORE THE REQUIRE.
+// / Every declaration is nulled immediately before the require.
 // / Enumeration loops, so each config lands in the same function scope as the last one. A
 // / config that forgets a declaration would otherwise silently inherit the previous
 // / pipeline's value & be credited with capabilities it does not have.
 function verifyPipelineComponent($pipelineFolderName, $requiredPipelineVersion) {
   // / Set variables.
-  global $InstLoc, $CoreLoaded, $EnableMemoryProtection;
+  global $InstLoc, $CoreLoaded, $EnableMemoryProtection, $DirSep;
   $PipelineIsAvailable = FALSE;
   $PipelineRecord = array();
   $pipelineFolder = $configPath = $corePath = $configContents = '';
   $detectedVersion = $cleanDetected = $cleanRequired = '';
   $versionMatches = array();
   $declarationsAreValid = FALSE;
-  $pipelineFolder = $InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'Pipelines'.DIRECTORY_SEPARATOR.$pipelineFolderName;
-  $configPath = $pipelineFolder.DIRECTORY_SEPARATOR.'pipelineConfig.php';
-  $corePath = $pipelineFolder.DIRECTORY_SEPARATOR.'pipelineCore.php';
+  $pipelineFolder = $InstLoc.$DirSep.'Resources'.$DirSep.'Pipelines'.$DirSep.$pipelineFolderName;
+  $configPath = $pipelineFolder.$DirSep.'pipelineConfig.php';
+  $corePath = $pipelineFolder.$DirSep.'pipelineCore.php';
   if (!is_dir($pipelineFolder)) warningEntry('The '.$pipelineFolderName.' pipeline is not installed at '.$pipelineFolder.'.');
   else if (!file_exists($configPath)) warningEntry('The '.$pipelineFolderName.' pipeline has no pipelineConfig.php at '.$configPath.'.');
   else {
@@ -216,7 +216,7 @@ function validatePipelineDeclarations($pipelineFolderName, $pipelineCorePath, $d
     $PipelineRecord['Input'] = $inputExtensions;
     $PipelineRecord['Output'] = $outputExtensions;
     $PipelineRecord['Exclude'] = $cleanExclusions;
-    // / A CONVERSION PIPELINE & AN OPERATION PIPELINE ARE VERIFIED IDENTICALLY & DISPATCHED
+    // / A conversion pipeline & an operation pipeline are verified identically & dispatched
     // / DIFFERENTLY. A conversion pipeline takes one file & returns the six value contract,
     // / & convert() dispatches to it. An operation pipeline takes a selection of files,
     // / decides its own route, returns its own shape, & is dispatched from wherever the
@@ -318,7 +318,7 @@ function pipelineClaimsConversion($pipelineRecord, $inputExtension, $outputExten
 // / -----------------------------------------------------------------------------------
 // / A function to report every family that can do something with one input extension.
 // / Accepts the input extension. Returns a completion boolean & the description records.
-// / THIS IS FOR THE INTERFACE & IT NEVER RESOLVES TO ONE ANSWER.
+// / This is for the interface & it never resolves to one answer.
 // / An rtf file is claimed by Document & by Ebook & BOTH are offered, each with its own
 // / options panel & its own format list. A file supported by ImageMagick & by 7z shows an
 // / image menu & an archive menu. Offering every available conversion is the design.
@@ -422,7 +422,7 @@ function resolvePipelineCandidates($conversionFamily, $inputExtension, $outputEx
 // / Accepts the family, the input extension & the output extension, in that order.
 // / Returns a boolean & nothing else. It reads declarations & loads no pipeline code.
 // /
-// / THE CORE ASKS THIS BEFORE IT DISPATCHES & THAT ORDERING IS THE WHOLE POINT.
+// / The core asks this before it dispatches & that ordering is the whole point.
 // / A manager that verified one pipeline is active, & being active says nothing about
 // / whether it can serve the conversion in front of it. A core that asked only whether the
 // / manager had loaded would hand it every conversion & lose the ones no pipeline claims,
@@ -531,17 +531,17 @@ function runOcrOperation($selectedFiles, $userFilename, $userExtension, $ocrMeth
 // / optional request fields, in that order.
 // / Returns the six value pipeline contract. Success, errors, path, extension, filename & PID.
 // /
-// / EVERY ARGUMENT IS PASSED TO EVERY PIPELINE & PHP DISCARDS WHAT THE PIPELINE DID NOT
+// / Every argument is passed to every pipeline & PHP discards what the pipeline did not
 // / DECLARE. An entry point taking three parameters is called with seven & ignores four.
 // / This is what lets a pipeline author add a converter without touching the core or
 // / config.php. $PipelineRequestFields documents what a pipeline reads & is the basis of
 // / its own sanity check. It is not a dispatch mechanism.
 // /
-// / A SUBSYSTEM THAT CAN FALL BACK MUST FALL BACK BEFORE IT ERRORS.
+// / A subsystem that can fall back must fall back before it errors.
 // / Candidates are tried in priority order. A failure warns & moves to the next one. Error
 // / 34003 fires only once the LAST candidate has also failed.
 // /
-// / THE OUTPUT PATH IS UNLINKED BETWEEN ATTEMPTS.
+// / The output path is unlinked between attempts.
 // / Every converter in this application decides success by testing file_exists on the
 // / output path. A failed attempt can leave a partial file behind, so a second attempt that
 // / did not clear the path first would inherit it & report a success that never happened.
@@ -577,7 +577,7 @@ function runConversion($conversionFamily, $pathname, $newPathname, $extension, $
       // / The candidate already logged why it failed under its own name.
       if (count($candidateFolders) > $attemptCount) warningEntry('The '.$candidateFolder.' pipeline could not complete a '.$inputExtension.' to '.$Extension.' conversion. Falling back to the next implementation.'); }
     // / Every implementation has now been tried & none of them produced anything.
-    // / A PIPELINE THAT REPORTED A REASON HAS ALREADY BEEN HEARD. DO NOT RESTATE IT.
+    // / A pipeline that reported a reason has already been heard. Do not restate it.
     // / Calling code need not log a failure the callee has already logged, & duplicating
     // / the entry misreports the origin & doubles the log volume.
     // / This matters most where it is least obvious. A refused stream is not a broken

@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.8.5.
+v3.8.6.
 This plain text file contains descriptions of all the native error messages contained in or produced by the HRConvert2 Diablo engine. 
 These descriptions should give administrators a starting point for debugging problems with HRConvert2 installations. 
 Each section in this file contains information about a different error message. The first one is an example to demonstrate the structure of this file.
@@ -41,11 +41,14 @@ The log number will be replaced with '###' in the event that the error number su
 If "Enhanced Logging Verbosity" is enabled in config.php; all significant core operations will produce a log entry.
 If "Enhanced Logging Verbosity" is disabled in config.php; only warnings and errors during core operations will produce a log entry.
 As of v3.8.5 every conversion pipeline is a detachable component beneath /Resources/Pipelines/ rather than code inside convertCore.php.
-NO ERROR NUMBER CHANGED VALUE when those pipelines moved. Only the FILE section of each affected entry was updated to name its new location.
+No error number changed value when those pipelines moved. Only the FILE section of each affected entry was updated to name its new location.
 An operator who read a number in an older release reads exactly the same number today.
-The 2000 block is raised by /Resources/Pipelines/Shared/libreOffice.php, which serves the Document pipeline and the OCR pipeline alike, so an operator seeing one of those numbers may have been running either. The log line above it names which.
-Error 2005 stayed with the Document pipeline because the XPS branch that raises it never moved into that shared module. That one number is separated from the rest of its block on purpose.
-The Pipeline Manager component reserves 34000 through 34019. The 32000 and 33000 blocks were already taken by Setup Core and Dependency Core.
+Every FILE section below was derived by scanning the code for the call that raises each number rather than by assuming which pipeline owns a block.
+A number raised from more than one file names every file that raises it.
+The 2000 block is raised by /Resources/Pipelines/Shared/libreOffice.php, which serves the Document pipeline and the OCR pipeline alike.
+An operator seeing one of those numbers may have been running either one. The log line above it names which.
+The Pipeline Manager component reserves 34000 through 34019.
+The 32000 and 33000 blocks were already taken by Setup Core and Dependency Core.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -668,7 +671,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-300, <SESSION_IDENTIFIER>: 'Could not process extension for file <FILE_PATH>!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -693,7 +696,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-400, <SESSION_IDENTIFIER>: Could not display file <FILE_NAME>!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -718,7 +721,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-500, <SESSION_IDENTIFIER>: There were potentially infected files detected at <FILE_PATH>!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -739,7 +742,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-501, <SESSION_IDENTIFIER>: ClamAV output the following: <ADDITIONAL_DATA>
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -760,7 +763,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-502, <SESSION_IDENTIFIER>: ClamAV is missing, too old, or unusable, so <FILE_PATH> was NOT scanned!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -779,15 +782,46 @@ ERROR DESCRIPTION
   --Virus Scanning-- enabled & no usable scanner refuses to process files rather than processing
   them unscanned.
   Install ClamAV, or disable --Virus Scanning-- in config.php if scanning is not wanted.
+
+
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-503, <SESSION_IDENTIFIER>: The DATA directory is returning a server error, so no download & no share link can work.
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The DATA exposure check fetched its canary & the web server answered with a 5xx.
+  THIS IS AN OUTAGE, NOT AN EXPOSURE. Every download & every share link is failing while
+  this is true, because nothing in that tree is being served at all.
+  The usual cause is a directive in DATA/.htaccess that the AllowOverride level configured
+  for that directory does not permit. Apache REFUSES such a request rather than ignoring the
+  directive, & an <IfModule> guard does not prevent it, because <IfModule> tests whether a
+  module is loaded rather than whether a directive is allowed.
+  Only Header & RemoveHandler are legal under AllowOverride FileInfo. Options & php_flag
+  require AllowOverride Options & return this error wherever that is not granted, which is
+  why the file this application writes contains neither.
+  The web server error log names the offending line. Deleting DATA/.htaccess restores service
+  immediately. Apply the rules in the server configuration instead, where no override level
+  applies. See Documentation/ABOUT_DATA_DIRECTORY_PROTECTION.txt.
+  A hand edited DATA/.htaccess is the other common cause.
+
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-1000, <SESSION_IDENTIFIER>: The specified Data Storage Directory does not exist at <FILE_PATH>!
 
 FILE
-  /Resources/Pipelines/Audio/pipelineCore.php
+  convertCore.php
 
 FATAL
   YES
@@ -806,10 +840,40 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-504, <SESSION_IDENTIFIER>: The Apache configuration HRConvert2 wrote did not pass apachectl configtest & was removed again.
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The -fp argument wrote the DATA rules into the Apache configuration, ran apachectl
+  configtest, & the test failed for a reason that was NOT already present before the write.
+  THE FILE WAS REMOVED AGAIN & THE WEB SERVER IS UNCHANGED. Nothing was reloaded, so the
+  server is still running the configuration it was running before this ran.
+  A configuration that does not parse takes the whole server down on its next restart, which
+  is a far worse outcome than the exposure these rules close, so the rules are never left in
+  place unless they are known to parse.
+  The apachectl output is quoted in the error & names the offending line.
+  A host whose configuration ALREADY did not parse before this ran is reported differently &
+  the HRConvert2 file is KEPT, because that fault belongs to the administrator rather than to
+  this application.
+  The DATA/.htaccess remains as the fallback. Run the -fp argument again after correcting the
+  cause & read the DATA exposure line it prints to confirm the tree is protected.
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-1001, <SESSION_IDENTIFIER>: Could not create a directory at <FILE_PATH>!
 
 FILE
-  /Resources/Pipelines/Audio/pipelineCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -987,7 +1051,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3000, <SESSION_IDENTIFIER>: Could not sanitize the input file!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -1012,7 +1076,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3001, <SESSION_IDENTIFIER>: Could not verify the input file!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -1042,7 +1106,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3002, <SESSION_IDENTIFIER>: File <FILE_NAME> does not exist!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -1063,7 +1127,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3003, <SESSION_IDENTIFIER>: Could not verify the input file!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -1085,7 +1149,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3004, <SESSION_IDENTIFIER>: Unsupported file format!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -1105,7 +1169,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4000, <SESSION_IDENTIFIER>: Could not sanitize the input file!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -1130,7 +1194,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4001, <SESSION_IDENTIFIER>: Could not verify the input file!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -1159,7 +1223,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4002, <SESSION_IDENTIFIER>: Could not perform a virus scan!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -1181,7 +1245,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4003, <SESSION_IDENTIFIER>: Virus detected!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -1203,7 +1267,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4004, <SESSION_IDENTIFIER>: Could not archive <FILE_NAME> to <FILE_PATH>!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -1231,7 +1295,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5000, <SESSION_IDENTIFIER>: Could not sanitize the input file!
 
 FILE
-  /Resources/Pipelines/Image/pipelineCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -1256,7 +1320,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5001, <SESSION_IDENTIFIER>: Could not verify the input file!
 
 FILE
-  /Resources/Pipelines/Image/pipelineCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -1286,7 +1350,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5002, <SESSION_IDENTIFIER>: Could not perform a virus scan!
 
 FILE
-  /Resources/Pipelines/Image/pipelineCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -1308,7 +1372,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5003, <SESSION_IDENTIFIER>: Virus detected!
 
 FILE
-  /Resources/Pipelines/Image/pipelineCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -1330,7 +1394,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5004, <SESSION_IDENTIFIER>: Could not convert the selected <FILE_TYPE>!
 
 FILE
-  /Resources/Pipelines/Image/pipelineCore.php
+  convertCore.php
 
 FATAL
   NO
@@ -1357,7 +1421,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5006, <SESSION_IDENTIFIER>: The conversion <FILE_EXTENSION> to <FILE_EXTENSION> is not supported!
 
 FILE
-  /Resources/Pipelines/Image/pipelineCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -1376,7 +1440,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5005, <SESSION_IDENTIFIER>: Could not archive <FILE_NAME> to <FILE_PATH>!
 
 FILE
-  /Resources/Pipelines/Image/pipelineCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -1404,7 +1468,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6000, <SESSION_IDENTIFIER>: Could not sanitize the input file!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -1429,7 +1493,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6001, <SESSION_IDENTIFIER>: Unsupported file format!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -1449,7 +1513,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6002, <SESSION_IDENTIFIER>: Could not upload file <FILE_NAME> to <FILE_PATH>!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -1472,7 +1536,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6003, <SESSION_IDENTIFIER>: Could not perform a virus scan!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -1494,7 +1558,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6004, <SESSION_IDENTIFIER>: Virus detected!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -1569,7 +1633,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-8000, <SESSION_IDENTIFIER>: The image converter timed out!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Image/pipelineCore.php
 
 FATAL
   NO
@@ -1601,7 +1665,8 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-8001, <SESSION_IDENTIFIER>: The installed ImageMagick version is missing, unidentifiable, or too old!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Image/pipelineCore.php
+  /Resources/Pipelines/OCR/pipelineCore.php
 
 FATAL
   YES
@@ -1629,7 +1694,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-8002, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this image conversion cannot be isolated!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Image/pipelineCore.php
 
 FATAL
   NO
@@ -1660,7 +1725,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9000, <SESSION_IDENTIFIER>: The model converter timed out!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Model/pipelineCore.php
 
 FATAL
   NO
@@ -1692,7 +1757,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9001, <SESSION_IDENTIFIER>: The installed Assimp version is missing, unidentifiable, or too old!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Model/pipelineCore.php
 
 FATAL
   YES
@@ -1718,7 +1783,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9002, <SESSION_IDENTIFIER>: The installed MeshLab version is missing, unidentifiable, or too old!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Model/pipelineCore.php
 
 FATAL
   NO
@@ -1767,10 +1832,34 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9004, <SESSION_IDENTIFIER>: Neither Assimp nor MeshLab can write the <FILE_TYPE> format!
+
+FILE
+  /Resources/Pipelines/Model/pipelineCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A model conversion was requested into a format that no installed utility can produce.
+  The two utilities cover different sets & neither covers the whole of --Supported Model Formats-- in config.php on its own.
+  Assimp writes obj, stl, ply, 3ds, dae, x3d, fbx, gltf, glb and 3mf.
+  MeshLab writes ply, stl, obj, off, dae, x3d, dxf, wrl, ctm and u3d.
+  A format in neither list cannot be produced, however the conversion is routed.
+  This is reported before the retry loop is entered, because retrying a command that cannot succeed only delays the same failure.
+  READING A FORMAT IS NOT THE SAME AS WRITING IT.
+  Assimp reads OFF perfectly well and has no OFF exporter at all.
+  An earlier version routed on the input extension alone, so an obj to off conversion reached Assimp, which answered that it could not guess the output format, and the retry loop repeated the identical command until it timed out with error 9000.
+  Remove the format from --Supported Model Formats-- in config.php, or install a utility that can write it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9002, <SESSION_IDENTIFIER>: The installed Meshlab version is missing, unidentifiable, or too old!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Model/pipelineCore.php
 
 FATAL
   YES
@@ -1969,7 +2058,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-12000, <SESSION_IDENTIFIER>: The audio converter timed out!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Audio/pipelineCore.php
 
 FATAL
   NO
@@ -2001,7 +2090,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-12001, <SESSION_IDENTIFIER>: The installed FFMPEG version is missing, unidentifiable, or too old!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Audio/pipelineCore.php
 
 FATAL
   NO
@@ -2027,7 +2116,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-12002, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this audio conversion cannot be isolated!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Audio/pipelineCore.php
 
 FATAL
   NO
@@ -2049,7 +2138,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13000, <SESSION_IDENTIFIER>: The archiver failed to produce an archive!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Archive/pipelineCore.php
 
 FATAL
   NO
@@ -2242,6 +2331,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13006, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this archive operation cannot be isolated!
  
 FILE
+  /Resources/Pipelines/Archive/pipelineCore.php
   /convertCore.php
  
 FATAL
@@ -2269,7 +2359,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13007, <SESSION_IDENTIFIER>: The extractor produced no files from the source archive!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Archive/pipelineCore.php
 
 FATAL
   NO
@@ -2300,6 +2390,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13008, <SESSION_IDENTIFIER>: The installed 7-Zip version is missing, unidentifiable, or too old!
 
 FILE
+  /Resources/Pipelines/Archive/pipelineCore.php
   /convertCore.php
 
 FATAL
@@ -2335,6 +2426,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13009, <SESSION_IDENTIFIER>: Mkisofs is missing, unidentifiable, or too old!
 
 FILE
+  /Resources/Pipelines/Archive/pipelineCore.php
   /convertCore.php
 
 FATAL
@@ -2363,6 +2455,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13010, <SESSION_IDENTIFIER>: Zip is missing, unidentifiable, or too old!
 
 FILE
+  /Resources/Pipelines/Archive/pipelineCore.php
   /convertCore.php
 
 FATAL
@@ -2389,7 +2482,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13011, <SESSION_IDENTIFIER>: Tar is missing, unidentifiable, or too old!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Archive/pipelineCore.php
 
 FATAL
   NO
@@ -2413,7 +2506,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13012, <SESSION_IDENTIFIER>: The archiver timed out!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -2446,7 +2539,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13013, <SESSION_IDENTIFIER>: Rar output requires the rar utility, which is missing or too old!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Archive/pipelineCore.php
 
 FATAL
   NO
@@ -2485,7 +2578,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13105, <SESSION_IDENTIFIER>: Cryptographic validation failed for internal UEFI assets! Files are missing or corrupted.
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Archive/pipelineCore.php
 
 FATAL
   NO
@@ -2511,7 +2604,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13106, <SESSION_IDENTIFIER>: The installed Isohybrid version is missing, unidentifiable, or too old!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Archive/pipelineCore.php
 
 FATAL
   NO
@@ -2536,7 +2629,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13106, <SESSION_IDENTIFIER>: Could not generate required bootloader assets!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Archive/pipelineCore.php
 
 FATAL
   NO
@@ -2562,7 +2655,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14000, <SESSION_IDENTIFIER>: The file <FILE_NAME> failed first stage validation!
 
 FILE
-  /Resources/Pipelines/Stream/pipelineCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -2586,7 +2679,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14001, <SESSION_IDENTIFIER>: Could not delete stale file <PATH_NAME>!
 
 FILE
-  /Resources/Pipelines/Stream/pipelineCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -2608,7 +2701,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14002, <SESSION_IDENTIFIER>: The file <FILE_NAME> failed second stage validation!
 
 FILE
-  /Resources/Pipelines/Stream/pipelineCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -2630,7 +2723,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14003, <SESSION_IDENTIFIER>: The file <FILE_NAME> failed third stage validation!
 
 FILE
-  /Resources/Pipelines/Stream/pipelineCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -2654,7 +2747,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14004, <SESSION_IDENTIFIER>: Could not delete stale file <PATH_NAME>!
 
 FILE
-  /Resources/Pipelines/Stream/pipelineCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -3033,7 +3126,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16000, <SESSION_IDENTIFIER>: Could not delete stale file <FILE_PATH>!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -3055,7 +3148,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16001, <SESSION_IDENTIFIER>: Could not create a file at <FILE_PATH>!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -3077,7 +3170,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16002, <SESSION_IDENTIFIER>: Could not delete stale file <FILE_PATH>!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -3099,7 +3192,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16003, <SESSION_IDENTIFIER>: Could not create a file at <FILE_PATH>!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -3121,7 +3214,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-17000, <SESSION_IDENTIFIER>: Could not sanitize the input file!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -3146,7 +3239,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-17001, <SESSION_IDENTIFIER>: Could not verify the input file!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -3176,7 +3269,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-17002, <SESSION_IDENTIFIER>: ClamAV is missing, too old, or unusable, so the user virus scan could not run!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -3202,7 +3295,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-18000, <SESSION_IDENTIFIER>: Could not verify ScanCore Virus Scanner!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -3226,7 +3319,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-19000, <SESSION_IDENTIFIER>: Could not sanitize the input file!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -3251,7 +3344,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-19001, <SESSION_IDENTIFIER>: Could not verify the input file!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -3281,7 +3374,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-20000, <SESSION_IDENTIFIER>: Could not delete stale file <FILE_PATH>!
 
 FILE
-  /Resources/Pipelines/Model/pipelineCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -3303,7 +3396,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-20001, <SESSION_IDENTIFIER>: Could create a file at <FILE_PATH>!
 
 FILE
-  /Resources/Pipelines/Model/pipelineCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -3519,7 +3612,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-23000, <SESSION_IDENTIFIER>: Could not sanitize the input file!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -3544,7 +3637,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-23001, <SESSION_IDENTIFIER>: Unsupported file format, <FILE_EXTENSION>!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -3567,7 +3660,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-23002, <SESSION_IDENTIFIER>: Could not delete file <FILE_NAME>!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -3590,7 +3683,7 @@ ERROR MESSAGE
   ERROR!!! HRConvert2-24000: Could not process the HRConvert2 Version Information file (versionInfo.php)!
 
 FILE
-  /Resources/Pipelines/Archive/pipelineCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -3696,7 +3789,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-26000, <SESSION_IDENTIFIER>: Could not remove the build environment!
 
 FILE
-  /Resources/Pipelines/Stream/pipelineCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -3720,7 +3813,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-26001, <SESSION_IDENTIFIER>: Could not remove the development documentation!
 
 FILE
-  /Resources/Pipelines/Stream/pipelineCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -3742,7 +3835,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27000, <SESSION_IDENTIFIER>: Could not prepare the OpenSCAD sources for rendering!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Scad/pipelineCore.php
 
 FATAL
   NO
@@ -3765,7 +3858,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27003, <SESSION_IDENTIFIER>: The OpenSCAD converter failed with exit code <ADDITIONAL_DATA>!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Scad/pipelineCore.php
 
 FATAL
   NO
@@ -3792,7 +3885,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27007, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so OpenSCAD renders cannot be isolated!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Scad/pipelineCore.php
 
 FATAL
   NO
@@ -3828,7 +3921,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27008, <SESSION_IDENTIFIER>: Could not move the rendered OpenSCAD model out of the sandbox!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Scad/pipelineCore.php
 
 FATAL
   NO
@@ -3854,7 +3947,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27001, <SESSION_IDENTIFIER>: Could not stage the sanitized OpenSCAD source <FILE_NAME>!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Scad/pipelineCore.php
 
 FATAL
   NO
@@ -3877,7 +3970,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27002, <SESSION_IDENTIFIER>: The OpenSCAD converter timed out after <ADDITIONAL_DATA> seconds!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Scad/pipelineCore.php
 
 FATAL
   NO
@@ -3903,7 +3996,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27003, <SESSION_IDENTIFIER>: The OpenSCAD converter failed with exit code <ADDITIONAL_DATA>!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Scad/pipelineCore.php
 
 FATAL
   NO
@@ -3928,7 +4021,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27004, <SESSION_IDENTIFIER>: Could not remove the sanitized OpenSCAD sources!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Scad/pipelineCore.php
 
 FATAL
   NO
@@ -3951,7 +4044,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27005, <SESSION_IDENTIFIER>: The installed OpenSCAD version is missing or too old!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Scad/pipelineCore.php
 
 FATAL
   NO
@@ -3975,7 +4068,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27006, <SESSION_IDENTIFIER>: Could not read the OpenSCAD source file <FILE_NAME>!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Scad/pipelineCore.php
 
 FATAL
   NO
@@ -3998,7 +4091,7 @@ ERROR MESSAGE
   ERROR!!! HRConvert2-28000: The config.php file is missing <ADDITIONAL_DATA> required setting(s). Config version detected: <ADDITIONAL_DATA>. Config version required: <ADDITIONAL_DATA>. Missing Variables: <ADDITIONAL_DATA>
 
 FILE
-  /Resources/Pipelines/Scad/pipelineCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -4034,7 +4127,7 @@ ERROR MESSAGE
   ERROR!!! HRConvert2-28001: The core file reports version <ADDITIONAL_DATA> but the version information file reports version <ADDITIONAL_DATA>. This installation is incomplete or was updated incorrectly.
 
 FILE
-  /Resources/Pipelines/Scad/pipelineCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -4755,7 +4848,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31008, <SESSION_IDENTIFIER>: Permissions can only be corrected while running as root!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -4776,7 +4869,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31009, <SESSION_IDENTIFIER>: A Core Manager start was requested but the component is unavailable!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -4800,7 +4893,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31010, <SESSION_IDENTIFIER>: Resource awareness is required by config.php & the Core Manager component is unavailable!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -4825,7 +4918,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31011, <SESSION_IDENTIFIER>: Conversion limits can only be enabled while running as root!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -4849,7 +4942,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31012, <SESSION_IDENTIFIER>: A subordinate manager start was requested but the component is unavailable!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -4875,7 +4968,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31013, <SESSION_IDENTIFIER>: Resource awareness is required by config.php but is disabled or has no install secret!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -4901,7 +4994,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-40000, <SESSION_IDENTIFIER>: Cannot purge sensitive memory for the <FUNCTION_NAME> function! Memory protection is Enabled. Execution cannot continue!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -5104,7 +5197,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31011, <SESSION_IDENTIFIER>: Conversion limits can only be enabled while running as root!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   NO
@@ -5127,7 +5220,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31012, <SESSION_IDENTIFIER>: A subordinate manager start was requested but the component is unavailable!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -5152,7 +5245,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31013, <SESSION_IDENTIFIER>: Resource awareness is required by config.php but is disabled or has no install secret!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -5225,7 +5318,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31016, <SESSION_IDENTIFIER>: The foreground listener was requested but the Core Manager component is unavailable!
 
 FILE
-  convertCore.php
+  /convertCore.php
 
 FATAL
   YES
@@ -5244,6 +5337,32 @@ ERROR DESCRIPTION
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31017, <SESSION_IDENTIFIER>: A startup key for <ADDITIONAL_DATA> was presented a second time & refused as a replay!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A manager startup key that had already been spent was presented again.
+  A startup key is an HMAC over a short time bucket and is valid for the current window and the one before it.
+  A key that crosses a process boundary is now spent the moment it validates, and a second process presenting the same key is refused however soon it happens.
+  Time alone cannot make a leaked key dead. Whoever holds a copy validates it against the same clock this application does, so the window decides only how long they have and never whether they succeed. Spending the key is the part this application controls.
+  The key is also carried in the environment rather than on the command line, because /proc/PID/cmdline is world readable and a manager process runs for days.
+  CAUSE. Almost always a second launch of the same manager role within the same window, such as a service unit and an operator both starting the listener at once.
+  It is also what a replay of a captured key looks like, so a run of these with no matching launch is worth investigating.
+  RESOLUTION. Start the listener once. Run --status to see what is already running, and --stop-listener before starting it again.
+  The ledger of spent keys lives in the manager socket directory and holds hashes rather than keys, so reading it grants nothing. Entries older than three windows are dropped automatically.
+  This control defends against a key that leaked, not against an account that holds the install secret.
+  Deleting the ledger un-spends a captured key, and the only accounts that can delete it are root and the web server user, both of which can already read the secret and mint a valid key directly. Losing the ledger to either of them costs nothing that was not already lost.
+  The directory holding it sits inside the data location, owned by the web server user, so an unprivileged local account cannot remove it. That is the account this control exists for.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32000, <SESSION_IDENTIFIER>: A configuration backup was requested but the source does not exist!
@@ -5562,6 +5681,32 @@ ERROR DESCRIPTION
   This error is not fatal. The listener can still be started with the -l argument, which is what
   a host without a running systemd does anyway.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32014, <SESSION_IDENTIFIER>: The web served DATA location could not be created at <PATH>!
+
+FILE
+  Resources/SetupCore/setupCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  $ConvertTemp, which is <INSTALL_LOCATION>/DATA, could not be created during a setup run.
+  This is the ONLY data location that lives inside the web root. Every other location the
+  setup routine creates sits outside it & is reachable only by the application itself.
+  The application copies a file here whenever a user asks to download or share it, so that a
+  browser can fetch it by URL. Without this directory no download & no share link can work.
+  The parent directory is not writable, or the filesystem is full or mounted read only.
+  Setup continues. The core will create this directory again on the first request, but it
+  will do so WITHOUT the protection file that makes the tree serve inert downloads, so run
+  the -fp argument as root once the cause is corrected & read the exposure line it prints.
+
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

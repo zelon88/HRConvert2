@@ -1,24 +1,24 @@
 <?php
 // / -----------------------------------------------------------------------------------
-// / COPYRIGHT INFORMATION ...
+// / Copyright Information ...
 // / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
 // /
-// / LICENSE INFORMATION ...
+// / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
-// / APPLICATION INFORMATION ...
+// / Application Information ...
 // / This application is designed to provide a web-interface for converting file formats on
 // / a server for users of any web browser without authentication.
 // /
-// / FILE INFORMATION ...
-// / v3.8.5.
+// / File Information ...
+// / v3.8.6.
 // / This file is the converter for the OCR pipeline. It is loaded by pipelineManager.php
 // / ONLY when a OCR operation is about to be dispatched to it, so a request that does
 // / something else never parses a line of it.
 // / Error block 15000 through 15014 belongs to this pipeline. Those numbers came with the code when it
 // / moved out of convertCore.php & they did not change, because operators have read them.
-// / OCR IS AN OPERATION PIPELINE RATHER THAN A CONVERSION PIPELINE.
+// / OCR is an operation pipeline rather than a conversion pipeline.
 // / It takes a SELECTION of files, decides a route per file, & returns three values rather
 // / than the six a conversion pipeline returns. The third is the list of filenames it
 // / produced, which the CORE prints once this function has returned. A pipeline never
@@ -58,7 +58,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   // / Set variables.
   global $Verbose, $VirusScan, $ConvertTempDir, $Lol, $Lolol, $Append, $MinimumTesseractVersion, $MinimumPdftotextVersion, $MinimumImageVersion, $EnableMemoryProtection;
   $documentConverted = $OperationSuccessful = $OperationErrors = $multiple = $virusFound = $skip = $variableIsSanitized = FALSE;
-  $fileIsVerified = $scanComplete = $documentEngineStarted = $sandboxIsAvailable = $anyFileSucceeded = $loopCheck = FALSE;
+  $fileIsVerified = $scanComplete = $documentEngineStarted = $commandMayRun = $anyFileSucceeded = $loopCheck = FALSE;
   $ocrToolsAreValid = FALSE;
   $tesseractBinary = $pdftotextBinary = $imageBinary = FALSE;
   $clean = $copy = TRUE;
@@ -76,8 +76,8 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   $pdf1array = array('pdf');
   $allowedOCR = array('txt', 'doc', 'docx', 'rtf', 'xls', 'xlsx', 'ods', 'odt', 'jpg', 'jpeg', 'bmp', 'webp', 'png', 'gif', 'pdf', 'abw');
   // / Locate & verify every OCR utility before anything is read.
-  // / Each route gates on the specific tool it uses rather than on the overall verdict, so
-  // / a missing pdftotext does not prevent an image from being read by Tesseract.
+  // / Each route gates on the specific tool it uses rather than on the overall verdict.
+  // / A missing pdftotext does not prevent an image from being read by Tesseract.
   list ($ocrToolsAreValid, $tesseractBinary, $pdftotextBinary) = verifyOCRVersions($MinimumTesseractVersion, $MinimumPdftotextVersion);
   // / ImageMagick rasterizes a PDF page for the advanced route & is verified separately.
   $imageBinary = verifyImageVersion($MinimumImageVersion);
@@ -116,7 +116,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
           // / Method 0 is the automatic choice. It attempts the simple route first &
           // / falls back to the advanced one only if the simple route produces nothing.
           if ($Method === 0 or $Method === '0' or $Method === '') $Method = 1;
-          // / Method 1 is the simple route. pdftotext reads a PDF that already holds text.
+          // / Method 1 is the simple route. Pdftotext reads a PDF that already holds text.
           // / It is fast & exact, & produces nothing at all on a scanned page.
           if ($Method === 1 or $Method === '1') {
             if ($pdftotextBinary === FALSE) {
@@ -127,10 +127,10 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
               if ($Verbose) logEntry('Performing OCR using method 1.');
               // / Perform the conversion using PDFTOTEXT.
               $ocrCommand = escapeshellarg($pdftotextBinary).' -layout '.escapeshellarg($pathname).' '.escapeshellarg($pathnameTEMP);
-              list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathname, $pathnameTEMP, FALSE, 'tesseract');
+              list ($commandMayRun, $ocrCommand) = sandboxCommand($ocrCommand, $pathname, $pathnameTEMP, FALSE, 'tesseract');
               // / pdftotext has no native control of its own, so an unavailable sandbox leaves
               // / no boundary at all & the operation is refused rather than run without one.
-              if (!$sandboxIsAvailable) {
+              if (!$commandMayRun) {
                 $OperationErrors = TRUE;
                 errorEntry('Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!', 15012, FALSE); }
               else $returnData = shell_exec($ocrCommand);
@@ -155,10 +155,10 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
               if ($Verbose) logEntry('Performing OCR intermediate operation using method 2.');
               // / Perform the conversion using ImageMagick.
               $ocrCommand = escapeshellarg($imageBinary).' '.escapeshellarg($pathname).' '.escapeshellarg($pathnameTEMP1);
-              list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathname, $pathnameTEMP1, FALSE, 'tesseract');
+              list ($commandMayRun, $ocrCommand) = sandboxCommand($ocrCommand, $pathname, $pathnameTEMP1, FALSE, 'tesseract');
               // / ImageMagick has policy.xml, so an unavailable sandbox is a downgrade to a
               // / weaker control rather than to no control at all. The operation continues.
-              if (!$sandboxIsAvailable) warningEntry('Bubblewrap is unavailable. This OCR page split will run unsandboxed & is protected only by policy.xml.');
+              if (!$commandMayRun) warningEntry('Bubblewrap is unavailable. This OCR page split will run unsandboxed & is protected only by policy.xml.');
               $returnData = shell_exec($ocrCommand);
               // / Log the output of the operation to the logfile, if it is not blank.
               if ($Verbose && trim($returnData) !== '') logEntry('The converter (IM-1) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
@@ -185,10 +185,10 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
                   // / Tesseract appends .txt to the output argument, so what is passed is a
                   // / prefix rather than a filename. The sandbox mounts its directory either way.
                   $ocrCommand = escapeshellarg($tesseractBinary).' '.escapeshellarg($pathnameTEMP1).' '.escapeshellarg($pathnameTEMPTesseract);
-                  list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathnameTEMP1, $pathnameTEMPTesseract, FALSE, 'tesseract');
+                  list ($commandMayRun, $ocrCommand) = sandboxCommand($ocrCommand, $pathnameTEMP1, $pathnameTEMPTesseract, FALSE, 'tesseract');
                   // / Tesseract has no native control of its own, so an unavailable sandbox
                   // / leaves no boundary & the operation is refused rather than run without one.
-                  if (!$sandboxIsAvailable) {
+                  if (!$commandMayRun) {
                     $OperationErrors = TRUE;
                     errorEntry('Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!', 15012, FALSE);
                     continue; }
@@ -210,8 +210,8 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
                 $pathnameTEMPTesseract = str_replace('..', '', str_replace('.txt', '', $pathnameTEMP));
                 if ($Verbose) logEntry('Performing OCR final operation using method 2.');
                 $ocrCommand = escapeshellarg($tesseractBinary).' '.escapeshellarg($pathnameTEMP1).' '.escapeshellarg($pathnameTEMPTesseract);
-                list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathnameTEMP1, $pathnameTEMPTesseract, FALSE, 'tesseract');
-                if (!$sandboxIsAvailable) {
+                list ($commandMayRun, $ocrCommand) = sandboxCommand($ocrCommand, $pathnameTEMP1, $pathnameTEMPTesseract, FALSE, 'tesseract');
+                if (!$commandMayRun) {
                   $OperationErrors = TRUE;
                   errorEntry('Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!', 15012, FALSE); }
                 else $returnData = shell_exec($ocrCommand);
@@ -242,8 +242,8 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
           if ($Verbose) logEntry('Reading the image with Tesseract.');
           // / Perform the conversion using Tesseract.
           $ocrCommand = escapeshellarg($tesseractBinary).' '.escapeshellarg($pathname).' '.escapeshellarg($pathnameTEMPTesseract);
-          list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathname, $pathnameTEMPTesseract, FALSE, 'tesseract');
-          if (!$sandboxIsAvailable) {
+          list ($commandMayRun, $ocrCommand) = sandboxCommand($ocrCommand, $pathname, $pathnameTEMPTesseract, FALSE, 'tesseract');
+          if (!$commandMayRun) {
             $OperationErrors = TRUE;
             errorEntry('Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!', 15012, FALSE); }
           else $returnData = shell_exec($ocrCommand);
@@ -268,8 +268,8 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
             if ($Verbose && trim($returnData) !== '') logEntry('The converter (U-2) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
             // / Perform the conversion using PDFTOTEXT.
             $ocrCommand = escapeshellarg($pdftotextBinary).' -layout '.escapeshellarg($pathnameTEMP3).' '.escapeshellarg($pathnameTEMP);
-            list ($sandboxIsAvailable, $ocrCommand) = sandboxCommand($ocrCommand, $pathnameTEMP3, $pathnameTEMP, FALSE, 'tesseract');
-            if (!$sandboxIsAvailable) {
+            list ($commandMayRun, $ocrCommand) = sandboxCommand($ocrCommand, $pathnameTEMP3, $pathnameTEMP, FALSE, 'tesseract');
+            if (!$commandMayRun) {
               $OperationErrors = TRUE;
               errorEntry('Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!', 15012, FALSE); }
             else $returnData = shell_exec($ocrCommand);
@@ -299,7 +299,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
       // / Error handler for if the output file does not exist.
       if (file_exists($newPathname)) {
         $loopCheck = TRUE;
-        // / A PIPELINE NEVER PRINTS. IT COLLECTS & RETURNS, & THE CORE DECIDES.
+        // / A pipeline never prints. It collects & returns, & the core decides.
         // / This line used to print the filename straight into the AJAX response, which it
         // / could do safely while it lived in convertCore.php. It is a component now, & a
         // / component writing into a reply the interface parses line by line is the exact
@@ -314,7 +314,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   // / Error handler for if any failures happened during file loops.
   if ($anyFileSucceeded) $OperationSuccessful = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $file, $pathname, $oldPathname, $filename, $oldExtension, $newPathname, $doc1array, $img1array, $pdf1array, $pathnameTEMP, $pathnameTEMP0, $pathnameTEMP1, $pathnameTEMP3, $pagedFilesArrRAW, $pagedFile, $cleanFilname, $pageNumber, $readPageData, $writePageData, $multiple, $pathnameTEMPTesseract, $clean, $copy, $skip, $allowedOCR, $variableIsSanitized, $loopCheck, $anyFileSucceeded, $ocrCommand, $sandboxIsAvailable, $fileIsVerified, $scanComplete, $virusFound, $documentEngineStarted, $documentEnginePID, $returnData, $ocrToolsAreValid, $tesseractBinary, $pdftotextBinary, $imageBinary, $PDFWorkSelected, $UserFilename, $UserExtension, $Method, $documentConverted);
+  purgeSensitiveMemory($EnableMemoryProtection, $file, $pathname, $oldPathname, $filename, $oldExtension, $newPathname, $doc1array, $img1array, $pdf1array, $pathnameTEMP, $pathnameTEMP0, $pathnameTEMP1, $pathnameTEMP3, $pagedFilesArrRAW, $pagedFile, $cleanFilname, $pageNumber, $readPageData, $writePageData, $multiple, $pathnameTEMPTesseract, $clean, $copy, $skip, $allowedOCR, $variableIsSanitized, $loopCheck, $anyFileSucceeded, $ocrCommand, $commandMayRun, $fileIsVerified, $scanComplete, $virusFound, $documentEngineStarted, $documentEnginePID, $returnData, $ocrToolsAreValid, $tesseractBinary, $pdftotextBinary, $imageBinary, $PDFWorkSelected, $UserFilename, $UserExtension, $Method, $documentConverted);
   return array($OperationSuccessful, $OperationErrors, $OutputFilenames); }
 // / -----------------------------------------------------------------------------------
 

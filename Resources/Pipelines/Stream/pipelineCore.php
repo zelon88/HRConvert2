@@ -1,24 +1,24 @@
 <?php
 // / -----------------------------------------------------------------------------------
-// / COPYRIGHT INFORMATION ...
+// / Copyright Information ...
 // / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
 // /
-// / LICENSE INFORMATION ...
+// / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
-// / APPLICATION INFORMATION ...
+// / Application Information ...
 // / This application is designed to provide a web-interface for converting file formats on
 // / a server for users of any web browser without authentication.
 // /
-// / FILE INFORMATION ...
-// / v3.8.5.
+// / File Information ...
+// / v3.8.6.
 // / This file is the converter for the Stream pipeline. It is loaded by pipelineManager.php
 // / ONLY when a Stream conversion is about to be dispatched to it.
 // / Error block 14000 through 14001 & 26000 through 26007 belong to this pipeline. Those
 // / numbers came with the code when it moved out of convertCore.php & they did not change.
 // /
-// / THIS IS THE REFERENCE IMPLEMENTATION OF A DETACHED WORKER PIPELINE.
+// / This is the reference implementation of a detached worker pipeline.
 // / It does not produce an output file before it returns. It launches FFMPEG in the
 // / background, hands back the process ID, & the core supervises that process after the
 // / connection to the user has closed.
@@ -26,8 +26,8 @@
 // / The passthrough is four small pieces & getting any one of them wrong orphans a process
 // / on the server. It is written down precisely so that nobody has to invent it again.
 // /
-// / WHAT MOVED HERE & WHAT STAYED IN THE CORE, & THE RULE THAT DECIDED IT.
-// / THE CORE OWNS THE NETWORK. A PIPELINE OWNS ITS FORMAT.
+// / What moved here & what stayed in the core, & the rule that decided it.
+// / The core owns the network. A pipeline owns its format.
 // / Anything that decides whether an address is safe to contact, or that actually contacts
 // / it, is core owned. Anything that knows what bytes MEAN belongs to the pipeline that
 // / understands that format.
@@ -48,7 +48,7 @@
 // /   downloadRemoteFileForInspection pinned, redirect refusing, size bounded fetch
 // /   waitForStream                   supervise a detached worker of any kind
 // /
-// / THOSE EIGHT HAVE NO CALLER OUTSIDE THIS PIPELINE TODAY & THEY STILL STAY.
+// / Those eight have no caller outside this pipeline today & they still stay.
 // / Everywhere else in this migration, a helper with no other caller moved with its
 // / pipeline. This is the deliberate exception. Network egress & SSRF judgement are core
 // / owned by POLICY rather than by caller count, so that a community author writing a
@@ -108,7 +108,7 @@ function classifyStreamContent($streamContents) {
   // / Set variables.
   global $EnableMemoryProtection;
   $IsPlaylist = $IsSegment = FALSE;
-  // / A playlist must open with the #EXTM3U tag. ltrim handles a BOM or leading whitespace.
+  // / A playlist must open with the #EXTM3U tag. Ltrim handles a BOM or leading whitespace.
   if (strncmp(ltrim($streamContents), '#EXTM3U', 7) === 0) $IsPlaylist = TRUE;
   // / Only check for MPEG-TS if it is not already a playlist. Nothing can legitimately be both.
   else $IsSegment = inspectTSFile($streamContents);

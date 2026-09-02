@@ -1,24 +1,24 @@
 <?php
 // / -----------------------------------------------------------------------------------
-// / COPYRIGHT INFORMATION ...
+// / Copyright Information ...
 // / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
 // /
-// / LICENSE INFORMATION ...
+// / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
-// / APPLICATION INFORMATION ...
+// / Application Information ...
 // / This application is designed to provide a web-interface for converting file formats on
 // / a server for users of any web browser without authentication.
 // /
-// / FILE INFORMATION ...
-// / v3.8.5.
+// / File Information ...
+// / v3.8.6.
 // / This file declares what the Model conversion pipeline is & what it can do.
 // / It is read by pipelineManager.php on EVERY request & it must stay cheap.
 // / It ASSIGNS VARIABLES & DOES NOTHING ELSE. No functions, no logic, no output.
-// / rror block 20000 through 20003 belongs to this pipeline. Those numbers came with the code
-// / when it
-// / moved out of convertCore.php & they did not change.
+// / Error block 9000 through 9004 belongs to this pipeline.
+// / Those numbers came with the code when it moved out of convertCore.php.
+// / They did not change, because operators have already read them.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for what each declaration means.
 // /
 // / <3 Open-Source
@@ -35,7 +35,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read WITHOUT executing this file, then matched
 // / EXACTLY against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipelineCore.php beside it ships & moves with this file.
-$PipelineVersion = 'v3.8.5';
+$PipelineVersion = 'v3.8.6';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -57,11 +57,13 @@ $PipelinePriority = 450;
 $PipelineEntryPoint = 'convertModels';
 
 // / The depends.php subsystem this pipeline needs. Dependency Core owns installation.
-// / TWO BINARIES SERVE THIS FAMILY & ONLY ONE IS NAMED HERE.
+// / This string must match a Subsystem name in depends.php exactly.
+// / Naming the subsystem rather than the package keeps one source of truth for the version.
+// / Two binaries serve this family & only one is named here.
 // / Assimp converts between mesh formats & MeshLab handles what Assimp will not. Assimp is
 // / named because it is the one without which nothing here works at all, & verifyModelVersions()
 // / in convertCore.php is what actually gates both.
-$PipelineSubsystem = 'assimp';
+$PipelineSubsystem = '3D Models';
 
 // / Shared modules this pipeline needs, loaded before its converter is loaded.
 // / This pipeline needs none.
@@ -82,6 +84,10 @@ $Capabilities = array(
   'Input' => array(
     'obj', 'stl', 'ply', 'dae', 'fbx', '3ds', 'blend', 'gltf', 'glb', 'x3d', 'off', 'lwo',
     'ms3d', 'ac', 'b3d', 'q3d', 'irr', 'md2', 'md3', 'md5mesh', 'smd', 'ase', 'dxf', 'raw'),
+  // / A format here that neither Assimp nor MeshLab can WRITE is refused at conversion time
+  // / with error 9004. Reading a format is not the same as writing it, & Assimp reads
+  // / several it cannot produce. The writer lists live in pipelineCore.php beside the route
+  // / selection that consults them.
   'Output' => array(
     'obj', 'stl', 'ply', 'dae', 'fbx', 'gltf', 'glb', 'x3d', 'off', '3ds', 'assbin', 'json'));
 

@@ -1,18 +1,18 @@
 <?php
 // / -----------------------------------------------------------------------------------
-// / COPYRIGHT INFORMATION ...
+// / Copyright Information ...
 // / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
 // /
-// / LICENSE INFORMATION ...
+// / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
-// / APPLICATION INFORMATION ...
+// / Application Information ...
 // / This application is designed to provide a web-interface for converting file formats on
 // / a server for users of any web browser without authentication.
 // /
-// / FILE INFORMATION ...
-// / v3.8.5.
+// / File Information ...
+// / v3.8.6.
 // / This file is the converter for the Scad pipeline. It is loaded by pipelineManager.php
 // / ONLY when a Scad conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
@@ -26,8 +26,8 @@
 // /   rectifySCAD           rewrites the source using what the Sanitizer found
 // /   sanitizeAllSCADUploads  applies that to every file in the session
 // / All four are knowledge about what OpenSCAD source MEANS, which is this pipeline's job.
-// / THE POLICY FILES DID NOT MOVE & MUST NOT.
-// / verifyOpenScadPolicy() & openScadApparmorContents() stay in convertCore.php, because
+// / The policy files did not move & must not.
+// / verifyOpenScadPolicy() & openScadApparmorContents() stay in convertCore.php.
 // / fixManagedPermissions() & validateOperatingEnvironment() write & check that policy
 // / during installation, whether or not this pipeline is installed at all. A sandbox
 // / profile is part of the operating environment rather than part of a converter.
@@ -348,7 +348,7 @@ function sanitizeAllSCADUploads() {
 // / resolved include would otherwise hand OpenSCAD a source that was never filtered.
 // / Sanitized copies are never retained. If they are needed again they are regenerated.
 // /
-// / SANITIZATION IS NOT THE SECURITY BOUNDARY & MUST NEVER BE TREATED AS ONE.
+// / Sanitization is not the security boundary & must never be treated as one.
 // / A filter over a closed character set can be a boundary, because that question has a
 // / complete answer. A filter that must interpret a grammar cannot be, because it can only
 // / approximate another program's parser & every disagreement is a bypass.
@@ -448,8 +448,8 @@ function convertSCAD($pathname, $newPathname, $extension) {
       // / require for shared memory. A tmpfs is enough & stays inside the namespace.
       .' --tmpfs /dev/shm'
       .' --setenv HOME /tmp'
-      // / Every writable location a dependency reaches for is pointed at the tmpfs, so
-      // / nothing tries to create state outside the namespace & fail.
+      // / Every writable location a dependency reaches for is pointed at the tmpfs.
+      // / Nothing tries to create state outside the namespace & fail.
       .' --setenv XDG_RUNTIME_DIR /tmp'
       .' --setenv XDG_CONFIG_HOME /tmp/.config'
       .' --setenv XDG_CACHE_HOME /tmp/.cache'
@@ -467,8 +467,8 @@ function convertSCAD($pathname, $newPathname, $extension) {
     // / THIS REPLACES A FIXED nice -n 19 & IS NOT STRICTLY STRONGER ON EVERY HOST.
     // / Where a scope can be created the ceiling is far stronger; a CPUQuota is enforced
     // / against a cgroup rather than requested from the scheduler. Where no scope can be
-    // / created limitCommand() falls back to niceness derived from the configured share, so
-    // / the stock 'Scad' => '75,1024' yields less than the old hardcoded 19 did. That is the
+    // / created limitCommand() falls back to niceness derived from the configured share.
+    // / The stock 'Scad' => '75,1024' yields less than the old hardcoded 19 did. That is the
     // / configured policy being honoured rather than overridden, which is the point, but an
     // / administrator running without systemd who wants the old behaviour back sets a
     // / smaller processor share for Scad & gets a larger niceness from it.

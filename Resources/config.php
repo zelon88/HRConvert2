@@ -1,29 +1,29 @@
 <?php
 
 // / -----------------------------------------------------------------------------------
-// / COPYRIGHT INFORMATION ...
+// / Copyright information ...
 // / HRConvert2, Copyright on 8/28/2026 by Justin Grimes, www.github.com/zelon88
 // /
-// / LICENSE INFORMATION ...
+// / License information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
-// / APPLICATION INFORMATION ...
+// / Application information ...
 // / This application is designed to provide a web-interface for converting file formats
 // / on a server for users of any web browser without authentication. 
 // /
-// / FILE INFORMATION ... 
-// / v3.8.3.
+// / File information ...
+// / v3.8.6.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
 // / Be careful to preserve all syntax & formatting.
 // /
-// / HARDWARE REQUIREMENTS ... 
+// / Hardware requirements ...
 // / This application requires at least a Raspberry Pi Model B+ or greater.
 // / This application will run on just about any x86 or x64 computer.
 // /
-// / DEPENDENCY REQUIREMENTS ... 
+// / Dependency requirements ...
 // / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
 // / Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Calibre,
 // / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap Dia & xvfb-run.
@@ -44,7 +44,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. Replacing config.php with a newer one is the correct fix.
-$ConfigVersion = 'v3.8.3';
+$ConfigVersion = 'v3.8.6';
 // / ------------------------------
 
 // / ------------------------------
@@ -148,6 +148,28 @@ $DeleteBuildEnvironment = FALSE;
 // /   Valid options are TRUE or FALSE.
 // /   Default is FALSE.
 $DeleteDevelopmentDocumentation = FALSE;
+// /  --Maintain HTAccess--
+// /   Whether HRConvert2 writes & maintains the .htaccess that protects its DATA directory.
+// /   The DATA directory sits inside the web root & holds the files users upload & convert,
+// /   because a browser has to be able to fetch them by URL. That makes the web server hand
+// /   out user supplied content from this application's own origin, & for any format a
+// /   browser treats as ACTIVE that content is code rather than data. An SVG is the clear
+// /   case; it is served as image/svg+xml & a script element inside it executes.
+// /   The rules that close this belong in the server configuration, which the -fp argument
+// /   writes & activates. The .htaccess is the FALLBACK for a server this cannot configure.
+// /   If set to TRUE, the -fp & --setup arguments write the file, & every web request checks
+// /   that it still matches this release & rewrites it when it does not.
+// /   If set to FALSE, the file is never written, & a file this application previously wrote
+// /   is REMOVED so that turning this off actually takes effect. A file an administrator
+// /   wrote themselves is never touched either way.
+// /   Set this to FALSE where the DATA rules are already applied in the server configuration
+// /   & a second copy in a .htaccess would be redundant, or where policy forbids the
+// /   application writing into the web root at all.
+// /   Turning this off does NOT make the DATA directory safe by itself. Run the -fp argument
+// /   & read the DATA exposure line it prints to confirm the tree is still protected.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$MaintainHTAccess = TRUE;
 // /  --Require Sandbox--
 // /   Whether a conversion that cannot be isolated is refused or run unprotected.
 // /   A conversion dependency parses an untrusted file & most of them have a history of
@@ -322,10 +344,11 @@ $MinimumAssimpVersion = '5.0';
 // /   Enabling this toggle forces the core to pass geometry repairs to a local Python script.
 // /   This bypasses the need for an active X11 virtual frame display buffer on your host.
 // /   When enabled, it completely bypasses the legacy binary year-month version validation check.
+// /   When disabled, standard Meshlab is used instead.
 // /   Requires 'python3' and the 'pymeshlab' package to be manually installed via pip on the server.
 // /   True runs the modern Python script route, False defaults to the standard meshlabserver binary.
-// /   Default is FALSE.
-$UsePyMeshLab = FALSE;
+// /   Default is TRUE.
+$UsePyMeshLab = TRUE;
 // /  --Minimum MeshLab Version--
 // /   MeshLab is the engine behind 3D geometry optimization and manifold rectification.
 // /   This minimum exists for headless server parity, not for security.
@@ -501,6 +524,22 @@ $MinimumIsoHybridVersion = '0.12';
 // /   Format is major.minor.
 // /   Default is '5.0'.
 $MinimumCalibreVersion = '9.13';
+// /  --Allow Unprivileged Namespaces--
+// /   Permits HRConvert2 to switch off kernel.apparmor_restrict_unprivileged_userns.
+// /   The switch is thrown during the -fp argument & at no other time.
+// /   Bubblewrap needs that restriction lifted to create the namespace every sandbox is built in.
+// /   The restriction protects a general purpose desktop from a hostile local user.
+// /   This machine is a dedicated appliance whose only local users are the administrator & the web server.
+// /   Leaving the restriction in force here does not make the machine safer.
+// /   It disables the sandbox that isolates every hostile file the machine exists to process.
+// /   That file is the threat which actually arrives on an appliance like this one.
+// /   Set this to FALSE on a shared host carrying untrusted local users.
+// /   The restriction is doing real work on a machine of that kind.
+// /   Conversions will then refuse unless --Require Sandbox-- is also FALSE.
+// /   Setting both to FALSE runs every conversion unprotected & is worse again.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$AllowUnprivilegedNamespaces = TRUE;
 // / ------------------------------
 
 // / ------------------------------
@@ -856,7 +895,7 @@ $RetryCount = 5;
 // /  --Enable Per Conversion Limits--
 // /   Runs every conversion inside a transient systemd scope carrying a processor & memory
 // /   ceiling, so one conversion cannot starve the host.
-// /   THIS REQUIRES PERMISSION THE WEB SERVER USER DOES NOT HAVE BY DEFAULT.
+// / This requires permission the web server user does not have by default.
 // /   Creating a transient scope on the system bus is a privileged operation. HRConvert2
 // /   proves it can create one before it relies on it, & falls back to running unlimited
 // /   with a warning when it cannot. To grant the permission, install a polkit rule
@@ -993,6 +1032,33 @@ $DefaultExpectedRuntime = 120;
 // / ------------------------------
 // / --Supported File Format Information--
 // /
+// /  --Supported Format Detection Type--
+// /   Decides whether the format arrays below are the final word on what may be converted.
+// /   Every conversion pipeline also declares the formats it believes it can handle.
+// /   This setting chooses what happens when a declaration & an array disagree.
+// /   Set this to hardcoded-only to let the arrays below decide everything.
+// /   A pipeline declaration is then treated as information & is never enforced.
+// /   Set this to detected-restrictive to drop any format no installed pipeline claims.
+// /   That can never widen what may be uploaded.
+// /   It removes menu entries which would always have failed.
+// /   Set this to detected-additive to also offer formats a pipeline claims but the arrays omit.
+// /   That widens the accepted format surface past what you approved here.
+// /   Use it only on a server where you trust every installed pipeline.
+// /   A pipeline can always refuse a pair its own exclusion list names, whatever this is set to.
+// /   Refusing is safe in any mode because it only ever removes a broken pairing.
+// /   Valid options are 'hardcoded-only', 'detected-restrictive' or 'detected-additive'.
+// /   Default is 'hardcoded-only'.
+$SupportedFormatDetectionType = 'hardcoded-only';
+// /  --Warn On Capability Mismatch--
+// /   Logs a warning when a pipeline declaration disagrees with the arrays below.
+// /   The warning names the format, the conversion family & which side it came from.
+// /   This has no effect while --Supported Format Detection Type-- is hardcoded-only.
+// /   No declaration decides anything in that mode, so there is nothing to report.
+// /   Leaving this enabled is recommended wherever detection is active.
+// /   A format quietly appearing or disappearing is worth knowing about.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$WarnOnCapabilityMismatch = TRUE;
 // /  --Supported Archive Formats--
 $UserArchiveArray = array('zip', 'rar', 'tar', '7z', 'iso');
 // /  --Supported Bootable ISO Output Formats--
@@ -1065,20 +1131,3 @@ $UserEbookInputArray = array('epub', 'mobi', 'azw', 'azw3', 'azw4', 'fb2', 'fbz'
 // /   Add 'pdf' here only after confirming it actually works on your server.
 $UserEbookOutputArray = array('epub', 'mobi', 'azw3', 'fb2', 'lit', 'lrf', 'pdb', 'pml', 'rb', 'snb', 'tcr', 'txt', 'txtz', 'rtf', 'oeb', 'docx', 'pdf');
 // / ------------------------------
-// /  --Allow Unprivileged Namespaces--
-// /   Permits HRConvert2 to switch off kernel.apparmor_restrict_unprivileged_userns during
-// /   the -fp argument, so bubblewrap can create the namespace every sandbox is built in.
-// /
-// /   THE DEFAULT IS TRUE & THAT IS THE SAFER SETTING ON A CONVERSION SERVER.
-// /   The restriction protects a general purpose desktop from a hostile local user. This
-// /   machine is a dedicated appliance whose local users are the administrator & the web
-// /   server. Leaving the restriction in force does not make it safer, it disables the
-// /   sandbox that isolates every hostile FILE the machine exists to process, which is the
-// /   threat that actually arrives here.
-// /
-// /   Set this to FALSE on a shared host carrying untrusted local users, where the
-// /   restriction is doing real work. Conversions will then refuse unless --Require
-// /   Sandbox-- is also FALSE, which runs them unprotected & is worse again.
-// /   Valid options are TRUE or FALSE.
-// /   Default is TRUE.
-$AllowUnprivilegedNamespaces = TRUE;

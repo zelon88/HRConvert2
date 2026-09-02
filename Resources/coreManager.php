@@ -1,26 +1,26 @@
 <?php
 // / -----------------------------------------------------------------------------------
-// / COPYRIGHT INFORMATION ...
+// / Copyright information ...
 // / HRConvert2, Copyright on 8/28/2026 by Justin Grimes, www.github.com/zelon88
 // /
-// / LICENSE INFORMATION ...
+// / License information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
-// / APPLICATION INFORMATION ...
+// / Application information ...
 // / This application is designed to provide a web-interface for converting file formats
 // / on a server for users of any web browser without authentication.
 // /
-// / FILEINFORMATION ...
-// / v3.8.1.
+// / Fileinformation ...
+// / v3.8.6.
 // / This file contains the core manager resource listener logic of the application.
 // / This file contains logic related to rate planning & resouce management.
 // /
-// / HARDWARE REQUIREMENTS ...
+// / Hardware requirements ...
 // / This application requires at least a Raspberry Pi Model B+ or greater.
 // / This application will run on just about any x86 or x64 computer.
 // /
-// / DEPENDENCY REQUIREMENTS ...
+// / Dependency requirements ...
 // / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
 // / Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Calibre,
 // / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap Dia & xvfb-run.
@@ -38,7 +38,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php checks this without executing the file.
-$CoreManagerVersion = 'v3.8.1';
+$CoreManagerVersion = 'v3.8.6';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -53,6 +53,7 @@ function deriveManagerKey($keyPurpose) {
   if (is_string($SecretKey) && strlen($SecretKey) === 64) {
     $keyMaterial = $SecretKey.'|coreManager|'.$keyPurpose;
     $DerivedKey = hash('sha256', $keyMaterial, TRUE); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $keyMaterial, $keyPurpose);
   return $DerivedKey; }
 // / -----------------------------------------------------------------------------------
@@ -76,6 +77,7 @@ function encryptManagerMessage($messagePayload, $keyPurpose) {
     $messageIv = random_bytes(12);
     $messageCipher = openssl_encrypt($messageJson, 'aes-256-gcm', $messageKey, OPENSSL_RAW_DATA, $messageIv, $messageTag);
     if ($messageCipher !== FALSE) $EncryptedMessage = base64_encode($messageIv.$messageTag.$messageCipher); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $messageKey, $messageJson, $messageIv, $messageTag, $messageCipher, $messagePayload, $keyPurpose);
   return $EncryptedMessage; }
 // / -----------------------------------------------------------------------------------
@@ -108,6 +110,7 @@ function decryptManagerMessage($encryptedPayload, $keyPurpose) {
           if ($messageAge <= (int)$ManagerMessageSkew) {
             $MessagePayload = $decodedPayload;
             $MessageIsValid = TRUE; } } } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $messageKey, $rawPayload, $messageIv, $messageTag, $messageCipher, $messageJson, $decodedPayload, $messageAge, $encryptedPayload, $keyPurpose);
   return array($MessageIsValid, $MessagePayload); }
 // / -----------------------------------------------------------------------------------
@@ -122,6 +125,7 @@ function buildManagerSocketPath($socketName) {
   $ManagerSocketPath = '';
   $cleanSocketName = preg_replace('/[^A-Za-z0-9\-]/', '', (string)$socketName);
   if ($cleanSocketName !== '') $ManagerSocketPath = $ManagerSocketDir.$DirSep.$cleanSocketName.'.sock';
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $cleanSocketName, $socketName);
   return $ManagerSocketPath; }
 // / -----------------------------------------------------------------------------------
@@ -146,6 +150,7 @@ function openManagerSocketServer($socketPath) {
     $ServerIsOpen = TRUE;
     if ($Verbose) logEntry('Bound a manager socket at '.$socketPath.'.'); }
   else warningEntry('Could not open the manager socket at '.$socketPath.'. '.$socketError);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $socketError, $socketErrorNumber, $socketPath);
   return array($ServerIsOpen, $SocketServer); }
 // / -----------------------------------------------------------------------------------
@@ -177,6 +182,7 @@ function sendManagerMessage($socketPath, $messagePayload, $keyPurpose, $timeoutS
         $rawReply = @fgets($socketClient, 65536);
         if (is_string($rawReply) && trim($rawReply) !== '') list ($replyIsValid, $ReplyPayload) = decryptManagerMessage($rawReply, $keyPurpose); }
       @fclose($socketClient); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $socketError, $socketErrorNumber, $encryptedMessage, $rawReply, $bytesWritten, $replyIsValid, $socketPath, $messagePayload, $keyPurpose, $timeoutSeconds);
   return array($MessageWasDelivered, $ReplyPayload); }
 // / -----------------------------------------------------------------------------------
@@ -213,6 +219,7 @@ function receiveManagerMessages($socketServer, $keyPurpose, $maxMessages, $waitS
     $messageCounter++;
     $waitSeconds = 0; }
   if ($Verbose && $MessagesReceived > 0) logEntry('Accepted '.$MessagesReceived.' message(s) on the '.$keyPurpose.' channel.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $rawMessage, $messageIsValid, $messagePayload, $messageCounter, $keyPurpose, $maxMessages, $waitSeconds);
   return array($MessagesReceived, $ManagerMessages, $ManagerConnections); }
 // / -----------------------------------------------------------------------------------
@@ -231,6 +238,7 @@ function replyToManagerMessage($socketConnection, $replyPayload, $keyPurpose) {
     $bytesWritten = @fwrite($socketConnection, $encryptedReply.PHP_EOL);
     if ($bytesWritten > 0) $ReplyWasSent = TRUE; }
   if (is_resource($socketConnection)) @fclose($socketConnection);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $encryptedReply, $bytesWritten, $replyPayload, $keyPurpose);
   return $ReplyWasSent; }
 // / -----------------------------------------------------------------------------------
@@ -257,6 +265,7 @@ function readManagerState($stateName) {
         if (is_array($decodedState)) {
           $ManagerState = $decodedState;
           $StateWasRead = TRUE; } } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $statePath, $stateContents, $decodedState, $cleanStateName, $stateName);
   return array($StateWasRead, $ManagerState); }
 // / -----------------------------------------------------------------------------------
@@ -279,6 +288,7 @@ function writeManagerState($stateName, $stateData) {
     if ($bytesWritten === strlen($stateContents)) {
       @chmod($statePath, 0600);
       $StateWasWritten = TRUE; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $statePath, $stateContents, $bytesWritten, $cleanStateName, $stateName, $stateData);
   return $StateWasWritten; }
 // / -----------------------------------------------------------------------------------
@@ -297,9 +307,13 @@ function pollSystemResources() {
   $memoryInfo = $cpuInfo = '';
   $memoryMatches = array();
   $cpuCount = 1;
+  $memoryWasRead = FALSE;
   // / Processor count. nproc is not always present, so cpuinfo is the fallback.
   $cpuInfo = @file_get_contents('/proc/cpuinfo');
-  if (is_string($cpuInfo) && $cpuInfo !== '') $cpuCount = max(1, substr_count($cpuInfo, 'processor'));
+  // / Only a line that begins with the processor field is counted. substr_count matched the
+  // / word anywhere in the file, including inside a model name that contains it, & every
+  // / spurious match inflated the budget this host is willing to hand out.
+  if (is_string($cpuInfo) && $cpuInfo !== '') $cpuCount = max(1, preg_match_all('/^processor\s*:/m', $cpuInfo));
   $SystemResources['CpuCount'] = $cpuCount;
   // / Load average over one minute.
   if (function_exists('sys_getloadavg')) {
@@ -312,10 +326,20 @@ function pollSystemResources() {
   $memoryInfo = @file_get_contents('/proc/meminfo');
   if (is_string($memoryInfo) && $memoryInfo !== '') {
     if (preg_match('/MemTotal:\s+(\d+)/', $memoryInfo, $memoryMatches)) $SystemResources['MemoryTotalKb'] = (int)$memoryMatches[1];
-    if (preg_match('/MemAvailable:\s+(\d+)/', $memoryInfo, $memoryMatches)) $SystemResources['MemoryAvailableKb'] = (int)$memoryMatches[1];
-    if ($SystemResources['MemoryTotalKb'] > 0) $SystemResources['MemoryUsedPercentage'] = round((1 - ($SystemResources['MemoryAvailableKb'] / $SystemResources['MemoryTotalKb'])) * 100, 2);
+    if (preg_match('/MemAvailable:\s+(\d+)/', $memoryInfo, $memoryMatches)) {
+      $SystemResources['MemoryAvailableKb'] = (int)$memoryMatches[1];
+      $memoryWasRead = TRUE; }
+    // / The percentage is only calculated when MemAvailable was actually found.
+    // / MemAvailable arrived in Linux 3.14 & some container runtimes still do not expose it.
+    // / Calculating regardless read the initialized zero as no memory available, reported
+    // / 100 percent pressure, & drove the usable budget to zero. Every conversion on such a
+    // / host was then refused for insufficient budget, permanently, with nothing in the log
+    // / that pointed at the cause.
+    if ($memoryWasRead && $SystemResources['MemoryTotalKb'] > 0) $SystemResources['MemoryUsedPercentage'] = round((1 - ($SystemResources['MemoryAvailableKb'] / $SystemResources['MemoryTotalKb'])) * 100, 2);
+    else if (!$memoryWasRead) warningEntry('This kernel does not report MemAvailable, so the resource budget is governed by load average alone.');
     $ResourcesPolled = TRUE; }
-  purgeSensitiveMemory($EnableMemoryProtection, $loadAverages, $memoryInfo, $cpuInfo, $memoryMatches, $cpuCount);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $loadAverages, $memoryInfo, $cpuInfo, $memoryMatches, $cpuCount, $memoryWasRead);
   return array($ResourcesPolled, $SystemResources); }
 // / -----------------------------------------------------------------------------------
 
@@ -330,13 +354,21 @@ function calculateResourceBudget($systemResources, $allocatedBudget) {
   global $TotalResourceBudget, $ReserveResourcePercentage, $EnableMemoryProtection;
   $BudgetCalculated = FALSE;
   $ResourceBudget = array('TotalBudget' => 0, 'ReserveBudget' => 0, 'AllocatedBudget' => 0, 'RemainingBudget' => 0, 'ConsumedBudget' => 0, 'AllowNextWorker' => FALSE, 'BudgetTime' => time());
-  $baseBudget = $reserveBudget = $pressurePenalty = $usableBudget = 0;
+  $baseBudget = $reserveBudget = $pressurePenalty = $usableBudget = $reserveShare = 0;
   $highestPressure = 0.0;
   if (is_array($systemResources)) {
     // / A configured budget of zero derives the budget from the processor count.
     $baseBudget = (int)$TotalResourceBudget;
     if ($baseBudget < 1) $baseBudget = max(1, (int)$systemResources['CpuCount']) * 100;
-    $reserveBudget = (int)floor($baseBudget * ((int)$ReserveResourcePercentage / 100));
+    // / A reserve outside nought to a hundred is a configuration mistake rather than an
+    // / instruction. Left unclamped, a value above a hundred reserved more than the whole
+    // / budget & refused every conversion without ever saying why.
+    $reserveShare = (int)$ReserveResourcePercentage;
+    if ($reserveShare < 0) $reserveShare = 0;
+    if ($reserveShare > 100) {
+      warningEntry('The configured reserve share is above 100 percent. It was treated as 100.');
+      $reserveShare = 100; }
+    $reserveBudget = (int)floor($baseBudget * ($reserveShare / 100));
     // / Whichever of load or memory is under more pressure governs the budget.
     $highestPressure = max((float)$systemResources['LoadPercentage'], (float)$systemResources['MemoryUsedPercentage']);
     if ($highestPressure > 100) $highestPressure = 100;
@@ -351,13 +383,15 @@ function calculateResourceBudget($systemResources, $allocatedBudget) {
     if ($ResourceBudget['RemainingBudget'] < 0) $ResourceBudget['RemainingBudget'] = 0;
     if ($ResourceBudget['RemainingBudget'] > 0) $ResourceBudget['AllowNextWorker'] = TRUE;
     $BudgetCalculated = TRUE; }
-  purgeSensitiveMemory($EnableMemoryProtection, $baseBudget, $reserveBudget, $pressurePenalty, $usableBudget, $highestPressure, $systemResources, $allocatedBudget);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $baseBudget, $reserveBudget, $pressurePenalty, $usableBudget, $reserveShare, $highestPressure, $systemResources, $allocatedBudget);
   return array($BudgetCalculated, $ResourceBudget); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to decide whether one budget request may proceed.
-// / Accepts the current budget array, the conversion cost & the expected runtime.
+// / Accepts the budget array, the tracked worker registry, the conversion cost & the
+// / expected runtime, in that order.
 // / Returns an approval boolean & a denial reason string, in that order.
 function evaluateBudgetRequest($resourceBudget, $workerRegistry, $conversionCost, $expectedRuntime) {
   // / Set variables.
@@ -368,11 +402,16 @@ function evaluateBudgetRequest($resourceBudget, $workerRegistry, $conversionCost
   $requestedRuntime = (int)$expectedRuntime;
   $trackedWorkers = count($workerRegistry);
   if ($requestedCost < 1) $requestedCost = 1;
+  // / A runtime below one is not shorter than the maximum, it is nonsense. Left alone it
+  // / passed the ceiling test & registered a worker that findStaleWorkers judged overdue
+  // / on its very first sweep.
+  if ($requestedRuntime < 1) $requestedRuntime = 1;
   if ($requestedRuntime > (int)$MaxExpectedRuntime) $DenialReason = 'The expected runtime exceeds the configured maximum.';
   else if ((int)$MaxConcurrentWorkers > 0 && $trackedWorkers >= (int)$MaxConcurrentWorkers) $DenialReason = 'The concurrent worker limit has been reached.';
   else if (!isset($resourceBudget['RemainingBudget'])) $DenialReason = 'The resource budget is unavailable.';
   else if ((int)$resourceBudget['RemainingBudget'] < $requestedCost) $DenialReason = 'The remaining resource budget is insufficient.';
   else $RequestApproved = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $requestedCost, $requestedRuntime, $trackedWorkers, $resourceBudget, $workerRegistry, $conversionCost, $expectedRuntime);
   return array($RequestApproved, $DenialReason); }
 // / -----------------------------------------------------------------------------------
@@ -386,14 +425,20 @@ function registerTrackedWorker(&$workerRegistry, $workerPid, $conversionCost, $e
   global $EnableMemoryProtection;
   $WorkerWasRegistered = FALSE;
   $BudgetToken = bin2hex(random_bytes(12));
+  // / The kernel start time is recorded beside the number, so the worker can still be
+  // / identified after the number itself has been reused by something else.
   $workerRegistry[$BudgetToken] = array(
     'WorkerPid' => (int)$workerPid,
+    'ProcessStartTime' => readProcessStartTime((int)$workerPid),
     'ConversionCost' => (int)$conversionCost,
     'ExpectedRuntime' => (int)$expectedRuntime,
     'StartTime' => time(),
     'CheckTime' => time(),
     'Extensions' => 0);
-  if (isset($workerRegistry[$BudgetToken])) $WorkerWasRegistered = TRUE;
+  // / The assignment above cannot fail, so the registration is confirmed by reading the
+  // / record back rather than by testing that the key exists.
+  if (isset($workerRegistry[$BudgetToken]['WorkerPid']) && $workerRegistry[$BudgetToken]['WorkerPid'] === (int)$workerPid) $WorkerWasRegistered = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $workerPid, $conversionCost, $expectedRuntime);
   return array($WorkerWasRegistered, $BudgetToken); }
 // / -----------------------------------------------------------------------------------
@@ -410,6 +455,7 @@ function releaseTrackedWorker(&$workerRegistry, $budgetToken) {
   if ($cleanToken !== '' && isset($workerRegistry[$cleanToken])) {
     unset($workerRegistry[$cleanToken]);
     $WorkerWasReleased = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $cleanToken, $budgetToken);
   return $WorkerWasReleased; }
 // / -----------------------------------------------------------------------------------
@@ -434,9 +480,41 @@ function extendTrackedWorker(&$workerRegistry, $budgetToken, $requestedSeconds) 
       $workerRegistry[$cleanToken]['CheckTime'] = time();
       $NewExpectedRuntime = $proposedRuntime;
       $ExtensionApproved = TRUE; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $cleanToken, $proposedRuntime, $budgetToken, $requestedSeconds);
   return array($ExtensionApproved, $NewExpectedRuntime); }
 // / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to read the kernel start time of one process.
+// / Accepts the process identifier. Returns the start time in clock ticks, or zero.
+// / A process identifier on its own does not identify a process.
+// / The kernel reuses numbers, & a worker that exited can have its number taken by
+// / something unrelated within the life of one conversion. Pairing the number with the
+// / start time the kernel recorded gives an identity that cannot be inherited, because a
+// / new process occupying the same number necessarily started later.
+// / Field 22 of /proc/PID/stat is that start time. It is read from the end of the line
+// / rather than by splitting on spaces, because field 2 is the executable name & a
+// / process may legitimately have spaces or brackets in it.
+function readProcessStartTime($processId) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $ProcessStartTime = 0;
+  $cleanPid = (int)$processId;
+  $statContents = $statTail = '';
+  $statFields = array();
+  if ($cleanPid > 1) {
+    $statContents = @file_get_contents('/proc/'.$cleanPid.'/stat');
+    if (is_string($statContents) && strrpos($statContents, ')') !== FALSE) {
+      $statTail = trim(substr($statContents, strrpos($statContents, ')') + 1));
+      $statFields = preg_split('/\s+/', $statTail);
+      // / The tail begins at field 3, so field 22 sits at offset 19.
+      if (is_array($statFields) && isset($statFields[19])) $ProcessStartTime = (int)$statFields[19]; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $cleanPid, $statContents, $statTail, $statFields, $processId);
+  return $ProcessStartTime; }
+// / -----------------------------------------------------------------------------------
+
 
 // / -----------------------------------------------------------------------------------
 // / A function to find tracked workers that have outlived their expected runtime.
@@ -450,23 +528,33 @@ function findStaleWorkers($workerRegistry, $graceSeconds) {
   $StaleWorkers = array();
   $workerToken = '';
   $workerRecord = array();
-  $workerAge = $workerDeadline = 0;
+  $workerAge = $workerDeadline = $recordedStart = $currentStart = 0;
   foreach ($workerRegistry as $workerToken => $workerRecord) {
     $workerAge = time() - (int)$workerRecord['StartTime'];
     $workerDeadline = (int)$workerRecord['ExpectedRuntime'] + (int)$graceSeconds;
     // / A process that no longer exists never sent its completion message.
-    if (!managerProcessIsAlive((int)$workerRecord['WorkerPid'])) $StaleWorkers[$workerToken] = array('WorkerPid' => (int)$workerRecord['WorkerPid'], 'StaleReason' => 'Process has exited');
-    else if ($workerAge > $workerDeadline) $StaleWorkers[$workerToken] = array('WorkerPid' => (int)$workerRecord['WorkerPid'], 'StaleReason' => 'Runtime exceeded by '.($workerAge - $workerDeadline).' second(s)'); }
-  purgeSensitiveMemory($EnableMemoryProtection, $workerToken, $workerRecord, $workerAge, $workerDeadline, $workerRegistry, $graceSeconds);
+    // / A number that is alive but no longer carries the start time recorded at
+    // / registration belongs to something else entirely. The worker is gone & its budget is
+    // / reclaimed, but the reason says so plainly, because the alternative is signalling a
+    // / process this application never started.
+    $recordedStart = isset($workerRecord['ProcessStartTime']) ? (int)$workerRecord['ProcessStartTime'] : 0;
+    $currentStart = readProcessStartTime((int)$workerRecord['WorkerPid']);
+    if (!managerProcessIsAlive((int)$workerRecord['WorkerPid'])) $StaleWorkers[$workerToken] = array('WorkerPid' => (int)$workerRecord['WorkerPid'], 'ProcessStartTime' => $recordedStart, 'StaleReason' => 'Process has exited');
+    else if ($recordedStart > 0 && $currentStart > 0 && $currentStart !== $recordedStart) $StaleWorkers[$workerToken] = array('WorkerPid' => 0, 'ProcessStartTime' => $recordedStart, 'StaleReason' => 'Process has exited & its identifier has been reused');
+    else if ($workerAge > $workerDeadline) $StaleWorkers[$workerToken] = array('WorkerPid' => (int)$workerRecord['WorkerPid'], 'ProcessStartTime' => $recordedStart, 'StaleReason' => 'Runtime exceeded by '.($workerAge - $workerDeadline).' second(s)'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $workerToken, $workerRecord, $workerAge, $workerDeadline, $recordedStart, $currentStart, $workerRegistry, $graceSeconds);
   return array($ScanCompleted, $StaleWorkers); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to terminate one worker process.
-// / Accepts the process identifier & a boolean requesting an immediate kill.
+// / Accepts the process identifier, a boolean requesting an immediate kill & the kernel
+// / start time recorded when the worker was registered, in that order.
 // / Returns TRUE when the process is no longer present after the attempt.
+// / A start time of zero skips the identity check, for a caller that has none to offer.
 // / This is the only place in the component that acts on a process without negotiation.
-function terminateWorkerProcess($workerPid, $forceKill) {
+function terminateWorkerProcess($workerPid, $forceKill, $expectedStartTime) {
   // / Set variables.
   global $EnableMemoryProtection;
   $ProcessWasTerminated = FALSE;
@@ -474,15 +562,25 @@ function terminateWorkerProcess($workerPid, $forceKill) {
   $killSignal = 15;
   $killOutput = array();
   $killExitCode = 1;
+  $currentStart = 0;
   if ($forceKill) $killSignal = 9;
   // / Never signal the whole process group & never signal process zero.
   if ($cleanPid > 1 && $cleanPid !== getmypid()) {
+    $currentStart = readProcessStartTime($cleanPid);
     if (!file_exists('/proc/'.$cleanPid)) $ProcessWasTerminated = TRUE;
+    // / The number is alive but is not the process that was registered against it.
+    // / Signalling here would kill something this application never started, as root.
+    // / The worker is gone either way, so the caller is told the process is no longer
+    // / present & nothing is signalled.
+    else if ((int)$expectedStartTime > 0 && $currentStart > 0 && $currentStart !== (int)$expectedStartTime) {
+      warningEntry('Worker '.$cleanPid.' was not terminated because its identifier now belongs to a different process. The worker had already exited.');
+      $ProcessWasTerminated = TRUE; }
     else {
       exec('kill -'.$killSignal.' '.escapeshellarg((string)$cleanPid).' 2>&1', $killOutput, $killExitCode);
       usleep(250000);
       if (!file_exists('/proc/'.$cleanPid)) $ProcessWasTerminated = TRUE; } }
-  purgeSensitiveMemory($EnableMemoryProtection, $cleanPid, $killSignal, $killOutput, $killExitCode, $workerPid, $forceKill);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $cleanPid, $killSignal, $killOutput, $killExitCode, $currentStart, $workerPid, $forceKill, $expectedStartTime);
   return $ProcessWasTerminated; }
 // / -----------------------------------------------------------------------------------
 
@@ -499,9 +597,14 @@ function spawnManagerProcess($managerRole) {
   $cleanRole = preg_replace('/[^a-z\-]/', '', strtolower((string)$managerRole));
   $startupKey = deriveStartupKey('start-manager-'.$cleanRole);
   if ($cleanRole !== '' && $startupKey !== '') {
-    $spawnCommand = 'nohup php '.escapeshellarg($InstLoc.$DirSep.'convertCore.php')
+    // / The key travels in the environment & never on the command line.
+    // / /proc/PID/cmdline is world readable, so a key placed there is visible in ps to
+    // / every local account for the whole life of the process, & a manager runs for days.
+    // / /proc/PID/environ is readable only by the owner. The child clears the variable as
+    // / soon as it reads it, so nothing the manager launches later inherits it.
+    $spawnCommand = 'HRCONVERT2_STARTUP_KEY='.escapeshellarg($startupKey)
+      .' nohup php '.escapeshellarg($InstLoc.$DirSep.'convertCore.php')
       .' --start-manager '.escapeshellarg($cleanRole)
-      .' '.escapeshellarg($startupKey)
       .' > /dev/null 2>&1 & echo $!';
     $spawnOutput = shell_exec($spawnCommand);
     $ManagerPid = (int)trim((string)$spawnOutput);
@@ -509,6 +612,7 @@ function spawnManagerProcess($managerRole) {
       $ManagerWasSpawned = TRUE;
       if ($Verbose) logEntry('Core Manager spawned the '.$cleanRole.' process as '.$ManagerPid.'.'); }
     else warningEntry('Could not spawn the '.$cleanRole.' manager process.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $spawnCommand, $spawnOutput, $startupKey, $cleanRole, $managerRole);
   return array($ManagerWasSpawned, $ManagerPid); }
 // / -----------------------------------------------------------------------------------
@@ -578,10 +682,11 @@ function runCoreManager() {
               $managerState['Subordinates'][$managerRole] = $managerPid;
               writeManagerState('managers', $managerState); } } } } }
     // / Stop every subordinate before leaving, so no orphan keeps a socket bound.
-    foreach ($managerState['Subordinates'] as $managerRole => $managerPid) terminateWorkerProcess($managerPid, FALSE);
+    foreach ($managerState['Subordinates'] as $managerRole => $managerPid) terminateWorkerProcess($managerPid, FALSE, 0);
     if (is_resource($socketServer)) @fclose($socketServer);
     if (file_exists($socketPath)) @unlink($socketPath);
     logEntry('Core Manager stopped.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $serverIsOpen, $keepRunning, $stateWasWritten, $socketPath, $managerRole, $targetSocket, $managerState, $managerMessages, $managerConnections, $replyPayload, $routedReply, $messagesReceived, $messageIndex, $managerPid, $managerWasSpawned, $replyWasDelivered, $subordinateRoles);
   return $CoreManagerExitedCleanly; }
 // / -----------------------------------------------------------------------------------
@@ -626,6 +731,7 @@ function runRequestManager() {
         replyToManagerMessage($managerConnections[$messageIndex], $replyPayload, 'worker');
         $messageIndex++; } }
     $RequestManagerExitedCleanly = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $serverIsOpen, $keepRunning, $forwardWasDelivered, $socketPath, $coreSocket, $managerMessages, $managerConnections, $forwardedReply, $replyPayload, $messagesReceived, $messageIndex);
   return $RequestManagerExitedCleanly; }
 // / -----------------------------------------------------------------------------------
@@ -711,6 +817,7 @@ function resolveSessionLocation(&$sessionLocations, $dailyHash, $sessionHash) {
     $SessionConvertLoc = resolveConvertLoc($cleanDaily, $cleanSession);
     $sessionLocations[$mapKey] = array('Path' => $SessionConvertLoc, 'LastSeen' => time()); }
   if ($Verbose) logEntry('Session Location: '.$SessionConvertLoc.', Session: '.($cleanSession === '' ? 'NONE' : $cleanSession).', Source: '.($entryIsCached ? 'MAP' : 'RESOLVED').'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $cleanDaily, $cleanSession, $mapKey, $entryIsCached, $dailyHash, $sessionHash);
   return $SessionConvertLoc; }
 // / -----------------------------------------------------------------------------------
@@ -732,6 +839,7 @@ function evictExpiredSessionLocations(&$sessionLocations, $maximumAgeSeconds) {
   foreach ($expiredKeys as $mapKey) {
     unset($sessionLocations[$mapKey]);
     $EntriesDropped++; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $mapKey, $mapEntry, $expiredKeys, $maximumAgeSeconds);
   return $EntriesDropped; }
 // / -----------------------------------------------------------------------------------
@@ -826,6 +934,7 @@ function cleanEveryConvertLoc() {
       else {
         $LocationsSwept++;
         if ($Verbose) logEntry('Scheduled sweep: '.$poolEntry['Path'].', Type: '.$poolEntry['Type'].', Expired sessions removed: '.($locationDeepCleaned ? 'YES' : 'NO').'.'); } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $convertLocPool, $poolEntry, $locationCleaned, $locationDeepCleaned);
   return array($SweepCompleted, $LocationsSwept); }
 // / -----------------------------------------------------------------------------------
@@ -849,8 +958,9 @@ function runResourceManager() {
   $managerMessages = $managerConnections = $replyPayload = $staleWorkers = $staleRecord = $workerRecord = $killReply = array();
   $messagesReceived = $messageIndex = $allocatedBudget = $newExpectedRuntime = 0;
   $lastPollTime = $lastReapTime = $lastSweepTime = $locationsSwept = $entriesDropped = 0;
-  $environmentIsReady = FALSE;
+  $environmentIsReady = $dataIsProtected = FALSE;
   $environmentFindings = array();
+  $exposureStatus = $exposureDetail = '';
   $socketPath = buildManagerSocketPath('resource-manager');
   list ($serverIsOpen, $socketServer) = openManagerSocketServer($socketPath);
   if (!$serverIsOpen) errorEntry('The Resource Manager could not open its socket!', 31002, TRUE);
@@ -895,6 +1005,31 @@ function runResourceManager() {
         list ($environmentIsReady, $environmentFindings) = validateOperatingEnvironment();
         if (!$environmentIsReady) warningEntry('The operating environment has degraded. The sandbox is unavailable & conversions requiring it will be refused. Run the -fp argument as root.');
         else if ($Verbose) logEntry('Operating environment revalidated. '.count($environmentFindings).' check(s) passed.');
+        // / Re-prove that the web served DATA tree still hands out inert downloads.
+        // /
+        // / This is not a check that can be done once at install time.
+        // / The protection lives in web server configuration, & web server configuration is
+        // / edited by people & replaced by package upgrades long after this application was
+        // / installed. Turning AllowOverride off, moving the vhost, adding a reverse proxy
+        // / that drops response headers, or migrating from Apache to nginx each re-open this
+        // / silently. There is no error, no failed conversion & nothing in any log; the only
+        // / observable difference is that an uploaded SVG starts executing again.
+        // / So it is re-established on the same schedule as everything else that can rot,
+        // / by asking the server rather than by reading a file off the disk.
+        // /
+        // / This REPORTS only, like every other check in this block. The listener runs as
+        // / the web server user, cannot edit server configuration & must not try.
+        // / The exposure check is part of validateOperatingEnvironment() above & is not run
+        // / a second time here. Its status is read back out of the findings so the listener
+        // / can say the right thing about it, because the three outcomes need three
+        // / different sentences & a degraded environment warning covers none of them.
+        $exposureStatus = environmentFindingStatus($environmentFindings, 'DATA exposure');
+        if ($exposureStatus === 'EXPOSED') warningEntry('The DATA directory is EXPOSED. Uploaded files are served as renderable documents rather than as downloads. Run the -fp argument as root & apply the rules in the server configuration. See Documentation/ABOUT_DATA_DIRECTORY_PROTECTION.txt.');
+        // / A broken tree is an outage rather than an exposure & is worth saying so plainly.
+        // / Every download & every share link is failing while this is true.
+        else if ($exposureStatus === 'BROKEN') warningEntry('The DATA directory is returning a server error, so no download & no share link works. Check the web server error log for a line naming DATA/.htaccess. Deleting that file restores service.');
+        else if ($exposureStatus !== 'ok') warningEntry('The exposure of the DATA directory could not be established. It reported '.$exposureStatus.'.');
+        else if ($Verbose) logEntry('DATA directory exposure revalidated. The tree serves inert content.');
         $lastSweepTime = time(); }
       list ($messagesReceived, $managerMessages, $managerConnections) = receiveManagerMessages($socketServer, 'internal', (int)$ManagerMessageBatchSize, (int)$ManagerSocketTimeout);
       $messageIndex = 0;
@@ -935,7 +1070,8 @@ function runResourceManager() {
         replyToManagerMessage($managerConnections[$messageIndex], $replyPayload, 'internal');
         $messageIndex++; } }
     $ResourceManagerExitedCleanly = TRUE; }
-  purgeSensitiveMemory($EnableMemoryProtection, $serverIsOpen, $keepRunning, $resourcesPolled, $budgetCalculated, $requestApproved, $workerWasRegistered, $workerWasReleased, $extensionApproved, $sweepCompleted, $messageWasDelivered, $socketPath, $denialReason, $budgetToken, $sessionConvertLoc, $staleToken, $systemResources, $resourceBudget, $workerRegistry, $sessionLocations, $managerMessages, $managerConnections, $replyPayload, $staleWorkers, $staleRecord, $workerRecord, $killReply, $scaledLimits, $limitsWereScaled, $environmentIsReady, $environmentFindings, $messagesReceived, $messageIndex, $allocatedBudget, $newExpectedRuntime, $lastPollTime, $lastReapTime, $lastSweepTime, $locationsSwept, $entriesDropped);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $serverIsOpen, $keepRunning, $resourcesPolled, $budgetCalculated, $requestApproved, $workerWasRegistered, $workerWasReleased, $extensionApproved, $sweepCompleted, $messageWasDelivered, $socketPath, $denialReason, $budgetToken, $sessionConvertLoc, $staleToken, $systemResources, $resourceBudget, $workerRegistry, $sessionLocations, $managerMessages, $managerConnections, $replyPayload, $staleWorkers, $staleRecord, $workerRecord, $killReply, $scaledLimits, $limitsWereScaled, $environmentIsReady, $environmentFindings, $dataIsProtected, $exposureStatus, $exposureDetail, $messagesReceived, $messageIndex, $allocatedBudget, $newExpectedRuntime, $lastPollTime, $lastReapTime, $lastSweepTime, $locationsSwept, $entriesDropped);
   return $ResourceManagerExitedCleanly; }
 // / -----------------------------------------------------------------------------------
 
@@ -966,7 +1102,7 @@ function runWorkerManager() {
         $replyPayload = array('Approved' => FALSE, 'Reason' => 'Unrecognized worker request.');
         if (isset($managerMessages[$messageIndex]['RequestType'])) {
           if ($managerMessages[$messageIndex]['RequestType'] === 'kill') {
-            $processWasTerminated = terminateWorkerProcess(($managerMessages[$messageIndex]['WorkerPid'] ?? 0), TRUE);
+            $processWasTerminated = terminateWorkerProcess(($managerMessages[$messageIndex]['WorkerPid'] ?? 0), TRUE, ($managerMessages[$messageIndex]['ProcessStartTime'] ?? 0));
             if ($Verbose) logEntry('Worker Manager ended process '.(int)($managerMessages[$messageIndex]['WorkerPid'] ?? 0).'. Result: '.($processWasTerminated ? 'OK' : 'FAILED').'.');
             $replyPayload = array('Approved' => $processWasTerminated, 'Reason' => $processWasTerminated ? 'Terminated.' : 'The process could not be terminated.'); }
           else if ($managerMessages[$messageIndex]['RequestType'] === 'kill-every') {
@@ -975,6 +1111,7 @@ function runWorkerManager() {
         replyToManagerMessage($managerConnections[$messageIndex], $replyPayload, 'internal');
         $messageIndex++; } }
     $WorkerManagerExitedCleanly = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $serverIsOpen, $keepRunning, $processWasTerminated, $socketPath, $managerMessages, $managerConnections, $replyPayload, $messagesReceived, $messageIndex, $killedCount);
   return $WorkerManagerExitedCleanly; }
 // / -----------------------------------------------------------------------------------
@@ -991,10 +1128,13 @@ function killTrackedWorkers(&$workerRegistry) {
   $workerRecord = $replyPayload = array();
   $messageWasDelivered = FALSE;
   foreach ($workerRegistry as $workerToken => $workerRecord) {
-    list ($messageWasDelivered, $replyPayload) = sendManagerMessage(buildManagerSocketPath('worker-manager'), array('RequestType' => 'kill', 'WorkerPid' => (int)$workerRecord['WorkerPid']), 'internal', (int)$ManagerSocketTimeout);
+    // / The recorded start time travels with the request, so the worker manager can refuse
+    // / to signal a number that now belongs to something else.
+    list ($messageWasDelivered, $replyPayload) = sendManagerMessage(buildManagerSocketPath('worker-manager'), array('RequestType' => 'kill', 'WorkerPid' => (int)$workerRecord['WorkerPid'], 'ProcessStartTime' => (isset($workerRecord['ProcessStartTime']) ? (int)$workerRecord['ProcessStartTime'] : 0)), 'internal', (int)$ManagerSocketTimeout);
     if ($messageWasDelivered && isset($replyPayload['Approved']) && $replyPayload['Approved'] === TRUE) $WorkersKilled++; }
   $workerRegistry = array();
   warningEntry('Every tracked worker was ended on request. '.$WorkersKilled.' process(es) ended.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $workerToken, $workerRecord, $replyPayload, $messageWasDelivered);
   return $WorkersKilled; }
 // / -----------------------------------------------------------------------------------
@@ -1024,11 +1164,12 @@ function killEveryWorker() {
   foreach ($processOutput as $processLine) {
     $processPid = (int)trim($processLine);
     if ($processPid > 1 && !in_array($processPid, $protectedPids, TRUE)) {
-      if (terminateWorkerProcess($processPid, TRUE)) $ProcessesKilled++; } }
+      if (terminateWorkerProcess($processPid, TRUE, 0)) $ProcessesKilled++; } }
   // / The registry lives in Resource Manager memory, so it is told to forget rather than
   // / having a file emptied underneath it.
   sendManagerMessage(buildManagerSocketPath('resource-manager'), array('RequestType' => 'kill-tracked'), 'internal', (int)$ManagerSocketTimeout);
   warningEntry('Every process owned by '.$ApacheUser.' was terminated on request. '.$ProcessesKilled.' process(es) ended. Unrelated applications on this host were affected.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $processOutput, $processExitCode, $processLine, $processPid, $protectedPids, $managerState, $stateWasRead);
   return $ProcessesKilled; }
 // / -----------------------------------------------------------------------------------
@@ -1067,7 +1208,11 @@ function runCoreManagerForeground() {
       list ($environmentIsReady, $environmentFindings) = validateOperatingEnvironment();
       if (!$environmentIsReady) warningEntry('The listener is starting into a degraded environment. The sandbox is unavailable & conversions requiring it will be refused. Run the -fp argument as root.');
       prepareManagerSocketDir();
-      $ListenerExitedCleanly = dispatchManagerRole('core-manager', $startupKey); } }
+      // / This key is derived & checked inside this process & never leaves it, so it is
+      // / not spent. Spending it would refuse a service manager restarting inside the same
+      // / window, because the key it derives on the way back up is byte for byte the same.
+      $ListenerExitedCleanly = dispatchManagerRole('core-manager', $startupKey, FALSE); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $startupKey, $callerIsAuthorized, $environmentIsReady, $environmentFindings);
   return $ListenerExitedCleanly; }
 // / -----------------------------------------------------------------------------------
@@ -1092,6 +1237,7 @@ function listenerUnitIsInstalled() {
   if ($systemctlBinary !== '') {
     exec(escapeshellarg($systemctlBinary).' is-enabled hrconvert2-listener 2>/dev/null', $commandOutput, $commandExitCode);
     if ($commandExitCode === 0) $UnitIsInstalled = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $systemctlBinary, $commandOutput, $commandExitCode);
   return $UnitIsInstalled; }
 // / -----------------------------------------------------------------------------------
@@ -1136,8 +1282,11 @@ function startCoreManagerListener() {
     // / A stale record from a listener that died leaves a pid that no longer exists.
     writeManagerState('managers', array());
     $startupKey = deriveStartupKey('start-core-manager');
-    $innerCommand = 'nohup php '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.'convertCore.php')
-      .' --start-core-manager '.escapeshellarg($startupKey)
+    // / The key travels in the environment for the same reason it does for a subordinate.
+    // / The assignment sits inside the inner command, so it survives the su that follows.
+    $innerCommand = 'HRCONVERT2_STARTUP_KEY='.escapeshellarg($startupKey)
+      .' nohup php '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.'convertCore.php')
+      .' --start-core-manager'
       .' > /dev/null 2>&1 &';
     // / Drop to the web server user so every socket is owned by the account that must reach it.
     if ($RunningAsRoot && $CurrentUser !== $ApacheUser) $spawnCommand = 'su -s /bin/sh '.escapeshellarg($ApacheUser).' -c '.escapeshellarg($innerCommand);
@@ -1178,6 +1327,7 @@ function startCoreManagerListener() {
       print('Check the log for the reason. A manager that started records itself there.'.$Lol);
       print('Confirm '.$ApacheUser.' can read the install secret & write the logfile,'.$Lol);
       print('then run the -fp argument as root & try again.'.$Lol.$Lol); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $managerState, $chownOutput, $listenerStatus, $stateWasRead, $directoryIsReady, $listenerIsRunning, $startupKey, $spawnCommand, $innerCommand, $managerRole, $chownExitCode, $listenerPid, $waitCounter, $managerPid, $unitOwnsListener, $unitOutput, $unitExitCode);
   return $ListenerWasStarted; }
 // / -----------------------------------------------------------------------------------
@@ -1223,7 +1373,7 @@ function stopCoreManagerListener() {
       $waitCounter++; }
     // / Signal whatever did not leave. Subordinates first, then the Core Manager.
     foreach ($recordedProcesses as $managerRole => $managerPid) {
-      if (managerProcessIsAlive($managerPid)) terminateWorkerProcess($managerPid, TRUE); }
+      if (managerProcessIsAlive($managerPid)) terminateWorkerProcess($managerPid, TRUE, 0); }
     // / Verify. A process that is still present after this is reported by name.
     $survivingProcesses = array();
     foreach ($recordedProcesses as $managerRole => $managerPid) {
@@ -1240,6 +1390,7 @@ function stopCoreManagerListener() {
         $processCommand = trim((string)@file_get_contents('/proc/'.(int)$managerPid.'/comm'));
         print('  '.str_pad($managerRole, 20).'process '.(int)$managerPid.' is still present, running '.($processCommand === '' ? 'an unknown command' : $processCommand).$Lol); }
       print($Lol.'Kill them by hand, then run -l again.'.$Lol.$Lol); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $managerState, $replyPayload, $survivingProcesses, $recordedProcesses, $stateWasRead, $messageWasDelivered, $managerRole, $processCommand, $managerPid, $waitCounter);
   return $ListenerWasStopped; }
 // / -----------------------------------------------------------------------------------
@@ -1262,6 +1413,7 @@ function managerProcessIsAlive($processId) {
     // / The state letter follows the command name, which may itself contain spaces & brackets.
     if (preg_match('/\)\s+(\S)/', $processState, $stateMatches)) $stateField = $stateMatches[1];
     if ($stateField !== '' && $stateField !== 'Z' && $stateField !== 'X') $ProcessIsAlive = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $cleanPid, $processState, $stateField, $stateMatches, $processId);
   return $ProcessIsAlive; }
 // / -----------------------------------------------------------------------------------
@@ -1279,6 +1431,7 @@ function prepareManagerSocketDir() {
     @chmod($ManagerSocketDir, 0700);
     if (is_writable($ManagerSocketDir)) $DirectoryIsReady = TRUE; }
   if (!$DirectoryIsReady) warningEntry('The manager socket directory at '.$ManagerSocketDir.' is not usable.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection);
   return $DirectoryIsReady; }
 // / -----------------------------------------------------------------------------------
@@ -1288,7 +1441,13 @@ function prepareManagerSocketDir() {
 // / Accepts the role name & the supplied startup key.
 // / Returns TRUE when a role ran to completion.
 // / This is the single entry point convertCore.php uses to enter a manager process.
-function dispatchManagerRole($managerRole, $suppliedKey) {
+// / The third argument says whether the key reached this process from another one.
+// / A key that crossed a boundary is spent, because a copy of it may exist elsewhere.
+// / A key derived & checked inside one process is NOT spent. Derivation is deterministic
+// / within a window, so the foreground listener restarting inside ten seconds would mint
+// / the identical key & refuse itself as a replay, which under a service manager is a
+// / restart loop rather than a security control.
+function dispatchManagerRole($managerRole, $suppliedKey, $keyWasTransported = TRUE) {
   // / Set variables.
   global $EnableMemoryProtection;
   $RoleWasDispatched = FALSE;
@@ -1297,7 +1456,7 @@ function dispatchManagerRole($managerRole, $suppliedKey) {
   $keyPurpose = '';
   if ($cleanRole === 'core-manager') $keyPurpose = 'start-core-manager';
   else $keyPurpose = 'start-manager-'.$cleanRole;
-  $keyIsValid = validateStartupKey($keyPurpose, $suppliedKey);
+  $keyIsValid = validateStartupKey($keyPurpose, $suppliedKey, $keyWasTransported);
   if (!$keyIsValid) errorEntry('A manager process was started with an invalid startup key!', 31006, TRUE);
   else {
     prepareManagerSocketDir();
@@ -1307,7 +1466,8 @@ function dispatchManagerRole($managerRole, $suppliedKey) {
     else if ($cleanRole === 'resource-manager') $RoleWasDispatched = runResourceManager();
     else if ($cleanRole === 'worker-manager') $RoleWasDispatched = runWorkerManager();
     else errorEntry('An unrecognized manager role was requested!', 31007, TRUE); }
-  purgeSensitiveMemory($EnableMemoryProtection, $keyIsValid, $cleanRole, $keyPurpose, $managerRole, $suppliedKey);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $keyIsValid, $cleanRole, $keyPurpose, $managerRole, $suppliedKey, $keyWasTransported);
   return $RoleWasDispatched; }
 // / -----------------------------------------------------------------------------------
 
@@ -1334,6 +1494,7 @@ function reportListenerStatus() {
       $ListenerStatus['SessionLocations'] = (int)($replyPayload['SessionLocations'] ?? 0);
       $ListenerStatus['Budget'] = (isset($replyPayload['Budget']) && is_array($replyPayload['Budget'])) ? $replyPayload['Budget'] : array();
       $ListenerStatus['Answered'] = TRUE; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $managerState, $replyPayload, $stateWasRead, $messageWasDelivered);
   return array($ListenerIsRunning, $ListenerStatus); }
 // / -----------------------------------------------------------------------------------

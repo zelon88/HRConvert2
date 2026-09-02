@@ -1,0 +1,266 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 9/1/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v3.8.6.
+This plain text file describes why the DATA directory must be served as inert downloads,
+what closes that & what only appears to.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The DATA Directory--
+
+$ConvertTempDir is $InstLoc/DATA/<SesHash>/<SesHash2>/ & it sits INSIDE the web root.
+$ConvertDir is $ConvertLoc/<SesHash>/<SesHash2>/ & it sits outside it.
+
+Every file a user uploads or produces exists in both. The copy under $ConvertDir is the one
+the application works on. The copy under $ConvertTempDir exists for one reason only, which
+is that a browser has to be able to fetch it by URL, & verifyFile() creates it by copying
+the working file across whenever an operation asks it to.
+
+That copy is user supplied bytes handed out by the web server from the application's own
+origin. For any format a browser treats as ACTIVE, those bytes are code.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Active Formats--
+
+An SVG is the clear case. It is a document, not a picture. A browser serves it as
+image/svg+xml & runs any <script> inside it, in the origin it was served from.
+
+.svg & .plain-svg are legitimate conversion inputs & are correctly in $Allowed. They are
+not in $DangerousFiles & they should not be, because $DangerousFiles governs what the
+application will HANDLE & an SVG is something this application converts on purpose.
+
+The problem was never the format list. It was that a file the application is right to
+accept was being served back as a document rather than as a download.
+
+PDF is the same shape with a smaller blast radius. The built in viewer runs a restricted
+subset of JavaScript, so the rules below cover it for the same reason & at no extra cost.
+
+.html, .htm, .xhtml, .xml & .xsl are ALREADY excluded, either by $DangerousFiles or simply
+by not being conversion formats. Do not add them.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About What Actually Closes This--
+
+  Content-Disposition: attachment    CLOSES IT. The file is handed over as a download &
+                                     is never rendered as a document, so nothing in it runs.
+
+  Content-Security-Policy: sandbox   CLOSES IT, independently. Even rendered, the document
+                                     gets no script execution.
+
+  X-Content-Type-Options: nosniff    DOES NOT CLOSE IT & IS NOT WHY THIS WORKS.
+                                     An SVG here is served with a correct image/svg+xml
+                                     type. There is no sniffing to prevent. It is worth
+                                     setting for the neighbouring case of an ambiguous
+                                     type, but it stops nothing on its own & must never be
+                                     reported as the control that fixed this.
+
+Both real controls are applied, because one directive is one point of failure & these two
+fail in different ways.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Where These Rules Belong--
+
+PUT THEM IN THE SERVER CONFIGURATION. USE THE .htaccess ONLY WHEN YOU CANNOT.
+
+A .htaccess is only read when AllowOverride is enabled for that directory. Debian & Ubuntu
+ship AllowOverride None for /var/www, which is also what the Apache inside the standard
+php:*-apache container inherits. An ignored .htaccess produces NO error, NO log line & NO
+warning of any kind. It sits there looking like protection & does nothing.
+
+That failure mode is the whole argument. A control that fails silently is worse than no
+control, because it also removes the reason to look.
+
+--About What May Go In A .htaccess--
+
+A DIRECTIVE AN OVERRIDE LEVEL DOES NOT PERMIT IS A 500, NOT AN IGNORED LINE.
+This is the opposite failure to the one above & it is worse while it lasts. An ignored
+.htaccess leaves the tree exposed & working. A REFUSED one takes the whole tree down, so
+every download & every share link on the server returns 500 until the file is removed.
+
+An <IfModule> guard does NOT prevent this. <IfModule> tests whether a module is LOADED, not
+whether a directive is PERMITTED, so a php_flag wrapped in <IfModule mod_php.c> still
+returns 500 wherever AllowOverride does not grant Options.
+
+Measured on Apache 2.4, serving the DATA tree;
+
+  Header             AllowOverride FileInfo    works
+  RemoveHandler      AllowOverride FileInfo    works
+  Options            AllowOverride Options     500 under FileInfo
+  php_flag           AllowOverride Options     500 under FileInfo, guarded or not
+
+So the file this application writes contains Header & RemoveHandler & NOTHING ELSE. It is
+safe at every override level; ignored at None, effective at FileInfo & above, never fatal.
+
+Options & php_flag belong in the server configuration, where no override level applies.
+The <Directory> block verifyApacheConfiguration() writes carries both.
+
+DO NOT ADD Options OR php_flag TO DATA/.htaccess. Running -fp will overwrite the file &
+remove them anyway, which is deliberate.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Short Lived Links--
+
+A SYMLINK DOES NOT CLOSE THIS FINDING & MUST NOT BE ADOPTED AS THOUGH IT DOES.
+Apache follows a symlink & serves the target's bytes with the target's content type. An SVG
+reached through a symlink is still served as image/svg+xml & its script still executes. The
+exposure is decided by the RESPONSE HEADERS & by nothing else, so the header rules in this
+document are required whether the thing in the DATA tree is a copy or a link.
+
+Measured on Apache 2.4, the same file reached through a symlink rather than a copy;
+
+  header rules absent    Content-Type image/svg+xml, rendered in the tab, SCRIPT EXECUTED
+  header rules present   Content-Disposition attachment, downloaded, script never ran
+
+A SYMLINK ALSO NEEDS MORE SERVER CONFIGURATION THAN A COPY, NOT LESS.
+The target of the link is $ConvertDir, which is outside the DocumentRoot on purpose. Apache
+refuses to serve a symlink whose target it has no <Directory> grant for, & answers
+'Symbolic link not allowed or link target not accessible' rather than serving the file. So a
+symlink scheme needs FollowSymLinks on the DATA tree AND an explicit grant for the data
+location, in the server configuration, in addition to the header rules. Anyone reaching for
+symlinks to AVOID configuring the server will find they have added a second thing to
+configure & closed nothing.
+
+What a link changes is LIFETIME & DUPLICATION, & both are worth having;
+
+  Duplication   A staged copy doubles the bytes on disk for the life of the session. Every
+                file already exists under $ConvertDir before the copy is made, so the copy
+                is pure overhead & is the larger cost on a server converting video.
+  Lifetime      A staged copy is reachable until the session is swept. A link can be
+                withdrawn on its own schedule, which bounds how long a share URL that has
+                been pasted somewhere continues to resolve.
+
+A link also introduces a requirement the copy does not have. Apache serves a symlink only
+where Options FollowSymLinks or SymLinksIfOwnerMatch is granted for that directory, & a
+server hardened with -FollowSymLinks answers 403 instead. That is another way for downloads
+to stop working for a reason nothing explains, so it belongs behind the same live check the
+header rules are behind.
+
+EXPIRY HAS TO WORK WITH & WITHOUT THE LISTENER, & THE TWO ARE NOT THE SAME MECHANISM.
+
+  Resource aware    The listener already runs a timed sweep on --Storage Cleanup Interval,
+                    already holds the session map, & already revalidates this tree. Link
+                    expiry is one more thing done there, on a real timer, whether or not
+                    anybody is making requests.
+  Resource unaware  There is no timer & no process between requests, so expiry can only
+                    happen opportunistically, on the next request that arrives, exactly as
+                    --File Deletion Age Threshold-- sweeps sessions today. A link therefore
+                    carries its own expiry stamp & is checked when it is next touched, & an
+                    installation with no traffic keeps its links longer than the nominal
+                    lifetime. That is a real difference in behaviour & should be documented
+                    rather than papered over, because an administrator who believes links
+                    expire on a clock will otherwise be wrong on a quiet server.
+
+The stronger version of this idea removes the tree from the web root altogether & serves the
+bytes through convertCore.php, which is described in --About The Longer Fix-- below. That
+gets the lifetime control, the deduplication & the header guarantee in one change, & it does
+not depend on the administrator having configured anything.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+  Preferred    Server configuration, WRITTEN & ACTIVATED AUTOMATICALLY by -fp.
+               verifyApacheConfiguration() builds a <Directory> block for this
+               installation's own DATA path, writes it to the Apache configuration
+               directory this host uses, links it into conf-enabled on a Debian layout,
+               proves it parses with apachectl configtest & gracefully reloads.
+               No override level applies to server configuration, so the whole rule set is
+               reliable there & nothing is silently dropped.
+  Fallback     DATA/.htaccess, written by -fp & --setup & kept current on every request by
+               maintainDataProtection(). It needs AllowOverride FileInfo or better on that
+               directory & is inert without it. It exists for an installation whose web
+               server this cannot configure.
+
+--Maintain HTAccess-- in config.php governs the fallback & nothing else.
+TRUE, the default, writes the file & keeps it matching this release on every request.
+FALSE never writes it, & REMOVES a file this application previously wrote, so that turning
+the setting off actually takes effect rather than leaving a stale copy of a rule set nobody
+is maintaining. A file an administrator wrote themselves is never touched either way,
+because it was never ours to delete.
+Set it FALSE where the rules are already in the server configuration & a second copy is
+redundant, or where policy forbids the application writing into the web root at all.
+Turning it off does NOT make the directory safe by itself. The server configuration is then
+carrying the rules alone, & the exposure line is what says whether it is.
+
+A CONFIGURATION THAT DOES NOT PARSE IS WITHDRAWN BEFORE ANYTHING RELOADS.
+configtest is run before the write to establish a baseline & again after. A failure that was
+NOT already present is treated as ours; the file & its link are removed, nothing is
+reloaded, the server keeps running what it was already running, & error 504 is written. A
+failure that WAS already present is the administrator's, so the file is kept & the
+pre-existing fault is reported as theirs.
+
+THE EXPOSURE CHECK IS ONE OF THE ENVIRONMENT CHECKS & IS COUNTED WITH THEM.
+It used to be reported separately & after the summary, so a run could say every check passed
+& then report an exposed tree directly underneath. A summary that does not cover a check is
+worse than no summary, because it gets read instead of the thing it left out.
+
+VERIFY. DO NOT ASSUME. THE APPLICATION DOES THIS ITSELF.
+-fp writes the rules & then PROVES the result over HTTP with a canary, printing DATA
+exposure as PROTECTED, EXPOSED, BROKEN or UNREACHABLE.
+-v reports the same three facts without repairing anything; where the directory is, whether
+the fallback is maintained, whether the server configuration is installed, & the live
+exposure. The first three are configuration & only the last is evidence.
+The listener re-establishes it on every --Storage Cleanup Interval & warns the moment it
+regresses. There is no separate tool to run; the check lives where the repairs live.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About index.html--
+
+index.html is excluded from Content-Disposition on purpose. It is the application's own
+document root protection page & it is the one file in this tree that is MEANT to render.
+
+Excluding it by name opens nothing, because 'index.html' is a literal entry in
+$DangerousFiles & the core refuses to stage a file by that name.
+
+It is excluded with a negative lookahead in <FilesMatch>, in both the server configuration
+block & the .htaccess, so the same rule is expressed the same way in both places.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Longer Fix--
+
+The rules above are correct & they are still a mitigation rather than a cure. They rely on
+an administrator having applied them, & the application cannot tell whether they did.
+
+The application does not actually need this directory to be web reachable.
+
+Every legitimate use of a staged file is a request for its BYTES. The interface downloads
+through an anchor & displays a share link as text; nothing in any shipped GUI renders a
+DATA file inline, so no img, embed, iframe or object tag anywhere depends on that tree
+being fetchable. The bytes already exist under $ConvertDir, outside the web root, before
+the copy into DATA is ever made.
+
+So the copy into the web root exists only to give the browser a URL. Serve those bytes
+through convertCore.php instead & the core sets Content-Disposition itself, on every
+response, with no server configuration involved & no way for an administrator to omit it.
+DATA then stops existing inside the web root & this entire class of finding goes with it.
+
+That is a real change to the share & download paths in the core & in every GUI, so it is
+recorded here as the direction rather than as something already done. Note also that the
+download attribute on an anchor is NOT a substitute; it is a client side hint that a bare
+URL ignores, & a share link is a bare URL by definition. Only the server can decide how a
+response is treated.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

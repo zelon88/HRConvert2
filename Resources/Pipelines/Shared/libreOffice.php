@@ -1,22 +1,22 @@
 <?php
 // / -----------------------------------------------------------------------------------
-// / COPYRIGHT INFORMATION ...
+// / Copyright Information ...
 // / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
 // /
-// / LICENSE INFORMATION ...
+// / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
-// / APPLICATION INFORMATION ...
+// / Application Information ...
 // / This application is designed to provide a web-interface for converting file formats on
 // / a server for users of any web browser without authentication.
 // /
-// / FILE INFORMATION ...
-// / v3.8.5.
+// / File Information ...
+// / v3.8.6.
 // / This file is the LibreOffice shared module. It is NOT a pipeline & it converts nothing
 // / on its own. It holds the code that the Document pipeline & the OCR pipeline both need.
 // /
-// / A SHARED MODULE EXISTS BECAUSE TWO PIPELINES NEEDED THE SAME CODE & NEITHER COULD OWN IT.
+// / A shared module exists because two pipelines needed the same code & neither could own it.
 // / convertWithLibreOffice() has callers in both. Leaving it in convertCore.php would have
 // / kept document conversion logic in the file this work exists to get it out of. Putting
 // / it in the Document pipeline would have made OCR depend on another pipeline being
@@ -24,7 +24,7 @@
 // / to reason about. So it lives here, is version pinned by pipelineManager.php exactly as
 // / a pipeline is, & is loaded once for whichever pipelines declare they need it.
 // /
-// / A MODULE IS LOADED ONCE PER REQUEST, BEFORE THE PIPELINE THAT DECLARED IT.
+// / A module is loaded once per request, before the pipeline that declared it.
 // / Document & OCR in the same request load this file once between them.
 // /
 // / Error block 2000 through 2004 belongs to this module. Those numbers came with the code
@@ -48,7 +48,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / -----------------------------------------------------------------------------------
 // / The version of this shared module. Read WITHOUT executing this file, then matched
 // / EXACTLY against the pin in getAcceptedSharedModules().
-$SharedModuleVersion = 'v3.8.5';
+$SharedModuleVersion = 'v3.8.6';
 // / -----------------------------------------------------------------------------------
 
 
@@ -193,7 +193,7 @@ function verifyDocumentConversionEngine() {
 // / mount before running. When no sandbox could be built the directory is named outright.
 function convertWithLibreOffice($inputPath, $outputPath, $targetExtension) {
   // / Set variables.
-  global $Verbose, $EnableMemoryProtection;
+  global $Verbose, $EnableMemoryProtection, $DirSep;
   $ConversionCompleted = FALSE;
   $ReturnData = '';
   $sofficeBinary = $sofficeCommand = $sandboxedCommand = $producedPath = $cleanExtension = '';
@@ -228,7 +228,7 @@ function convertWithLibreOffice($inputPath, $outputPath, $targetExtension) {
     else {
       $ReturnData = (string)shell_exec('LANG=C.UTF-8 LC_ALL=C.UTF-8 '.$sandboxedCommand.' 2>&1');
       // / LibreOffice derives the output name from the input, so rename when it differs.
-      $producedPath = dirname($outputPath).DIRECTORY_SEPARATOR.pathinfo($inputPath, PATHINFO_FILENAME).'.'.$cleanExtension;
+      $producedPath = dirname($outputPath).$DirSep.pathinfo($inputPath, PATHINFO_FILENAME).'.'.$cleanExtension;
       if ($producedPath !== $outputPath && file_exists($producedPath) && !file_exists($outputPath)) @rename($producedPath, $outputPath);
       if (file_exists($outputPath)) $ConversionCompleted = TRUE; } }
   if ($Verbose) logEntry('LibreOffice Conversion: '.basename($inputPath).' to '.$cleanExtension.', Sandboxed: '.($sandboxedCommand === $sofficeCommand ? 'NO' : 'YES').', Result: '.($ConversionCompleted ? 'OK' : 'FAILED').'.');

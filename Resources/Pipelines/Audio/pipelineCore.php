@@ -1,18 +1,18 @@
 <?php
 // / -----------------------------------------------------------------------------------
-// / COPYRIGHT INFORMATION ...
+// / Copyright Information ...
 // / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
 // /
-// / LICENSE INFORMATION ...
+// / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
-// / APPLICATION INFORMATION ...
+// / Application Information ...
 // / This application is designed to provide a web-interface for converting file formats on
 // / a server for users of any web browser without authentication.
 // /
-// / FILE INFORMATION ...
-// / v3.8.5.
+// / File Information ...
+// / v3.8.6.
 // / This file is the converter for the Audio pipeline. It is loaded by pipelineManager.php
 // / ONLY when a Audio conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
@@ -48,7 +48,7 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
   // / detached process must be supervised after the connection to the user is closed.
   $OutputFilename = basename($newPathname);
   $WorkerPID = 0;
-  $ConversionSuccess = $ConversionErrors = $sandboxIsAvailable = FALSE;
+  $ConversionSuccess = $ConversionErrors = $commandMayRun = FALSE;
   $ffmpegBinary = FALSE;
   $returnData = $ffmpegCommand = '';
   $br = ' ';
@@ -66,8 +66,8 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
   else {
     // / Build & sandbox the command once. It does not change between retries.
     $ffmpegCommand = escapeshellarg($ffmpegBinary).' -y -vn -i '.escapeshellarg($pathname).$br.escapeshellarg($newPathname);
-    list ($sandboxIsAvailable, $ffmpegCommand) = sandboxCommand($ffmpegCommand, $pathname, $newPathname, FALSE, 'ffmpeg');
-    if (!$sandboxIsAvailable) {
+    list ($commandMayRun, $ffmpegCommand) = sandboxCommand($ffmpegCommand, $pathname, $newPathname, FALSE, 'ffmpeg');
+    if (!$commandMayRun) {
       $ConversionErrors = TRUE;
       errorEntry('Bubblewrap is missing or non functional, so this audio conversion cannot be isolated!', 12002, FALSE); }
     else {
@@ -90,7 +90,7 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
       // / attempt would report success for a conversion that was refused & never ran.
       if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $br, $bitrate, $sleepTime, $ffmpegBinary, $ffmpegCommand, $sandboxIsAvailable);
+  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $br, $bitrate, $sleepTime, $ffmpegBinary, $ffmpegCommand, $commandMayRun);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

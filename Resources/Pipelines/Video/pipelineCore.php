@@ -1,31 +1,31 @@
 <?php
 // / -----------------------------------------------------------------------------------
-// / COPYRIGHT INFORMATION ...
+// / Copyright Information ...
 // / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
 // /
-// / LICENSE INFORMATION ...
+// / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
-// / APPLICATION INFORMATION ...
+// / Application Information ...
 // / This application is designed to provide a web-interface for converting file formats on
 // / a server for users of any web browser without authentication.
 // /
-// / FILE INFORMATION ...
-// / v3.8.5.
+// / File Information ...
+// / v3.8.6.
 // / This file is the converter for the Video pipeline. It is loaded by pipelineManager.php
 // / ONLY when a Video conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
 // / Error block 11000 through 11002 belongs to this pipeline. Those numbers came with the code when it
 // / moved out of convertCore.php & they did not change, because operators have read them.
 // /
-// / THIS IS ONE OF FOUR FAMILIES SHARING THE FFMPEG SUBSYSTEM.
+// / This is one of four families sharing the FFMPEG subsystem.
 // / Audio & Stream are still built into convertCore.php & Video & Subtitle are not, so an
 // / installation now runs FFMPEG from two places at once. That is expected & is safe,
 // / because verifyFFMPEGVersion() remains core owned & is the single gate all four pass
 // / through. A pipeline that carried its own copy of that verifier would be the bug.
 // / This pipeline calls verifyFFMPEGVersion(), sandboxCommand() & locateDependency(), all
-// / of which remain in convertCore.php. A dependency verifier is still core owned, because
+// / of which remain in convertCore.php. A dependency verifier is still core owned.
 // / showVersionInfo() reports on it whether or not this pipeline is installed.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
@@ -52,7 +52,7 @@ function convertVideos($pathname, $newPathname, $extension) {
   // / detached process must be supervised after the connection to the user is closed.
   $OutputFilename = basename($newPathname);
   $WorkerPID = 0;
-  $ConversionSuccess = $ConversionErrors = $sandboxIsAvailable = FALSE;
+  $ConversionSuccess = $ConversionErrors = $commandMayRun = FALSE;
   $ffmpegBinary = FALSE;
   $returnData = $ffmpegCommand = '';
   $stopper = 0;
@@ -65,8 +65,8 @@ function convertVideos($pathname, $newPathname, $extension) {
   else {
     // / Build & sandbox the command once. It does not change between retries.
     $ffmpegCommand = escapeshellarg($ffmpegBinary).' -y -i '.escapeshellarg($pathname).' -c:v libx264 '.escapeshellarg($newPathname);
-    list ($sandboxIsAvailable, $ffmpegCommand) = sandboxCommand($ffmpegCommand, $pathname, $newPathname, FALSE, 'ffmpeg');
-    if (!$sandboxIsAvailable) {
+    list ($commandMayRun, $ffmpegCommand) = sandboxCommand($ffmpegCommand, $pathname, $newPathname, FALSE, 'ffmpeg');
+    if (!$commandMayRun) {
       $ConversionErrors = TRUE;
       errorEntry('Bubblewrap is missing or non functional, so this video conversion cannot be isolated!', 11002, FALSE); }
     else {
@@ -87,7 +87,7 @@ function convertVideos($pathname, $newPathname, $extension) {
       // / The output file is the only verdict on whether the conversion produced anything.
       if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $sleepTime, $ffmpegBinary, $ffmpegCommand, $sandboxIsAvailable);
+  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $sleepTime, $ffmpegBinary, $ffmpegCommand, $commandMayRun);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

@@ -1,23 +1,24 @@
 <?php
 // / -----------------------------------------------------------------------------------
-// / COPYRIGHT INFORMATION ...
+// / Copyright Information ...
 // / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
 // /
-// / LICENSE INFORMATION ...
+// / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
-// / APPLICATION INFORMATION ...
+// / Application Information ...
 // / This application is designed to provide a web-interface for converting file formats on
 // / a server for users of any web browser without authentication.
 // /
-// / FILE INFORMATION ...
-// / v3.8.5.
+// / File Information ...
+// / v3.8.6.
 // / This file declares what the OCR pipeline is & what it can do.
 // / It is read by pipelineManager.php on EVERY request & it must stay cheap.
 // / It ASSIGNS VARIABLES & DOES NOTHING ELSE. No functions, no logic, no output.
-// / Error block 15000 through 15014 belongs to this pipeline. Those numbers came with the
-// / code when it moved out of convertCore.php & they did not change.
+// / Error block 8001, 15000 through 15014 belongs to this pipeline.
+// / Those numbers came with the code when it moved out of convertCore.php.
+// / They did not change, because operators have already read them.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for what each declaration means.
 // /
 // / <3 Open-Source
@@ -34,9 +35,9 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read WITHOUT executing this file, then matched
 // / EXACTLY against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipelineCore.php beside it ships & moves with this file.
-$PipelineVersion = 'v3.8.5';
+$PipelineVersion = 'v3.8.6';
 
-// / THIS IS AN OPERATION PIPELINE & IT IS THE FIRST ONE.
+// / This is an operation pipeline & it is the first one.
 // / A conversion pipeline takes one file, returns the six value contract, & is dispatched
 // / by convert(). This one takes a SELECTION of files, chooses a different route per file
 // / depending on whether it is a PDF, a document or an image, & reports one verdict for
@@ -64,16 +65,18 @@ $PipelinePriority = 100;
 $PipelineEntryPoint = 'ocrFiles';
 
 // / The depends.php subsystem this pipeline needs. Dependency Core owns installation.
-// / TESSERACT IS NAMED HERE & IT IS NOT THE ONLY DEPENDENCY THIS PIPELINE USES.
+// / This string must match a Subsystem name in depends.php exactly.
+// / Naming the subsystem rather than the package keeps one source of truth for the version.
+// / Tesseract is named here & it is not the only dependency this pipeline uses.
 // / pdftotext reads a PDF directly, ImageMagick rasterizes a page for the advanced route, &
 // / LibreOffice converts a document to PDF before any of that. Each route gates on the
 // / specific tool it needs rather than on an overall verdict, so a missing pdftotext does
 // / not stop an image being read by Tesseract. Tesseract is named because it is the one
 // / without which nothing here works at all.
-$PipelineSubsystem = 'tesseract';
+$PipelineSubsystem = 'OCR';
 
 // / Shared modules this pipeline needs, loaded before its converter is loaded.
-// / THE DOCUMENT PIPELINE DECLARES THIS SAME MODULE & THAT IS THE POINT.
+// / The document pipeline declares this same module & that is the point.
 // / A document being OCR'd is converted to PDF first, by the same code a document
 // / conversion uses. Both pipelines in one request load this module once between them.
 $PipelineSharedModules = array('libreOffice.php');
@@ -88,8 +91,8 @@ $PipelineRequestFields = array('Extension', 'Filename', 'Method');
 // / THESE LISTS ARE INFORMATIONAL WHILE $SupportedFormatDetectionType IS hardcoded-only.
 // / They mirror the allowed input list inside the converter itself, which is the gate that
 // / actually runs today.
-// / Every route ends at a text file which is then converted to the requested output, so
-// / the output list is the set of text bearing formats rather than anything Tesseract knows.
+// / Every route ends at a text file which is then converted to the requested output.
+// / The output list is the set of text bearing formats rather than anything Tesseract knows.
 $Capabilities = array(
   'Input' => array('pdf', 'txt', 'doc', 'docx', 'rtf', 'xls', 'xlsx', 'ods', 'odt', 'abw', 'jpg', 'jpeg', 'bmp', 'webp', 'png', 'gif'),
   'Output' => array('txt', 'doc', 'docx', 'rtf', 'odt', 'pdf'));

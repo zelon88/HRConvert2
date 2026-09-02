@@ -1,18 +1,18 @@
 <?php
 // / -----------------------------------------------------------------------------------
-// / COPYRIGHT INFORMATION ...
+// / Copyright Information ...
 // / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
 // /
-// / LICENSE INFORMATION ...
+// / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
-// / APPLICATION INFORMATION ...
+// / Application Information ...
 // / This application is designed to provide a web-interface for converting file formats on
 // / a server for users of any web browser without authentication.
 // /
-// / FILE INFORMATION ...
-// / v3.8.5.
+// / File Information ...
+// / v3.8.6.
 // / This file is the converter for the Image pipeline. It is loaded by pipelineManager.php
 // / ONLY when a Image conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
@@ -50,7 +50,7 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
   // / detached process must be supervised after the connection to the user is closed.
   $OutputFilename = basename($newPathname);
   $WorkerPID = 0;
-  $ConversionSuccess = $ConversionErrors = $sandboxIsAvailable = FALSE;
+  $ConversionSuccess = $ConversionErrors = $commandMayRun = FALSE;
   $imageBinary = FALSE;
   $returnData = $wh = $wxh = $bgSwitch = $outputExt = $magickCommand = '';
   $stopper = 0;
@@ -83,8 +83,8 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
     // / The input comes FIRST. -alpha remove is an operation & needs an image already
     // / loaded, so a settings block placed before the input fails with no images found.
     $magickCommand = escapeshellarg($imageBinary).' '.escapeshellarg($pathname).' '.$bgSwitch.$wh.$rotate.escapeshellarg($newPathname);
-    list ($sandboxIsAvailable, $magickCommand) = sandboxCommand($magickCommand, $pathname, $newPathname, FALSE, 'imagemagick');
-    if (!$sandboxIsAvailable) {
+    list ($commandMayRun, $magickCommand) = sandboxCommand($magickCommand, $pathname, $newPathname, FALSE, 'imagemagick');
+    if (!$commandMayRun) {
       $ConversionErrors = TRUE;
       errorEntry('Bubblewrap is missing or non functional, so this image conversion cannot be isolated!', 8002, FALSE); }
     else {
@@ -107,7 +107,7 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
       // / attempt would report success for a conversion that was refused & never ran.
       if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $height, $width, $wxh, $rotate, $wh, $sleepTime, $outputExt, $bgSwitch, $imageBinary, $magickCommand, $sandboxIsAvailable);
+  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $height, $width, $wxh, $rotate, $wh, $sleepTime, $outputExt, $bgSwitch, $imageBinary, $magickCommand, $commandMayRun);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

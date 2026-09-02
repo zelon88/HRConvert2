@@ -1,18 +1,18 @@
 <?php
 // / -----------------------------------------------------------------------------------
-// / COPYRIGHT INFORMATION ...
+// / Copyright Information ...
 // / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
 // /
-// / LICENSE INFORMATION ...
+// / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
-// / APPLICATION INFORMATION ...
+// / Application Information ...
 // / This application is designed to provide a web-interface for converting file formats on
 // / a server for users of any web browser without authentication.
 // /
-// / FILE INFORMATION ...
-// / v3.8.5.
+// / File Information ...
+// / v3.8.6.
 // / This file is the converter for the Archive pipeline. It is loaded by pipelineManager.php
 // / ONLY when a Archive conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
@@ -23,7 +23,7 @@
 // / verifyArchiveVersions() & verifyIsoHybridVersion() DID NOT MOVE. archiveFiles(),
 // / deleteFiles() & showVersionInfo() all still call them, & those run whether or not this
 // / pipeline is installed.
-// / THIS IS THE ONLY PIPELINE THAT REWRITES ITS OWN OUTPUT NAME.
+// / This is the only pipeline that rewrites its own output name.
 // / An extraction hands the user something named differently from what they asked for, which
 // / is what the fifth value of the six value contract exists for. Every other pipeline
 // / returns the filename it was given.
@@ -48,12 +48,12 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / Returns FALSE when a bundled asset is missing, corrupt, or when the requested extension
 // / is not one this function knows how to validate.
 // /
-// / EVERY BOOTABLE FORMAT IS VALIDATED, INCLUDING THE LEGACY MBR IMAGE.
+// / Every bootable format is validated, including the legacy MBR image.
 // / An earlier version skipped iso_mbr-boot entirely & returned TRUE for it without looking
-// / at anything. isolinux.bin is a bootloader copied into a user facing image, so it is
+// / at anything. Isolinux.bin is a bootloader copied into a user facing image, so it is
 // / exactly as worth pinning as the UEFI images are & is now checked the same way.
 // /
-// / A HYBRID IMAGE NEEDS TWO ASSETS RATHER THAN ONE.
+// / A hybrid image needs two assets rather than one.
 // / It carries both an isolinux record & an EFI record, so isolinux.bin & the blank EFI
 // / image are BOTH validated & both must pass. Every other format needs exactly one.
 // / ldlinux.c32 is deliberately NOT pinned. It is optional, its absence is handled by the
@@ -121,7 +121,7 @@ function verifyIsoBootloaders($extension, $safedir2) {
 // / SEPARATE isohybrid command which is an empty string for every image that does not need one.
 // / Returns FALSE as the first value when no usable boot configuration could be assembled.
 // /
-// / THE TWO COMMANDS ARE RETURNED SEPARATELY & MUST NOT BE JOINED WITH &&.
+// / The two commands are returned separately & must not be joined with &&.
 // / shell_exec() runs its argument through a shell, but bwrap execs a single command & does
 // / not. A compound statement handed to the sandbox therefore has its && parsed by the
 // / OUTER shell, which would run isohybrid outside the namespace against a path that only
@@ -227,7 +227,7 @@ function generateBootableIsoCommand($extension, $newPathname, $safedir2, $mkisof
 // / A bootable ISO carries its target architecture in the requested extension, such as
 // / iso_gpt-boot-x86-64. generateBootableIsoCommand() normalizes that back to iso & returns
 // / a corrected output path, so both are reassigned from what it hands back.
-// / A generic hybrid image is built in TWO sandboxed steps rather than one. mkisofs writes
+// / A generic hybrid image is built in TWO sandboxed steps rather than one. Mkisofs writes
 // / the image & isohybrid then rewrites its MBR in place.
 function convertArchives($pathname, $newPathname, $extension) {
   // / Set variables.
@@ -235,7 +235,7 @@ function convertArchives($pathname, $newPathname, $extension) {
   // / The six value pipeline contract. $UserFilename is this converter's fifth value,
   // / because an archive extraction renames what the user is given.
   $WorkerPID = 0;
-  $ConversionSuccess = $ConversionErrors = $sandboxIsAvailable = FALSE;
+  $ConversionSuccess = $ConversionErrors = $commandMayRun = FALSE;
   $archiveToolsAreValid = $bootloadersAreValid = FALSE;
   $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = $isoHybridBinary = FALSE;
   $returnData = $extractCommand = $archiveCommand = $hybridCommand = $UserFilename = '';
@@ -267,8 +267,8 @@ function convertArchives($pathname, $newPathname, $extension) {
     if (in_array(strtolower($oldExtension), $array7zo2)) $extractCommand = escapeshellarg($sevenZipBinary).' x -y '.escapeshellarg($pathname).' -o'.escapeshellarg($safedir2);
     else if (in_array(strtolower($oldExtension), $arrayzipo) or in_array(strtolower($oldExtension), $array7zo) or in_array(strtolower($oldExtension), $arrayraro) or in_array(strtolower($oldExtension), $arraytaro)) $extractCommand = escapeshellarg($sevenZipBinary).' x -aoa '.escapeshellarg($pathname).' -o'.escapeshellarg($safedir2);
     if ($extractCommand !== '') {
-      list ($sandboxIsAvailable, $extractCommand) = sandboxCommand($extractCommand, $pathname, $safedir2, FALSE, 'archive');
-      if (!$sandboxIsAvailable) {
+      list ($commandMayRun, $extractCommand) = sandboxCommand($extractCommand, $pathname, $safedir2, FALSE, 'archive');
+      if (!$commandMayRun) {
         $ConversionErrors = TRUE;
         errorEntry('Bubblewrap is missing or non functional, so this archive operation cannot be isolated!', 13006, FALSE); }
       else $returnData = shell_exec($extractCommand); }
@@ -326,8 +326,8 @@ function convertArchives($pathname, $newPathname, $extension) {
       // / The loop exits as soon as the output exists. Without that test it always ran the
       // / full count & always reported a timeout, even on a conversion that succeeded.
       if ($archiveCommand !== '') {
-        list ($sandboxIsAvailable, $archiveCommand) = sandboxCommand($archiveCommand, $safedir2, $newPathname, FALSE, 'archive');
-        if (!$sandboxIsAvailable) {
+        list ($commandMayRun, $archiveCommand) = sandboxCommand($archiveCommand, $safedir2, $newPathname, FALSE, 'archive');
+        if (!$commandMayRun) {
           $ConversionErrors = TRUE;
           errorEntry('Bubblewrap is missing or non functional, so this archive operation cannot be isolated!', 13006, FALSE); }
         else {
@@ -345,15 +345,15 @@ function convertArchives($pathname, $newPathname, $extension) {
               errorEntry('The archiver timed out!', $archiveError, FALSE); } }
           // / Post process a hybrid image so it also boots from a USB stick presenting an MBR.
           // / This is a SEPARATE sandboxed invocation rather than a compound statement joined
-          // / to the mkisofs command with &&. bwrap execs one command & does not run a shell,
+          // / to the mkisofs command with &&. Bwrap execs one command & does not run a shell,
           // / so an && would be parsed by the outer shell & isohybrid would run OUTSIDE the
           // / namespace against a path that only exists inside it.
           // / isohybrid modifies the image IN PLACE, so the input & the output are the same
           // / file & sandboxCommand() mounts their shared directory once at /work.
           if ($hybridCommand !== '' && file_exists($newPathname)) {
             if ($Verbose) logEntry('Post processing the hybrid image with isohybrid.');
-            list ($sandboxIsAvailable, $hybridCommand) = sandboxCommand($hybridCommand, $newPathname, $newPathname, FALSE, 'archive');
-            if (!$sandboxIsAvailable) {
+            list ($commandMayRun, $hybridCommand) = sandboxCommand($hybridCommand, $newPathname, $newPathname, FALSE, 'archive');
+            if (!$commandMayRun) {
               $ConversionErrors = TRUE;
               errorEntry('Bubblewrap is missing or non functional, so this archive operation cannot be isolated!', 13006, FALSE); }
             else {
@@ -371,7 +371,7 @@ function convertArchives($pathname, $newPathname, $extension) {
   // / Code to clean up temporary files & directories.
   cleanFiles($safedir2);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $filename, $safedir2, $oldExtension, $returnData, $pathname, $array7zo, $arrayzipo, $array7zo2, $array7zo3, $arraytaro, $arrayraro, $sleepTime, $stopper, $extractCommand, $archiveCommand, $hybridCommand, $archiveError, $sandboxIsAvailable, $archiveToolsAreValid, $bootloadersAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary);
+  purgeSensitiveMemory($EnableMemoryProtection, $filename, $safedir2, $oldExtension, $returnData, $pathname, $array7zo, $arrayzipo, $array7zo2, $array7zo3, $arraytaro, $arrayraro, $sleepTime, $stopper, $extractCommand, $archiveCommand, $hybridCommand, $archiveError, $commandMayRun, $archiveToolsAreValid, $bootloadersAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $UserFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

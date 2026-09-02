@@ -28,8 +28,59 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia
 
 
 --------------------
+COMMIT 9/1/2026
+v3.8.6 - Add managed Apache config, htaccess, DATA protection. Fix model converter bugs.
+
+-v3.8.6.
+-Thanks to Github user @skeletonsec for filing a security advisory that lead to the hardening of the hosted DATA directory.
+  -https://github.com/skeletonsec
+  -https://github.com/zelon88/HRConvert2/security/advisories/GHSA-hrq7-pfhf-r2fw
+  -skeletonsec determined that lack of a stock .htaccess configuration with HRConvert2 made it possible to perform stored XSS.
+  -The impact on a default installation is primarily phishing & defacement.
+  -When testing this, I generated 
+-Thanks to Github user @aalsanie for discovering that 3D Model conversions were not compliant with the documented shape of Conversion Pipelines. 
+  -https://github.com/aalsanie
+  -https://github.com/zelon88/HRConvert2/issues/137
+  -The 3D Model Conversion Pipeline did NOT respect the $commandMayRun return variable from the sandboxCommand() function.
+  -This means that 3D Model conversions WOULD STILL run even in the abscense of a functional sandbox.
+  -If a sandbox was functional, the operation would be sandboxed normally. 
+  -This bug only affects the failure mode where a sandbox is unavailable.
+  -The expected, documented behaviour for an incoming conversion with unavailable sandbox is -> "ERROR!!! HRConvert2-21, Conversion Failed!"
+  -The observed result for an incoming conversion with sandbox unavailable on >=v3.8.5 is "OP-Act: Conversion Complete!"
+  -In v3.8.6 the 3D Model pipeline has been fixed, and correctly gates conversion upon $commandMayRun from the sandboxCommand() function.
+  -The mixup happened because of confusing variable naming that did not reflect actual variable intent. This has been corrected.
+-Revise format routing through 3D Model pipeline.
+  -Improve assimp / Meshlab support for things that assimp lacks export filters for, like .off files.
+  -Supress export of .mtl files for operations that generate them.
+  -Fix sandbox fail-safe behavior bugs presented by @aalsanie
+  -Bring 3D Model Conversion Pipeline into compliance with CRE
+-Update ERROR_DESCRIPTIONS.txt.
+-Rename ABOUTG_PRE-BAKED_UEFI_ASSET_IMAGES / .md to drop the ABOUT_ from the name, add CREATING_.
+  -This makes these docs more consistent with other CREATING_ docs of similar nature.
+-Add Apache conf management, with .htaccess generation & maintanence.
+  -This can be enabled / disabled in config.php for admins who want to manage .htaccess themselves, or let other apps do it.
+  -The -v and -fp argument still check for hosted DATA directory state.
+  -The -v and -fp argument warn if hosted DATA is vulnerable to the POC provided by @skeletonsec in GHSA-hrq7-pfhf-r2fw.
+  -The apache config is managed by the resourceManager, or -fp arguments same as our other managed policies.
+  -Apache conf procedures are respected. We've been bitten by winging it before.
+-Added capability inspection for managed dependencies.
+  -The core now decides whether to utilize detected capability, hard-coded config.php capability, or an inclusive/exclusive combination of both.
+  -Config.php now has controls for this.
+  -Basically, you can tell HRConvert2 exactly what it supports, let it decide itself, or let it decide from a list of pre-approved formats you provide. 
+-Further improve -fp and -v output to simplify.
+  -A perfectly healthy box should not produce that much output.
+  -It was sensory overload.
+  -Now it's more useful, concise, easier to distinguish a healthy box from an unhealthy one.
+-Significant quality pass on dependencyCore.php.
+-Significant quality pass on convertCore.php.
+-Significant quality pass on coreManager.php.
+-Significant quality pass on setupCore.php.
+-Harden manager startup key generation against replay attacks.
+-Adjust auto-install process ordering.
+
+--------------------
 COMMIT 8/31/2026
-v3.8.5 - Archive, A/V Scan, OpenSCAD Resource Ceilings + Awareness.
+v3.8.5 - Start work on modularizing conversion pipelines.
 
 -v3.8.5.
 -convertCore.php converts nothing on its own any more. 

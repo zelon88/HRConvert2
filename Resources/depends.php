@@ -1,17 +1,17 @@
 <?php
 // / -----------------------------------------------------------------------------------
-// / COPYRIGHT INFORMATION ...
+// / Copyright information ...
 // / HRConvert2, Copyright on 8/28/2026 by Justin Grimes, www.github.com/zelon88
 // /
-// / LICENSE INFORMATION ...
+// / License information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
-// / APPLICATION INFORMATION ...
+// / Application information ...
 // / This application is designed to provide a web-interface for converting file formats
 // / on a server for users of any web browser without authentication.
 // /
-// / FILEINFORMATION ...
+// / Fileinformation ...
 // / v3.8.1.
 // / HRConvert2 Dependency Manifest.
 // / This file is data. It defines nothing & does nothing.
@@ -40,11 +40,11 @@
 // /   Source           Where it comes from. Read by the supply chain audit.
 // /   Purpose          Why HRConvert2 needs it. Read by the supply chain audit.
 // /
-// / HARDWARE REQUIREMENTS ...
+// / Hardware requirements ...
 // / This application requires at least a Raspberry Pi Model B+ or greater.
 // / This application will run on just about any x86 or x64 computer.
 // /
-// / DEPENDENCY REQUIREMENTS ...
+// / Dependency requirements ...
 // / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
 // / Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Calibre,
 // / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap Dia & xvfb-run.
@@ -62,7 +62,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependsVersion = 'v3.8.1';
+$DependsVersion = 'v3.8.6';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -73,7 +73,12 @@ $DependsManifest = array(
     'MinimumVersion' => '8.0', 'VersionCommand' => 'php -v', 'VersionPattern' => '/^PHP (\d+\.\d+)/',
     'Required' => TRUE, 'Subsystem' => 'Core', 'Requires' => array(),
     'License' => 'PHP-3.01', 'Source' => 'https://www.php.net', 'Purpose' => 'Runs the application.'),
-  // / A PHP EXTENSION IS NOT PROVED BY THE PHP BINARY BEING PRESENT.
+  // / A PHP extension is not proved by the PHP binary being present.
+  // / php-zip is Required because it backs a security filter rather than a feature.
+  // / sanitizeDocumentLinks() opens an OOXML document with ZipArchive to strip external
+  // / references before LibreOffice is allowed to see it. Without the extension that
+  // / function warns & passes the document through unfiltered, leaving the sandbox as the
+  // / only thing standing between a crafted document & the machine.
   // / php-zip is named in the PHP package list above, but a check that only asks the binary
   // / for its version reports PHP ok while an extension it needs is missing. An extension
   // / is asked for by name, from PHP itself, & is its own entry for that reason.
@@ -83,7 +88,7 @@ $DependsManifest = array(
     'License' => 'PHP-3.01', 'Source' => 'https://www.php.net/manual/en/book.openssl.php', 'Purpose' => 'Encrypts every message on a manager socket. Resource awareness cannot work without it & fails quietly rather than loudly.'),
   array('Name' => 'PHP Zip', 'Binary' => '', 'Type' => 'php-extension', 'Package' => 'zip',
     'MinimumVersion' => '', 'VersionCommand' => 'php -r "exit(extension_loaded(\'zip\') ? 0 : 1);"', 'VersionPattern' => '',
-    'Required' => FALSE, 'Subsystem' => 'Documents', 'Requires' => array('PHP'),
+    'Required' => TRUE, 'Subsystem' => 'Documents', 'Requires' => array('PHP'),
     'License' => 'PHP-3.01', 'Source' => 'https://www.php.net/manual/en/book.zip.php', 'Purpose' => 'Opens OOXML documents so external references can be stripped before LibreOffice sees them. Without it the sandbox is the only protection.'),
   array('Name' => 'Apache', 'Binary' => 'apache2', 'Type' => 'apt', 'Package' => 'apache2 libapache2-mod-php',
     'MinimumVersion' => '2.4', 'VersionCommand' => 'apache2 -v', 'VersionPattern' => '/Apache\/(\d+\.\d+)/',

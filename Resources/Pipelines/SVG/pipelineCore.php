@@ -1,25 +1,25 @@
 <?php
 // / -----------------------------------------------------------------------------------
-// / COPYRIGHT INFORMATION ...
+// / Copyright Information ...
 // / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
 // /
-// / LICENSE INFORMATION ...
+// / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
-// / APPLICATION INFORMATION ...
+// / Application Information ...
 // / This application is designed to provide a web-interface for converting file formats on
 // / a server for users of any web browser without authentication.
 // /
-// / FILE INFORMATION ...
-// / v3.8.5.
+// / File Information ...
+// / v3.8.6.
 // / This file is the converter for the SVG pipeline. It is loaded by pipelineManager.php
 // / ONLY when a SVG conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
 // / Error block 25000 through 25002 belongs to this pipeline. Those numbers came with the code when it
 // / moved out of convertCore.php & they did not change, because operators have read them.
 // / This pipeline calls verifySVGVersion(), sandboxCommand() & locateDependency(), which all
-// / remain in convertCore.php. A dependency verifier is still core owned, because
+// / remain in convertCore.php. A dependency verifier is still core owned.
 // / showVersionInfo() reports on it whether or not this pipeline is installed.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
@@ -47,7 +47,7 @@ function convertSVG($pathname, $newPathname, $extension, $height, $width) {
   // / detached process must be supervised after the connection to the user is closed.
   $OutputFilename = basename($newPathname);
   $WorkerPID = 0;
-  $ConversionSuccess = $ConversionErrors = $sandboxIsAvailable = FALSE;
+  $ConversionSuccess = $ConversionErrors = $commandMayRun = FALSE;
   $svgBinary = FALSE;
   $returnData = $argEcho = $inkscapeCommand = '';
   $stopper = 0;
@@ -64,8 +64,8 @@ function convertSVG($pathname, $newPathname, $extension, $height, $width) {
   else {
     // / Build & sandbox the command once. It does not change between retries.
     $inkscapeCommand = escapeshellarg($svgBinary).' '.$argEcho.'--export-filename='.escapeshellarg($newPathname).' '.escapeshellarg($pathname);
-    list ($sandboxIsAvailable, $inkscapeCommand) = sandboxCommand($inkscapeCommand, $pathname, $newPathname, FALSE, 'inkscape');
-    if (!$sandboxIsAvailable) {
+    list ($commandMayRun, $inkscapeCommand) = sandboxCommand($inkscapeCommand, $pathname, $newPathname, FALSE, 'inkscape');
+    if (!$commandMayRun) {
       $ConversionErrors = TRUE;
       errorEntry('Bubblewrap is missing or non functional, so this SVG conversion cannot be isolated!', 25002, FALSE); }
     else {
@@ -86,7 +86,7 @@ function convertSVG($pathname, $newPathname, $extension, $height, $width) {
       // / The output file is the only verdict on whether the conversion produced anything.
       if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $height, $width, $sleepTime, $argEcho, $svgBinary, $inkscapeCommand, $sandboxIsAvailable);
+  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $height, $width, $sleepTime, $argEcho, $svgBinary, $inkscapeCommand, $commandMayRun);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

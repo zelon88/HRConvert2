@@ -1,147 +1,591 @@
------------------------------------------------------------------------------------
-COPYRIGHT INFORMATION ...
-ScanCore, Copyright on 3/29/2024 by Justin Grimes, www.github.com/zelon88 
+ScanCore CHANGELOG
 
-LICENSE INFORMATION ...
-This project is protected by the GNU GPLv3 Open-Source license.
-BSD or MIT licensing is available. Reach out to @zelon88 for more information.
-https://www.gnu.org/licenses/gpl-3.0.html
+v1.8
+--------------------------------------------------------------------------------
+Updates now stage, verify, swap, test & commit
 
-APPLICATION INFORMATION ...
-This application is designed to scan files & folders for viruses.
+- Reworked both updaters onto the staging pattern HRConvert2 uses. A download is
+  staged beside its target as a .new file, verified, the installed file is
+  retired to .old, the staged file is renamed into its place, the result is
+  tested, and only then is the retired file removed.
+- Nothing installed is touched until the whole staged set has passed. A single
+  bad file therefore cannot leave half an update in place, which is the failure
+  the previous per file loop allowed.
+- Verification of a staged file checks that it exists, is not empty, and does not
+  carry a repository not found page. A PHP file is additionally syntax checked
+  with the running interpreter, so a core that does not parse never reaches the
+  installation. A definitions file must yield at least one matchable definition.
+- Testing an application update runs the freshly installed core in a separate
+  process and asks it for its version. The running process still holds the code
+  it started with, so this tests what is actually on disk rather than what we
+  believe we wrote.
+- A failed test restores every retired file over the installation and reports
+  what the test said. An update can therefore no longer leave a server unable to
+  run ScanCore at all.
+- A server with no shell cannot lint and cannot run the smoke test. Both report
+  that the check was not performed and the update continues, rather than
+  reporting a failure that was never observed.
+- Stale .new files from an interrupted update are removed before a new one starts.
+- Definition updates follow the same path. The .previous copy introduced in v1.6
+  is replaced by the retired .old file, which is removed once the installed
+  definitions have been counted and found usable.
 
-FILE INFORMATION ...
-v1.5.
-This file contains a list of itemized changes made in each iteration of the application.
+Enabled classifiers
 
-HARDWARE REQUIREMENTS ...
-This application requires at least a Raspberry Pi Model B+ or greater.
-This application will run on just about any x86 or x64 computer.
+- Added $EnabledClassifiers, an array naming the classifiers that are switched
+  on. A classifier not named there is never loaded, so a disabled classifier
+  costs nothing to scan for rather than being loaded and then ignored.
+- Names are matched without regard to case, so a configuration may write SCAD and
+  Document the way a person would while a definition record writes scad and
+  document.
+- The special entry Language controls detection of executable code. Removing it
+  stops ScanCore reporting source files as code and lets them be classified for
+  handlers instead.
+- An enabled classifier that no definition record declares is reported as a
+  warning, so a typo in the configuration is visible rather than silent.
+- The count of records skipped because their classifier is disabled is logged.
 
-DEPENDENCY REQUIREMENTS ... 
-This application should run on Linux or Windows systems with PHP 8.0 (or later).
-Git is preferred for performing automatic update operations, but not required.
+Fixed during development
 
-VALID SWITCHES / ARGUMENTS / USAGE ...
-Quick Start Example:
- C:\Path-To-PHP-Binary.exe C:\Path-To-ScanCore.php C:\Path-To-Scan\ -m [integer] -c [integer] -v -d
+- Added a list type to the configuration validator. An empty array was treated as
+  a mistake and replaced with the built in default, which meant an empty
+  $EnabledClassifiers switched every classifier back on instead of switching them
+  all off. A list accepts an empty value as the real answer it is, while an array
+  still rejects one. $EnabledClassifiers is validated as a list.
 
-Start by opening a command-prompt.
-Type the absolute path to a portable PHP 7.0+ binary. Don't press enter just yet.
-Now type the absolute path to this PHP file as the only argument for the PHP binary.
-Everything after the path to this script will be passed to this file as an argument.
-The first Argument Must be a valid absolute path to the file or folder being scanned.
-Optional arguments can be specified after the scan path. Separate them with spaces.
+Definition build policy
 
-Reqiured Arguments Include:
+- Added an entropy floor for byte signatures. A signature is matched against every
+  byte of every file, so a value made of one repeated byte matches the padding in
+  ordinary binaries constantly. Measured against 400 clean system binaries, four
+  low variety certificate serials produced 534 false positives while 404 ordinary
+  serials produced none. The floor of 2.0 bits per byte removes the four and keeps
+  every legitimate value tested, which measured between 2.69 and 3.88.
+- Added a maximum repeated byte run of 6, as a second guard on the same problem.
+- Both limits live in Policy/limits.txt & every refusal names the measured value.
 
-  File or folder to scan:                 /path/to/scan
+Scan summary
 
-Optional Arguments Include:
+- The summary is now one finding per line, each a complete sentence, rather than
+  three lines that each carried two counts.
+      Scanned 12 files in 1 folder.
+      Found 5 files that may contain file or URL handlers.
+      Found 5 files that may contain executable code.
+      Found 3 suspicious files.
+      Found 2 infected files.
+- The infected count moved from the opening line to the last one. It is the answer,
+  & an answer that opens the summary is read before the reader knows what was
+  scanned. The order now runs from what was looked at, through what was merely
+  noticed, to the verdict.
+- Every count agrees with its noun, so a summary never reads 1 files or 0 folder.
+- This replaces the sentence that earlier versions kept byte identical. Nothing in
+  HRConvert2 reads it: the test there is for the string "Infected: " with a colon,
+  which appears only on a detection line & never in the summary. Verified against a
+  clean scan & an infected one.
 
-  Show version information:               -version
-                                          -ver
+Packed hash index
 
-  Show help information:                  -help
-                                          -h
+- A hash held in a PHP array costs far more than the hash itself, because the array
+  held a whole six field record for every one. Measured against the current
+  MalwareBazaar sample count of 1,129,343, that was 1,054 MB of memory and 10.7
+  seconds to parse, which is not usable for a scanner invoked once per upload.
+- ScanCore now keeps a packed binary index beside the definitions file. Each record
+  is the hash as raw bytes followed by the offset of its own line, and the file is
+  searched by halving rather than by holding a record per hash. The name and the
+  confidence are read from disk only when something actually matches, which is rare.
+- The string indicators are stored in the index too, so a valid index means the
+  definitions file is never opened at all until a hash hits.
 
-  Force recursion:                        -recursion
-                                          -r
+    definitions file                    171 MB
+    index file                           39 MB
+    first run, parse and build          4.3 s     98 MB peak
+    every run after that                0.7 s     60 MB peak
+    the same set without an index       exhausted the memory limit
 
-  Force no recursion:                     -norecursion
-                                          -nr
+- The definitions file is now read a line at a time rather than loaded into an array
+  of lines first. Loading every line cost more than the definitions themselves and
+  was what made a large set impossible to open at all, index or not.
+- The index carries the hash of the definitions file it was built from, so an index
+  left behind by an older file is rebuilt rather than trusted. Verified by editing
+  the definitions file and watching the next run rebuild.
+- A truncated index is refused rather than searched, because a partial section would
+  silently answer no to every hash beyond where it stops.
+- An index is only built above $HashIndexThreshold hashes, which defaults to 10000.
+  A small set is cheaper to parse than to index and needs no second file on disk. A
+  stale index belonging to a set that has shrunk below the threshold is removed.
+- Added $UseHashIndex and $HashIndexThreshold, with -nohashindex, -rebuildindex and
+  -hashindexthreshold.
 
-  Specify memory limit (in bytes):        -memorylimit ####
-                                          -m ####
+Network indicator matching
 
-  Specify chunk size (in bytes);          -chunksize ####
-                                          -c ####
+- A host or url indicator is no longer searched for one indicator at a time. The
+  data is read once for anything host shaped or url shaped, and whatever is found
+  is looked up by its own value, which is the same thing that makes a hash
+  indicator free. The cost no longer grows with the size of the feed.
+  Measured on a 240 MB corpus:
+      500 host indicators    6.2 s      previously about 12 s
+     5000 host indicators    5.3 s      previously about 2 minutes
+    50000 host indicators    6.1 s      previously about 19 minutes
+- A host candidate is looked up whole and then with its leftmost label removed
+  until the labels run out, so an indicator naming evil.example still catches
+  www.evil.example and a.b.c.evil.example.
+- IPv4 addresses are extracted as hosts.
+- The name boundary is now enforced by the extraction itself rather than by a
+  character check afterwards, so ow.ly still cannot match inside snow.lyrics or
+  ow.lycos.com. Verified against both.
+- A data indicator is an arbitrary run of bytes with no shape, so it still needs a
+  search of its own and a data feed should stay small. A url feed may now be
+  large.
 
-  Enable "debug" mode (more logging):     -debug
-                                          -d
+Byte signatures
 
-  Enable "verbose" mode (more console):   -verbose
-                                          -v
+- Implemented the \xNN escape the definition format was documented with from the
+  start & which nothing had ever decoded. A signature is often a run of bytes with
+  no printable form, and until now the format promised a way to write one that the
+  scanner did not understand.
+- The backslash & the double quote are escaped too, even though both print. A raw
+  backslash would make a value ambiguous, because a signature holding the four
+  bytes of the text \x1c would decode back as the single byte 0x1c. Round tripped
+  against that exact case & three others.
+- A match is written into the report with the same escaping. A byte signature is
+  raw bytes & writing those into the report put control characters into a text
+  file that HRConvert2 reads back.
+- Added transform = hexbytes to the definition builder, so a feed column carrying
+  hex text becomes the bytes it names before it is measured or written.
+- Added labelprefix to the builder, so a feed column becomes a readable name.
 
-  Force a specific report file:           -reportfile /path/to/file
-                                          -rf path/to/file
+Definition builder
 
-  Force a specific configuration file:    -configfile /path/to/file
-                                          -cf path/to/file
+- A recipe that produces no indicators at all from a source with lines in it is
+  now a build failure rather than a log line. A wrong column number otherwise
+  survives indefinitely, because everything downstream reports success.
+- Rewrote the abuse.ch CSCB recipe. It had been mapped to column 4, which is the
+  thumbprint algorithm rather than a hash, so every row was refused. Mapping it to
+  the thumbprint column instead would have been worse, because a thumbprint is the
+  hash OF THE CERTIFICATE and never of a file, so the build would have succeeded
+  and produced hundreds of definitions that could never match anything. The recipe
+  now maps the serial number, which really is stored inside a signed file, decoded
+  from hex and matched as a byte signature.
 
-  Force a specific definitions file:      -defsfile /path/to/file
-                                          -df path/to/file
+New definition format
 
-  Force maximum log size (in bytes):      -maxlogsize ###
-                                          -ml ###
+- ScanCore now reads the keyword led definition format produced by the
+  ScanCore_Definitions builder. One indicator per line:
+    sha256 Trojan.Win32.DarkComet = 7d14bfe... src=legacy-hashes confidence=high
+    host   Malware.C2.Emotet      = "evil.example" confidence=medium
+- The retired tab delimited format is recognised & reported by name rather than
+  read as nothing, so an upgrade that has not rebuilt its definitions says so.
+- Indicator kinds are separate. A name indicator is matched against the file name
+  only, a data indicator against content only. The retired format matched its one
+  column against both the path & the content, which is why 61% of its signatures
+  were file names being tested against every byte of every file.
+- A host indicator carries a name boundary rule, so ow.ly matches http://ow.ly/x
+  but not snow.lyrics & not ow.lycos.com.
+- Hashes are stored under their own value as an array key, so a lookup costs the
+  same whether the set holds nine hundred hashes or nine hundred thousand. The
+  retired format walked every definition for every file.
+- scope=<type> restricts a data indicator to one classifier type, using the same
+  type names the classifier definitions use.
 
-  Perform definition update:              -updatedefinitions
-                                          -ud
+Confidence changes the output line
 
-  Perform application update:             -updateapplication
-                                          -ua
+- confidence=high is reported as Infected:, which is what a whole file hash gets
+  by default. Anything else is reported as Suspicious:, which is what a string
+  indicator gets by default.
+- HRConvert2 tests a ScanCore report for the string "Infected: ", so a heuristic
+  match no longer carries the weight of a confirmed hash on that test.
+- The scan summary sentence is unchanged. The suspicious tally is its own line.
+- $ReportSuspicious switches the Suspicious lines off entirely.
 
-<3 Open-Source
------------------------------------------------------------------------------------
+Permissions when running as root
+
+- ScanCore no longer leaves root owned files behind when an administrator runs it
+  under sudo. Anything created is handed to the user & group that owns the
+  installation directory, so the service account that runs ScanCore the rest of
+  the time can still write its own report & install its own updates.
+- $OwnerUser & $OwnerGroup override that when the installation directory is owned
+  by somebody other than the account ScanCore runs as day to day.
+- A file being replaced by an update keeps the owner & the mode it already had.
+  The mode is preserved whoever is running, because the owner of a file may always
+  set it. The owner is only restored when running as root, because nobody else may
+  give a file away. An update therefore never quietly changes a permission.
+- Ownership is resolved twice, once from the configuration before the first
+  directory is created & again once the command line overrides are known.
+- None of this does anything at all unless the process is root.
+
+Configuration & command line
+
+- Every feature added since v1.5 now has both a configuration entry & a command
+  line override. Added -classify, -noclassify, -classifiers, -inspectarchives,
+  -noinspectarchives, -maxarchiveentries, -maxarchiveentrysize,
+  -maxarchivetotalsize, -maxarchiveratio, -minlanguagesignatures,
+  -mindatasignature, -suspicious, -nosuspicious, -owner, -group,
+  -nopreserveownership, -connectiontimeout, -updatemethod & -nofollowsymlinks.
+- Every numeric override is validated & clamped the same way the existing ones
+  are, so a bad argument falls back with a warning rather than breaking a scan.
+- The help screen is now built from a switch table rather than from forty
+  individually numbered variables, so adding a switch means adding a row.
+
+Fixed during development
+
+- Fixed a definition scope being satisfied by the classifier fallback. A file
+  whose extension names no type is searched against every declared type, and that
+  list was also being used to answer scope=. A scope=pdf definition therefore
+  matched a .txt file. Scope now uses only what the file honestly claims to be.
+- Fixed a handler declared by two types being listed twice in one classification
+  line, which is what happens now that both stream and transport declare http://.
+
+Container inspection
+
+- A zip container is now opened & each entry inside it is classified against the
+  type the container itself claims. Until now a word processing document
+  classified as nothing at all, because the interesting part of a .docx is a
+  compressed member rather than the container. A relationship carrying
+  TargetMode External is now reported, and the report names the member it was
+  found in.
+- The zip extension is used when it is present, because it needs no external
+  binary and reports the stored size of an entry directly. The unzip binary is
+  the fallback when the extension is absent. Both paths were tested against the
+  same corpus and produce identical findings.
+- An entry that is itself an archive is skipped. This inspector does not nest, so
+  no container can lead it into an unbounded chain of containers.
+- Only entries that could carry a handler are read. A handler lives in markup,
+  never in a picture or a font, so reading the rest would spend the
+  decompression budget on entries that can never produce a finding.
+
+Decompression limits
+
+- Four independent limits govern how much a container may be allowed to expand,
+  and any one of them refuses an entry on its own.
+    $MaxArchiveCompressionRatio refuses an entry that expands further than the
+      configured multiple of its stored size, before a byte of it is decompressed.
+      Ordinary markup compresses between five and twenty times. The default is 200.
+    $MaxArchiveEntrySize caps a single entry. The read is bounded by this value
+      and not by what the container claims, so an entry with a dishonest header
+      cannot talk ScanCore into a larger read than this.
+    $MaxArchiveTotalSize caps one whole container. Reading stops there and
+      whatever was found up to that point is still reported.
+    $MaxArchiveEntries caps how many members are looked at, which is the defence
+      against a container holding millions of tiny ones.
+- Tested against a 204 KiB container declaring a 200 MiB member, a ratio of
+  1028 to 1. Each limit was defeated in turn to confirm the next one still held.
+  Peak resident memory stayed at 21.8 MiB against a 21.5 MiB baseline in every
+  case, so the expansion never happens rather than happening and being discarded.
+- Added $InspectArchivedContent to switch the whole mechanism off.
+
+Magic identification
+
+- Added a magic record to the classifier definitions, written as
+  magic transport = 0:47, 188:47, 376:47  where offsets are decimal and bytes are
+  hexadecimal. Every declared offset must match, because one common byte
+  identifies nothing.
+- A magic match outranks an extension, because bytes cannot be renamed.
+- This resolves the .ts collision. The extension is used both by MPEG transport
+  streams and by TypeScript source, and the two have nothing else in common. A
+  file carrying transport stream packet sync bytes is classified as a stream, and
+  one that does not is still detected as TypeScript source.
+
+Transport streams
+
+- Added the transport type covering ts, m2ts, mts, m2t, tsv, tsa and trp.
+- A transport stream is scanned for anything ffmpeg would treat as a location,
+  which covers both a real URI scheme and an ffmpeg protocol prefix such as
+  concat:, subfile:, cache:, async: and crypto:.
+- The same scheme handlers were added to the stream type, because a playlist can
+  carry a bare URL on a line of its own as well as inside a tag.
+- Transport was added to the default $EnabledClassifiers.
+
+Notes
+
+- With Language disabled, a source file whose extension no enabled type claims is
+  searched against every enabled type. A C file can therefore be reported as
+  carrying a scad include, because #include < satisfies the call rule. This only
+  happens when code detection has been deliberately switched off.
+- $ConfigVersion raised to v1.8.
 
 
+v1.7
+--------------------------------------------------------------------------------
+Content classification
+
+- Added a content classifier that reports what a data file is & what it is able
+  to reach out to. This answers a different question from the virus scanner. The
+  virus scanner asks whether a file is known to be bad. The classifier asks what
+  a file can do if it is opened.
+- Added ScanCore_Classifiers.def, a human readable definition file with three
+  record kinds. A type record maps a type name onto the extensions it covers. A
+  lang record declares an executable language. A handler record names what to
+  look for inside a type, written as  scad include(file), surface(file)  where
+  the leading word claims the file type and each entry names a handler and the
+  capability it grants.
+- A handler token written as a bare word is matched as a call. A handler token
+  written in quotes is matched literally, which is what a PDF name or a playlist
+  tag needs. A signature may also be quoted, which preserves whitespace that
+  would otherwise be lost to the comma separator.
+- Executable code is detected before anything else. A file whose extension names
+  a language is reported as code and is not classified for handlers, because at
+  that point the whole file is a handler.
+- A file whose extension names no language and no type is searched against every
+  language signature and every declared type. Content alone can therefore
+  identify a shell script saved as .dat.
+- $MinimumLanguageSignatures governs how much evidence content alone must carry.
+  It defaults to 2, because a single generic signature also appears in prose.
+
+Matching rules taken from the HRConvert2 SCAD sanitizer
+
+- A keyword counts as a call only when the character before it is not part of an
+  identifier, so house_width and include_lid are not read as include calls.
+- A keyword counts as a call only when the next meaningful character is one of
+  ( < = :
+- Whitespace and newlines are skipped while looking for that character, so a call
+  split across any number of lines is still found.
+- Comments are skipped in that lookahead as well. OpenSCAD treats a comment as a
+  token separator, so surface/**/("file") is a live call. This was the fifth
+  bypass reported against the HRConvert2 filter and the classifier is written to
+  the corrected rule rather than the original one.
+
+Output
+
+- Classification results are written as Classified: lines. They are never written
+  as Infected: lines, because HRConvert2 tests the ScanCore report for the string
+  "Infected: " to decide whether a user upload is a threat. A handler is not a
+  threat and must not raise that alarm.
+- Two distinct messages are emitted:
+    Classified: <file> (File may contain executable code - Detected Language: C#)
+    Classified: <file> (File may contain file or URL handlers - Type: scad,
+      Handlers: include(file), surface(file))
+- The classification tally is written as its own summary line, so the existing
+  scan summary sentence is unchanged and any parser reading it still works.
+- A count is rendered with a noun that agrees with it, so a summary never reads
+  1 files.
+
+Fixed during development
+
+- Fixed separator whitespace being retained in a quoted definition member. A
+  quoted member is deliberately never trimmed, so the space following a comma
+  became part of the next token and every handler after the first in a list
+  searched for a token with a leading space. Only the first handler on each line
+  could match. Whitespace preceding an opening quote is now discarded as the
+  separator it is.
+- The chunk overlap now also covers the longest classifier token plus its
+  lookahead window, so a handler sitting on a chunk boundary is still found.
+
+Behaviour and configuration
+
+- Classification runs inside the existing single read of each file, so it costs
+  no additional disk access.
+- Added $ClassifyContent, defaulting to TRUE.
+- Added $ClassifierFileName and $MinimumLanguageSignatures.
+- ScanCore_Classifiers.def is added to $ApplicationUpdateSubscriptions, because a
+  handler grammar changes with a format specification rather than with threat
+  intelligence.
+- A missing or unusable classifier file disables classification and lets the scan
+  continue, rather than stopping it.
+- $ConfigVersion raised to v1.7.
+
+Known gaps
+
+- The classifier reads a file as bytes. A handler inside a compressed container,
+  such as an OOXML or EPUB archive, is only found if it is stored uncompressed.
+  Archive extraction is not attempted.
+- The classifier is a reporter, not a boundary. HRConvert2 removes SCAD file
+  reading primitives itself and renders inside a bubblewrap namespace. That is
+  the boundary. This only reports what is present.
+- The .tx extension is not declared, because the intended format is ambiguous.
 
 
---------------------
-COMMIT 3/31/2024
-v1.5 - Finish Application Update logic. Now the app is fully self-updating.
+v1.6
+--------------------------------------------------------------------------------
+Scanning correctness
 
--v1.5.
--Add additional text to index files.
-  -"This is a command line application! Please open a terminal, navigate to this directory, and submit commands to ScanCore.php!"
--Fix potential infinite loop bug in chunking.
--Improve optimization by reducing the amount of exposed logic, especially in scanning logic.
--Fix indentation of code blocks.
+- Fixed the definition loader retaining line endings. file() was called without
+  FILE_IGNORE_NEW_LINES, so the final field of every definition line carried a
+  trailing newline. Matching is a substring test, and a newline can never appear
+  inside a file hash or inside most file content, so those signatures could never
+  match. Against the shipped definition set this disabled 1936 of 2435
+  definitions, or 79.5 percent of the catalogue. Every field is now trimmed as it
+  is parsed.
+- Fixed hash signatures being evaluated outside the definition loop in the chunked
+  reader. A closing brace placed the MD5, SHA256 and SHA1 comparisons after the
+  foreach that walks the definitions, so a file at or above the memory limit was
+  only ever compared against whichever definition happened to be read last. Hash
+  comparison now runs against the whole definition set for every file.
+- Fixed signatures spanning a chunk boundary going undetected. The reader now
+  carries an overlap equal to the longest data signature minus one byte from each
+  chunk into the next.
+- Fixed hash fields being trusted by the column they occupy rather than by their
+  content. The shipped definition set has 48 SHA256 values sitting in the MD5
+  column and one in the SHA1 column, none of which could ever match. Each hash
+  field is now classified by its own length, so a correct hash matches regardless
+  of which column holds it.
+- Hash comparison is now an equality test against a whole hash. A partial hash
+  would match far more files than intended.
+- Malformed hash fields are counted during load and reported once as a warning
+  rather than failing silently. The shipped set contains three.
+- Fixed the report file being scanned by the scanner that wrote it. Once the
+  newline defect above was corrected, a report quoting a matched signature would
+  itself match on the next scan. The report file and the definitions file are now
+  both excluded by resolved path.
+- Files are now always read in chunks. A file smaller than the memory limit was
+  previously loaded whole with file_get_contents(), which could exceed the
+  interpreter memory limit long before it reached the configured one.
+- The configured memory limit is now applied to the interpreter at startup.
+  Previously the setting only gated which read path was taken.
+- Data matching no longer lowercases the entire buffer once per definition. A
+  case insensitive search is used against the buffer directly.
 
---------------------
-COMMIT 3/29/2024
-v1.4 - Finish Application Update logic. Now the app is fully self-updating.
+Scanning traversal
 
--v1.4.
--Finish application update logic.
--Supports url_fopen, cURL, or git update methods.
-  -Represented in config as raw or git.
--Config files are backed up prior to application updates.
-  -These must remain .php files. If ScanCore is installed to a hosted location, they will not be downloadable.
+- Fixed the file and directory counters. file_scan() incremented the directory
+  count before testing whether the path was a directory, and incremented the file
+  count in the single file branch in addition to the increment inside the checker.
+  Scanning one file reported two files in one folder.
+- Symbolic links are now skipped unless -followsymlinks or -fs is supplied. A
+  looping link previously made the scanner walk the same file 41 times across 123
+  folders until the operating system path length limit stopped it.
+- Added a maximum scan depth, configurable with $MaxScanDepth and -maxdepth or
+  -md, as a backstop against a looping directory structure.
+- A directory that cannot be read is now a warning and the scan continues.
+  scandir() returning FALSE previously reached foreach and raised a TypeError.
+- The scan sanity check is now meaningful. $ScanComplete was set TRUE
+  unconditionally, including when the requested path did not exist. It now
+  reflects the result of every child walk and every file check.
+- The infected tally now counts infected files rather than individual signature
+  matches. A file matching three signatures counted as three items. Every
+  individual match is still logged.
 
---------------------
-COMMIT 3/28/2024
-v1.3 - Add -defsfile, -df argument. Reorder logic & functions. Clean up output. Improve help, version output.
+Paths and invocation
 
--v1.3 - Add -defsfile, -df argument. Reorder logic & functions. Clean up output. Improve help, version output.
-  -Add -defsfile & -df argument for specifying a definition file by command line. 
-  -Now ScanCore is completely modular. It can be run against any defs file and any config file, so automating tasks is easy & granular.
-  -Add config file last modified, which core file, and which defs file to version output.
-  -Add new commands to help output.
-  -Will update the docs with proper error descriptions and instructions once the error numbers stop chaning.
+- Every path is now resolved against the installation directory. The report
+  directory, the definitions file and the configuration file were all relative to
+  the working directory, so a microservice invoked from elsewhere wrote its Logs
+  folder into the caller's directory.
+- Fixed -version and -help failing from any working directory other than the
+  installation directory. buildHelpInformation() tested file_exists('ScanCore.php')
+  against a relative path and reported that it could not build the information.
+- $InstallDir now falls back to the directory holding the core when the configured
+  value does not contain ScanCore.php, which happens whenever -configfile points
+  at a configuration file stored elsewhere.
+- $DefsFile falls back to the definitions file beside the core when the configured
+  path does not exist.
+- Added the configured $ScanLoc as a fallback when no scan path argument is given.
+  The setting was documented but never read.
 
+Arguments
 
---------------------
-COMMIT 3/26/2024
-v1.2 - Add several def update methods, so even with no deps they work.
+- Every switch that takes a value now checks that the value exists. Supplying a
+  trailing -m, -c, -ml, -rf, -cf or -df raised an undefined array key warning and,
+  for -df, a deprecation from passing NULL to file_exists().
+- Numeric arguments are validated individually and clamped to a minimum. A bad
+  memory limit previously reset the chunk size as well, and a chunk size of zero
+  or one would make the reader loop without advancing.
+- A chunk size larger than the memory limit is reduced to match.
+- All arguments pass through sanitize() before use.
+- Added -maxdepth and -md.
+- Added -followsymlinks and -fs.
+- Documented the existing -logfile and -lf aliases in the help screen.
 
--v1.2.
-  -Add 'raw' and 'git' update methods. So if you can't get git (hehe) then you can still perform updates.
-  -Use globals $EOL, $SEP for PHP_EOL and DIRECTORY_SEPARATOR, as intended.
-  -Add -version argument for displaying useful info.
-    -Info like the source for def & app updates, the original repo, subscribed defs, version, last update, ect...
-  -Added a plug to the LICENSE INFORMATION section of the header text.
-    -// / BSD or MIT licensing is available. Reach out to @zelon88 for more information.
-    -Support your favorite developer by buying a trophy license for your favorite open-source software.
-    -Imrove comments / formatting in ScanCore_Config.php. Add default values, labels, better descriptions for everything.
-    -Add -help, -h and -version, -ver arguments for showing version & help, respectively.
-    -Add -configfile, -cf argument for selecting which configuration file to use.
-      -Now one scanner can rule them all!
-      -Instead of installing multiple scanners to scan different subscriptions, just have different config files.
-    -Revise output. Make more consistent, easier to read.
-    -Remove unused $LogFile and $LogDir references from core.
-    -Remove unused $LogFile and $LogDir references from config.
-    -ReportsDir is now the only location for logs. Logs & reports are officially the same thing.
-    -The -logfile & -lf arguments are now undocumented aliases of the -reportfile and -rf arguments.
-    -I plan on removing -logfile & -lf arguments in the future.
-    -What will probably happen is I'll forget I said that and wind up re-documenting these undocumented aliases in the future.
+Logging
+
+- Added the warning tier. Normal and error line formats are unchanged. A warning
+  is written as "WARNING!!! ScanCore on <time>, ". Anything an attacker caused
+  that ScanCore handled correctly is now a warning rather than an error.
+- Fixed informational messages being logged as errors. The chunk size and memory
+  limit lines were passed with the error flag set and an error number of zero,
+  producing "ERROR!!! ScanCore-0" entries in the report.
+- An error raised with an error number of zero is now recorded as a warning,
+  because an error without a documented number cannot be looked up.
+- Implemented log rotation. $MaxLogSize and -maxlogsize were accepted but never
+  acted upon. The report file is renamed with a date and index suffix once it
+  would exceed the maximum.
+- Each log entry now carries its own timestamp. Previously every entry in a run
+  carried the time the run started.
+- Fixed the typo in the processOutput() global declaration, which named $Tiome.
+- A report file that cannot be written now disables logging with a console warning
+  and lets the scan continue, rather than raising a warning on every entry.
+
+Updates
+
+- Fixed the raw download path. It tested a remote address with file_exists(),
+  which is always FALSE for a URL, then fetched the repository root rather than
+  the requested file, and its 404 test was inverted so the success branch was
+  unreachable.
+- Fixed git updates cloning into the working directory and ignoring the configured
+  branch. The destination and branch are now passed explicitly.
+- All values reaching the shell are escaped with escapeshellarg().
+- Definition updates are now staged. The previous version deleted the working
+  definitions file before knowing whether a replacement existed, so a failed
+  download destroyed a working installation. The combined file is written to a
+  staging path, checked, and only then moved into place. One previous generation
+  is retained.
+- Fixed the raw update reporting success based only on the last subscription file,
+  ignoring whether the combined definitions were written at all.
+- Fixed application updates reporting success based only on the last file written.
+- Fixed $SubText being undefined during an update. It was only ever populated by
+  buildHelpInformation(), which runs only for -version and -help.
+- Path separators are now normalised consistently for subscription names, so a
+  Documentation subscription resolves on Windows in both update methods.
+- An application subscription name containing two dots is refused, so a
+  subscription list cannot write outside the installation directory.
+- Update targets are no longer unlinked before being rewritten.
+- The update host is reduced to a bare host name before the socket test, so a
+  value written with a scheme no longer fails the connectivity check.
+- Added a connection timeout, configurable with $ConnectionTimeout.
+- git availability is checked before the git method is used.
+- The temporary update directory is now removed whether or not the update
+  succeeded.
+
+Safety
+
+- The cleaner now refuses any path that does not resolve to somewhere underneath
+  the installation directory, and refuses the installation directory itself. A
+  blank repository name previously aimed it at the installation directory.
+- The cleaner removes a symbolic link as a link rather than walking through it.
+
+Structure and conventions
+
+- Rewritten to the HRConvert2 coding conventions. Single exit functions, uppercase
+  first letter variables for global and return scope only, lowercase variables
+  confined to the function that initialises them, functions defined ahead of
+  logic, and complete sentence comments.
+- Added purgeSensitiveMemory(), which takes each target as its own argument, and
+  redeclare() for loop body resets. All manual NULL and unset() blocks were
+  replaced.
+- Added sanitize(), applied to all supplied input.
+- Added compareVersions(), which compares numerically after stripping a leading v.
+  A string comparison ranks 3.10 below 3.9. The configuration file is now a
+  minimum match, so a newer configuration is accepted and an older one is refused.
+- Configuration entries are validated on load. A missing or invalid entry falls
+  back to a built in default and is reported as a warning once logging is
+  available, rather than propagating as NULL.
+- verifyInstallation() now verifies something. It checks the command line
+  interpreter, the PHP version and the availability of every required function.
+  Previously it set its own result to TRUE unconditionally.
+- Extracted buildSubscriptionText(), readArgumentValue(), validateNumericSetting(),
+  resolvePath(), fetchRemoteFile(), cloneRepository(), recordDetection(),
+  matchDataSignatures(), matchHashSignatures() and rotateLog(), removing repeated
+  blocks.
+- Removed the unused $Debug and $Verbose parameters from the scanning functions,
+  which read the globals directly.
+- Renamed load_defs(), file_scan() and virus_check() to loadDefs(), fileScan() and
+  virusCheck() for consistency with the rest of the file. These are internal names
+  and no command line behaviour changes.
+- The build now runs clean under error_reporting E_ALL across every code path.
+
+Behaviour changes to be aware of
+
+- A fatal error now exits with status 1. Previously die() was used, which exits 0,
+  so a caller checking the exit code saw every fatal error as a success. A clean
+  scan and an infected scan both still exit 0.
+- The infected count in the summary line now counts files rather than matches. The
+  summary sentence itself is unchanged.
+- $DefaultChunkSize now defaults to 8 MiB rather than 128 MiB. Chunk overlap makes
+  a small chunk as accurate as a large one, and lowers peak memory use.
+
+Configuration
+
+- Added $MaxScanDepth, $FollowSymlinks, $ConnectionTimeout and
+  $MinimumDataSignatureLength.
+- Corrected the $ApplicationUpdateDomain and $DefinitionUpdateDomain comments,
+  which asked for a scheme that the socket test cannot accept.
+- $ConfigVersion raised to v1.6.

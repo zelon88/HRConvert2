@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / Fileinformation ...
-// / v3.8.6.
+// / v3.8.7.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -679,7 +679,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
-  $HRConvertVersion = 'v3.8.6';
+  $HRConvertVersion = 'v3.8.7';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
@@ -8158,6 +8158,8 @@ else if ($Verbose) logEntry('Verified the Pipeline Manager. '.$PipelineCount.' c
 // / Error 27 should not be possible & should never be able to fire. If it does something is seriously wrong.
 list($CommandLineHandled, $UserType) = parseCommandLine();
 if ($CommandLineHandled && $UserType === 'web') errorEntry('Could not verify user type!', 27, TRUE);
+
+// / If this is a CLI operation log a warning that conversion operations will be disabled.
 if ($CommandLineHandled && $UserType === 'cli') warningEntry('CLI user detected. Conversion operations are disabled.');
 
 // / Only enable file operations for web users, when the script is being run with Apache+PHP.

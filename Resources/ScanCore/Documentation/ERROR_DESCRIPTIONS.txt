@@ -1,0 +1,212 @@
+ScanCore ERROR DESCRIPTIONS
+
+Error numbers are permanent once documented. A number is never reused for a
+different meaning, and relocating a function does not change its number.
+
+Errors are written to the report file as:
+  ERROR!!! ScanCore-<number> on <time>, <message>
+
+Warnings carry no number and are written as:
+  WARNING!!! ScanCore on <time>, <message>
+
+A warning records something the administrator should know about that did not stop
+the requested work. An error records a failure that altered behaviour. An error
+marked fatal stops execution and exits with status 1.
+
+
+STARTUP, BLOCK 1 TO 99
+--------------------------------------------------------------------------------
+1     Fatal. Cannot verify the ScanCore installation. Raised before logging is
+      available, so it is printed to the console only. The accompanying text names
+      the specific fault: a non command line interpreter, an interpreter older
+      than PHP 8.0, a required PHP function that has been disabled, or an
+      installation directory that cannot be resolved.
+
+2     Fatal. Cannot load the configuration file. The path does not exist, is a
+      directory, or the file returned FALSE. Printed to the console only.
+
+3     Fatal. Cannot verify the definitions file. The configured definitions file
+      does not exist and no fallback beside the core was found. Printed to the
+      console only.
+
+4     Fatal. Cannot verify the configuration file version. The configuration file
+      reports a version older than the core, or a version that cannot be parsed.
+      The configuration file is a minimum match, so a newer configuration is
+      accepted. Printed to the console only.
+
+5     Fatal. Cannot create required directories. The report directory could not be
+      created. Printed to the console only.
+
+6     Fatal. Cannot verify supplied arguments. parseArgs() did not reach a state
+      where any operation could be performed. A more specific error from the
+      100 or 300 block is normally logged first.
+
+7     Fatal. Cannot install definition update. The update did not complete. A more
+      specific error from the 400 block is normally logged first.
+
+8     Fatal. Cannot install application update. The update did not complete. A more
+      specific error from the 700, 800 or 900 block is normally logged first.
+
+9     Fatal. Cannot load definitions. loadDefs() could not produce a usable
+      definition set. Error 500 or 510 is normally logged first.
+
+10    Fatal. Cannot complete the requested scan. At least one file check or child
+      directory walk reported that it did not complete.
+
+
+ARGUMENTS, BLOCK 100 TO 299
+--------------------------------------------------------------------------------
+100   Not fatal. There were no arguments set. No scan path was supplied and the
+      configured $ScanLoc was empty. Execution continues to error 6.
+
+
+SCAN PATH, BLOCK 300 TO 399
+--------------------------------------------------------------------------------
+300   Not fatal. The specified file was not found. The first argument must be a
+      valid file or directory path. Also raised by the walker if the requested
+      path disappears between argument parsing and the start of the scan.
+
+310   Not fatal. The specified path cannot be read. The path exists but the
+      current user has no read permission on it.
+
+
+DEFINITION UPDATES, BLOCK 400 TO 499
+--------------------------------------------------------------------------------
+400   Not fatal. Cannot verify network connectivity for definition updates. The
+      configured $DefinitionUpdateDomain did not accept a socket on port 443
+      within $ConnectionTimeout seconds.
+
+410   Not fatal. Cannot download a definition subscription. One subscribed file
+      could not be retrieved by either the built in downloader or cURL. The
+      remaining subscriptions are still attempted.
+
+420   Not fatal. The combined definition data was empty, so the existing
+      definitions were kept. No subscription file yielded any content. The working
+      definitions file is left untouched.
+
+430   Not fatal. Cannot write the staged definitions file, or cannot move the
+      staged definitions into place. The working definitions file is left
+      untouched.
+
+
+DEFINITION LOADING, BLOCK 500 TO 599
+--------------------------------------------------------------------------------
+500   Fatal. Cannot load the definitions file. The file does not exist at the point
+      the scanner tries to read it.
+
+510   Not fatal. The definitions file contains no usable definitions. The file was
+      read but every line was blank, a comment, or carried no field that could be
+      matched. Execution continues to error 9.
+
+
+540   Not fatal. The definitions file holds records in the retired tab delimited
+      format, which is no longer read. Rebuild the file with the
+      ScanCore_Definitions builder:  php Build/scancore-defs.php --all
+      The retired format packed several indicator types into positional columns &
+      shipped with hashes in the wrong ones. It was replaced rather than repaired.
+
+
+550   Not fatal. Cannot write the definitions index, so the definitions are parsed on
+      every scan instead. The scan continues and detection is unaffected, but a large
+      definitions file will be slow and memory hungry every time. The directory
+      holding the definitions file needs to be writable, or set $UseHashIndex to
+      FALSE to stop ScanCore trying.
+
+
+CONTENT CLASSIFICATION, BLOCK 520 TO 599
+--------------------------------------------------------------------------------
+520   Not fatal. Cannot load the classifier definitions file, so content
+      classification is disabled. The scan continues and virus detection is
+      unaffected. Check $ClassifierFileName and confirm the file sits beside the
+      core. Set $ClassifyContent to FALSE to stop ScanCore looking for it.
+
+530   Not fatal. The classifier definitions file contains no usable records. The
+      file was read but every line was blank, a comment, or malformed. Content
+      classification is disabled and the scan continues.
+
+
+FILE READING, BLOCK 600 TO 699
+--------------------------------------------------------------------------------
+600   Not fatal. Cannot read the whole of a file, so results may be incomplete. A
+      read returned FALSE partway through a file. The hashes computed for that
+      file are therefore incomplete and any hash match against it is unreliable.
+
+610   Not fatal. Cannot open a file for reading, so it was skipped. The file is not
+      readable by the current user, or fopen() failed. The scan continues with the
+      next file.
+
+
+620   Not fatal. Refused a container entry whose declared expansion exceeds
+      $MaxArchiveCompressionRatio. This is the shape of a decompression bomb and
+      the entry is refused before any of it is decompressed. The rest of the
+      container is still inspected. This is an attacker supplied file handled
+      correctly, so it does not stop the scan.
+
+630   Not fatal. Cannot open a container for inspection, so its contents were not
+      classified. The container may be corrupt, encrypted, or not a zip file
+      despite its header. Neither the zip extension nor the unzip binary was able
+      to list it. Install php-zip, or the unzip package, if this recurs on files
+      that open normally elsewhere.
+
+
+APPLICATION UPDATES, BLOCK 700 TO 799
+--------------------------------------------------------------------------------
+700   Not fatal. Cannot verify network connectivity for application updates. The
+      configured $ApplicationUpdateDomain did not accept a socket on port 443
+      within $ConnectionTimeout seconds.
+
+710   Not fatal. Cannot download an application file. One subscribed file could not
+      be retrieved. The remaining subscriptions are still attempted.
+
+720   Not fatal. Cannot write an application file into the installation directory.
+
+730   Not fatal. Refused an application subscription that points outside the
+      installation directory. The subscription name contained two dots. This is an
+      attacker controlled input handled correctly, so the update continues with the
+      remaining subscriptions.
+
+
+440   Not fatal. The staged definitions failed verification, so the existing
+      definitions were kept. The staged file was empty, carried a repository not
+      found page, or contained nothing matchable. The installation was never
+      touched, so no rollback was needed.
+
+450   Not fatal. The installed definitions failed their test and the previous
+      definitions were restored. The staged file passed verification but the
+      file that ended up in place did not, which points at a disk or permission
+      problem rather than at the download.
+
+
+740   Not fatal. A staged application file failed verification, so the whole
+      update was abandoned before any installed file was touched. The message
+      names the file and the reason, which is one of empty, a repository not
+      found page, or a PHP file that does not parse.
+
+750   Not fatal. The updated application failed its test and the previous
+      application was restored. The freshly installed core was run and did not
+      report its version. Every retired file has been put back. The message
+      carries whatever the core actually said.
+
+760   Not fatal. Cannot restore a previous file during a rollback. The retired
+      copy is still on disk with a .old suffix beside its target and can be
+      renamed back by hand. This is the one path that can leave an installation
+      needing attention, and it only occurs when the filesystem refuses a rename
+      it had already permitted once.
+
+
+CONFIGURATION, BLOCK 800 TO 899
+--------------------------------------------------------------------------------
+800   Not fatal. Cannot back up the existing configuration file. Raised by
+      backupConfig() before an application update begins.
+
+
+APPLICATION UPDATE ABORT, BLOCK 900 TO 999
+--------------------------------------------------------------------------------
+900   Not fatal. The application update was aborted because the existing
+      configuration file could not be backed up. Execution continues to error 8.
+      Error 800 is logged first with the specific reason.
+
+910   Not fatal. Cannot write to the report file. Logging is disabled for the
+      remainder of the run and the message is printed to the console as a warning.
+      The scan continues, because a scanner that cannot write a log must still
+      scan.

@@ -1,0 +1,177 @@
+# ScanCore Classifier Definitions
+#
+# This file describes what a data file is & what it can reach out to.
+# It does not describe threats. Threats live in the virus definitions file.
+#
+# A line beginning with a hash is a comment. A blank line is ignored.
+#
+# THREE RECORD KINDS
+#
+#   type <name> = <ext>,<ext>,...
+#     Maps a type name to the file extensions that type covers.
+#     Optional. A type with no declaration covers the extension named after it,
+#     so a handler line beginning with scad already covers a .scad file.
+#
+#   lang <Display Name> = <ext>,<ext>,... : <signature>, <signature>, ...
+#     Declares an executable language.
+#     An extension listed here identifies the language outright.
+#     Signatures identify it by content when the extension is unknown.
+#     A file identified as a language is reported as code & is not classified
+#     for handlers, because the whole file is a handler at that point.
+#
+#   magic <type> = <offset>:<hex>, <offset>:<hex>, ...
+#     Declares a byte signature that identifies a type whatever its extension says.
+#     Offsets are decimal, bytes are hexadecimal, & every pair must match.
+#     A magic match overrides the extension. That is how a .ts transport stream is
+#     told apart from a .ts TypeScript source, which share an extension & nothing else.
+#
+#   <type> <handler>(<capabilities>), <handler>(<capabilities>), ...
+#     Declares what to look for inside a file of that type.
+#     Capabilities are file, url & exec, joined with a pipe when more than one.
+#
+#   A zip container is opened & each entry inside it is classified against the type
+#   the container itself claims. That is how a handler inside a .docx is found, since
+#   the interesting part of a .docx is a compressed xml file rather than the container.
+#
+# HOW A HANDLER IS MATCHED
+#
+#   A bare word is matched as a call, using the rules OpenSCAD taught us.
+#     The character before it must not be part of an identifier, so a handler
+#     named include does not match include_lid or house_include.
+#     The next meaningful character must be one of  (  <  =  :
+#     Whitespace, newlines & comments are skipped while looking for it, so a
+#     call split across lines & surface/**/("file") are both still found.
+#
+#   A quoted string is matched literally & carries no context rule.
+#     Quote a token that is already distinctive, or one that is followed by
+#     something other than a bracket, such as a PDF name or a playlist tag.
+#     Quote a signature when its leading or trailing whitespace matters.
+#
+# THIS FILE IS A REPORTER, NOT A BOUNDARY
+#
+#   Reporting that a file carries a handler is not the same as neutralising it.
+#   HRConvert2 removes SCAD file reading primitives itself & renders inside a
+#   bubblewrap namespace. That is the boundary. This file only tells you what
+#   is present so a caller can decide whether to proceed.
+
+
+# --------------------------------------------------------------------------
+# Type declarations.
+# --------------------------------------------------------------------------
+type document = doc,docx,docm,dot,dotx,dotm,odt,ott,fodt,rtf,sxw,wps,abw,uot
+type spreadsheet = xls,xlsx,xlsm,xlt,xltx,ods,ots,fods,slk,dif,dbf
+type presentation = ppt,pptx,pptm,pps,ppsx,pot,potx,odp,otp,fodp
+type xps = xps,oxps
+type pdf = pdf
+type scad = scad
+type svg = svg,svgz
+type markup = html,htm,xhtml,xml,xsl,xslt,xsd,rss,atom,plist
+type stream = m3u8,m3u,mpd,f4m,ism,ismc
+type transport = ts,m2ts,mts,m2t,tsv,tsa,trp
+type model = obj,mtl,dae,gltf,glb,x3d,amf,3mf,ply,off,wrl
+type drawing = dxf,dwg,dia,vsd,vsdx,vdx,fig
+type ebook = epub,fb2,azw3,opf,ncx
+type subtitle = ass,ssa,vtt,srt,sub,sbv,ttml,dfxp
+
+
+# --------------------------------------------------------------------------
+# Executable languages. These are detected before anything else.
+# --------------------------------------------------------------------------
+lang PHP = php,php3,php4,php5,php7,phtml,phps,phar : "<?php", "<?=", "$_GET", "$_POST", "$_REQUEST", "$_SERVER", "->", "::"
+lang JavaScript = js,mjs,cjs,jsx : "function(", "=>", "require(", "console.log", "document.", "window.", "typeof ", "prototype."
+lang TypeScript = ts,tsx : "interface ", ": string", ": number", "export class", "import {", "implements "
+lang C = c,h : "#include <", "int main(", "printf(", "malloc(", "sizeof(", "typedef struct"
+lang C++ = cpp,cxx,cc,hpp,hxx,hh : "#include <iostream>", "std::", "using namespace", "template<", "public:", "virtual "
+lang C# = cs,csx : "using System;", "namespace ", "public class ", "static void Main", "async Task", "get; set;"
+lang Java = java,jsp,jspx : "public class ", "import java.", "static void main", "System.out.println", "@Override", "extends "
+lang Python = py,pyw,pyi,pyx : "if __name__", "def ", "import ", "self.", "elif ", "__init__"
+lang Ruby = rb,erb,rake,gemspec : "require '", "attr_accessor", "puts ", "do |", "end", "module "
+lang Perl = pl,pm,cgi,pod : "use strict;", "my $", "sub ", "=~", "@ARGV", "qw("
+lang Shell = sh,bash,zsh,ksh,ash : "#!/bin/sh", "#!/bin/bash", "#!/usr/bin/env", "esac", "fi", "$(", "export "
+lang PowerShell = ps1,psm1,psd1 : "$PSScriptRoot", "Write-Host", "Get-ChildItem", "Invoke-Expression", "-ErrorAction", "param("
+lang Batch = bat,cmd : "@echo off", "%errorlevel%", "setlocal", "%~dp0", "goto :"
+lang VBScript = vbs,vbe,wsf,hta : "CreateObject(", "WScript.", "End Sub", "On Error Resume Next", "Dim ", "Set "
+lang Go = go : "package main", "func ", "import (", ":= ", "fmt.", "defer "
+lang Rust = rs : "fn main(", "let mut", "use std::", "impl ", "pub fn", "match "
+lang Lua = lua : "local ", "function ", "require(", "then", "elseif", "nil"
+lang SQL = sql : "SELECT ", "INSERT INTO", "CREATE TABLE", "DROP TABLE", "UPDATE ", "WHERE "
+lang Swift = swift : "import Foundation", "func ", "var ", "guard let", "@objc", "-> "
+lang Objective-C = m,mm : "#import ", "@interface", "@implementation", "NSString", "@end", "@property"
+lang Groovy = groovy,gradle : "def ", "@Grab", "println ", "closure", "it."
+lang R = r,rdata : "<- function", "library(", "data.frame", "%>%", "c("
+
+
+# --------------------------------------------------------------------------
+# OpenSCAD. Token list taken from the HRConvert2 SCAD sanitizer.
+# HRConvert2 removes every one of these from an uploaded source before render.
+# --------------------------------------------------------------------------
+scad include(file), use(file), import(file|url), surface(file), import_stl(file), import_dxf(file), import_off(file), import_dwg(file), dxf_linear_extrude(file), dxf_rotate_extrude(file), dxf_dim(file), dxf_cross(file)
+
+
+# --------------------------------------------------------------------------
+# Portable Document Format.
+# Every PDF token is quoted because a name is followed by a value, not a bracket.
+# --------------------------------------------------------------------------
+pdf "/URI"(url), "/Launch"(file|exec), "/GoToR"(file), "/GoToE"(file), "/EmbeddedFile"(file), "/SubmitForm"(url), "/ImportData"(file), "/JavaScript"(exec), "/JS"(exec), "/OpenAction"(exec), "/AA"(exec), "/RichMedia"(file|url), "/Filespec"(file), "/URL"(url), "/Movie"(file|url), "/Sound"(file)
+
+
+# --------------------------------------------------------------------------
+# Word processing, spreadsheet & presentation documents.
+# Covers the OOXML relationship form, the ODF link form & the RTF field form.
+# --------------------------------------------------------------------------
+document "xlink:href"(file|url), "Target="(file|url), "TargetMode=\"External\""(url), "oleObject"(file), "externalLink"(file|url), "INCLUDEPICTURE"(file|url), "INCLUDETEXT"(file|url), "DDEAUTO"(exec), "objdata"(file), "subDoc"(file), "r:embed"(file), "r:link"(file|url), "HYPERLINK"(url), "objupdate"(exec), "frameURL"(url)
+spreadsheet "xlink:href"(file|url), "Target="(file|url), "externalLink"(file|url), "DDEAUTO"(exec), "oleObject"(file), "table:table-source"(file|url), "WEBSERVICE("(url), "=HYPERLINK("(url), "RTD("(exec)
+presentation "xlink:href"(file|url), "Target="(file|url), "oleObject"(file), "videoFile"(file|url), "audioFile"(file|url), "r:link"(file|url), "HYPERLINK"(url)
+xps "Target="(file|url), "NavigateUri"(url), "ImageSource"(file|url), "FixedPage.Source"(file), "DocumentReference"(file)
+
+
+# --------------------------------------------------------------------------
+# Markup. Scalable Vector Graphics is XML & carries the same reach as HTML.
+# --------------------------------------------------------------------------
+svg "xlink:href"(file|url), "href="(file|url), "<image"(file|url), "<use"(file), "<script"(exec), "<foreignObject"(exec), "@import"(file|url), "url("(file|url), "<!ENTITY"(file|url), "SYSTEM"(file|url), "<feImage"(file|url)
+markup "<script"(exec), "<iframe"(url), "<embed"(file|url), "<object"(file|url), "src="(file|url), "href="(file|url), "action="(url), "@import"(file|url), "<!ENTITY"(file|url), "SYSTEM"(file|url), "url("(file|url), "<link"(file|url), "data:"(file)
+ebook "href="(file|url), "src="(file|url), "@import"(file|url), "<!ENTITY"(file|url), "<script"(exec), "xlink:href"(file|url)
+
+
+# --------------------------------------------------------------------------
+# Streaming manifests. These exist to name other files & other hosts.
+# --------------------------------------------------------------------------
+stream "#EXT-X-KEY"(url), "#EXT-X-MAP"(url), "#EXT-X-MEDIA"(url), "#EXT-X-SESSION-KEY"(url), "#EXT-X-SESSION-DATA"(url), "#EXT-X-I-FRAME-STREAM-INF"(url), "#EXT-X-STREAM-INF"(url), "#EXT-X-DATERANGE"(url), "<BaseURL"(url), "sourceURL="(url), "initialization="(url), "media="(url), "<Location"(url)
+stream "http://"(url), "https://"(url), "rtmp://"(url), "rtsp://"(url), "udp://"(url), "file://"(file), "concat:"(file), "subfile:"(file), "data:"(file), "async:"(url), "cache:"(url), "crypto:"(file|url)
+
+
+# --------------------------------------------------------------------------
+# MPEG transport streams. A segment is identified by its packet sync bytes,
+# because the .ts extension is also used by TypeScript source & the two files
+# have nothing else in common. The magic record settles which one this is.
+# A transport stream is scanned for anything ffmpeg would treat as a location,
+# which covers both a real URI scheme & an ffmpeg protocol prefix.
+# --------------------------------------------------------------------------
+magic transport = 0:47, 188:47, 376:47
+transport "http://"(url), "https://"(url), "rtmp://"(url), "rtmps://"(url), "rtsp://"(url), "udp://"(url), "rtp://"(url), "srt://"(url), "ftp://"(url), "sftp://"(url), "tcp://"(url), "tls://"(url), "mmsh://"(url), "mmst://"(url), "file://"(file), "unix://"(file), "concat:"(file), "subfile:"(file), "data:"(file), "pipe:"(file), "async:"(url), "cache:"(url), "crypto:"(file|url), "hls+"(url), "ffconcat"(file)
+
+
+# --------------------------------------------------------------------------
+# Three dimensional models. A material library is a file reference.
+# --------------------------------------------------------------------------
+model "mtllib"(file), "usemtl"(file), "maplib"(file), "usemap"(file), "map_Kd"(file), "map_Ka"(file), "map_Ks"(file), "map_Bump"(file), "map_d"(file), "refl"(file), "<init_from"(file|url), "<image"(file|url), "uri"(file|url)
+
+
+# --------------------------------------------------------------------------
+# Vector drawings. An external reference is a first class feature here.
+# --------------------------------------------------------------------------
+drawing "XREF"(file), "IMAGEDEF"(file|url), "ACAD_IMAGE"(file), "OLE2FRAME"(file), "ACAD_XREF"(file), "xlink:href"(file|url)
+
+
+# --------------------------------------------------------------------------
+# Subtitles. Advanced SubStation headers name the media they were timed against.
+# --------------------------------------------------------------------------
+subtitle "Video File:"(file), "Audio File:"(file), "<font"(file|url), "src="(file|url), "xlink:href"(file|url)
+
+
+# --------------------------------------------------------------------------
+# Resolved.
+# The extension named in the original request was .ts rather than .tx. It is
+# declared above as the transport type & is separated from TypeScript source by
+# its packet sync bytes rather than by its extension.
+# --------------------------------------------------------------------------

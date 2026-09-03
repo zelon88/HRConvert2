@@ -5759,6 +5759,51 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-33002, <SESSION_IDENTIFIER>: Capability detection was requested but the Dependency Core component is unavailable!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The --detect-capabilities argument was used and the Dependency Core component could not be loaded.
+  Capability detection lives in Dependency Core, because the dependency manifest describes how each tool is asked what it can do.
+  Nothing was detected and nothing was written. The existing capability cache, if there is one, is left exactly as it was.
+  CAUSE. /Resources/DependencyCore/dependencyCore.php is missing, unreadable, or reports a version this core does not accept. Every component is an EXACT version match.
+  RESOLUTION. Run the application with the -v argument. It reports the version found beside the version required for every component.
+  Conversions are unaffected by this error. Detection only ever narrows what is already permitted, so an installation with no detection offers exactly what config.php and the pipeline declarations say it offers.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! HRConvert2-33003, A generated cache cannot be loaded directly!
+
+FILE
+  /DATA/HRConvert2/capability-cache.php
+
+FATAL
+  YES
+
+LOGGED
+  NO
+
+ERROR DESCRIPTION
+  The generated capability cache was executed directly instead of being loaded by convertCore.php.
+  The cache is written as a PHP file on purpose. It cannot render anything if it is ever served by a web server, it refuses to execute without the core, and require_once is the only parser it needs. A JSON or an ini file would need a parser of its own and would be readable as plain text.
+  Because this error takes place before any logging environment belonging to the request exists; this error is not logged.
+  CAUSE. Somebody requested the file directly, or a script included it without loading the core first.
+  RESOLUTION. This file is generated and holds no configuration worth reading by hand. Rebuild it with --setup --detect-capabilities.
+  The cache lives in the data location, which is served as inert content and is not executable by the web server. Seeing this error at all suggests the data location is reachable in a way it should not be. Run -v and read the Live exposure line.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! HRConvert2-34000, The Pipeline Manager component cannot be loaded directly!
   ERROR!!! HRConvert2-34000, A pipeline configuration cannot be loaded directly!
   ERROR!!! HRConvert2-34000, A pipeline converter cannot be loaded directly!

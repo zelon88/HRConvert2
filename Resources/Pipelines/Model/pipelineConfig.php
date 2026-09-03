@@ -12,9 +12,9 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.8.6.
+// / v3.8.8.
 // / This file declares what the Model conversion pipeline is & what it can do.
-// / It is read by pipelineManager.php on EVERY request & it must stay cheap.
+// / It is read by pipelineCore.php on EVERY request & it must stay cheap.
 // / It ASSIGNS VARIABLES & DOES NOTHING ELSE. No functions, no logic, no output.
 // / Error block 9000 through 9004 belongs to this pipeline.
 // / Those numbers came with the code when it moved out of convertCore.php.
@@ -34,8 +34,8 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / -----------------------------------------------------------------------------------
 // / The version of this pipeline folder. Read WITHOUT executing this file, then matched
 // / EXACTLY against the pin in getAcceptedPipelines(). This version covers the whole
-// / folder, so pipelineCore.php beside it ships & moves with this file.
-$PipelineVersion = 'v3.8.6';
+// / folder, so pipeline.php beside it ships & moves with this file.
+$PipelineVersion = 'v3.8.8';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -53,7 +53,7 @@ $PipelineDisplayName = '3D Model';
 $PipelinePriority = 450;
 
 // / The function dispatch calls. THIS NAME MUST BE UNIQUE ACROSS EVERY INSTALLED PIPELINE.
-// / It lives in pipelineCore.php beside this file & no longer exists in convertCore.php.
+// / It lives in pipeline.php beside this file & no longer exists in convertCore.php.
 $PipelineEntryPoint = 'convertModels';
 
 // / The depends.php subsystem this pipeline needs. Dependency Core owns installation.
@@ -86,7 +86,7 @@ $Capabilities = array(
     'ms3d', 'ac', 'b3d', 'q3d', 'irr', 'md2', 'md3', 'md5mesh', 'smd', 'ase', 'dxf', 'raw'),
   // / A format here that neither Assimp nor MeshLab can WRITE is refused at conversion time
   // / with error 9004. Reading a format is not the same as writing it, & Assimp reads
-  // / several it cannot produce. The writer lists live in pipelineCore.php beside the route
+  // / several it cannot produce. The writer lists live in pipeline.php beside the route
   // / selection that consults them.
   'Output' => array(
     'obj', 'stl', 'ply', 'dae', 'fbx', 'gltf', 'glb', 'x3d', 'off', '3ds', 'assbin', 'json'));

@@ -44,7 +44,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. Replacing config.php with a newer one is the correct fix.
-$ConfigVersion = 'v3.8.6';
+$ConfigVersion = 'v3.8.8';
 // / ------------------------------
 
 // / ------------------------------
@@ -1033,27 +1033,50 @@ $DefaultExpectedRuntime = 120;
 // / --Supported File Format Information--
 // /
 // /  --Supported Format Detection Type--
-// /   Decides whether the format arrays below are the final word on what may be converted.
-// /   Every conversion pipeline also declares the formats it believes it can handle.
-// /   This setting chooses what happens when a declaration & an array disagree.
+// /   Decides what decides which conversions this installation offers.
+// /   Three things have an opinion & this setting says how they are combined.
+// /   The arrays below are yours & say what is permitted on this machine.
+// /   Every conversion pipeline declares the formats it is willing to claim at all.
+// /   Dependency Core asks each installed tool what it can actually read & write.
+// /   Nothing here ever widens the accepted format surface past what a pipeline declares.
+// /   ImageMagick reports that it reads MSL, which is a scripting language it executes,
+// /   & http, https & file, which fetch a URL without passing any guard this application
+// /   owns. A tool's own opinion of itself is a filter & is never a source of formats.
+// /
 // /   Set this to hardcoded-only to let the arrays below decide everything.
-// /   A pipeline declaration is then treated as information & is never enforced.
-// /   Set this to detected-restrictive to drop any format no installed pipeline claims.
-// /   That can never widen what may be uploaded.
-// /   It removes menu entries which would always have failed.
-// /   Set this to detected-additive to also offer formats a pipeline claims but the arrays omit.
-// /   That widens the accepted format surface past what you approved here.
-// /   Use it only on a server where you trust every installed pipeline.
-// /   A pipeline can always refuse a pair its own exclusion list names, whatever this is set to.
-// /   Refusing is safe in any mode because it only ever removes a broken pairing.
-// /   Valid options are 'hardcoded-only', 'detected-restrictive' or 'detected-additive'.
-// /   Default is 'hardcoded-only'.
-$SupportedFormatDetectionType = 'hardcoded-only';
+// /   Detection never runs & a pipeline declaration is never enforced.
+// /
+// /   Set this to detected-advisory to run detection & change nothing.
+// /   Every disagreement is logged & every conversion carries on exactly as before.
+// /   This is the setting to run first & to leave running for a while.
+// /   A tool names its formats after its own internals rather than after the extension a
+// /   user types. FFMPEG has no mkv & no wmv, it has matroska & asf. Assimp has no dae, it
+// /   has collada. Seven of Assimp's twenty two export names are not the extension.
+// /   Those are corrected by a table in depends.php, & a gap in that table looks exactly
+// /   like a tool that cannot do something it does perfectly well.
+// /   Advisory finds the gaps on your machine & names them in the log, without any of them
+// /   costing you a conversion while you are finding out.
+// /
+// /   Set this to detected-restrictive once the log is quiet.
+// /   A format no installed tool can produce is dropped, so the interface stops offering
+// /   conversions that were always going to fail. This can never widen anything.
+// /
+// /   Set this to detected-additive to also offer a format a pipeline declares & the
+// /   arrays below omit, where the tool confirms it. Still bounded by the declaration.
+// /   Use it only where you trust every installed pipeline.
+// /
+// /   A pipeline can always refuse a pair its own exclusion list names, in every mode.
+// /   Refusing is safe anywhere, because it only ever removes a broken pairing.
+// /   Valid options are 'hardcoded-only', 'detected-advisory', 'detected-restrictive'
+// /   or 'detected-additive'.
+// /   Default is 'detected-advisory'.
+$SupportedFormatDetectionType = 'detected-advisory';
 // /  --Warn On Capability Mismatch--
 // /   Logs a warning when a pipeline declaration disagrees with the arrays below.
 // /   The warning names the format, the conversion family & which side it came from.
 // /   This has no effect while --Supported Format Detection Type-- is hardcoded-only.
-// /   No declaration decides anything in that mode, so there is nothing to report.
+// /   Detection never runs in that mode, so there is nothing to report.
+// /   Under detected-advisory this warning is the entire point of the setting.
 // /   Leaving this enabled is recommended wherever detection is active.
 // /   A format quietly appearing or disappearing is worth knowing about.
 // /   Valid options are TRUE or FALSE.

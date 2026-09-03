@@ -1,0 +1,278 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 9/3/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v3.8.8.
+This plain text file describes how HRConvert2 finds out what its dependencies can actually do, and what it does with the answer.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+Capability detection requires nothing this application does not already require. Every dependency that cannot answer is handled, and most of them cannot.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Capability Detection--
+
+THREE THINGS HAVE AN OPINION ABOUT WHICH CONVERSIONS THIS INSTALLATION OFFERS.
+
+  config.php                    What the administrator permits on this machine.
+  A pipeline's $Capabilities    What that pipeline is willing to claim at all.
+  The installed tool itself     What it can actually read & write today.
+
+Capability detection is the third of those. Dependency Core asks each installed tool what
+formats it handles, writes the answer to a cache, and Pipeline Core reads that cache.
+
+THE THREE LAYERS ONLY EVER NARROW. NOTHING HERE WIDENS ANYTHING.
+The pipeline declaration is the ceiling. Detection is a filter beneath it. config.php is
+the administrator's veto beneath that. A format has to survive all three.
+
+That ordering is not a stylistic preference. Run  magick -list format  on any installation
+and read what ImageMagick offers as readable formats.
+
+  MSL      Magick Scripting Language
+  HTTP     Uniform Resource Locator (http://)
+  HTTPS    Uniform Resource Locator (https://)
+  FILE     Uniform Resource Locator (file://)
+
+MSL is a scripting language ImageMagick executes. The three URL handlers fetch a remote
+address without passing through NetworkCore, dnsLookup, isPubliclyRoutableIP, or any other
+guard this application owns. A design that let detection add formats would have made all
+four uploadable, because $Allowed is built from the accepted format arrays and verifyFile()
+gates on $Allowed. A tool's own opinion of itself is a filter. It is never a source.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Three States--
+
+A DEPENDENCY IS detected, unknown, OR unavailable. UNKNOWN IS NOT EMPTY.
+
+  detected      The tool answered & the answer is usable.
+  unknown       The tool was never asked, or was asked & could not answer.
+  unavailable   The tool is not installed, so there is nothing to ask.
+
+Unknown means the pipeline declaration stands untouched. That single rule is what keeps an
+installation working, and here is why it has to exist.
+
+MOST DEPENDENCIES CANNOT BE ASKED ANYTHING.
+
+  ImageMagick   Yes.  magick -list format  reports read & write separately.
+  FFMPEG        Yes.  ffmpeg -formats  reports demux & mux separately.
+  Assimp        Yes, but with two commands. listext & listexport.
+  Calibre       Awkwardly, through calibre-debug.
+  7-Zip         Partly.  7z i  lists codecs rather than formats.
+  LibreOffice   No. There is no format list command in any released version.
+  Inkscape      No.
+  Dia           No.
+  OpenSCAD      No. Its targets are fixed by the renderer.
+
+Reading that silence as a report of no capability would remove every document conversion,
+every drawing conversion and every vector conversion from a machine where all four are
+installed and working perfectly.
+
+A COMMAND THAT RUNS AND YIELDS NOTHING IS ALSO UNKNOWN RATHER THAN EMPTY.
+That is the floor. A parse failure and an honest answer of nothing look identical from
+inside the reader, so the safe reading is the one that changes nothing.
+
+THE TWO DIRECTIONS CARRY THEIR OWN STATE.
+Assimp answers with two commands and one can fail while the other succeeds. A single state
+made a successful listext report the whole dependency as detected while the write set sat
+empty, and a narrowing pass reading that would conclude Assimp can write nothing at all.
+ReadState and WriteState are judged separately for exactly that reason.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Reading & Writing Being Different Questions--
+
+ASSIMP READS OFF. ASSIMP CANNOT WRITE OFF.
+
+An earlier release routed a model conversion on the input extension alone. An obj file was
+handled by Assimp because Assimp reads obj, and the conversion to off was then handed to a
+utility with no OFF exporter. Assimp answered that it could not guess the output format,
+the retry loop repeated the identical impossible command until it timed out, and error 9000
+reported a timeout rather than an impossibility.
+
+Detection reports the two directions separately because that bug is not specific to Assimp.
+It is what happens whenever presence is allowed to stand in for capability.
+
+  magick -list format     the rw+ column. r is read, w is write, + is multiple images.
+  ffmpeg -formats         the D & E flags. D is demux, E is mux.
+  assimp listext          import extensions, one line, semicolon separated.
+  assimp listexport       export identifiers, one per line.
+
+A pipeline consults the write set for the output extension and the read set for the input.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Aliases, Which Are Not Optional--
+
+A TOOL NAMES FORMATS AFTER ITS OWN INTERNALS, NOT AFTER THE EXTENSION A USER TYPES.
+
+  FFMPEG has no mkv. It has matroska.
+  FFMPEG has no wmv. It has asf.
+  FFMPEG has no mpg, no ts, no m4v, no m4a, no mka, no vtt & no sub.
+  ImageMagick has no tif. It has TIFF & TIFF64.
+  Assimp has no dae. It has collada.
+
+Seven of Assimp's twenty two export identifiers are not the extension. Without a table
+correcting this, a narrowing pass deletes working conversions from a correct installation.
+CapabilityAliases in depends.php is that table.
+
+AN ALIAS ADDS AN EXTENSION. IT NEVER RENAMES ONE.
+A tool that prints TIFF can still be handed a file named tiff, so removing the token in
+favour of tif would lose a format while gaining one. Both are kept.
+
+A VARIANT IS NOT AN ALIAS.
+Assimp writes obj and objnomtl, stl and stlb, ply and plyb, fbx and fbxa. Those are
+different operations rather than two names for one. The table maps them so that the
+question "can Assimp write obj" is answered correctly. It does not tell a pipeline what to
+ask for, and the Model pipeline still names objnomtl deliberately, because the plain obj
+exporter leaves a material sidecar beside the model that the user never asked for.
+
+THE TABLE IS HAND MAINTAINED & A GAP IN IT IS A FALSE NEGATIVE.
+That is the direction that costs somebody a conversion, which is the entire reason
+detected-advisory exists.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Four Modes--
+
+$SupportedFormatDetectionType in config.php.
+
+  hardcoded-only        Detection never runs. config.php decides everything & a pipeline
+                        declaration is never enforced. This is the old behaviour.
+
+  detected-advisory     Detection runs & changes nothing. Every disagreement is logged.
+                        THIS IS THE DEFAULT & IT IS THE ONE TO RUN FIRST.
+
+  detected-restrictive  A format no installed tool can produce is dropped, so the interface
+                        stops offering conversions that were always going to fail.
+                        This can never widen anything.
+
+  detected-additive     Also offers a format a pipeline declares & config.php omits, where
+                        the tool confirms it. Still bounded by the declaration.
+                        Use it only where every installed pipeline is trusted.
+
+ADVISORY IS THE MIGRATION PATH & SKIPPING IT IS A MISTAKE.
+Turn it on. Read a week of warnings. Fill in the aliases those warnings name. Then move to
+restrictive with evidence rather than with hope.
+
+A mode that reported problems and also acted on them would give an administrator no safe
+way to find out what enabling detection is going to do to their machine before it does it.
+
+$WarnOnCapabilityMismatch controls the reporting. Under advisory it is the whole point of
+the setting. Under hardcoded-only it does nothing, because detection never runs.
+
+A PIPELINE'S $PipelineExclude IS HONOURED IN EVERY MODE, INCLUDING hardcoded-only.
+An exclusion is the pipeline stating outright that it cannot do something. Honouring that
+is safe anywhere, because it only ever removes a pairing that would have failed.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About What Advisory Mode Found On The Author's Machine--
+
+Two of these are worked examples rather than hypotheticals. Both are declarations that
+promise a conversion no installed tool can perform.
+
+  wma is declared as an Audio output. FFMPEG has no WMA muxer at all. It reads WMA through
+  ASF & cannot write it. Every wma conversion the interface offers will fail.
+
+  mpl2 is declared as a Subtitle output.  ffmpeg -formats  reports  D  mpl2  with no E
+  flag, so it is demux only. FFMPEG can read MPL2 subtitles & cannot write them.
+
+Both are the same class of fault as obj to off. A declaration was written from memory, the
+memory was wrong, and nothing checked. Advisory mode is what turns that into a log line
+instead of into a user watching a conversion fail.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Manifest Fields--
+
+Every capability field in depends.php is optional. An entry that omits them is not less
+correct. It is a dependency whose formats cannot be asked for.
+
+  CapabilityCommand      A command that prints what the tool can read & write.
+  CapabilityStyle        matrix or list. How the output is shaped, not what it holds.
+  CapabilityPattern      The expression that reads it. Its meaning follows the style.
+  CapabilityDirection    For a list style. read, write, or readwrite.
+  CapabilityAliases      Maps the token a tool prints to the extension a user types.
+  CapabilityWriteCommand   A second command answering the write direction on its own.
+  CapabilityWriteStyle     The style of that second command.
+  CapabilityWritePattern   The expression that reads it.
+
+A MATRIX PRINTS ONE LINE PER FORMAT CARRYING ITS OWN DIRECTION FLAGS.
+The pattern names three groups. read, write & name. A read or write group holding a hyphen
+or a space means no, and anything else means yes. That lets one reader handle ImageMagick
+using r & w and FFMPEG using D & E without knowing anything about either.
+
+A name field is split on commas before it is compared, because one demuxer may answer to
+several names. FFMPEG prints  mov,mp4,m4a,3gp,3g2,mj2  as a single entry & every one of
+those is a real extension somebody may upload.
+
+A LIST PRINTS NAMES WITH NO FLAGS AT ALL, SO THE MANIFEST DECLARES THE DIRECTION.
+A glob such as *.obj is stripped, so a list of globs & a list of bare names read the same.
+A compound glob such as *.mesh.xml is reduced to its final segment, because that is what
+getExtension() returns for a file named that way.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Cache--
+
+DETECTION SPAWNS A PROCESS FOR EVERY DEPENDENCY THAT CAN ANSWER. IT NEVER RUNS IN A REQUEST.
+
+  php convertCore.php --setup --detect-capabilities
+
+That reads the machine & changes nothing else, so it needs no authorization token. It does
+write a file, so it is worth knowing when it runs.
+
+The cache lives beside the data location as capability-cache.php & is a PHP file on
+purpose. It cannot render anything if it is ever served, it refuses to execute without the
+core, and require_once is the only parser it needs. A JSON or an ini file would need a
+parser of its own and would be readable as plain text.
+
+IT IS CHOWNED TO THE WEB SERVER USER WHEN DETECTION RUNS AS ROOT.
+Detection is a command line operation and is usually run with sudo, so the file it writes
+would otherwise be owned by root and unreadable by the account that needs it. Every request
+would then find no cache, fall back to declared formats, and nothing would say why.
+
+A CACHE IS REFUSED WHEN IT WAS BUILT BY A DIFFERENT MANIFEST OR IN A DIFFERENT FORMAT.
+A manifest that changed may name a dependency the cache has never heard of, or may have
+corrected a pattern, and a cache built by the old one is not evidence about the new one.
+
+A REFUSED CACHE IS NOT AN EMPTY ONE.
+The caller receives no records and must read that as every dependency being unknown, which
+leaves every pipeline declaration standing. Reading it as no capability would take the
+whole application down on a missing file.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Adding Capability Detection To A Dependency--
+
+Four things, and the fourth is the one people skip.
+
+  1  Find a command that prints what the tool handles. Run it & read the real output.
+     Not the documentation. The output on the machine.
+  2  Write a pattern against that output & add CapabilityCommand, CapabilityStyle &
+     CapabilityPattern to the entry in depends.php.
+  3  Run  --setup --detect-capabilities  & read what landed in the cache.
+  4  COMPARE THE RESULT AGAINST WHAT THE PIPELINE DECLARES & WRITE THE ALIASES.
+
+Step four found eight aliases on the author's machine that had been missed by reading
+documentation alone, and two declarations that were simply wrong. A pattern that looks
+right against a paste in a terminal will still be missing half the extensions a user types,
+because the tool is naming its internals rather than the file names.
+
+LEAVE THE INSTALLATION IN detected-advisory UNTIL THE LOG IS QUIET.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

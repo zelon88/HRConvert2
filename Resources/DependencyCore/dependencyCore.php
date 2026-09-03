@@ -48,7 +48,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependencyCoreVersion = 'v3.8.6';
+$DependencyCoreVersion = 'v3.8.8';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -640,6 +640,285 @@ function uninstallDepends($authorizationToken, $subsystemFilter, $operatorConfir
   purgeSensitiveMemory($EnableMemoryProtection, $dependsManifest, $dependencyEntry, $manifestIsAvailable, $callerIsAuthorized, $detectedDependsVersion, $packageManager, $removeCommand, $operatorChoice, $commandOutput, $commandExitCode, $authorizationToken, $subsystemFilter, $operatorConfirmed);
   return array($UninstallSucceeded, $DependenciesRemoved); }
 // / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to apply the alias table of one dependency to a set of detected tokens.
+// / Accepts the detected tokens & the alias table. Returns the expanded set.
+// / An alias ADDS an extension & never renames one. A tool that prints TIFF can still be
+// / handed a file named tiff, so removing the token in favour of tif would lose a format
+// / while adding one. Both are kept.
+// / This table is the reason a narrowing pass is safe. FFMPEG has no mkv & no wmv, it has
+// / matroska & asf. Assimp has no dae, it has collada. Seven of Assimp's twenty two export
+// / identifiers are not the extension a user types. Without this table a narrowing pass
+// / would delete working conversions on a correctly installed machine.
+function applyCapabilityAliases($detectedTokens, $aliasTable) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $ExpandedTokens = array();
+  $detectedToken = $aliasKey = $aliasValue = '';
+  $ExpandedTokens = $detectedTokens;
+  if (is_array($aliasTable)) {
+    foreach ($aliasTable as $aliasKey => $aliasValue) {
+      $aliasKey = strtolower(trim((string)$aliasKey));
+      $aliasValue = strtolower(trim((string)$aliasValue));
+      if ($aliasKey === '' or $aliasValue === '') continue;
+      if (in_array($aliasKey, $ExpandedTokens, TRUE) && !in_array($aliasValue, $ExpandedTokens, TRUE)) array_push($ExpandedTokens, $aliasValue); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $ExpandedTokens is not purged, because it is a return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $detectedToken, $aliasKey, $aliasValue, $detectedTokens, $aliasTable);
+  return $ExpandedTokens; }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / A function to run one capability command & read what it prints.
+// / Accepts the command, the style, the pattern & the direction, in that order.
+// / Returns a success boolean, the readable tokens & the writable tokens, in that order.
+// / A failure here is a failure to ASK & never an answer of nothing.
+// / The caller decides what that means.
+// / The conclusion it must never reach is that the tool can do nothing at all.
+// /
+// / Two styles exist because two shapes of output exist.
+// / A matrix prints one line per format carrying its own direction flags.
+// / ImageMagick & FFMPEG both do this & the pattern names three groups for it.
+// / A read or write group holding a hyphen or a space means no.
+// / Anything else means yes.
+// / That lets one reader handle ImageMagick using r & w & FFMPEG using D & E, without
+// / knowing anything about either.
+// / A list prints names with no flags at all, which is what Assimp does.
+// / The manifest declares the direction for a list, because the output cannot.
+function runCapabilityCommand($capabilityCommand, $capabilityStyle, $capabilityPattern, $capabilityDirection) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $CommandSucceeded = FALSE;
+  $ReadableTokens = $WritableTokens = array();
+  $commandOutput = $patternMatches = $patternMatch = $splitTokens = array();
+  $commandExitCode = 1;
+  $rawOutput = $splitToken = '';
+  exec((string)$capabilityCommand.' 2>&1', $commandOutput, $commandExitCode);
+  $rawOutput = implode(PHP_EOL, $commandOutput);
+  // / An exit code is not consulted. Several of these tools describe themselves & then
+  // / exit non zero, & what matters is whether anything parseable came back.
+  if (trim($rawOutput) === '') warningEntry('The capability command '.$capabilityCommand.' printed nothing.');
+  else if ((string)$capabilityStyle === 'matrix') {
+    if (preg_match_all((string)$capabilityPattern, $rawOutput, $patternMatches, PREG_SET_ORDER)) {
+      foreach ($patternMatches as $patternMatch) {
+        if (!isset($patternMatch['name'])) continue;
+        // / One demuxer may answer to several names. FFMPEG prints mov,mp4,m4a,3gp,3g2,mj2
+        // / as a single entry, & every one of those is a real extension a user may upload.
+        $splitTokens = explode(',', strtolower(trim($patternMatch['name'])));
+        foreach ($splitTokens as $splitToken) {
+          $splitToken = trim($splitToken);
+          if ($splitToken === '') continue;
+          // / A flag of hyphen or space means the tool cannot. Anything else means it can.
+          if (isset($patternMatch['read']) && trim($patternMatch['read']) !== '' && trim($patternMatch['read']) !== '-' && !in_array($splitToken, $ReadableTokens, TRUE)) array_push($ReadableTokens, $splitToken);
+          if (isset($patternMatch['write']) && trim($patternMatch['write']) !== '' && trim($patternMatch['write']) !== '-' && !in_array($splitToken, $WritableTokens, TRUE)) array_push($WritableTokens, $splitToken); } }
+      if (count($ReadableTokens) > 0 or count($WritableTokens) > 0) $CommandSucceeded = TRUE; } }
+  else {
+    // / A list carries no flags, so the manifest says which direction it describes.
+    $splitTokens = preg_split((string)$capabilityPattern, $rawOutput);
+    if (is_array($splitTokens)) {
+      foreach ($splitTokens as $splitToken) {
+        // / A glob such as *.obj & any surrounding whitespace are stripped, so a list of
+        // / globs & a list of bare names are read by the same code.
+        $splitToken = strtolower(trim($splitToken));
+        $splitToken = ltrim($splitToken, '*');
+        $splitToken = ltrim($splitToken, '.');
+        // / A compound glob such as *.mesh.xml is reduced to the final segment, because
+        // / that is what getExtension() returns for a file named that way & a token nothing
+        // / can ever match is noise in the cache rather than a capability.
+        if (strpos($splitToken, '.') !== FALSE) $splitToken = substr($splitToken, strrpos($splitToken, '.') + 1);
+        if ($splitToken === '' or !preg_match('/^[a-z0-9][a-z0-9_-]*$/', $splitToken)) continue;
+        if ((string)$capabilityDirection !== 'write' && !in_array($splitToken, $ReadableTokens, TRUE)) array_push($ReadableTokens, $splitToken);
+        if ((string)$capabilityDirection !== 'read' && !in_array($splitToken, $WritableTokens, TRUE)) array_push($WritableTokens, $splitToken); }
+      if (count($ReadableTokens) > 0 or count($WritableTokens) > 0) $CommandSucceeded = TRUE; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / The two token sets are not purged, because they are return values.
+  purgeSensitiveMemory($EnableMemoryProtection, $commandOutput, $commandExitCode, $rawOutput, $patternMatches, $patternMatch, $splitTokens, $splitToken, $capabilityCommand, $capabilityStyle, $capabilityPattern, $capabilityDirection);
+  return array($CommandSucceeded, $ReadableTokens, $WritableTokens); }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / A function to detect what one dependency can actually read & write.
+// / Accepts one manifest entry.
+// / Returns a read state, a write state, the readable extensions & the writable
+// / extensions, in that order.
+// /
+// / The state is the whole point of this function & it has three values.
+// /   detected      The tool answered & the answer is usable.
+// /   unknown       The tool was never asked, or was asked & could not answer.
+// /   unavailable   The tool is not installed, so there is nothing to ask.
+// /
+// / Unknown is not empty & the difference decides whether an installation works.
+// / LibreOffice, Inkscape, Dia & OpenSCAD have no format list command in any released
+// / version. Reading that silence as a report of no capability would remove every document
+// / conversion, every drawing conversion & every vector conversion from a machine where
+// / all four are installed & working. Unknown means the pipeline declaration stands.
+// /
+// / A command that runs & yields nothing is also unknown rather than empty.
+// / That is the floor. A parse failure & an honest answer of nothing look identical from
+// / here, so the safe reading is the one that changes nothing.
+// /
+// / The two directions carry their OWN state & an earlier version did not.
+// / Assimp answers with two commands. listext reports what it imports & listexport reports
+// / what it exports, & one of them can fail while the other succeeds. A single state made
+// / a successful listext report the whole dependency as detected, while the write set sat
+// / empty because listexport never answered. A narrowing pass reading that would conclude
+// / Assimp can write nothing at all & would refuse every model conversion on the machine.
+// / That is the exact failure this design exists to prevent, one level further in.
+function detectDependencyCapability($dependencyEntry) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $ReadState = $WriteState = 'unknown';
+  $ReadableExtensions = $WritableExtensions = array();
+  $commandSucceeded = $writeSucceeded = FALSE;
+  $readTokens = $writeTokens = $secondRead = $secondWrite = $aliasTable = array();
+  $binaryPath = $firstDirection = '';
+  if ((string)$dependencyEntry['Binary'] !== '') {
+    $binaryPath = locateDependency((string)$dependencyEntry['Binary']);
+    if ($binaryPath === '') $ReadState = $WriteState = 'unavailable'; }
+  if ($ReadState !== 'unavailable' && isset($dependencyEntry['CapabilityCommand']) && (string)$dependencyEntry['CapabilityCommand'] !== '') {
+    $aliasTable = (isset($dependencyEntry['CapabilityAliases']) && is_array($dependencyEntry['CapabilityAliases'])) ? $dependencyEntry['CapabilityAliases'] : array();
+    $firstDirection = (isset($dependencyEntry['CapabilityDirection']) ? (string)$dependencyEntry['CapabilityDirection'] : 'readwrite');
+    list ($commandSucceeded, $readTokens, $writeTokens) = runCapabilityCommand(
+      (string)$dependencyEntry['CapabilityCommand'],
+      (isset($dependencyEntry['CapabilityStyle']) ? (string)$dependencyEntry['CapabilityStyle'] : 'matrix'),
+      (string)$dependencyEntry['CapabilityPattern'],
+      $firstDirection);
+    // / A command only settles the directions it was asked about. A read only command
+    // / leaves the write state exactly as it was, which is unknown.
+    if ($commandSucceeded) {
+      if ($firstDirection !== 'write') {
+        $ReadableExtensions = applyCapabilityAliases($readTokens, $aliasTable);
+        $ReadState = 'detected'; }
+      if ($firstDirection !== 'read') {
+        $WritableExtensions = applyCapabilityAliases($writeTokens, $aliasTable);
+        $WriteState = 'detected'; } }
+    else warningEntry('Capability detection for '.(string)$dependencyEntry['Name'].' produced nothing usable. Its declared formats will be trusted instead.');
+    // / A dependency answering two questions with two commands runs the second one here.
+    // / Assimp reports what it can import with listext & what it can export with
+    // / listexport, & neither command mentions the other direction at all.
+    if (isset($dependencyEntry['CapabilityWriteCommand']) && (string)$dependencyEntry['CapabilityWriteCommand'] !== '') {
+      list ($writeSucceeded, $secondRead, $secondWrite) = runCapabilityCommand(
+        (string)$dependencyEntry['CapabilityWriteCommand'],
+        (isset($dependencyEntry['CapabilityWriteStyle']) ? (string)$dependencyEntry['CapabilityWriteStyle'] : 'list'),
+        (string)$dependencyEntry['CapabilityWritePattern'],
+        'write');
+      // / A second command that failed leaves the write state unknown & the write set
+      // / empty. Those two together are read as nothing being known about writing, which
+      // / is true, rather than as the tool being unable to write, which is not.
+      if ($writeSucceeded) {
+        $WritableExtensions = applyCapabilityAliases($secondWrite, $aliasTable);
+        $WriteState = 'detected'; }
+      else {
+        $WritableExtensions = array();
+        $WriteState = 'unknown';
+        warningEntry('The write capability command for '.(string)$dependencyEntry['Name'].' produced nothing usable. Its declared output formats will be trusted instead.'); } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / The two extension sets are not purged, because they are return values.
+  purgeSensitiveMemory($EnableMemoryProtection, $commandSucceeded, $writeSucceeded, $readTokens, $writeTokens, $secondRead, $secondWrite, $aliasTable, $binaryPath, $firstDirection, $dependencyEntry);
+  return array($ReadState, $WriteState, $ReadableExtensions, $WritableExtensions); }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / A function to build the capability cache by asking every installed dependency.
+// / Accepts nothing. Returns a success boolean & the number of dependencies detected.
+// / Detection spawns a process for every dependency that can answer, so it happens here &
+// / never during a request. A conversion reads the file this writes.
+// / The cache is a PHP file & that is deliberate. It cannot render anything if it is ever
+// / served, it refuses to execute without the core, & require_once is the only parser it
+// / needs. A JSON or an ini file would need a parser & would be readable as text.
+function buildCapabilityCache() {
+  // / Set variables.
+  global $ConvertLoc, $DirSep, $DependsVersion, $RunningAsRoot, $ApacheUser, $EnableMemoryProtection;
+  $CacheWasBuilt = FALSE;
+  $DetectedCount = 0;
+  $manifestIsAvailable = FALSE;
+  $dependsManifest = $dependencyEntry = $cacheRecords = array();
+  $readableExtensions = $writableExtensions = array();
+  $readState = $writeState = $detectedDependsVersion = $cachePath = $cacheContents = '';
+  list ($manifestIsAvailable, $dependsManifest, $detectedDependsVersion) = verifyDependsManifest($DependsVersion);
+  if (!$manifestIsAvailable) warningEntry('Capability detection was skipped, because the dependency manifest is unavailable.');
+  else {
+    foreach ($dependsManifest as $dependencyEntry) {
+      list ($readState, $writeState, $readableExtensions, $writableExtensions) = detectDependencyCapability($dependencyEntry);
+      $cacheRecords[(string)$dependencyEntry['Name']] = array(
+        'ReadState' => $readState,
+        'WriteState' => $writeState,
+        'Subsystem' => (string)$dependencyEntry['Subsystem'],
+        'CanRead' => $readableExtensions,
+        'CanWrite' => $writableExtensions);
+      // / A dependency counts as answered when it settled either direction. Assimp settles
+      // / them with two commands & one of those can succeed while the other does not.
+      if ($readState === 'detected' or $writeState === 'detected') $DetectedCount++; }
+    // / The cache records which manifest built it. A manifest that changed may name a
+    // / dependency this file has never heard of, or may have corrected a pattern, & either
+    // / way a cache built by the old one is not evidence about the new one.
+    $cacheContents = '<?php'.PHP_EOL
+      .'// / HRConvert2 capability cache. Written by Dependency Core.'.PHP_EOL
+      .'// / This file is generated. Every edit made here is lost the next time it is built.'.PHP_EOL
+      .'// / Rebuild it with --setup --detect-capabilities.'.PHP_EOL
+      .'if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die(\'ERROR!!! HRConvert2-33003, A generated cache cannot be loaded directly!\'.PHP_EOL);'.PHP_EOL
+      .'$CapabilityCacheFormat = \'v3.8.7\';'.PHP_EOL
+      .'$CapabilityCacheManifest = '.var_export((string)$detectedDependsVersion, TRUE).';'.PHP_EOL
+      .'$CapabilityCacheBuilt = '.var_export(time(), TRUE).';'.PHP_EOL
+      .'$CapabilityCache = '.var_export($cacheRecords, TRUE).';'.PHP_EOL
+      .'?>'.PHP_EOL;
+    $cachePath = rtrim((string)$ConvertLoc, $DirSep).$DirSep.'capability-cache.php';
+    if (@file_put_contents($cachePath, $cacheContents, LOCK_EX) === FALSE) warningEntry('The capability cache could not be written to '.$cachePath.'. Detection will be repeated on the next run & conversions will use declared formats.');
+    else {
+      // / Detection is run from the command line & usually as root, so the file it writes
+      // / is owned by root & the web server cannot read it. Every request would then find
+      // / no cache, fall back to declared formats, & nothing would say why.
+      // / This is the same mistake a configuration backup made before it was corrected.
+      if ($RunningAsRoot && (string)$ApacheUser !== '') @chown($cachePath, (string)$ApacheUser);
+      @chmod($cachePath, 0640);
+      $CacheWasBuilt = TRUE;
+      logEntry('Capability cache written. '.$DetectedCount.' of '.count($cacheRecords).' dependencies answered.'); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $manifestIsAvailable, $dependsManifest, $dependencyEntry, $cacheRecords, $readableExtensions, $writableExtensions, $readState, $writeState, $detectedDependsVersion, $cachePath, $cacheContents);
+  return array($CacheWasBuilt, $DetectedCount); }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / A function to read the capability cache & judge whether it still describes this host.
+// / Accepts nothing. Returns an availability boolean & the cache records, in that order.
+// / A cache that is missing, unreadable, or was built by a different manifest is refused.
+// / A refused cache is not an EMPTY one.
+// / The caller receives no records & must read that as every dependency being unknown,
+// / which leaves every pipeline declaration standing. Reading it as no capability would
+// / take the whole application down on a missing file.
+function readCapabilityCache() {
+  // / Set variables.
+  // / $CoreLoaded is declared so the guard at the top of the generated file can see it.
+  // / The require below happens inside this function, so a global the file tests must be
+  // / in this scope or a valid cache refuses to load itself.
+  global $ConvertLoc, $DirSep, $DependsVersion, $CoreLoaded, $EnableMemoryProtection;
+  $CacheIsAvailable = FALSE;
+  $CapabilityRecords = array();
+  $cachePath = $requiredManifest = '';
+  $CapabilityCacheFormat = $CapabilityCacheManifest = $CapabilityCacheBuilt = $CapabilityCache = NULL;
+  $cachePath = rtrim((string)$ConvertLoc, $DirSep).$DirSep.'capability-cache.php';
+  $requiredManifest = ltrim((string)$DependsVersion, 'vV');
+  if (file_exists($cachePath)) {
+    // / The declarations are nulled before the require, so a truncated or partly written
+    // / file is caught here instead of inheriting whatever was in scope.
+    require ($cachePath);
+    if (!is_array($CapabilityCache)) warningEntry('The capability cache declares nothing usable & was ignored.');
+    else if ((string)$CapabilityCacheFormat !== 'v3.8.7') warningEntry('The capability cache was written in format '.(string)$CapabilityCacheFormat.' & this release reads v3.8.7. It was ignored.');
+    else if (ltrim((string)$CapabilityCacheManifest, 'vV') !== $requiredManifest) warningEntry('The capability cache was built from manifest '.(string)$CapabilityCacheManifest.' & this release ships '.$requiredManifest.'. It was ignored.');
+    else {
+      $CapabilityRecords = $CapabilityCache;
+      $CacheIsAvailable = TRUE; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $CapabilityRecords is not purged, because it is a return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $cachePath, $requiredManifest, $CapabilityCacheFormat, $CapabilityCacheManifest, $CapabilityCacheBuilt, $CapabilityCache);
+  return array($CacheIsAvailable, $CapabilityRecords); }
+// / -----------------------------------------------------------------------------------
+
 
 // / -----------------------------------------------------------------------------------
 // / A function to write a supply chain audit template.

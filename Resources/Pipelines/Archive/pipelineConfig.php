@@ -12,9 +12,9 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.8.6.
+// / v3.8.8.
 // / This file declares what the Archive conversion pipeline is & what it can do.
-// / It is read by pipelineManager.php on EVERY request & it must stay cheap.
+// / It is read by pipelineCore.php on EVERY request & it must stay cheap.
 // / It ASSIGNS VARIABLES & DOES NOTHING ELSE. No functions, no logic, no output.
 // / Error block 13000, 13006 through 13011, 13013, 13105 through 13107 belongs to this pipeline.
 // / Those numbers came with the code when it moved out of convertCore.php.
@@ -34,8 +34,8 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / -----------------------------------------------------------------------------------
 // / The version of this pipeline folder. Read WITHOUT executing this file, then matched
 // / EXACTLY against the pin in getAcceptedPipelines(). This version covers the whole
-// / folder, so pipelineCore.php beside it ships & moves with this file.
-$PipelineVersion = 'v3.8.6';
+// / folder, so pipeline.php beside it ships & moves with this file.
+$PipelineVersion = 'v3.8.8';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -54,7 +54,7 @@ $PipelineDisplayName = 'Archive';
 $PipelinePriority = 700;
 
 // / The function dispatch calls. THIS NAME MUST BE UNIQUE ACROSS EVERY INSTALLED PIPELINE.
-// / It lives in pipelineCore.php beside this file & no longer exists in convertCore.php.
+// / It lives in pipeline.php beside this file & no longer exists in convertCore.php.
 $PipelineEntryPoint = 'convertArchives';
 
 // / The depends.php subsystem this pipeline needs. Dependency Core owns installation.

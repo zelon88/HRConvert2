@@ -40,6 +40,34 @@
 // /   Source           Where it comes from. Read by the supply chain audit.
 // /   Purpose          Why HRConvert2 needs it. Read by the supply chain audit.
 // /
+// / Capability fields. Every one is optional & an entry that omits them is not less
+// / correct, it is a dependency whose formats cannot be asked for.
+// /   CapabilityCommand    A command that prints what the tool can read & write.
+// /   CapabilityStyle      matrix or list. How the output is shaped, not what it holds.
+// /   CapabilityPattern    The expression that reads it. Its meaning follows the style.
+// /   CapabilityDirection  For a list style. read, write, or readwrite.
+// /   CapabilityAliases    Maps the token a tool prints to the extension a user types.
+// /
+// / An entry with no CapabilityCommand resolves to unknown, which is a third state & not
+// / an empty one. Unknown means the pipeline declaration stands untouched. Half of these
+// / dependencies cannot enumerate anything. LibreOffice, Inkscape, Dia & OpenSCAD have no
+// / format list command at all, & reading that silence as a report of no capability would
+// / delete every document conversion on a working installation.
+// /
+// / A command that runs & returns nothing is a parse failure rather than a report of no
+// / capability, & it resolves to unknown for the same reason.
+// /
+// / Reading a format is not writing it & the two are stored separately.
+// / Assimp reads OFF & has no OFF exporter. An earlier release routed on the input
+// / extension alone, sent an obj to off conversion to Assimp, & retried a command that
+// / could never succeed until it timed out. ImageMagick & FFMPEG each report both
+// / directions in one line. Assimp reports them from two separate commands.
+// /
+// / A capability list is a FILTER & is never a source of new formats.
+// / magick -list format offers MSL, a scripting language ImageMagick executes, & http,
+// / https & file, which fetch a URL without passing through any guard this application
+// / owns. Detection narrows what a pipeline already declared. It never adds to it.
+// /
 // / Hardware requirements ...
 // / This application requires at least a Raspberry Pi Model B+ or greater.
 // / This application will run on just about any x86 or x64 computer.
@@ -62,7 +90,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependsVersion = 'v3.8.6';
+$DependsVersion = 'v3.8.8';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -134,6 +162,23 @@ $DependsManifest = array(
   // / ---- Media. ----
   array('Name' => 'FFMPEG', 'Binary' => 'ffmpeg', 'Type' => 'apt', 'Package' => 'ffmpeg',
     'MinimumVersion' => '6.1', 'VersionCommand' => 'ffmpeg -version', 'VersionPattern' => '/ffmpeg version n?(\d+\.\d+)/',
+    // / FFMPEG names muxers rather than extensions. It has no mkv & no wmv. Matroska is
+    // / the muxer behind one & ASF is the muxer behind the other, so both are aliased here
+    // / or both are lost. An entry such as mov,mp4,m4a,3gp,3g2,mj2 is one demuxer answering
+    // / to six names, so a matched name is split on commas before it is compared.
+    'CapabilityCommand' => 'ffmpeg -formats', 'CapabilityStyle' => 'matrix',
+    'CapabilityPattern' => '/^\s(?<read>[D\s])(?<write>[E\s])\s(?<name>[A-Za-z0-9_,]+)\s/m',
+    // / Each of these was found by running the real output through the reader rather than
+    // / by reading documentation. m4v, mpg & ts are all formats FFMPEG writes perfectly &
+    // / none of them appear under those names, so a narrowing pass would have removed four
+    // / working video conversions from a correct installation.
+    // / This is why detected-advisory exists & why it should be run for a while before
+    // / anything is allowed to narrow. The table is hand maintained & a gap in it is a
+    // / false negative, which is the direction that costs somebody a conversion.
+    'CapabilityAliases' => array('matroska' => 'mkv', 'matroska,webm' => 'mkv', 'asf' => 'wmv',
+      'mpeg' => 'mpg', 'mpegts' => 'ts', 'mp4' => 'm4v', 'ogg' => 'oga',
+      'adts' => 'aac', 'ipod' => 'm4a', 'matroska' => 'mka', 'image2' => 'jpg',
+      'ass' => 'ssa', 'webvtt' => 'vtt', 'microdvd' => 'sub'),
     'Required' => FALSE, 'Subsystem' => 'Audio, Video & Streams', 'Requires' => array('Bubblewrap'),
     'License' => 'LGPL-2.1', 'Source' => 'https://ffmpeg.org', 'Purpose' => 'Converts audio, video, subtitles & captures streams.'),
 
@@ -150,6 +195,15 @@ $DependsManifest = array(
   // / ---- Images. ----
   array('Name' => 'ImageMagick', 'Binary' => 'magick', 'Type' => 'apt', 'Package' => 'imagemagick',
     'MinimumVersion' => '7.1', 'VersionCommand' => 'magick -version', 'VersionPattern' => '/ImageMagick (\d+\.\d+)/',
+    // / The format column may carry a hyphen & may overrun its width, as RADIAL-GRADIENT
+    // / does, so the name is not anchored to a column. A trailing asterisk is native blob
+    // / support rather than part of the name. A continuation line describing a format
+    // / carries no mode column & therefore cannot match.
+    'CapabilityCommand' => 'magick -list format', 'CapabilityStyle' => 'matrix',
+    'CapabilityPattern' => '/^\s*(?<name>[A-Za-z0-9][A-Za-z0-9-]*)\*?\s+(?<read>[r-])(?<write>[w-])[+-]\s/m',
+    // / ImageMagick has no TIF. It reports TIFF & TIFF64. An installation permitting tif
+    // / would lose it to a narrowing pass without this line.
+    'CapabilityAliases' => array('tiff' => 'tif', 'jpeg' => 'jpg', 'jpe' => 'jpg'),
     'Required' => FALSE, 'Subsystem' => 'Images', 'Requires' => array('Bubblewrap'),
     'License' => 'ImageMagick', 'Source' => 'https://imagemagick.org', 'Purpose' => 'Converts raster images & splits pages for OCR.'),
   array('Name' => 'Inkscape', 'Binary' => 'inkscape', 'Type' => 'apt', 'Package' => 'inkscape',
@@ -168,6 +222,23 @@ $DependsManifest = array(
     'License' => 'GPL-2.0', 'Source' => 'https://openscad.org', 'Purpose' => 'Renders parametric models.'),
   array('Name' => 'Assimp', 'Binary' => 'assimp', 'Type' => 'apt', 'Package' => 'assimp-utils',
     'MinimumVersion' => '5.0', 'VersionCommand' => 'assimp version', 'VersionPattern' => '/[Vv]ersion\s+v?(\d+\.\d+)/',
+    // / Assimp answers two separate questions with two separate commands, so the read set
+    // / is detected here & the write set is detected by the entry below. Neither command
+    // / reports flags, so each is a plain list & each declares its own direction.
+    // / listext prints one line of *.ext;*.ext, so the pattern strips the glob.
+    'CapabilityCommand' => 'assimp listext', 'CapabilityStyle' => 'list',
+    'CapabilityDirection' => 'read', 'CapabilityPattern' => '/;/',
+    // / listexport prints export identifiers, one per line, & seven of the twenty two are
+    // / not the extension a user types. collada is dae, gltf2 is gltf, glb2 is glb, stlb is
+    // / stl, plyb is ply, fbxa is fbx & objnomtl is obj.
+    // / Those last four are variants rather than names for the same thing. This table says
+    // / what Assimp is able to write. It does not say what the pipeline should ask for, &
+    // / the Model pipeline still names objnomtl deliberately to avoid the material sidecar
+    // / the plain obj exporter leaves beside the model.
+    'CapabilityWriteCommand' => 'assimp listexport', 'CapabilityWriteStyle' => 'list',
+    'CapabilityWritePattern' => '/\R/',
+    'CapabilityAliases' => array('collada' => 'dae', 'gltf2' => 'gltf', 'glb2' => 'glb',
+      'stlb' => 'stl', 'plyb' => 'ply', 'fbxa' => 'fbx', 'objnomtl' => 'obj', 'stp' => 'step'),
     'Required' => FALSE, 'Subsystem' => '3D Models', 'Requires' => array('Bubblewrap'),
     'License' => 'BSD-3-Clause', 'Source' => 'https://github.com/assimp/assimp', 'Purpose' => 'Converts between 3D model formats.'),
   // / PyMeshLab is BUNDLED at Resources/PyMeshLab & is imported by inserting that directory

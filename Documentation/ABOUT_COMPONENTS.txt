@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
 
 FILE INFORMATION ...
-v3.7.9.
+v3.8.8.
 This plain text file describes how HRConvert2 is divided into components, how each one is verified, and what happens when one is missing or does not match.
 
 HARDWARE REQUIREMENTS ...
@@ -38,10 +38,68 @@ lost is the capability that component provides, & the loss is reported rather th
   Resources/coreManager.php                     Resource awareness & the listener.
   Resources/SetupCore/setupCore.php             Installation & configuration.
   Resources/DependencyCore/dependencyCore.php   Dependency management & the supply chain audit.
+  Resources/PipelineCore/pipelineCore.php       Conversion pipeline dispatch.
 
 Each core lives in a folder of its own, the same way ScanCore does. Configuration files do
 not. config.php, depends.php & versionInfo.php stay in Resources beside each other, because
 a configuration file is data an administrator edits & is not part of a component.
+
+coreManager.php has not moved into a folder & keeps its name for historical reasons. It is
+a Core by every test in this document.
+
+TWO KINDS OF THING LIVE UNDER Resources/Pipelines & NEITHER IS A CORE.
+
+  Resources/Pipelines/<Family>/pipelineConfig.php   What a pipeline declares.
+  Resources/Pipelines/<Family>/pipeline.php         The converter itself.
+  Resources/Pipelines/Shared/<name>.php             Code two pipelines both need.
+
+A pipeline is verified by Pipeline Core rather than by the core, which makes it a
+sub component. Pipeline Core pins each one exactly, the same way the core pins Pipeline
+Core. See ABOUT_PIPELINE_COMPONENTS.txt.
+
+The converter was called pipelineCore.php until v3.8.8. That name collided with the
+dispatcher & described the wrong thing, because a converter owns no domain & is not called
+on demand by the application. It is pipeline.php now.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Cores--
+
+A CORE IS A COMPONENT THAT OWNS A DOMAIN & EXTENDS THE OPERATIONAL SCOPE OF THE APPLICATION.
+
+The core converts files & serves the interface. A Core adds a whole area of responsibility
+the core does not have on its own.
+
+  Setup Core        Installing, configuring, repairing & the service unit.
+  Dependency Core   Dependencies, capability detection & the supply chain audit.
+  Pipeline Core     Which conversion families exist & which one gets a given conversion.
+  Core Manager      Resource awareness & the manager processes.
+
+FOUR PROPERTIES SEPARATE A CORE FROM ANYTHING ELSE IN THIS APPLICATION.
+
+  1  IT OWNS A DOMAIN. Everything about installation is in Setup Core & nowhere else.
+     Two files understanding the same thing is two implementations kept in step by hand.
+
+  2  IT RUNS INSIDE THE CALLER. It is called, it works, it returns. A Core starts nothing
+     that outlives the call. Core Manager starts processes, which is why the processes it
+     starts are described separately in ABOUT_MANAGERS.txt rather than here.
+
+  3  IT IS OPTIONAL. Every Core can be deleted & the application still converts files.
+     What is lost is the scope that Core provided, & the loss is reported rather than silent.
+
+  4  IT EXTENDS SCOPE RATHER THAN CAPABILITY. A dependency gives the application a new
+     format. A pipeline gives it a new conversion. A Core gives it a new thing it is able
+     to be responsible for, which is a larger claim & is why there are only four.
+
+A CORE IS NOT A MANAGER, & THE WORD MANAGER MEANS SOMETHING ELSE IN THIS APPLICATION.
+A Core is a file that is loaded. A manager is a role a long lived process runs under, with
+a socket, a supervisor & a place in a budget. Core Manager is the Core that starts them.
+core-manager, resource-manager, worker-manager & request-manager are the managers, & none
+of those is a file. See ABOUT_MANAGERS.txt.
+
+That distinction decides what moves when this machinery is shared with another application.
+The managers have nothing to do with converting files & would serve a virus scanner or a
+job dispatcher unchanged. The Cores would not.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -113,6 +171,13 @@ only because resource awareness affects a conversion.
   coreManager.php        Resolved during verifyInstallation when resource awareness is on.
   setupCore.php          Loaded by --config, & by -fp when it installs the service unit.
   dependencyCore.php     Loaded by --setup.
+  pipelineCore.php       Resolved in the main logic, directly after verifyGlobals().
+
+PIPELINE CORE IS THE EXCEPTION TO ON DEMAND & THE REASON IS ORDERING.
+It is resolved on every request that could convert something, because a conversion cannot
+wait for it. It is resolved AFTER verifyGlobals() rather than during verifyInstallation,
+because enumerating pipelines warns about every one it refuses & those warnings are
+worthless before there is a logfile to write them to.
 
 EACH COMMAND LOADS ONLY WHAT IT NEEDS.
 --config needs Setup Core. --setup needs Dependency Core. Only --install-complete &
@@ -124,18 +189,26 @@ did by loading Setup Core before every --setup option.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About Version Pins--
 
-EIGHT PINS. EVERY ONE OF THEM IS AN EXACT MATCH EXCEPT WHERE NOTED.
+TEN PINS. EVERY ONE OF THEM IS AN EXACT MATCH EXCEPT WHERE NOTED.
 
   $RequiredConfigVersion           config.php                    MINIMUM. A newer config carrying
                                                                  every required setting is fine.
   $RequiredCoreManagerVersion      coreManager.php               EXACT.
   $RequiredSetupCoreVersion        setupCore.php                 EXACT.
   $RequiredDependencyCoreVersion   dependencyCore.php            EXACT.
+  $RequiredPipelineCoreVersion     pipelineCore.php              EXACT.
   $RequiredDependsVersion          depends.php                   EXACT.
   $RequiredSecretVersion           the install secret file       EXACT.
   $RequiredGuiVersion              every UI folder               EXACT.
   $RequiredLanguageVersion         every language pack           EXACT.
   $RequiredConfigScript            the bootstrap script          EXACT.
+
+Pipeline Core carries pins of its own for every pipeline & every shared module it accepts.
+Those are listed in ABOUT_PIPELINE_COMPONENTS.txt rather than here, because the core knows
+nothing about them & a pipeline is verified one level down.
+
+RAISE $RequiredPipelineCoreVersion WHENEVER A PIPELINE IS ADDED, REMOVED OR RAISED.
+Pipeline Core holds the pin list, so a pipeline moving means that list moved.
 
 RAISE $RequiredSetupCoreVersion WHENEVER $RequiredConfigVersion IS RAISED.
 Setup Core holds the model of every setting config.php declares. Forgetting does not break
@@ -164,6 +237,12 @@ THE CORE DEGRADES. IT DOES NOT BREAK.
                         approved by default. --status, -l & -k report the component missing.
   No Setup Core         --config refuses & explains why. Everything else is unaffected.
   No Dependency Core    --setup refuses & explains why. Conversions are unaffected.
+                        Capability detection is unavailable & declared formats are trusted.
+  No Pipeline Core      NO CONVERSION RUNS AT ALL. Uploading, downloading, deleting &
+                        virus scanning continue. Every conversion family reports 34005.
+                        This is the one component whose absence is not a partial loss,
+                        because convertCore.php stopped converting anything itself once
+                        the last family moved out of it.
   No depends.php        Dependency management is unavailable. Conversions are unaffected.
   No bootstrap script   Nothing at all. It is a convenience, not a dependency.
 

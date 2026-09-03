@@ -1,7 +1,7 @@
 <?php if (php_sapi_name() !== 'cli') print('<!DOCTYPE HTML>'.PHP_EOL);
 // / -----------------------------------------------------------------------------------
 // / Copyright Information ...
-// / HRConvert2, Copyright on 8/21/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 9/4/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,8 +11,8 @@
 // / This application is designed to provide a web-interface for converting file formats
 // / on a server for users of any web browser without authentication.
 // /
-// / Fileinformation ...
-// / v3.8.7.
+// / File Information ...
+// / v3.8.8.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -631,7 +631,7 @@ function resolveSecretFile($secretFile, $requiredSecretVersion) {
 // / Any other combination gets no secret at all & fails verification.
 function verifyInstallation() {
   // / Set variables.
-  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $LogFile, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $SecretFile, $RequiredSecretVersion, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumImageVersion, $UsePyMeshLab, $MinimumMeshlabVersion, $MinimumAssimpVersion, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $Minimum7zVersion, $MinimumZipVersion, $MinimumRarVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumDiaVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection, $ResourceAwarenessActive, $EnableResourceAwareness, $RequireResourceAwareness, $ManagerSocketDir, $DirSep, $RequiredCoreManagerVersion, $CoreManagerVersion, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $CoreLoaded, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $RequiredSetupCoreVersion, $RequiredConfigScript, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineManagerVersion, $AllowUnprivilegedNamespaces, $MaintainHTAccess;
+  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $LogFile, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $SecretFile, $RequiredSecretVersion, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumImageVersion, $UsePyMeshLab, $MinimumMeshlabVersion, $MinimumAssimpVersion, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $Minimum7zVersion, $MinimumZipVersion, $MinimumRarVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumDiaVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection, $ResourceAwarenessActive, $EnableResourceAwareness, $RequireResourceAwareness, $ManagerSocketDir, $DirSep, $RequiredCoreManagerVersion, $CoreManagerVersion, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $CoreLoaded, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $RequiredSetupCoreVersion, $RequiredConfigScript, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $AllowUnprivilegedNamespaces, $MaintainHTAccess;
   putenv('HOME='.$HomeLoc);
   $CoreLoaded = TRUE;
   $InstallationIsVerified = $RunningFromCLI = $RunningAsRoot = $RunningInContainer = FALSE;
@@ -679,13 +679,13 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
-  $HRConvertVersion = 'v3.8.7';
+  $HRConvertVersion = 'v3.8.8';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
   // / A release that changes no settings leaves this alone, so existing config files keep working.
   // / Any config.php version that is greater (newer) than the version listed below is considered acceptable.
-  $RequiredConfigVersion = 'v3.8.6';
+  $RequiredConfigVersion = 'v3.8.8';
   $RequiredConfigVersion = ltrim($RequiredConfigVersion, 'vV');
   // / Define the minimum acceptable GUI version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
@@ -712,20 +712,20 @@ function verifyInstallation() {
   $RequiredSetupCoreVersion = ltrim($RequiredSetupCoreVersion, 'vV');
   // / The Dependency Core component version this core requires.
   // / This is an EXACT match. A component built for another core may not be called safely.
-  $RequiredDependencyCoreVersion = 'v3.8.6';
+  $RequiredDependencyCoreVersion = 'v3.8.8';
   $RequiredDependencyCoreVersion = ltrim($RequiredDependencyCoreVersion, 'vV');
   // / The dependency manifest version this core requires.
   // / Raise this whenever a dependency is added, removed, or its minimum version moves.
   // / A manifest from another release may name a package that no longer exists.
-  $RequiredDependsVersion = 'v3.8.6';
+  $RequiredDependsVersion = 'v3.8.8';
   $RequiredDependsVersion = ltrim($RequiredDependsVersion, 'vV');
-  // / The Pipeline Manager component version this core requires.
+  // / The Pipeline Core component version this core requires.
   // / This is an EXACT match. A component built for another core may declare an entry point
   // / whose arguments have moved, or capabilities this core cannot honour.
   // / Raise this whenever a pipeline is added, removed, or its own version pin moves.
   // / The manager carries the pin list for every pipeline it accepts.
-  $RequiredPipelineManagerVersion = 'v3.8.6';
-  $RequiredPipelineManagerVersion = ltrim($RequiredPipelineManagerVersion, 'vV');
+  $RequiredPipelineCoreVersion = 'v3.8.8';
+  $RequiredPipelineCoreVersion = ltrim($RequiredPipelineCoreVersion, 'vV');
   // / The bootstrap script version this core expects.
   // / A manager compares the script against this & disables the script when it differs.
   $RequiredConfigScript = 'v3.8.0';
@@ -1622,7 +1622,7 @@ function requestConvertLoc($dailyHash, $sessionHash) {
 // / Converting here as well produced a fifteen hour watch timeout & a ten million second connect timeout.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $ProtectedRootDirs, $ResourcesDir, $BootloadersDir, $AllowBootableIsoImage, $UserBootableIsoArray, $BootableIsoArray, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $ManagerSocketDir, $ManagerSocketTimeout, $ManagerMessageBatchSize, $ManagerMessageSkew, $StartupKeyWindow, $ResourceAwarenessActive, $CoreManagerVersion, $RequiredCoreManagerVersion, $EnableResourceAwareness, $RequireResourceAwareness, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EffectiveConversionLimits, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $AllowUnprivilegedNamespaces, $PipelineManagerActive, $PipelinesAreEnumerated, $Pipelines, $PipelineCount;
+  global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $ProtectedRootDirs, $ResourcesDir, $BootloadersDir, $AllowBootableIsoImage, $UserBootableIsoArray, $BootableIsoArray, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $ManagerSocketDir, $ManagerSocketTimeout, $ManagerMessageBatchSize, $ManagerMessageSkew, $StartupKeyWindow, $ResourceAwarenessActive, $CoreManagerVersion, $RequiredCoreManagerVersion, $EnableResourceAwareness, $RequireResourceAwareness, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EffectiveConversionLimits, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $AllowUnprivilegedNamespaces, $PipelineCoreActive, $PipelinesAreEnumerated, $Pipelines, $PipelineCount;
   // / Application related variables.
   $GlobalsAreVerified = $sanitizeGlobalCheck = $sanitizeGlobalCheckA = $sanitizeGlobalCheckB = $sanitizeGlobalCheckC = $sanitizeGlobalCheckD = $sanitizeGlobalCheckE = FALSE;
   $SleepTimer = 0;
@@ -1662,9 +1662,9 @@ function verifyGlobals() {
   $StreamOutputPath = '';
   // / Pipeline component variables.
   // / Stated here rather than in the main logic, so that a CLI path which never reaches the
-  // / Pipeline Manager still finds them defined instead of raising a notice on first read.
+  // / Pipeline Core still finds them defined instead of raising a notice on first read.
   // / The main logic overwrites all four the moment the component has been verified.
-  $PipelineManagerActive = $PipelinesAreEnumerated = FALSE;
+  $PipelineCoreActive = $PipelinesAreEnumerated = FALSE;
   $Pipelines = array();
   $PipelineCount = 0;
   // / URL related variables.
@@ -3457,7 +3457,7 @@ function verifyBwrap() {
 // / file, because loading twenty version files would overwrite the variable each time.
 function showVersionInfo() {
   // / Set variables.
-  global $SecretFile, $ManagerSocketDir, $InstLoc, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineManagerVersion, $PipelineManagerActive, $PipelineCount, $RequiredSecretVersion, $RequiredConfigScript, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $MinimumInkscapeVersion, $MinimumDiaVersion, $MinimumSCADVersion, $MinimumImageVersion, $MinimumAssimpVersion, $MinimumMeshlabVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EnableResourceAwareness, $RequireResourceAwareness, $ResourceAwarenessActive, $RequiredCoreManagerVersion, $CoreManagerVersion, $ManagerSocketDir, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $ConvertTemp, $MaintainHTAccess;
+  global $SecretFile, $ManagerSocketDir, $InstLoc, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $PipelineCoreActive, $PipelineCount, $RequiredSecretVersion, $RequiredConfigScript, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $MinimumInkscapeVersion, $MinimumDiaVersion, $MinimumSCADVersion, $MinimumImageVersion, $MinimumAssimpVersion, $MinimumMeshlabVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EnableResourceAwareness, $RequireResourceAwareness, $ResourceAwarenessActive, $RequiredCoreManagerVersion, $CoreManagerVersion, $ManagerSocketDir, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $ConvertTemp, $MaintainHTAccess;
   $VersionInfoDisplayed = $modelsAreValid = $ocrToolsAreValid = $archiveToolsAreValid = $libreOfficeIsValid = FALSE;
   $ffmpegBinary = $streamFfmpegBinary = $inkscapeBinary = $diaBinary = $scadBinary = $imageBinary = $ebookBinary = FALSE;
   $assimpBinary = $meshlabBinary = $tesseractBinary = $pdftotextBinary = FALSE;
@@ -3502,13 +3502,13 @@ function showVersionInfo() {
     'Setup Core' => array(readComponentVersion('SetupCore'.$DirSep.'setupCore.php', 'SetupCoreVersion'), $RequiredSetupCoreVersion),
     'Dependency Core' => array(readComponentVersion('DependencyCore'.$DirSep.'dependencyCore.php', 'DependencyCoreVersion'), $RequiredDependencyCoreVersion),
     'Dependency manifest' => array(readComponentVersion('depends.php', 'DependsVersion'), $RequiredDependsVersion),
-    'Pipeline Manager' => array(readComponentVersion('Pipelines'.$DirSep.'pipelineManager.php', 'PipelineManagerVersion'), $RequiredPipelineManagerVersion));
+    'Pipeline Core' => array(readComponentVersion('PipelineCore'.$DirSep.'pipelineCore.php', 'PipelineCoreVersion'), $RequiredPipelineCoreVersion));
   foreach ($componentChecks as $componentName => $componentPair) {
     if (ltrim((string)$componentPair[0], 'vV') === ltrim((string)$componentPair[1], 'vV')) print('  '.str_pad($componentName, 28).'OK, '.ltrim((string)$componentPair[0], 'vV').$Lol);
     else {
       $failureCount++;
       print('  '.str_pad($componentName, 28).'FAILED, reports '.($componentPair[0] === '' ? 'no version' : ltrim((string)$componentPair[0], 'vV')).', requires '.$componentPair[1].$Lol); } }
-  if (!$PipelineManagerActive) print('  '.str_pad('Conversion pipelines', 28).'UNAVAILABLE, no conversion can run'.$Lol);
+  if (!$PipelineCoreActive) print('  '.str_pad('Conversion pipelines', 28).'UNAVAILABLE, no conversion can run'.$Lol);
   else print('  '.str_pad('Conversion pipelines', 28).'OK, '.$PipelineCount.' verified'.$Lol);
 
   // / Dependencies. An optional one says so, because losing it costs a feature rather than
@@ -3546,7 +3546,7 @@ function showVersionInfo() {
   print($Lol.'Subsystem readiness'.$Lol);
   $subsystemChecks = array(
     '3D models' => $modelsAreValid,
-    'Optical character recognition' => $ocrToolsAreValid,
+    'OCR' => $ocrToolsAreValid,
     'Archives' => $archiveToolsAreValid);
   foreach ($subsystemChecks as $subsystemName => $subsystemIsReady) {
     if (!$subsystemIsReady) $failureCount++;
@@ -3760,6 +3760,9 @@ function parseCommandLine() {
   $cliConfirmed = $cliListenerAuthorized = $cliActionConfirmed = $cliPermissionsFixed = $cliListenerRunning = $cliSetupIsAvailable = FALSE;
   $cliDependencyIsAvailable = $cliDependenciesReady = $cliSetupSucceeded = FALSE;
   $cliDependencyVersion = $cliSubsystem = $cliDependencyToken = '';
+  // / Capability detection reports how many dependencies were able to answer.
+  $cliCacheWasBuilt = FALSE;
+  $cliDetectedCount = 0;
   // / A startup key that arrived in the environment rather than on the command line.
   $cliStartupKey = '';
   $cliDependencyFindings = $subOptionOwners = array();
@@ -3789,6 +3792,7 @@ function parseCommandLine() {
     $subOptionOwners = array(
       '--check-depends' => '--setup', '--install-depends' => '--setup', '--install-deps' => '--setup',
       '--update-depends' => '--setup', '--uninstall-depends' => '--setup', '--output-supply-chain' => '--setup',
+      '--detect-capabilities' => '--setup',
       '--install-complete' => '--setup', '--reinstall-existing' => '--setup', '--subsystem' => '--setup',
       '--install-service' => '--setup',
       '--reset-all-defaults' => '--config', '--reset-default-section' => '--config',
@@ -3915,6 +3919,21 @@ function parseCommandLine() {
           else if (in_array('--output-supply-chain', $cliArguments, TRUE) or extractCliOption($cliArguments, '--output-supply-chain') !== '') {
             logEntry('Command line invocation. Writing a supply chain report.');
             outputSupplyChain(extractCliOption($cliArguments, '--output-supply-chain')); }
+          // / Capability detection asks every installed tool what it can read & write, &
+          // / writes the answer to a cache. It reads the machine & changes nothing else, so
+          // / it needs no authorization token. It does spawn a process for every dependency
+          // / that can answer, which is exactly why it happens here & never in a request.
+          else if (in_array('--detect-capabilities', $cliArguments, TRUE)) {
+            logEntry('Command line invocation. Detecting dependency capabilities.');
+            if (!function_exists('buildCapabilityCache')) errorEntry('Capability detection was requested but the Dependency Core component is unavailable!', 33002, FALSE);
+            else {
+              list ($cliCacheWasBuilt, $cliDetectedCount) = buildCapabilityCache();
+              if (!$cliCacheWasBuilt) print($Lol.'The capability cache could not be written. The log says why.'.$Lol.$Lol);
+              else {
+                print($Lol.'Capability detection complete.'.$Lol);
+                print('  '.str_pad('Dependencies asked', 28).$cliDetectedCount.' answered'.$Lol);
+                print($Lol.'A dependency that cannot answer is recorded as unknown rather than as empty.'.$Lol);
+                print('Unknown means its pipeline declaration stands untouched.'.$Lol.$Lol); } } }
           // / Everything below rewrites the machine & carries a token derived from the
           // / install secret. The token proves the request came through this core.
           else if (in_array('--install-depends', $cliArguments, TRUE) or in_array('--install-deps', $cliArguments, TRUE)) {
@@ -3964,7 +3983,8 @@ function parseCommandLine() {
             print('  --install-depends            Install everything absent or too old.'.$Lol);
             print('  --update-depends             Upgrade everything already installed.'.$Lol);
             print('  --uninstall-depends          Remove a subsystem. Requires --subsystem.'.$Lol);
-            print('  --output-supply-chain[=path] Write a supply chain audit template.'.$Lol);
+            print('  --detect-capabilities       Ask every installed tool what it can read & write.'.$Lol);
+  print('  --output-supply-chain[=path] Write a supply chain audit template.'.$Lol);
             print('  --install-service            Install the listener service unit from this configuration.'.$Lol);
             print('  --install-complete           Install HRConvert2 & every dependency.'.$Lol);
             print('  --reinstall-existing         Reinstall this installation in place.'.$Lol);
@@ -4069,7 +4089,7 @@ function parseCommandLine() {
   // / Determine if the user is using the application via command line (CLI) or Apache+PHP through a web browser.
   if ($CommandLineHandled === TRUE) $UserType = 'cli';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $cliStartupKey, $cliArguments, $cliCommand, $cliArgumentCount, $rawFirstArg, $cliParts, $cliTarget, $cliSecondTarget, $cliThreshold, $cliTempCleaned, $cliTempDeepCleaned, $cliDataCleaned, $cliDataDeepCleaned, $cliConfirmed, $cliListenerAuthorized, $cliActionConfirmed, $cliPermissionsFixed, $cliListenerRunning, $cliPathsCorrected, $cliStatus, $cliWhoami, $cliSetupIsAvailable, $cliSetupVersion, $listenerCommands, $setupCommands, $cliDependencyIsAvailable, $cliDependencyVersion, $cliSubsystem, $cliDependencyToken, $cliDependencyFindings, $cliDependenciesReady, $cliSetupSucceeded, $cliSetupCount, $subOptionOwners, $cliOptionalProblems);
+  purgeSensitiveMemory($EnableMemoryProtection, $cliCacheWasBuilt, $cliDetectedCount, $cliStartupKey, $cliArguments, $cliCommand, $cliArgumentCount, $rawFirstArg, $cliParts, $cliTarget, $cliSecondTarget, $cliThreshold, $cliTempCleaned, $cliTempDeepCleaned, $cliDataCleaned, $cliDataDeepCleaned, $cliConfirmed, $cliListenerAuthorized, $cliActionConfirmed, $cliPermissionsFixed, $cliListenerRunning, $cliPathsCorrected, $cliStatus, $cliWhoami, $cliSetupIsAvailable, $cliSetupVersion, $listenerCommands, $setupCommands, $cliDependencyIsAvailable, $cliDependencyVersion, $cliSubsystem, $cliDependencyToken, $cliDependencyFindings, $cliDependenciesReady, $cliSetupSucceeded, $cliSetupCount, $subOptionOwners, $cliOptionalProblems);
   return array($CommandLineHandled, $UserType); }
 // / -----------------------------------------------------------------------------------
 
@@ -5810,7 +5830,7 @@ function waitForStream($StreamPID, $newPathname) {
 // / An undefined return value is a warning & a warning corrupts an AJAX response.
 function convert($type, $pathname, $newPathname, $extension, $height, $width, $rotate, $bitrate) {
   // / Set variables.
-  global $SupportedConversionTypes, $PipelineManagerActive, $WaitForStream, $StreamPID, $StreamOutputPath, $Verbose, $EnableMemoryProtection;
+  global $SupportedConversionTypes, $PipelineCoreActive, $WaitForStream, $StreamPID, $StreamOutputPath, $Verbose, $EnableMemoryProtection;
   $ConversionSuccess = $ConversionErrors = FALSE;
   $UserFilename = basename($newPathname);
   $WorkerPID = 0;
@@ -5821,7 +5841,7 @@ function convert($type, $pathname, $newPathname, $extension, $height, $width, $r
     // / Try the pipeline manager first, then fall back to the built in routing.
     // / A subsystem that can fall back must fall back before it errors. The routing below
     // / is the local fallback that configuration cannot overwrite, so a missing, unreadable
-    // / or version mismatched Pipeline Manager costs an installation nothing but a warning.
+    // / or version mismatched Pipeline Core costs an installation nothing but a warning.
     // /
     // / The question is whether a pipeline serves this conversion, not whether the manager
     // / LOADED. Those are different questions & asking the wrong one is how a working
@@ -5834,7 +5854,7 @@ function convert($type, $pathname, $newPathname, $extension, $height, $width, $r
     // / So the family, the input extension & the output extension are ALL asked about
     // / before dispatch. A family that is not served falls through to the routing below &
     // / converts exactly as it did before this component existed.
-    if ($PipelineManagerActive && function_exists('familyHasPipeline')) $pipelineServesThisConversion = familyHasPipeline($type, $inputExtension, $extension);
+    if ($PipelineCoreActive && function_exists('familyHasPipeline')) $pipelineServesThisConversion = familyHasPipeline($type, $inputExtension, $extension);
     if ($pipelineServesThisConversion) list ($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $UserFilename, $WorkerPID) = runConversion($type, $pathname, $newPathname, $extension, $height, $width, $rotate, $bitrate);
     // / Every conversion family has migrated. This file converts nothing on its own.
     // / There is no built in dispatcher left to fall back to, so a family with no installed
@@ -8136,23 +8156,23 @@ list ($GlobalsAreVerified) = verifyGlobals();
 if (!$GlobalsAreVerified) errorEntry('Could not verify globals!', 11, TRUE);
 else if ($Verbose) logEntry('Verified globals.');
 
-// / The following code verifies the Pipeline Manager & reads what each pipeline declares.
+// / The following code verifies the Pipeline Core & reads what each pipeline declares.
 // / THIS RUNS AFTER verifyLogs() DELIBERATELY, because enumeration warns about every
 // / pipeline it refuses & those warnings are worthless if there is nowhere to write them.
 // / NO PIPELINE CODE IS EXECUTED HERE. Only pipelineConfig.php declarations are read, & a
 // / pipelineCore.php is loaded later, once a conversion is actually about to be dispatched.
 // / A missing or mismatched component is a WARNING & never an error. convert() carries a
 // / built in dispatcher that configuration cannot overwrite, so an installation with no
-// / Pipeline Manager at all converts exactly as it did before this component existed.
+// / Pipeline Core at all converts exactly as it did before this component existed.
 // / These four are stated by verifyGlobals(), which has already run.
-list ($PipelineManagerActive, $PipelineManagerVersion) = verifyCoreComponent('Pipeline Manager', 'Pipelines'.$DirSep.'pipelineManager.php', 'PipelineManagerVersion', $RequiredPipelineManagerVersion);
-if ($PipelineManagerActive) {
+list ($PipelineCoreActive, $PipelineCoreVersion) = verifyCoreComponent('Pipeline Core', 'PipelineCore'.$DirSep.'pipelineCore.php', 'PipelineCoreVersion', $RequiredPipelineCoreVersion);
+if ($PipelineCoreActive) {
   list ($PipelinesAreEnumerated, $Pipelines, $PipelineCount) = enumeratePipelines();
   // / A manager that verified nothing is worse than no manager, because it would send every
   // / conversion to a dispatcher with nothing behind it. Stand it down & use the fallback.
-  if (!$PipelinesAreEnumerated) $PipelineManagerActive = FALSE; }
-if (!$PipelineManagerActive) warningEntry('The Pipeline Manager is unavailable. No conversion can run until it is repaired.');
-else if ($Verbose) logEntry('Verified the Pipeline Manager. '.$PipelineCount.' conversion pipeline(s) are available.');
+  if (!$PipelinesAreEnumerated) $PipelineCoreActive = FALSE; }
+if (!$PipelineCoreActive) warningEntry('The Pipeline Core is unavailable. No conversion can run until it is repaired.');
+else if ($Verbose) logEntry('Verified the Pipeline Core. '.$PipelineCount.' conversion pipeline(s) are available.');
 
 // / The following code decides if the security context being attempted matches a valid CLI or web request.
 // / Error 27 should not be possible & should never be able to fire. If it does something is seriously wrong.
@@ -8304,7 +8324,7 @@ if (!$CommandLineHandled && $UserType === 'web') {
           // / There is NO built in fallback left for OCR. Its body has moved out of this
           // / file, so a missing or mismatched OCR pipeline is reported rather than being
           // / quietly treated as an OCR run that produced nothing.
-          if ($PipelineManagerActive && function_exists('runOcrOperation')) {
+          if ($PipelineCoreActive && function_exists('runOcrOperation')) {
             list ($ConversionComplete, $ConversionErrors, $OcrOutputFilenames) = runOcrOperation($PDFWorkSelected, $UserFilename, $UserExtension, $Method);
             // / THE CORE PRINTS. THE PIPELINE RETURNED. See contract 6.
             // / The interface reads this reply one line per produced file, exactly as it

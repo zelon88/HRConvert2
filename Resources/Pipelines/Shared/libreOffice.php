@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.8.6.
+// / v3.8.8.
 // / This file is the LibreOffice shared module. It is NOT a pipeline & it converts nothing
 // / on its own. It holds the code that the Document pipeline & the OCR pipeline both need.
 // /
@@ -21,7 +21,7 @@
 // / kept document conversion logic in the file this work exists to get it out of. Putting
 // / it in the Document pipeline would have made OCR depend on another pipeline being
 // / installed, verified & loaded first, which is a coupling no pipeline author should have
-// / to reason about. So it lives here, is version pinned by pipelineManager.php exactly as
+// / to reason about. So it lives here, is version pinned by pipelineCore.php exactly as
 // / a pipeline is, & is loaded once for whichever pipelines declare they need it.
 // /
 // / A module is loaded once per request, before the pipeline that declared it.
@@ -48,7 +48,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / -----------------------------------------------------------------------------------
 // / The version of this shared module. Read WITHOUT executing this file, then matched
 // / EXACTLY against the pin in getAcceptedSharedModules().
-$SharedModuleVersion = 'v3.8.6';
+$SharedModuleVersion = 'v3.8.8';
 // / -----------------------------------------------------------------------------------
 
 

@@ -48,7 +48,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependencyCoreVersion = 'v3.8.8';
+$DependencyCoreVersion = 'v3.8.9';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -61,7 +61,11 @@ $DependencyCoreVersion = 'v3.8.8';
 // / This is an EXACT match, the same rule applied to a GUI or a language pack.
 function verifyDependsManifest($requiredDependsVersion) {
   // / Set variables.
-  global $InstLoc, $EnableMemoryProtection;
+  // / $CoreLoaded is declared so the guard at the top of depends.php can see it.
+  // / The require below happens inside this function, so a global the required file tests
+  // / must be in this scope. It is not read here & looks unused, & removing it on that
+  // / reading made every manifest refuse to load with error 2.
+  global $InstLoc, $CoreLoaded, $EnableMemoryProtection;
   $ManifestIsAvailable = FALSE;
   $DependsManifest = NULL;
   $DetectedDependsVersion = '';
@@ -77,6 +81,11 @@ function verifyDependsManifest($requiredDependsVersion) {
       $cleanDetected = ltrim(trim($DetectedDependsVersion), 'vV');
       $cleanRequired = ltrim(trim((string)$requiredDependsVersion), 'vV');
       if ($cleanDetected === '') warningEntry('The dependency manifest reports no version. Dependency management is unavailable.');
+      // / A requirement that arrived empty is a caller passing the wrong global rather than
+      // / a manifest with the wrong version, & the message has to be able to say so.
+      // / Reporting  requires v  with nothing after it sent an operator looking at the
+      // / manifest, which was correct the whole time.
+      else if ($cleanRequired === '') warningEntry('The dependency manifest reports v'.$cleanDetected.' & no required version was supplied. This is a fault in the caller rather than in the manifest.');
       else if ($cleanDetected !== $cleanRequired) warningEntry('The dependency manifest reports v'.$cleanDetected.' & this core requires v'.$cleanRequired.'. Dependency management is unavailable.');
       else {
         // / The manifest is nulled above rather than started as an empty array, so that a
@@ -322,20 +331,52 @@ function showDependencyFindings($dependencyFindings) {
 // / problem & is handled separately.
 function installOneDependency($dependencyEntry, $packageManager) {
   // / Set variables.
-  global $EnableMemoryProtection;
+  // / $Lol is declared because a source build reports its progress. A build takes minutes
+  // / & an operator watching a silent terminal has no way to tell it apart from a hang.
+  global $Lol, $EnableMemoryProtection;
   $InstallSucceeded = FALSE;
   $ReturnData = '';
   $installCommand = $packageList = '';
   $commandOutput = array();
   $commandExitCode = 1;
   $packageList = trim((string)$dependencyEntry['Package']);
+  // / A bundled dependency ships inside the application & is a microservice this project
+  // / distributes rather than a package this project installs.
+  // / It is never installed, never updated & never removed by this component.
+  // / It is represented so that --check-depends, -v & the supply chain audit can all see
+  // / it, & so that anything requiring it can say so in its own Requires list.
+  // / Reporting an install here would claim work that did not happen.
   if ((string)$dependencyEntry['Type'] === 'bundled') {
     // / A bundled dependency ships inside the application & is already present by
     // / definition. Nothing to install & nothing to fail.
     $InstallSucceeded = TRUE;
     $ReturnData = 'This dependency ships with HRConvert2 & needs no installation.'; }
   else if ((string)$dependencyEntry['Type'] === 'manual') $ReturnData = 'This dependency is never installed automatically. Install it by hand from '.(string)$dependencyEntry['Source'].'.';
-  else if ((string)$dependencyEntry['Type'] === 'source') $ReturnData = 'This dependency is built from source & is not handled by this operation.';
+  // / A source built dependency runs the command its manifest entry carries.
+  // / This was refused outright until v3.8.9, which meant anything not in a package
+  // / repository had to be installed by a hand written script kept in step by hand.
+  // / A build takes minutes rather than seconds & prints a great deal while it works.
+  // / Only the tail of that output is kept, because a full compiler log in a report helps
+  // / nobody & the log already records that the build ran.
+  // / A build with no command is a manifest that has not said how, & says so.
+  else if ((string)$dependencyEntry['Type'] === 'source') {
+    if (!isset($dependencyEntry['BuildCommand']) or trim((string)$dependencyEntry['BuildCommand']) === '') $ReturnData = 'This dependency is built from source & its manifest entry names no build command.';
+    else {
+      print('  '.str_pad((string)$dependencyEntry['Name'], 20).'building from source, this takes several minutes'.$Lol);
+      logEntry('Building '.(string)$dependencyEntry['Name'].' from source.');
+      $commandOutput = array();
+      exec('('.(string)$dependencyEntry['BuildCommand'].') 2>&1', $commandOutput, $commandExitCode);
+      $ReturnData = implode(PHP_EOL, array_slice($commandOutput, -12));
+      if ($commandExitCode !== 0) warningEntry('The source build for '.(string)$dependencyEntry['Name'].' exited with code '.$commandExitCode.'.');
+      else {
+        // / A build that reported success is still only believed once the thing it built
+        // / answers for itself, exactly as a package install is.
+        if ((string)$dependencyEntry['VersionCommand'] === '') $InstallSucceeded = TRUE;
+        else {
+          $commandOutput = array();
+          exec((string)$dependencyEntry['VersionCommand'].' 2>&1', $commandOutput, $commandExitCode);
+          if ($commandExitCode === 0) $InstallSucceeded = TRUE;
+          else $ReturnData = 'The build completed & the result does not answer. Check the tail of the build output in the log.'; } } } }
   else if ($packageList === '') $ReturnData = 'This dependency names no package to install.';
   // / A PHP extension is installed differently on a packaged PHP & on an official container
   // / image. Debian ships a php-NAME metapackage that resolves to the running version. The
@@ -483,7 +524,11 @@ function installDepends($authorizationToken, $subsystemFilter, $operatorConfirme
           list ($dependencyIsPresent, $detectedVersion, $dependencyStatus, $rawOutput) = resolveDependencyState($dependencyEntry);
           if ($dependencyStatus === 'ok' or $dependencyStatus === 'unknown-version') {
             $installedNames[(string)$dependencyEntry['Name']] = TRUE;
-            print('  '.str_pad((string)$dependencyEntry['Name'], 20).'already present'.$Lol);
+            // / Present, not installed. Installed is reserved for work this run actually
+            // / did, so a reader can tell what changed on this machine just now from what
+            // / was already true of it. A bundled dependency is present for the same
+            // / reason & is never installed by anything.
+            print('  '.str_pad((string)$dependencyEntry['Name'], 20).'present'.$Lol);
             continue; }
           // / Refuse to attempt anything whose own requirements are not in place.
           // / Only the requirements actually missing are named. Printing the whole Requires
@@ -494,6 +539,16 @@ function installDepends($authorizationToken, $subsystemFilter, $operatorConfirme
           if (count($missingRequirements) > 0) {
             print('  '.str_pad((string)$dependencyEntry['Name'], 20).'SKIPPED, waiting on '.implode(', ', $missingRequirements).$Lol);
             if ($dependencyEntry['Required']) $InstallSucceeded = FALSE;
+            continue; }
+          // / A bundled dependency is never installed by anything & must not say it was.
+          // / It ships inside this application, so there is no work for this run to do &
+          // / no count to increment. Reporting an install would claim work that did not
+          // / happen, & it claimed exactly that for PyMeshLab & for ScanCore.
+          // / Whether it actually works is a separate question that --check-depends answers,
+          // / & a bundled file being on disk has never been evidence that it runs.
+          if ((string)$dependencyEntry['Type'] === 'bundled') {
+            $installedNames[(string)$dependencyEntry['Name']] = TRUE;
+            print('  '.str_pad((string)$dependencyEntry['Name'], 20).'bundled, ships with this application'.$Lol);
             continue; }
           list ($installOneSucceeded, $returnData) = installOneDependency($dependencyEntry, $packageManager);
           if ($installOneSucceeded) {
@@ -832,14 +887,18 @@ function detectDependencyCapability($dependencyEntry) {
 // / needs. A JSON or an ini file would need a parser & would be readable as text.
 function buildCapabilityCache() {
   // / Set variables.
-  global $ConvertLoc, $DirSep, $DependsVersion, $RunningAsRoot, $ApacheUser, $EnableMemoryProtection;
+  // / The pin the core sets is $RequiredDependsVersion. $DependsVersion is what the
+  // / manifest declares & is not set until the manifest has been read, so passing it here
+  // / handed verifyDependsManifest() an empty string & every manifest was refused for
+  // / reporting a version this core did not require.
+  global $ConvertLoc, $DirSep, $RequiredDependsVersion, $RunningAsRoot, $ApacheUser, $EnableMemoryProtection;
   $CacheWasBuilt = FALSE;
   $DetectedCount = 0;
   $manifestIsAvailable = FALSE;
   $dependsManifest = $dependencyEntry = $cacheRecords = array();
   $readableExtensions = $writableExtensions = array();
   $readState = $writeState = $detectedDependsVersion = $cachePath = $cacheContents = '';
-  list ($manifestIsAvailable, $dependsManifest, $detectedDependsVersion) = verifyDependsManifest($DependsVersion);
+  list ($manifestIsAvailable, $dependsManifest, $detectedDependsVersion) = verifyDependsManifest($RequiredDependsVersion);
   if (!$manifestIsAvailable) warningEntry('Capability detection was skipped, because the dependency manifest is unavailable.');
   else {
     foreach ($dependsManifest as $dependencyEntry) {
@@ -896,13 +955,16 @@ function readCapabilityCache() {
   // / $CoreLoaded is declared so the guard at the top of the generated file can see it.
   // / The require below happens inside this function, so a global the file tests must be
   // / in this scope or a valid cache refuses to load itself.
-  global $ConvertLoc, $DirSep, $DependsVersion, $CoreLoaded, $EnableMemoryProtection;
+  // / $RequiredDependsVersion for the same reason buildCapabilityCache() uses it. This
+  // / function may run before the manifest has been read, & a comparison against a value
+  // / that is not set yet refuses every cache that was ever written.
+  global $ConvertLoc, $DirSep, $RequiredDependsVersion, $CoreLoaded, $EnableMemoryProtection;
   $CacheIsAvailable = FALSE;
   $CapabilityRecords = array();
   $cachePath = $requiredManifest = '';
   $CapabilityCacheFormat = $CapabilityCacheManifest = $CapabilityCacheBuilt = $CapabilityCache = NULL;
   $cachePath = rtrim((string)$ConvertLoc, $DirSep).$DirSep.'capability-cache.php';
-  $requiredManifest = ltrim((string)$DependsVersion, 'vV');
+  $requiredManifest = ltrim((string)$RequiredDependsVersion, 'vV');
   if (file_exists($cachePath)) {
     // / The declarations are nulled before the require, so a truncated or partly written
     // / file is caught here instead of inheriting whatever was in scope.

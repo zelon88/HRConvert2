@@ -13,11 +13,12 @@
 // /
 // / File Information ...
 // / v3.8.8.
-// / This file is the converter for the Video pipeline. It is loaded by pipelineCore.php
+// / This file is the converter for the Video pipeline. It is loaded by pipelineManager.php
 // / ONLY when a Video conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
-// / Error block 11000 through 11002 belongs to this pipeline. Those numbers came with the code when it
-// / moved out of convertCore.php & they did not change, because operators have read them.
+// / Error block 11000 through 11002 belongs to this pipeline.
+// / Those numbers came with the code when it moved out of convertCore.php.
+// / They did not change, because operators have already read them.
 // /
 // / This is one of four families sharing the FFMPEG subsystem.
 // / Audio & Stream are still built into convertCore.php & Video & Subtitle are not, so an
@@ -54,7 +55,7 @@ function convertVideos($pathname, $newPathname, $extension) {
   $WorkerPID = 0;
   $ConversionSuccess = $ConversionErrors = $commandMayRun = FALSE;
   $ffmpegBinary = FALSE;
-  $returnData = $ffmpegCommand = '';
+  $returnData = $ffmpegCommand = $outputExtension = $videoCodec = '';
   $stopper = 0;
   $sleepTime = $SleepTimer;
   // / Locate & verify FFMPEG. A path is returned only when both succeeded.
@@ -63,8 +64,22 @@ function convertVideos($pathname, $newPathname, $extension) {
     $ConversionErrors = TRUE;
     errorEntry('The installed FFMPEG version is missing, unidentifiable, or too old!', 11001, FALSE); }
   else {
-    // / Build & sandbox the command once. It does not change between retries.
-    $ffmpegCommand = escapeshellarg($ffmpegBinary).' -y -i '.escapeshellarg($pathname).' -c:v libx264 '.escapeshellarg($newPathname);
+    // / The codec follows the container rather than being the same one every time.
+    // / An earlier version asked for libx264 whatever the target was.
+    // / A WebM container holds VP8, VP9 or AV1 & rejects H.264 outright.
+    // / An Ogg container expects Theora & rejects it for the same reason.
+    // / Both formats are offered by this pipeline & neither could ever have worked.
+    // / An empty codec lets FFMPEG choose the default encoder for the container it is
+    // / writing, which is correct for every other format this pipeline offers.
+    $outputExtension = strtolower(trim((string)$extension, '.'));
+    if ($outputExtension === 'webm') $videoCodec = ' -c:v libvpx-vp9 -c:a libopus';
+    else if ($outputExtension === 'ogv') $videoCodec = ' -c:v libtheora -c:a libvorbis';
+    else $videoCodec = ' -c:v libx264';
+    // / Standard error is captured, & for FFMPEG that is not a detail.
+    // / FFMPEG writes everything it has to say to standard error, including its failures.
+    // / Without this the return data was always empty, the log line that reports it never
+    // / fired, & a failed conversion produced a timeout & no explanation whatsoever.
+    $ffmpegCommand = escapeshellarg($ffmpegBinary).' -y -i '.escapeshellarg($pathname).$videoCodec.' '.escapeshellarg($newPathname).' 2>&1';
     list ($commandMayRun, $ffmpegCommand) = sandboxCommand($ffmpegCommand, $pathname, $newPathname, FALSE, 'ffmpeg');
     if (!$commandMayRun) {
       $ConversionErrors = TRUE;
@@ -79,15 +94,25 @@ function convertVideos($pathname, $newPathname, $extension) {
         // / Count the number of conversions to avoid infinite loops.
         $stopper++;
         // / Stop attempting the conversion after $StopCounter number of attempts.
-        if ($stopper === $StopCounter) {
+        // / The loop is left immediately, because an attempt already counted as the last
+        // / one must not run again after the timeout has been reported.
+        if ($stopper >= $StopCounter) {
           $ConversionErrors = TRUE;
-          errorEntry('The video converter timed out!', 11000, FALSE); } }
+          errorEntry('The video converter timed out!', 11000, FALSE);
+          // / A timeout on its own says only that something was tried repeatedly.
+          // / The command is what was tried & is the only way to reproduce the failure.
+          warningEntry('The command that timed out was: '.trim($ffmpegCommand));
+          break; } }
+      // / A converter that produced nothing at all is worth a line of its own.
+      // / Testing for output & staying silent when there is none meant the one case that
+      // / needed explaining was the one case that explained nothing.
+      if (!file_exists($newPathname) && trim($returnData) === '') warningEntry('FFMPEG produced no output at all. The command was found & run, & it printed nothing.');
       // / Log the output of the operation to the logfile, if it is not blank.
       if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
       // / The output file is the only verdict on whether the conversion produced anything.
       if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $sleepTime, $ffmpegBinary, $ffmpegCommand, $commandMayRun);
+  purgeSensitiveMemory($EnableMemoryProtection, $outputExtension, $videoCodec, $returnData, $stopper, $pathname, $sleepTime, $ffmpegBinary, $ffmpegCommand, $commandMayRun);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

@@ -1,0 +1,12 @@
+ERROR!!! ScanCore-300 on September 4, 2026, 6:39 am, The specified file was not found! The first argument must be a valid file or directory path!
+ERROR!!! ScanCore-6 on September 4, 2026, 6:39 am, Cannot verify supplied arguments!
+ERROR!!! ScanCore-300 on September 4, 2026, 6:40 am, The specified file was not found! The first argument must be a valid file or directory path!
+ERROR!!! ScanCore-6 on September 4, 2026, 6:40 am, Cannot verify supplied arguments!
+ERROR!!! ScanCore-300 on September 4, 2026, 6:45 am, The specified file was not found! The first argument must be a valid file or directory path!
+ERROR!!! ScanCore-6 on September 4, 2026, 6:45 am, Cannot verify supplied arguments!
+ERROR!!! ScanCore-300 on September 4, 2026, 6:45 am, The specified file was not found! The first argument must be a valid file or directory path!
+ERROR!!! ScanCore-6 on September 4, 2026, 6:45 am, Cannot verify supplied arguments!
+ERROR!!! ScanCore-300 on September 4, 2026, 6:50 am, The specified file was not found! The first argument must be a valid file or directory path!
+ERROR!!! ScanCore-6 on September 4, 2026, 6:50 am, Cannot verify supplied arguments!
+ERROR!!! ScanCore-300 on September 4, 2026, 6:50 am, The specified file was not found! The first argument must be a valid file or directory path!
+ERROR!!! ScanCore-6 on September 4, 2026, 6:50 am, Cannot verify supplied arguments!

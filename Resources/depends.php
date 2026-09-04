@@ -39,6 +39,21 @@
 // /   License          The licence it ships under. Read by the supply chain audit.
 // /   Source           Where it comes from. Read by the supply chain audit.
 // /   Purpose          Why HRConvert2 needs it. Read by the supply chain audit.
+// /   BuildCommand     For a source Type. The shell command that builds & installs it.
+// /
+// / A bundled Type is a microservice this project distributes rather than a package this
+// / project installs. It is never installed, never updated & never removed.
+// / It is listed so --check-depends, -v & the supply chain audit can all see it, & so that
+// / anything needing it can name it in its own Requires list.
+// / PyMeshLab & ScanCore are both bundled.
+// /
+// / A source Type was declared here & refused by Dependency Core until v3.8.9.
+// / Anything outside a package repository therefore had to be installed by a hand written
+// / script kept in step with this manifest by hand, which is the arrangement this file
+// / exists to replace.
+// / A build command runs as root, takes minutes & prints a great deal while it works.
+// / Only the tail of its output is kept, because a compiler log helps nobody in a report.
+// / A build that reports success is still only believed once VersionCommand answers.
 // /
 // / Capability fields. Every one is optional & an entry that omits them is not less
 // / correct, it is a dependency whose formats cannot be asked for.
@@ -90,7 +105,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependsVersion = 'v3.8.8';
+$DependsVersion = 'v3.8.9';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -160,7 +175,15 @@ $DependsManifest = array(
     'License' => 'Proprietary', 'Source' => 'https://www.rarlab.com', 'Purpose' => 'Creates RAR archives. Licence forbids redistribution, so it is never installed automatically.'),
 
   // / ---- Media. ----
-  array('Name' => 'FFMPEG', 'Binary' => 'ffmpeg', 'Type' => 'apt', 'Package' => 'ffmpeg',
+  // / FFMPEG is built from source rather than installed from a repository.
+  // / The packaged build cannot carry --enable-nonfree & this application needs it.
+  // / A nonfree build may not be redistributed, so it is built where it is used.
+  // / The build script was called by hand from the Dockerfile until v3.8.9, which meant
+  // / the manifest did not know this dependency was built & the audit did not record it.
+  // / The script still does the work. The manifest now decides when it runs & whether it
+  // / worked, which is the arrangement every other dependency already had.
+  array('Name' => 'FFMPEG', 'Binary' => 'ffmpeg', 'Type' => 'source', 'Package' => '',
+    'BuildCommand' => 'cd '.$InstLoc.DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build && bash ffmpeg-build.sh',
     'MinimumVersion' => '6.1', 'VersionCommand' => 'ffmpeg -version', 'VersionPattern' => '/ffmpeg version n?(\d+\.\d+)/',
     // / FFMPEG names muxers rather than extensions. It has no mkv & no wmv. Matroska is
     // / the muxer behind one & ASF is the muxer behind the other, so both are aliased here
@@ -193,7 +216,11 @@ $DependsManifest = array(
     'License' => 'GPL-2.0', 'Source' => 'https://poppler.freedesktop.org', 'Purpose' => 'Extracts text & converts XPS documents.'),
 
   // / ---- Images. ----
-  array('Name' => 'ImageMagick', 'Binary' => 'magick', 'Type' => 'apt', 'Package' => 'imagemagick',
+  // / ImageMagick is built from source rather than installed from a repository.
+  // / The packaged build carries no HEIC, AVIF or JPEG XL support & this application
+  // / offers all three. The same reasoning as FFMPEG applies to how it is invoked.
+  array('Name' => 'ImageMagick', 'Binary' => 'magick', 'Type' => 'source', 'Package' => '',
+    'BuildCommand' => 'bash '.$InstLoc.DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build'.DIRECTORY_SEPARATOR.'build-imagemagick-v7.sh',
     'MinimumVersion' => '7.1', 'VersionCommand' => 'magick -version', 'VersionPattern' => '/ImageMagick (\d+\.\d+)/',
     // / The format column may carry a hyphen & may overrun its width, as RADIAL-GRADIENT
     // / does, so the name is not anchored to a column. A trailing asterisk is native blob
@@ -246,9 +273,41 @@ $DependsManifest = array(
   // / probing for one reported a dependency that ships with the application as absent.
   // / Type is bundled, so nothing tries to install or remove it.
   // / __version__ is not exposed by every build, so presence is proved by the import alone.
+// / The probe names python3.14 rather than python3 & that matters.
+// / A probe using python3 asked an interpreter that cannot load the bundle.
+// / It reported the bundle as absent on a machine where the bundle was present & intact.
+  // / The interpreter the bundled PyMeshLab was compiled against.
+  // / A compiled extension loads under one Python minor version & under no other.
+  // / The bundled object names the version it needs, currently cpython-314.
+  // / Type is manual because no mainstream distribution packages this version yet.
+  // / Debian bookworm ships 3.11 & Ubuntu 24.04 ships 3.12, so neither can load the bundle.
+  // / It is optional & the 3D Models subsystem works without it.
+  // / MeshLab performs the same work whenever this is absent.
+  // / Install it ALONGSIDE the system interpreter & never in place of it.
+  // / A distribution writes its own tooling against the interpreter it ships.
+  // / Replacing /usr/bin/python3 breaks the package manager on Debian & on Ubuntu.
+  // / The Model pipeline reads the tag off the bundle & finds whichever version matches.
+  // / Rebuilding the bundle for a locally available interpreter needs no change here.
+  array('Name' => 'Python 3.14', 'Binary' => 'python3.14', 'Type' => 'source', 'Package' => '',
+    'MinimumVersion' => '3.14', 'VersionCommand' => 'python3.14 -V', 'VersionPattern' => '/Python (\d+\.\d+)/',
+    // / make altinstall is the whole reason this is safe & it is not optional.
+    // / A plain make install would overwrite /usr/bin/python3 & break the package manager.
+    // / altinstall writes python3.14 & leaves every unversioned name exactly as it was.
+    // / --enable-shared builds libpython so the compiled PyMeshLab module can link it.
+    // / ldconfig then tells the loader about /usr/local/lib, which the sandbox reads from
+    // / /etc/ld.so.cache rather than searching for itself.
+    'BuildCommand' => 'set -e; DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends build-essential wget libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev libffi-dev liblzma-dev; cd /tmp; rm -rf Python-3.14.0 Python-3.14.0.tgz; wget -q https://www.python.org/ftp/python/3.14.0/Python-3.14.0.tgz; tar -xf Python-3.14.0.tgz; cd Python-3.14.0; ./configure --enable-shared --prefix=/usr/local; make -j$(nproc); make altinstall; ldconfig; cd /tmp; rm -rf Python-3.14.0 Python-3.14.0.tgz',
+    'Required' => FALSE, 'Subsystem' => '3D Models', 'Requires' => array(),
+    'License' => 'PSF-2.0', 'Source' => 'https://www.python.org', 'Purpose' => 'Loads the bundled PyMeshLab, which is the only mesh route MeshLab has not removed.'),
   array('Name' => 'PyMeshLab', 'Binary' => '', 'Type' => 'bundled', 'Package' => '',
-    'MinimumVersion' => '', 'VersionCommand' => 'python3 -c "import sys; sys.path.insert(0, \''.$InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'PyMeshLab\'); import pymeshlab; print(\'bundled\')"', 'VersionPattern' => '',
-    'Required' => FALSE, 'Subsystem' => '3D Models', 'Requires' => array('Assimp'),
+  // / The probe names the bundled shared objects on the loader path.
+  // / The compiled module links libraries that ship inside the bundle rather than system
+  // / ones, & the loader has no reason to look there.
+  // / Without this the module is found & then fails to load, which reports as absent.
+  // / A prefix works here because this command is run through a shell.
+  // / It would not work inside the sandbox, where bwrap execs without one.
+    'MinimumVersion' => '', 'VersionCommand' => 'LD_LIBRARY_PATH='.$InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'PyMeshLab'.DIRECTORY_SEPARATOR.'pymeshlab'.DIRECTORY_SEPARATOR.'lib'.' python3.14 -c "import sys; sys.path.insert(0, \''.$InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'PyMeshLab\'); import pymeshlab; print(\'bundled\')"', 'VersionPattern' => '',
+    'Required' => FALSE, 'Subsystem' => '3D Models', 'Requires' => array('Assimp', 'Python 3.14'),
     'License' => 'GPL-3.0', 'Source' => 'Bundled at Resources/PyMeshLab', 'Purpose' => 'Repairs & simplifies meshes. Replaces MeshLab. Ships with HRConvert2.'),
   array('Name' => 'MeshLab', 'Binary' => 'meshlabserver', 'Type' => 'apt', 'Package' => 'meshlab',
     'MinimumVersion' => '2020.09', 'VersionCommand' => 'meshlabserver --version', 'VersionPattern' => '/(\d+\.\d+)/',
@@ -278,6 +337,14 @@ $DependsManifest = array(
     'License' => 'GPL-3.0', 'Source' => 'https://calibre-ebook.com', 'Purpose' => 'Converts between ebook formats.'),
 
   // / ---- Optional scanning. ----
+  // / ScanCore is a standalone virus scanner this project writes & distributes.
+  // / It ships inside the application & is a microservice rather than a package.
+  // / Presence is proved by asking it to report its own version, because a bundled file
+  // / being on disk says nothing about whether it runs.
+  array('Name' => 'ScanCore', 'Binary' => '', 'Type' => 'bundled', 'Package' => '',
+    'MinimumVersion' => '', 'VersionCommand' => 'php '.$InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'ScanCore'.DIRECTORY_SEPARATOR.'ScanCore.php -v', 'VersionPattern' => '/(\d+\.\d+)/',
+    'Required' => FALSE, 'Subsystem' => 'Virus Scanning', 'Requires' => array('PHP'),
+    'License' => 'GPL-3.0', 'Source' => 'Bundled at Resources/ScanCore', 'Purpose' => 'Scans every uploaded file. Written & distributed by this project.'),
   array('Name' => 'ClamAV', 'Binary' => 'clamscan', 'Type' => 'apt', 'Package' => 'clamav clamav-daemon',
     'MinimumVersion' => '0.103', 'VersionCommand' => 'clamscan --version', 'VersionPattern' => '/ClamAV (\d+\.\d+)/',
     'Required' => FALSE, 'Subsystem' => 'Virus Scanning', 'Requires' => array(),

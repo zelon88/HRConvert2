@@ -1,44 +1,649 @@
 <?php
 // / -----------------------------------------------------------------------------------
-// / Copyright information ...
-// / HRConvert2, Copyright on 8/28/2026 by Justin Grimes, www.github.com/zelon88
+// / Copyright Information ...
+// / HRProprietary Engine, Copyright on 9/4/2026 by Justin Grimes, www.github.com/zelon88
 // /
-// / License information ...
+// / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
-// / Application information ...
-// / This application is designed to provide a web-interface for converting file formats
-// / on a server for users of any web browser without authentication.
+// / Application Information ...
+// / The HRProprietary Engine provides a coherent application environment. It is bundled
+// / with an application rather than installed beside one, & it is paired to the release
+// / that carries it.
 // /
-// / Fileinformation ...
-// / v3.8.6.
-// / This file contains the core manager resource listener logic of the application.
-// / This file contains logic related to rate planning & resouce management.
+// / File Information ...
+// / v3.8.9.
+// / This file is the Engine. It provides the environment an application runs in.
+// / It is pinned EXACTLY by the application via $RequiredEngineVersion.
+// / Error block 35000 through 35019 reserved. None are used yet.
+// / See Documentation/ABOUT_ENGINE_CONTRACT.txt for what an application must supply.
 // /
-// / Hardware requirements ...
-// / This application requires at least a Raspberry Pi Model B+ or greater.
-// / This application will run on just about any x86 or x64 computer.
+// / What the Engine is for.
+// / An application that converts files, an application that scans them for malware & an
+// / application that dispatches work to either of those all need the same environment.
+// / They need to know where they are, whether they are running as root, whether there is a
+// / terminal on the other end, how to find a binary, how to write a log, how to shred a
+// / variable & how to prove that a process they started is one of theirs.
+// / None of that is about converting a file. All of it was written inside an application
+// / that converts files, & this is where it goes instead.
 // /
-// / Dependency requirements ...
-// / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
-// / Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Calibre,
-// / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap Dia & xvfb-run.
+// / What the Engine is NOT.
+// / It is not a framework & it does not build the application. The application is the
+// / entry point. It boots, it verifies its components, it loads this file & then it calls
+// / into it. The Engine never calls application code, & an Engine that needed to would be
+// / an Engine that only works for one application.
+// /
+// / Three tiers exist & the boundaries are not arbitrary.
+// /   The kernel   Lives in the application entry file & loads this one. quickDie,
+// /                purgeSensitiveMemory, redeclare, readComponentVersion &
+// /                verifyCoreComponent. It cannot live here, because it is what loads
+// /                this file & because it must be able to report that loading failed.
+// /   The Engine   This file. The environment every application needs.
+// /   The app      Everything that makes one application different from another.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
 
+
 // / -----------------------------------------------------------------------------------
-// / Refuse direct execution. This file is a component & has no standalone context.
-// / This is the ONE halt in the application that cannot use quickDie. Reaching this line
-// / means convertCore.php was never loaded, so quickDie is not defined & calling it would
-// / replace a clear refusal with an undefined function error.
-if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: This file cannot process your request! Please submit your file to convertCore.php instead!'.PHP_EOL);
+// / A component may only be loaded by an application.
+if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-35000, The Engine cannot be loaded directly!'.PHP_EOL);
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / The version of this Engine. Read by the application WITHOUT executing this file.
+$EngineVersion = 'v3.8.9';
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / A function to report whether systemd is actually running this host.
+// / Accepts no arguments.
+// / Returns a usability boolean & the reason, in that order.
+// /
+// / The binary being present proves nothing. This is the mistake this function exists for.
+// / An earlier release decided systemd was available because loginctl was on the PATH.
+// / Every official PHP container image ships the systemd client tools & does not run
+// / systemd, so every check passed, a unit file was written, lingering was attempted, & the
+// / listener was then handed to a service manager that was never going to answer. The
+// / error that finally surfaced came from systemctl itself, which is the proof the binary
+// / was there all along.
+// /
+// / /run/systemd/system EXISTS ONLY WHEN SYSTEMD IS PID 1.
+// / This is the test the systemd documentation gives for exactly this question & is what
+// / sd_booted does. It is a directory test, it costs nothing, & it is correct inside a
+// / container, inside a chroot, & on a host running any other init.
+function systemdIsUsable() {
+  // / Set variables.
+  global $Verbose, $EnableMemoryProtection;
+  static $cachedUsable = NULL;
+  static $cachedReason = '';
+  $SystemdIsUsable = FALSE;
+  $SystemdReason = '';
+  if ($cachedUsable !== NULL) {
+    $SystemdIsUsable = $cachedUsable;
+    $SystemdReason = $cachedReason; }
+  else {
+    if (!is_dir('/run/systemd/system')) $SystemdReason = 'systemd is not running this host, whatever tools are installed.';
+    else if (locateDependency('systemctl') === '') $SystemdReason = 'systemd is running but systemctl is not installed.';
+    else {
+      $SystemdIsUsable = TRUE;
+      $SystemdReason = 'systemd is running & systemctl is available.'; }
+    if ($Verbose) logEntry('Systemd Check: '.($SystemdIsUsable ? 'AVAILABLE' : 'UNAVAILABLE').', '.$SystemdReason);
+    $cachedUsable = $SystemdIsUsable;
+    $cachedReason = $SystemdReason; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / Neither value is purged, because both are return values.
+  purgeSensitiveMemory($EnableMemoryProtection);
+  return array($SystemdIsUsable, $SystemdReason); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / The component version. convertCore.php checks this without executing the file.
-$CoreManagerVersion = 'v3.8.6';
+// / A function to read one check's status back out of an environment report.
+// / Accepts the findings array & the name of the check, in that order.
+// / Returns the status word, or an empty string when that check is not in the report.
+// / A caller that needs to say more about one finding than a single line allows should not
+// / have to run the check a second time to find out what it said.
+function environmentFindingStatus($environmentFindings, $checkName) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $FindingStatus = '';
+  $finding = array();
+  if (is_array($environmentFindings)) {
+    foreach ($environmentFindings as $finding) {
+      if (isset($finding['Check']) && $finding['Check'] === $checkName && isset($finding['Status'])) $FindingStatus = (string)$finding['Status']; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $finding, $environmentFindings, $checkName);
+  return $FindingStatus; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to read a limit pair out of its configured string.
+// / Accepts a string of a processor percentage & a memory ceiling in megabytes, comma separated.
+// / Returns a validity boolean, the processor percentage & the memory megabytes, in that order.
+// / A pair that cannot be read is refused rather than guessed at, because a guessed ceiling
+// / is worse than no ceiling. The caller falls back to the configured default.
+function parseConversionLimit($limitString) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $LimitIsValid = FALSE;
+  $CpuPercentage = 0;
+  $MemoryMegabytes = 0;
+  $limitParts = array();
+  $limitParts = explode(',', trim((string)$limitString));
+  if (count($limitParts) === 2 && ctype_digit(trim($limitParts[0])) && ctype_digit(trim($limitParts[1]))) {
+    $CpuPercentage = (int)trim($limitParts[0]);
+    $MemoryMegabytes = (int)trim($limitParts[1]);
+    // / A percentage of zero & a ceiling of zero both mean no limit, which is not a limit.
+    if ($CpuPercentage > 0 && $MemoryMegabytes > 0) $LimitIsValid = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $limitParts, $limitString);
+  return array($LimitIsValid, $CpuPercentage, $MemoryMegabytes); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to read a startup key out of the environment & clear it immediately.
+// / Accepts no arguments. Returns the key, or an empty string when none was supplied.
+// / A startup key used to travel on the command line, & /proc/PID/cmdline is world
+// / readable, so every local account could read it out of ps for the whole life of the
+// / process. A manager listener runs for days, so the key sat in plain view long after the
+// / ten second window that made it useful had closed. Anybody watching ps during a spawn
+// / had the key. /proc/PID/environ is readable only by the owner of the process.
+// / The variable is cleared the moment it is read, so it is not inherited by a converter
+// / the manager launches later.
+function readTransportedStartupKey() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $TransportedKey = '';
+  $rawKey = '';
+  $rawKey = (string)getenv('HRCONVERT2_STARTUP_KEY');
+  if ($rawKey !== '') {
+    $TransportedKey = preg_replace('/[^a-f0-9]/', '', strtolower($rawKey));
+    putenv('HRCONVERT2_STARTUP_KEY');
+    unset($_ENV['HRCONVERT2_STARTUP_KEY'], $_SERVER['HRCONVERT2_STARTUP_KEY']); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $rawKey);
+  return $TransportedKey; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to spend a startup key so it can never be presented a second time.
+// / Accepts the purpose & the key. Returns TRUE when the key had not been spent before.
+// / Time alone cannot make a leaked key dead. The holder of a copy validates it against
+// / the same clock we do, so the window only decides how long they have, never whether
+// / they succeed. Spending the key is a property this application controls.
+// / The ledger lives in the manager socket directory, which is already 0700, & it holds
+// / hashes rather than keys so reading it grants nothing. Entries older than three windows
+// / are dropped, because a key that old cannot validate anyway.
+// /
+// / What this defends against, & what it does not.
+// / It defends against a key that leaked. Somebody who obtained one copy of a key cannot
+// / spend it twice, & cannot spend it at all once the process it was minted for has used it.
+// / It does NOT defend against an account that holds the install secret. Deleting this
+// / ledger un-spends a captured key, & the two accounts that can delete it are root & the
+// / web server user, both of which can already read the secret at 0600 & mint a valid key
+// / for any purpose in any window. That is a shorter route to the same place, so losing the
+// / ledger to either of them costs nothing that was not already lost.
+// / The directory holding the ledger sits inside the data location at 0755 & owned by the
+// / web server user, so an unprivileged local account cannot unlink it. That is the account
+// / this control exists for, & the property that has to keep holding.
+function consumeStartupKey($keyPurpose, $suppliedKey) {
+  // / Set variables.
+  global $ManagerSocketDir, $DirSep, $StartupKeyWindow, $EnableMemoryProtection;
+  $KeyWasUnspent = FALSE;
+  $ledgerPath = $ledgerContents = $keyFingerprint = $rebuiltLedger = $ledgerLine = '';
+  $ledgerLines = array();
+  $cutoffTime = 0;
+  if (!is_dir((string)$ManagerSocketDir)) $KeyWasUnspent = TRUE;
+  else {
+    $ledgerPath = rtrim((string)$ManagerSocketDir, $DirSep).$DirSep.'startup-keys.ledger';
+    $keyFingerprint = hash('sha256', (string)$keyPurpose.'|'.(string)$suppliedKey);
+    $cutoffTime = time() - (max(1, (int)$StartupKeyWindow) * 3);
+    $ledgerContents = (string)@file_get_contents($ledgerPath);
+    $ledgerLines = ($ledgerContents === '' ? array() : explode(PHP_EOL, $ledgerContents));
+    $KeyWasUnspent = TRUE;
+    foreach ($ledgerLines as $ledgerLine) {
+      if (trim($ledgerLine) === '') continue;
+      // / A line is a timestamp & a fingerprint. Anything older than the cutoff is dropped
+      // / rather than carried, so the ledger cannot grow without bound.
+      if ((int)substr($ledgerLine, 0, strpos($ledgerLine, ' ')) < $cutoffTime) continue;
+      if (substr($ledgerLine, strpos($ledgerLine, ' ') + 1) === $keyFingerprint) $KeyWasUnspent = FALSE;
+      $rebuiltLedger = $rebuiltLedger.$ledgerLine.PHP_EOL; }
+    if ($KeyWasUnspent) {
+      $rebuiltLedger = $rebuiltLedger.time().' '.$keyFingerprint.PHP_EOL;
+      @file_put_contents($ledgerPath, $rebuiltLedger, LOCK_EX);
+      @chmod($ledgerPath, 0600); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $ledgerPath, $ledgerContents, $keyFingerprint, $rebuiltLedger, $ledgerLine, $ledgerLines, $cutoffTime, $keyPurpose, $suppliedKey);
+  return $KeyWasUnspent; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to derive a time bucketed startup key for an internal core invocation.
+// / Accepts the purpose the key authorizes.
+// / Returns the key, or an empty string when no install secret is available.
+// / The bucket bounds the window in which a captured key can be reused.
+function deriveStartupKey($keyPurpose) {
+  // / Set variables.
+  global $SecretKey, $StartupKeyWindow, $EnableMemoryProtection;
+  $StartupKey = '';
+  $timeBucket = 0;
+  $keyMaterial = '';
+  if (is_string($SecretKey) && strlen($SecretKey) === 64) {
+    $timeBucket = (int)floor(time() / max(1, (int)$StartupKeyWindow));
+    $keyMaterial = 'startup|'.$keyPurpose.'|'.$timeBucket;
+    $StartupKey = hash_hmac('sha256', $keyMaterial, $SecretKey); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $timeBucket, $keyMaterial, $keyPurpose);
+  return $StartupKey; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to validate a startup key supplied on the command line.
+// / Accepts the purpose the key must authorize & the key that was supplied.
+// / Accepts a third argument requesting that the key be spent once it validates.
+// / Returns TRUE when the key matches the current or the previous window.
+// / The previous window is accepted because process launch is not instant.
+// / A key that crossed a process boundary is spent, so presenting it again is refused
+// / however soon it happens. A key derived & checked inside one process never leaves it &
+// / is not spent, because there is nothing to replay & four such keys minted in the same
+// / second would otherwise refuse each other.
+// / The default is not to spend, so a component built against an older core still works.
+function validateStartupKey($keyPurpose, $suppliedKey, $singleUse = FALSE) {
+  // / Set variables.
+  global $SecretKey, $StartupKeyWindow, $EnableMemoryProtection;
+  $KeyIsValid = FALSE;
+  $timeBucket = 0;
+  $keyWasUnspent = TRUE;
+  $currentKey = $previousKey = $cleanKey = '';
+  $cleanKey = preg_replace('/[^a-f0-9]/', '', strtolower((string)$suppliedKey));
+  if (is_string($SecretKey) && strlen($SecretKey) === 64 && strlen($cleanKey) === 64) {
+    $timeBucket = (int)floor(time() / max(1, (int)$StartupKeyWindow));
+    $currentKey = hash_hmac('sha256', 'startup|'.$keyPurpose.'|'.$timeBucket, $SecretKey);
+    $previousKey = hash_hmac('sha256', 'startup|'.$keyPurpose.'|'.($timeBucket - 1), $SecretKey);
+    if (hash_equals($currentKey, $cleanKey) or hash_equals($previousKey, $cleanKey)) $KeyIsValid = TRUE; }
+  // / The key is only spent once it has proved genuine, so a wrong guess cannot fill the
+  // / ledger & cannot deny the real one.
+  if ($KeyIsValid && $singleUse) {
+    $keyWasUnspent = consumeStartupKey($keyPurpose, $cleanKey);
+    if (!$keyWasUnspent) {
+      $KeyIsValid = FALSE;
+      errorEntry('A startup key for '.$keyPurpose.' was presented a second time & refused as a replay!', 31017, FALSE); } }
+  if (!$KeyIsValid && $keyWasUnspent) warningEntry('A startup key for '.$keyPurpose.' was refused.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $timeBucket, $currentKey, $previousKey, $cleanKey, $keyWasUnspent, $keyPurpose, $suppliedKey, $singleUse);
+  return $KeyIsValid; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to check that this host can actually do the work, without changing it.
+// / Accepts no arguments.
+// / Returns a readiness boolean & an array of findings, in that order.
+// / THIS NEVER REPAIRS ANYTHING. Repair needs root & the listener does not have it, so a
+// / validator that tried would fail confusingly on every pass. It reports, & -fp fixes.
+// / Readiness is FALSE only for a condition that stops conversions outright. A policy that
+// / has drifted is reported & does not fail the check, because conversions still run.
+function validateOperatingEnvironment() {
+  // / Set variables.
+  global $RequireSandbox, $RunningInContainer, $RequireSandboxOnDocker, $EnableMemoryProtection;
+  $EnvironmentIsReady = TRUE;
+  $EnvironmentFindings = array();
+  $sandboxIsRequired = $policyIsValid = $kernelIsReady = $dataIsProtected = FALSE;
+  $policyStatus = $exposureStatus = $exposureDetail = '';
+  $kernelFindings = $kernelFinding = array();
+  // / The sandbox is the one thing a conversion cannot proceed without when it is required.
+  $sandboxIsRequired = (bool)$RequireSandbox;
+  if ($RunningInContainer && !$RequireSandboxOnDocker) $sandboxIsRequired = FALSE;
+  // / Report the kernel settings first. A sandbox failure is almost always one of these &
+  // / naming the setting is more use than naming the symptom.
+  list ($kernelIsReady, $kernelFindings) = verifySandboxKernel(FALSE);
+  foreach ($kernelFindings as $kernelFinding) $EnvironmentFindings[] = $kernelFinding;
+  if (!$kernelIsReady) $EnvironmentIsReady = FALSE;
+  if (verifyBwrap() === FALSE) {
+    $EnvironmentFindings[] = array('Check' => 'Sandbox', 'Status' => 'FAILED', 'Detail' => 'Bubblewrap cannot build a namespace.'.($sandboxIsRequired ? ' Every conversion will be refused.' : ' Conversions will run unprotected.'));
+    if ($sandboxIsRequired) $EnvironmentIsReady = FALSE; }
+  else $EnvironmentFindings[] = array('Check' => 'Sandbox', 'Status' => 'ok', 'Detail' => 'Bubblewrap can build a namespace.');
+  // / Policies are validated & never repaired here. A drifted policy is reported.
+  // / The status word is reported as it is, rather than flattened to ok, & the sentence
+  // / beside it says whether anything needs doing. Flattening lost the difference between
+  // / a policy that matches & a host that never needed one.
+  list ($policyIsValid, $policyStatus) = verifySandboxPolicy(FALSE);
+  $EnvironmentFindings[] = array('Check' => 'Sandbox AppArmor', 'Status' => policyDisplayStatus($policyStatus), 'Detail' => describePolicyStatus('Sandbox AppArmor', $policyStatus));
+  list ($policyIsValid, $policyStatus) = verifyImageMagickPolicy(FALSE);
+  $EnvironmentFindings[] = array('Check' => 'ImageMagick policy', 'Status' => policyDisplayStatus($policyStatus), 'Detail' => describePolicyStatus('ImageMagick', $policyStatus));
+  list ($policyIsValid, $policyStatus) = verifyOpenScadPolicy(FALSE);
+  $EnvironmentFindings[] = array('Check' => 'OpenSCAD AppArmor', 'Status' => policyDisplayStatus($policyStatus), 'Detail' => describePolicyStatus('OpenSCAD AppArmor', $policyStatus));
+  // / The DATA tree is part of the environment & is counted with everything else.
+  // / It was reported separately & AFTER the summary line, so a run could print that every
+  // / check passed & then say the tree was exposed directly underneath it. A summary that
+  // / does not cover a check is worse than no summary, because it is read instead of the
+  // / thing it failed to include. It is a finding now, so the count is honest & an exposed
+  // / tree appears in the problems list where an operator is already looking.
+  list ($dataIsProtected, $exposureStatus, $exposureDetail) = verifyDataExposure();
+  $EnvironmentFindings[] = array('Check' => 'DATA exposure', 'Status' => ($exposureStatus === 'protected' ? 'ok' : strtoupper($exposureStatus)), 'Detail' => $exposureDetail);
+  // / An exposed or broken tree does not stop a conversion, so it does not make the
+  // / environment unready. It is reported loudly & the operator decides.
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $sandboxIsRequired, $policyIsValid, $policyStatus, $kernelIsReady, $kernelFindings, $kernelFinding, $dataIsProtected, $exposureStatus, $exposureDetail);
+  return array($EnvironmentIsReady, $EnvironmentFindings); }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / A function to report the manager subcomponents this Engine accepts.
+// / Accepts nothing. Returns an array of file name to required version.
+// / A manager is a role a long lived process runs under rather than a file the application
+// / loads, & each one lives in Resources/Engine/Managers named for the role it serves.
+// / This list is an allowlist rather than a convenience.
+// / A file that is not named here is never read, never required & never dispatched to, so
+// / a file somebody drops into that directory cannot be executed by being present.
+// / Each is pinned EXACTLY, the same way this Engine is pinned by the application & the
+// / same way Pipeline Core pins a pipeline.
+// / Raise the Engine version whenever this list changes, because the list moving means the
+// / Engine moved.
+function getAcceptedManagers() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $AcceptedManagers = array();
+  $AcceptedManagers = array(
+    'coreManager.php' => 'v3.8.9',
+    'resourceManager.php' => 'v3.8.9',
+    'workerManager.php' => 'v3.8.9',
+    'requestManager.php' => 'v3.8.9');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $AcceptedManagers is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection);
+  return $AcceptedManagers; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to verify & load one manager subcomponent.
+// / Accepts the file name. Returns an availability boolean & the detected version.
+// / A manager is judged before it is loaded, never after, because a manager built for
+// / another Engine may accept an argument this one has dropped.
+// / A manager that is absent or mismatched is a warning rather than a halt. What is lost
+// / is the role that manager serves & the loss is named rather than guessed at.
+function loadEngineManager($managerFileName) {
+  // / Set variables.
+  global $InstLoc, $DirSep, $CoreLoaded, $EnableMemoryProtection;
+  $ManagerIsAvailable = FALSE;
+  $ManagerVersion = '';
+  $acceptedManagers = array();
+  $managerPath = $requiredVersion = '';
+  $acceptedManagers = getAcceptedManagers();
+  if (!isset($acceptedManagers[(string)$managerFileName])) warningEntry('The manager subcomponent '.$managerFileName.' is not one this Engine accepts. It was not loaded.');
+  else {
+    $requiredVersion = ltrim((string)$acceptedManagers[(string)$managerFileName], 'vV');
+    $managerPath = rtrim((string)$InstLoc, $DirSep).$DirSep.'Resources'.$DirSep.'Engine'.$DirSep.'Managers'.$DirSep.(string)$managerFileName;
+    // / readComponentVersion is a kernel service & reads the version without executing the
+    // / file, which is the whole reason a mismatched manager can be refused safely.
+    $ManagerVersion = readComponentVersion('Engine'.$DirSep.'Managers'.$DirSep.(string)$managerFileName, 'ManagerVersion');
+    if (!file_exists($managerPath)) warningEntry('The manager subcomponent '.$managerFileName.' is not installed. The role it serves is unavailable.');
+    else if ($ManagerVersion === '') warningEntry('The manager subcomponent '.$managerFileName.' reports no version. An unknown build cannot be cleared & it was not loaded.');
+    else if (ltrim((string)$ManagerVersion, 'vV') !== $requiredVersion) warningEntry('The manager subcomponent '.$managerFileName.' reports '.$ManagerVersion.' & this Engine requires '.$requiredVersion.'. It was not loaded.');
+    else {
+      require_once ($managerPath);
+      $ManagerIsAvailable = TRUE; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $acceptedManagers, $managerPath, $requiredVersion, $managerFileName);
+  return array($ManagerIsAvailable, $ManagerVersion); }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / Data locations.
+// / An application keeps its working files somewhere & may keep them in several places.
+// / HRConvert2 calls that a Convert Location & ScanCore would call it a quarantine.
+// / The concept is the same & the code below knows nothing about either name.
+// / A location carries a Path & a Type. The primary is always first in the pool.
+// / A type of roundrobin, leastactive or redundant decides how work is distributed.
+// / An unrecognized type becomes redundant, because a typo must never silently start
+// / sending user data somewhere unintended.
+// / Everything an application knows is passed in rather than read from a global.
+// / That is why these functions carry more arguments than they otherwise would, & it is
+// / what lets a second application use them without renaming any of its own settings.
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to count the sessions currently held in one data location.
+// / Accepts the absolute path of the location.
+// / Returns the number of session directories across every daily directory it holds.
+// / This is the measure least active selection compares. It is only called when a session
+// / is new, because an established session never chooses a location again.
+function countDataLocationSessions($locationPath, $protectedRootDirs) {
+  // / Set variables.
+  global $DirSep, $EnableMemoryProtection;
+  $SessionCount = 0;
+  $dailyDirs = $sessionDirs = array();
+  $dailyDir = $dailyPath = '';
+  if (is_dir($locationPath)) {
+    $dailyDirs = array_diff(scandir($locationPath), array('..', '.'));
+    foreach ($dailyDirs as $dailyDir) {
+      $dailyPath = $locationPath.$DirSep.$dailyDir;
+      // / A protected root directory is not a daily directory & holds no sessions.
+      if (!in_array($dailyDir, $protectedRootDirs, TRUE) && is_dir($dailyPath)) {
+        $sessionDirs = array_diff(scandir($dailyPath), array('..', '.'));
+        $SessionCount = $SessionCount + count($sessionDirs); } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $dailyDirs, $sessionDirs, $dailyDir, $dailyPath, $locationPath);
+  return $SessionCount; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to enumerate every data location this installation may use.
+// / Accepts no arguments.
+// / Returns an array of entries, each carrying a Path & a Type, with the primary first.
+// / The primary is the --Convert Location-- declared in config.php & is always present.
+// / An entry that is not an array of a path & a type is skipped & reported.
+// / A duplicate path is skipped, because the same location twice would double its share.
+function enumerateDataLocations($primaryPath, $activePath, $additionalLocations) {
+  // / Set variables.
+  global $DirSep, $EnableMemoryProtection;
+  $activePathPool = array();
+  $additionalEntry = $seenPaths = array();
+  $entryPath = $entryType = $primaryPath = '';
+  // / $primaryPath holds the configured value & is set once, before $activePath is
+  // / narrowed to the location this session actually uses.
+  // / The caller passes the configured primary & the location this session settled on.
+  // / The configured one wins, because the active one has already been narrowed & would
+  // / otherwise nominate itself as the primary of a pool it is only a member of.
+  if (!is_string($primaryPath) or $primaryPath === '') $primaryPath = (string)$activePath;
+  $primaryPath = rtrim($primaryPath, $DirSep);
+  $activePathPool[] = array('Path' => $primaryPath, 'Type' => 'primary');
+  $seenPaths[] = $primaryPath;
+  if (is_array($additionalLocations)) {
+    foreach ($additionalLocations as $additionalEntry) {
+      if (!is_array($additionalEntry) or count($additionalEntry) < 2) warningEntry('An entry in Additional Data Locations is not an array of a path & a type. It was skipped.');
+      else {
+        $entryPath = rtrim(trim((string)$additionalEntry[0]), $DirSep);
+        $entryType = strtolower(trim((string)$additionalEntry[1]));
+        // / An unrecognized type becomes a standby rather than joining the distribution.
+        // / A typo must not silently start sending user data somewhere unintended.
+        if ($entryType !== 'roundrobin' && $entryType !== 'leastactive' && $entryType !== 'redundant') {
+          warningEntry('The data location at '.$entryPath.' declares an unrecognized type of '.$entryType.'. It will be treated as redundant.');
+          $entryType = 'redundant'; }
+        if ($entryPath === '') warningEntry('An entry in Additional Data Locations has an empty path. It was skipped.');
+        else if (in_array($entryPath, $seenPaths, TRUE)) warningEntry('The data location at '.$entryPath.' is listed more than once. The duplicate was skipped.');
+        else {
+          $activePathPool[] = array('Path' => $entryPath, 'Type' => $entryType);
+          $seenPaths[] = $entryPath; } } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $activePathPool is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $additionalEntry, $seenPaths, $entryPath, $entryType, $primaryPath);
+  return $activePathPool; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide which data location this session will use.
+// / Accepts the daily hash & the session hash, in that order.
+// / Returns an absolute path as a string, ALWAYS. Every failure falls back to the location
+// / config.php declares, so a caller never has to test the result before using it.
+// / AN ESTABLISHED SESSION IS DISCOVERED, NOT CHOSEN. A session that already holds a
+// / directory somewhere keeps that location for its whole life. Choosing again on a later
+// / request would send the worker looking for the user's files where they are not.
+// / Only a session with no directory anywhere is distributed, & only then does type matter.
+// / A location marked leastactive puts the whole pool into least active selection.
+// / Otherwise the pool is distributed by session identifier, which needs no shared counter
+// / & therefore works with several front ends that never speak to each other.
+// / A location marked redundant is a standby. It takes a session only when every other
+// / location is unusable.
+function resolveDataLocation($dailyHash, $sessionHash, $primaryPath, $activePath, $additionalLocations, $protectedRootDirs) {
+  // / Set variables.
+  global $DirSep, $Verbose, $EnableMemoryProtection;
+  $ResolvedDataLocation = '';
+  $convertLocPool = $distributionPool = $redundantPool = $poolEntry = array();
+  $selectionMode = $cleanDailyHash = $cleanSessionHash = '';
+  $sessionCount = $lowestSessionCount = $selectionIndex = 0;
+  $sessionIsDiscovered = FALSE;
+  // / The fallback is established first, so every path below can only improve on it.
+  $ResolvedDataLocation = (isset($primaryPath) && is_string($primaryPath) && $primaryPath !== '') ? $primaryPath : (string)$activePath;
+  $ResolvedDataLocation = rtrim($ResolvedDataLocation, $DirSep);
+  $cleanDailyHash = preg_replace('/[^A-Za-z0-9]/', '', (string)$dailyHash);
+  $cleanSessionHash = preg_replace('/[^A-Za-z0-9]/', '', (string)$sessionHash);
+  $convertLocPool = enumerateDataLocations($primaryPath, $activePath, $additionalLocations);
+  // / Discovery. An existing session directory decides the answer outright.
+  if ($cleanDailyHash !== '' && $cleanSessionHash !== '') {
+    foreach ($convertLocPool as $poolEntry) {
+      if (!$sessionIsDiscovered && is_dir($poolEntry['Path'].$DirSep.$cleanDailyHash.$DirSep.$cleanSessionHash)) {
+        $ResolvedDataLocation = $poolEntry['Path'];
+        $sessionIsDiscovered = TRUE; } } }
+  // / A new session is distributed across whatever is usable right now.
+  if (!$sessionIsDiscovered) {
+    foreach ($convertLocPool as $poolEntry) {
+      if (is_dir($poolEntry['Path']) && is_writable($poolEntry['Path'])) {
+        if ($poolEntry['Type'] === 'redundant') $redundantPool[] = $poolEntry;
+        else $distributionPool[] = $poolEntry;
+        if ($poolEntry['Type'] === 'leastactive') $selectionMode = 'leastactive'; } }
+    if ($selectionMode === '') $selectionMode = 'distributed';
+    // / One usable candidate is not a distribution. It is the answer.
+    if (count($distributionPool) === 1) $ResolvedDataLocation = $distributionPool[0]['Path'];
+    else if (count($distributionPool) > 1 && $selectionMode === 'leastactive') {
+      $lowestSessionCount = -1;
+      foreach ($distributionPool as $poolEntry) {
+        $sessionCount = countDataLocationSessions($poolEntry['Path'], $protectedRootDirs);
+        if ($lowestSessionCount < 0 or $sessionCount < $lowestSessionCount) {
+          $lowestSessionCount = $sessionCount;
+          $ResolvedDataLocation = $poolEntry['Path']; } } }
+    else if (count($distributionPool) > 1) {
+      // / Derived from the session identifier rather than from a counter, so two front ends
+      // / that share storage & never speak to each other still agree on the answer.
+      $selectionIndex = abs((int)crc32($cleanSessionHash)) % count($distributionPool);
+      $ResolvedDataLocation = $distributionPool[$selectionIndex]['Path']; }
+    // / Nothing in the distribution pool is usable, so a standby takes the session.
+    else if (!empty($redundantPool)) {
+      $ResolvedDataLocation = $redundantPool[0]['Path'];
+      warningEntry('Every distributed data location is unusable. The redundant location at '.$ResolvedDataLocation.' has taken this session.'); }
+    // / Nothing at all is usable. The configured location is returned & will fail loudly
+    // / at directory verification, which is a better failure than a silent wrong path.
+    else warningEntry('No configured data location is usable. Falling back to '.$ResolvedDataLocation.'.'); }
+  if ($Verbose) logEntry('Data Location: '.$ResolvedDataLocation.', Pool: '.count($convertLocPool).', Session: '.($sessionIsDiscovered ? 'DISCOVERED' : 'NEW, selected by '.$selectionMode).'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $ResolvedDataLocation is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $convertLocPool, $distributionPool, $redundantPool, $poolEntry, $selectionMode, $cleanDailyHash, $cleanSessionHash, $sessionCount, $lowestSessionCount, $selectionIndex, $sessionIsDiscovered, $dailyHash, $sessionHash);
+  return $ResolvedDataLocation; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to remove expired session data from a data location.
+// / A data location holds daily directories, & each daily directory holds session
+// / directories. Only a session directory is ever swept, & only once it is older than the
+// / delete threshold. A daily directory is removed once every session inside it is gone.
+// / The location being cleaned is authorized in two independent ways before anything is
+// / read. The name must be one this function recognizes, & the path must be the one that
+// / name refers to. A caller that supplies a valid name with any other path is refused,
+// / which is what stops a mistake elsewhere in the core from sweeping the wrong tree.
+function cleanDataLocation($dataLoc, $locationName, $deleteThreshold, $protectedRootDirs, $authorizedPaths) {
+  // / Set variables.
+  global $DirSep, $Verbose, $EnableMemoryProtection;
+  $LocationDeepCleaned = $cleanAuthorized = FALSE;
+  $CleanedLocation = TRUE;
+  // / Every filesystem lists these two & neither is ever a session.
+  $defaultApps = array('.', '..');
+  $dailyDirs = $sessionDirs = array();
+  $dailyDir = $sessionDir = $dailyPath = $sessionPath = '';
+  $now = time();
+  // / Determine whether this clean operation is being requested on a valid target.
+  // / The caller supplies the paths it is permitted to clean & the target must be one.
+  // / An earlier version matched a NAME against a short list this function knew, then
+  // / checked the path that name referred to. That worked & tied a generic cleaner to one
+  // / application's vocabulary, & a caller passing the wrong label was silently refused.
+  // / A list of paths says the same thing without either problem, & is no weaker, because
+  // / an arbitrary path is still refused for not being in it.
+  // / $locationName is now only a label for the messages below.
+  if (is_array($authorizedPaths) && in_array($dataLoc, $authorizedPaths, TRUE)) $cleanAuthorized = TRUE;
+  // / An unauthorized target is a failure of the caller & must be reported as one.
+  // / Reporting success here would let the core log that a location was cleaned when it was
+  // / refused, which is the one outcome this check exists to make visible.
+  if (!$cleanAuthorized) {
+    $CleanedLocation = FALSE;
+    errorEntry('An invalid clean operation has been blocked!', 29, FALSE); }
+  // / A location that does not exist is not an error. There is simply nothing to clean.
+  else if (!file_exists($dataLoc)) warningEntry('The '.$locationName.' location does not exist at '.$dataLoc.'. Nothing to clean.');
+  else {
+    if ($Verbose) logEntry('The valid clean operation has been authorized.');
+    $dailyDirs = array_diff(scandir($dataLoc), array('..', '.'));
+    // / Iterate through each daily folder in the location.
+    foreach ($dailyDirs as $dailyDir) {
+      // / Validate the folder.
+      if (in_array($dailyDir, $defaultApps)) continue;
+      // / A protected directory at this level is not a daily session parent & is never swept.
+      // / The LibreOffice profile, the log directory & the update backup live at this level.
+      if (in_array($dailyDir, $protectedRootDirs, TRUE)) continue;
+      $dailyPath = $dataLoc.$DirSep.$dailyDir;
+      // / Only directories hold sessions.
+      // / Files at this level are left alone entirely.
+      if (!is_dir($dailyPath)) continue;
+      $sessionDirs = array_diff(scandir($dailyPath), array('..', '.'));
+      // / Iterate through each session folder inside this day.
+      foreach ($sessionDirs as $sessionDir) {
+        if (in_array($sessionDir, $defaultApps)) continue;
+        $sessionPath = $dailyPath.$DirSep.$sessionDir;
+        if (!is_dir($sessionPath)) continue;
+        // / See if this individual session is due for deletion.
+        // / A threshold of zero expires everything, because every session is older than nothing.
+        if ($now - fileTime($sessionPath) > ($deleteThreshold * 60)) {
+          $LocationDeepCleaned = TRUE;
+          if (file_exists($sessionPath)) {
+            @chmod($sessionPath, 0777);
+            $directoryIterator = new RecursiveDirectoryIterator($sessionPath, RecursiveDirectoryIterator::SKIP_DOTS);
+            $iterator = new RecursiveIteratorIterator($directoryIterator, RecursiveIteratorIterator::CHILD_FIRST);
+            foreach ($iterator as $fileObject) {
+              $realPath = $fileObject->getRealPath();
+              @chmod($realPath, 0777);
+              // / Strip system restrictions (immutable/append-only flags) from every object universally.
+              @shell_exec("chattr -i -a " . escapeshellarg($realPath) . " 2>&1");
+              if ($fileObject->isDir()) @rmdir($realPath);
+              else @unlink($realPath); } }
+          // / Track failure if cleanFiles returns false.
+          if (!cleanFiles($sessionPath)) {
+            $CleanedLocation = FALSE; }
+          // / Remove the session shell, including any protected file objects still in it.
+          removeEmptiedSessionDir($sessionPath); } }
+      // / Remove the daily parent only once every session inside it is gone.
+      if (isDirEmptyOfUserFiles($dailyPath)) removeEmptiedSessionDir($dailyPath); }
+    // / Log the result.
+    if ($Verbose) logEntry('Cleaned the '.$locationName.' location. Removed Files: '.($LocationDeepCleaned ? 'TRUE' : 'FALSE').'.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $dailyDirs, $dailyDir, $dailyPath, $sessionDirs, $sessionDir, $sessionPath, $now, $dataLoc, $locationName, $deleteThreshold, $cleanAuthorized, $directoryIterator, $iterator, $fileObject, $realPath);
+  return array($CleanedLocation, $LocationDeepCleaned); }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / Manager machinery.
+// / Everything below is shared by every manager role & by anything that starts or stops
+// / one. The roles themselves live in Resources/Engine/Managers, one file each.
+// / A message between two managers is encrypted with AES-256-GCM under a key derived from
+// / the install secret, carries a random initialization vector & an authentication tag, &
+// / is refused when its timestamp falls outside the configured skew.
+// / A worker is identified by its process number AND the kernel start time recorded when it
+// / was registered, because the kernel reuses numbers & a number alone would eventually
+// / name a process this application never started.
+// / A budget is a number of cost units rather than a number of workers.
+// / None of this is about converting a file & all of it would serve a virus scanner or a
+// / job dispatcher without a line changing.
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -515,7 +1120,6 @@ function readProcessStartTime($processId) {
   return $ProcessStartTime; }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to find tracked workers that have outlived their expected runtime.
 // / Accepts a grace period in seconds added to every expected runtime.
@@ -585,538 +1189,6 @@ function terminateWorkerProcess($workerPid, $forceKill, $expectedStartTime) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to start one subordinate manager as a detached background process.
-// / Accepts the manager role name.
-// / Returns a success boolean & the process identifier, in that order.
-function spawnManagerProcess($managerRole) {
-  // / Set variables.
-  global $InstLoc, $DirSep, $EnableMemoryProtection, $Verbose;
-  $ManagerWasSpawned = FALSE;
-  $ManagerPid = 0;
-  $spawnCommand = $spawnOutput = $startupKey = '';
-  $cleanRole = preg_replace('/[^a-z\-]/', '', strtolower((string)$managerRole));
-  $startupKey = deriveStartupKey('start-manager-'.$cleanRole);
-  if ($cleanRole !== '' && $startupKey !== '') {
-    // / The key travels in the environment & never on the command line.
-    // / /proc/PID/cmdline is world readable, so a key placed there is visible in ps to
-    // / every local account for the whole life of the process, & a manager runs for days.
-    // / /proc/PID/environ is readable only by the owner. The child clears the variable as
-    // / soon as it reads it, so nothing the manager launches later inherits it.
-    $spawnCommand = 'HRCONVERT2_STARTUP_KEY='.escapeshellarg($startupKey)
-      .' nohup php '.escapeshellarg($InstLoc.$DirSep.'convertCore.php')
-      .' --start-manager '.escapeshellarg($cleanRole)
-      .' > /dev/null 2>&1 & echo $!';
-    $spawnOutput = shell_exec($spawnCommand);
-    $ManagerPid = (int)trim((string)$spawnOutput);
-    if ($ManagerPid > 0) { 
-      $ManagerWasSpawned = TRUE;
-      if ($Verbose) logEntry('Core Manager spawned the '.$cleanRole.' process as '.$ManagerPid.'.'); }
-    else warningEntry('Could not spawn the '.$cleanRole.' manager process.'); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $spawnCommand, $spawnOutput, $startupKey, $cleanRole, $managerRole);
-  return array($ManagerWasSpawned, $ManagerPid); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to run the Core Manager supervisor loop.
-// / Accepts no arguments & does not return until the listener is stopped.
-// / Returns TRUE when the loop exited on a stop instruction rather than a failure.
-// / Core Manager owns no budget & no registry. It routes, supervises & reaps.
-function runCoreManager() {
-  // / Set variables.
-  global $CoreManagerSubprocessPollInterval, $ManagerSocketTimeout, $ManagerMessageBatchSize, $Verbose, $EnableMemoryProtection;
-  $CoreManagerExitedCleanly = FALSE;
-  $socketServer = FALSE;
-  $serverIsOpen = $keepRunning = $stateWasWritten = FALSE;
-  $socketPath = $managerRole = $targetSocket = '';
-  $managerState = $managerMessages = $managerConnections = $replyPayload = $routedReply = array();
-  $messagesReceived = $messageIndex = $managerPid = 0;
-  $managerWasSpawned = $replyWasDelivered = FALSE;
-  $subordinateRoles = array('request-manager', 'resource-manager', 'worker-manager');
-  $socketPath = buildManagerSocketPath('core-manager');
-  list ($serverIsOpen, $socketServer) = openManagerSocketServer($socketPath);
-  if (!$serverIsOpen) errorEntry('The Core Manager could not open its socket!', 31000, TRUE);
-  else {
-    // / Start every subordinate & record the process identifiers for supervision.
-    $managerState = array('CoreManagerPid' => getmypid(), 'StartTime' => time(), 'Subordinates' => array());
-    foreach ($subordinateRoles as $managerRole) {
-      list ($managerWasSpawned, $managerPid) = spawnManagerProcess($managerRole);
-      if ($managerWasSpawned) $managerState['Subordinates'][$managerRole] = $managerPid; }
-    $stateWasWritten = writeManagerState('managers', $managerState);
-    if (!$stateWasWritten) warningEntry('The Core Manager could not record its subordinate process identifiers.');
-    logEntry('Core Manager started with '.count($managerState['Subordinates']).' subordinate manager(s).');
-    if ($Verbose) logEntry('Core Manager starting supervisor loop. Poll interval '.(int)$CoreManagerSubprocessPollInterval.' second(s).');
-    $keepRunning = TRUE;
-    while ($keepRunning) {
-      list ($messagesReceived, $managerMessages, $managerConnections) = receiveManagerMessages($socketServer, 'core', (int)$ManagerMessageBatchSize, (int)$CoreManagerSubprocessPollInterval);
-      $messageIndex = 0;
-      while ($messageIndex < $messagesReceived) {
-        $replyPayload = array('Approved' => FALSE, 'Reason' => 'Unrecognized request type.');
-        $targetSocket = '';
-        // / Route by request type. Core Manager decides who answers, never what the answer is.
-        if (isset($managerMessages[$messageIndex]['RequestType'])) {
-          if ($managerMessages[$messageIndex]['RequestType'] === 'stop') {
-            $keepRunning = FALSE;
-            $CoreManagerExitedCleanly = TRUE;
-            if ($Verbose) logEntry('Core Manager accepted a stop instruction & is unwinding.');
-            $replyPayload = array('Approved' => TRUE, 'Reason' => 'Stopping.'); }
-          // / The Resource Manager holds the budget, the registry & the session map, so every
-          // / question about state goes there. Only an instruction to end a process goes to
-          // / the Worker Manager, which is the only component permitted to carry one out.
-          else if (in_array($managerMessages[$messageIndex]['RequestType'], array('budget', 'release', 'extend', 'convertloc', 'status', 'kill-tracked'), TRUE)) $targetSocket = buildManagerSocketPath('resource-manager');
-          else if (in_array($managerMessages[$messageIndex]['RequestType'], array('kill', 'kill-every'), TRUE)) $targetSocket = buildManagerSocketPath('worker-manager'); }
-        if ($targetSocket !== '') {
-          if ($Verbose) logEntry('Core Manager routed a '.$managerMessages[$messageIndex]['RequestType'].' request to '.basename($targetSocket).'.');
-          list ($replyWasDelivered, $routedReply) = sendManagerMessage($targetSocket, $managerMessages[$messageIndex], 'internal', (int)$ManagerSocketTimeout);
-          if ($replyWasDelivered && !empty($routedReply)) $replyPayload = $routedReply;
-          else $replyPayload = array('Approved' => FALSE, 'Reason' => 'The responsible manager did not answer.'); }
-        replyToManagerMessage($managerConnections[$messageIndex], $replyPayload, 'core');
-        $messageIndex++; }
-      // / Supervise. A subordinate that has died is replaced rather than mourned.
-      if ($keepRunning) {
-        foreach ($subordinateRoles as $managerRole) {
-          if (!isset($managerState['Subordinates'][$managerRole]) or !file_exists('/proc/'.(int)$managerState['Subordinates'][$managerRole])) {
-            warningEntry('The '.$managerRole.' process is not running. Restarting it.');
-            list ($managerWasSpawned, $managerPid) = spawnManagerProcess($managerRole);
-            if ($managerWasSpawned) {
-              $managerState['Subordinates'][$managerRole] = $managerPid;
-              writeManagerState('managers', $managerState); } } } } }
-    // / Stop every subordinate before leaving, so no orphan keeps a socket bound.
-    foreach ($managerState['Subordinates'] as $managerRole => $managerPid) terminateWorkerProcess($managerPid, FALSE, 0);
-    if (is_resource($socketServer)) @fclose($socketServer);
-    if (file_exists($socketPath)) @unlink($socketPath);
-    logEntry('Core Manager stopped.'); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $serverIsOpen, $keepRunning, $stateWasWritten, $socketPath, $managerRole, $targetSocket, $managerState, $managerMessages, $managerConnections, $replyPayload, $routedReply, $messagesReceived, $messageIndex, $managerPid, $managerWasSpawned, $replyWasDelivered, $subordinateRoles);
-  return $CoreManagerExitedCleanly; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to run the Request Manager loop.
-// / Accepts no arguments & does not return until the process is terminated.
-// / Returns TRUE when the loop exited cleanly.
-// / Request Manager is the only socket a worker may address. It validates & forwards.
-function runRequestManager() {
-  // / Set variables.
-  global $ManagerSocketTimeout, $ManagerMessageBatchSize, $EnableMemoryProtection, $Verbose;
-  $RequestManagerExitedCleanly = FALSE;
-  $socketServer = FALSE;
-  $serverIsOpen = $keepRunning = $forwardWasDelivered = FALSE;
-  $socketPath = $coreSocket = '';
-  $managerMessages = $managerConnections = $forwardedReply = $replyPayload = array();
-  $messagesReceived = $messageIndex = 0;
-  $socketPath = buildManagerSocketPath('request-manager');
-  $coreSocket = buildManagerSocketPath('core-manager');
-  list ($serverIsOpen, $socketServer) = openManagerSocketServer($socketPath);
-  if (!$serverIsOpen) errorEntry('The Request Manager could not open its socket!', 31001, TRUE);
-  else {
-    // / The worker facing socket is the only one a non manager process may reach.
-    @chmod($socketPath, 0660);
-    logEntry('Request Manager started.');
-    $keepRunning = TRUE;
-    if ($Verbose) logEntry('Request Manager is listening for worker requests on '.basename($socketPath).'.');
-    while ($keepRunning) {
-      list ($messagesReceived, $managerMessages, $managerConnections) = receiveManagerMessages($socketServer, 'worker', (int)$ManagerMessageBatchSize, (int)$ManagerSocketTimeout);
-      $messageIndex = 0;
-      while ($messageIndex < $messagesReceived) {
-        // / A worker may not issue a manager instruction. Only these three types pass.
-        if (isset($managerMessages[$messageIndex]['RequestType']) && in_array($managerMessages[$messageIndex]['RequestType'], array('budget', 'release', 'extend', 'convertloc'), TRUE)) {
-          list ($forwardWasDelivered, $forwardedReply) = sendManagerMessage($coreSocket, $managerMessages[$messageIndex], 'core', (int)$ManagerSocketTimeout * 2);
-          if ($forwardWasDelivered && !empty($forwardedReply)) $replyPayload = $forwardedReply;
-          else $replyPayload = array('Approved' => FALSE, 'Reason' => 'The Core Manager did not answer.'); 
-          if ($Verbose) logEntry('Request Manager forwarded a '.$managerMessages[$messageIndex]['RequestType'].' request from worker '.(isset($managerMessages[$messageIndex]['WorkerPid']) ? (int)$managerMessages[$messageIndex]['WorkerPid'] : 0).'.'); }
-        else {
-          warningEntry('A worker submitted a request type it is not permitted to issue & it was refused.');
-          $replyPayload = array('Approved' => FALSE, 'Reason' => 'That request type is not available to a worker.'); }
-        replyToManagerMessage($managerConnections[$messageIndex], $replyPayload, 'worker');
-        $messageIndex++; } }
-    $RequestManagerExitedCleanly = TRUE; }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $serverIsOpen, $keepRunning, $forwardWasDelivered, $socketPath, $coreSocket, $managerMessages, $managerConnections, $forwardedReply, $replyPayload, $messagesReceived, $messageIndex);
-  return $RequestManagerExitedCleanly; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / -----------------------------------------------------------------------------------
-// / A function to scale the configured per conversion limits against current load.
-// / Accepts the polled resource array & the number of workers already tracked, in that order.
-// / Returns a success boolean & a table of conversion type to limit string, in that order.
-// / A busy host hands out smaller ceilings, so twenty conversions cannot each claim the
-// / share that was safe for one. Nothing is ever scaled below the configured minimum.
-// / The table is handed to the worker with its budget approval & is used for every file in
-// / that request, so a conversion never has to ask again mid batch.
-function scaleConversionLimits($systemResources, $trackedWorkers) {
-  // / Set variables.
-  global $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $Verbose, $EnableMemoryProtection;
-  $LimitsWereScaled = FALSE;
-  $ScaledLimits = array();
-  $conversionType = $limitString = '';
-  $limitIsValid = $minimumIsValid = FALSE;
-  $cpuPercentage = $memoryMegabytes = $minimumCpu = $minimumMemory = 0;
-  $scaledCpu = $scaledMemory = $concurrentShare = 0;
-  $highestPressure = $pressureFactor = 0.0;
-  $limitTable = array();
-  list ($minimumIsValid, $minimumCpu, $minimumMemory) = parseConversionLimit((string)$MinimumPerConversionResources);
-  if (!$minimumIsValid) {
-    $minimumCpu = 10;
-    $minimumMemory = 128;
-    warningEntry('The configured minimum per conversion resources could not be read. Falling back to 10% and 128M.'); }
-  // / Whichever of load or memory is under more pressure governs the reduction.
-  $highestPressure = 0.0;
-  if (is_array($systemResources)) $highestPressure = max((float)$systemResources['LoadPercentage'], (float)$systemResources['MemoryUsedPercentage']);
-  if ($highestPressure > 95) $highestPressure = 95;
-  if ($highestPressure < 0) $highestPressure = 0;
-  // / A conversion already in flight has taken a share, so the next one is offered less.
-  $concurrentShare = max(1, (int)$trackedWorkers + 1);
-  $pressureFactor = (1 - ($highestPressure / 100)) / $concurrentShare;
-  // / Build the table from the configured maxima, plus the default under its own key.
-  $limitTable = is_array($MaximumPerConversionResources) ? $MaximumPerConversionResources : array();
-  $limitTable['Default'] = (string)$DefaultPerConversionResources;
-  foreach ($limitTable as $conversionType => $limitString) {
-    list ($limitIsValid, $cpuPercentage, $memoryMegabytes) = parseConversionLimit((string)$limitString);
-    if (!$limitIsValid) warningEntry('The configured per conversion limit for '.$conversionType.' could not be read & was left out of the table.');
-    else {
-      $scaledCpu = (int)floor($cpuPercentage * $pressureFactor);
-      $scaledMemory = (int)floor($memoryMegabytes * $pressureFactor);
-      // / The floor is what stops a loaded server handing out a ceiling nothing can run in.
-      if ($scaledCpu < $minimumCpu) $scaledCpu = $minimumCpu;
-      if ($scaledMemory < $minimumMemory) $scaledMemory = $minimumMemory;
-      // / A scaled ceiling never exceeds the configured maximum.
-      if ($scaledCpu > $cpuPercentage) $scaledCpu = $cpuPercentage;
-      if ($scaledMemory > $memoryMegabytes) $scaledMemory = $memoryMegabytes;
-      $ScaledLimits[$conversionType] = $scaledCpu.','.$scaledMemory; } }
-  if (!empty($ScaledLimits)) $LimitsWereScaled = TRUE;
-  if ($Verbose && $LimitsWereScaled) logEntry('Scaled per conversion limits for '.count($ScaledLimits).' type(s). Pressure '.round($highestPressure, 1).'%, in flight '.(int)$trackedWorkers.'.');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  // / $ScaledLimits is not purged, because it is a return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $conversionType, $limitString, $limitIsValid, $minimumIsValid, $cpuPercentage, $memoryMegabytes, $minimumCpu, $minimumMemory, $scaledCpu, $scaledMemory, $concurrentShare, $highestPressure, $pressureFactor, $limitTable, $systemResources, $trackedWorkers);
-  return array($LimitsWereScaled, $ScaledLimits); }
-// / -----------------------------------------------------------------------------------
-
-// / A function to decide which data location a session uses & remember the answer.
-// / Accepts the session map BY REFERENCE, the daily hash & the session hash.
-// / Returns the absolute path as a string.
-// / THE MAP IS A CACHE, NOT THE RECORD. resolveConvertLoc discovers an existing session
-// / directory before it distributes anything, so a Resource Manager that restarted in the
-// / middle of a session still returns the location that actually holds the files.
-// / Load balancing happens here, once, when a session is first seen. Never again.
-function resolveSessionLocation(&$sessionLocations, $dailyHash, $sessionHash) {
-  // / Set variables.
-  global $Verbose, $EnableMemoryProtection;
-  $SessionConvertLoc = '';
-  $cleanDaily = preg_replace('/[^A-Za-z0-9]/', '', (string)$dailyHash);
-  $cleanSession = preg_replace('/[^A-Za-z0-9]/', '', (string)$sessionHash);
-  $mapKey = $cleanDaily.'|'.$cleanSession;
-  $entryIsCached = FALSE;
-  if ($cleanSession === '') $SessionConvertLoc = resolveConvertLoc('', '');
-  else if (isset($sessionLocations[$mapKey])) {
-    $SessionConvertLoc = (string)$sessionLocations[$mapKey]['Path'];
-    $sessionLocations[$mapKey]['LastSeen'] = time();
-    $entryIsCached = TRUE; }
-  else {
-    $SessionConvertLoc = resolveConvertLoc($cleanDaily, $cleanSession);
-    $sessionLocations[$mapKey] = array('Path' => $SessionConvertLoc, 'LastSeen' => time()); }
-  if ($Verbose) logEntry('Session Location: '.$SessionConvertLoc.', Session: '.($cleanSession === '' ? 'NONE' : $cleanSession).', Source: '.($entryIsCached ? 'MAP' : 'RESOLVED').'.');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $cleanDaily, $cleanSession, $mapKey, $entryIsCached, $dailyHash, $sessionHash);
-  return $SessionConvertLoc; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to drop session map entries that no session can still be using.
-// / Accepts the session map BY REFERENCE & the maximum age in seconds.
-// / Returns the number of entries dropped.
-// / The map lives in memory for the life of the process, so it must be bounded or a long
-// / running listener grows one entry per session it has ever seen.
-function evictExpiredSessionLocations(&$sessionLocations, $maximumAgeSeconds) {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $EntriesDropped = 0;
-  $mapKey = '';
-  $mapEntry = array();
-  $expiredKeys = array();
-  foreach ($sessionLocations as $mapKey => $mapEntry) { if ((time() - (int)$mapEntry['LastSeen']) > (int)$maximumAgeSeconds) $expiredKeys[] = $mapKey; }
-  foreach ($expiredKeys as $mapKey) {
-    unset($sessionLocations[$mapKey]);
-    $EntriesDropped++; }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $mapKey, $mapEntry, $expiredKeys, $maximumAgeSeconds);
-  return $EntriesDropped; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to validate the bootstrap script & disable it when it no longer matches.
-// / Accepts no arguments.
-// / Returns a validity boolean & a status word, in that order.
-// / The status is 'ok', 'disabled', 'absent', 'unreadable' or 'unwritable'.
-// / The bootstrap script hands arguments to a core it does not understand. A script from
-// / another release may pass an argument this core has dropped, or fail to pass one it now
-// / needs, & the operator running it has no way to know that has happened.
-// / When the versions differ the DisabledByCore line is rewritten, so the script refuses to
-// / run & says why. It is never deleted & is not otherwise altered, so an operator can read
-// / exactly what was disabled & reinstall the matching one.
-// / A script that matches is left alone, including one disabled earlier that has since been
-// / replaced with a matching version, which is re-enabled.
-function verifyBootstrapScript() {
-  // / Set variables.
-  global $InstLoc, $DirSep, $RequiredConfigScript, $Verbose, $EnableMemoryProtection;
-  $ScriptIsValid = FALSE;
-  $ScriptStatus = 'absent';
-  $scriptPath = $scriptContents = $updatedContents = $detectedVersion = $cleanDetected = $cleanRequired = '';
-  $versionMatches = array();
-  $bytesWritten = 0;
-  $scriptIsDisabled = FALSE;
-  $scriptPath = $InstLoc.$DirSep.'Documentation'.$DirSep.'Build'.$DirSep.'hrconvert2-setup.sh';
-  if (!file_exists($scriptPath)) {
-    // / No script is not a fault. An installation that never used one is perfectly normal.
-    $ScriptIsValid = TRUE;
-    $ScriptStatus = 'absent'; }
-  else {
-    $scriptContents = (string)@file_get_contents($scriptPath);
-    if ($scriptContents === '') $ScriptStatus = 'unreadable';
-    else {
-      if (preg_match('/^SCRIPT_VERSION="([^"]+)"/m', $scriptContents, $versionMatches)) $detectedVersion = $versionMatches[1];
-      $scriptIsDisabled = (preg_match('/^DisabledByCore="TRUE"/m', $scriptContents) === 1);
-      $cleanDetected = ltrim(trim($detectedVersion), 'vV');
-      $cleanRequired = ltrim(trim((string)$RequiredConfigScript), 'vV');
-      // / A script that matches is left alone, & is re-enabled if it was disabled before.
-      if ($cleanDetected !== '' && $cleanDetected === $cleanRequired) {
-        $ScriptIsValid = TRUE;
-        $ScriptStatus = 'ok';
-        if ($scriptIsDisabled) {
-          $updatedContents = preg_replace('/^DisabledByCore="TRUE"/m', 'DisabledByCore="FALSE"', $scriptContents, 1);
-          $bytesWritten = @file_put_contents($scriptPath, $updatedContents);
-          if ($bytesWritten === strlen($updatedContents)) warningEntry('The bootstrap script now matches this core & was re-enabled.');
-          else warningEntry('The bootstrap script matches this core but could not be re-enabled. Edit DisabledByCore by hand.'); } }
-      // / A script that does not match is disabled where it stands.
-      else if ($scriptIsDisabled) $ScriptStatus = 'disabled';
-      else {
-        $updatedContents = preg_replace('/^DisabledByCore="FALSE"/m', 'DisabledByCore="TRUE"', $scriptContents, 1);
-        if ($updatedContents === $scriptContents) {
-          $ScriptStatus = 'unwritable';
-          warningEntry('The bootstrap script reports v'.($cleanDetected === '' ? 'none' : $cleanDetected).' & this core requires v'.$cleanRequired.', but it carries no DisabledByCore line to set. Remove it by hand.'); }
-        else {
-          $bytesWritten = @file_put_contents($scriptPath, $updatedContents);
-          if ($bytesWritten !== strlen($updatedContents)) {
-            $ScriptStatus = 'unwritable';
-            warningEntry('The bootstrap script reports v'.($cleanDetected === '' ? 'none' : $cleanDetected).' & this core requires v'.$cleanRequired.', but it could not be disabled. Remove it by hand.'); }
-          else {
-            $ScriptStatus = 'disabled';
-            warningEntry('The bootstrap script reports v'.($cleanDetected === '' ? 'none' : $cleanDetected).' & this core requires v'.$cleanRequired.'. It has been disabled. Reinstall the script from the matching release.'); } } } } }
-  if ($Verbose) logEntry('Bootstrap Script: '.$scriptPath.', Reports: '.($detectedVersion === '' ? 'none' : $detectedVersion).', Status: '.$ScriptStatus.'.');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $scriptPath, $scriptContents, $updatedContents, $detectedVersion, $cleanDetected, $cleanRequired, $versionMatches, $bytesWritten, $scriptIsDisabled);
-  return array($ScriptIsValid, $ScriptStatus); }
-// / -----------------------------------------------------------------------------------
-
-
-// / -----------------------------------------------------------------------------------
-// / A function to sweep every configured data location on a schedule.
-// / Accepts no arguments.
-// / Returns a completion boolean & the number of locations swept, in that order.
-// / This uses cleanDataLoc, the same function the stock clean calls use. Those calls remain
-// / in convertCore.php & are what a standalone installation with no listener relies on.
-// / Only the shared data locations are swept. The temporary location lives inside the
-// / installation directory, so it belongs to one front end & each one cleans its own.
-function cleanEveryConvertLoc() {
-  // / Set variables.
-  global $DeleteThreshold, $Verbose, $EnableMemoryProtection;
-  $SweepCompleted = TRUE;
-  $LocationsSwept = 0;
-  $convertLocPool = $poolEntry = array();
-  $locationCleaned = $locationDeepCleaned = FALSE;
-  $convertLocPool = enumerateConvertLocs();
-  foreach ($convertLocPool as $poolEntry) {
-    if (!is_dir($poolEntry['Path'])) warningEntry('The '.$poolEntry['Type'].' data location at '.$poolEntry['Path'].' does not exist & was not swept.');
-    else {
-      list ($locationCleaned, $locationDeepCleaned) = cleanDataLoc($poolEntry['Path'], 'ConvertLocPool', $DeleteThreshold);
-      if (!$locationCleaned) $SweepCompleted = FALSE;
-      else {
-        $LocationsSwept++;
-        if ($Verbose) logEntry('Scheduled sweep: '.$poolEntry['Path'].', Type: '.$poolEntry['Type'].', Expired sessions removed: '.($locationDeepCleaned ? 'YES' : 'NO').'.'); } } }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $convertLocPool, $poolEntry, $locationCleaned, $locationDeepCleaned);
-  return array($SweepCompleted, $LocationsSwept); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to run the Resource Manager loop.
-// / Accepts no arguments & does not return until the process is terminated.
-// / Returns TRUE when the loop exited cleanly.
-// / Resource Manager owns the budget. Nothing else may adjust it.
-function runResourceManager() {
-  // / Set variables.
-  global $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $StorageCleanupInterval, $DeleteThreshold, $ManagerSocketTimeout, $ManagerMessageBatchSize, $Verbose, $EnableMemoryProtection;
-  $ResourceManagerExitedCleanly = FALSE;
-  $socketServer = FALSE;
-  $serverIsOpen = $keepRunning = $resourcesPolled = $budgetCalculated = FALSE;
-  $requestApproved = $workerWasRegistered = $workerWasReleased = $extensionApproved = FALSE;
-  $sweepCompleted = $messageWasDelivered = $limitsWereScaled = FALSE;
-  $scaledLimits = array();
-  $socketPath = $denialReason = $budgetToken = $sessionConvertLoc = $staleToken = '';
-  $systemResources = $resourceBudget = $workerRegistry = $sessionLocations = array();
-  $managerMessages = $managerConnections = $replyPayload = $staleWorkers = $staleRecord = $workerRecord = $killReply = array();
-  $messagesReceived = $messageIndex = $allocatedBudget = $newExpectedRuntime = 0;
-  $lastPollTime = $lastReapTime = $lastSweepTime = $locationsSwept = $entriesDropped = 0;
-  $environmentIsReady = $dataIsProtected = FALSE;
-  $environmentFindings = array();
-  $exposureStatus = $exposureDetail = '';
-  $socketPath = buildManagerSocketPath('resource-manager');
-  list ($serverIsOpen, $socketServer) = openManagerSocketServer($socketPath);
-  if (!$serverIsOpen) errorEntry('The Resource Manager could not open its socket!', 31002, TRUE);
-  else {
-    logEntry('Resource Manager started. Budget, worker registry & session map are held in memory.');
-    // / A session map entry is kept a little longer than a session can survive a sweep.
-    $keepRunning = TRUE;
-    while ($keepRunning) {
-      // / Repoll the host on the configured interval & recompute from the live registry.
-      if ((time() - $lastPollTime) >= (int)$ResourcePollInterval) {
-        $allocatedBudget = 0;
-        foreach ($workerRegistry as $workerRecord) $allocatedBudget = $allocatedBudget + (int)$workerRecord['ConversionCost'];
-        list ($resourcesPolled, $systemResources) = pollSystemResources();
-        list ($budgetCalculated, $resourceBudget) = calculateResourceBudget($systemResources, $allocatedBudget);
-        if (!$resourcesPolled) warningEntry('The Resource Manager could not poll system resources. The budget was not adjusted.');
-        if ($Verbose && $budgetCalculated) logEntry('Resource Manager recalculated the budget. Load '.$systemResources['LoadPercentage'].'%, memory '.$systemResources['MemoryUsedPercentage'].'%, remaining '.$resourceBudget['RemainingBudget'].' of '.$resourceBudget['TotalBudget'].', tracked '.count($workerRegistry).'.');
-        $lastPollTime = time(); }
-      // / Find what has outlived its runtime & hand each one to the Worker Manager.
-      if ((time() - $lastReapTime) >= (int)$WorkerReapInterval) {
-        list ($sweepCompleted, $staleWorkers) = findStaleWorkers($workerRegistry, (int)$WorkerStaleGracePeriod);
-        foreach ($staleWorkers as $staleToken => $staleRecord) {
-          warningEntry('Reaping worker '.$staleRecord['WorkerPid'].'. '.$staleRecord['StaleReason'].'.');
-          sendManagerMessage(buildManagerSocketPath('worker-manager'), array('RequestType' => 'kill', 'WorkerPid' => (int)$staleRecord['WorkerPid']), 'internal', (int)$ManagerSocketTimeout);
-          releaseTrackedWorker($workerRegistry, $staleToken); }
-        // / Bound the session map so a listener that runs for months does not grow forever.
-        $entriesDropped = evictExpiredSessionLocations($sessionLocations, ((int)$DeleteThreshold * 60) + 3600);
-        if ($Verbose && $entriesDropped > 0) logEntry('Dropped '.$entriesDropped.' expired session location entr(ies). '.count($sessionLocations).' remain.');
-        $lastReapTime = time(); }
-      // / Sweep every configured data location on the storage interval.
-      if ((int)$StorageCleanupInterval > 0 && (time() - $lastSweepTime) >= (int)$StorageCleanupInterval) {
-        list ($sweepCompleted, $locationsSwept) = cleanEveryConvertLoc();
-        if (!$sweepCompleted) warningEntry('A scheduled data location sweep did not complete cleanly.');
-        else logEntry('Scheduled sweep completed across '.$locationsSwept.' data location(s).');
-        // / Check the bootstrap script on the same schedule. A script left behind by an
-        // / older release hands arguments to a core that may no longer accept them.
-        verifyBootstrapScript();
-        // / Revalidate the operating environment on the same schedule. A package upgrade, a
-        // / kernel change or an administrator editing a policy can break the sandbox under a
-        // / listener that has been running for weeks, & nothing else would notice until a
-        // / conversion failed for a reason that looked unrelated.
-        // / This REPORTS only. The listener runs as the web server user & cannot repair.
-        list ($environmentIsReady, $environmentFindings) = validateOperatingEnvironment();
-        if (!$environmentIsReady) warningEntry('The operating environment has degraded. The sandbox is unavailable & conversions requiring it will be refused. Run the -fp argument as root.');
-        else if ($Verbose) logEntry('Operating environment revalidated. '.count($environmentFindings).' check(s) passed.');
-        // / Re-prove that the web served DATA tree still hands out inert downloads.
-        // /
-        // / This is not a check that can be done once at install time.
-        // / The protection lives in web server configuration, & web server configuration is
-        // / edited by people & replaced by package upgrades long after this application was
-        // / installed. Turning AllowOverride off, moving the vhost, adding a reverse proxy
-        // / that drops response headers, or migrating from Apache to nginx each re-open this
-        // / silently. There is no error, no failed conversion & nothing in any log; the only
-        // / observable difference is that an uploaded SVG starts executing again.
-        // / So it is re-established on the same schedule as everything else that can rot,
-        // / by asking the server rather than by reading a file off the disk.
-        // /
-        // / This REPORTS only, like every other check in this block. The listener runs as
-        // / the web server user, cannot edit server configuration & must not try.
-        // / The exposure check is part of validateOperatingEnvironment() above & is not run
-        // / a second time here. Its status is read back out of the findings so the listener
-        // / can say the right thing about it, because the three outcomes need three
-        // / different sentences & a degraded environment warning covers none of them.
-        $exposureStatus = environmentFindingStatus($environmentFindings, 'DATA exposure');
-        if ($exposureStatus === 'EXPOSED') warningEntry('The DATA directory is EXPOSED. Uploaded files are served as renderable documents rather than as downloads. Run the -fp argument as root & apply the rules in the server configuration. See Documentation/ABOUT_DATA_DIRECTORY_PROTECTION.txt.');
-        // / A broken tree is an outage rather than an exposure & is worth saying so plainly.
-        // / Every download & every share link is failing while this is true.
-        else if ($exposureStatus === 'BROKEN') warningEntry('The DATA directory is returning a server error, so no download & no share link works. Check the web server error log for a line naming DATA/.htaccess. Deleting that file restores service.');
-        else if ($exposureStatus !== 'ok') warningEntry('The exposure of the DATA directory could not be established. It reported '.$exposureStatus.'.');
-        else if ($Verbose) logEntry('DATA directory exposure revalidated. The tree serves inert content.');
-        $lastSweepTime = time(); }
-      list ($messagesReceived, $managerMessages, $managerConnections) = receiveManagerMessages($socketServer, 'internal', (int)$ManagerMessageBatchSize, (int)$ManagerSocketTimeout);
-      $messageIndex = 0;
-      while ($messageIndex < $messagesReceived) {
-        $replyPayload = array('Approved' => FALSE, 'Reason' => 'Unrecognized resource request.');
-        if (isset($managerMessages[$messageIndex]['RequestType'])) {
-          // / A data location request. Sticky for the life of the session.
-          if ($managerMessages[$messageIndex]['RequestType'] === 'convertloc') {
-            $sessionConvertLoc = resolveSessionLocation($sessionLocations, ($managerMessages[$messageIndex]['DailyHash'] ?? ''), ($managerMessages[$messageIndex]['SessionHash'] ?? ''));
-            $replyPayload = array('Approved' => TRUE, 'Reason' => 'Resolved.', 'ConvertLoc' => $sessionConvertLoc); }
-          // / A budget request. Approve, register & issue a token the worker returns later.
-          else if ($managerMessages[$messageIndex]['RequestType'] === 'budget') {
-            list ($requestApproved, $denialReason) = evaluateBudgetRequest($resourceBudget, $workerRegistry, ($managerMessages[$messageIndex]['ConversionCost'] ?? 0), ($managerMessages[$messageIndex]['ExpectedRuntime'] ?? 0));
-            if (!$requestApproved) $replyPayload = array('Approved' => FALSE, 'Reason' => $denialReason);
-            else {
-              list ($workerWasRegistered, $budgetToken) = registerTrackedWorker($workerRegistry, ($managerMessages[$messageIndex]['WorkerPid'] ?? 0), ($managerMessages[$messageIndex]['ConversionCost'] ?? 0), ($managerMessages[$messageIndex]['ExpectedRuntime'] ?? 0));
-              if (!$workerWasRegistered) $replyPayload = array('Approved' => FALSE, 'Reason' => 'The worker registry could not be updated.');
-              else {
-                list ($limitsWereScaled, $scaledLimits) = scaleConversionLimits($systemResources, count($workerRegistry));
-                $replyPayload = array('Approved' => TRUE, 'Reason' => 'Approved.', 'BudgetToken' => $budgetToken, 'Limits' => ($limitsWereScaled ? $scaledLimits : array()));
-                if ($Verbose) logEntry('Resource Manager approved worker '.(int)($managerMessages[$messageIndex]['WorkerPid'] ?? 0).' at cost '.(int)($managerMessages[$messageIndex]['ConversionCost'] ?? 0).'. Token '.$budgetToken.'.'); } } }
-          // / A completion notice. The budget is reclaimed immediately.
-          else if ($managerMessages[$messageIndex]['RequestType'] === 'release') {
-            $workerWasReleased = releaseTrackedWorker($workerRegistry, ($managerMessages[$messageIndex]['BudgetToken'] ?? ''));
-            $replyPayload = array('Approved' => $workerWasReleased, 'Reason' => $workerWasReleased ? 'Released.' : 'That budget token is not tracked.');
-            if ($Verbose) logEntry('Resource Manager released a token. Reclaimed: '.($workerWasReleased ? 'yes' : 'no').'. Tracked now '.count($workerRegistry).'.'); }
-          // / A runtime extension, against the configured ceiling & extension count.
-          else if ($managerMessages[$messageIndex]['RequestType'] === 'extend') {
-            list ($extensionApproved, $newExpectedRuntime) = extendTrackedWorker($workerRegistry, ($managerMessages[$messageIndex]['BudgetToken'] ?? ''), ($managerMessages[$messageIndex]['RequestedSeconds'] ?? 0));
-            $replyPayload = array('Approved' => $extensionApproved, 'Reason' => $extensionApproved ? 'Extended.' : 'The extension was refused.', 'ExpectedRuntime' => $newExpectedRuntime); }
-          // / A command line request for live figures. Nothing on disk can answer this.
-          else if ($managerMessages[$messageIndex]['RequestType'] === 'status') {
-            list ($limitsWereScaled, $scaledLimits) = scaleConversionLimits($systemResources, count($workerRegistry));
-            $replyPayload = array('Approved' => TRUE, 'Reason' => 'Reported.', 'TrackedWorkers' => count($workerRegistry), 'SessionLocations' => count($sessionLocations), 'Budget' => $resourceBudget, 'Limits' => ($limitsWereScaled ? $scaledLimits : array())); }
-          // / A command line request to end every tracked worker.
-          else if ($managerMessages[$messageIndex]['RequestType'] === 'kill-tracked') {
-            $replyPayload = array('Approved' => TRUE, 'Reason' => 'Ended '.killTrackedWorkers($workerRegistry).' tracked worker(s).'); } }
-        replyToManagerMessage($managerConnections[$messageIndex], $replyPayload, 'internal');
-        $messageIndex++; } }
-    $ResourceManagerExitedCleanly = TRUE; }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $serverIsOpen, $keepRunning, $resourcesPolled, $budgetCalculated, $requestApproved, $workerWasRegistered, $workerWasReleased, $extensionApproved, $sweepCompleted, $messageWasDelivered, $socketPath, $denialReason, $budgetToken, $sessionConvertLoc, $staleToken, $systemResources, $resourceBudget, $workerRegistry, $sessionLocations, $managerMessages, $managerConnections, $replyPayload, $staleWorkers, $staleRecord, $workerRecord, $killReply, $scaledLimits, $limitsWereScaled, $environmentIsReady, $environmentFindings, $dataIsProtected, $exposureStatus, $exposureDetail, $messagesReceived, $messageIndex, $allocatedBudget, $newExpectedRuntime, $lastPollTime, $lastReapTime, $lastSweepTime, $locationsSwept, $entriesDropped);
-  return $ResourceManagerExitedCleanly; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to run the Worker Manager loop.
-// / Accepts no arguments & does not return until the process is terminated.
-// / Returns TRUE when the loop exited cleanly.
-// / Worker Manager is the only component that may end a process without negotiation.
-function runWorkerManager() {
-  // / Set variables.
-  global $ManagerSocketTimeout, $ManagerMessageBatchSize, $Verbose, $EnableMemoryProtection;
-  $WorkerManagerExitedCleanly = FALSE;
-  $socketServer = FALSE;
-  $serverIsOpen = $keepRunning = $processWasTerminated = FALSE;
-  $socketPath = '';
-  $managerMessages = $managerConnections = $replyPayload = array();
-  $messagesReceived = $messageIndex = $killedCount = 0;
-  $socketPath = buildManagerSocketPath('worker-manager');
-  list ($serverIsOpen, $socketServer) = openManagerSocketServer($socketPath);
-  if (!$serverIsOpen) errorEntry('The Worker Manager could not open its socket!', 31003, TRUE);
-  else {
-    logEntry('Worker Manager started.');
-    $keepRunning = TRUE;
-    while ($keepRunning) {
-      list ($messagesReceived, $managerMessages, $managerConnections) = receiveManagerMessages($socketServer, 'internal', (int)$ManagerMessageBatchSize, (int)$ManagerSocketTimeout);
-      $messageIndex = 0;
-      while ($messageIndex < $messagesReceived) {
-        $replyPayload = array('Approved' => FALSE, 'Reason' => 'Unrecognized worker request.');
-        if (isset($managerMessages[$messageIndex]['RequestType'])) {
-          if ($managerMessages[$messageIndex]['RequestType'] === 'kill') {
-            $processWasTerminated = terminateWorkerProcess(($managerMessages[$messageIndex]['WorkerPid'] ?? 0), TRUE, ($managerMessages[$messageIndex]['ProcessStartTime'] ?? 0));
-            if ($Verbose) logEntry('Worker Manager ended process '.(int)($managerMessages[$messageIndex]['WorkerPid'] ?? 0).'. Result: '.($processWasTerminated ? 'OK' : 'FAILED').'.');
-            $replyPayload = array('Approved' => $processWasTerminated, 'Reason' => $processWasTerminated ? 'Terminated.' : 'The process could not be terminated.'); }
-          else if ($managerMessages[$messageIndex]['RequestType'] === 'kill-every') {
-            $killedCount = killEveryWorker();
-            $replyPayload = array('Approved' => TRUE, 'Reason' => 'Terminated '.$killedCount.' process(es).', 'KilledCount' => $killedCount); } }
-        replyToManagerMessage($managerConnections[$messageIndex], $replyPayload, 'internal');
-        $messageIndex++; } }
-    $WorkerManagerExitedCleanly = TRUE; }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $serverIsOpen, $keepRunning, $processWasTerminated, $socketPath, $managerMessages, $managerConnections, $replyPayload, $messagesReceived, $messageIndex, $killedCount);
-  return $WorkerManagerExitedCleanly; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
 // / A function to terminate every tracked worker.
 // / Accepts no arguments.
 // / Returns the number of processes terminated.
@@ -1137,41 +1209,6 @@ function killTrackedWorkers(&$workerRegistry) {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $workerToken, $workerRecord, $replyPayload, $messageWasDelivered);
   return $WorkersKilled; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to terminate every PHP process owned by the web server user.
-// / Accepts no arguments.
-// / Returns the number of processes terminated.
-// / This ends unrelated applications sharing the host. It is never called automatically.
-function killEveryWorker() {
-  // / Set variables.
-  global $ApacheUser, $ManagerSocketTimeout, $EnableMemoryProtection;
-  $ProcessesKilled = 0;
-  $processOutput = array();
-  $processExitCode = 1;
-  $processLine = '';
-  $processPid = 0;
-  $protectedPids = array();
-  $managerState = array();
-  $stateWasRead = FALSE;
-  // / The listener must survive its own instruction, so every manager is excluded.
-  list ($stateWasRead, $managerState) = readManagerState('managers');
-  $protectedPids[] = getmypid();
-  if (isset($managerState['CoreManagerPid'])) $protectedPids[] = (int)$managerState['CoreManagerPid'];
-  if (isset($managerState['Subordinates'])) foreach ($managerState['Subordinates'] as $processLine) $protectedPids[] = (int)$processLine;
-  exec('pgrep -u '.escapeshellarg($ApacheUser).' php 2>/dev/null', $processOutput, $processExitCode);
-  foreach ($processOutput as $processLine) {
-    $processPid = (int)trim($processLine);
-    if ($processPid > 1 && !in_array($processPid, $protectedPids, TRUE)) {
-      if (terminateWorkerProcess($processPid, TRUE, 0)) $ProcessesKilled++; } }
-  // / The registry lives in Resource Manager memory, so it is told to forget rather than
-  // / having a file emptied underneath it.
-  sendManagerMessage(buildManagerSocketPath('resource-manager'), array('RequestType' => 'kill-tracked'), 'internal', (int)$ManagerSocketTimeout);
-  warningEntry('Every process owned by '.$ApacheUser.' was terminated on request. '.$ProcessesKilled.' process(es) ended. Unrelated applications on this host were affected.');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $processOutput, $processExitCode, $processLine, $processPid, $protectedPids, $managerState, $stateWasRead);
-  return $ProcessesKilled; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1332,7 +1369,6 @@ function startCoreManagerListener() {
   return $ListenerWasStarted; }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to stop the listener & every subordinate manager.
 // / Accepts no arguments.
@@ -1453,7 +1489,9 @@ function dispatchManagerRole($managerRole, $suppliedKey, $keyWasTransported = TR
   $RoleWasDispatched = FALSE;
   $keyIsValid = FALSE;
   $cleanRole = preg_replace('/[^a-z\-]/', '', strtolower((string)$managerRole));
-  $keyPurpose = '';
+  $keyPurpose = $managerVersion = '';
+  $managerFiles = array();
+  $managerIsAvailable = FALSE;
   if ($cleanRole === 'core-manager') $keyPurpose = 'start-core-manager';
   else $keyPurpose = 'start-manager-'.$cleanRole;
   $keyIsValid = validateStartupKey($keyPurpose, $suppliedKey, $keyWasTransported);
@@ -1461,13 +1499,26 @@ function dispatchManagerRole($managerRole, $suppliedKey, $keyWasTransported = TR
   else {
     prepareManagerSocketDir();
     logEntry('A '.$cleanRole.' process started as '.getmypid().' & validated its startup key.');
-    if ($cleanRole === 'core-manager') $RoleWasDispatched = runCoreManager();
-    else if ($cleanRole === 'request-manager') $RoleWasDispatched = runRequestManager();
-    else if ($cleanRole === 'resource-manager') $RoleWasDispatched = runResourceManager();
-    else if ($cleanRole === 'worker-manager') $RoleWasDispatched = runWorkerManager();
-    else errorEntry('An unrecognized manager role was requested!', 31007, TRUE); }
+    // / The role's own file is loaded here & nowhere else.
+    // / A process running as one role never parses the other three, & a request that is
+    // / not a manager at all never parses any of them.
+    // / A role name maps to its file by a table rather than by assembling a filename from
+    // / the role, because a name that assembles into a path is a name somebody can steer.
+    $managerFiles = array(
+      'core-manager' => 'coreManager.php',
+      'resource-manager' => 'resourceManager.php',
+      'worker-manager' => 'workerManager.php',
+      'request-manager' => 'requestManager.php');
+    if (!isset($managerFiles[$cleanRole])) errorEntry('An unrecognized manager role was requested!', 31007, TRUE);
+    else {
+      list ($managerIsAvailable, $managerVersion) = loadEngineManager($managerFiles[$cleanRole]);
+      if (!$managerIsAvailable) errorEntry('The manager subcomponent for this role could not be loaded!', 31007, TRUE);
+      else if ($cleanRole === 'core-manager') $RoleWasDispatched = runCoreManager();
+      else if ($cleanRole === 'request-manager') $RoleWasDispatched = runRequestManager();
+      else if ($cleanRole === 'resource-manager') $RoleWasDispatched = runResourceManager();
+      else $RoleWasDispatched = runWorkerManager(); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $keyIsValid, $cleanRole, $keyPurpose, $managerRole, $suppliedKey, $keyWasTransported);
+  purgeSensitiveMemory($EnableMemoryProtection, $managerFiles, $managerIsAvailable, $managerVersion, $keyIsValid, $cleanRole, $keyPurpose, $managerRole, $suppliedKey, $keyWasTransported);
   return $RoleWasDispatched; }
 // / -----------------------------------------------------------------------------------
 
@@ -1498,3 +1549,5 @@ function reportListenerStatus() {
   purgeSensitiveMemory($EnableMemoryProtection, $managerState, $replyPayload, $stateWasRead, $messageWasDelivered);
   return array($ListenerIsRunning, $ListenerStatus); }
 // / -----------------------------------------------------------------------------------
+
+?>

@@ -1,0 +1,181 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 9/4/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v3.8.9.
+This plain text file describes how HRConvert2 writes a log, and why it writes it that way.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+Logging requires a writable directory. Everything else it needs, it does without.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Three Tiers--
+
+  logEntry()      Op-Act      Normal activity. The caller suppresses it when not verbose.
+  warningEntry()  WARNING!!!  Always written. Carries no number. Can never halt.
+  errorEntry()    ERROR!!!    Always written. Carries a documented number. May halt.
+
+A log is normal operational activity.
+A warning is something an administrator should know is happening.
+It does not mean anything needs to change & it can never stop execution.
+An error reports a failure that alters what this application does.
+Anything an attacker caused & this application handled correctly is a warning.
+A blocked SSRF attempt, a removed file reference & a refused stream are all warnings.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About One Writer--
+
+THREE TIERS, ONE COMPOSER & ONE WRITER.
+
+  composeLogEntry()  Builds the line & gives it a sequence number.
+  emitLogEntry()     Writes the line, or holds it until there is somewhere to write.
+  flushLogBuffer()   Empties whatever was held, in order.
+
+The three tiers were three near identical copies of the same formatting until v3.8.9.
+Each one recomputed the timestamp, resolved the session & assembled the line itself.
+A change to any of that had to be made three times & was once made in only two.
+The tiers are now nine lines each & the thing they share is written down once.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Sequence Number--
+
+EVERY ENTRY IS NUMBERED FROM ZERO & THE NUMBER COUNTS ENTRIES RATHER THAN SECONDS.
+
+  Op-Act, 00042, September 4, 2026, 6:30 am, <session>: Converting model.
+
+A gap in that sequence is the only evidence that an entry was lost.
+Nothing else in a logfile can prove a line was written & never arrived.
+Two entries stamped with the same second are otherwise impossible to order.
+A conversion writes several entries inside one second routinely.
+
+The counter starts at zero when the process starts rather than when the day starts.
+A manager process therefore counts from its own launch & a web request from its own arrival.
+A number is meaningful within one process & means nothing across two.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Buffer--
+
+AN ENTRY RAISED BEFORE THERE IS A LOGFILE IS HELD RATHER THAN LOST.
+
+verifyLogs() runs a long way into the boot & several hundred entries are raised before it.
+Those entries used to go to the server error log.
+They sat there apart from everything around them & were almost never found.
+They are held in a buffer now & written in order the moment a logfile exists.
+verifyLogs() empties the buffer itself, so nothing waits for the next entry to arrive.
+
+THE BUFFER IS BOUNDED AT FIVE HUNDRED & TWELVE ENTRIES.
+A process that never reaches a logfile must not grow until it is killed for memory.
+The entries that explain a boot failure are the early ones rather than the thousandth.
+An overflow leaves a line in the log saying older entries were discarded.
+
+quickDie() EMPTIES THE BUFFER TO WHATEVER CHANNEL EXISTS BEFORE IT HALTS.
+A halt during boot is exactly the case where the entries leading up to it explain the halt.
+It is also exactly the case where there was nowhere to have written them.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Log Files Being Named For A Role--
+
+  HRConvert2_Web_0_<date>.txt       A web request.
+  HRConvert2_Manager_0_<date>.txt   A manager process.
+  HRConvert2_Cli_0_<date>.txt       Anything run from the command line.
+
+The role is decided in verifyLogs() before the filename is built.
+Web is the default, because a request is what this application mostly is.
+
+SEPARATING BY ROLE IS THE MAIN DEFENCE AGAINST TWO PROCESSES INTERLEAVING ONE LINE.
+Several processes append to a logfile at the same time.
+A web request, four manager processes & any worker they supervise all write at once.
+An append shorter than the pipe buffer is atomic on Linux & most entries are.
+A stream inspection dump, a compiler log or an FFMPEG failure is not.
+Those are exactly the entries worth not corrupting.
+LOCK_EX in emitLogEntry() closes the gap that remains & costs nothing at this volume.
+
+It is also a readability decision & that is not a small one.
+A manager writing every few seconds for a week buried every web request beside it.
+
+TWO ENGINE SETTINGS SPLIT THE FILES FURTHER & BOTH ARE FALSE FOR HRConvert2.
+$EnginePerManagerLogFiles gives each manager role a file named for the role, so the
+listener & the three managers stop sharing one.
+$EnginePerWorkerLogFiles gives each tracked worker a file named from an identifier the
+application supplies before verifyLogs runs.
+Four managers sharing one file is readable & four files is four things to open, so the
+first stays off until a manager is writing enough to matter.
+One file per conversion on a busy server is a directory nobody can read, so the second is
+for an application that dispatches long running work rather than for this one.
+Turning either on removes the possibility of two processes interleaving rather than
+guarding against it, which is why they exist at all.
+
+THERE IS NO Worker ROLE YET & THAT IS DELIBERATE.
+Nothing spawns a PHP worker today. A detached conversion spawns FFMPEG rather than PHP.
+The role exists in the naming for when HRProtect dispatches workers of its own.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Whether A Web Request Is A Worker--
+
+IT IS ONE TO THE BUDGET & IT IS NOT ONE TO THE LOG. BOTH ARE CORRECT.
+
+A request that converts something asks the listener for budget, receives a token & is
+registered by registerTrackedWorker() against that token. It is a worker in every sense
+the resource machinery cares about, & findStaleWorkers() will notice if it overruns.
+
+The log role is decided in verifyLogs(), which runs long before anybody knows whether this
+request will convert anything at all. A request that only uploads a file never becomes a
+worker & a request that converts one does. The same code path produces both.
+
+So the role names the KIND OF PROCESS rather than what it turned out to do.
+A web request writes to the Web log whether or not it ends up holding a budget token.
+That is the right level for a filename, & the budget token is in the entries themselves for
+anybody following one conversion through.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Why Logging Is Kernel Rather Than Engine--
+
+IT WAS CONSIDERED FOR THE ENGINE & MOVING IT WOULD HAVE BEEN WRONG.
+
+An Engine that fails to load costs an application the capability the Engine provides.
+Every other component degrades that way & the loss is reported.
+An application whose logging lived in the Engine would lose the ability to report anything,
+at exactly the moment there was something worth reporting.
+
+Logging is also used several hundred times before the Engine is loaded at all.
+The Engine is verified late on purpose, because a failure to verify it is worth a warning
+that has somewhere to be written.
+
+The Engine may call logEntry, warningEntry, errorEntry & quickDie freely.
+The kernel is the substrate both the Engine & the application stand on, & it is byte
+identical in every application, so an Engine calling it is not coupled to any one of them.
+See Documentation/ABOUT_ENGINE_CONTRACT.txt for the full list of kernel services.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Rotation--
+
+$MaxLogSize in config.php decides when a logfile is finished with.
+verifyLogs() advances the increment in the filename until it finds one under that size.
+A rotation therefore happens at the start of a request rather than in the middle of one.
+No entry is ever split across two files.
+
+ClamAV writes its own log & is rotated the same way by the same function.
+It is named rather than created there, because ClamAV creates it when it first scans.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

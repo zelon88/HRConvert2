@@ -1,0 +1,247 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRProprietary Engine, Copyright on 9/4/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+The HRProprietary Engine provides a coherent application environment. It is bundled with an application rather than installed beside one.
+
+FILE INFORMATION ...
+v3.8.9.
+This plain text file is the contract between an application and the Engine it bundles.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+The Engine requires PHP. Everything else it uses, it locates at runtime and reports when it cannot find.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About This Contract--
+
+THE ENGINE IS BUNDLED, NOT INSTALLED.
+
+It lives at Resources/Engine inside the application that carries it. It is not on a shared
+path, it is not a system package & no other application can reach it. An application ships
+with the Engine it was tested against & the two move together, so the EXACT version pin
+between them is free rather than fragile.
+
+The benefit is not one a user notices at runtime. It is that two applications stop being
+one codebase kept in step by hand, & that an application keeps working until the people who
+maintain it decide to update the copy it carries.
+
+THE APPLICATION IS THE ENTRY POINT. THE ENGINE IS NOT A FRAMEWORK.
+An application boots, verifies its components, loads the Engine & calls into it. The Engine
+never calls application code. An Engine that needed to would be an Engine that works for
+exactly one application, which is the situation this exists to leave behind.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Three Tiers--
+
+  THE KERNEL   Lives in the application entry file. Copied between applications verbatim.
+               quickDie, purgeSensitiveMemory, redeclare, readComponentVersion,
+               verifyCoreComponent, & the whole of logging.
+
+  THE ENGINE   Resources/Engine/engine.php. The environment every application needs.
+
+  THE APP      Everything that makes one application different from another.
+
+THE KERNEL CANNOT MOVE INTO THE ENGINE & THE REASON IS MECHANICAL RATHER THAN STYLISTIC.
+verifyCoreComponent() is what loads the Engine, so it cannot be inside the file it loads.
+It calls purgeSensitiveMemory(), so that cannot be either. Something has to be able to
+report that loading the Engine failed, which means a halt & a log line must exist first.
+
+LOGGING IS KERNEL & THAT IS A DECISION RATHER THAN AN OVERSIGHT.
+It was considered for the Engine & moving it would have been wrong.
+An Engine that fails to load costs an application the capability it provides.
+Every other component degrades that way & the loss is reported.
+An application whose logging lived in the Engine would lose the ability to report anything.
+It would lose it at exactly the moment there was something worth reporting.
+Logging is also needed three hundred times before the Engine is loaded at all.
+The Engine is verified late, because a failure to verify it is worth a warning that has
+somewhere to be written.
+
+THE ENGINE MAY CALL THE KERNEL. THE ENGINE MAY NOT CALL THE APPLICATION.
+That distinction is the whole of the direction rule & an earlier draft of this document
+stated it too broadly.
+The kernel is the substrate both the Engine & the application stand on.
+It is byte identical in every application, so an Engine calling it is not coupled to any
+one of them.
+An Engine function may therefore call logEntry, warningEntry, errorEntry, quickDie,
+purgeSensitiveMemory & redeclare freely.
+An Engine function may not call convertFiles, buildGUI or anything else that only
+HRConvert2 has.
+
+THE KERNEL SERVICES, WHICH EVERY APPLICATION SUPPLIES & THE ENGINE MAY USE.
+  quickDie              Halts, reports & empties the log buffer to whatever channel exists.
+  logEntry              Records normal activity. Suppressed by the caller when not verbose.
+  warningEntry          Records something an operator should know. Never halts.
+  errorEntry            Records a numbered failure. Halts when it is told to.
+  purgeSensitiveMemory  Shreds the variables a function is finished with.
+  redeclare             Resets a loop variable without leaving the old value behind.
+  readComponentVersion  Reads a version out of a file without executing the file.
+  verifyCoreComponent   Judges a component & loads it, or reports why it did not.
+
+That is not duplicated logic. It is the thing that makes an application an application. It
+carries its own version stamp so that drift between two applications is visible rather than
+discovered.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About What The Application Must Supply--
+
+SIX VALUES. THE CONTRACT IS DELIBERATELY SMALL.
+
+  $InstLoc                Absolute path to the application root. The Engine resolves every
+                          path it needs from this & derives none of them from __FILE__,
+                          because an application may be relocated & the Engine should not
+                          have an opinion about that.
+  $LogDir                 Absolute path to where logs are written.
+  $SecretKey              The install secret. Startup keys are derived from it.
+  $ApacheUser             The account the web server runs as.
+  $Verbose                Whether ordinary activity is logged.
+  $EnableMemoryProtection Whether sensitive memory is shredded at every return.
+
+THAT IS THE WHOLE CONTRACT. Anything else the Engine needs, it works out for itself.
+
+THE ENGINE DERIVES THESE RATHER THAN ASKING FOR THEM.
+$DirSep, $Lol, $CurrentUser, $RunningAsRoot, $RunningFromCLI & $RunningInContainer are all
+properties of the host rather than decisions an application makes. Asking an application to
+supply them would mean every application computing the same answer slightly differently,
+which is the shape of bug this whole exercise exists to remove.
+
+EVERY ENGINE READ OF A CONTRACT VALUE USES isset() WITH A LOCAL FALLBACK.
+A newer Engine reading a value an older application never supplied produces a notice, & a
+notice inside an AJAX response is read by the interface as a line of the reply. The fallback
+is the same shape as the lowercase $defaultGui sitting beside the global $DefaultGui, & it
+is what lets an Engine be newer than the application that bundles it without either of them
+knowing.
+
+--Engine Strict Contract-- in the Engine configuration inverts this while developing. Set it
+TRUE & a missing contract value refuses to load rather than falling back. Ship it FALSE.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Two Configurations--
+
+TWO FILES, ANSWERING DIFFERENT QUESTIONS, READ IN A DELIBERATE ORDER.
+
+  Resources/Engine/engineConfig.php   Which Engine capabilities this application uses.
+                                      Set by a developer. Shipped with the release.
+                                      Replaced by an update.
+
+  Resources/config.php                How this installation behaves.
+                                      Set by an administrator. Kept across an update.
+                                      The only one anybody is ever asked to read.
+
+The Engine configuration is read FIRST, so a setting of the same name in the application
+configuration wins. A developer sets a default & an administrator may still override it,
+where they can see it & where the comments explaining it live.
+
+A VALUE THE APPLICATION MUST NOT BE ABLE TO OVERRIDE DOES NOT BELONG IN A VARIABLE.
+A global is overridable by definition. Something the Engine must decide for itself is a
+constant or the return of a function, not a configuration line that happens to be read
+early.
+
+NAME COLLISION IS THE THING TO WATCH.
+Both files assign uppercase globals into one scope. Engine owned names begin with Engine.
+An application setting that begins with Engine is a mistake waiting to be discovered by
+whichever file happened to load second.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Capability Gates--
+
+EVERY CAPABILITY IS A GATE RATHER THAN A FEATURE REQUEST.
+
+A capability that is disabled is not loaded, is not verified & is not reported. An
+application that sandboxes nothing should not be told its sandbox is broken.
+
+A capability that is enabled still degrades the way everything else in this project
+degrades. Enabling it says this application uses it, not that it must be present.
+
+  $EngineEnableEnvironment            Detecting the host.
+  $EngineEnableDependencyLocation     Finding an executable & reporting where it was found.
+  $EngineEnableStartupKeys            Proving a process was started by this application.
+  $EngineEnableEnvironmentValidation  Reporting whether the host is configured correctly.
+  $EngineEnableResourceLimits         Bounding what one unit of work may consume.
+
+The list grows as applications need more. It does not grow speculatively. A gate with
+nothing behind it is a gate somebody will eventually turn on expecting something to happen.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About What Has Moved So Far--
+
+v3.8.9 MOVED NINE FUNCTIONS. NOTHING ELSE CHANGED.
+
+  systemdIsUsable               Whether a service manager is present & usable.
+  environmentFindingStatus      Formats an environment finding for a report.
+  parseConversionLimit          Reads a per operation resource limit.
+  deriveStartupKey              Mints a key proving a process is ours.
+  validateStartupKey            Judges one, & spends it when it crossed a boundary.
+  consumeStartupKey             The ledger of spent keys.
+  readTransportedStartupKey     Reads a key out of the environment & clears it.
+  validateOperatingEnvironment  Reports whether the host is configured correctly.
+
+Every one was already engine work sitting in an application file. The measurement that
+decided this was simple. coreManager.php calls fourteen functions defined in the core, &
+eleven of them would serve a virus scanner unchanged.
+
+THOSE THREE HAVE SINCE MOVED, RENAMED FOR THE CONCEPT RATHER THAN THE APPLICATION.
+enumerateDataLocations, resolveDataLocation & cleanDataLocation, with the session counter
+they share. HRConvert2 calls it a Convert Location & ScanCore would call it a quarantine.
+Nothing was added to the contract to do it. Everything the application knows is passed in,
+which is why they carry more arguments than they otherwise would.
+
+cleanDataLocation authorizes a delete differently as a result & the change is worth reading.
+It took a NAME, matched it against a short list it knew, then checked the path that name
+referred to. It takes the list of paths the caller is permitted to clean instead.
+That is no weaker, because an arbitrary path is still refused for not being in the list, &
+it no longer ties a generic cleaner to one application's vocabulary.
+
+ONE FUNCTION MOVED INTO THE ENGINE & MOVED BACK, WHICH IS WORTH RECORDING.
+locateDependency was moved in the first pass & returned to the kernel in a later one.
+Finding an executable is a primitive that boot code needs before the Engine can exist.
+verifyInstallation reaches it through verifySandboxPolicy & unloadApparmorProfile, & that
+path runs before any component has been verified.
+It was found by a call order check that follows the call graph rather than by reading, &
+Documentation/Build/hrconvert2-check.py is that check.
+
+MANAGER SUBCOMPONENTS ARE DECLARED & THE DIRECTORY IS STILL EMPTY.
+getAcceptedManagers names four files under Resources/Engine/Managers & loadEngineManager
+verifies & loads one. Nothing is there yet.
+Resources/coreManager.php still holds all four roles & still cannot be deleted.
+It is free of application dependencies, which is what makes absorbing it a file move rather
+than an extraction. It is not the move.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Adding To The Engine--
+
+FOUR QUESTIONS. A NO TO ANY OF THEM MEANS IT STAYS IN THE APPLICATION.
+
+  1  WOULD A DIFFERENT APPLICATION WANT THIS UNCHANGED?
+     Not with a rename & not with a parameter added. Unchanged. A virus scanner & a job
+     dispatcher are the two to hold it against.
+
+  2  DOES IT CALL APPLICATION CODE?
+     If it does, it is not Engine work yet. Either what it calls moves too, or the value it
+     needs becomes a parameter.
+
+  3  IS IT REACHABLE BEFORE THE ENGINE IS LOADED?
+     Anything the boot path touches belongs in the kernel or in the application. The Engine
+     cannot provide what is needed to load the Engine.
+
+  4  DOES IT READ A GLOBAL THAT IS NOT IN THE CONTRACT?
+     Then either the contract grows, which is a decision, or the value becomes a parameter,
+     which usually turns out to be the better answer.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

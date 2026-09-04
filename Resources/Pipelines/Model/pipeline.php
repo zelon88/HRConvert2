@@ -12,15 +12,70 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.8.8.
+// / v3.8.9.
 // / This file is the converter for the Model pipeline. It is loaded by pipelineCore.php
 // / ONLY when a Model conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
-// / Error block 20000 through 20003 belongs to this pipeline. Those numbers came with the code when it
-// / moved out of convertCore.php & they did not change, because operators have read them.
+// / Error block 9000 through 9004 belongs to this pipeline.
+// / Those numbers came with the code when it moved out of convertCore.php.
+// / They did not change, because operators have already read them.
+// / An earlier header claimed 20000 through 20003, which this pipeline never raised.
 // / This pipeline calls verifyModelVersions() & sandboxCommand(), which remain in
 // / convertCore.php. A dependency verifier is core owned, because showVersionInfo()
 // / reports on it whether or not this pipeline is installed.
+// / A note on PyMeshLab, which is bundled at Resources/PyMeshLab.
+// / The bundled module is a compiled extension rather than plain Python.
+// / Its object is named for the interpreter it was built against, as cpython-314.
+// / That tag is chosen by CPython rather than by PyMeshLab.
+// / An import under Python 3.12 only ever considers an object tagged 312.
+// / It also considers one tagged abi3, & one carrying no tag at all.
+// / An object tagged 314 is never opened by a 3.12 interpreter.
+// / Renaming the file does not help, because the code inside it is the problem.
+// / A compiled extension links against symbols & structures that change between versions.
+// / A renamed object would be found & would then crash instead of being skipped.
+// / The stable abi3 interface would avoid this & is not practical for this kind of module.
+// / Python 3.14 is therefore not a requirement of this application.
+// / It is not listed in depends.php & nobody should be asked to install it.
+// / The meshlabserver binary performs the same work & is already a dependency.
+// / A host without a matching interpreter falls back to that binary & warns once.
+// / The system python3 must never be replaced to satisfy this.
+// / A distribution writes its own tooling against the interpreter it ships.
+// / A machine whose package manager cannot run is worse than a slower conversion.
+// / An interpreter may be installed alongside the system one & will then be found.
+// / The bundle is kept even though it is unusable here, & that is deliberate.
+// / MeshLab removed meshlabserver from its own releases in 2022.
+// / This host runs 2020.09 & therefore still has it.
+// / A current distribution ships no meshlabserver at all.
+// / PyMeshLab is the only route on such a host, so the bundle is not dead weight.
+// / resolvePyMeshLabInterpreter() reads whichever tag a future bundle carries.
+// / Replacing the bundle with one built for the local interpreter needs no code change.
+// /
+// / A note on running meshlabserver inside the sandbox.
+// / It links Qt & it initializes GLEW at startup whatever it has been asked to do.
+// / A format conversion that renders nothing still requires an OpenGL context.
+// / The offscreen platform plugin starts Qt & supplies no GL, so it is not enough.
+// / An X server supplies GLX & therefore supplies GL, which is why xvfb-run is used.
+// / Four separate problems stood between that server & a working namespace.
+// / Xvfb needs /tmp/.X11-unix to exist & the sandbox mounts an empty tmpfs at /tmp.
+// / Xvfb will only create that directory when its effective user is root.
+// / Xvfb then checks that the directory is owned by root & rejects it when it is not.
+// / A GPU vendor driver crashed while enumerating devices the sandbox does not expose.
+// / The meshlab sandbox profile answers all four & each answer is commented there.
+// / The profile mounts a tmpfs at the socket path so the directory is already present.
+// / It maps this process to root inside the namespace, which grants nothing on the host.
+// / It names the Mesa vendor file so the GPU driver is never loaded at all.
+// / Software rendering is correct here regardless, because a conversion renders nothing.
+// / None of this was visible until xvfb-run was asked to report the server's own output.
+// / It discards that output by default & reports only that the display was unreachable.
+// / Several rounds were spent reading Qt's guess about a cause rather than the cause.
+// / This path only ever worked unsandboxed, where /tmp is the real one on the host.
+// / A host has a root owned /tmp/.X11-unix already & Xvfb was content with it.
+// / It failed from the day this profile began sandboxing & nobody saw it fail.
+// / The normalize route falls through to Assimp when MeshLab produces nothing.
+// / Every model conversion since then silently skipped the normalization step.
+// / A well formed mesh does not care & a non manifold one quietly converts worse.
+// / A fallback that works too well turns a hard failure into a silent regression.
+// /
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
 // / <3 Open-Source
@@ -52,10 +107,46 @@ function buildAssimpCommand($assimpBinary, $inputPath, $outputPath, $targetExten
   $formatIdentifier = '';
   $formatIdentifier = strtolower(trim((string)$targetExtension, '.'));
   if ($formatIdentifier === 'obj') $formatIdentifier = 'objnomtl';
-  $AssimpCommand = escapeshellarg($assimpBinary).' export '.escapeshellarg($inputPath).' '.escapeshellarg($outputPath).' -f'.escapeshellarg($formatIdentifier);
+  // / Standard error is captured. A converter whose failure goes to a stream nothing reads
+  // / produces a timeout & no explanation, which is exactly what an unreadable PyMeshLab
+  // / traceback did. Every retry then repeated a command nobody could see failing.
+  $AssimpCommand = escapeshellarg($assimpBinary).' export '.escapeshellarg($inputPath).' '.escapeshellarg($outputPath).' -f'.escapeshellarg($formatIdentifier).' 2>&1';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $formatIdentifier, $assimpBinary, $inputPath, $outputPath, $targetExtension);
   return $AssimpCommand; }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / A function to find the interpreter that can actually load the bundled PyMeshLab.
+// / Accepts the bundle directory. Returns an interpreter name, or an empty string.
+// / A compiled extension is built against one Python minor version.
+// / It will not load under any other version.
+// / The bundle states which version it needs in the name of its object.
+// / That name is derived here rather than assuming the interpreter is python3.
+// / An interpreter that cannot load an object reports the module as absent.
+// / That message reads as a path problem & is not one.
+// / Deriving the name from the bundle removes the guesswork entirely.
+// / An empty return means no interpreter on this host can load the bundle.
+// / The caller falls back to the MeshLab binary when that happens.
+function resolvePyMeshLabInterpreter($pyMeshLabDir) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $InterpreterName = '';
+  $objectPaths = $tagMatches = array();
+  $candidateName = $objectPath = '';
+  $objectPaths = glob(rtrim((string)$pyMeshLabDir, '/').'/pymeshlab/*.cpython-*.so');
+  if (is_array($objectPaths)) {
+    foreach ($objectPaths as $objectPath) {
+      if (!preg_match('/cpython-(\\d)(\\d+)/', basename($objectPath), $tagMatches)) continue;
+      // / cpython-314 means python3.14. The tag carries no dot & the name does.
+      $candidateName = 'python'.$tagMatches[1].'.'.$tagMatches[2];
+      if (locateDependency($candidateName) !== '') {
+        $InterpreterName = $candidateName;
+        break; } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $objectPaths, $tagMatches, $candidateName, $objectPath, $pyMeshLabDir);
+  return $InterpreterName; }
 // / -----------------------------------------------------------------------------------
 
 
@@ -65,17 +156,57 @@ function buildAssimpCommand($assimpBinary, $inputPath, $outputPath, $targetExten
 // / the output path, in that order. Returns the command as a string.
 // / MeshLab is reachable two ways & the caller should not have to know which is in use.
 // / The bundled PyMeshLab module needs no display server.
-// / The meshlabserver binary does, so it is run under xvfb-run.
+// / The meshlabserver binary needs a real display & is run under xvfb-run.
 // / Both decide the output format from the extension of the path they are given.
-function buildMeshLabCommand($usePyMeshLab, $pyMeshLabDir, $meshlabBinary, $inputPath, $outputPath) {
+// / Returns the command & the environment it needs, in that order.
+// / The variables are returned rather than prefixed onto the command, because bwrap execs
+// / without a shell & would read a NAME=value prefix as the name of a binary.
+// / sandboxCommand() turns them into --setenv when it sandboxes & into a prefix when it
+// / cannot, so this function does not need to know which happened.
+function buildMeshLabCommand($usePyMeshLab, $pyMeshLabDir, $meshlabBinary, $inputPath, $outputPath, $interpreterName) {
   // / Set variables.
-  global $EnableMemoryProtection;
-  $MeshLabCommand = '';
-  if ($usePyMeshLab) $MeshLabCommand = 'python3 -c "import sys; sys.path.insert(0, '.escapeshellarg($pyMeshLabDir).'); import pymeshlab; ms = pymeshlab.MeshSet(); ms.load_new_mesh('.escapeshellarg($inputPath).'); ms.save_current_mesh('.escapeshellarg($outputPath).');"';
-  else $MeshLabCommand = 'xvfb-run -a '.escapeshellarg($meshlabBinary).' -i '.escapeshellarg($inputPath).' -o '.escapeshellarg($outputPath);
+  global $Verbose, $EnableMemoryProtection;
+  $MeshLabCommand = $pythonPrologue = '';
+  $CommandEnvironment = array();
+  if ($usePyMeshLab) {
+    // / The bundled directory is only put on the Python path when it is actually there.
+    // / PyMeshLab is normally a pip package living under /usr, which the sandbox already
+    // / binds, & this application does not ship a copy. Inserting a directory that does not
+    // / exist achieved nothing & made it look as though the module had been provided.
+    // / The bundle is a directory holding a pymeshlab package, so the PARENT goes on the
+    // / path & the import finds the package inside it.
+    // / It also ships its own shared objects under pymeshlab/lib, & the dynamic loader has
+    // / no reason to look there. Without this the compiled extension is found & then fails
+    // / to load, which reports as a missing module & sends everybody looking at sys.path.
+    // / The escaped directory is what sandboxCommand() rewrites, so the suffix is appended
+    // / outside it & survives the rewrite as /res/pymeshlab/lib.
+    if (is_dir((string)$pyMeshLabDir)) {
+      $pythonPrologue = 'import sys; sys.path.insert(0, '.escapeshellarg($pyMeshLabDir).'); ';
+      $CommandEnvironment['LD_LIBRARY_PATH'] = rtrim((string)$pyMeshLabDir, '/').'/pymeshlab/lib'; }
+    $MeshLabCommand = escapeshellarg((string)$interpreterName).' -c "'.$pythonPrologue.'import pymeshlab; ms = pymeshlab.MeshSet(); ms.load_new_mesh('.escapeshellarg($inputPath).'); ms.save_current_mesh('.escapeshellarg($outputPath).');" 2>&1'; }
+  // / meshlabserver needs a real display & the offscreen platform plugin will not do.
+  // / It initializes GLEW at startup whatever it has been asked to do.
+  // / A pure format conversion that renders nothing still requires an OpenGL context.
+  // / Qt starting successfully is not enough, & the offscreen plugin supplies no GL.
+  // / An attempt to use it failed with  GLEW initialization failed: Missing GL version.
+  // / An X server supplies GLX & therefore supplies GL, which is why xvfb-run is here.
+  // / The server is told not to listen on a TCP port.
+  // / The sandbox unshares the network namespace & leaves loopback down.
+  // / An X server binding a port in that namespace fails & takes the display with it.
+  // / xvfb-run then retries the next display number & reports the last one it tried.
+  // / That is why an earlier failure named display 109 rather than the usual 99.
+  // / -e names a file for the X server's own error output.
+  // / xvfb-run discards that output by default & reports only that the display was never
+  // / reached, which is Qt complaining about a symptom rather than the server explaining
+  // / a cause. Several rounds of diagnosis were guesswork for exactly that reason.
+  // / It is attached only under verbose logging, because a working X server still reports
+  // / around thirty keysym warnings from the keymap compiler on every start.
+  // / Those warnings say outright that they are not fatal & they are not worth carrying in
+  // / an ordinary log. A server that fails to start is worth every line it prints.
+  else $MeshLabCommand = 'xvfb-run -a'.($Verbose ? ' -e /dev/stderr' : '').' -s '.escapeshellarg('-screen 0 1280x1024x24 -nolisten tcp').' '.escapeshellarg($meshlabBinary).' -i '.escapeshellarg($inputPath).' -o '.escapeshellarg($outputPath).' 2>&1';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $usePyMeshLab, $pyMeshLabDir, $meshlabBinary, $inputPath, $outputPath);
-  return $MeshLabCommand; }
+  purgeSensitiveMemory($EnableMemoryProtection, $pythonPrologue, $usePyMeshLab, $pyMeshLabDir, $meshlabBinary, $inputPath, $outputPath, $interpreterName);
+  return array($MeshLabCommand, $CommandEnvironment); }
 // / -----------------------------------------------------------------------------------
 
 
@@ -91,7 +222,7 @@ function buildMeshLabCommand($usePyMeshLab, $pyMeshLabDir, $meshlabBinary, $inpu
 // / writes, & Assimp bridging an input MeshLab cannot read before MeshLab writes.
 // / A target neither utility can write is refused before the retry loop is entered.
 // / MeshLab is reachable two ways. The bundled PyMeshLab module needs no display server.
-// / The meshlabserver binary does, so it is run under xvfb-run.
+// / The meshlabserver binary needs a real display & is run under xvfb-run.
 // / PyMeshLab bypasses the meshlabserver binary entirely, so its version cannot be read &
 // / is not checked. Assimp is checked on every path, because every path uses it.
 function convertModels($pathname, $newPathname, $extension) {
@@ -108,7 +239,9 @@ function convertModels($pathname, $newPathname, $extension) {
   $meshlabOnly = $assimpSupported = array();
   $stopper = 0;
   $sleepTime = $SleepTimer;
-  $outputExt = $conversionRoute = '';
+  $outputExt = $conversionRoute = $pyMeshLabInterpreter = $sidecarPathname = '';
+  $meshlabEnvironment = array();
+  $pyMeshLabInUse = FALSE;
   $assimpCanWrite = $meshlabCanWrite = $meshlabCanRead = array();
   // / Detect the installed versions of Assimp & MeshLab.
   list ($modelsValid, $assimpBinary, $meshlabBinary) = verifyModelVersions($MinimumAssimpVersion, $MinimumMeshlabVersion);
@@ -138,9 +271,28 @@ function convertModels($pathname, $newPathname, $extension) {
     // / Engineering & CAD formats that benefit from triangulation before Assimp writes.
     $meshlabOnly = array('stl', 'ply', 'off', '3ds');
     // / The bundled PyMeshLab workspace, used when the binary is not.
+    // / This directory is handed to sandboxCommand() as a read only resource, because the
+    // / namespace binds the input & the output & nothing else. Without that bind the Python
+    // / path points at a directory which does not exist inside the sandbox, import fails, &
+    // / every MeshLab route fails with it. An Assimp command passes nothing, because Assimp
+    // / loads nothing out of the installation.
     $pyMeshLabDir = $InstLoc.$DirSep.'Resources'.$DirSep.'PyMeshLab';
+    // / A subsystem that can fall back must fall back before it errors.
+    // / PyMeshLab is used only when an interpreter exists that can load it.
+    // / The MeshLab binary does the same work when no such interpreter is present.
+    // / A warning then says why the requested route was not taken.
+    // / An earlier version failed the whole conversion instead.
+    // / It did so on a machine where meshlabserver was installed & working perfectly.
+    $pyMeshLabInUse = FALSE;
+    if ($UsePyMeshLab) {
+      $pyMeshLabInterpreter = resolvePyMeshLabInterpreter($pyMeshLabDir);
+      if ($pyMeshLabInterpreter !== '') $pyMeshLabInUse = TRUE;
+      else warningEntry('PyMeshLab is enabled & no interpreter on this host can load the bundled build. It is compiled for one Python minor version & that version is not installed. Falling back to the MeshLab binary.'); }
     // / An intermediate file bridges the two utilities on any two stage route.
-    $intermediatePathname = dirname($newPathname).$DirSep.'rectified_'.basename($newPathname).'.obj';
+    // / The target's extension is dropped before obj is appended.
+    // / Appending to the whole basename produced names like rectified_x.obj.obj, which
+    // / worked because the final segment decides the format & read like a mistake.
+    $intermediatePathname = dirname($newPathname).$DirSep.'rectified_'.pathinfo($newPathname, PATHINFO_FILENAME).'.obj';
     // / Decide the route once, before any attempt is made.
     // / A format neither utility can write is refused here rather than inside the retry
     // / loop. Retrying a command that cannot succeed only delays the same failure.
@@ -150,6 +302,10 @@ function convertModels($pathname, $newPathname, $extension) {
       $ConversionErrors = TRUE;
       errorEntry('Neither Assimp nor MeshLab can write the '.$outputExt.' format!', 9004, FALSE); }
     if ($conversionRoute !== '' && $Verbose) logEntry('Model route selected: '.$conversionRoute.', '.$inputExt.' to '.$outputExt.'.');
+    // / The command is logged before it runs, under verbose only. A converter that fails
+    // / with no output leaves nothing to diagnose, & the command is the one thing that
+    // / always exists. It names paths this session already owns & no secret of any kind.
+    if ($conversionRoute !== '' && $Verbose && !$UsePyMeshLab) logEntry('MeshLab binary route in use. PyMeshLab is disabled.');
     // / This code will attempt the conversion up to $StopCounter number of times.
     while ($conversionRoute !== '' && !file_exists($newPathname) && $stopper <= $StopCounter) {
       // / If the last conversion attempt failed, wait a moment before trying again.
@@ -159,8 +315,8 @@ function convertModels($pathname, $newPathname, $extension) {
         // / The bridge route runs the two utilities the other way round, so the first stage
         // / differs between them & the second stage is chosen below.
         if ($conversionRoute === 'normalize') {
-          $meshlabCommand = buildMeshLabCommand($UsePyMeshLab, $pyMeshLabDir, $meshlabBinary, $pathname, $intermediatePathname);
-          list ($commandMayRun, $meshlabCommand) = sandboxCommand($meshlabCommand, $pathname, $intermediatePathname, FALSE, 'meshlab');
+          list ($meshlabCommand, $meshlabEnvironment) = buildMeshLabCommand($pyMeshLabInUse, $pyMeshLabDir, $meshlabBinary, $pathname, $intermediatePathname, $pyMeshLabInterpreter);
+          list ($commandMayRun, $meshlabCommand) = sandboxCommand($meshlabCommand, $pathname, $intermediatePathname, FALSE, 'meshlab', $pyMeshLabDir, $meshlabEnvironment);
           if (!$commandMayRun) {
             $ConversionErrors = TRUE;
             errorEntry('Bubblewrap is missing or non functional, so this model conversion cannot be isolated!', 9003, FALSE);
@@ -187,8 +343,8 @@ function convertModels($pathname, $newPathname, $extension) {
             break; }
           $assimpData = shell_exec($assimpCommand); }
         else {
-          $meshlabCommand = buildMeshLabCommand($UsePyMeshLab, $pyMeshLabDir, $meshlabBinary, $assimpInput, $newPathname);
-          list ($commandMayRun, $meshlabCommand) = sandboxCommand($meshlabCommand, $assimpInput, $newPathname, FALSE, 'meshlab');
+          list ($meshlabCommand, $meshlabEnvironment) = buildMeshLabCommand($pyMeshLabInUse, $pyMeshLabDir, $meshlabBinary, $assimpInput, $newPathname, $pyMeshLabInterpreter);
+          list ($commandMayRun, $meshlabCommand) = sandboxCommand($meshlabCommand, $assimpInput, $newPathname, FALSE, 'meshlab', $pyMeshLabDir, $meshlabEnvironment);
           if (!$commandMayRun) {
             $ConversionErrors = TRUE;
             errorEntry('Bubblewrap is missing or non functional, so this model conversion cannot be isolated!', 9003, FALSE);
@@ -205,8 +361,8 @@ function convertModels($pathname, $newPathname, $extension) {
         $assimpData = shell_exec($assimpCommand); }
       // / Route meshlab. MeshLab reads the input & writes a format Assimp cannot produce.
       else {
-        $meshlabCommand = buildMeshLabCommand($UsePyMeshLab, $pyMeshLabDir, $meshlabBinary, $pathname, $newPathname);
-        list ($commandMayRun, $meshlabCommand) = sandboxCommand($meshlabCommand, $pathname, $newPathname, FALSE, 'meshlab');
+        list ($meshlabCommand, $meshlabEnvironment) = buildMeshLabCommand($pyMeshLabInUse, $pyMeshLabDir, $meshlabBinary, $pathname, $newPathname, $pyMeshLabInterpreter);
+        list ($commandMayRun, $meshlabCommand) = sandboxCommand($meshlabCommand, $pathname, $newPathname, FALSE, 'meshlab', $pyMeshLabDir, $meshlabEnvironment);
         if (!$commandMayRun) {
           $ConversionErrors = TRUE;
           errorEntry('Bubblewrap is missing or non functional, so this model conversion cannot be isolated!', 9003, FALSE);
@@ -220,21 +376,38 @@ function convertModels($pathname, $newPathname, $extension) {
       if ($stopper >= $StopCounter) {
         $ConversionErrors = TRUE;
         errorEntry('The model converter timed out!', 9000, FALSE);
+        // / A timeout on its own says only that something was tried repeatedly. The command
+        // / is what was tried, & without it an operator has a number & no way to reproduce
+        // / the failure. It names paths this session already owns & carries no secret.
+        warningEntry('The command that timed out was: '.trim(($conversionRoute === 'assimp' ? $assimpCommand : $meshlabCommand)));
         break; } }
     // / Log the output of each utility to the logfile, if it is not blank.
+    // / A converter that produced nothing at all is worth a line of its own. Testing for
+    // / output & staying silent when there is none meant the one case that needed
+    // / explaining was the one case that explained nothing.
+    if (!file_exists($newPathname) && trim($returnData) === '' && trim($assimpData) === '') warningEntry('Neither utility produced any output at all. The command was found & run, & it printed nothing on either stream.');
+    // / A bundled PyMeshLab is compiled against one Python minor version.
+    // / An object tagged 314 will not load under 3.12 or under 3.11.
+    // / The interpreter reports that as the module being absent.
+    // / An operator reading that goes looking at the path instead of at the build.
+    if ($UsePyMeshLab && !file_exists($newPathname) && stripos((string)$returnData, 'pymeshlab') !== FALSE && stripos((string)$returnData, 'No module named') !== FALSE) warningEntry('PyMeshLab could not be imported. A bundled build is compiled for one Python minor version, so check that the interpreter matches the cpython tag on the object in Resources/PyMeshLab/pymeshlab. Set --Use PyMeshLab Python Bindings-- to FALSE to use the meshlabserver binary instead.');
     if ($Verbose && trim($returnData) !== '') logEntry('Meshlab processing engine returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
     if ($Verbose && trim($assimpData) !== '') logEntry('Assimp returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($assimpData)))));
     // / Erase the intermediate file so a two stage conversion leaves nothing behind.
     if (file_exists($intermediatePathname)) @unlink($intermediatePathname);
-    // / Erase the material sidecar Assimp writes beside an intermediate obj.
+    // / Erase the material sidecar written beside an intermediate obj.
     // / The final output never has one, because the obj exporter is asked for objnomtl.
+    // / Two names are possible & both are derived from the intermediate rather than counted
+    // / back from the end of it. A magic offset here would have to be corrected every time
+    // / the intermediate is renamed, & would keep working incorrectly if it were not.
+    $sidecarPathname = dirname($intermediatePathname).$DirSep.pathinfo($intermediatePathname, PATHINFO_FILENAME).'.mtl';
     if (file_exists($intermediatePathname.'.mtl')) @unlink($intermediatePathname.'.mtl');
-    if (file_exists(substr($intermediatePathname, 0, -4).'.mtl')) @unlink(substr($intermediatePathname, 0, -4).'.mtl');
+    if (file_exists($sidecarPathname)) @unlink($sidecarPathname);
 
     // / The output file is the only verdict on whether the conversion produced anything.
     if (file_exists($newPathname)) $ConversionSuccess = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $assimpData, $stopper, $pathname, $intermediatePathname, $assimpInput, $inputExt, $outputExt, $conversionRoute, $meshlabOnly, $assimpCanWrite, $meshlabCanWrite, $meshlabCanRead, $pyMeshLabDir, $sleepTime, $modelsValid, $readyToConvert, $meshlabCommand, $assimpCommand, $commandMayRun, $meshlabBinary, $assimpBinary);
+  purgeSensitiveMemory($EnableMemoryProtection, $sidecarPathname, $meshlabEnvironment, $pyMeshLabInUse, $pyMeshLabInterpreter, $returnData, $assimpData, $stopper, $pathname, $intermediatePathname, $assimpInput, $inputExt, $outputExt, $conversionRoute, $meshlabOnly, $assimpCanWrite, $meshlabCanWrite, $meshlabCanRead, $pyMeshLabDir, $sleepTime, $modelsValid, $readyToConvert, $meshlabCommand, $assimpCommand, $commandMayRun, $meshlabBinary, $assimpBinary);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

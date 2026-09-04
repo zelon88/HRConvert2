@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by convertCore.php WITHOUT executing this file.
-$PipelineCoreVersion = 'v3.8.8';
+$PipelineCoreVersion = 'v3.8.9';
 // / -----------------------------------------------------------------------------------
 
 
@@ -60,8 +60,8 @@ function getAcceptedPipelines() {
     'SVG' => 'v3.8.8',
     'Drawing' => 'v3.8.8',
     'Image' => 'v3.8.8',
-    'Model' => 'v3.8.8',
-    'Video' => 'v3.8.8',
+    'Model' => 'v3.8.9',
+    'Video' => 'v3.8.9',
     'Ebook' => 'v3.8.8',
     'Audio' => 'v3.8.8',
     'Archive' => 'v3.8.8');
@@ -285,6 +285,47 @@ function enumeratePipelines() {
 
 
 // / -----------------------------------------------------------------------------------
+// / A function to ask the capability cache what a subsystem can do with two extensions.
+// / Accepts the subsystem name, the input extension & the output extension, in that order.
+// / Returns whether reading is known, whether writing is known, whether the input can be
+// / read & whether the output can be written, in that order.
+// / The two known flags are the point. A caller must be able to tell a tool saying no from
+// / a tool that was never asked, & most tools were never asked. LibreOffice, Inkscape, Dia
+// / & OpenSCAD have no format list command in any released version, so reading their
+// / silence as a refusal would remove every document, drawing & vector conversion from a
+// / machine where all four work perfectly.
+// / A missing cache, a refused cache & a subsystem the cache has never heard of all resolve
+// / to not known, which leaves the declaration standing.
+// / The cache is read ONCE per request & carried, because a conversion of ten files would
+// / otherwise read the same file ten times.
+function capabilityVerdict($subsystemName, $inputExtension, $outputExtension) {
+  // / Set variables.
+  global $CapabilityRecords, $CapabilityCacheWasRead, $EnableMemoryProtection;
+  $ReadIsKnown = $WriteIsKnown = $CanReadInput = $CanWriteOutput = FALSE;
+  $cacheIsAvailable = FALSE;
+  $subsystemRecord = array();
+  if (!$CapabilityCacheWasRead) {
+    $CapabilityCacheWasRead = TRUE;
+    if (function_exists('readCapabilityCache')) list ($cacheIsAvailable, $CapabilityRecords) = readCapabilityCache();
+    else $CapabilityRecords = array(); }
+  // / A subsystem serves several pipelines & several dependencies may serve one subsystem.
+  // / The first record naming this subsystem & reporting a state answers for it.
+  if (is_array($CapabilityRecords)) {
+    foreach ($CapabilityRecords as $subsystemRecord) {
+      if (!isset($subsystemRecord['Subsystem']) or (string)$subsystemRecord['Subsystem'] !== (string)$subsystemName) continue;
+      if (isset($subsystemRecord['ReadState']) && (string)$subsystemRecord['ReadState'] === 'detected') {
+        $ReadIsKnown = TRUE;
+        if (in_array($inputExtension, (array)$subsystemRecord['CanRead'], TRUE)) $CanReadInput = TRUE; }
+      if (isset($subsystemRecord['WriteState']) && (string)$subsystemRecord['WriteState'] === 'detected') {
+        $WriteIsKnown = TRUE;
+        if (in_array($outputExtension, (array)$subsystemRecord['CanWrite'], TRUE)) $CanWriteOutput = TRUE; } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $cacheIsAvailable, $subsystemRecord, $subsystemName, $inputExtension, $outputExtension);
+  return array($ReadIsKnown, $WriteIsKnown, $CanReadInput, $CanWriteOutput); }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
 // / A function to report whether one pipeline claims one conversion.
 // / Accepts a pipeline record, the input extension & the output extension, in that order.
 // / Returns a claim boolean.
@@ -293,9 +334,10 @@ function enumeratePipelines() {
 // / unreadable & the exclusion list keeps the nonsense pairs honest at a fraction of the cost.
 function pipelineClaimsConversion($pipelineRecord, $inputExtension, $outputExtension) {
   // / Set variables.
-  global $SupportedFormatDetectionType, $EnableMemoryProtection;
+  global $SupportedFormatDetectionType, $WarnOnCapabilityMismatch, $EnableMemoryProtection;
   $PipelineClaimsIt = FALSE;
   $cleanInput = $cleanOutput = $excludedPair = $detectionType = '';
+  $readIsKnown = $writeIsKnown = $toolReadsInput = $toolWritesOutput = $declarationAllows = $detectionAllows = FALSE;
   $cleanInput = strtolower(trim((string)$inputExtension));
   $cleanOutput = strtolower(trim((string)$outputExtension));
   $excludedPair = $cleanInput.'>'.$cleanOutput;
@@ -323,10 +365,29 @@ function pipelineClaimsConversion($pipelineRecord, $inputExtension, $outputExten
   // / A mode that reported problems & also acted on them would give an administrator no
   // / safe way to find out what turning detection on is going to do to their machine.
   if (!in_array($excludedPair, $pipelineRecord['Exclude'], TRUE)) {
-    if ($detectionType === 'hardcoded-only' or $detectionType === 'detected-advisory') $PipelineClaimsIt = TRUE;
-    else if (in_array($cleanInput, $pipelineRecord['Input'], TRUE) && in_array($cleanOutput, $pipelineRecord['Output'], TRUE)) $PipelineClaimsIt = TRUE; }
+    if ($detectionType === 'hardcoded-only') $PipelineClaimsIt = TRUE;
+    else {
+      // / Detection asks whether the tool behind this pipeline actually reads the input &
+      // / writes the output. It answers detected, unknown or unavailable, & only detected
+      // / is allowed to remove anything.
+      list ($readIsKnown, $writeIsKnown, $toolReadsInput, $toolWritesOutput) = capabilityVerdict($pipelineRecord['Subsystem'], $cleanInput, $cleanOutput);
+      $declarationAllows = (in_array($cleanInput, $pipelineRecord['Input'], TRUE) && in_array($cleanOutput, $pipelineRecord['Output'], TRUE));
+      $detectionAllows = ((!$readIsKnown or $toolReadsInput) && (!$writeIsKnown or $toolWritesOutput));
+      // / Advisory decides what hardcoded-only decides & reports what the other modes would
+      // / have done. That is the whole of its behaviour & the reason it is the default.
+      if ($detectionType === 'detected-advisory') {
+        $PipelineClaimsIt = TRUE;
+        if (!$detectionAllows && $WarnOnCapabilityMismatch) warningEntry('Capability mismatch. The '.$pipelineRecord['Family'].' pipeline claims '.$cleanInput.' to '.$cleanOutput.' & '.$pipelineRecord['Subsystem'].' reports it cannot. A narrowing mode would refuse this conversion. Check the alias table in depends.php before enabling one.'); }
+      // / Restrictive keeps a pair only when the declaration allows it & detection has not
+      // / contradicted it. Unknown never contradicts anything.
+      else if ($detectionType === 'detected-restrictive') $PipelineClaimsIt = ($declarationAllows && $detectionAllows);
+      // / Additive keeps a pair the declaration allows even where config.php omitted it,
+      // / which convertFiles() has already decided by the time anything reaches here. It is
+      // / still bounded by the declaration & still refused by a contradiction.
+      else $PipelineClaimsIt = ($declarationAllows && $detectionAllows); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $cleanInput, $cleanOutput, $excludedPair, $detectionType, $pipelineRecord, $inputExtension, $outputExtension);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $cleanInput, $cleanOutput, $excludedPair, $detectionType, $readIsKnown, $writeIsKnown, $toolReadsInput, $toolWritesOutput, $declarationAllows, $detectionAllows, $pipelineRecord, $inputExtension, $outputExtension);
   return $PipelineClaimsIt; }
 // / -----------------------------------------------------------------------------------
 

@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.7.4.
+v3.8.8.
 This file contains instructions for developers who want to add conversion pipelines. 
 
 HARDWARE REQUIREMENTS ... 
@@ -42,8 +42,25 @@ This document focuses on the CONVERSION PIPELINE specifically.
 Pipelines in HRConvert2 are the backbone of how file operations work. 
   1. A `pipeline` is the complete path a file takes on it's journey through the core during a single request.
   2. Each major conversion type has proven unique enough to warrant it's own dedicated pipeline.
-  3. All pipelines live in `convertCore.php` and are completely separate from GUI logic.
-  4. All pipelines are server-side only. There are no client-side pipelines which operate on files.
+  3. Conversion pipelines are DETACHABLE COMPONENTS living in their own folders beneath `Resources/Pipelines/`.
+  4. Upload, delete & download are pipelines too, & those are built into the core & are not detachable.
+  5. All pipelines are server-side only. There are no client-side pipelines which operate on files.
+
+AS OF v3.8.5 NO CONVERSION PIPELINE LIVES IN `convertCore.php`. NOT ONE.
+The core boots components, checks versions & decides what to do. It converts nothing itself.
+Every conversion family moved out into its own folder, one at a time, & the built in
+dispatcher that carried them during that migration has been removed. A family with no
+installed pipeline reports error 34005 rather than falling back to anything.
+
+  `Resources/PipelineCore/pipelineCore.php`         Pipeline Core. Pins & dispatches.
+  `Resources/Pipelines/<Family>/pipelineConfig.php` What a pipeline declares.
+  `Resources/Pipelines/<Family>/pipeline.php`       The converter itself.
+  `Resources/Pipelines/Shared/<name>.php`           Code two pipelines both need.
+
+This document is the PROCEDURE. `ABOUT_PIPELINE_COMPONENTS.txt` is the CONTRACT.
+Read that one first. It describes the six contracts, the version pinning, the difference
+between enumeration & dispatch, & how a detached worker is supervised.
+`ABOUT_CAPABILITY_DETECTION.txt` describes how a dependency is asked what it can do.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -184,7 +201,9 @@ Read these before writing code. They are preconditions, not steps.
   4e. Comment every setting with how an administrator finds the right value.
   4f. Comment every setting with what the default is.
   4g. Bump the `config.php` file version contained in `config.php`. Do it right now. Not later.
-  4h. Bump the config version variable contained in `convertCore.php`. Do it right now. Not later.
+  4h. Bump `$RequiredConfigVersion` in `convertCore.php`. Do it right now. Not later.
+  4i. `config.php` remains authoritative over what may be uploaded. A pipeline declaration
+      never widens it. See `ABOUT_CAPABILITY_DETECTION.txt` for how the layers compose.
 
 5. In `convertCore.php` register the config so a missing setting is detected.
   5a. `verifyConfigVersion()` - add each setting name to `$requiredConfigVars`.
@@ -202,18 +221,52 @@ Read these before writing code. They are preconditions, not steps.
   5m. That function sanitizes request input. It knows nothing about dependencies.
 
 6. Write a `verifyDEPENDENCYVersion()` accepting `$MinimumDEPENDENCYVersion`.
-  6a. Obey Contract 1. Locate the binary, then return its path or FALSE.
-  6b. Anchor the version pattern on the product name.
-  6c. An unanchored pattern matches whatever number appears first in the banner.
-  6d. That first number is frequently a library version or a build date.
-  6e. Do not consult the exit code until you know the dependency uses it sensibly.
-  6f. Several dependencies print a good version banner while exiting non zero.
-  6g. Log the result under `$Verbose`. Report detected, required & the path in use.
-  6h. A pipeline needing two dependencies uses one function returning both paths.
-  6i. That function also returns an overall boolean describing the SUBSYSTEM.
+  6a. THIS ONE STAYS IN `convertCore.php`, NOT IN YOUR PIPELINE FOLDER.
+  6b. `showVersionInfo()` reports on it whether or not your pipeline is installed, so a
+      dependency verifier is core owned by definition. Your pipeline calls into the core
+      for it, along with `sandboxCommand()`, `locateDependency()` & `getExtension()`.
+  6c. Obey Contract 1. Locate the binary, then return its path or FALSE.
+  6d. Anchor the version pattern on the product name.
+  6e. An unanchored pattern matches whatever number appears first in the banner.
+  6f. That first number is frequently a library version or a build date.
+  6g. Do not consult the exit code until you know the dependency uses it sensibly.
+  6h. Several dependencies print a good version banner while exiting non zero.
+  6i. Log the result under `$Verbose`. Report detected, required & the path in use.
+  6j. A pipeline needing two dependencies uses one function returning both paths.
+  6k. That function also returns an overall boolean describing the SUBSYSTEM.
 
-7. Write a `convertDEPENDENCY()` function where `DEPENDENCY` is the pipeline you're building.
-  7a. Obey Contract 2 & Contract 3.
+7. Create `Resources/Pipelines/<Family>/` & write the two files it holds.
+  7a. Copy the closest existing pipeline. Ebook is the smallest & is the reference.
+  7b. Copy `index.html` from any existing folder. Never write a new one.
+  7c. `pipelineConfig.php` ASSIGNS VARIABLES & DOES NOTHING ELSE. No functions, no logic.
+  7d. It is read on EVERY request, for every installed pipeline, so it must stay cheap.
+  7e. `$PipelineEntryPoint` MUST BE UNIQUE ACROSS EVERY INSTALLED PIPELINE. Two pipelines
+      sharing a function name fatally redeclare the moment both load in one request, which
+      happens whenever an upload batch spans two families. The second is refused with 34004.
+  7f. Renaming a copied folder & forgetting the entry point is the commonest mistake there is.
+  7g. `$PipelineSubsystem` must match a `Subsystem` name in `depends.php` EXACTLY. It names
+      the subsystem rather than the package, so one version lives in one place.
+  7h. `$Capabilities` is the CEILING. Detection may narrow it & may never exceed it.
+  7i. `$PipelineExclude` removes a pair from the cross product. `pdf>pdf` is the usual case.
+  7j. Add your folder to `getAcceptedPipelines()` in Pipeline Core & bump BOTH versions.
+      That list is an ALLOWLIST rather than a convenience. A folder that is not named there
+      is never read, never required & never enumerated, so a folder somebody drops onto the
+      server cannot be executed by being present.
+
+8. Write the converter in `pipeline.php`.
+  8a. Obey Contract 2 & Contract 3, & now also Contract 4, 5 & 6.
+  8b. CONTRACT 4. Return SIX values, in order, every time. Success, errors, output path,
+      output extension, output filename & worker PID. Return what you were given for a slot
+      you have nothing to say about. An undefined return value is a PHP warning, & a warning
+      corrupts an AJAX response.
+  8c. CONTRACT 5. Return a non zero PID only when you launched something that outlives the
+      request. Read `ABOUT_MANAGERS.txt` before you do. The passthrough already exists.
+  8d. CONTRACT 6. A PIPELINE NEVER PRINTS. Not once. It returns & the core decides.
+  8e. `sandboxCommand()` returns whether the command MAY RUN, not whether a sandbox exists.
+      FALSE means the core refused it & it must not be executed. The case where sandboxing
+      is not required returns TRUE with the command unwrapped & warns from inside itself.
+  8f. ROUTE ON WHAT A TOOL CAN WRITE, NOT ON WHAT IT CAN READ. Assimp reads OFF & has no OFF
+      exporter, & an input based route retried an impossible command until it timed out.
   7b. Gate on the version check first. Error out with your reserved number.
   7c. Build the command once, before the retry loop. It never changes.
   7d. Sandbox the command, then test the permission boolean.
@@ -222,19 +275,26 @@ Read these before writing code. They are preconditions, not steps.
   7g. Log dependency output under `$Verbose`, but only when it is not blank.
   7h. Clean up every local in the cleanup line. Never null anything you return.
 
-8. Add the conversion type filter to the `convert()` function to route files to your `convertDEPENDENCY()` function.
-  8a. Pass `$extension` through to your function. Every other branch does.
-
 9. Check `convertFiles()` for globals & proper conversion type routing.
-  9a. There are two maps. Your pipeline needs an entry in both, under one key.
-  9b. `$arrayArray` filters the input extension.
-  9c. `$arrayArrayOut` filters the output extension.
-  9d. A pipeline missing from either map will never be reached by the routing loop.
-  9e. Order is significant. The first family to match both extensions wins.
-  9f. `Stream` must remain last. Its outputs are ordinary audio & video formats.
-  9g. Decide deliberately where your family sits when its formats overlap another.
-  9h. The loop skips a family when the input matches but the output does not.
-  9i. That behavior lets overlapping families coexist without special cases.
+  9a. `convert()` no longer carries a branch per family. It asks Pipeline Core whether any
+      pipeline serves this family & this pair of extensions, then dispatches. There is
+      nothing to add there & nothing to edit. Your `getAcceptedPipelines()` line is what
+      makes your family reachable.
+  9b. There are two maps. Your pipeline needs an entry in both, under one key.
+  9c. `$arrayArray` filters the input extension.
+  9d. `$arrayArrayOut` filters the output extension.
+  9e. A pipeline missing from either map will never be reached by the routing loop.
+  9f. Order is significant. The first family to match both extensions wins.
+  9g. ORDER IS NO LONGER SET BY THE POSITION OF AN ENTRY IN THESE MAPS.
+      `$PipelinePriority` in your `pipelineConfig.php` decides it. Lower runs first, & ties
+      break on folder name so the result never depends on what order a filesystem returned.
+      `Stream` sits at 900 because its outputs are ordinary audio & video formats, so a
+      local file must reach the converter that reads files rather than the one that fetches
+      a URL. That was once a comment saying the array must keep Stream last. It is a number
+      now, & it is enforced.
+  9h. Decide deliberately where your family sits when its formats overlap another.
+  9i. The loop skips a family when the input matches but the output does not.
+  9j. That behavior lets overlapping families coexist without special cases.
 
 10. Update `showVersionInfo()` function, which fires when the `-v` or `--version` command line argument is set.
   10a. Call your `verifyDEPENDENCYVersion()`. Add it to the globals line.

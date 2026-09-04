@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.7.0.
+v3.8.8.
 This file contains a walkthrough guide for building an HRConvert2 Docker Image from source.
 
 HARDWARE REQUIREMENTS ... 
@@ -24,30 +24,6 @@ Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape
 Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia & xvfb-run.
 
 <3 Open-Source
------------------------------------------------------------------------------------
-
-
------STEP 0 - ARE YOU IN THE RIGHT PLACE?-----
-In this step we will make sure your use case aligns with the purpose of this document.
-It is not necessary to perform the steps in this document to simply install and use the official HRConvert2 Docker Image.
-This document is intended to be used for development purposes by HRConvert2 maintainers.
-
-If you simply want to download and run HRConvert2, you can download the official pre-built docker image at the following URL.
-  https://hub.docker.com/r/zelon88/hrconvert2
-
-Usually people who want to run the official Docker image are people who;
-  1. Want to use HRConvert2 for personal, industrial, educational, non-profit, or commercial use on a small number of servers.
-  2. Want to run the most stable, secure, & up-to-date version of HRConvert2 that is available.
-  3. Just want to convert files.
-  4. Are not planning on contributing to development.
-  5. Are not planning on modifying the code or dependencies.
-
-Usually people who want to build their own Docker Image from source are people who;
-  1. Have modified the code or dependencies, and want to share the changes or deploy them on many servers.
-  2. Have a custom configuration that needs to be deployed on many servers.
-  3. Are contributing to a branch of HRConvert2 for distribution.
-
-If you truly want to build your own Docker Image from source this document will guide you through the Docker Image Build Instructions.
 -----------------------------------------------------------------------------------
 
 
@@ -92,8 +68,7 @@ Publishing the official image is automatic. Pushing a version tag is the entire 
 4. The workflow at .github/workflows/docker-build.yml takes over from there. It will;
   4a. Build for linux/amd64 and linux/arm64.
   4b. Publish to Docker Hub as v#.#.#, #.#, # and latest.
-  4c. Publish the same tags to GHCR.
-  4d. Start the resulting container and confirm it serves a page before calling it good.
+  4c. Start the resulting container and confirm it serves a page before calling it good.
 5. Watch the run in the Actions tab of the repository.
   5a. A cold build takes a long time. The arm64 half is emulated and is the slow part.
   5b. A build where only later layers changed reuses the cache and finishes much faster.
@@ -101,10 +76,22 @@ Publishing the official image is automatic. Pushing a version tag is the entire 
   6a. Run  'git tag -d v#.#.#'
   6b. Run  'git push --delete origin v#.#.#'
 
-NOTE. Pushing to master does NOT publish anything. Only a version tag does.
-NOTE. A pull request builds the image without publishing it, which catches a broken
-      Dockerfile before it is merged rather than after it is tagged.
-NOTE. The workflow can also be started by hand from the Actions tab using workflow_dispatch.
+WHAT TRIGGERS A BUILD. FOUR THINGS, & ONLY TWO OF THEM PUBLISH.
+
+  A version tag       Builds, smoke tests & publishes v#.#.#, #.#, # and latest.
+  A push to master    Builds, smoke tests & publishes edge ONLY. latest does not move.
+  A pull request      Builds & smoke tests. Publishes nothing.
+  workflow_dispatch   Builds, smoke tests & publishes, because it is not a pull request.
+
+NOTE. A tagged release runs the workflow twice. The commit reaching master fires an edge
+      build & the tag pointing at that same commit fires another. Both build the identical
+      tree & the layer cache makes the second one cheap.
+NOTE. workflow_dispatch from a branch that is neither master nor a tag produces no tags at
+      all & the push step fails. Launch it from master or from a tag.
+NOTE. THE IMAGE IS BUILT FROM THE CHECKOUT, NOT FROM GITHUB.
+      An earlier Dockerfile cloned the repository & checked out a build argument, so the
+      image never held the code being tested. A pull request could not build at all, since
+      the merge commit it builds against does not exist in a plain clone.
 -----------------------------------------------------------------------------------
 
 
@@ -148,7 +135,17 @@ or when you need an image the workflow will not produce.
       testing each conversion type by hand.
   3b. Every dependency should report OK. Anything reporting FAILED is missing from the image.
 4. Run  'docker logs hrc2test'  to see anything the container printed on startup.
+  4a. The entrypoint prefixes every line it writes with [entrypoint], so its own progress is
+      distinguishable from the output of the core & of the web server.
 5. Run  'docker stop hrc2test && docker rm hrc2test'  when finished.
+
+NOTE ON DIAGNOSING A FAILED SMOKE TEST.
+  A curl exit code of 7 is CONNECTION REFUSED & means nothing is listening. That is a
+  container that exited rather than an application that returned an error. An application
+  error would answer with a 500 & curl would exit 22.
+  The workflow polls for sixty seconds, detects an exited container immediately rather than
+  waiting out a fixed sleep, & always prints the container state, the logs, the -v report &
+  the tail of the HRConvert2 log before it fails.
 
 NOTE ON THE SECCOMP OPTION.
   bwrap needs an unprivileged user namespace to sandbox an OpenSCAD render.
@@ -166,8 +163,14 @@ Only necessary when you built by hand. The workflow pushes its own images.
 
 1. On a computer with Docker Hub account linked, run  'docker push zelon88/hrconvert2:v#.#.#'
 2. On a computer with Docker Hub account linked, run  'docker push zelon88/hrconvert2:latest'
-3. On a computer with GHCR account linked, run  'docker push ghcr.io/zelon88/hrconvert2:v#.#.#'
-4. On a computer with GHCR account linked, run  'docker push ghcr.io/zelon88/hrconvert2:latest'
+
+NOTE ON THE GITHUB CONTAINER REGISTRY.
+  The workflow published to GHCR as well until v3.8.8 & no longer does.
+  Pushing to it needs a package scope the workflow token does not carry by default, & the
+  failure it produces reads as  denied: permission_denied: read_package  on a PUSH, which
+  points at the wrong thing entirely.
+  A second registry publishing an identical image earns nothing unless somebody pulls from
+  it. Add it back deliberately, with a token that has the scope, rather than by default.
 -----------------------------------------------------------------------------------
 
 
@@ -181,7 +184,7 @@ Only necessary when you built by hand. The workflow pushes its own images.
 3. The workflow needs two repository secrets to publish to Docker Hub.
   3a. DOCKERHUB_USERNAME
   3b. DOCKERHUB_TOKEN
-  3c. GHCR uses the built in GITHUB_TOKEN and needs no secret.
+  3c. It needs no permission over GitHub packages & the publish job asks for none.
 4. A Docker container is disposable. A Docker user updates by pulling a new image, not by
    running the built in updater. The updater exists for bare metal installations.
 5. Everything a container must keep across a replacement lives outside the image.

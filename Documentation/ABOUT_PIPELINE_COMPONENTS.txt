@@ -10,9 +10,10 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
 
 FILE INFORMATION ...
-v3.8.5.
+v3.8.8.
 This file documents the contracts every detachable conversion pipeline obeys.
-This file describes the Pipeline Manager component & the pipeline folders it accepts.
+This file describes the Pipeline Core component & the pipeline folders it accepts.
+For how a dependency is asked what it can do, see ABOUT_CAPABILITY_DETECTION.txt.
 For the procedure for writing a pipeline, see CREATING_CONVERSION_PIPELINES.txt.
 For general quality & security standards, see CODING_CONVENTIONS.txt.
 
@@ -50,6 +51,12 @@ copies eventually disagree about the minimum version.
 A PIPELINE IMPLEMENTATION is one folder serving one family. Two folders may serve the same
 family, which is how an alternative or a fallback implementation is supplied.
 
+A CONVERTER is the pipeline.php beside a declaration. It was called pipelineCore.php until
+v3.8.8, & that name was wrong twice over. It collided with the dispatcher, which is the file
+that genuinely is a Core, & it described the wrong thing. A Core owns a domain & is called
+on demand by the application. A converter owns neither & is dispatched to.
+See ABOUT_COMPONENTS.txt for what a Core is.
+
 A CONVERSION PIPELINE takes one file, returns the six value contract, & is dispatched by
 convert(). Every family except OCR is one of these.
 
@@ -68,12 +75,13 @@ exactly as a pipeline is & is loaded once per request for whichever pipelines de
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Folder Layout--
 
-  Resources/Pipelines/pipelineManager.php         The component. Pinned EXACTLY by the core.
+  Resources/PipelineCore/pipelineCore.php         The component. Pinned EXACTLY by the core.
+  Resources/PipelineCore/index.html               Document root protection. Not optional.
   Resources/Pipelines/index.html                  Document root protection. Not optional.
-  Resources/Pipelines/<Family>/pipelineConfig.php Declarations only. Pinned EXACTLY by the manager.
-  Resources/Pipelines/<Family>/pipelineCore.php   The converter. Loaded only when it is about to run.
+  Resources/Pipelines/<Family>/pipelineConfig.php Declarations only. Pinned EXACTLY by Pipeline Core.
+  Resources/Pipelines/<Family>/pipeline.php       The converter. Loaded only when it runs.
   Resources/Pipelines/<Family>/index.html         Document root protection. Not optional.
-  Resources/Pipelines/Shared/<name>.php           Shared module. Pinned EXACTLY by the manager.
+  Resources/Pipelines/Shared/<name>.php           Shared module. Pinned EXACTLY by Pipeline Core.
   Resources/Pipelines/Shared/index.html           Document root protection. Not optional.
 
 Every file is UTF-8 with NO byte order mark. A BOM emits three bytes before any output.
@@ -84,7 +92,7 @@ Every folder carries the stock index.html. Copy an existing one. Never write a n
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --The Manager Pins Its Pipelines. It Does Not Scan For Them.--
 
-getAcceptedPipelines() inside pipelineManager.php returns the folder names this manager
+getAcceptedPipelines() inside pipelineCore.php returns the folder names this manager
 accepts & the version it accepts each of them at. A folder that is not named there is never
 read, never required & never enumerated.
 
@@ -94,15 +102,15 @@ could get code executed by a require. The pin list is the allowlist, & the allow
 what makes a dropped-in folder inert until a human decides otherwise.
 
 Accepting a community pipeline is therefore one line added to getAcceptedPipelines() &
-one version bump on pipelineManager.php. That is the intended amount of friction.
+one version bump on pipelineCore.php. That is the intended amount of friction.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Version Pinning--
 
-  convertCore.php   pins pipelineManager.php     EXACT, via $RequiredPipelineManagerVersion.
-  pipelineManager   pins each pipelineConfig.php EXACT, via getAcceptedPipelines().
+  convertCore.php   pins pipelineCore.php     EXACT, via $RequiredPipelineManagerVersion.
+  Pipeline Core     pins each pipelineConfig.php EXACT, via getAcceptedPipelines().
 
 Both are EXACT matches, the same rule applied to a GUI, a language pack or any other
 component. A pipeline built against another manager may declare capabilities this manager
@@ -115,7 +123,7 @@ approach readComponentVersion() uses. A mismatched pipeline is judged before it 
 never after.
 
 pipelineConfig.php carries $PipelineVersion & is the version of the WHOLE FOLDER.
-pipelineCore.php carries no version of its own. The two ship & move together, exactly as a
+pipeline.php carries no version of its own. The two ship & move together, exactly as a
 GUI folder is versioned by uiVersionInfo.php alone.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -127,7 +135,7 @@ pipelineConfig.php DECLARES. It assigns variables & does nothing else.
 It contains no function definitions, no logic, no output & no side effects.
 It is cheap to read & it is read for EVERY installed pipeline on EVERY request.
 
-pipelineCore.php CONVERTS. It defines the entry point function & its helpers.
+pipeline.php CONVERTS. It defines the entry point function & its helpers.
 It is loaded ONLY when a conversion is about to be dispatched to it.
 A request that converts an image never loads the Document pipeline's code at all.
 
@@ -141,7 +149,7 @@ Enumeration & dispatch happen in different function scopes & each needs the decl
 its own scope. A require_once during enumeration would no-op during dispatch, & dispatch
 would find nothing.
 
-pipelineCore.php IS REQUIRED WITH require_once, NEVER require.
+pipeline.php IS REQUIRED WITH require_once, NEVER require.
 It defines functions. A second load is a fatal redeclare in a request a user is waiting on.
 
 pipelineConfig.php IS NOT ADMINISTRATOR EDITABLE. It is a developer manifest.
@@ -160,6 +168,9 @@ Every administrator facing setting lives in config.php & is owned by Setup Core.
   $PipelineSubsystem     String. The depends.php subsystem name. Required.
   $PipelineRequestFields Array. Request fields this pipeline reads. Required, may be empty.
   $Capabilities          Array with Input & Output keys, each an array of extensions. Required.
+                         The CEILING. Detection may narrow it & may never exceed it.
+                         Read & write are judged separately, because reading a format is
+                         not writing it. Assimp reads OFF & has no OFF exporter.
   $PipelineExclude       Array of 'input>output' pairs to remove from the cross product. Optional.
   $PipelineKind          'conversion' or 'operation'. Optional. Undeclared means conversion.
   $PipelineSharedModules Array of shared module file names to load first. Optional.
@@ -177,14 +188,21 @@ enumeration would make a forty format pipeline unreadable, & the exclusion list 
 handful of nonsense pairs honest without that cost. 'pdf>pdf' is the usual case.
 
 A PIPELINE MAY NEVER NARROW WHAT config.php ALLOWS.
-Under hardcoded-only, which is the default & is what every installation runs today, the
-declared Input & Output lists are INFORMATIONAL and only $PipelineExclude is enforced.
+Under hardcoded-only & under detected-advisory, the declared Input & Output lists are
+INFORMATIONAL and only $PipelineExclude is enforced.
 convertFiles() has already tested the pair against the administrator's format arrays before
-anything reaches the manager, so the pair arrives approved. Testing it again against a list
-a pipeline author wrote by hand would let an incomplete declaration quietly delete a
+anything reaches Pipeline Core, so the pair arrives approved. Testing it again against a
+list a pipeline author wrote by hand would let an incomplete declaration quietly delete a
 conversion the installation has always performed, & an omission in a forty format list is
 not a hypothetical. An exclusion is safe to honour in any mode, because it only removes a
 pair the pipeline states outright that it cannot do.
+
+detected-advisory DECIDES EXACTLY WHAT hardcoded-only DECIDES, & THAT IS THE POINT.
+It exists so detection can run & report every disagreement without any of it costing
+somebody a conversion while the alias tables are still being filled in from real output.
+A mode that reported problems & also acted on them would give an administrator no safe way
+to find out what enabling detection is going to do before it does it.
+
 The declared lists become authoritative under detected-restrictive & detected-additive.
 That is what they are for, & it is why they are still required, validated & carried in the
 record even while nothing enforces them.
@@ -207,7 +225,7 @@ depend on another pipeline being installed, verified & loaded first, which is a 
 pipeline author should have to reason about.
 
 A module carries $SharedModuleVersion & is pinned EXACTLY by getAcceptedSharedModules() in
-pipelineManager.php. It is read without executing & judged before it is loaded, exactly as a
+pipelineCore.php. It is read without executing & judged before it is loaded, exactly as a
 pipeline is. A module that is not on the pin list is never read.
 
 A MODULE IS LOADED WITH require_once & A PIPELINE CONFIGURATION IS LOADED WITH require.
@@ -504,17 +522,31 @@ pipelineConfig.php declares what a pipeline CAN do.
 config.php declares what the administrator PERMITS.
 What actually runs is decided by $SupportedFormatDetectionType.
 
-  hardcoded-only        config.php is authoritative. Declared capability is ignored.
-                        This is the default & it preserves existing behaviour exactly.
-  detected-restrictive  The intersection. A format the administrator listed but no
-                        installed pipeline can produce is dropped. Never widens anything.
-  detected-additive     The union. A format a pipeline can produce becomes available even
-                        though the administrator never listed it. Convenient, & it widens
-                        the accepted format surface past what was approved.
+  hardcoded-only        Detection never runs. config.php decides everything & a pipeline
+                        declaration is never enforced. This is the old behaviour.
+  detected-advisory     Detection runs & changes nothing. Every disagreement is logged.
+                        THIS IS THE DEFAULT & IT IS THE ONE TO RUN FIRST.
+  detected-restrictive  A format no installed tool can produce is dropped, so the interface
+                        stops offering conversions that were always going to fail.
+                        Never widens anything.
+  detected-additive     Also offers a format a pipeline declares & config.php omits, where
+                        the tool confirms it. STILL BOUNDED BY THE DECLARATION.
 
-$WarnOnCapabilityMismatch logs a WARNING whenever detection is not hardcoded-only & the
-capability actually used differs from what config.php declared. It names the format, the
-family & which side of the diff it came from.
+NOTHING WIDENS PAST WHAT A PIPELINE DECLARES, & detected-additive ONCE DID.
+An earlier draft defined it as the union of config.php & what the tool reports. Run
+magick -list format & read what ImageMagick offers as readable. MSL is a scripting language
+it executes. HTTP, HTTPS & FILE fetch a remote address without passing any guard this
+application owns. That definition would have made all four uploadable, because $Allowed is
+built from the accepted arrays & verifyFile() gates on $Allowed.
+The declaration is the ceiling. Detection is a filter beneath it. config.php is the veto
+beneath that. A format survives all three or it is not offered.
+
+$WarnOnCapabilityMismatch logs a WARNING whenever detection runs & the capability actually
+used differs from what config.php declared. It names the format, the family & which side of
+the difference it came from. Under advisory that warning is the entire point of the mode.
+
+See ABOUT_CAPABILITY_DETECTION.txt for the three states, the alias tables & why most
+dependencies cannot be asked anything at all.
 
 $Allowed IS BUILT FROM THE RESULT.
 verifyGlobals() builds $Allowed from $allArrays & verifyFile() rejects any extension missing
@@ -567,15 +599,15 @@ A PIPELINE CARRIES ITS EXISTING ERROR BLOCK WITH IT WHEN IT MOVES OUT OF THE COR
 Those numbers are documented & operators have already read them. Relocation is not a reason
 to renumber. 2000 through 2005 stay with Document. 30000 through 30002 stay with Ebook.
 
-The Pipeline Manager reserves 34000 through 34019.
+The Pipeline Core reserves 34000 through 34019.
 31000 & 32000 were both proposed for this block & both were taken. 31008 through 31016 are
 called by the Core Manager command line paths, & ERROR_DESCRIPTIONS.txt documents 32000
 through 32013 for Setup Core & 33000 through 33001 for Dependency Core without the code
 having called any of them yet.
 A CODE AUDIT IS NOT A BLOCK RESERVATION AUDIT. Check the document, not only the source.
 
-  34000  The Pipeline Manager was loaded directly rather than by the core.
-  34001  The Pipeline Manager could not enumerate any pipeline at all.
+  34000  The Pipeline Core was loaded directly rather than by the core.
+  34001  The Pipeline Core could not enumerate any pipeline at all.
   34002  A pipeline declared an entry point that does not exist after loading its core.
   34003  Every candidate implementation for a conversion failed.
   34004  A pipeline declared an entry point name already claimed by another pipeline.
@@ -594,8 +626,8 @@ against ERROR_DESCRIPTIONS.txt before reserving it.
 
   PHASE 0  These contracts. No code.                                            DONE
   PHASE 1a Normalize every convert*() in the core to the six value return.       DONE
-  PHASE 1b Add pipelineManager.php & config-only pipeline folders.               DONE
-  PHASE 2  Move converter bodies into real pipelineCore.php files.               DONE
+  PHASE 1b Add pipelineCore.php & config-only pipeline folders.               DONE
+  PHASE 2  Move converter bodies into real pipeline.php files.               DONE
            All thirteen have migrated. convertCore.php converts nothing on its own.
            Archive, Audio, Document, Drawing, Ebook, Image, Model, OCR, Scad,
            Stream, Subtitle, SVG & Video.

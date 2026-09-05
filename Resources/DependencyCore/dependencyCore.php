@@ -48,7 +48,60 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependencyCoreVersion = 'v3.8.9';
+$DependencyCoreVersion = 'v3.9.0';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to build the environment a dependency command runs under.
+// / Accepts nothing. Returns a run of exports to place in front of a command, ending in a
+// / semicolon & a space.
+// /
+// / A dependency command runs OUTSIDE the sandbox & that is the whole reason this exists.
+// / sandboxCommand() already points every writable location a tool reaches for at a tmpfs
+// / inside the namespace, so a conversion creates no state anywhere it should not.
+// / A version probe & a capability probe get no such treatment. They run as the web server
+// / account, with the working directory set to the installation root, & with HOME unset,
+// / because a web server does not set it.
+// / A library that reads HOME, finds nothing & falls back to the working directory then
+// / writes into the installation itself. A .cache directory appearing beside convertCore.php
+// / is fontconfig, or a shader cache, or a LibreOffice profile, doing exactly that.
+// /
+// / Every variable below is one a tool actually reaches for. They are pointed at a
+// / directory under the system temporary location, which is disposable by definition & is
+// / writable by whichever account is running.
+// /
+// / A prefix is correct here & would NOT be correct inside the sandbox. exec() runs the
+// / command through a shell, which reads NAME=value as an assignment. bwrap execs directly
+// / & would read the same text as the name of a program to run.
+// /
+// / A package manager command is deliberately not given this. apt has its own cache in its
+// / own place & redirecting it would be a change to the machine rather than to this
+// / application.
+function dependencyEnvironmentPrefix() {
+  // / Set variables.
+  global $ApplicationName, $EnableMemoryProtection;
+  $EnvironmentPrefix = '';
+  $scratchRoot = $applicationSlug = '';
+  $applicationSlug = (isset($ApplicationName) && (string)$ApplicationName !== '') ? preg_replace('/[^A-Za-z0-9]/', '', (string)$ApplicationName) : 'HRConvert2';
+  $scratchRoot = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$applicationSlug.'-probe';
+  // / The directory is created rather than left to the tool, because a tool that cannot
+  // / create it falls back to somewhere else & the point of this is to stop that happening.
+  if (!is_dir($scratchRoot)) @mkdir($scratchRoot, 0700, TRUE);
+  // / These are exports followed by a semicolon rather than NAME=value prefixes.
+  // / A prefix applies only to a simple command. A source build is wrapped in a subshell
+  // / so its exit code can be read, & HOME=x ( ... ) is a syntax error in sh, which is what
+  // / --install-depends printed on the first source build it attempted.
+  // / An export applies to everything that follows it in the same shell, including a
+  // / subshell & every command inside one, & the shell is discarded when the call returns.
+  $EnvironmentPrefix = 'export HOME='.escapeshellarg($scratchRoot)
+    .'; export XDG_CACHE_HOME='.escapeshellarg($scratchRoot.DIRECTORY_SEPARATOR.'.cache')
+    .'; export XDG_CONFIG_HOME='.escapeshellarg($scratchRoot.DIRECTORY_SEPARATOR.'.config')
+    .'; export XDG_DATA_HOME='.escapeshellarg($scratchRoot.DIRECTORY_SEPARATOR.'.local')
+    .'; export XDG_RUNTIME_DIR='.escapeshellarg($scratchRoot)
+    .'; ';
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $scratchRoot, $applicationSlug);
+  return $EnvironmentPrefix; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -180,7 +233,7 @@ function resolveDependencyState($dependencyEntry) {
     // / A library has no binary, so its version command is both the presence test & the
     // / version read. The output is kept & reused below rather than running it a second
     // / time, which spawned two processes per library & repeated any side effect.
-    exec((string)$dependencyEntry['VersionCommand'].' 2>&1', $commandOutput, $commandExitCode);
+    exec(dependencyEnvironmentPrefix().(string)$dependencyEntry['VersionCommand'].' 2>&1', $commandOutput, $commandExitCode);
     $commandWasExecuted = TRUE;
     if ($commandExitCode === 0) $DependencyIsPresent = TRUE;
     // / A library has no binary to look for, so a failed command is the ONLY evidence there
@@ -194,7 +247,7 @@ function resolveDependencyState($dependencyEntry) {
     else {
       if (!$commandWasExecuted) {
         $commandOutput = array();
-        exec((string)$dependencyEntry['VersionCommand'].' 2>&1', $commandOutput, $commandExitCode); }
+        exec(dependencyEnvironmentPrefix().(string)$dependencyEntry['VersionCommand'].' 2>&1', $commandOutput, $commandExitCode); }
       $versionOutput = implode(PHP_EOL, $commandOutput);
       $RawOutput = trim((string)(isset($commandOutput[0]) ? $commandOutput[0] : ''));
       // / A dependency that declares no pattern is not asking to be version checked. Its
@@ -317,7 +370,7 @@ function showDependencyFindings($dependencyFindings) {
   if ($optionalProblems > 0) print($optionalProblems.' optional dependenc(ies) are missing or unverified. Those subsystems are unavailable & everything else works.'.$Lol);
   print($Lol);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $finding, $dependencyFindings);
+  purgeSensitiveMemory($EnableMemoryProtection, $optionalProblems, $requiredProblems, $finding, $dependencyFindings);
   return $LinesPrinted; }
 // / -----------------------------------------------------------------------------------
 
@@ -365,7 +418,7 @@ function installOneDependency($dependencyEntry, $packageManager) {
       print('  '.str_pad((string)$dependencyEntry['Name'], 20).'building from source, this takes several minutes'.$Lol);
       logEntry('Building '.(string)$dependencyEntry['Name'].' from source.');
       $commandOutput = array();
-      exec('('.(string)$dependencyEntry['BuildCommand'].') 2>&1', $commandOutput, $commandExitCode);
+      exec(dependencyEnvironmentPrefix().'('.(string)$dependencyEntry['BuildCommand'].') 2>&1', $commandOutput, $commandExitCode);
       $ReturnData = implode(PHP_EOL, array_slice($commandOutput, -12));
       if ($commandExitCode !== 0) warningEntry('The source build for '.(string)$dependencyEntry['Name'].' exited with code '.$commandExitCode.'.');
       else {
@@ -374,7 +427,7 @@ function installOneDependency($dependencyEntry, $packageManager) {
         if ((string)$dependencyEntry['VersionCommand'] === '') $InstallSucceeded = TRUE;
         else {
           $commandOutput = array();
-          exec((string)$dependencyEntry['VersionCommand'].' 2>&1', $commandOutput, $commandExitCode);
+          exec(dependencyEnvironmentPrefix().(string)$dependencyEntry['VersionCommand'].' 2>&1', $commandOutput, $commandExitCode);
           if ($commandExitCode === 0) $InstallSucceeded = TRUE;
           else $ReturnData = 'The build completed & the result does not answer. Check the tail of the build output in the log.'; } } } }
   else if ($packageList === '') $ReturnData = 'This dependency names no package to install.';
@@ -398,7 +451,7 @@ function installOneDependency($dependencyEntry, $packageManager) {
         if ((string)$dependencyEntry['VersionCommand'] === '') $InstallSucceeded = TRUE;
         else {
           $commandOutput = array();
-          exec((string)$dependencyEntry['VersionCommand'].' 2>&1', $commandOutput, $commandExitCode);
+          exec(dependencyEnvironmentPrefix().(string)$dependencyEntry['VersionCommand'].' 2>&1', $commandOutput, $commandExitCode);
           if ($commandExitCode === 0) $InstallSucceeded = TRUE;
           else $ReturnData = 'The package installed but PHP still cannot load the extension. The web server may need restarting.'; } } } }
   else if ((string)$dependencyEntry['Type'] === 'pip') {
@@ -750,7 +803,7 @@ function runCapabilityCommand($capabilityCommand, $capabilityStyle, $capabilityP
   $commandOutput = $patternMatches = $patternMatch = $splitTokens = array();
   $commandExitCode = 1;
   $rawOutput = $splitToken = '';
-  exec((string)$capabilityCommand.' 2>&1', $commandOutput, $commandExitCode);
+  exec(dependencyEnvironmentPrefix().(string)$capabilityCommand.' 2>&1', $commandOutput, $commandExitCode);
   $rawOutput = implode(PHP_EOL, $commandOutput);
   // / An exit code is not consulted. Several of these tools describe themselves & then
   // / exit non zero, & what matters is whether anything parseable came back.

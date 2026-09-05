@@ -43,7 +43,8 @@ If "Enhanced Logging Verbosity" is disabled in config.php; only warnings and err
 As of v3.8.9 every entry carries a sequence number immediately after its tier label.
 An error therefore reads  ERROR!!! 00042, <TIMESTAMP>, <APPLICATION_NAME>-####, <SESSION_IDENTIFIER>: message
 The number counts entries rather than seconds and starts at zero when the process starts.
-A gap in that sequence is the only evidence that an entry was written and never arrived, and two entries stamped with the same second are otherwise impossible to order.
+A gap in that sequence is the only evidence that an entry was written and never arrived.
+Two entries stamped with the same second are otherwise impossible to order.
 Every example below omits the sequence number for readability. The number is present in a real log and is not part of the error itself.
 Log files are also named for the role that writes them, as HRConvert2_Web, HRConvert2_Manager or HRConvert2_Cli.
 An error raised by a web request is therefore in the Web log rather than in a single shared file.
@@ -124,6 +125,295 @@ WHAT TO GATHER BEFORE ASKING FOR HELP.
   Whether the same operation works from the command line, which separates a web server
   problem from an application problem in one step.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13107, <SESSION_IDENTIFIER>: A hybrid bootable image requires the
+  isohybrid utility from syslinux-utils, which is missing or too old!
+
+FILE
+  Resources/Pipelines/Archive/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A hybrid image was requested & isohybrid could not be used to produce one.
+  A hybrid image boots from optical media & from a USB device, which is what the hybrid in the
+  name refers to. A plain image was not written in its place, because an image that does not
+  boot the way it was asked to is worse than no image at all.
+  Install syslinux-utils, then run -v & read the Syslinux Utils line for the version found.
+---------------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15010, <SESSION_IDENTIFIER>: Could not verify the Document Conversion Engine!
+
+FILE
+  Resources/Pipelines/Document/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  LibreOffice is missing, reports no version, or reports one older than this release requires.
+  Every document, spreadsheet & presentation conversion depends on it & none of them can run.
+  Run -v & read the LibreOffice line, which names the version found & the version wanted.
+  Run --setup --install-depends as root to install it.
+---------------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15011, <SESSION_IDENTIFIER>: Could not create a file at <PATH>!
+
+FILE
+  Resources/Pipelines/Document/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The conversion ran & no output file exists at the path it was told to write.
+  This is the converter reporting success while producing nothing, which is a different fault
+  from a converter that failed & said so.
+  The usual cause is a permission on the data location. Run -fp as root, which corrects
+  ownership on every path this application manages.
+  A full disk produces the same result. Check the free space on the data location.
+---------------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-30000, <SESSION_IDENTIFIER>: The e-book converter timed out!
+
+FILE
+  Resources/Pipelines/Ebook/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Calibre was invoked repeatedly & no output file ever appeared.
+  A large book with many images legitimately takes minutes, so raise the retry count in
+  config.php before assuming a fault.
+  The entry immediately above this one carries whatever Calibre printed, which names the
+  actual cause when there is one.
+---------------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-30001, <SESSION_IDENTIFIER>: The installed Calibre version is missing, unidentifiable, or too old!
+
+FILE
+  Resources/Pipelines/Ebook/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Calibre is absent, reports no version, or reports one older than this release requires.
+  Every e-book conversion depends on it & none of them can run.
+  Run -v & read the Calibre line, which names the version found & the version wanted.
+---------------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-30002, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this e-book conversion cannot be isolated!
+
+FILE
+  Resources/Pipelines/Ebook/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The sandbox could not be prepared & config.php requires one.
+  An e-book is an archive of documents & scripts written by somebody else, so a converter
+  reading one is exactly the case a sandbox exists for. The conversion is refused rather than
+  run unprotected.
+  Run -v & read the Bubblewrap line. Run --setup --install-depends as root to install it.
+  Setting --Require Sandbox-- to FALSE would allow this conversion & is not advised.
+---------------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-0, <SESSION_IDENTIFIER>: Could not process the HRConvert2 Configuration file (config.php)!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The configuration file is missing, unreadable, or contains a syntax error PHP refused.
+  This is raised before the logging environment exists, so it reaches the page & the server
+  error log rather than the HRConvert2 log.
+  Confirm Resources/config.php exists & is readable by the web server account.
+  Restore it from Resources/config.php.bak or from the repository if it was edited by hand.
+  A syntax error names its own line in the web server error log.
+---------------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3, <SESSION_IDENTIFIER>: Could not set the execution timer!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  set_time_limit was refused, which happens when PHP is running in safe mode or when a
+  hosting environment forbids it.
+  Nothing this application does is safe without a limit, because a conversion that never
+  finishes holds a worker slot until the process is killed.
+  Check disable_functions in php.ini for set_time_limit.
+---------------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4, <SESSION_IDENTIFIER>: Could not verify timezone!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The timezone named in config.php was refused by PHP.
+  Every log entry, every session directory & every deletion threshold is derived from the
+  time, so an unknown timezone makes all three untrustworthy rather than merely wrong.
+  Set --Server Timezone-- in config.php to a name PHP recognizes, such as America/New_York.
+  A list of names is available from timedatectl list-timezones.
+---------------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5, <SESSION_IDENTIFIER>: Could not verify installation!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  One of the checks verifyInstallation performs did not pass & the reason was reported by
+  whichever check failed rather than by this line.
+  Read the entry immediately above this one, which names the actual cause.
+  Run -v, which performs the same checks & reports every one of them rather than stopping
+  at the first failure.
+---------------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-24000, <SESSION_IDENTIFIER>: Could not process the HRConvert2 Version Information file (versionInfo.php)!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Resources/versionInfo.php is missing or unreadable.
+  This file carries the version this installation reports & every component is judged
+  against it, so an installation that cannot read it cannot judge anything.
+  Restore it from the repository. It is never edited by an administrator.
+---------------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-28000, <SESSION_IDENTIFIER>: The config.php file is missing N required setting(s). Config version detected: vX!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  config.php does not carry every setting this core requires & the count of missing ones is
+  in the message.
+  An undefined setting reads as NULL in PHP, which silently becomes FALSE or zero at every
+  point of use, so a missing setting is a silently changed behaviour rather than an error.
+  Run --setup --merge-config as root, which adds every missing setting at its default &
+  leaves every existing value alone.
+  A backup is written before anything is changed.
+---------------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-28001, <SESSION_IDENTIFIER>: The core file reports one version
+  & the version information file reports another. This installation is inconsistent!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  convertCore.php & Resources/versionInfo.php disagree about which version this is.
+  An update was interrupted, or one file was replaced by hand & the other was not.
+  Running in this state would judge every component against a version that is not the one
+  actually installed.
+  Complete the update, or replace both files from the same release.
+---------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -5828,7 +6118,30 @@ ERROR DESCRIPTION
   The filesystem is full.
   This error is not fatal. Nothing else is affected & the report may be requested again with a
   destination this account owns.
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-33002, <SESSION_IDENTIFIER>: Capability detection was requested & the Dependency Core component is unavailable!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Capability detection was requested with --setup --detect-capabilities & the component that
+  performs it could not be loaded.
+  Dependency Core is absent, reports no version, or reports a version this core does not require.
+  Run -v & read the Dependency Core line, which names the version found & the version wanted.
+  This error is not fatal. No cache was written & every pipeline continues to use the formats
+  its own declaration names, which is the behaviour with no detection at all.
+---------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.8.9.
+// / v3.9.0.
 // / This file is the Core Manager. It is a manager subcomponent of the Engine.
 // / The Core Manager the listener. It starts the other three, restarts one that dies & is the only role an operator starts directly.
 // /
@@ -38,7 +38,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-35000,
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v3.8.9';
+$ManagerVersion = 'v3.9.0';
 // / -----------------------------------------------------------------------------------
 
 
@@ -112,7 +112,7 @@ function runCoreManager() {
     if (file_exists($socketPath)) @unlink($socketPath);
     logEntry('Core Manager stopped.'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $serverIsOpen, $keepRunning, $stateWasWritten, $socketPath, $managerRole, $targetSocket, $managerState, $managerMessages, $managerConnections, $replyPayload, $routedReply, $messagesReceived, $messageIndex, $managerPid, $managerWasSpawned, $replyWasDelivered, $subordinateRoles);
+  purgeSensitiveMemory($EnableMemoryProtection, $socketServer, $serverIsOpen, $keepRunning, $stateWasWritten, $socketPath, $managerRole, $targetSocket, $managerState, $managerMessages, $managerConnections, $replyPayload, $routedReply, $messagesReceived, $messageIndex, $managerPid, $managerWasSpawned, $replyWasDelivered, $subordinateRoles);
   return $CoreManagerExitedCleanly; }
 // / -----------------------------------------------------------------------------------
 

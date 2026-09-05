@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by convertCore.php WITHOUT executing this file.
-$PipelineCoreVersion = 'v3.8.9';
+$PipelineCoreVersion = 'v3.9.0';
 // / -----------------------------------------------------------------------------------
 
 
@@ -60,8 +60,8 @@ function getAcceptedPipelines() {
     'SVG' => 'v3.8.8',
     'Drawing' => 'v3.8.8',
     'Image' => 'v3.8.8',
-    'Model' => 'v3.8.9',
-    'Video' => 'v3.8.9',
+    'Model' => 'v3.9.0',
+    'Video' => 'v3.9.0',
     'Ebook' => 'v3.8.8',
     'Audio' => 'v3.8.8',
     'Archive' => 'v3.8.8');
@@ -279,7 +279,7 @@ function enumeratePipelines() {
   else if ($Verbose) logEntry('Verified '.$PipelineCount.' conversion pipeline(s).');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $Pipelines is not purged, because it is a return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $acceptedPipelines, $claimedEntryPoints, $pipelineIsAvailable, $pipelineRecord);
+  purgeSensitiveMemory($EnableMemoryProtection, $folderName, $requiredVersion, $acceptedPipelines, $claimedEntryPoints, $pipelineIsAvailable, $pipelineRecord);
   return array($EnumerationComplete, $Pipelines, $PipelineCount); }
 // / -----------------------------------------------------------------------------------
 
@@ -427,7 +427,7 @@ function describePipelineCapabilities($inputExtension) {
     $DescriptionComplete = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $CapabilityDescriptions is not purged, because it is a return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $cleanInput, $familyKey, $mergedOutputs, $inputExtension);
+  purgeSensitiveMemory($EnableMemoryProtection, $candidateOutput, $pipelineRecord, $cleanInput, $familyKey, $mergedOutputs, $inputExtension);
   return array($DescriptionComplete, $CapabilityDescriptions); }
 // / -----------------------------------------------------------------------------------
 
@@ -450,6 +450,8 @@ function buildPipelineFormatArrays() {
     redeclare($PipelineInputFormats, array_values(array_unique($PipelineInputFormats)));
     redeclare($PipelineOutputFormats, array_values(array_unique($PipelineOutputFormats)));
     $FormatArraysAreBuilt = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $pipelineRecord);
   return array($FormatArraysAreBuilt, $PipelineInputFormats, $PipelineOutputFormats); }
 // / -----------------------------------------------------------------------------------
 
@@ -489,7 +491,7 @@ function resolvePipelineCandidates($conversionFamily, $inputExtension, $outputEx
     if (count($CandidateFolders) > 0) $CandidatesAreResolved = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $CandidateFolders is not purged, because it is a return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $candidateRanking, $sortKey, $conversionFamily, $inputExtension, $outputExtension);
+  purgeSensitiveMemory($EnableMemoryProtection, $folderName, $pipelineRecord, $candidateRanking, $sortKey, $conversionFamily, $inputExtension, $outputExtension);
   return array($CandidatesAreResolved, $CandidateFolders); }
 // / -----------------------------------------------------------------------------------
 
@@ -556,7 +558,7 @@ function loadPipelineCore($pipelineFolderName) {
       if ($Verbose) logEntry('Loaded the '.$pipelineFolderName.' pipeline, entry point '.$PipelineEntryPointName.'.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $PipelineEntryPointName is not purged, because it is a return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $pipelineRecord, $pipelineFolderName);
+  purgeSensitiveMemory($EnableMemoryProtection, $sharedModuleName, $pipelineRecord, $pipelineFolderName);
   return array($PipelineIsReady, $PipelineEntryPointName); }
 // / -----------------------------------------------------------------------------------
 
@@ -601,7 +603,7 @@ function runOcrOperation($selectedFiles, $userFilename, $userExtension, $ocrMeth
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $selectedFiles is not purged, because the caller still holds the selection.
   // / $OutputFilenames is not purged, because it is a return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $pipelineIsReady, $entryPointName, $chosenFolder, $userFilename, $userExtension, $ocrMethod);
+  purgeSensitiveMemory($EnableMemoryProtection, $folderName, $pipelineRecord, $selectedFiles, $pipelineIsReady, $entryPointName, $chosenFolder, $userFilename, $userExtension, $ocrMethod);
   return array($OperationSuccessful, $OperationErrors, $OutputFilenames); }
 // / -----------------------------------------------------------------------------------
 
@@ -680,7 +682,7 @@ function runConversion($conversionFamily, $pathname, $newPathname, $extension, $
   if (!is_string($OutputFilename) or $OutputFilename === '') $OutputFilename = basename($NewPathname);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / The six contract values are not purged, because they are return values.
-  purgeSensitiveMemory($EnableMemoryProtection, $candidatesAreResolved, $candidateFolders, $pipelineIsReady, $entryPointName, $inputExtension, $attemptCount, $conversionFamily, $pathname, $newPathname, $extension, $height, $width, $rotate, $bitrate);
+  purgeSensitiveMemory($EnableMemoryProtection, $candidateFolder, $candidatesAreResolved, $candidateFolders, $pipelineIsReady, $entryPointName, $inputExtension, $attemptCount, $conversionFamily, $pathname, $newPathname, $extension, $height, $width, $rotate, $bitrate);
   return array($ConversionSuccess, $ConversionErrors, $NewPathname, $Extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 ?>

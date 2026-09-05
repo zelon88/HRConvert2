@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.8.9.
+// / v3.9.0.
 // / This file declares what the Model conversion pipeline is & what it can do.
 // / It is read by pipelineCore.php on EVERY request & it must stay cheap.
 // / It ASSIGNS VARIABLES & DOES NOTHING ELSE. No functions, no logic, no output.
@@ -35,7 +35,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read WITHOUT executing this file, then matched
 // / EXACTLY against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v3.8.9';
+$PipelineVersion = 'v3.9.0';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -83,18 +83,36 @@ $PipelineRequestFields = array('Extension');
 $Capabilities = array(
   'Input' => array(
     'obj', 'stl', 'ply', 'dae', 'fbx', '3ds', 'blend', 'gltf', 'glb', 'x3d', 'off', 'lwo',
-    'ms3d', 'ac', 'b3d', 'q3d', 'irr', 'md2', 'md3', 'md5mesh', 'smd', 'ase', 'dxf', 'raw'),
+    'ms3d', 'ac', 'b3d', 'q3d', 'irr', 'md2', 'md3', 'md5mesh', 'smd', 'ase', 'dxf', 'raw',
+    // / 3mf, x & ctm read as well as write. 3mf was offered by config.php as an input long
+    // / before this line existed, so every 3mf upload was refused by a pipeline that never
+    // / claimed it, which reads as a broken conversion rather than as a missing declaration.
+    '3mf', 'x', 'ctm'),
   // / A format here that neither Assimp nor MeshLab can WRITE is refused at conversion time
   // / with error 9004. Reading a format is not the same as writing it, & Assimp reads
   // / several it cannot produce. The writer lists live in pipeline.php beside the route
   // / selection that consults them.
+  // / Five formats were added at v3.9.0 & each is written by a utility already installed.
+  // / 3mf & x are in the output of assimp listexport on this installation.
+  // / ctm, dxf & wrl are written by the MeshLab route. ctm has a plugin of its own in the
+  // / bundle & dxf & wrl come from the base input output plugin.
+  // / u3d was considered & LEFT OUT. MeshLab writes it only by handing the mesh to a
+  // / separate IDTF converter, which is a second process with its own failure modes, & the
+  // / bundle carries those libraries without carrying the converter that drives them.
+  // / A format that works most of the time is worse than one this pipeline never offered,
+  // / because the failure arrives after a user has already waited for it.
   'Output' => array(
-    'obj', 'stl', 'ply', 'dae', 'fbx', 'gltf', 'glb', 'x3d', 'off', '3ds', 'assbin', 'json'));
+    'obj', 'stl', 'ply', 'dae', 'fbx', 'gltf', 'glb', 'x3d', 'off', '3ds', 'assbin', 'json',
+    '3mf', 'x', 'ctm', 'dxf', 'wrl'));
 
 // / Pairs removed from the cross product above, written as 'input>output'.
 // / A conversion that produces the format it was handed is not a conversion.
 $PipelineExclude = array(
     'obj>obj', 'stl>stl', 'ply>ply', 'dae>dae', 'fbx>fbx', 'gltf>gltf', 'glb>glb', 'x3d>x3d',
-    'off>off', '3ds>3ds');
+    'off>off', '3ds>3ds',
+    // / dxf became an output at v3.9.0 & was already an input, so the pair exists now.
+    // / Every other format added at the same time is an output only & cannot pair with
+    // / itself. Adding one of them as an input means adding a line here at the same time.
+    'dxf>dxf', 'x>x', 'ctm>ctm', '3mf>3mf');
 // / -----------------------------------------------------------------------------------
 ?>

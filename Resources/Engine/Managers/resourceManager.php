@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.8.9.
+// / v3.9.0.
 // / This file is the Resource Manager. It is a manager subcomponent of the Engine.
 // / The Resource Manager polls the host, calculates the budget every operation is granted from & sweeps anything that has outlived its welcome.
 // /
@@ -38,7 +38,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-35000,
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v3.8.9';
+$ManagerVersion = 'v3.9.0';
 // / -----------------------------------------------------------------------------------
 
 
@@ -174,7 +174,7 @@ function runResourceManager() {
         $messageIndex++; } }
     $ResourceManagerExitedCleanly = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $serverIsOpen, $keepRunning, $resourcesPolled, $budgetCalculated, $requestApproved, $workerWasRegistered, $workerWasReleased, $extensionApproved, $sweepCompleted, $messageWasDelivered, $socketPath, $denialReason, $budgetToken, $sessionConvertLoc, $staleToken, $systemResources, $resourceBudget, $workerRegistry, $sessionLocations, $managerMessages, $managerConnections, $replyPayload, $staleWorkers, $staleRecord, $workerRecord, $killReply, $scaledLimits, $limitsWereScaled, $environmentIsReady, $environmentFindings, $dataIsProtected, $exposureStatus, $exposureDetail, $messagesReceived, $messageIndex, $allocatedBudget, $newExpectedRuntime, $lastPollTime, $lastReapTime, $lastSweepTime, $locationsSwept, $entriesDropped);
+  purgeSensitiveMemory($EnableMemoryProtection, $socketServer, $serverIsOpen, $keepRunning, $resourcesPolled, $budgetCalculated, $requestApproved, $workerWasRegistered, $workerWasReleased, $extensionApproved, $sweepCompleted, $messageWasDelivered, $socketPath, $denialReason, $budgetToken, $sessionConvertLoc, $staleToken, $systemResources, $resourceBudget, $workerRegistry, $sessionLocations, $managerMessages, $managerConnections, $replyPayload, $staleWorkers, $staleRecord, $workerRecord, $killReply, $scaledLimits, $limitsWereScaled, $environmentIsReady, $environmentFindings, $dataIsProtected, $exposureStatus, $exposureDetail, $messagesReceived, $messageIndex, $allocatedBudget, $newExpectedRuntime, $lastPollTime, $lastReapTime, $lastSweepTime, $locationsSwept, $entriesDropped);
   return $ResourceManagerExitedCleanly; }
 // / -----------------------------------------------------------------------------------
 

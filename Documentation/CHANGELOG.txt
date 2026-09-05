@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.8.9.
+v3.9.0.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -26,6 +26,20 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+
+--------------------
+COMMIT 9/4/2026
+v3.9.0 - Work on engine design.
+
+-v3.9.0.
+-Build linters in 2 languages for checking the code.
+  -Compliance is now measurable and enforceable.
+  -These tests were designed to not only report what is not-compliant, but how to fix it.
+-Work on engine migration and overall design.
+-Improve logging, pipelines, convention compliance.
+-Add Python 3.14 and Numpy as managed dependencies.
+-Add support for additonal 3d model formats.
+-Update docs, add new docs.
 
 --------------------
 COMMIT 9/4/2026

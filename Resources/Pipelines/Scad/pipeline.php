@@ -70,7 +70,7 @@ function resolveSCADInclude($scadReference, $sessionFiles) {
         $ResolvedFile = $ScadTemp.$DirSep.basename($sessionFile);
         break; } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $referenceBase, $sessionFile, $referenceIsUsable);
+  purgeSensitiveMemory($EnableMemoryProtection, $scadReference, $sessionFiles, $referenceBase, $sessionFile, $referenceIsUsable);
   return $ResolvedFile; }
 // / -----------------------------------------------------------------------------------
 

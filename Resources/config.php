@@ -44,7 +44,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. Replacing config.php with a newer one is the correct fix.
-$ConfigVersion = 'v3.8.8';
+$ConfigVersion = 'v3.9.0';
 // / ------------------------------
 
 // / ------------------------------
@@ -232,7 +232,7 @@ $ThrowSandboxWarning = TRUE;
 // /   On popular public facing servers, setting this too high can result in the server becoming overwhelmed by on-going streams.
 // /   Valid options are integers greater than 1, but not more than the PHP execution time or the --Delete Threshold--.
 // /   This option MUST be set higher than 0.
-// /   Default is 15
+// /   Default is 15.
 $StreamWatchTimeout = 15;
 // /  --Stream Connection Timeout--
 // /   Set the minimum amount of time in seconds that FFMPEG will wait after attempting to make a connection to a remote stream provider.
@@ -289,7 +289,7 @@ $StreamInspectionFilesPerLayer = 7;
 // /   If set to 'ALLOW', HRConvert2 will allow FFMPEG to process the file only when the inspection has exhausted the budget with no findings.
 // /   If set to 'DENY', HRConvert2 will not allow FFMPEG to process the file unless it can afford to inspect & approve every required stream file.
 // /   Valid options are 'DENY' or 'ALLOW'.
-// /   Default is 'DENY'
+// /   Default is 'DENY'.
 $DefaultStreamInspectionForfeitAction = 'DENY';
 // /  -- Maximum Stream Inspection Size--
 // /   The Stream Inspector will download up to this many bytes of a manifest file for validation during operation.
@@ -550,33 +550,33 @@ $AllowUnprivilegedNamespaces = TRUE;
 // /   Do not include a trailing slash.
 // /   Do not use a path with whitespace.
 // /   Changing this value is not recommended.
-// /   Default is '/var/www/html/HRProprietary/HRConvert2'
+// /   Default is '/var/www/html/HRProprietary/HRConvert2'.
 $InstLoc = '/var/www/html/HRProprietary/HRConvert2';
 // /  --Proprietary Directory--
 // /   Install the HRConvert2 folder to the following directory.
 // /   Do not include a trailing slash.
 // /   Do not use a path with whitespace.
 // /   Changing this value is not recommended.
-// /   Default is '/var/www/html/HRProprietary'
+// /   Default is '/var/www/html/HRProprietary'.
 $ProprietaryLoc = '/var/www/html/HRProprietary';
 // /  --Server Root Directory--
 // /   This should be pointed at the root of your web server directory.
 // /   Do not include a trailing slash.
 // /   Do not use a path with whitespace.
 // /   Changing this value is not recommended.
-// /   Default is '/var/www/html'
+// /   Default is '/var/www/html'.
 $ServerRootDir = '/var/www/html';
 // /  --Data Storage Directory--
 // /   This is where temporary data files are stored.
 // /   Do not include a trailing slash.
 // /   Do not use a path with whitespace.
-// /   Default is '/DATA/HRConvert2'
+// /   Default is '/DATA/HRConvert2'.
 $ConvertLoc = '/DATA/HRConvert2';
 // /  --Log Storage Directory--
 // /   This is where permanent Log files are stored.
 // /   Do not include a trailing slash.
 // /   Do not use a path with whitespace.
-// /   Default is $ConvertLoc.'/Logs'
+// /   Default is $ConvertLoc.'/Logs'.
 $LogDir = $ConvertLoc.'/Logs';
 // /  --Home Directory--
 // /   This is the Home directory for the web server user.
@@ -599,7 +599,7 @@ $HomeLoc = $ConvertLoc;
 // /   that have already been carried into the new installation.
 // /   Do not include a trailing slash.
 // /   Do not use a path with whitespace.
-// /   Default is $ConvertLoc.'/Last-Installed-Version'
+// /   Default is $ConvertLoc.'/Last-Installed-Version'.
 $BackupLoc = $ConvertLoc.'/Last-Installed-Version';
 // /  --Append Log Hash To Log Files--
 // /   This setting is used to append a 12 digit unique identifier to log file names.
@@ -614,7 +614,7 @@ $AppendLogHashToLogFiles = TRUE;
 // /   Log files are appended with t
 // /   Do not include a trailing slash.
 // /   Do not use a path with whitespace.
-// /   Default is $ConvertLoc.'/Logs'
+// /   Default is $ConvertLoc.'/Logs'.
 $UniqueDailyLogHash = TRUE;
 // /  --Additional Data Locations--
 // /   Extra locations are used to load balance sessions across multiple --Convert Location--.
@@ -1082,44 +1082,97 @@ $SupportedFormatDetectionType = 'detected-advisory';
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
 $WarnOnCapabilityMismatch = TRUE;
-// /  --Supported Archive Formats--
+// /  --Supported Archive Formats--.
 $UserArchiveArray = array('zip', 'rar', 'tar', '7z', 'iso');
-// /  --Supported Bootable ISO Output Formats--
+// /  --Supported Bootable ISO Output Formats--.
 $UserBootableIsoArray = array('iso_mbr-boot', 'iso_gpt-boot', 'iso_gpt-boot-x86', 'iso_gpt-boot-x86-64', 'iso_gpt-boot-arm32', 'iso_gpt-boot-arm64');
-// /  --Supported Dearchive Formats--
+// /  --Supported Dearchive Formats--.
 $UserDearchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi', 'tar.bz2', 'tar.gz', 'cbr', 'cbz');
-// /  --Supported Document Formats--
+// /  --Supported Document Formats--.
 $UserDocumentArray = array('txt', 'doc', 'docx', 'rtf', 'odt', 'pdf');
-// /  --Supported Spreadsheet Formats--
+// /  --Supported Spreadsheet Formats--.
 $UserSpreadsheetArray = array('csv', 'xls', 'xlsx', 'ods');
-// /  --Supported XPS Input Formats--
+// /  --Supported XPS Input Formats--.
 $UserXPSInputArray = array('xps', 'oxps');
-// /  --Supported XPS Output Formats--
+// /  --Supported XPS Output Formats--.
 $UserXPSOutputArray = array('pdf');
-// /  --Supported Presentation Input Formats--
+// /  --Supported Presentation Input Formats--.
 $UserPresentationInputArray = array('pptx', 'ppt', 'potx', 'potm', 'pot', 'ppa', 'odp');
-// /  --Supported Presentation Output Formats--
+// /  --Supported Presentation Output Formats--.
 $UserPresentationOutputArray = array('pptx', 'ppt', 'potx', 'potm', 'pot', 'ppa', 'odp', 'pdf');
-// /  --Supported Image Formats--
+// /  --Supported Image Formats--.
 $UserImageArray = array('jpeg', 'jpg', 'jpe', 'png', 'bmp', 'gif', 'webp', 'cin', 'dds', 'dib', 'flif', 'avif', 'gplt', 'sct', 'xcf', 'heic', 'ico', 'tiff', 'tif', 'heif', 'jp2', 'j2k', 'jxl');
-// /  --Supported Audio Input Formats--
+// /   Ten formats were offered as uploads the pipeline never claimed & eleven as outputs it
+// /   cannot write. Each one was accepted by the interface & refused by the converter.
+
+// /  --Supported Image Input Formats--
+// /   What a user may upload. Every entry is a format the Image pipeline declares
+// /   as an input, so nothing here is offered & then refused.
+$UserImageInputArray = array('jpeg', 'jpg', 'png', 'bmp', 'gif', 'webp', 'dds', 'avif', 'heic', 'ico', 'tiff', 'tif', 'jp2');
+
+// /  --Supported Image Output Formats--
+// /   What a user may ask for. Every entry is a format the pipeline declares as an
+// /   output.
+$UserImageOutputArray = array('jpeg', 'jpg', 'png', 'bmp', 'gif', 'webp', 'dds', 'avif', 'ico', 'tiff', 'tif', 'jp2');
+
+// /  --Supported Audio Input Formats--.
 $UserMediaInputArray = array('sox', 'spdif', 'spx', 'tta', 'u16be', 'u16le', 'u24be', 'u24le', 'u32be', 'u32le', 'u8', 'voc', 'wav', 'wv', 'wsaud', 'mulaw', 'mxf', 'mxf_d10', 'mxf_opatom', 'oga', 'ogg', 'opus', 'oss', 'psp', 'rawvideo', 's16be', 's16le', 's24be', 's24le', 's32be', 's32le', 's8', 'sbc', 'ilbc', 'ircam', 'latm', 'lrc', 'mp2', 'mp3', 'mlp', 'flac', 'g722', 'g723_1', 'g726', 'g726le', 'gsm', 'caf', 'daud', 'dts', 'eac3', 'f32be', 'f32le', 'f64be', 'f64le', 'ac3', 'ac4', 'adts', 'aiff', 'alaw', 'amr', 'aptx', 'aptx_hd', 'argo_asf', 'argo_cvg', 'ast', 'au', 'a64', 'aa', 'aac', 'aax', 'acm', 'act', 'adp', 'adx', 'aea', 'afc', 'aix', 'alp', 'amrnb', 'amrwb', 'apac', 'apc', 'ape', 'apm', 'argo_asf', 'binka', 'bit', 'boa', 'bonk', 'brstm', 'dfpwm', 'dsf', 'dss', 'epaf', 'fsb', 'fwse', 'g729', 'hca', 'idf', 'kux', 'kvag', 'laf', 'lavfi', 'loas', 'luodat', 'lvf', 'lxf', 'mca', 'mcc', 'megsts', 'mlv', 'mmf', 'mods', 'moflex', 'mpc8', 'msf', 'msnwctcp', 'mtaf', 'musx', 'nc', 'nistsphere', 'nsp', 'paf', 'pam_pipe', 'pbm_pipe', 'pfm_pipe', 'pp_bnk', 'psxstr', 'pva', 'pvf', 'qcp', 'rka', 'rl2', 'rpl', 'rso', 's337m', 'sap', 'sbg', 'scd', 'sdns', 'sdp', 'sds', 'sdx', 'siff', 'simbiosis_imx', 'sln', 'smk', 'smush', 'sol', 'svag', 'svs', 'tak', 'thp', 'tierexseq', 'tty', 'ty', 'usm', 'vag', 'vidc', 'vpk', 'vqf', 'w64', 'wady', 'wavarc', 'wsd', 'wsvqa', 'wve', 'xa', 'xbin', 'xbm_pipe', 'xmd', 'xpm_pipe', 'xwma', 'yop', 'wma', 'm4a');
-// /  --Supported Audio Output Formats--
+// /  --Supported Audio Output Formats--.
 $UserMediaOutputArray = array('mp3', 'aac', 'ogg', 'wma', 'mp2', 'flac', 'm4a');
-// /  --Supported Video Input Formats--
+// /  --Supported Video Input Formats--.
 $UserVideoInputArray = array('smoothstreaming', 'svcd', 'swf', 'truehd', 'vc1', 'vc1test', 'vcd', 'vob', 'vvc', 'webm', 'yuv4mpegpipe', 'mpjpeg', 'mxf', 'mxf_d10', 'mxf_opatom', 'nut', 'obu', 'ogv', 'psp', 'rawvideo', 'rm', 'roq', 'rtp_mpegts', 'smjpeg', 'hevc', 'hls', 'image2', 'image2pipe', 'ipod', 'ismv', 'm4v', 'matroska', 'mjpeg', 'mkvtimestamp_v2', 'mov', 'mp4', 'mpeg', 'mpeg1video', 'mpeg2video', 'mpegts', 'mpegtsraw', 'mpegvideo', 'fbdev', 'film_cpk', 'filmstrip', 'gxf', 'h261', 'h263', 'h264', 'hds', 'avs2', 'avs3', 'cavsvideo', 'cavs', 'dirac', 'dnxhd', 'dv', 'dvd', 'evc', '3g2', '3gp', 'apng', 'argo_asf', 'argo_cvg', 'asf', 'asf_stream', 'avi', 'avif', 'avm2', '3dostr', '4xm', 'adf', 'ads', 'alias_pix', 'anm', 'argo_brp', 'asf_o', 'av1', 'avs', 'bethsoftvid', 'bfi', 'bink', 'bmv', 'brender_pix', 'brender', 'cdg', 'cdxl', 'cine', 'concat', 'cri', 'dcstr', 'derf', 'dfa', 'dhav', 'dsicin', 'dtshd', 'dxa', 'ea', 'exr', 'fits', 'flic', 'frm', 'gdv', 'genh', 'gif', 'idcin', 'iff', 'ifv', 'ingenient', 'ipmovie', 'iss', 'iv8', 'ivf', 'ivr', 'j2k', 'jp2', 'jv', 'live_flv', 'lmlm4', 'mtv', 'mv', 'mvi', 'mxg', 'nsv', 'nuv', 'osq', 'pcx_pipe', 'pdv', 'pgm_pipe', 'pgmuv_pipe', 'pgx_pipe', 'phm_pipe', 'protocol_pipe', 'pictor_pipe', 'png_pipe', 'ppm_pipe', 'psd_pipe', 'qdraw_pipe', 'qoi_pipe', 'r3d', 'redspark', 'rroq', 'rsd', 'rtsp', 'sdr2', 'ser', 'sga', 'sgi_pipe', 'shn', 'sunrast_pipe', 'svg_pipe', 'tiff_pipe', 'tmv', 'v210', 'v210x', 'vbn_pipe', 'video4linux2', 'v4l2', 'vividas', 'vivo', 'vmd', 'wc3movie', 'webm_dash_manifest', 'webp_pipe', 'wtv', 'xmv', 'xvag', 'xwd_pipe', 'mkv', 'wmv');
-// /  --Supported Video Output Formats--
+// /  --Supported Video Output Formats--.
 $UserVideoOutputArray = array('3gp', 'mkv', 'avi', 'mp4', 'mpeg', 'wmv', 'mov', 'm4v');
-// /  --Supported Stream Formats--
+// /  --Supported Stream Formats--.
 $UserStreamArray = array('m3u8', 'ts');
-// /  --Supported Drawing Formats--
+// /   The old array offered ts as an upload & m3u8 as an output, which is each direction
+// /   backwards. A stream is fetched as a playlist & written as a media file.
+
+
+// /  --Supported Drawing Formats--.
 $UserDrawingArray = array('dxf', 'vdx', 'fig', 'dia', 'wpg');
-// /  --Supported SVG Input Formats--
+// /   Every format offered is both read & written, so the two lists are identical today.
+// /   They are separate because the pipeline writes eighteen formats & only five are
+// /   offered, & adding an output no longer means offering it as an upload.
+
+// /  --Supported Drawing Input Formats--
+// /   What a user may upload. Every entry is a format the Drawing pipeline declares
+// /   as an input, so nothing here is offered & then refused.
+$UserDrawingInputArray = array('dxf', 'vdx', 'fig', 'dia', 'wpg');
+
+// /  --Supported Drawing Output Formats--
+// /   What a user may ask for. Every entry is a format the pipeline declares as an
+// /   output.
+$UserDrawingOutputArray = array('dxf', 'vdx', 'fig', 'dia', 'wpg');
+
+// /  --Supported SVG Input Formats--.
 $UserSVGInputArray = array('svg', 'plain-svg');
-// /  --Supported SVG Output Formats--
+// /  --Supported SVG Output Formats--.
 $UserSVGOutputArray = array('png', 'pdf', 'ps', 'eps', 'emf', 'wmf');
 // /  --Supported Model Formats--
-$UserModelArray = array('stl', 'ply', 'off', '3ds', 'fbx', 'dae', 'gltf', 'glb', 'obj', '3mf', 'x3d', 'dxf');
+// /   This array was offered as both the input list & the output list, which the audio,
+// /   video & vector converters each split in two. The two below carry those directions.
+// /   All three are required. --setup --merge-config adds whichever are missing & scales
+// /   itself from the required list in convertCore.php, so a setting left out of that list
+// /   is never added to anybody's configuration.
+// /   This one remains because other code reads the combined list.
+$UserModelArray = array('stl', 'ply', 'off', '3ds', 'fbx', 'dae', 'gltf', 'glb', 'obj', '3mf', 'x3d', 'dxf', 'x', 'ctm');
+
+// /  --Supported Model Input Formats--
+// /   What a user may upload for a model conversion.
+// /   Every entry must be a format the Model pipeline declares as an input, or the upload is
+// /   offered & then refused by a pipeline that never claimed it.
+$UserModelInputArray = array('stl', 'ply', 'off', '3ds', 'fbx', 'dae', 'gltf', 'glb', 'obj', '3mf', 'x3d', 'dxf', 'x', 'ctm');
+
+// /  --Supported Model Output Formats--
+// /   What a user may ask for. This list is longer than the input list & that is the whole
+// /   reason the two are separate.
+// /   wrl is written by MeshLab & read by it poorly, so it is an output & never an input.
+// /   u3d is deliberately absent. MeshLab writes it only through a separate converter this
+// /   bundle does not carry, & a format that works most of the time is worse than one that
+// /   was never offered.
+$UserModelOutputArray = array('stl', 'ply', 'off', '3ds', 'fbx', 'dae', 'gltf', 'glb', 'obj', '3mf', 'x3d', 'dxf', 'x', 'ctm', 'wrl', 'assbin', 'json');
+
 // /  --Supported OpenSCAD Formats--
 // /   The first entry must be scad, which is the only input format this converter accepts.
 // /   Every remaining entry is an export format OpenSCAD can produce from 3D geometry.
@@ -1129,11 +1182,25 @@ $UserModelArray = array('stl', 'ply', 'off', '3ds', 'fbx', 'dae', 'gltf', 'glb',
 // /   Offering them would produce confusing failures for the overwhelming majority of uploads.
 // /   PNG is deliberately absent because a useful render would require camera & image size arguments.
 $UserSCADArray = array('scad', 'stl', 'off', 'amf', '3mf', 'csg');
-// /  --Supported Subtitle Input Formats--
+// /   The old array carried scad first & relied on that position to mean input. Everything
+// /   after it was an output. A positional convention is not a declaration & nothing
+// /   enforced it.
+
+// /  --Supported SCAD Input Formats--
+// /   What a user may upload. Every entry is a format the Scad pipeline declares
+// /   as an input, so nothing here is offered & then refused.
+$UserSCADInputArray = array('scad');
+
+// /  --Supported SCAD Output Formats--
+// /   What a user may ask for. Every entry is a format the pipeline declares as an
+// /   output.
+$UserSCADOutputArray = array('stl', 'off', 'amf', '3mf', 'csg');
+
+// /  --Supported Subtitle Input Formats--.
 $UserSubtitleInputArray = array('sub', 'sbv', 'srt', 'stream_segment', 'ssegment', 'streamhash', 'sup', 'subtitles', 'ttml', 'uncodedframecrc', 'webvtt', 'wtv', 'oma', 'rso', 'rtp', 'rtsp', 'scc', 'sdl', 'sdl2', 'segment', 'sap', 'jacosub', 'kvag', 'microdvd', 'ffmetadata', 'fifo', 'fifo_test', 'fits', 'framecrc', 'framehash', 'framemd5', 'dash', 'crc', 'dvbsub', 'dvbtxt', 'gsm', 'ass', 'vobsub', 'mpl2', 'mpsub', 'pjs', 'realtext', 'sami', 'stl', 'subviewer', 'subviewer1', 'tedcaptions', 'txd', 'vtt', 'ssa', 'dvb', 'vplayer');
-// /  --Supported Subtitle Output Formats--
+// /  --Supported Subtitle Output Formats--.
 $UserSubtitleOutputArray = array('vtt', 'ssa', 'ass', 'srt');
-// /  --Supported OCR Formats--
+// /  --Supported OCR Formats--.
 $UserPDFWorkArr = array('pdf', 'jpg', 'jpeg', 'png', 'bmp', 'webp', 'gif');
 // /  --User Ebook Input Array--
 // /   The e-book formats a user may convert FROM.

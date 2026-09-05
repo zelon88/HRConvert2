@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.8.9.
+// / v3.9.0.
 // / This file configures the Engine for the application that bundles it.
 // /
 // / This file is NOT the administrator's configuration & is not edited by a user.
@@ -43,7 +43,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-35000,
 // / The version of this configuration. Matched as a MINIMUM by the Engine, the same way
 // / an application matches its own configuration. A newer file carrying every required
 // / setting is fine, because a setting this Engine does not know is simply not read.
-$EngineConfigVersion = 'v3.8.9';
+$EngineConfigVersion = 'v3.9.0';
 // / -----------------------------------------------------------------------------------
 
 
@@ -167,6 +167,77 @@ $EnginePerManagerLogFiles = FALSE;
 // /   Valid options are TRUE or FALSE.
 // /   Default is FALSE.
 $EnginePerWorkerLogFiles = FALSE;
+
+// / -----------------------------------------------------------------------------------
+// / --Engine Network Policy--
+// /
+// / Every setting here has a fallback to the name HRConvert2 already uses, so leaving the
+// / whole section commented changes nothing about an existing installation.
+// / A new application sets these & has no stream shaped settings of its own.
+// / networkPolicy() in the Engine resolves them & is the only thing that reads them.
+// /
+// /  --Engine Allow Plain HTTP--
+// /   Permits a fetch over http rather than https.
+// /   Falls back to --Allow Stream Over HTTP-- & then to FALSE.
+// /   Valid options are TRUE or FALSE.
+// /   Default is the application's own setting.
+// $EngineAllowPlainHTTP = FALSE;
+
+// /  --Engine Max Inspection Bytes--
+// /   How much of a remote file is read before it is judged.
+// /   A file larger than this is truncated for inspection rather than refused, because the
+// /   beginning of a file is where an address hides.
+// /   Falls back to --Max Stream Inspection File Size-- & then to one megabyte.
+// $EngineMaxInspectionBytes = 1048576;
+
+// /  --Engine Connection Timeout--
+// /   Seconds to wait for a remote host before giving up.
+// /   Falls back to --Stream Connection Timeout-- & then to ten.
+// $EngineConnectionTimeout = 10;
+
+// /  --Engine Watch Timeout--
+// /   Seconds to supervise a detached worker before it is considered overdue.
+// /   Falls back to --Stream Watch Timeout-- & then to three hundred.
+// $EngineWatchTimeout = 300;
+
+// /  --Engine Fetch Temp--
+// /   Where a remote file is written while it is being inspected.
+// /   Falls back to --Stream Temp-- & then to the system temporary directory.
+// $EngineFetchTemp = '';
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / --Engine Operating Shape--
+// /
+// /  --Engine Dispatch Direction--
+// /   Which way work moves through this application, & therefore what the Engine opens.
+// /
+// /   Set this to 'requests-upward' for an application where unprivileged work asks a
+// /   privileged process for permission. HRConvert2 is this shape. A web request needs
+// /   budget before it converts anything, so a listening socket has to exist & anything
+// /   that reaches it has to be authenticated.
+// /
+// /   Set this to 'work-downward' for an application where a privileged process hands
+// /   tasks to less privileged workers. A scanner dispatching workers is this shape.
+// /   Nothing untrusted ever needs to talk to anything privileged, so NO LISTENING SOCKET
+// /   IS OPENED AT ALL. A worker takes its instructions from how it was started, does the
+// /   work & exits, & the result is an exit code & a file the parent already owns.
+// /
+// /   The second shape is strictly safer & is safer because it is one way.
+// /   A socket that does not exist cannot be authenticated to, forged against or replayed.
+// /   An application that runs privileged & opens a listening socket has made the secret
+// /   that authenticates it the only thing standing between a compromise of the
+// /   unprivileged side & the privileged one.
+// /
+// /   This exists so the Engine does not quietly assume the shape of the first application
+// /   that used it. Declaring it wrong for a privileged application is the mistake this
+// /   setting is here to prevent.
+// /   Valid options are 'requests-upward' or 'work-downward'.
+// /   Default is 'requests-upward'.
+$EngineDispatchDirection = 'requests-upward';
+// / -----------------------------------------------------------------------------------
+
 
 // /  --Engine Strict Contract--
 // /   Refuses to load when the application has not supplied every value the contract

@@ -108,7 +108,7 @@ function sanitizeDocumentLinks($documentPath) {
   else $DocumentIsSanitized = FALSE;
   if ($Verbose) logEntry('Document Sanitization: '.basename($documentPath).', Format: '.($documentExtension === '' ? 'NONE' : $documentExtension).', Examined: '.($DocumentIsSanitized ? 'YES' : 'NO').', References Neutralized: '.$ReferencesRemoved.'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $documentExtension, $entryName, $entryContents, $cleanContents, $flatContents, $entryIndex, $entryCount, $replacementCount, $packagedFormats, $flatFormats, $documentPath);
+  purgeSensitiveMemory($EnableMemoryProtection, $zipArchive, $documentExtension, $entryName, $entryContents, $cleanContents, $flatContents, $entryIndex, $entryCount, $replacementCount, $packagedFormats, $flatFormats, $documentPath);
   return array($DocumentIsSanitized, $ReferencesRemoved); }
 // / -----------------------------------------------------------------------------------
 

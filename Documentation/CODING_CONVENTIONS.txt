@@ -124,6 +124,28 @@ developed in the open, alongside the code they are designed to safeguard.
 20. A pattern repeated more than twice belongs in a function or a template.
 
 21. Call sanitize() against any user input before using it. It accepts any variable type as input.
+
+22. No dependency command may run unsandboxed. Every exec() or shell_exec() that runs a
+  tool this application depends on goes through sandboxCommand(), which gives it a
+  namespace with no network, a minimal device set, a tmpfs for everything writable, and
+  read only access to the two directories it was handed.
+  A command handling a file somebody else supplied is the whole attack surface of this
+  application. A sandbox is not a precaution there, it is the boundary.
+  Some commands genuinely cannot be sandboxed. A package manager installs to the machine,
+  a source build writes into /usr/local, and a probe that asks a tool for its version has
+  to reach that tool where it actually lives.
+  Every one of those must carry a comment saying why it does not comply. An exception
+  nobody wrote down is indistinguishable from an oversight, and the next person to read it
+  has no way to tell whether it was considered.
+  A command that cannot be sandboxed must still be given a disposable environment.
+  dependencyEnvironmentPrefix() points HOME and every XDG location at a scratch directory,
+  because a tool that reads HOME, finds nothing, and falls back to the working directory
+  writes into the installation itself. A .cache appearing beside convertCore.php is that
+  happening.
+  Do not prefix an environment onto a command that goes to bwrap. bwrap execs directly and
+  reads NAME=value as the name of a program to run rather than as an assignment. Use
+  --setenv there instead.
+
 -----------------------------------------------------------------------------------
 
 -----DETAILED CODEBASE STANDARDS & GUIDANCE-----

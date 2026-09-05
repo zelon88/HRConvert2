@@ -202,7 +202,7 @@ function inspectStreamFile($StreamFile, $ParentURL, $CurrentLayer) {
   // / Content that disagrees with its own extension is the shape of a disguised file.
   if ($ContentMismatch) warningEntry('Stream File '.$StreamFile.' content does not match its file extension.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $streamFileContents, $DomainMatches, $IPMatches, $streamLineMatches, $RawURI, $extensionAllowed);
+  purgeSensitiveMemory($EnableMemoryProtection, $streamFileExtension, $streamLine, $streamFileContents, $DomainMatches, $IPMatches, $streamLineMatches, $RawURI, $extensionAllowed);
   return array($InspectionFailed, $StreamURIs, $StreamContainsLAN, $StreamContainsIP, $StreamContainsHTTP, $looksLikePlaylist, $looksLikeSegment); }
 // / -----------------------------------------------------------------------------------
 
@@ -358,7 +358,7 @@ function streamFileWalker($StreamFile) {
   else if ($Verbose) logEntry('Stream Walk Result: ALLOWED, Layers Walked: '.$currentLayer.', Files Downloaded: '.$FileNumber.', URIs Examined: '.count($AllStreamURIs).', Unique URLs Seen: '.count($SeenURLs).', Budget Exhausted: '.($StreamBudgetExhausted ? 'TRUE' : 'FALSE').', Reason: '.($HaltReason === '' ? 'NONE' : $HaltReason).'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $layerFile & $uriRecord hold whole records including validated IPs & local paths, so they matter most here.
-  purgeSensitiveMemory($EnableMemoryProtection, $currentLayerFiles, $nextLayerFiles, $streamURIs, $layerFile, $uriRecord, $currentLayer, $index, $urlHost, $urlPort, $urlScheme, $urlIP);
+  purgeSensitiveMemory($EnableMemoryProtection, $looksLikePlaylist, $looksLikeSegment, $currentLayerFiles, $nextLayerFiles, $streamURIs, $layerFile, $uriRecord, $currentLayer, $index, $urlHost, $urlPort, $urlScheme, $urlIP);
   return array($InspectionFailed, $StreamBudgetExhausted, $HaltReason, $AllStreamURIs, $SeenURLs); }
 // / -----------------------------------------------------------------------------------
 
@@ -407,6 +407,21 @@ function convertStreams($pathname, $newPathname) {
         .' -i '.escapeshellarg($pathname)
         .' -c copy '.escapeshellarg($newPathname)
         .' > /dev/null 2>&1 & echo $!';
+      // / This command is NOT sandboxed & convention 22 requires that to be explained.
+      // / Two things prevent it & the second is the harder one.
+      // / A stream is fetched from a remote address, so the namespace would have to be given
+      // / network access. sandboxCommand accepts that, so this alone is not the obstacle.
+      // / The process is backgrounded so its identifier can be captured & handed to
+      // / waitForStream, which supervises it, & to terminateWorkerProcess, which reaps it.
+      // / Under bwrap the identifier returned is bwrap's rather than the one belonging to
+      // / FFMPEG, so every later signal would be aimed at the wrong process & a stream that
+      // / overran would never be stopped.
+      // / The guards that would otherwise be missing are applied before this line rather
+      // / than around it. The address was resolved & refused if it was not publicly routable,
+      // / the content was fetched & inspected for addresses of its own, & the protocol
+      // / whitelist below permits nothing this application did not name.
+      // / Sandboxing this properly means teaching sandboxCommand to report the identifier of
+      // / the process it started rather than its own, & that is worth doing.
       $returnData = shell_exec($ffmpegCommand);
       $StreamPID = (int)trim($returnData);
       // / A PID of 0 means the process never started at all.

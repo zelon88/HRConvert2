@@ -1,0 +1,245 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 9/4/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v3.9.0.
+This plain text file describes the quality control tooling, what each check looks for, and what each one cannot see.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+The Python tool requires Python 3. The Bash tool requires bash, awk, grep and sed.
+Both use the php binary for the syntax check and skip it with a notice when php is absent.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Running Them--
+
+  cd /var/www/html/HRProprietary/HRConvert2
+  python3 Documentation/Build/hrconvert2-check.py
+  bash Documentation/Build/hrconvert2-check.sh
+
+Both are run from the installation root, beside convertCore.php. Running one from anywhere
+else exits two & says so, rather than reporting that a tree it cannot see is clean.
+
+  --list           Name every check & say in one line what it looks for.
+  --only <name>    Run one check. This is what to use while fixing something.
+  --quiet          Print nothing & report the answer in the exit code.
+
+EXIT CODES.
+  0   Every check passed.
+  1   Something was reported.
+  2   It was asked something it could not answer.
+
+Nothing stops early. An operator wants every fault in one pass rather than the first one
+seven times.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Why There Are Two Of Them--
+
+A checker has bugs like anything else, & a bug in a checker is INVISIBLE.
+The result it produces when it is broken is the same silence it produces when the code is
+clean, so nothing about the output says which one happened.
+
+Two implementations sharing no code do not share bugs.
+The Python parses. The Bash uses awk, grep & the shell. When they agree the answer is
+probably right, & when they disagree exactly one of them is right.
+
+A DISAGREEMENT IS DATA RATHER THAN NOISE.
+Two differences are expected & are stated in the header of the Bash tool. Anything else is
+a bug in one of them & is worth ten minutes.
+
+hrconvert2-check.py IS AUTHORITATIVE.
+The Bash tool is a second opinion. Where they differ & the difference is not one of the two
+documented ones, believe the Python until proven otherwise.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Seventeen Checks--
+
+  syntax      The php binary parses every file.
+  balance     Every brace, parenthesis & bracket closes.
+  order       Nothing in the main logic calls a component before that component is loaded.
+  undefined   Every variable a function reads exists. PYTHON ONLY.
+  duplicate   No function is defined twice.
+  pins        Every version pin matches the file it points at.
+  errno       Every error number raised is documented in ERROR_DESCRIPTIONS.txt.
+  guard       Every component under Resources refuses to be loaded directly.
+  contract    The Engine never calls application code.
+  caps        No comment line is entirely capitals.
+  purge       Every cleanup at a return carries the comment that belongs with it.
+  exit        Every function has one exit.
+  config      Every required configuration setting is declared global where config.php loads.
+  locals      Every lowercase local is destroyed before the function returns. PYTHON ONLY.
+  sentence    Every comment block ends a sentence. PYTHON ONLY.
+  name        No function parameter has a generic name. PYTHON ONLY.
+  return      No function destroys a value it is about to return. PYTHON ONLY.
+
+Each one is described at length above the function that performs it, & each description
+says what it CANNOT see as well as what it can. Read those before chasing a finding.
+
+EVERY CHECK WAS WRITTEN AFTER A FAULT REACHED A RUNNING INSTALLATION.
+None of them are hypothetical & none of them were caught by reading the code.
+
+  order       A fatal on the first web request after the data location functions moved into
+              the Engine. verifyGlobals called requestConvertLoc which called
+              resolveDataLocation, which the Engine defines & which had not loaded yet.
+              Reading the call sites showed nothing, because requestConvertLoc is DEFINED
+              early in the file. It RUNS late.
+  undefined   A parameter renamed in a function body & not in its signature. Valid PHP &
+              fatal at runtime. Also found two variables being purged that the function
+              never created, which produced a warning on every virus scan & shredded
+              nothing while appearing to.
+  errno       Seven quickDie calls raising numbers ERROR_DESCRIPTIONS.txt did not document.
+  contract    The Engine calling eighteen application functions, none deliberately. Each
+              was a function moved without a helper it quietly depended on.
+  guard       Written after noticing an earlier version of this check tested the raw text,
+              so a file whose only mention of the guard was in a comment passed.
+  pins        Verified by hand every release until it was not.
+  config      A fatal on --check-depends after eight settings were added to config.php, to
+              the required list & to the file, & not to the global declaration where the file
+              is loaded. The settings were tested by name through a list at runtime, so
+              nothing read them anywhere & every other check saw nothing wrong.
+  locals      Six locals found & purged by hand across three functions in one round, then
+              one hundred & twenty more the moment the check existed. Convention five had
+              been enforced by attention alone.
+  return      The locals check, obeyed without thought, added every lowercase parameter to
+              every purge call, including the ones that were also the return value.
+              purgeSensitiveMemory takes by reference, so eighteen functions returned NULL,
+              including every conversion pipeline. The first symptom was a fatal three calls
+              away from any of them. A check that produces instructions must know what its
+              instructions can break, & this one now does.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About What They Do Not Do--
+
+THEY DO NOT RUN THE APPLICATION & THEY DO NOT TEST BEHAVIOUR.
+A conversion that produces the wrong file passes every check in both of them.
+They are a net for one class of fault. Testing is still testing.
+
+THREE PATTERNS ARE REPORTED THAT ARE NOT FAULTS.
+A foreach that binds by reference, written as foreach ($x as &$y), assigns $y where nothing
+appears to. A file brought in with require may assign variables into the calling scope,
+which is how a GUI supplies its button codes. A catch block binds its exception to a name.
+The first & third are resolved by the Python. The second cannot be, because a parser reading
+one function has no way to know what a required file will do.
+
+A PIN WHOSE COMPONENT IS NOT INSTALLED IS SILENT.
+Config, the GUI, the language pack & the install secret are all pinned & none of them is a
+component with a version constant, so a missing match cannot be told apart from a pin that
+was never meant to have one. The application reports that at load time instead.
+
+THE BASH TOOL FOLLOWS ONE LEVEL OF CALLS RATHER THAN THE WHOLE CALL GRAPH.
+It finds a component called directly by the main logic & not one reached through three
+other functions. That second case is exactly what produced the fatal described above, so
+the Python is the one to trust for order.
+
+THE BASH TOOL DOES NOT IMPLEMENT undefined.
+Working out which names a function creates needs a pass per function over its whole body,
+& in awk on a file of seven thousand lines that took longer than everything else in the
+script put together. A check nobody waits for is a check nobody runs.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Reading The Source Correctly--
+
+BOTH TOOLS BLANK EVERY COMMENT & STRING LITERAL BEFORE READING ANYTHING.
+A brace inside a string is not a brace. A variable name inside a regular expression is not
+a variable. A check that reads raw text finds all of them & reports every one.
+
+THE WHOLE FILE IS READ RATHER THAN ONE LINE AT A TIME & THAT MATTERS.
+A string in PHP may run across several lines, & a reader that starts fresh on each line
+treats the remainder of that string as code.
+Generated code inside a string is the worst case, because it looks exactly like the thing
+being searched for. The capability cache this project writes contains the text
+if (!isset($CoreLoaded)) inside a string, & a per line reader reported it as a variable
+read that was never declared.
+
+Line positions are preserved through blanking, so a reported line number is the real one.
+The comment case check reads the ORIGINAL rather than the blanked source, because a comment
+is exactly what blanking removes.
+
+Heredoc & nowdoc are not handled & this project does not use them. A file that starts using
+one will produce noise rather than silence, which is the safer failure.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Adding A Check--
+
+A convention nobody can verify is only taste.
+Every check in these tools is a convention this project already had, turned into something
+a machine decides rather than something a reader is trusted to notice. That is the whole
+value & it is the test for whether a new one belongs.
+
+IN THE PYTHON.
+Write a function named check_<something> that accepts what it needs & a report callable,
+& returns the number of findings. Add one line to the checks tuple in the main logic. That
+tuple is the only place a check has to be registered.
+
+IN THE BASH.
+Write a shell function named check_<name> & add the name to CHECK_NAMES & to describe().
+The name must match the Python's, because --only <name> should mean the same thing in both.
+
+IN BOTH.
+Write what the check CANNOT see in the comment above it. Every description in these tools
+says that, & it is the difference between a finding somebody investigates & a finding
+somebody learns to ignore.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Where They Live--
+
+Documentation/Build is inside the web root & is served like anything else there.
+A python file has no handler configured, so a web server hands back its source rather than
+running it. Nothing in either tool is secret & this project is open source, so that is
+untidy rather than dangerous. Both directories should still carry the index.html every
+other directory in this project carries.
+
+The whole of Documentation/Build is removed by --Delete Build Environment-- in config.php,
+which is the correct answer for an installation nobody develops on. Neither tool is needed
+at runtime & neither is loaded by anything.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Standing Findings--
+
+A clean run is the goal & is not always the state.
+As of v3.9.0 both tools report seven findings & every one is the same known debt.
+
+  CONTRACT   The Engine calls seven application functions.
+             Six are the policy group reached from validateOperatingEnvironment. They write
+             to /etc & /usr & need root, so they belong with the privileged side rather
+             than with the Engine as it stands.
+             verifyDataExposure asks whether a web server is serving a directory it should
+             not be, which only an application with a web server can answer. It should
+             become a value passed in rather than a call made out.
+
+The Engine is USABLE in this state, because HRConvert2 loads both files. It is not yet
+PORTABLE, & that list is exactly the difference.
+See Documentation/ABOUT_ENGINE_CONTRACT.txt for the full account.
+
+EVERY FINDING IS AN INSTRUCTION RATHER THAN A DIAGNOSIS.
+A message says what to do, because the reader may not carry the whole convention set.
+"never destroys $x. Add it to the purgeSensitiveMemory() call before the return" can be
+acted on by somebody who has never read convention five. "convention five violated" cannot.
+These tools exist so that compliance does not depend on who is reading the code or on how
+much of it they hold in their head at once. A reader who runs them & does what they say
+produces compliant code, & that is the whole point of writing the conventions down at all.
+
+A FINDING THAT IS KNOWN DEBT SHOULD STILL BE REPORTED.
+A green run that hides a real problem is worse than a red one that names it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

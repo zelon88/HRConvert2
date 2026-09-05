@@ -13,7 +13,7 @@
 // / that carries it.
 // /
 // / File Information ...
-// / v3.8.9.
+// / v3.9.0.
 // / This file is the Engine. It provides the environment an application runs in.
 // / It is pinned EXACTLY by the application via $RequiredEngineVersion.
 // / Error block 35000 through 35019 reserved. None are used yet.
@@ -54,7 +54,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-35000,
 
 // / -----------------------------------------------------------------------------------
 // / The version of this Engine. Read by the application WITHOUT executing this file.
-$EngineVersion = 'v3.8.9';
+$EngineVersion = 'v3.9.0';
 // / -----------------------------------------------------------------------------------
 
 
@@ -348,10 +348,10 @@ function getAcceptedManagers() {
   global $EnableMemoryProtection;
   $AcceptedManagers = array();
   $AcceptedManagers = array(
-    'coreManager.php' => 'v3.8.9',
-    'resourceManager.php' => 'v3.8.9',
-    'workerManager.php' => 'v3.8.9',
-    'requestManager.php' => 'v3.8.9');
+    'coreManager.php' => 'v3.9.0',
+    'resourceManager.php' => 'v3.9.0',
+    'workerManager.php' => 'v3.9.0',
+    'requestManager.php' => 'v3.9.0');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $AcceptedManagers is not purged, because it is the return value.
   purgeSensitiveMemory($EnableMemoryProtection);
@@ -393,6 +393,167 @@ function loadEngineManager($managerFileName) {
 
 
 // / -----------------------------------------------------------------------------------
+// / Filesystem helpers the data location functions depend on.
+// / None of these know what the files they are looking at are for.
+// / They moved with cleanDataLocation, because a function that moves without the helpers
+// / it quietly depends on is a function that only appears to have moved.
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to return the file time of a specified file.
+// / Only returns a value if the specified file exists.
+// / Returns FALSE when the path cannot be read.
+function fileTime($filePath) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $Stat = FALSE;
+  if (file_exists($filePath)) $Stat = @filemtime($filePath);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $filePath);
+  return $Stat; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to determine whether a folder holds nothing but protected file objects.
+// / A hosted session directory always contains an index.html file for document root protection.
+// / This overlooks the required files and only looks to see if any user requested files remain.
+function isDirEmptyOfUserFiles($path) {
+  // / Set variables.
+  // / Every filesystem lists these two & neither is ever a file somebody uploaded.
+  // / This was a global named for the application. It is a local here, because a directory
+  // / listing means the same thing to every application there has ever been.
+  global $EnableMemoryProtection;
+  $defaultApps = array('.', '..');
+  $DirIsEmptyOfUserFiles = FALSE;
+  $remaining = array();
+  if (is_dir($path)) {
+    $remaining = array_diff(scandir($path), array('..', '.'));
+    // / Discard every protected file object. Whatever is left belongs to a user.
+    $remaining = array_diff($remaining, $defaultApps);
+    if (empty($remaining)) $DirIsEmptyOfUserFiles = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $defaultApps, $remaining, $path);
+  return $DirIsEmptyOfUserFiles; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to remove a session directory once nothing of the user's remains in it.
+// / Protected file objects such as the enforced index.html are removed only at this point.
+function removeEmptiedSessionDir($sessionPath) {
+  // / Set variables.
+  global $DirSep, $EnableMemoryProtection;
+  $SessionDirRemoved = FALSE;
+  $leftovers = array();
+  $leftover = '';
+  if (isDirEmptyOfUserFiles($sessionPath)) {
+    $leftovers = array_diff(scandir($sessionPath), array('..', '.'));
+    // / Only protected file objects can be left at this point. Remove them with the directory.
+    foreach ($leftovers as $leftover) {
+      if (is_file($sessionPath.$DirSep.$leftover)) @unlink($sessionPath.$DirSep.$leftover); }
+    @rmdir($sessionPath);
+    if (!is_dir($sessionPath)) $SessionDirRemoved = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $leftovers, $leftover, $sessionPath);
+  return $SessionDirRemoved; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to test if a folder is empty.
+// / Returns TRUE only when the folder exists & holds nothing at all.
+// / Returns FALSE when the folder holds anything, or when the path is not a folder.
+// / Every directory contains a . and a .. entry, so both are discarded before testing.
+function is_dir_empty($dir) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $Check = TRUE;
+  $contents = array();
+  // / Make sure the selected directory is actually a directory.
+  if (is_dir($dir)) {
+    // / Gather the contents of the directory, discarding the two entries every directory has.
+    $contents = array_diff(scandir($dir), array('.', '..'));
+    // / Anything left over means the directory holds something.
+    if (!empty($contents)) $Check = FALSE; }
+  // / A path that is not a directory at all must never be reported as an empty one.
+  else $Check = FALSE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $dir, $contents);
+  return $Check; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to clean a selection of files.
+// / Recursively deletes files.
+// / This function is extremely dangerous! Please handle with care.
+// / This function refuses to operate on anything outside a root the caller named. Both sides of the comparison are passed
+// / through realpath() first, so a path containing .. cannot walk out of an approved root
+// / while still matching it as a string prefix. If a future edit ever hands this function
+// / the wrong variable, the result is a no-op & a FALSE return, not an incident.
+// / The second argument is the list of roots this caller may clean under.
+// / It used to be built here from the application's own paths, which meant a generic
+// / cleaner knew the name of one application's directories.
+// / The caller supplies the list instead & an arbitrary path is still refused for not
+// / being under one of them, which is the guard that mattered.
+function cleanFiles($path, $allowedRoots) {
+  // / Set variables.
+  // / Every filesystem lists these two & neither is ever a file somebody uploaded.
+  global $DirSep, $EnableMemoryProtection;
+  $defaultApps = array('.', '..');
+  $variableIsSanitized = $CleanSuccess = $pathCheck = $pathIsContained = FALSE;
+  $loopCheck = TRUE;
+  $dirContents = $allowedRoots = array();
+  $dirEntry = $childPath = $realPath = $realRoot = $allowedRoot = '';
+  list ($path, $variableIsSanitized) = sanitize($path, FALSE);
+  // / Assemble every location this function is permitted to operate inside.
+  // / The caller's list already holds every maintenance location it needs cleaned.
+  // / Resolve the supplied path to its true location before any comparison is made.
+  // / realpath() returns FALSE for anything that does not exist, which fails the check below.
+  $realPath = realpath($path);
+  // / Confirm the resolved path sits inside an approved root & is not the root itself.
+  // / The trailing separator on the root is required. Without it a sibling directory named
+  // / like a sibling directory would match a root as a prefix & be accepted.
+  if ($realPath !== FALSE) {
+    foreach ($allowedRoots as $allowedRoot) {
+      if (empty($allowedRoot)) continue;
+      $realRoot = realpath($allowedRoot);
+      if ($realRoot !== FALSE && strpos($realPath, $realRoot.$DirSep) === 0) {
+        $pathIsContained = TRUE;
+        break; } } }
+  // / Make sure the selected directory is contained, sanitized, & actually a directory.
+  if ($pathIsContained && $variableIsSanitized && is_dir($path)) {
+    // / Iterate through each file object in the directory.
+    $dirContents = array_diff(scandir($path), array('..', '.'));
+    foreach ($dirContents as $dirEntry) {
+      // / Build the full path to this child ONCE. Every check below refers to the CHILD,
+      // / never to the parent. Testing the parent here would choose the wrong branch.
+      $childPath = $path.$DirSep.$dirEntry;
+      // / Protected file objects are never touched at any depth.
+      if (in_array(basename($childPath), $defaultApps)) continue;
+      // / If the selected file object is a file, delete it.
+      if (is_file($childPath)) @unlink($childPath);
+      // / If the selected file object is an empty directory, remove it outright.
+      elseif (is_dir($childPath) && is_dir_empty($childPath)) @rmdir($childPath);
+      // / If the selected file object is a directory with contents, recurse into it.
+      // / A failure anywhere below must propagate up, so $loopCheck is never reset to TRUE here.
+      elseif (is_dir($childPath)) {
+        if (!cleanFiles($childPath, $allowedRoots)) $loopCheck = FALSE; } }
+    // / Once all file objects in the selected directory have been deleted, attempt to delete the selected directory.
+    // / The containment check above already prevents reaching any approved root, but this
+    // / explicit comparison is retained so the intent survives any future change to that check.
+    if (!in_array($path, $allowedRoots, TRUE)) @rmdir($path); }
+  // / Check if the function was successful. Note that approved root locations are never deleted.
+  $pathCheck = is_dir($path);
+  if ($pathCheck && is_dir_empty($path)) $CleanSuccess = TRUE;
+  if (!$pathCheck) $CleanSuccess = TRUE;
+  // / A failure in any recursive call invalidates the whole operation regardless of what is left here.
+  if (!$loopCheck) $CleanSuccess = FALSE;
+  // / An uncontained path is never a success. Nothing was cleaned & nothing should report otherwise.
+  if (!$pathIsContained) $CleanSuccess = FALSE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $defaultApps, $path, $dirContents, $dirEntry, $childPath, $realPath, $realRoot, $allowedRoot, $allowedRoots, $variableIsSanitized, $pathCheck, $pathIsContained, $loopCheck);
+  return $CleanSuccess; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / Data locations.
 // / An application keeps its working files somewhere & may keep them in several places.
 // / HRConvert2 calls that a Convert Location & ScanCore would call it a quarantine.
@@ -427,7 +588,7 @@ function countDataLocationSessions($locationPath, $protectedRootDirs) {
         $sessionDirs = array_diff(scandir($dailyPath), array('..', '.'));
         $SessionCount = $SessionCount + count($sessionDirs); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $dailyDirs, $sessionDirs, $dailyDir, $dailyPath, $locationPath);
+  purgeSensitiveMemory($EnableMemoryProtection, $protectedRootDirs, $dailyDirs, $sessionDirs, $dailyDir, $dailyPath, $locationPath);
   return $SessionCount; }
 // / -----------------------------------------------------------------------------------
 
@@ -441,7 +602,7 @@ function countDataLocationSessions($locationPath, $protectedRootDirs) {
 function enumerateDataLocations($primaryPath, $activePath, $additionalLocations) {
   // / Set variables.
   global $DirSep, $EnableMemoryProtection;
-  $activePathPool = array();
+  $DataLocationPool = array();
   $additionalEntry = $seenPaths = array();
   $entryPath = $entryType = $primaryPath = '';
   // / $primaryPath holds the configured value & is set once, before $activePath is
@@ -451,7 +612,7 @@ function enumerateDataLocations($primaryPath, $activePath, $additionalLocations)
   // / otherwise nominate itself as the primary of a pool it is only a member of.
   if (!is_string($primaryPath) or $primaryPath === '') $primaryPath = (string)$activePath;
   $primaryPath = rtrim($primaryPath, $DirSep);
-  $activePathPool[] = array('Path' => $primaryPath, 'Type' => 'primary');
+  $DataLocationPool[] = array('Path' => $primaryPath, 'Type' => 'primary');
   $seenPaths[] = $primaryPath;
   if (is_array($additionalLocations)) {
     foreach ($additionalLocations as $additionalEntry) {
@@ -467,12 +628,12 @@ function enumerateDataLocations($primaryPath, $activePath, $additionalLocations)
         if ($entryPath === '') warningEntry('An entry in Additional Data Locations has an empty path. It was skipped.');
         else if (in_array($entryPath, $seenPaths, TRUE)) warningEntry('The data location at '.$entryPath.' is listed more than once. The duplicate was skipped.');
         else {
-          $activePathPool[] = array('Path' => $entryPath, 'Type' => $entryType);
+          $DataLocationPool[] = array('Path' => $entryPath, 'Type' => $entryType);
           $seenPaths[] = $entryPath; } } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  // / $activePathPool is not purged, because it is the return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $additionalEntry, $seenPaths, $entryPath, $entryType, $primaryPath);
-  return $activePathPool; }
+  // / $DataLocationPool is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $activePath, $additionalLocations, $additionalEntry, $seenPaths, $entryPath, $entryType, $primaryPath);
+  return $DataLocationPool; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -541,7 +702,7 @@ function resolveDataLocation($dailyHash, $sessionHash, $primaryPath, $activePath
   if ($Verbose) logEntry('Data Location: '.$ResolvedDataLocation.', Pool: '.count($convertLocPool).', Session: '.($sessionIsDiscovered ? 'DISCOVERED' : 'NEW, selected by '.$selectionMode).'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $ResolvedDataLocation is not purged, because it is the return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $convertLocPool, $distributionPool, $redundantPool, $poolEntry, $selectionMode, $cleanDailyHash, $cleanSessionHash, $sessionCount, $lowestSessionCount, $selectionIndex, $sessionIsDiscovered, $dailyHash, $sessionHash);
+  purgeSensitiveMemory($EnableMemoryProtection, $activePath, $additionalLocations, $primaryPath, $protectedRootDirs, $convertLocPool, $distributionPool, $redundantPool, $poolEntry, $selectionMode, $cleanDailyHash, $cleanSessionHash, $sessionCount, $lowestSessionCount, $selectionIndex, $sessionIsDiscovered, $dailyHash, $sessionHash);
   return $ResolvedDataLocation; }
 // / -----------------------------------------------------------------------------------
 
@@ -617,7 +778,7 @@ function cleanDataLocation($dataLoc, $locationName, $deleteThreshold, $protected
               if ($fileObject->isDir()) @rmdir($realPath);
               else @unlink($realPath); } }
           // / Track failure if cleanFiles returns false.
-          if (!cleanFiles($sessionPath)) {
+          if (!cleanFiles($sessionPath, $authorizedPaths)) {
             $CleanedLocation = FALSE; }
           // / Remove the session shell, including any protected file objects still in it.
           removeEmptiedSessionDir($sessionPath); } }
@@ -626,7 +787,7 @@ function cleanDataLocation($dataLoc, $locationName, $deleteThreshold, $protected
     // / Log the result.
     if ($Verbose) logEntry('Cleaned the '.$locationName.' location. Removed Files: '.($LocationDeepCleaned ? 'TRUE' : 'FALSE').'.'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $dailyDirs, $dailyDir, $dailyPath, $sessionDirs, $sessionDir, $sessionPath, $now, $dataLoc, $locationName, $deleteThreshold, $cleanAuthorized, $directoryIterator, $iterator, $fileObject, $realPath);
+  purgeSensitiveMemory($EnableMemoryProtection, $authorizedPaths, $defaultApps, $protectedRootDirs, $dailyDirs, $dailyDir, $dailyPath, $sessionDirs, $sessionDir, $sessionPath, $now, $dataLoc, $locationName, $deleteThreshold, $cleanAuthorized, $directoryIterator, $iterator, $fileObject, $realPath);
   return array($CleanedLocation, $LocationDeepCleaned); }
 // / -----------------------------------------------------------------------------------
 
@@ -736,6 +897,26 @@ function buildManagerSocketPath($socketName) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to report whether this application opens a listening socket at all.
+// / Accepts nothing. Returns TRUE when it does.
+// / An application that hands work downward to less privileged workers never needs one.
+// / Nothing untrusted has to reach anything privileged in that shape, so a socket would be
+// / an attack surface with no purpose. A socket that does not exist cannot be
+// / authenticated to, forged against or replayed.
+// / An application that has not declared a direction is assumed to want one, because that
+// / is the shape the first application using this Engine had & silently withholding a
+// / socket from it would break every conversion with no message worth reading.
+function engineOpensSocket() {
+  // / Set variables.
+  global $EngineDispatchDirection, $EnableMemoryProtection;
+  $SocketIsWanted = TRUE;
+  if (isset($EngineDispatchDirection) && (string)$EngineDispatchDirection === 'work-downward') $SocketIsWanted = FALSE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection);
+  return $SocketIsWanted; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to open a listening unix domain socket for a manager.
 // / Accepts the absolute socket path.
 // / Returns a success boolean & the stream resource, in that order.
@@ -747,14 +928,19 @@ function openManagerSocketServer($socketPath) {
   $SocketServer = FALSE;
   $socketError = '';
   $socketErrorNumber = 0;
-  if (file_exists($socketPath)) @unlink($socketPath);
-  $SocketServer = @stream_socket_server('unix://'.$socketPath, $socketErrorNumber, $socketError);
-  if ($SocketServer !== FALSE) {
-    @chmod($socketPath, 0600);
-    stream_set_blocking($SocketServer, FALSE);
-    $ServerIsOpen = TRUE;
-    if ($Verbose) logEntry('Bound a manager socket at '.$socketPath.'.'); }
-  else warningEntry('Could not open the manager socket at '.$socketPath.'. '.$socketError);
+  // / An application that hands work downward opens nothing & says so once.
+  // / This is a wrapper rather than an early return, because one exit per function is
+  // / what makes the cleanup at the bottom reliable.
+  if (!engineOpensSocket()) warningEntry('A listening socket was requested & this application is declared work-downward, so none was opened.');
+  else {
+    if (file_exists($socketPath)) @unlink($socketPath);
+    $SocketServer = @stream_socket_server('unix://'.$socketPath, $socketErrorNumber, $socketError);
+    if ($SocketServer !== FALSE) {
+      @chmod($socketPath, 0600);
+      stream_set_blocking($SocketServer, FALSE);
+      $ServerIsOpen = TRUE;
+      if ($Verbose) logEntry('Bound a manager socket at '.$socketPath.'.'); }
+    else warningEntry('Could not open the manager socket at '.$socketPath.'. '.$socketError); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $socketError, $socketErrorNumber, $socketPath);
   return array($ServerIsOpen, $SocketServer); }
@@ -788,7 +974,7 @@ function sendManagerMessage($socketPath, $messagePayload, $keyPurpose, $timeoutS
         if (is_string($rawReply) && trim($rawReply) !== '') list ($replyIsValid, $ReplyPayload) = decryptManagerMessage($rawReply, $keyPurpose); }
       @fclose($socketClient); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $socketError, $socketErrorNumber, $encryptedMessage, $rawReply, $bytesWritten, $replyIsValid, $socketPath, $messagePayload, $keyPurpose, $timeoutSeconds);
+  purgeSensitiveMemory($EnableMemoryProtection, $socketClient, $socketError, $socketErrorNumber, $encryptedMessage, $rawReply, $bytesWritten, $replyIsValid, $socketPath, $messagePayload, $keyPurpose, $timeoutSeconds);
   return array($MessageWasDelivered, $ReplyPayload); }
 // / -----------------------------------------------------------------------------------
 
@@ -825,7 +1011,7 @@ function receiveManagerMessages($socketServer, $keyPurpose, $maxMessages, $waitS
     $waitSeconds = 0; }
   if ($Verbose && $MessagesReceived > 0) logEntry('Accepted '.$MessagesReceived.' message(s) on the '.$keyPurpose.' channel.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $rawMessage, $messageIsValid, $messagePayload, $messageCounter, $keyPurpose, $maxMessages, $waitSeconds);
+  purgeSensitiveMemory($EnableMemoryProtection, $socketConnection, $socketServer, $rawMessage, $messageIsValid, $messagePayload, $messageCounter, $keyPurpose, $maxMessages, $waitSeconds);
   return array($MessagesReceived, $ManagerMessages, $ManagerConnections); }
 // / -----------------------------------------------------------------------------------
 
@@ -844,7 +1030,7 @@ function replyToManagerMessage($socketConnection, $replyPayload, $keyPurpose) {
     if ($bytesWritten > 0) $ReplyWasSent = TRUE; }
   if (is_resource($socketConnection)) @fclose($socketConnection);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $encryptedReply, $bytesWritten, $replyPayload, $keyPurpose);
+  purgeSensitiveMemory($EnableMemoryProtection, $socketConnection, $encryptedReply, $bytesWritten, $replyPayload, $keyPurpose);
   return $ReplyWasSent; }
 // / -----------------------------------------------------------------------------------
 
@@ -1308,7 +1494,13 @@ function startCoreManagerListener() {
   else $directoryIsReady = prepareManagerSocketDir();
   // / Hand the socket directory to the web server user before anything binds inside it.
   // / A root owned directory is unreachable to the workers that must connect.
-  if (!$unitOwnsListener && $directoryIsReady && $RunningAsRoot) exec('chown -R '.escapeshellarg($ApacheUser).':'.escapeshellarg($ApacheUser).' '.escapeshellarg($ManagerSocketDir).' 2>&1', $chownOutput, $chownExitCode);
+  // / The socket directory is not chowned here & that is deliberate.
+  // / Ownership of every path this application manages belongs to -fp, which runs as
+  // / root once & exits. Doing it here meant the listener had to be root to start, &
+  // / a listener that starts as root then has to give that up somehow.
+  // / The wrong owner is reported rather than corrected, because correcting it needs a
+  // / privilege this process should not be holding.
+  if ($directoryIsReady && !is_writable($ManagerSocketDir)) warningEntry('The manager socket directory at '.$ManagerSocketDir.' is not writable by this account. Run -fp as root to correct it.');
   list ($stateWasRead, $managerState) = readManagerState('managers');
   if ($unitOwnsListener) $ListenerWasStarted = TRUE;
   else if ($stateWasRead && isset($managerState['CoreManagerPid']) && managerProcessIsAlive((int)$managerState['CoreManagerPid'])) {
@@ -1326,12 +1518,13 @@ function startCoreManagerListener() {
       .' --start-core-manager'
       .' > /dev/null 2>&1 &';
     // / Drop to the web server user so every socket is owned by the account that must reach it.
-    if ($RunningAsRoot && $CurrentUser !== $ApacheUser) $spawnCommand = 'su -s /bin/sh '.escapeshellarg($ApacheUser).' -c '.escapeshellarg($innerCommand);
-    else $spawnCommand = $innerCommand;
-    if ($Verbose) logEntry('Launching the Core Manager listener as '.($RunningAsRoot ? $ApacheUser.' through su' : $CurrentUser).'.');
+    // / No su. A listener started by its unit already runs as the right account & one
+    // / started by hand as root is warned about rather than quietly dropped into place.
+    $spawnCommand = $innerCommand;
+    if ($Verbose) logEntry('Launching the Core Manager listener as '.($RunningAsRoot ? $ApacheUser : $CurrentUser).'.');
     shell_exec($spawnCommand);
     // / The listener records its own pid, so wait for that rather than reading one back
-    // / through su. Five seconds is generous for a process that only opens a socket.
+    // / from the spawn. Five seconds is generous for a process that only opens a socket.
     while ($waitCounter < 20 && $listenerPid < 1) {
       usleep(250000);
       list ($stateWasRead, $managerState) = readManagerState('managers');
@@ -1548,6 +1741,997 @@ function reportListenerStatus() {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $managerState, $replyPayload, $stateWasRead, $messageWasDelivered);
   return array($ListenerIsRunning, $ListenerStatus); }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / Network & remote content.
+// / Everything below reaches an address somebody else controls, & every line of it exists
+// / because that is dangerous.
+// / A URL is resolved, the address behind it is checked against every range that is not
+// / publicly routable, & the content that arrives is inspected for addresses of its own
+// / before anything is allowed to act on it.
+// / A refusal here is a WARNING rather than an error. An attacker who was stopped is this
+// / application working correctly & is not a fault.
+// / None of this knows what a conversion is. An application that fetches a virus
+// / definition or a job description wants exactly the same guards.
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to report the network policy this installation runs under.
+// / Accepts nothing. Returns an array of the five settings every fetch obeys.
+// / An Engine that reaches a remote address needs a policy & the policy is per
+// / installation rather than per Engine, so it comes from configuration.
+// /
+// / Each setting is read from an Engine name first & from the application's own name
+// / second. That fallback is deliberate & is not clutter.
+// / HRConvert2 named these for streams because streaming was the first thing that fetched
+// / a URL. They govern every remote fetch now, & renaming a setting in config.php would
+// / silently reset it to a default on every installation in the world at the next update.
+// / A timeout quietly changing length is not a surprise worth handing anybody.
+// / A new application sets the Engine names & has no stream shaped settings at all.
+// /
+// / Every fallback ends in a literal that configuration cannot overwrite, so a policy
+// / exists even when neither name is set & a fetch is never left deciding for itself.
+function networkPolicy() {
+  // / Set variables.
+  global $EngineAllowPlainHTTP, $EngineMaxInspectionBytes, $EngineConnectionTimeout, $EngineWatchTimeout, $EngineFetchTemp, $AllowStreamOverHTTP, $MaxStreamInspectionFileSize, $StreamConnectionTimeout, $StreamWatchTimeout, $StreamTemp, $EnableMemoryProtection;
+  $NetworkPolicy = array();
+  $NetworkPolicy = array(
+    'AllowPlainHTTP' => isset($EngineAllowPlainHTTP) ? (bool)$EngineAllowPlainHTTP : (isset($AllowStreamOverHTTP) ? (bool)$AllowStreamOverHTTP : FALSE),
+    'MaxInspectionBytes' => isset($EngineMaxInspectionBytes) ? (int)$EngineMaxInspectionBytes : (isset($MaxStreamInspectionFileSize) ? (int)$MaxStreamInspectionFileSize : 1048576),
+    'ConnectionTimeout' => isset($EngineConnectionTimeout) ? (int)$EngineConnectionTimeout : (isset($StreamConnectionTimeout) ? (int)$StreamConnectionTimeout : 10),
+    'WatchTimeout' => isset($EngineWatchTimeout) ? (int)$EngineWatchTimeout : (isset($StreamWatchTimeout) ? (int)$StreamWatchTimeout : 300),
+    'FetchTemp' => isset($EngineFetchTemp) ? (string)$EngineFetchTemp : (isset($StreamTemp) ? (string)$StreamTemp : sys_get_temp_dir()));
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $NetworkPolicy is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection);
+  return $NetworkPolicy; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to simply return whether or not an IP is private or public.
+// / Used for server-side request forgery (SSRF) protection.
+// / Returns TRUE only for publicly routable addresses. Anything private, reserved, loopback,
+// / or link-local returns FALSE, as does any string that is not a valid IP at all.
+// / This is the single source of truth for IP safety. Do not duplicate this logic.
+function isPubliclyRoutableIP($ipAddress) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $Check = (bool)filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $ipAddress);
+  return $Check; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to perform DNS lookups without following redirects.
+// / Also used to detect if a host resolves to a LAN segment or private IP range.
+// / Note that this has an intentionally redundant check for whether or not the IP is private.
+// / A private/reserved answer means this host is untrustworthy regardless of what else it returned.
+// / $URLIP will return FALSE if the lookup failed or if a DNS rebind attack is suspected.
+// / $StreamContainsLAN will return TRUE if the response contained a local or reserved IP address.
+// / $LookupFailed will return TRUE if no DNS response was received or FALSE if DNS succeeded.
+function dnsLookup($URLHost) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $records = $record = array();
+  $urlIP = $URLIP = $LookupFailed = $StreamContainsLAN = $isPublic = FALSE;
+  // / Perform the actual DNS lookup against the $URLHost.
+  $records = @dns_get_record($URLHost, DNS_A + DNS_AAAA);
+  // / Check that the records received from the DNS provider were formed properly.
+  if (is_array($records) && !empty($records)) {
+    foreach ($records as $record) {
+      // / Parse the received DNS records.
+      $urlIP = $record['ip'] ?? $record['ipv6'] ?? NULL;
+      if ($urlIP === NULL) continue;
+      $isPublic = isPubliclyRoutableIP($urlIP);
+      if ($isPublic) $URLIP = $urlIP;
+      else {
+        // / A private/reserved answer means this host is untrustworthy regardless of what else it returned.
+        // / Discard any safe IP already found. A host answering with both is a rebinding setup, not a partial success.
+        $StreamContainsLAN = TRUE;
+        $URLIP = FALSE;
+        break; } } }
+  // / Set a flag to tell if the lookup failed outright.
+  else $LookupFailed = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $records, $record, $urlIP, $isPublic);
+  return array($URLIP, $StreamContainsLAN, $LookupFailed); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to scan a stream URL received from a stream file such as .m3u8.
+// / This function determines whether that URL is safe for FFMPEG to handle.
+// / This function performs a DNS lookup on the provided URL but DOES NOT follow redirects.
+// / Not following redirects is critical.
+// / To perform adequate SSRF protection we must obtain a non-redirected lookup for each remote host.
+// / The information obtained here binds downstream dependencies like CURL & FFMPEG to these locations.
+function gatherRemoteHostInfo($StreamURL) {
+  // / Set variables.
+  global $Verbose, $engineAllowPlainHTTP, $EnableMemoryProtection;
+  // / The network policy is resolved once & every setting below comes from it.
+  $networkPolicy = networkPolicy();
+  $engineAllowPlainHTTP = $networkPolicy['AllowPlainHTTP'];
+  $LookupFailed = $InspectionFailed = TRUE;
+  $URLIP = $URLHost = $URLPort = $URLScheme = $StreamContainsLAN = $StreamDNSContainsLAN = $StreamURLResolutionFailed = FALSE;
+  $urlIsSanitized = $partsAreSanitized = $schemeIsSanitized = $hostIsSanitized = FALSE;
+  $allowedSchemes = array('https');
+  $urlParts = array();
+  // / Sanitize the supplied URL before anything else looks at it.
+  list ($StreamURL, $urlIsSanitized) = sanitize($StreamURL, TRUE);
+  if ($Verbose) logEntry('Inspecting Stream URL: '.$StreamURL.'.');
+  // / Check if plain http stream URLs are allowed by config.php.
+  if ($engineAllowPlainHTTP) array_push($allowedSchemes, 'http');
+  // / A URL that could not be sanitized is unresolvable before we even parse it.
+  if (!$urlIsSanitized) $StreamURLResolutionFailed = TRUE;
+  else {
+    // / Parse the provided URL to gather DNS information.
+    // / parse_url returns FALSE if the response was seriously malformed.
+    $urlParts = parse_url($StreamURL);
+    // / If the parse_url response is malformed, then consider the URL unresolvable.
+    if (!$urlParts) $StreamURLResolutionFailed = TRUE;
+    // / If the parse_url response makes sense, then keep going.
+    else {
+      list ($urlParts, $partsAreSanitized) = sanitize($urlParts, TRUE);
+      // / If the parse_url response is incomplete, then consider the URL unresolvable.
+      if (!$partsAreSanitized or empty($urlParts['scheme']) or empty($urlParts['host'])) $StreamURLResolutionFailed = TRUE;
+      // / If the parse_url response makes sense, then keep going.
+      else {
+        // / If the scheme is not supported by config.php, then consider the URL unresolvable.
+        list ($URLScheme, $schemeIsSanitized) = sanitize(strtolower($urlParts['scheme']), TRUE);
+        if (!$schemeIsSanitized or !in_array($URLScheme, $allowedSchemes, TRUE)) $StreamURLResolutionFailed = TRUE;
+        // / If the scheme is supported by config.php, then keep going.
+        else {
+          // / Detect the host.
+          list ($URLHost, $hostIsSanitized) = sanitize(strtolower($urlParts['host']), TRUE);
+          if (!$hostIsSanitized) $StreamURLResolutionFailed = TRUE;
+          // / Detect the port where applicable.
+          // / Be very careful making changes to this code.
+          // / This uses the port supplied by the request when available.
+          // / When no port was supplied it falls back to 443 for https & 80 for http.
+          // / This code prevents dependencies from silently performing their own DNS lookups.
+          // / If this code fails to produce a valid host or port, dependencies will ignore our binding.
+          // / CURL & FFMPEG cannot be allowed to do lookups that could be spoofed into following redirects.
+          else $URLPort = isset($urlParts['port']) ? (int)$urlParts['port'] : ($URLScheme === 'https' ? 443 : 80); } } } }
+  // / If we have successfully obtained a host, port & scheme, then resolve the address.
+  if (!$StreamURLResolutionFailed) {
+    // / If the host is already a literal IP, validate it directly & skip DNS entirely.
+    if (filter_var($URLHost, FILTER_VALIDATE_IP)) {
+      if (isPubliclyRoutableIP($URLHost)) {
+        $URLIP = $URLHost;
+        $LookupFailed = FALSE; }
+      else $StreamContainsLAN = TRUE; }
+    // / Otherwise it is a hostname, so resolve it without following redirects.
+    else list($URLIP, $StreamDNSContainsLAN, $LookupFailed) = dnsLookup($URLHost);
+    // / A DNS result that was not publicly routable is treated as LAN & will be denied.
+    // / This condenses the DNS finding into one flag because anything containing LAN is denied.
+    if ($StreamDNSContainsLAN) $StreamContainsLAN = TRUE; }
+  // / If any check failed or any required value is empty, then the whole inspection failed.
+  if ($StreamURLResolutionFailed or $StreamContainsLAN or $LookupFailed or empty($URLHost) or empty($URLPort) or empty($URLScheme) or empty($URLIP)) $InspectionFailed = TRUE;
+  // / If everything passed then consider the inspection to have passed.
+  else $InspectionFailed = FALSE;
+  // / Write the information obtained to the log file.
+  if ($Verbose) logEntry('URL Inspection Result: '.($InspectionFailed ? 'FAILED' : 'PASSED').', Host: '.$URLHost.', Port: '.$URLPort.', Scheme: '.$URLScheme.', Contains LAN: '.($StreamContainsLAN ? 'TRUE' : 'FALSE').', URL Resolution Failed: '.($StreamURLResolutionFailed ? 'TRUE' : 'FALSE').', Lookup Failed: '.($LookupFailed ? 'TRUE' : 'FALSE').'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $networkPolicy, $engineAllowPlainHTTP, $allowedSchemes, $urlParts, $StreamDNSContainsLAN, $urlIsSanitized, $partsAreSanitized, $schemeIsSanitized, $hostIsSanitized);
+  return array($InspectionFailed, $StreamURLResolutionFailed, $StreamContainsLAN, $LookupFailed, $URLHost, $URLPort, $URLScheme, $URLIP); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to turn a URI found inside a stream file into a complete, absolute URL.
+// / Stream files routinely reference segments & nested playlists by relative path, which
+// / inherit their missing parts from the URL the PARENT manifest was downloaded from.
+// / $ParentURL is empty for the file the user uploaded, because nobody fetched it. A relative
+// / URI at that layer therefore resolves against nothing & is refused rather than guessed at.
+// / Returns an empty string when the URI cannot be honestly resolved. The caller must deny on empty.
+function resolveRemoteURI($StreamURI, $ParentURL) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $AbsoluteURL = '';
+  $parentParts = array();
+  $parentScheme = $parentHost = $parentPort = $parentDir = '';
+  $uriIsAbsolute = $parentIsUsable = FALSE;
+  $StreamURI = trim($StreamURI);
+  // / Case 1. The URI already carries its own scheme, so nothing is inherited & we are done.
+  // / Note this deliberately matches ANY scheme, including file: and gopher:, so that
+  // / gatherRemoteHostInfo() sees & rejects them rather than us silently mangling them.
+  if ($StreamURI !== '' && preg_match('#^[a-zA-Z][a-zA-Z0-9+.-]*:#', $StreamURI)) {
+    $uriIsAbsolute = TRUE;
+    $AbsoluteURL = $StreamURI; }
+  // / Everything below here is relative & needs a parent to inherit from.
+  // / The user's uploaded file has no parent, so a relative URI at layer 0 is unresolvable.
+  if (!$uriIsAbsolute && $StreamURI !== '' && $ParentURL !== '') {
+    $parentParts = parse_url($ParentURL);
+    if ($parentParts && !empty($parentParts['scheme']) && !empty($parentParts['host'])) $parentIsUsable = TRUE; }
+  // / Inherit whatever the relative form is missing from the parent it was found in.
+  if ($parentIsUsable) {
+    $parentScheme = strtolower($parentParts['scheme']);
+    $parentHost = strtolower($parentParts['host']);
+    $parentPort = isset($parentParts['port']) ? ':'.(int)$parentParts['port'] : '';
+    // / Case 2. Protocol-relative (//cdn.example.com/seg.ts). Inherits the scheme only.
+    if (substr($StreamURI, 0, 2) === '//') $AbsoluteURL = $parentScheme.':'.$StreamURI;
+    // / Case 3. Root-relative (/hls/seg.ts). Inherits scheme, host & port. The path is replaced outright.
+    elseif ($StreamURI[0] === '/') $AbsoluteURL = $parentScheme.'://'.$parentHost.$parentPort.$StreamURI;
+    // / Case 4. Plain relative (seg003.ts). Appended to the parent's DIRECTORY, never to its filename.
+    else {
+      $parentDir = rtrim(dirname($parentParts['path'] ?? '/'), '/');
+      $AbsoluteURL = $parentScheme.'://'.$parentHost.$parentPort.$parentDir.'/'.$StreamURI; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $parentParts, $parentScheme, $parentHost, $parentPort, $parentDir, $uriIsAbsolute, $parentIsUsable);
+  return $AbsoluteURL; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to gather & validate IPv4 & IPv6 addresses from ANY block of content.
+// / Does not perform DNS or any remote validation.
+// / This function only validates the syntactical form of IP addresses, and ensures they are not in a reserved range.
+// /
+// / This is SSRF machinery & it lives in the core on purpose.
+// / It knows nothing about streams, playlists or any other format. It is handed bytes &
+// / reports which addresses in them are safe to contact. A pipeline that needs to decide
+// / whether a reference is safe to follow calls this rather than writing its own.
+// / A PIPELINE MUST NEVER OWN SSRF PROTECTION. A community author writing a pipeline that
+// / fetches something should get this for free & must not be able to opt out of it by
+// / accident. That is the same reason verifyFile() & virusScan() stayed in the core.
+function inspectContentForIPs($streamFileContents) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $ipMatch = '';
+  $IPCount = 0;
+  $ipMatchesTemp = $ip4Temp = $ip6Temp = $IPMatches = array();
+  $StreamContainsLAN = $StreamContainsIP = FALSE;
+  // / Regex pattern to extract matching IPv4 formats.
+  $ip4Pattern = '/\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/';
+  // / Regex pattern to extract matching IPv6 formats.
+  // / Loose candidate matcher. Finds hex-and-colon runs that MIGHT be IPv6.
+  // / Deliberately over-matches; filter_var() (called below) is the authority on validity.
+  $ip6Pattern = '/(?<![0-9A-Fa-f:])(?:[0-9A-Fa-f]{0,4}:){2,7}[0-9A-Fa-f]{0,4}(?::[0-9]{1,3}(?:\.[0-9]{1,3}){3})?(?![0-9A-Fa-f:])/';
+  // / Check if the $streamFile contains any IP addresses, if those addresses are valid, & if they fall into a private subnet.
+  // / $ipMatchesTemp = flat array of every potential IP string matched by either pattern.
+  // / $IPMatches = flat array of every valid, publicly routable IP confirmed by filter_var.
+  preg_match_all($ip4Pattern, $streamFileContents, $ip4Temp);
+  preg_match_all($ip6Pattern, $streamFileContents, $ip6Temp);
+  $ipMatchesTemp = array_merge($ip4Temp[0], $ip6Temp[0]);
+  if (!empty($ipMatchesTemp)) {
+    foreach ($ipMatchesTemp as $ipMatch) {
+      // / Strip brackets from URL-form IPv6 (https://[::1]/) before validating.
+      $ipMatch = trim($ipMatch, '[]');
+      // / Not a real IP at all. Probably a regex over-match. Discard silently, do NOT flag.
+      if (!filter_var($ipMatch, FILTER_VALIDATE_IP)) continue;
+      // / Set a flag if the entry that was found is a genuine raw IP address.
+      $StreamContainsIP = TRUE;
+      // / Check whether each extracted IP is on a local / private subnet, or something we should not be probing.
+      if (isPubliclyRoutableIP($ipMatch)) array_push($IPMatches, $ipMatch);
+      else {
+        // / Set a flag if the IP address that was found appears to be on a local or private subnet.
+        $StreamContainsLAN = TRUE;
+        // / Stop as soon as we find a dangerous IP address. There is no need to continue validating a malicious file.
+        break; } } }
+  // / Count the number of publicly routable IPs found before we stopped.
+  $IPCount = count($IPMatches);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $ipMatch, $ipMatchesTemp, $ip4Pattern, $ip6Pattern, $streamFileContents, $ip4Temp, $ip6Temp);
+  return array($IPMatches, $IPCount, $StreamContainsLAN, $StreamContainsIP); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to gather & validate domain names from ANY block of content.
+// / Does not perform DNS or any remote validation.
+// / This function only validates the syntactical form of domain names.
+// / Preserves http:// and https:// as the only allowed protocols.
+// /
+// / THIS IS SSRF MACHINERY & IT LIVES IN THE CORE ON PURPOSE. See inspectContentForIPs().
+function inspectContentForDomains($streamFileContents) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $DomainCount = 0;
+  $DomainNames = $domainMatches = array();
+  $StreamContainsDomain = FALSE;
+  // / Matches only absolute http/https URLs & captures the hostname portion in group 1.
+  // / Skips any userinfo (user:pass@) so the REAL host is captured, not the decoy before the @.
+  $domainPattern = '/\bhttps?:\/\/(?:[^\/?#@\s]*@)?([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,63})(?=[:\/?#]|\s|$)/i';
+  // / Check if the $streamFile contains any domain names, and whether those domain names are valid.
+  if (preg_match_all($domainPattern, $streamFileContents, $domainMatches)) {
+    // / Set a flag if the entry that was found appears to be a domain name.
+    $StreamContainsDomain = TRUE;
+    // / $domainMatches[1] holds the bare hostnames & is the only row safe to hand to DNS.
+    $DomainNames = $domainMatches[1];
+    // / $domainMatches[0] holds the FULL match, including scheme & any user:pass@ decoy.
+    // / $domainMatches[0] is NOT safe to use for DNS. It is only referenced here for counting.
+    $DomainCount = count($domainMatches[0]); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $domainPattern, $streamFileContents, $domainMatches);
+  return array($DomainNames, $DomainCount, $StreamContainsDomain); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to download a single remote file to local disk for inspection.
+// /
+// / This is the only place in the application that fetches a remote file for a pipeline.
+// / It pins the resolved IP, refuses redirects, refuses DNS rebinding, & reads a bounded
+// / number of bytes. Every one of those is a thing a pipeline author writing their own curl
+// / call would forget. It stays in the core so that they cannot.
+// / A config note worth knowing before a second pipeline uses this.
+// / $engineAllowPlainHTTP, $engineConnectionTimeout, $engineMaxInspectionBytes &
+// / $engineFetchTemp are all named for streaming because streaming was the only caller when they
+// / were written. They govern EVERY caller of this function, not only the Stream pipeline.
+// / They were not renamed because an administrator's config.php names them & a rename would
+// / silently reset those settings on every installation. If a second pipeline starts
+// / fetching remote files, that shared governance should be a deliberate decision rather
+// / than something discovered afterwards.
+// / Files are saved with a numeric name & no extension so nothing downstream is fooled by a filename.
+// / The original URI is preserved in the stream record, not on disk.
+// / This function does NOT follow redirects.
+// / This function does NOT let CURL perform its own DNS lookup.
+// / Only the first $engineMaxInspectionBytes bytes are fetched.
+// / We are classifying files here, not streaming them.
+// / $engineConnectionTimeout is documented in seconds & is used directly.
+// / $engineWatchTimeout is documented in minutes & is converted once here.
+function downloadRemoteFileForInspection($StreamURL, $URLHost, $URLPort, $URLIP, $URLScheme, $FileNumber) {
+  // / Set variables.
+  global $Verbose, $engineAllowPlainHTTP, $engineConnectionTimeout, $engineWatchTimeout, $DirSep, $engineMaxInspectionBytes, $engineFetchTemp, $EnableMemoryProtection;
+  // / The network policy is resolved once & every setting below comes from it.
+  $networkPolicy = networkPolicy();
+  $engineAllowPlainHTTP = $networkPolicy['AllowPlainHTTP'];
+  $engineMaxInspectionBytes = $networkPolicy['MaxInspectionBytes'];
+  $engineConnectionTimeout = $networkPolicy['ConnectionTimeout'];
+  $engineWatchTimeout = $networkPolicy['WatchTimeout'];
+  $engineFetchTemp = $networkPolicy['FetchTemp'];
+  $DownloadFailed = $StreamFileTruncated = TRUE;
+  $pinIsComplete = FALSE;
+  $curlOutput = array();
+  $curlCommand = '';
+  $curlExitCode = 1;
+  $downloadedBytes = 0;
+  // / Sequential name for every file saved to StreamTemp.
+  // / This number never resets during a walk.
+  // / A layer 2 file must never overwrite a layer 1 file.
+  $LocalStreamPath = $engineFetchTemp.$DirSep.$FileNumber;
+  $protoString = 'https';
+  // / Only widen to plain http when config allows it AND this specific URL actually uses it.
+  if ($engineAllowPlainHTTP && $URLScheme === 'http') $protoString = 'http,https';
+  // / Refuse outright if any component needed for the DNS pin is missing.
+  // / An empty component produces a malformed --resolve entry which CURL silently ignores.
+  // / CURL would then perform its own lookup & every rebinding protection would be lost.
+  if (!empty($URLHost) && !empty($URLPort) && !empty($URLIP) && !empty($StreamURL)) $pinIsComplete = TRUE;
+  else if ($Verbose) logEntry('Stream download refused: incomplete validation data for '.$StreamURL.'.');
+  if ($pinIsComplete) {
+    // / Build the command with every user influenced value escaped.
+    // / There is no -L flag, so redirects are never followed.
+    // / The -r flag requests only the first chunk of the file.
+    // / The --max-filesize flag enforces the same ceiling when a host ignores -r.
+    $curlCommand = 'curl'
+      .' --resolve '.escapeshellarg($URLHost.':'.$URLPort.':'.$URLIP)
+      .' --proto '.escapeshellarg('='.$protoString)
+      .' --proto-redir '.escapeshellarg('='.$protoString)
+      .' -r '.escapeshellarg('0-'.((int)$engineMaxInspectionBytes - 1))
+      .' --max-filesize '.(int)$engineMaxInspectionBytes
+      .' --connect-timeout '.(int)$engineConnectionTimeout
+      .' -m '.((int)$engineWatchTimeout * 60)
+      .' -sS -o '.escapeshellarg($LocalStreamPath)
+      .' -- '.escapeshellarg($StreamURL).' 2>&1';
+    exec($curlCommand, $curlOutput, $curlExitCode);
+    // / A successful download requires exit code 0 AND a file that exists with content.
+    // / Either one alone is not proof of success.
+    if ($curlExitCode === 0 && file_exists($LocalStreamPath)) {
+      $downloadedBytes = filesize($LocalStreamPath);
+      if ($downloadedBytes > 0) $DownloadFailed = FALSE;
+      // / A file that filled the entire budget was almost certainly cut short.
+      // / We are only holding part of it, so we cannot claim to have inspected the whole thing.
+      if ($downloadedBytes < (int)$engineMaxInspectionBytes) $StreamFileTruncated = FALSE; }
+    else if ($Verbose) logEntry('Stream download failed for '.$StreamURL.'. CURL exit code: '.$curlExitCode.'.');
+    // / Log the outcome of this single download.
+    if ($Verbose) logEntry('Stream Download Result: '.($DownloadFailed ? 'FAILED' : 'SUCCESS').', File: '.$FileNumber.', Bytes: '.$downloadedBytes.', Truncated: '.($StreamFileTruncated ? 'TRUE' : 'FALSE').'.'); }
+  // / Never report a path we did not successfully write to.
+  // / The caller reads this file immediately after this function returns.
+  if ($DownloadFailed) $LocalStreamPath = '';
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $networkPolicy, $engineAllowPlainHTTP, $engineMaxInspectionBytes, $engineConnectionTimeout, $engineWatchTimeout, $engineFetchTemp, $curlCommand, $curlOutput, $protoString, $curlExitCode, $downloadedBytes, $pinIsComplete);
+  return array($DownloadFailed, $LocalStreamPath, $StreamFileTruncated); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to supervise a backgrounded FFMPEG stream conversion after the user has been served.
+// / Polls the process & kills it once $engineWatchTimeout minutes have elapsed.
+// / This is the only thing preventing an abandoned stream from running until PHP or the OS intervenes.
+function waitForStream($StreamPID, $newPathname) {
+  // / Set variables.
+  global $Verbose, $engineWatchTimeout, $EnableMemoryProtection;
+  // / The network policy is resolved once & every setting below comes from it.
+  $networkPolicy = networkPolicy();
+  $engineWatchTimeout = $networkPolicy['WatchTimeout'];
+  $StreamCompleted = $StreamKilled = $pidIsUsable = FALSE;
+  $psOutput = array();
+  $ElapsedSeconds = 0;
+  $pollInterval = 2;
+  // / Config states this value in MINUTES. Convert once, here, so the loop reads in seconds.
+  $timeoutSeconds = (int)$engineWatchTimeout * 60;
+  // / Nothing to supervise without a real process id.
+  if ((int)$StreamPID > 0) $pidIsUsable = TRUE;
+  if ($pidIsUsable) {
+    if ($Verbose) logEntry('Supervising stream PID '.$StreamPID.' for up to '.$timeoutSeconds.' seconds.');
+    while ($ElapsedSeconds < $timeoutSeconds) {
+      $psOutput = array();
+      // / A ps listing with only its header row means the process is gone.
+      exec('ps -p '.(int)$StreamPID, $psOutput);
+      if (count($psOutput) < 2) {
+        $StreamCompleted = TRUE;
+        break; }
+      sleep($pollInterval);
+      $ElapsedSeconds += $pollInterval; }
+    // / Still running after the full watch window. Terminate it.
+    if (!$StreamCompleted) {
+      exec('kill -9 '.(int)$StreamPID);
+      $StreamKilled = TRUE;
+      if ($Verbose) logEntry('Stream PID '.$StreamPID.' exceeded the watch timeout & was terminated.'); }
+    else if ($Verbose) logEntry('Stream PID '.$StreamPID.' finished after '.$ElapsedSeconds.' seconds. Output exists: '.(file_exists($newPathname) ? 'TRUE' : 'FALSE').'.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $newPathname, $networkPolicy, $engineWatchTimeout, $psOutput, $pollInterval, $timeoutSeconds, $pidIsUsable);
+  return array($StreamCompleted, $StreamKilled, $ElapsedSeconds); }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / A function to run one command as another account, permanently dropping to it first.
+// / Accepts the command & the account name. Returns the output & the exit code, in order.
+// / A caller that is not root runs the command as itself & nothing is dropped.
+// /
+// / This replaces  su -s /bin/sh <account> -c <command>  & the difference matters.
+// / su requires this process to still BE root at the moment it spawns, so the privilege
+// / this call exists to give up is held for the whole life of the call. It also puts a
+// / shell in the chain, with an environment & a PATH somebody may be able to influence.
+// / A fork drops privilege inside the child & never regains it. posix_setuid called as
+// / root sets the real, the effective & the saved identity together, so there is nothing
+// / left to climb back to. The parent keeps root & the child cannot reach it.
+// /
+// / The group is dropped BEFORE the account & that order is not interchangeable.
+// / Changing the account first removes the ability to change the group, so a process that
+// / did it the other way round would keep running in root's group & nothing would say so.
+// /
+// / A host without the pcntl or posix extension cannot do this safely, so it refuses
+// / rather than falling back to running the command as root. A command that was meant to
+// / run unprivileged is worse than a command that did not run.
+function runAsAccount($command, $accountName) {
+  // / Set variables.
+  global $RunningAsRoot, $EnableMemoryProtection;
+  $CommandOutput = array();
+  $CommandExitCode = 1;
+  $accountRecord = array();
+  $outputPath = $outputContents = '';
+  $childPid = $childStatus = 0;
+  if (!$RunningAsRoot) exec((string)$command, $CommandOutput, $CommandExitCode);
+  else if (!function_exists('pcntl_fork') or !function_exists('posix_setuid') or !function_exists('posix_getpwnam')) {
+    warningEntry('A command had to run as '.$accountName.' & this PHP has no pcntl or posix extension. It was not run at all, because running it as root would be worse.');
+    $CommandExitCode = 1; }
+  else {
+    $accountRecord = posix_getpwnam((string)$accountName);
+    if (!is_array($accountRecord)) warningEntry('The account '.$accountName.' does not exist on this host, so a command that had to run as it was not run.');
+    else {
+      // / The child writes to a file rather than a pipe, because the parent must not read
+      // / from a descriptor the child still owns while it is changing identity.
+      $outputPath = tempnam(sys_get_temp_dir(), 'hrc2run');
+      $childPid = pcntl_fork();
+      if ($childPid === -1) warningEntry('A command that had to run as '.$accountName.' could not be forked.');
+      else if ($childPid === 0) {
+        // / Inside the child. Group first, account second, & neither can be undone.
+        posix_setgid($accountRecord['gid']);
+        posix_setuid($accountRecord['uid']);
+        exec((string)$command, $CommandOutput, $CommandExitCode);
+        @file_put_contents($outputPath, (string)$CommandExitCode.PHP_EOL.implode(PHP_EOL, $CommandOutput));
+        exit(0); }
+      else {
+        pcntl_waitpid($childPid, $childStatus);
+        $outputContents = (string)@file_get_contents($outputPath);
+        @unlink($outputPath);
+        $CommandOutput = explode(PHP_EOL, $outputContents);
+        $CommandExitCode = (int)array_shift($CommandOutput); } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $accountRecord, $outputPath, $outputContents, $childPid, $childStatus, $command, $accountName);
+  return array($CommandOutput, $CommandExitCode); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Resource limits.
+// / A limit is a share of the host granted to one operation & is expressed as a percentage
+// / of a processor & a quantity of memory.
+// / limitCommand depends on both of these, so they moved with it. A function that moves
+// / without what it depends on has not moved, it has only appeared to.
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide the limits one conversion runs under.
+// / Accepts the sandbox profile about to run.
+// / Returns a validity boolean, the processor percentage & the memory megabytes, in that order.
+// / The listener supplies the table when one is running, because only it knows how loaded
+// / the host is & how many conversions are already in flight. Its figures are already
+// / scaled & floored. With no listener the configured maxima are used unchanged, which is
+// / the same behaviour a standalone installation has always had.
+function resolveConversionLimit($sandboxProfile) {
+  // / Set variables.
+  // / The limit tables are named by the application & are read rather than requested.
+  // / They are globals rather than arguments because the effective table is rewritten by
+  // / the resource manager while this process runs, & a value passed in at boot would be
+  // / the value from boot rather than the value now.
+  // / An application that supplies none of them gets an empty table, & the caller treats
+  // / an empty table as no limit rather than as a limit of nothing.
+  global $EffectiveConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $Verbose, $EnableMemoryProtection;
+  $LimitIsValid = FALSE;
+  $CpuPercentage = 0;
+  $MemoryMegabytes = 0;
+  $conversionType = $limitString = $limitSource = '';
+  // / A ceiling this core knows a type cannot run below, consulted only when the
+  // / administrator has named no ceiling for that type at all. Anything they DO set wins.
+  // /
+  // / THIS EXISTS BECAUSE A CORE CAN BE UPDATED WITHOUT config.php BEING UPDATED.
+  // / config.php is accepted at or above a minimum version, so an installation that takes a
+  // / newer core keeps whatever configuration file it already had. A type this core has
+  // / learned about since that file was written is therefore a type the file does not name,
+  // / & the general default is what it would fall to.
+  // / For Scan that default is fatal rather than merely tight. A ClamAV signature database
+  // / is well over a gigabyte once it is loaded, so handing a scan the 512M general default
+  // / does not slow it down, it has the kernel kill it, & every virus scan on that server
+  // / fails from the moment the core is updated. A local fallback the configuration cannot
+  // / lower by omission is what stops a version skew from turning a working scanner off.
+  $builtInLimits = array('Scan' => '50,2048');
+  $conversionType = conversionTypeForProfile($sandboxProfile);
+  // / A table supplied by the listener wins, because it reflects the host right now.
+  if (is_array($EffectiveConversionLimits) && isset($EffectiveConversionLimits[$conversionType])) {
+    $limitString = (string)$EffectiveConversionLimits[$conversionType];
+    $limitSource = 'listener'; }
+  else if (is_array($MaximumPerConversionResources) && isset($MaximumPerConversionResources[$conversionType])) {
+    $limitString = (string)$MaximumPerConversionResources[$conversionType];
+    $limitSource = 'config.php'; }
+  else if (isset($builtInLimits[$conversionType])) {
+    $limitString = (string)$builtInLimits[$conversionType];
+    $limitSource = 'core built-in';
+    warningEntry('config.php names no per conversion ceiling for '.$conversionType.'. Using this core\'s built-in '.$limitString.' rather than the general default, which is too small for that type. Add a '.$conversionType.' entry to --Maximum Per Conversion Resources-- to set this yourself.'); }
+  else {
+    $limitString = (string)$DefaultPerConversionResources;
+    $limitSource = 'config.php default'; }
+  list ($LimitIsValid, $CpuPercentage, $MemoryMegabytes) = parseConversionLimit($limitString);
+  // / An unreadable entry falls back to the default rather than running unlimited.
+  if (!$LimitIsValid && $limitSource !== 'config.php default') {
+    warningEntry('The per conversion limit for '.$conversionType.' could not be read from '.$limitSource.'. Using the configured default.');
+    list ($LimitIsValid, $CpuPercentage, $MemoryMegabytes) = parseConversionLimit((string)$DefaultPerConversionResources);
+    $limitSource = 'config.php default'; }
+  if ($Verbose && $LimitIsValid) logEntry('Conversion Limit: '.$conversionType.', CPU '.$CpuPercentage.'%, Memory '.$MemoryMegabytes.'M, Source: '.$limitSource.'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $conversionType, $limitString, $limitSource, $builtInLimits, $sandboxProfile);
+  return array($LimitIsValid, $CpuPercentage, $MemoryMegabytes); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to verify how, or whether, a resource scope can be created.
+// / Accepts no arguments.
+// / Returns the mode, the systemd-run binary & the environment prefix, in that order.
+// / The mode is 'user', 'system' or 'none'.
+// / The answer is cached for the request, because the probe launches a process.
+// /
+// / A user scope is preferred & is tried first.
+// / A user manager controls only its own cgroup subtree, which systemd delegates to it. It
+// / cannot start a unit as another account, so nothing here can become a way to gain
+// / privilege. It needs lingering enabled for the web server user, which -fp does as root.
+// /
+// / A system scope is accepted but is not recommended.
+// / Creating a transient unit on the system bus requires manage-units, & an account holding
+// / manage-units can start a transient service with User=root. Granting that to the account
+// / which parses uploaded documents hands an attacker a direct route to root. It is
+// / supported only because an operator may already have configured it deliberately.
+function verifySystemdRun() {
+  // / Set variables.
+  global $ApacheUser, $Verbose, $EnableMemoryProtection;
+  // / The probe result survives the call so it runs once per request rather than per file.
+  static $probedMode = NULL;
+  static $probedBinary = '';
+  static $probedEnvironment = '';
+  $ScopeMode = 'none';
+  $ScopeBinary = $ScopeEnvironment = '';
+  $locatedBinary = $probeCommand = $runtimeDirectory = '';
+  $probeOutput = $uidOutput = array();
+  $probeExitCode = 1;
+  $accountUid = 0;
+  if ($probedMode !== NULL) {
+    $ScopeMode = $probedMode;
+    $ScopeBinary = $probedBinary;
+    $ScopeEnvironment = $probedEnvironment; }
+  else {
+    $locatedBinary = locateDependency('systemd-run');
+    if ($locatedBinary === '') warningEntry('systemd-run is not installed. Per conversion limits fall back to scheduling priority only.');
+    else {
+      // / Build the environment a user manager needs. Without these systemd-run cannot find
+      // / the bus for this account & falls straight through to the system bus.
+      exec('id -u '.escapeshellarg($ApacheUser).' 2>/dev/null', $uidOutput, $probeExitCode);
+      $accountUid = (int)trim(implode('', $uidOutput));
+      if ($accountUid > 0) {
+        $runtimeDirectory = '/run/user/'.$accountUid;
+        $ScopeEnvironment = 'XDG_RUNTIME_DIR='.escapeshellarg($runtimeDirectory)
+          .' DBUS_SESSION_BUS_ADDRESS='.escapeshellarg('unix:path='.$runtimeDirectory.'/bus').' '; }
+      // / Try the user manager first. Create the smallest possible scope & throw it away.
+      $probeCommand = $ScopeEnvironment.'timeout 10 '.escapeshellarg($locatedBinary)
+        .' --user --scope --quiet --collect -p MemoryMax=64M -- /bin/true 2>&1';
+      exec($probeCommand, $probeOutput, $probeExitCode);
+      if ($probeExitCode === 0) {
+        $ScopeMode = 'user';
+        $ScopeBinary = $locatedBinary;
+        if ($Verbose) logEntry('Verified systemd-run in user mode. Per conversion limits are available without any privileged permission.'); }
+      else {
+        // / Fall back to the system bus only if the operator has already permitted it.
+        $probeOutput = array();
+        $probeCommand = 'timeout 10 '.escapeshellarg($locatedBinary).' --scope --quiet --collect -p CPUQuota=100% -- /bin/true 2>&1';
+        exec($probeCommand, $probeOutput, $probeExitCode);
+        if ($probeExitCode === 0) {
+          $ScopeMode = 'system';
+          $ScopeBinary = $locatedBinary;
+          $ScopeEnvironment = '';
+          warningEntry('Per conversion limits are using a SYSTEM scope. This account holds systemd manage-units, which is enough to start a unit as root. Enable lingering for '.$ApacheUser.' with the -fp argument & remove that permission.'); }
+        else warningEntry('A resource scope could not be created. Run the -fp argument as root to enable lingering for '.$ApacheUser.'. Per conversion limits fall back to scheduling priority only.'); } }
+    $probedMode = $ScopeMode;
+    $probedBinary = $ScopeBinary;
+    $probedEnvironment = $ScopeEnvironment; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $probedBinary, $probedEnvironment, $probedMode, $locatedBinary, $probeCommand, $runtimeDirectory, $probeOutput, $uidOutput, $probeExitCode, $accountUid);
+  return array($ScopeMode, $ScopeBinary, $ScopeEnvironment); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / The sandbox.
+// / Every command an application runs against a file somebody else supplied goes through
+// / here. The namespace has no network, no devices beyond a minimal set, a tmpfs for
+// / everything writable & read only access to the two directories the command was given.
+// /
+// / A profile is DATA the application supplies & is never knowledge this file holds.
+// / $EngineSandboxProfiles is filled by the application before a conversion runs.
+// / Nothing here knows what LibreOffice or MeshLab is & nothing here needs to.
+// / An application with different tools declares different profiles & this file does not
+// / change. An application that declares nothing gets the base sandbox, which is the
+// / tightest outcome rather than the loosest.
+// /
+// / A command is never assembled with a shell in mind. bwrap execs directly, so an
+// / environment variable goes through --setenv & a NAME=value prefix would be read as the
+// / name of a program to run.
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to report which operation type a sandbox profile belongs to.
+// / Accepts the profile name. Returns the type the resource limit is looked up under.
+// / A profile this application does not declare is Generic, which is the most conservative
+// / limit rather than the most generous, because an unknown tool has not been measured.
+function conversionTypeForProfile($sandboxProfile) {
+  // / Set variables.
+  // / The profile array is supplied by the application rather than fetched from it.
+  // / An Engine that called back into the application would be an Engine that works for
+  // / exactly one application. It reads a global the application filled instead.
+  global $EngineSandboxProfiles, $EnableMemoryProtection;
+  $ConversionType = 'Generic';
+  $cleanProfile = strtolower(trim((string)$sandboxProfile));
+  $sandboxProfiles = (isset($EngineSandboxProfiles) && is_array($EngineSandboxProfiles)) ? $EngineSandboxProfiles : array();
+  if (isset($sandboxProfiles[$cleanProfile]['OperationType'])) $ConversionType = (string)$sandboxProfiles[$cleanProfile]['OperationType'];
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $cleanProfile, $sandboxProfiles, $sandboxProfile);
+  return $ConversionType; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to assemble the bwrap flags one sandbox profile asks for.
+// / Accepts the profile name. Returns the flags as a string, which may be empty.
+// / Nothing here knows what any profile is for. It reads the record the application
+// / declared & turns each field into the flag that expresses it.
+// / A profile this application does not declare produces no extra flags at all, which
+// / leaves the base sandbox in force rather than loosening anything.
+function sandboxProfileFlags($sandboxProfile) {
+  // / Set variables.
+  // / The profile array is supplied by the application, for the reason given above.
+  // / An application that supplies nothing gets the base sandbox & no extra flags, which
+  // / is the tightest outcome rather than the loosest.
+  global $EngineSandboxProfiles, $EnableMemoryProtection;
+  $ProfileFlags = '';
+  $cleanProfile = strtolower(trim((string)$sandboxProfile));
+  $sandboxProfiles = (isset($EngineSandboxProfiles) && is_array($EngineSandboxProfiles)) ? $EngineSandboxProfiles : array();
+  $profileRecord = array();
+  $profilePath = $profileName = $profileValue = '';
+  if (isset($sandboxProfiles[$cleanProfile])) {
+    $profileRecord = $sandboxProfiles[$cleanProfile];
+    // / A read only bind uses the try form, so a tool installed without its data does not
+    // / take the whole sandbox down with it.
+    if (isset($profileRecord['ReadOnlyPaths'])) {
+      foreach ((array)$profileRecord['ReadOnlyPaths'] as $profilePath) $ProfileFlags = $ProfileFlags.' --ro-bind-try '.escapeshellarg($profilePath).' '.escapeshellarg($profilePath); }
+    // / Mapping to root happens before any tmpfs is created, so a directory this profile
+    // / asks for is owned by the namespace root rather than by the calling account.
+    if (isset($profileRecord['MapToRoot']) && $profileRecord['MapToRoot']) $ProfileFlags = $ProfileFlags.' --uid 0 --gid 0';
+    if (isset($profileRecord['Tmpfs'])) {
+      foreach ((array)$profileRecord['Tmpfs'] as $profilePath) $ProfileFlags = $ProfileFlags.' --tmpfs '.escapeshellarg($profilePath); }
+    // / An environment variable is set with --setenv & is never prefixed onto the command.
+    // / bwrap execs without a shell, so a NAME=value prefix is read as a program to run.
+    if (isset($profileRecord['Environment'])) {
+      foreach ((array)$profileRecord['Environment'] as $profileName => $profileValue) $ProfileFlags = $ProfileFlags.' --setenv '.escapeshellarg($profileName).' '.escapeshellarg((string)$profileValue); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $cleanProfile, $sandboxProfiles, $profileRecord, $profilePath, $profileName, $profileValue, $sandboxProfile);
+  return $ProfileFlags; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to wrap a command in a transient systemd scope carrying its limits.
+// / Accepts the command to wrap & the sandbox profile about to run, in that order.
+// / Returns the wrapped command, or the command unchanged when limiting is unavailable.
+// / The scope wraps the SANDBOX, not the tool inside it, so the ceiling covers bubblewrap
+// / & every process it goes on to create.
+// / CPUQuota is a percentage of ONE processor. 200% is two whole cores.
+// / MemoryMax is a hard ceiling. A conversion that reaches it is killed by the kernel &
+// / will report a conversion failure rather than a memory error, which is why the
+// / configured ceilings should be generous.
+// / With no scope mechanism the command is merely deprioritized, which needs no permission
+// / at all & still keeps a conversion from starving the web server under contention.
+// / This never refuses. A resource ceiling is a courtesy to the host & not a security
+// / control, so an unavailable limiter runs the conversion anyway.
+function limitCommand($command, $sandboxProfile) {
+  // / Set variables.
+  global $EnablePerConversionLimits, $Verbose, $EnableMemoryProtection;
+  $LimitedCommand = (string)$command;
+  $scopeMode = $scopeBinary = $scopeEnvironment = $scopePrefix = '';
+  $limitIsValid = FALSE;
+  $cpuPercentage = $memoryMegabytes = $nicePriority = 0;
+  if (!$EnablePerConversionLimits) $LimitedCommand = (string)$command;
+  else {
+    list ($limitIsValid, $cpuPercentage, $memoryMegabytes) = resolveConversionLimit($sandboxProfile);
+    if (!$limitIsValid) warningEntry('No usable per conversion limit could be resolved. This conversion runs unlimited.');
+    else {
+      list ($scopeMode, $scopeBinary, $scopeEnvironment) = verifySystemdRun();
+      // / --quiet keeps the unit name off stderr, which several callers capture as output.
+      // / --collect releases the unit when it exits, so a failed conversion leaves nothing.
+      // / Swap is pinned to zero so a memory ceiling cannot be evaded by swapping.
+      if ($scopeMode === 'user' or $scopeMode === 'system') {
+        $scopePrefix = $scopeEnvironment.escapeshellarg($scopeBinary)
+          .($scopeMode === 'user' ? ' --user' : '')
+          .' --scope --quiet --collect'
+          .' -p CPUQuota='.(int)$cpuPercentage.'%'
+          .' -p MemoryMax='.(int)$memoryMegabytes.'M'
+          .' -p MemorySwapMax=0'
+          .' -- ';
+        $LimitedCommand = $scopePrefix.$command; }
+      else {
+        // / No cgroup is available, so the ceiling cannot be enforced. The conversion is
+        // / deprioritized instead, which is weaker but needs nothing from the operator.
+        // / A smaller processor share becomes a larger niceness.
+        $nicePriority = (int)round(19 - (($cpuPercentage / 100) * 19));
+        if ($nicePriority < 0) $nicePriority = 0;
+        if ($nicePriority > 19) $nicePriority = 19;
+        $LimitedCommand = 'nice -n '.$nicePriority.' '.$command; }
+      if ($Verbose) logEntry('Conversion Scope: '.$scopeMode.', CPU '.$cpuPercentage.'%, Memory '.$memoryMegabytes.'M'.($scopeMode === 'none' ? ', enforced as niceness '.$nicePriority.' only' : '').'.'); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $scopeMode, $scopeBinary, $scopeEnvironment, $scopePrefix, $limitIsValid, $cpuPercentage, $memoryMegabytes, $nicePriority, $command, $sandboxProfile);
+  return $LimitedCommand; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to confirm this server can actually isolate a dependency invocation.
+// / Returns the absolute path of a WORKING bubblewrap binary, or FALSE.
+// / A path is returned ONLY when a real sandbox was launched successfully, so a caller
+// / holding a path may build a command with it without checking anything else.
+// / This is a CAPABILITY check rather than a version check & is the only one in the
+// / application. Bubblewrap may be installed & still be non functional.
+// / Unprivileged user namespaces can be disabled at the kernel level, restricted by an
+// / AppArmor profile, or blocked by a container runtime. Testing that the binary exists
+// / proves nothing at all, so a real minimal sandbox is launched here instead.
+// / A dependency that cannot be isolated must be refused rather than run unprotected, so a
+// / FALSE from this function is the strongest signal the application produces.
+function verifyBwrap() {
+  // / Set variables.
+  global $Verbose, $RunningAsRoot, $CurrentUser, $ApacheUser, $EnableMemoryProtection;
+  $BwrapBinary = FALSE;
+  $bwrapReason = '';
+  $locatedBinary = $bwrapCommand = '';
+  $bwrapOutput = array();
+  $bwrapExitCode = 1;
+  $locatedBinary = locateDependency('bwrap');
+  if ($locatedBinary !== '') {
+    // / Launch the smallest possible sandbox & run a command that does nothing but exit.
+    // / This proves the kernel will actually grant the namespaces a real render depends on.
+    // / The ro-bind-try entries are optional & are skipped on systems that do not have them.
+    $bwrapCommand = 'timeout 10 '.escapeshellarg($locatedBinary)
+      .' --unshare-all'
+      .' --die-with-parent'
+      .' --ro-bind /usr /usr'
+      .' --ro-bind-try /lib /lib'
+      .' --ro-bind-try /lib64 /lib64'
+      .' --ro-bind-try /bin /bin'
+      .' --proc /proc'
+      .' --dev /dev'
+      .' --tmpfs /tmp'
+      .' /usr/bin/true 2>&1';
+    // / A probe run as root proves nothing. Root can always create a namespace, so a check
+    // / made by -fp would report a working sandbox while every web request still failed.
+    // / When this is running as root the probe is re-run as the account that will actually
+    // / run conversions, which is the only answer worth reporting.
+    // / The probe runs as the account that will actually run conversions.
+    // / runAsAccount forks & drops rather than spawning a shell through su, so the
+    // / privilege this call exists to give up is not held while the command runs.
+    // / stderr is KEPT. bwrap names the exact reason it could not build a namespace, &
+    // / discarding it left an operator with an exit code & nothing to act on. The usual
+    // / cause is a kernel restricting unprivileged user namespaces, which -fp corrects.
+    if ($RunningAsRoot && $CurrentUser !== $ApacheUser) list ($bwrapOutput, $bwrapExitCode) = runAsAccount($bwrapCommand, $ApacheUser);
+    else exec($bwrapCommand, $bwrapOutput, $bwrapExitCode);
+    if ($bwrapExitCode === 0) $BwrapBinary = $locatedBinary;
+    else $bwrapReason = trim((string)(isset($bwrapOutput[0]) ? $bwrapOutput[0] : 'no reason was reported')); }
+  if ($BwrapBinary === FALSE && $bwrapReason !== '') warningEntry('Bubblewrap could not build a sandbox'.(($RunningAsRoot && $CurrentUser !== $ApacheUser) ? ' as '.$ApacheUser : '').'. '.$bwrapReason.' Run the -fp argument as root to install the AppArmor profile an unprivileged user namespace needs.');
+  if ($Verbose) logEntry('Bubblewrap Sandbox Check: '.($BwrapBinary === FALSE ? 'FAILED' : 'PASSED').', Exit code: '.$bwrapExitCode.($BwrapBinary === FALSE ? ', Reason: '.$bwrapReason : ', Using: '.$BwrapBinary).'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $bwrapCommand, $bwrapOutput, $bwrapExitCode, $bwrapReason);
+  return $BwrapBinary; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to wrap a dependency invocation in a bubblewrap sandbox.
+// / Accepts a finished command, the real path of the input, the real path of the output,
+// / & a boolean granting network access.
+// / Both paths must appear in the command exactly as escapeshellarg() rendered them,
+// / because that is the form matched when they are rewritten for the namespace.
+// / A path built any other way will not be matched & the command will refer to a location
+// / that does not exist inside the sandbox.
+// / Returns a permission boolean & a command string ready to run unmodified.
+// / The boolean reports whether the command MAY RUN, not whether a sandbox was built.
+// / A sandbox that was built returns TRUE with a bwrap command.
+// / A sandbox that could not be built returns FALSE when sandboxing is required, so every
+// / caller refuses without any caller needing to know why.
+// / A sandbox that could not be built returns TRUE with the unwrapped command when
+// / sandboxing is not required, & writes a warning naming the conversion as unprotected.
+// / A container blocks the namespaces bubblewrap needs unless it was started with
+// / --security-opt seccomp=unconfined, so a separate setting governs that case.
+// / The directory holding the input is mounted read only at /in.
+// / The directory holding the output is mounted writable at /out.
+// / When both paths share a directory it is mounted once, writable, at /work.
+// / Nothing else from the data location is visible inside the namespace.
+// / The mounts are derived from the supplied paths, so the caller never names one.
+// / Network access is unshared unless requested, which closes every URL handler at once.
+// / OpenSCAD does NOT use this. It needs a whole directory visible to resolve includes.
+// / The sixth argument is a directory the command needs that is neither its input nor its
+// / output. A converter loading a module, a template or a profile from inside the
+// / installation cannot reach it otherwise, because the namespace binds the input directory
+// / & the output directory & nothing else at all.
+// / PyMeshLab is why this exists. Its command inserts the bundled module directory onto the
+// / Python path, that directory was never bound, & every MeshLab route therefore failed the
+// / moment --Use PyMeshLab Python Bindings-- was enabled with sandboxing on. It looked like
+// / a broken conversion rather than like a missing bind.
+// / A caller with nothing to bind passes nothing & is unaffected.
+// / The seventh argument is a set of environment variables the command needs, keyed by
+// / name. A caller must never prefix them onto the command itself.
+// / bwrap execs the command with execvp & never through a shell.
+// / A NAME=value prefix is therefore read as the name of a binary rather than as an
+// / assignment, & the failure looks like a missing program.
+// / The message is  execvp QT_QPA_PLATFORM=offscreen: No such file or directory  which
+// / names a shell feature that was never involved.
+// / A value naming the read only resource is rewritten to its path inside the namespace.
+// / An unsandboxed command is run through a shell & takes the same variables as a prefix.
+function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandboxProfile, $readOnlyResourcePath = '', $environmentVariables = array()) {
+  // / Set variables.
+  global $Verbose, $RequireSandbox, $RequireSandboxOnDocker, $ThrowSandboxWarning, $RunningInContainer, $EnableMemoryProtection;
+  $CommandMayRun = FALSE;
+  $bwrapBinary = FALSE;
+  // / This initializes TRUE rather than FALSE, because for this variable TRUE is the safe
+  // / state. It is overwritten unconditionally below & the initial value is never read.
+  $sandboxIsRequired = TRUE;
+  $SandboxedCommand = $networkFlag = $mountFlags = $workingDir = $profileFlags = $resourceFlags = '';
+  $environmentFlags = $environmentPrefix = $environmentName = $environmentValue = '';
+  $rewriteSearch = $rewriteReplace = array();
+  $inputDir = $outputDir = $sandboxInput = $sandboxOutput = '';
+  $bwrapBinary = verifyBwrap();
+  // / Collect the mounts this one dependency needs. Nothing else receives them.
+  $profileFlags = sandboxProfileFlags($sandboxProfile);
+  // / A container that CAN build a sandbox still gets one. This only decides what happens
+  // / when it cannot.
+  $sandboxIsRequired = $RunningInContainer ? $RequireSandboxOnDocker : $RequireSandbox;
+  // / Resolve each path to the directory holding it.
+  // / The output file does not exist yet, so its directory is used rather than the file.
+  $inputDir = dirname($inputPath);
+  $outputDir = dirname($outputPath);
+  // / Build the mounts & the paths the two files carry inside the namespace.
+  // / One directory means one writable mount, because the output has to be written somewhere.
+  // / Two directories means a read only input & a writable output, so a dependency that is
+  // / exploited while parsing a hostile file cannot modify the file it came from.
+  if ($inputDir === $outputDir) {
+    $workingDir = '/work';
+    $mountFlags = ' --bind '.escapeshellarg($outputDir).' /work';
+    $sandboxInput = escapeshellarg('/work/'.basename($inputPath));
+    $sandboxOutput = escapeshellarg('/work/'.basename($outputPath)); }
+  else {
+    $workingDir = '/out';
+    $mountFlags = ' --ro-bind '.escapeshellarg($inputDir).' /in'
+      .' --bind '.escapeshellarg($outputDir).' /out';
+    $sandboxInput = escapeshellarg('/in/'.basename($inputPath));
+    $sandboxOutput = escapeshellarg('/out/'.basename($outputPath)); }
+  // / The rewrite pairs are built rather than assumed, because a pair is only correct when
+  // / there is something to bind. escapeshellarg('') returns two quote characters, so an
+  // / unconditional pair would search the command for an empty quoted argument & replace
+  // / every one it found with nothing.
+  // / Both forms are built & which one is used depends on whether bwrap is available.
+  // / A sandboxed command takes --setenv & an unsandboxed one takes a shell prefix.
+  if (is_array($environmentVariables)) {
+    foreach ($environmentVariables as $environmentName => $environmentValue) {
+      $environmentPrefix = $environmentPrefix.$environmentName.'='.escapeshellarg((string)$environmentValue).' ';
+      if (trim((string)$readOnlyResourcePath) !== '') $environmentValue = str_replace((string)$readOnlyResourcePath, '/res', (string)$environmentValue);
+      $environmentFlags = $environmentFlags.' --setenv '.escapeshellarg($environmentName).' '.escapeshellarg((string)$environmentValue); } }
+  $rewriteSearch = array(escapeshellarg($inputPath), escapeshellarg($outputPath));
+  $rewriteReplace = array($sandboxInput, $sandboxOutput);
+  if (trim((string)$readOnlyResourcePath) !== '' && is_dir((string)$readOnlyResourcePath)) {
+    $resourceFlags = ' --ro-bind '.escapeshellarg((string)$readOnlyResourcePath).' /res';
+    array_push($rewriteSearch, escapeshellarg((string)$readOnlyResourcePath));
+    array_push($rewriteReplace, escapeshellarg('/res')); }
+  // / A sandbox that could not be built is a policy decision rather than a technical one.
+  // / An operator who has deliberately accepted the risk gets the command & a warning.
+  // / An operator who has not gets a refusal, & every caller already handles that.
+  if ($bwrapBinary === FALSE) {
+    $SandboxedCommand = $environmentPrefix.$command;
+    if ($sandboxIsRequired) warningEntry('Bubblewrap is unavailable & sandboxing is required, so a conversion was refused. Install bubblewrap, or set '.($RunningInContainer ? '$RequireSandboxOnDocker' : '$RequireSandbox').' to FALSE in config.php to run conversions unprotected.');
+    else {
+      $CommandMayRun = TRUE;
+      if ($ThrowSandboxWarning) warningEntry('Bubblewrap is unavailable & sandboxing is not required, so a conversion will run unprotected.'); } }
+  else {
+    $CommandMayRun = TRUE;
+    // / --unshare-all removes every namespace the command has no business holding.
+    // / --share-net gives back ONLY the network, for the one caller that needs it.
+    if ($allowNetwork) $networkFlag = ' --share-net';
+    // / The rewrite is an exact match on the escaped paths rather than a pattern, so nothing
+    // / else in the command can be altered by accident. Neither escaped path can appear
+    // / inside the other's replacement, so a single pass is safe.
+    $SandboxedCommand = escapeshellarg($bwrapBinary)
+      .' --unshare-all'.$networkFlag
+      .' --die-with-parent'
+      .' --new-session'
+      .$resourceFlags
+      .' --ro-bind /usr /usr'
+      .' --ro-bind-try /lib /lib'
+      .' --ro-bind-try /lib64 /lib64'
+      .' --ro-bind-try /bin /bin'
+      .' --ro-bind-try /sbin /sbin'
+      .' --ro-bind-try /etc/alternatives /etc/alternatives'
+      .' --ro-bind-try /etc/fonts /etc/fonts'
+      .' --ro-bind-try /etc/ld.so.cache /etc/ld.so.cache'
+      .' --ro-bind-try /etc/ssl/certs /etc/ssl/certs'
+      .' --ro-bind-try /opt /opt'
+      .' --proc /proc'
+      .' --dev /dev'
+      .' --tmpfs /tmp'
+      .' --tmpfs /run'
+      // / A dependency resolves the running user with getpwuid() during startup & throws
+      // / out of its configuration backend when the lookup fails. --unshare-all unshares
+      // / the user namespace, so without these the lookup has nothing to read & LibreOffice
+      // / aborts with Signal 6 before it opens a file.
+      .' --ro-bind-try /etc/passwd /etc/passwd'
+      .' --ro-bind-try /etc/group /etc/group'
+      .' --ro-bind-try /etc/machine-id /etc/machine-id'
+      .' --ro-bind-try /etc/localtime /etc/localtime'
+      // / --dev builds a minimal device tree with no /dev/shm, which several dependencies
+      // / require for shared memory. A tmpfs is enough & stays inside the namespace.
+      .' --tmpfs /dev/shm'
+      .' --setenv HOME /tmp'
+      // / Every writable location a dependency reaches for is pointed at the tmpfs.
+      // / Nothing tries to create state outside the namespace & fail.
+      .' --setenv XDG_RUNTIME_DIR /tmp'
+      .' --setenv XDG_CONFIG_HOME /tmp/.config'
+      .' --setenv XDG_CACHE_HOME /tmp/.cache'
+      .' --setenv XDG_DATA_HOME /tmp/.local'
+      // / The caller's variables come last, so a caller may override anything above.
+      .$environmentFlags
+      // / Headless rendering with no display server & no OpenCL probing.
+      .$profileFlags
+      .$mountFlags
+      .' --chdir '.$workingDir
+      .' '
+      // / The resource is rewritten alongside the input & the output when there is one,
+      // / so a command naming it is corrected by the same single pass.
+      .str_replace(
+        $rewriteSearch,
+        $rewriteReplace,
+        $command);
+    if ($Verbose) logEntry('Sandbox prepared for a dependency invocation.'); }
+  // / Wrap whatever was built in its resource ceiling. This is applied to the sandbox
+  // / rather than to the tool, so the ceiling covers bubblewrap & everything under it.
+  // / An unsandboxed command is still limited, because the host deserves protection even
+  // / when the administrator has turned the sandbox off.
+  if ($CommandMayRun) $SandboxedCommand = limitCommand($SandboxedCommand, $sandboxProfile);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $environmentFlags, $environmentPrefix, $environmentName, $environmentValue, $environmentVariables, $resourceFlags, $rewriteSearch, $rewriteReplace, $readOnlyResourcePath, $bwrapBinary, $sandboxIsRequired, $networkFlag, $mountFlags, $profileFlags, $workingDir, $inputDir, $outputDir, $sandboxInput, $sandboxOutput, $command, $inputPath, $outputPath, $allowNetwork, $sandboxProfile);
+  return array($CommandMayRun, $SandboxedCommand); }
 // / -----------------------------------------------------------------------------------
 
 ?>

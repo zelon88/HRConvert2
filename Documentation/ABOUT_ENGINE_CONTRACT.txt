@@ -216,12 +216,40 @@ path runs before any component has been verified.
 It was found by a call order check that follows the call graph rather than by reading, &
 Documentation/Build/hrconvert2-check.py is that check.
 
-MANAGER SUBCOMPONENTS ARE DECLARED & THE DIRECTORY IS STILL EMPTY.
+THE ENGINE STILL CALLS TEN APPLICATION FUNCTIONS & THAT IS A DEBT RATHER THAN A DESIGN.
+Documentation/Build/hrconvert2-check.py reports every one of them on every run.
+None of them are deliberate. Each is a function that moved without a helper it quietly
+depended on, which is invisible while both files load in the same request & fatal the
+moment somebody bundles this Engine on its own.
+
+They fall into three groups & each group has a different answer.
+
+  THE POLICY GROUP, reached from validateOperatingEnvironment.
+  verifySandboxKernel, verifySandboxPolicy, verifyImageMagickPolicy, verifyOpenScadPolicy,
+  policyDisplayStatus & describePolicyStatus.
+  These write to /etc & /usr & need root, so they belong with the privileged side rather
+  than with the Engine as it stands. Roughly three hundred lines.
+
+  THE LIMIT GROUP, reached from limitCommand.
+  resolveConversionLimit & verifySystemdRun.
+  Small & mechanical. resolveConversionLimit reads the application's limit table, so the
+  table becomes something the application supplies, the same way sandbox profiles are.
+
+  THE REMAINDER.
+  verifyDataExposure asks whether a web server is serving a directory it should not be,
+  which only an application with a web server can answer. It should be a value passed in
+  rather than a call made out.
+  cleanFiles reads the application's own paths & belongs to the application.
+
+The Engine is USABLE in this state, because HRConvert2 loads both files. It is not yet
+PORTABLE, & the difference is exactly this list.
+
+MANAGER SUBCOMPONENTS ARE POPULATED & Resources/coreManager.php IS GONE.
 getAcceptedManagers names four files under Resources/Engine/Managers & loadEngineManager
-verifies & loads one. Nothing is there yet.
-Resources/coreManager.php still holds all four roles & still cannot be deleted.
-It is free of application dependencies, which is what makes absorbing it a file move rather
-than an extraction. It is not the move.
+verifies & loads one when a process is dispatched to that role.
+Twenty eight functions of shared machinery went into the Engine rather than into any one
+role, because sockets, budget arithmetic & the worker registry are not a role.
+A process running as one role never parses the other three.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

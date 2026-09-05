@@ -105,7 +105,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependsVersion = 'v3.8.9';
+$DependsVersion = 'v3.9.0';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -299,6 +299,21 @@ $DependsManifest = array(
     'BuildCommand' => 'set -e; DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends build-essential wget libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev libffi-dev liblzma-dev; cd /tmp; rm -rf Python-3.14.0 Python-3.14.0.tgz; wget -q https://www.python.org/ftp/python/3.14.0/Python-3.14.0.tgz; tar -xf Python-3.14.0.tgz; cd Python-3.14.0; ./configure --enable-shared --prefix=/usr/local; make -j$(nproc); make altinstall; ldconfig; cd /tmp; rm -rf Python-3.14.0 Python-3.14.0.tgz',
     'Required' => FALSE, 'Subsystem' => '3D Models', 'Requires' => array(),
     'License' => 'PSF-2.0', 'Source' => 'https://www.python.org', 'Purpose' => 'Loads the bundled PyMeshLab, which is the only mesh route MeshLab has not removed.'),
+  // / NumPy, which PyMeshLab imports before it does anything else.
+  // / It is installed against the SAME interpreter the bundle was built for rather than
+  // / against the system one. A host may carry numpy for python3 & none for python3.14 &
+  // / those are two different installations that share a name.
+  // / PyMeshLab catches an import failure & re-raises its own ImportError: initialization
+  // / failed, which names neither numpy nor anything else. Four separate theories about Qt
+  // / plugins & library paths were tested against that message before the real cause was
+  // / read by importing the inner module directly & letting the original exception through.
+  // / A dependency this manifest does not declare is a dependency nobody installs.
+  array('Name' => 'NumPy 3.14', 'Binary' => '', 'Type' => 'source', 'Package' => '',
+    'MinimumVersion' => '', 'VersionCommand' => 'python3.14 -c \'import numpy; print(numpy.__version__)\'', 'VersionPattern' => '/([0-9]+\\.[0-9]+)/',
+    'BuildCommand' => 'python3.14 -m ensurepip --upgrade; python3.14 -m pip install --upgrade numpy',
+    'Required' => FALSE, 'Subsystem' => '3D Models', 'Requires' => array('Python 3.14'),
+    'License' => 'BSD-3-Clause', 'Source' => 'https://numpy.org', 'Purpose' => 'Imported by PyMeshLab. Without it the bundle cannot load at all.'),
+
   array('Name' => 'PyMeshLab', 'Binary' => '', 'Type' => 'bundled', 'Package' => '',
   // / The probe names the bundled shared objects on the loader path.
   // / The compiled module links libraries that ship inside the bundle rather than system
@@ -306,8 +321,38 @@ $DependsManifest = array(
   // / Without this the module is found & then fails to load, which reports as absent.
   // / A prefix works here because this command is run through a shell.
   // / It would not work inside the sandbox, where bwrap execs without one.
-    'MinimumVersion' => '', 'VersionCommand' => 'LD_LIBRARY_PATH='.$InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'PyMeshLab'.DIRECTORY_SEPARATOR.'pymeshlab'.DIRECTORY_SEPARATOR.'lib'.' python3.14 -c "import sys; sys.path.insert(0, \''.$InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'PyMeshLab\'); import pymeshlab; print(\'bundled\')"', 'VersionPattern' => '',
-    'Required' => FALSE, 'Subsystem' => '3D Models', 'Requires' => array('Assimp', 'Python 3.14'),
+  // / Qt is given a platform plugin & rendering is forced through Mesa software.
+  // / The compiled module links Qt, & Qt refuses to start without a platform plugin.
+  // / A probe with no display reported ImportError: initialization failed, which reads
+  // / as a broken bundle & is Qt declining to start rather than the module being absent.
+  // / The same three variables are what the meshlab sandbox profile sets, & the reasons
+  // / are recorded there. This probe runs unsandboxed, so it sets them as a prefix.
+  // / Three things have to be true before this import works & each one hid the others.
+  // / An interpreter matching the cpython tag on the bundled object must be installed.
+  // / NumPy must be installed against THAT interpreter, because PyMeshLab imports it first.
+  // / Qt must be told where its platform plugin is, because the bundle carries Qt5 & the
+  // / plugins directory beside it holds MeshLab's filters rather than Qt's.
+  // / PyMeshLab reports all three as ImportError: initialization failed, which names none
+  // / of them. Import pmeshlab directly to see the exception that was actually raised.
+  // / QT_PLUGIN_PATH points Qt at the plugins beside the bundled Qt5 libraries.
+  // / QT_QPA_PLATFORM names which plugin to load & says nothing about where to find it,
+  // / so without this Qt searches the system path, finds nothing it can use & reports
+  // / ImportError: initialization failed, which names neither the plugin nor the path.
+  // /
+  // / The platforms directory in that bundle was ADDED BY HAND & is not in the wheel.
+  // / No PyMeshLab wheel ships a Qt platform plugin. The wheel carries Qt5 libraries & a
+  // / plugins directory holding MeshLab's own filters & format handlers, & expects the
+  // / platform plugin to come from the host.
+  // / It was copied from /usr/lib/x86_64-linux-gnu/qt5/plugins/platforms on this machine.
+  // / A bundle refresh will drop it again & PyMeshLab will report absent with exactly the
+  // / message above, which names nothing that would lead anybody back to this note.
+  // / Copy the directory back after replacing the bundle.
+  // /
+  // / The plugin & the bundled libQt5Core must be the same Qt minor version. Qt refuses a
+  // / plugin built against a different one & says so, which is the readable failure.
+  // / Run the probe with QT_DEBUG_PLUGINS=1 to see every path searched & every rejection.
+    'MinimumVersion' => '', 'VersionCommand' => 'QT_QPA_PLATFORM=offscreen QT_PLUGIN_PATH='.$InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'PyMeshLab'.DIRECTORY_SEPARATOR.'pymeshlab'.DIRECTORY_SEPARATOR.'lib'.DIRECTORY_SEPARATOR.'plugins'.' LIBGL_ALWAYS_SOFTWARE=1 __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/50_mesa.json LD_LIBRARY_PATH='.$InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'PyMeshLab'.DIRECTORY_SEPARATOR.'pymeshlab'.DIRECTORY_SEPARATOR.'lib'.' python3.14 -c "import sys; sys.path.insert(0, \''.$InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'PyMeshLab\'); import pymeshlab; print(\'bundled\')"', 'VersionPattern' => '',
+    'Required' => FALSE, 'Subsystem' => '3D Models', 'Requires' => array('Assimp', 'Python 3.14', 'NumPy 3.14'),
     'License' => 'GPL-3.0', 'Source' => 'Bundled at Resources/PyMeshLab', 'Purpose' => 'Repairs & simplifies meshes. Replaces MeshLab. Ships with HRConvert2.'),
   array('Name' => 'MeshLab', 'Binary' => 'meshlabserver', 'Type' => 'apt', 'Package' => 'meshlab',
     'MinimumVersion' => '2020.09', 'VersionCommand' => 'meshlabserver --version', 'VersionPattern' => '/(\d+\.\d+)/',
@@ -341,8 +386,17 @@ $DependsManifest = array(
   // / It ships inside the application & is a microservice rather than a package.
   // / Presence is proved by asking it to report its own version, because a bundled file
   // / being on disk says nothing about whether it runs.
+  // / ScanCore reports its own version with -version, & that is what is asked for here.
+  // / The pattern is anchored to the name rather than matching the first pair of numbers
+  // / it finds. That output also carries three timestamps & several paths, & an
+  // / unanchored pattern would keep working right up until the order of those lines
+  // / changed, then report a date as a version.
+  // / An earlier probe invented an argument, which ScanCore correctly refused with Cannot
+  // / verify supplied arguments, & a probe after that read the version out of the file with
+  // / grep. Reading rather than running was defensible & was not necessary. The interface
+  // / exists & asking the thing itself is the honest answer.
   array('Name' => 'ScanCore', 'Binary' => '', 'Type' => 'bundled', 'Package' => '',
-    'MinimumVersion' => '', 'VersionCommand' => 'php '.$InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'ScanCore'.DIRECTORY_SEPARATOR.'ScanCore.php -v', 'VersionPattern' => '/(\d+\.\d+)/',
+    'MinimumVersion' => '', 'VersionCommand' => 'php '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'ScanCore'.DIRECTORY_SEPARATOR.'ScanCore.php').' -version', 'VersionPattern' => '/ScanCore v([0-9]+\\.[0-9]+)/',
     'Required' => FALSE, 'Subsystem' => 'Virus Scanning', 'Requires' => array('PHP'),
     'License' => 'GPL-3.0', 'Source' => 'Bundled at Resources/ScanCore', 'Purpose' => 'Scans every uploaded file. Written & distributed by this project.'),
   array('Name' => 'ClamAV', 'Binary' => 'clamscan', 'Type' => 'apt', 'Package' => 'clamav clamav-daemon',

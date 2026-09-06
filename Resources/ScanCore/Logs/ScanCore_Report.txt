@@ -278,3 +278,81 @@ Definition update was last installed on:  September 05 2026 04:47:21.
 This installation has the following Definition Subscriptions:  Virus, Malware, PUP
 September 5, 2026, 7:10 am, Verified supplied arguments.
 September 5, 2026, 7:10 am, Running as root. Anything created will be handed to uid 33 & gid 33.
+September 5, 2026, 10:46 pm, ScanCore v1.8 by Justin Grimes (@zelon88), licensed under GPLv3.
+The original source code for this application can be found at:  https://github.com/zelon88/ScanCore
+This installation is located at:  /var/www/html/HRProprietary/HRConvert2/Resources/ScanCore/ScanCore.php
+This installation is using a definitions file located at:  /var/www/html/HRProprietary/HRConvert2/Resources/ScanCore/ScanCore_Combined_Definitions.def
+This installation is using a configuration file located at:  /var/www/html/HRProprietary/HRConvert2/Resources/ScanCore/ScanCore_Config.php
+This installation downloads Application updates from:  https://github.com/zelon88/ScanCore
+This installation downloads Definition updates from:  https://github.com/zelon88/ScanCore_Definitions
+Configuration file was last updated on:  September 05 2026 04:47:21.
+Application update was last installed on:  September 05 2026 04:47:21.
+Definition update was last installed on:  September 05 2026 04:47:21.
+This installation has the following Definition Subscriptions:  Virus, Malware, PUP
+September 5, 2026, 10:46 pm, Verified supplied arguments.
+September 5, 2026, 10:46 pm, Running as root. Anything created will be handed to uid 33 & gid 33.
+September 5, 2026, 10:46 pm, ScanCore v1.8 by Justin Grimes (@zelon88), licensed under GPLv3.
+The original source code for this application can be found at:  https://github.com/zelon88/ScanCore
+This installation is located at:  /var/www/html/HRProprietary/HRConvert2/Resources/ScanCore/ScanCore.php
+This installation is using a definitions file located at:  /var/www/html/HRProprietary/HRConvert2/Resources/ScanCore/ScanCore_Combined_Definitions.def
+This installation is using a configuration file located at:  /var/www/html/HRProprietary/HRConvert2/Resources/ScanCore/ScanCore_Config.php
+This installation downloads Application updates from:  https://github.com/zelon88/ScanCore
+This installation downloads Definition updates from:  https://github.com/zelon88/ScanCore_Definitions
+Configuration file was last updated on:  September 05 2026 04:47:21.
+Application update was last installed on:  September 05 2026 04:47:21.
+Definition update was last installed on:  September 05 2026 04:47:21.
+This installation has the following Definition Subscriptions:  Virus, Malware, PUP
+September 5, 2026, 10:46 pm, Verified supplied arguments.
+September 5, 2026, 10:46 pm, Running as root. Anything created will be handed to uid 33 & gid 33.
+September 6, 2026, 5:06 am, ScanCore v1.8 by Justin Grimes (@zelon88), licensed under GPLv3.
+The original source code for this application can be found at:  https://github.com/zelon88/ScanCore
+This installation is located at:  /var/www/html/HRProprietary/HRConvert2/Resources/ScanCore/ScanCore.php
+This installation is using a definitions file located at:  /var/www/html/HRProprietary/HRConvert2/Resources/ScanCore/ScanCore_Combined_Definitions.def
+This installation is using a configuration file located at:  /var/www/html/HRProprietary/HRConvert2/Resources/ScanCore/ScanCore_Config.php
+This installation downloads Application updates from:  https://github.com/zelon88/ScanCore
+This installation downloads Definition updates from:  https://github.com/zelon88/ScanCore_Definitions
+Configuration file was last updated on:  September 06 2026 05:02:35.
+Application update was last installed on:  September 06 2026 05:02:35.
+Definition update was last installed on:  September 06 2026 05:02:35.
+This installation has the following Definition Subscriptions:  Virus, Malware, PUP
+September 6, 2026, 5:06 am, Verified supplied arguments.
+September 6, 2026, 5:06 am, Running as root. Anything created will be handed to uid 33 & gid 33.
+September 6, 2026, 5:06 am, ScanCore v1.8 by Justin Grimes (@zelon88), licensed under GPLv3.
+The original source code for this application can be found at:  https://github.com/zelon88/ScanCore
+This installation is located at:  /var/www/html/HRProprietary/HRConvert2/Resources/ScanCore/ScanCore.php
+This installation is using a definitions file located at:  /var/www/html/HRProprietary/HRConvert2/Resources/ScanCore/ScanCore_Combined_Definitions.def
+This installation is using a configuration file located at:  /var/www/html/HRProprietary/HRConvert2/Resources/ScanCore/ScanCore_Config.php
+This installation downloads Application updates from:  https://github.com/zelon88/ScanCore
+This installation downloads Definition updates from:  https://github.com/zelon88/ScanCore_Definitions
+Configuration file was last updated on:  September 06 2026 05:02:35.
+Application update was last installed on:  September 06 2026 05:02:35.
+Definition update was last installed on:  September 06 2026 05:02:35.
+This installation has the following Definition Subscriptions:  Virus, Malware, PUP
+September 6, 2026, 5:06 am, Verified supplied arguments.
+September 6, 2026, 5:06 am, Running as root. Anything created will be handed to uid 33 & gid 33.
+September 6, 2026, 5:06 am, ScanCore v1.8 by Justin Grimes (@zelon88), licensed under GPLv3.
+The original source code for this application can be found at:  https://github.com/zelon88/ScanCore
+This installation is located at:  /var/www/html/HRProprietary/HRConvert2/Resources/ScanCore/ScanCore.php
+This installation is using a definitions file located at:  /var/www/html/HRProprietary/HRConvert2/Resources/ScanCore/ScanCore_Combined_Definitions.def
+This installation is using a configuration file located at:  /var/www/html/HRProprietary/HRConvert2/Resources/ScanCore/ScanCore_Config.php
+This installation downloads Application updates from:  https://github.com/zelon88/ScanCore
+This installation downloads Definition updates from:  https://github.com/zelon88/ScanCore_Definitions
+Configuration file was last updated on:  September 06 2026 05:02:35.
+Application update was last installed on:  September 06 2026 05:02:35.
+Definition update was last installed on:  September 06 2026 05:02:35.
+This installation has the following Definition Subscriptions:  Virus, Malware, PUP
+September 6, 2026, 5:06 am, Verified supplied arguments.
+September 6, 2026, 5:06 am, Running as root. Anything created will be handed to uid 33 & gid 33.
+September 6, 2026, 6:59 am, ScanCore v1.8 by Justin Grimes (@zelon88), licensed under GPLv3.
+The original source code for this application can be found at:  https://github.com/zelon88/ScanCore
+This installation is located at:  /var/www/html/HRProprietary/HRConvert2/Resources/ScanCore/ScanCore.php
+This installation is using a definitions file located at:  /var/www/html/HRProprietary/HRConvert2/Resources/ScanCore/ScanCore_Combined_Definitions.def
+This installation is using a configuration file located at:  /var/www/html/HRProprietary/HRConvert2/Resources/ScanCore/ScanCore_Config.php
+This installation downloads Application updates from:  https://github.com/zelon88/ScanCore
+This installation downloads Definition updates from:  https://github.com/zelon88/ScanCore_Definitions
+Configuration file was last updated on:  September 06 2026 05:02:35.
+Application update was last installed on:  September 06 2026 05:02:35.
+Definition update was last installed on:  September 06 2026 05:02:35.
+This installation has the following Definition Subscriptions:  Virus, Malware, PUP
+September 6, 2026, 6:59 am, Verified supplied arguments.
+September 6, 2026, 6:59 am, Running as root. Anything created will be handed to uid 33 & gid 33.

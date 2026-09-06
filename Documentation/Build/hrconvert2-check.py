@@ -23,6 +23,12 @@
 # / the output.
 # /   python3 Documentation/Build/hrconvert2-check.py --quiet
 # /
+# / Neither this tool nor its Bash twin ever writes to a file. They report & nothing else.
+# / A change to the code is always a separate act, & this tool is what to run after it.
+# /
+# / --fail-on names the kinds that decide the exit code, for a hook that nobody reads.
+# /   python3 Documentation/Build/hrconvert2-check.py --quiet --fail-on syntax,balance,return,config,duplicate,order,undefined
+# /
 # / Every check has a name & can be run on its own, which is what to do while fixing one.
 # /   python3 Documentation/Build/hrconvert2-check.py --list
 # /   python3 Documentation/Build/hrconvert2-check.py --only pins
@@ -771,7 +777,11 @@ def check_config_globals(root, report):
 def check_locals_purged(files, report):
     # / quickDie never returns, so nothing after it runs & nothing it holds outlives it.
     # / purgeSensitiveMemory cannot call itself & cleans up by hand. quickDie never returns.
-    exempt = {'quickDie', 'purgeSensitiveMemory'}
+    # / redeclare's whole purpose is to shred the caller's variable through a reference &
+    # / then write a new value into it. Both of those look like faults to the checks here &
+    # / neither is. Obeying either instruction empties every string built through it, which
+    # / is how a settings link rendered with no path at all & every change gave a 404.
+    exempt = {'quickDie', 'purgeSensitiveMemory', 'redeclare'}
     faults = 0
     for path in files:
         original, blanked = read_source(path)
@@ -935,7 +945,23 @@ def check_return_not_purged(files, report):
         # / A by-reference parameter purged anywhere in its function destroys the caller's
         # / variable, whether or not it is returned.
         for name, record in read_functions(original, blanked).items():
+            # / redeclare shreds the caller's variable on purpose. See the locals check.
+            if name == 'redeclare':
+                continue
             signature = record['signature']
+            body = '\n'.join(record['body'])
+            # / A value that is purged & then ASSIGNED to something is the same fault as one
+            # / that is purged & then returned. purgeSensitiveMemory writes NULL through a
+            # / reference, so whatever it touched is NULL by the time it is stored.
+            # / redeclare() purged its $newValue & then assigned it to the caller's variable,
+            # / which silently emptied every string built through it. The interface that used
+            # / it rendered links with no path at all & every settings change gave a 404.
+            for found in re.finditer(r'purgeSensitiveMemory\s*\(([^;]*)\);\s*\n(?:\s*//[^\n]*\n)*\s*\$(\w+)\s*=\s*\$(\w+)\s*;', body):
+                if found.group(3) in set(re.findall(r'\$(\w+)', found.group(1))):
+                    report('RETURN', os.path.basename(path) + ':' + str(record['start'] + 1) + ' ' + name
+                           + '() purges $' + found.group(3) + ' & then assigns it to $' + found.group(2)
+                           + ', so NULL is stored. Purge the variable being overwritten instead')
+                    faults += 1
             refs = set(re.findall(r'&\$(\w+)', signature[signature.index('('):]))
             if not refs:
                 continue
@@ -946,12 +972,71 @@ def check_return_not_purged(files, report):
                     faults += 1
     return faults
 
+
+# / -----------------------------------------------------------------------------------
+# / CHECK EIGHTEEN. Every call supplies the arguments its function requires.
+# / PHP raises an ArgumentCountError at runtime & not before, so a call left behind when a
+# / signature grew is invisible until somebody exercises that exact path.
+# /
+# / This found two. cleanFiles() gained a second argument naming the roots it may clean
+# / under, & two pipelines still called it with one. The missing argument made the call
+# / refuse silently, the temporary sources were never removed, & the pipeline then reported
+# / a failure on a conversion that had already succeeded.
+# / Both were in pipelines that were not present when the signature changed, which is the
+# / normal way this happens.
+# /
+# / A variadic parameter written as ...$name absorbs everything after it, so a function
+# / declaring one has no maximum & its required count stops at the parameter before.
+# / A parameter with a default is optional & is not counted as required.
+def check_argument_counts(files, report):
+    signatures = {}
+    for path in files:
+        original, blanked = read_source(path)
+        for found in re.finditer(r'^function (\w+)\(([^)]*)\)', '\n'.join(blanked), re.M):
+            parameters = [p for p in found.group(2).split(',') if p.strip()]
+            required = 0
+            for parameter in parameters:
+                if '=' in parameter or '...' in parameter:
+                    break
+                required += 1
+            signatures[found.group(1)] = (required, os.path.basename(path))
+    # / A construct that looks like a call & is not one.
+    language = {'array', 'isset', 'unset', 'list', 'empty', 'echo', 'print', 'return', 'if',
+                'for', 'foreach', 'while', 'switch', 'catch', 'function', 'use', 'match'}
+    faults = 0
+    for path in files:
+        original, blanked = read_source(path)
+        text = '\n'.join(blanked)
+        for found in re.finditer(r'\b([a-z]\w*)\s*\(([^();]*)\)', text):
+            name = found.group(1)
+            if name in language or name not in signatures:
+                continue
+            required, where = signatures[name]
+            supplied = len([a for a in found.group(2).split(',') if a.strip()])
+            if supplied < required:
+                line = text.count('\n', 0, found.start()) + 1
+                report('ARGS', os.path.basename(path) + ':' + str(line) + ' ' + name
+                       + '() is called with ' + str(supplied) + ' argument(s) & requires '
+                       + str(required) + '. Its signature is in ' + where)
+                faults += 1
+    return faults
+
 # / -----------------------------------------------------------------------------------
 # / The main logic. Every check runs & the total decides the exit code.
 # / Nothing stops early, because an operator wants every fault in one pass rather than the
 # / first one seven times.
 def main():
     quiet = '--quiet' in sys.argv
+    # / --fail-on names the kinds that decide the exit code. Every kind is still reported, but
+    # / only a named one fails the run. A pre-commit hook uses this to block on the kinds that
+    # / break execution while a tracked debt like CONTRACT is allowed through.
+    # / With nothing named, every finding fails the run, which is the right default for a
+    # / person reading the output & the wrong one for a hook nobody reads.
+    fail_on = set()
+    if '--fail-on' in sys.argv:
+        position = sys.argv.index('--fail-on')
+        if position + 1 < len(sys.argv):
+            fail_on = set(sys.argv[position + 1].upper().split(','))
     root = os.getcwd()
     if not os.path.exists(os.path.join(root, 'convertCore.php')):
         print('Run this from the installation root, beside convertCore.php.')
@@ -984,6 +1069,7 @@ def main():
         ('sentence', 'every comment ends a sentence', lambda: check_comment_sentences(files, report)),
         ('name', 'no parameter has a generic name', lambda: check_generic_names(files, report)),
         ('return', 'no function destroys what it returns', lambda: check_return_not_purged(files, report)),
+        ('args', 'every call supplies the arguments its function requires', lambda: check_argument_counts(files, report)),
         ('exit', 'every function has one exit', lambda: check_single_exit(files, report)))
     if '--list' in sys.argv:
         print('Checks, in the order they run.')
@@ -1022,6 +1108,11 @@ def main():
             print()
             print(str(total) + ' finding(s). A finding is not always a fault, & the header')
             print('for each check says which patterns it reports that are not.')
+    if fail_on:
+        blocking = [kind for kind, message in findings if kind in fail_on]
+        if not quiet and total > 0:
+            print(str(len(blocking)) + ' of those would block a commit under --fail-on ' + ','.join(sorted(fail_on)) + '.')
+        return 1 if blocking else 0
     return 1 if total > 0 else 0
 
 

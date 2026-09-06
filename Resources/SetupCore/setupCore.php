@@ -418,6 +418,13 @@ function writeConfigFile($configPath, $configContents) {
   else {
     // / Refuse to install a configuration that will not parse. There is no recovering from
     // / a syntax error in config.php from a web request.
+    // / This runs unsandboxed & convention 22 requires that to be said.
+    // / php -l is the interpreter already running this code rather than a managed
+    // / dependency, & the only path it is given was written by the line above from a model
+    // / this file owns. No part of it comes from a user.
+    // / Sandboxing it would also defeat it. The point is to ask THIS interpreter, with the
+    // / extensions & version this installation actually runs, whether the file it is about
+    // / to load will parse. An answer from a different environment would not be the answer.
     exec('php -l '.escapeshellarg($temporaryPath).' 2>&1', $lintOutput, $lintExitCode);
     if ($lintExitCode !== 0) {
       @unlink($temporaryPath);
@@ -548,7 +555,7 @@ function showConfigSection($sectionName, $sectionModel, $detectedVariables) {
   foreach ($sectionModel['Variables'] as $variableName => $variableModel) {
     if (!isset($detectedVariables[$variableName])) print('   $'.str_pad($variableName, 36).'ABSENT FROM THIS FILE'.$Lol); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $variableName, $currentValue, $defaultValue, $dependsNote, $statusNote, $variableModel, $sectionName, $sectionModel, $detectedVariables);
+  purgeSensitiveMemory($EnableMemoryProtection, $variableRecord, $variableName, $currentValue, $defaultValue, $dependsNote, $statusNote, $variableModel, $sectionName, $sectionModel, $detectedVariables);
   return $VariablesDisplayed; }
 // / -----------------------------------------------------------------------------------
 
@@ -1087,6 +1094,10 @@ function installListenerService($enableService) {
         errorEntry('The listener service unit could not be written to '.$unitPath.'!', 32013, FALSE); }
       else {
         @chmod($unitPath, 0644);
+        // / These two run unsandboxed & convention 22 requires that to be said.
+        // / systemctl changes the state of the host, which is the whole purpose of running
+        // / it, & a namespace that isolated it from the host would leave it nothing to do.
+        // / Neither command takes an argument that came from anywhere but this file.
         exec('systemctl daemon-reload 2>&1', $commandOutput, $commandExitCode);
         print('  '.str_pad(($existingContents === '' ? 'Installed' : 'Updated'), 12).$unitPath.$Lol);
         if ($enableService) {

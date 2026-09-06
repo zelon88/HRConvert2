@@ -371,11 +371,12 @@ function streamFileWalker($StreamFile) {
 // / Stream inspection cannot protect an affected build, so those builds are refused outright.
 function convertStreams($pathname, $newPathname) {
   // / Set variables.
-  global $Verbose, $StreamConnectionTimeout, $AllowStreamOverHTTP, $MinimumStreamFFMPEGVersion, $EnableMemoryProtection;
+  global $Verbose, $StreamConnectionTimeout, $AllowStreamOverHTTP, $MinimumStreamFFMPEGVersion, $EnableMemoryProtection, $DirSep;
   $ConversionSuccess = $ConversionErrors = FALSE;
   $ffmpegVersionIsValid = $inspectionFailed = $streamBudgetExhausted = FALSE;
   $allStreamURIs = $seenURLs = array();
-  $haltReason = $httpString = $returnData = $ffmpegCommand = '';
+  $haltReason = $httpString = $returnData = $ffmpegCommand = $pinnedHosts = $pinnedHostsFile = '';
+  $streamRecord = array();
   // / The six value pipeline contract. A stream is the reference case for a pipeline whose
   // / dependency outlives the request, so it is the one that returns a non zero worker PID.
   // / The core derives $WaitForStream from that PID rather than from a separate return value.
@@ -405,24 +406,52 @@ function convertStreams($pathname, $newPathname) {
       $ffmpegCommand = 'ffmpeg -protocol_whitelist '.escapeshellarg('file,https,tcp,tls,crypto'.$httpString)
         .' -rw_timeout '.((int)$StreamConnectionTimeout * 1000000)
         .' -i '.escapeshellarg($pathname)
-        .' -c copy '.escapeshellarg($newPathname)
-        .' > /dev/null 2>&1 & echo $!';
-      // / This command is NOT sandboxed & convention 22 requires that to be explained.
-      // / Two things prevent it & the second is the harder one.
-      // / A stream is fetched from a remote address, so the namespace would have to be given
-      // / network access. sandboxCommand accepts that, so this alone is not the obstacle.
-      // / The process is backgrounded so its identifier can be captured & handed to
-      // / waitForStream, which supervises it, & to terminateWorkerProcess, which reaps it.
-      // / Under bwrap the identifier returned is bwrap's rather than the one belonging to
-      // / FFMPEG, so every later signal would be aimed at the wrong process & a stream that
-      // / overran would never be stopped.
-      // / The guards that would otherwise be missing are applied before this line rather
-      // / than around it. The address was resolved & refused if it was not publicly routable,
-      // / the content was fetched & inspected for addresses of its own, & the protocol
-      // / whitelist below permits nothing this application did not name.
-      // / Sandboxing this properly means teaching sandboxCommand to report the identifier of
-      // / the process it started rather than its own, & that is worth doing.
+        .' -c copy '.escapeshellarg($newPathname);
+      // / This command IS sandboxed & an earlier version said it could not be.
+      // / The objection was that backgrounding the command & capturing its identifier would
+      // / capture bwrap's identifier rather than FFMPEG's, so every later signal would miss.
+      // / That is wrong, & the reason is the PID namespace --unshare-all creates.
+      // / bwrap is PID 1 inside it, & when PID 1 dies the kernel kills every process in the
+      // / namespace. bwrap also stays alive exactly as long as its child does. Its identifier
+      // / is therefore the correct handle for both liveness & termination, & waitForStream
+      // / & terminateWorkerProcess work unchanged.
+      // / The network is granted, because a stream is fetched from a remote address, & the
+      // / namespace binds the resolver configuration only when it is.
+      // / The playlist was resolved & refused if it was not publicly routable, fetched &
+      // / inspected for addresses of its own, & the protocol whitelist permits nothing this
+      // / application did not name. Those guards remain & the sandbox is added to them.
+      // / Every name the walker inspected & approved is pinned to the address it resolved to.
+      // / FFMPEG is given no resolver at all, so this file is the only lookup it can make.
+      // / A name it did not see cannot resolve, which is what stops a redirect the walker
+      // / never inspected. The real name is still used on the wire, so TLS validates.
+      // / Only the walker's own answers are written, & only for URIs it did not refuse.
+      // / A lookup that failed or an address that was not public never reaches this file.
+      $pinnedHosts = '';
+      foreach ($allStreamURIs as $streamRecord) {
+        if (!isset($streamRecord['URLHost'], $streamRecord['URLIP'])) continue;
+        if ((string)$streamRecord['URLHost'] === '' or (string)$streamRecord['URLIP'] === '') continue;
+        if (!isPubliclyRoutableIP((string)$streamRecord['URLIP'])) continue;
+        // / The host is checked again here against what a hostname may contain, & it has
+        // / already been through sanitize() in the Engine.
+        // / This file has LINE BASED syntax, so a newline inside a hostname would add a
+        // / mapping nobody wrote & point any name at any address. The address is already
+        // / proven by isPubliclyRoutableIP above, so this is the half that was not.
+        // / A value crossing out of one component & into a file format another tool parses
+        // / is worth proving where it lands rather than trusting where it came from.
+        if (!preg_match('/^[a-z0-9]([a-z0-9.-]{0,252}[a-z0-9])?$/i', (string)$streamRecord['URLHost'])) continue;
+        $pinnedHosts = $pinnedHosts.(string)$streamRecord['URLIP'].' '.(string)$streamRecord['URLHost'].PHP_EOL; }
+      $pinnedHostsFile = dirname($newPathname).$DirSep.'pinned.hosts';
+      @file_put_contents($pinnedHostsFile, $pinnedHosts);
+      // / The playlist is the input & is bound read only. The segments it names are fetched
+      // / over the network the sandbox was granted, by the addresses pinned above.
+      $ffmpegCommand = sandboxCommand($ffmpegCommand, $pathname, $newPathname, TRUE, 'ffmpeg', '', array(), $pinnedHostsFile);
+      // / The command is backgrounded OUTSIDE the sandbox, so the identifier captured is the
+      // / one the shell started, which is bwrap.
+      $ffmpegCommand = $ffmpegCommand.' > /dev/null 2>&1 & echo $!';
       $returnData = shell_exec($ffmpegCommand);
+      // / bwrap has bound the file by the time the shell returns, so it may go. A bind holds
+      // / the file open inside the namespace whether or not it still exists outside it.
+      if (file_exists($pinnedHostsFile)) @unlink($pinnedHostsFile);
       $StreamPID = (int)trim($returnData);
       // / A PID of 0 means the process never started at all.
       if ($StreamPID > 0) {
@@ -434,7 +463,7 @@ function convertStreams($pathname, $newPathname) {
         errorEntry('The stream converter failed to launch!', 21000, FALSE); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $newPathname is no longer purged here, because it is now a return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $ffmpegCommand, $httpString, $allStreamURIs, $seenURLs, $haltReason, $streamBudgetExhausted, $inspectionFailed, $ffmpegVersionIsValid, $pathname);
+  purgeSensitiveMemory($EnableMemoryProtection, $pinnedHosts, $pinnedHostsFile, $streamRecord, $returnData, $ffmpegCommand, $httpString, $allStreamURIs, $seenURLs, $haltReason, $streamBudgetExhausted, $inspectionFailed, $ffmpegVersionIsValid, $pathname);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $Extension, $OutputFilename, $StreamPID); }
 // / -----------------------------------------------------------------------------------
 

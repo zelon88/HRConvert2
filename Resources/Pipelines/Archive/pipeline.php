@@ -369,7 +369,8 @@ function convertArchives($pathname, $newPathname, $extension) {
   // / Only a bootable image rewrites it, because only a bootable image renames the output.
   if ($UserFilename === '') $UserFilename = basename($newPathname);
   // / Code to clean up temporary files & directories.
-  cleanFiles($safedir2);
+  // / The second argument is the list of roots this call may clean under & is required.
+  cleanFiles($safedir2, array($safedir2));
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $filename, $safedir2, $oldExtension, $returnData, $pathname, $array7zo, $arrayzipo, $array7zo2, $array7zo3, $arraytaro, $arrayraro, $sleepTime, $stopper, $extractCommand, $archiveCommand, $hybridCommand, $archiveError, $commandMayRun, $archiveToolsAreValid, $bootloadersAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $UserFilename, $WorkerPID); }

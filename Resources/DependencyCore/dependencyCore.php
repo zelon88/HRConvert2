@@ -93,7 +93,13 @@ function dependencyEnvironmentPrefix() {
   // / --install-depends printed on the first source build it attempted.
   // / An export applies to everything that follows it in the same shell, including a
   // / subshell & every command inside one, & the shell is discarded when the call returns.
-  $EnvironmentPrefix = 'export HOME='.escapeshellarg($scratchRoot)
+  // / The working directory moves too, & that is a separate protection from the variables.
+  // / A tool that ignores HOME & writes to a relative path writes wherever the process
+  // / happens to be standing, & for a probe that is the installation root. cd puts it
+  // / somewhere disposable instead, so both kinds of tool land in the same scratch space.
+  // / cd is first, so a failure to enter the directory stops the command rather than
+  // / running it in the installation root anyway.
+  $EnvironmentPrefix = 'cd '.escapeshellarg($scratchRoot).' || exit 1; export HOME='.escapeshellarg($scratchRoot)
     .'; export XDG_CACHE_HOME='.escapeshellarg($scratchRoot.DIRECTORY_SEPARATOR.'.cache')
     .'; export XDG_CONFIG_HOME='.escapeshellarg($scratchRoot.DIRECTORY_SEPARATOR.'.config')
     .'; export XDG_DATA_HOME='.escapeshellarg($scratchRoot.DIRECTORY_SEPARATOR.'.local')

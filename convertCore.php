@@ -305,7 +305,12 @@ function redeclare(&$targetVariable, $newValue) {
   $oldValueWasPurged = FALSE;
   // / Shred whatever the target holds before anything is allowed to overwrite it.
   // / The target is a reference to the caller's register, so this writes into the real buffer.
-  $oldValueWasPurged = purgeSensitiveMemory($EnableMemoryProtection, $newValue);
+  // / The TARGET is shredded, never $newValue. $newValue is what the caller asked to store,
+  // / & purgeSensitiveMemory writes NULL through its reference, so purging it here assigns
+  // / nothing to the target & silently empties the variable this function was asked to set.
+  // / That happened. Every redeclare() in convertGui2.php wiped the URL it was building, &
+  // / the settings links rendered as convertCore.php with no path & no parameters.
+  $oldValueWasPurged = purgeSensitiveMemory($EnableMemoryProtection, $targetVariable);
   // / Assign the new value only once the old one has been dealt with.
   $targetVariable = $newValue;
   if ($oldValueWasPurged) $VariableIsRedeclared = TRUE;
@@ -3909,13 +3914,16 @@ function parseCommandLine() {
           // / Reading the machine needs no authorization at all.
           else if (in_array('--check-depends', $cliArguments, TRUE)) {
             logEntry('Command line invocation. Checking dependencies.');
+            // / Two of these three are not read & are still named, because list() assigns by
+            // / position & dropping one would silently shift the others.
+            // / checkDepends returns the verdict as well as the findings, & this block uses
+            // / only the findings. Do not narrow the call to suit the caller.
             list ($cliDependenciesReady, $cliDependencyFindings, $cliOptionalProblems) = checkDepends($cliSubsystem);
             showDependencyFindings($cliDependencyFindings);
-            print(($cliDependenciesReady ? 'Every REQUIRED dependency is present & current.' : 'One or more REQUIRED dependencies are missing or too old.').$Lol);
-            // / An optional problem is still a problem. Reporting that every requirement is
-            // / met & stopping there reads as though the failures printed above it do not
-            // / matter, which is how two broken entries went unnoticed under a green summary.
-            if ($cliOptionalProblems > 0) print($cliOptionalProblems.' OPTIONAL dependenc(ies) are missing or too old. The subsystems that use them will refuse.'.$Lol);
+            // / The verdict is NOT printed here. showDependencyFindings() prints it, & this
+            // / block used to print its own immediately underneath, so --check-depends ended
+            // / with the same sentence twice in slightly different words.
+            // / The component that owns the table owns the summary of the table.
             print($Lol); }
           else if (in_array('--output-supply-chain', $cliArguments, TRUE) or extractCliOption($cliArguments, '--output-supply-chain') !== '') {
             logEntry('Command line invocation. Writing a supply chain report.');

@@ -28,6 +28,37 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia
 
 
 --------------------
+COMMIT 9/6/2026
+v3.9.0 - Absorb Core Manager, sandbox every dependency.
+
+-Absorb coreManager.php into the engine. Delete it.
+  -Four manager roles move to Resources/Engine/Managers, one file each.
+  -Everything shared moves to the engine. Sockets, budgets, worker registry.
+-Sandbox the Stream pipeline. Every dependency command is now sandboxed.
+  -bwrap is PID 1 in its namespace, so its identifier is the right handle after all.
+-Never give a tool a resolver. Pin the address instead.
+  -Harden the SSRF address filter. Refuse carrier NAT, multicast, IPv4-in-IPv6.
+  -curl is pinned with --resolve. FFMPEG is pinned with a hosts file.
+-Split Model, Image, SCAD & Drawing config arrays into input and output.
+  -SCAD was using array position to mean direction.
+  -Image was offering ten formats it cannot read.
+-Add five model output formats. Skip u3d, its converter is not bundled.
+-Replace su with a fork that drops privilege & cannot climb back.
+-Move socket directory ownership to -fp. The listener needs no privilege now.
+-Give dependency probes a disposable environment & directory. No more stray .cache.
+-Grow the linters to 18 checks. Negative test every one.
+  -args caught two stale cleanFiles() calls that reported failure on a good conversion.
+  -return catches a purge that empties what it was asked to store.
+-Fix redeclare(). It was purging the value it was asked to store.
+  -Broke every settings link in convertGui2 & emptied Pipeline Core's format arrays.
+-Add test tools for the address filter, redeclare & the SCAD sanitizer.
+  -Build tools in php are cli only & say so in the filename.
+-Prove the hostname where it lands, not where it came from. /etc/hosts is line based.
+-Network policy values are locals again. They were lowercase & declared global.
+-Print the dependency verdict once. The component that owns the table owns the summary.
+-Document network isolation, quality control, logging.
+
+--------------------
 COMMIT 9/4/2026
 v3.9.0 - Work on engine design.
 

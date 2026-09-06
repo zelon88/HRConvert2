@@ -1,0 +1,160 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 9/5/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v3.9.0.
+This plain text file describes how a remote address is inspected, pinned and reached, and what stands between a tool and an address it was never given.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+Bubblewrap for the namespace. curl for the inspection fetch. Nothing else.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Rule--
+
+NO TOOL THIS APPLICATION RUNS IS PERMITTED TO RESOLVE A NAME.
+The application resolves every name itself, inspects the address it got, & hands the tool
+the address rather than the name. A tool that resolved for itself could get a different
+answer than the inspection did, which is a DNS rebinding attack, & could follow a redirect
+to somewhere the inspection never looked, which is a redirect based one.
+
+Three things enforce this & each one covers a gap the others leave.
+
+  THE FILTER      isPubliclyRoutableIP() refuses every address that is not public unicast.
+  THE PIN         The tool is handed the address the application approved & nothing else.
+  THE NAMESPACE   The tool has a network & no resolver, so it cannot look anything up.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Filter--
+
+isPubliclyRoutableIP() in the Engine is the ONLY place that decides what is private.
+It has two layers & the first is not enough on its own.
+
+PHP's FILTER_FLAG_NO_PRIV_RANGE & FILTER_FLAG_NO_RES_RANGE refuse the well known ranges.
+A second layer refuses what they let through: carrier NAT at 100.64/10, the documentation
+ranges, benchmarking at 198.18/15, multicast, broadcast, IPv6 link local & the IPv6
+documentation prefix.
+
+AN IPv4 ADDRESS WRAPPED IN IPv6 IS UNWRAPPED & JUDGED AS THE IPv4 IT IS.
+::ffff:127.0.0.1 is loopback written in a form the IPv4 flags never see, & 64:ff9b::7f00:1
+is the same address through the NAT64 prefix. Both are unwrapped on their packed bytes,
+because the same address is written ::ffff:127.0.0.1 in one place & ::ffff:7f00:1 in
+another, & a text pattern that matched one form let the other straight through.
+
+Twenty addresses are tested against the filter in Documentation/Build & every one of the
+bypasses above is among them. A range is added to the list in the function & nowhere else.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Pin--
+
+TWO TOOLS REACH THE NETWORK & EACH IS PINNED IN THE WAY IT ACCEPTS.
+
+curl, for the inspection fetch, takes --resolve host:port:address & connects to that
+address while presenting that host. No -L flag, so it never follows a redirect. A malformed
+pin makes curl resolve for itself, which is why the fetch is refused outright when any
+component of the pin is empty.
+
+FFMPEG, for the conversion, accepts no such argument. It is given a hosts file instead,
+written by the application from every address the walker inspected & approved, & bound at
+/etc/hosts inside its namespace. That file is the only resolution it can perform. An
+approved name resolves to an approved address. A name it never saw, including one a
+redirect points at, cannot resolve at all. The real name is still used on the wire, so a
+certificate validates against it.
+
+The hosts file is written to the session directory, bound, & removed once the command has
+started. A bind holds the file open inside the namespace whether or not it exists outside.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Namespace--
+
+A NETWORKED SANDBOX HAS A NETWORK & NO RESOLVER, & THAT IS A BOUNDARY RATHER THAN A GAP.
+sandboxCommand() shares the network namespace only when asked & binds /etc/resolv.conf
+NEVER. A tool inside can reach an address it was given & cannot look one up. That is
+exactly the capability the application means to grant & nothing more.
+
+An earlier version bound the resolver alongside the network, reasoning that a network is
+useless without one. It handed every tool the ability the whole design exists to withhold.
+
+WHAT THE NAMESPACE CANNOT DO, STATED PLAINLY.
+A redirect to a LITERAL ADDRESS needs no lookup & is not stopped by any of the above. A
+response saying go to http://169.254.169.254/ is followed by a tool that follows redirects,
+& FFMPEG has no argument that refuses them.
+
+Bubblewrap cannot filter that connection. An unprivileged user namespace cannot install a
+packet filter, & a seccomp filter sees a syscall's arguments as numbers rather than as the
+memory they point to, so it cannot read the address inside a connect() call. That is the
+limit of what bwrap can enforce & it is worth knowing rather than assuming.
+
+WHAT CLOSES IT, & HOW MUCH OF IT IS PROVED.
+An unprivileged user namespace is root over the network namespace it owns. bwrap can grant
+CAP_NET_ADMIN over that one namespace & nothing else, & nftables then installs a
+destination allowlist with a drop policy inside it. The filter binds the tool & touches
+nothing on the host, because the host's network namespace is owned by a namespace the
+sandbox is not root in. THIS HALF IS PROVED, in a container with no host privilege, & the
+script that does it is Documentation/Build/hrconvert2-egress.sh.
+
+A namespace the sandbox owns has no interface, so something has to give it one. pasta is
+an unprivileged program that pushes a virtual interface into a namespace & relays every
+packet through ordinary sockets on the host. It was examined & it has NO destination
+allowlist of its own. It forwards everything. It supplies the interface & nftables inside
+the namespace supplies the filter, & neither is useful without the other.
+THIS HALF IS NOT PROVED HERE. The container this was built in cannot open a tap device.
+Documentation/Build/hrconvert2-test-egress.sh runs the whole chain on a real host & says
+whether it works, & sandboxCommand is not taught any of this until that script passes.
+
+The shape, once it does. When a network is granted, sandboxCommand keeps the network
+unshared, wraps the invocation in pasta, grants CAP_NET_ADMIN, & makes the egress script
+the entry point with the pinned addresses in its environment. The hosts file & the
+allowlist are written from the same records, so a name can only resolve to an address the
+filter permits. A redirect to a literal address then has nowhere to go.
+
+pasta is a new dependency, the passt package on Debian & Ubuntu, & nftables is needed
+inside the namespace. Both belong in depends.php the moment the test passes.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Deciding What A Namespace Permits--
+
+NOTHING ABOUT A SANDBOX PROFILE IS GUESSED.
+Documentation/Build/bisect.sh removes one permission at a time from a namespace until the
+conversion it runs stops working, & what remains is the least permissive profile that still
+runs. getSandboxProfiles() in convertCore.php records that result for each tool, with a
+Reason for every line that is not empty.
+
+A profile that is looser than bisect.sh found is less safe for no benefit. One that is
+tighter does not work. There is no third option worth offering an administrator, which is
+why the profiles are code rather than configuration & are never shown to one.
+
+The network is granted the same way. It is a permission like any other, off by default,
+switched on for the one tool that fetches & the one that inspects, & recorded here.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Where The Network Is Granted--
+
+As of v3.9.0 exactly two commands run with a network & both are named here.
+
+  downloadRemoteFileForInspection   curl, pinned by --resolve, no resolver, no redirects.
+  convertStreams                    FFMPEG, pinned by a hosts file, no resolver.
+
+Every other dependency command runs with --unshare-all & no network at all.
+A third command that needs one is added to this list at the same time, because a networked
+sandbox nobody wrote down is the one that gets a resolver bound to it by mistake.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -494,7 +494,11 @@ function convertSCAD($pathname, $newPathname, $extension) {
     // / Remove every sanitized copy immediately. None of them are retained for any reason.
     // / cleanFiles() removes the emptied directory itself, so its absence is the success case.
     // / verifyRequiredDirs() recreates it at the start of the next request.
-    cleanFiles($ScadTemp);
+    // / The second argument is the list of roots this call may clean under & is required.
+    // / cleanFiles refuses a path outside it, so omitting it refused this call silently,
+    // / the sanitized sources were never removed, & the error below reported a failure on a
+    // / render that had already succeeded.
+    cleanFiles($ScadTemp, array($ScadTemp));
     if (is_dir($ScadTemp) && !is_dir_empty($ScadTemp)) errorEntry('Could not remove the sanitized OpenSCAD sources!', 27004, FALSE); }
   // / The output file is the only verdict on whether the render actually produced anything.
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;

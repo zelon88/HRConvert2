@@ -1790,18 +1790,95 @@ function networkPolicy() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to simply return whether or not an IP is private or public.
-// / Used for server-side request forgery (SSRF) protection.
-// / Returns TRUE only for publicly routable addresses. Anything private, reserved, loopback,
-// / or link-local returns FALSE, as does any string that is not a valid IP at all.
-// / This is the single source of truth for IP safety. Do not duplicate this logic.
+// / A function to decide whether an address is one this application may ever connect to.
+// / Accepts the address as a string. Returns TRUE only for a public unicast address.
+// /
+// / PHP's filter flags are the first layer & are NOT enough on their own.
+// / FILTER_FLAG_NO_PRIV_RANGE refuses 10/8, 172.16/12, 192.168/16 & fc00::/7.
+// / FILTER_FLAG_NO_RES_RANGE refuses 0/8, 127/8, 169.254/16, 240/4 & a few IPv6 ranges.
+// / Everything below is what those flags let through & what an attacker reaches for next.
+// /
+// /   100.64.0.0/10     Shared address space, carrier NAT. Private in every sense that
+// /                     matters & absent from the PHP flags.
+// /   192.0.0.0/24      IETF protocol assignments.
+// /   192.0.2.0/24      Documentation. Never routable.
+// /   198.51.100.0/24   Documentation.
+// /   203.0.113.0/24    Documentation.
+// /   198.18.0.0/15     Benchmarking.
+// /   224.0.0.0/4       Multicast. A connection to it reaches every host that listens.
+// /   255.255.255.255   Broadcast.
+// /   ::/128, ::1/128   Unspecified & loopback.
+// /   fe80::/10         Link local. The PHP flags miss it.
+// /   ::ffff:0:0/96     IPv4 MAPPED IN IPv6. ::ffff:127.0.0.1 is the loopback address
+// /                     written in a form the IPv4 flags never see. This one is the
+// /                     classic bypass & is refused by unwrapping it & testing the IPv4.
+// /   64:ff9b::/96      NAT64. An IPv4 address reached through an IPv6 prefix, tested the
+// /                     same way for the same reason.
+// /   2001:db8::/32     Documentation.
+// /
+// / A range list is data & belongs in one place. Nothing else in the Engine or the
+// / application decides what is private, & a new range is added here & nowhere else.
 function isPubliclyRoutableIP($ipAddress) {
   // / Set variables.
   global $EnableMemoryProtection;
-  $Check = (bool)filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+  $Check = FALSE;
+  $cleanAddress = $mappedAddress = $packedAddress = $refusedRange = '';
+  $refusedRanges = array();
+  $cleanAddress = trim((string)$ipAddress, "[] \t");
+  // / An IPv4 address carried inside IPv6 is unwrapped & judged as the IPv4 it is.
+  // / A judgement on the wrapper alone lets loopback & every private range through.
+  // / The unwrapping works on the PACKED bytes rather than on the text, because the same
+  // / address is written ::ffff:127.0.0.1 in one place & ::ffff:7f00:1 in another & a
+  // / pattern that matched only the dotted form let the hexadecimal one straight through.
+  $packedAddress = @inet_pton($cleanAddress);
+  if ($packedAddress !== FALSE && strlen($packedAddress) === 16) {
+    if (addressIsInRange($cleanAddress, '::ffff:0:0/96') or addressIsInRange($cleanAddress, '64:ff9b::/96')) $mappedAddress = inet_ntop(substr($packedAddress, 12, 4)); }
+  if ($mappedAddress !== '' && $mappedAddress !== FALSE) $cleanAddress = $mappedAddress;
+  if (filter_var($cleanAddress, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== FALSE) {
+    $Check = TRUE;
+    $refusedRanges = array(
+      '100.64.0.0/10', '192.0.0.0/24', '192.0.2.0/24', '198.51.100.0/24', '203.0.113.0/24',
+      '198.18.0.0/15', '224.0.0.0/4', '255.255.255.255/32',
+      '::/128', '::1/128', 'fe80::/10', '2001:db8::/32');
+    foreach ($refusedRanges as $refusedRange) {
+      if (addressIsInRange($cleanAddress, $refusedRange)) {
+        $Check = FALSE;
+        break; } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $ipAddress);
+  purgeSensitiveMemory($EnableMemoryProtection, $cleanAddress, $mappedAddress, $packedAddress, $refusedRanges, $refusedRange, $ipAddress);
   return $Check; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to test whether an address falls inside a range written in CIDR notation.
+// / Accepts the address & the range. Returns TRUE when it does.
+// / IPv4 & IPv6 are compared as packed bytes, so a range of either family is written the
+// / same way & an address of the other family never matches it.
+function addressIsInRange($ipAddress, $cidrRange) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $IsInRange = FALSE;
+  $rangeParts = array();
+  $rangeAddress = $packedAddress = $packedRange = '';
+  $prefixLength = $byteIndex = $bitsLeft = $mask = 0;
+  $rangeParts = explode('/', (string)$cidrRange, 2);
+  $rangeAddress = $rangeParts[0];
+  $prefixLength = isset($rangeParts[1]) ? (int)$rangeParts[1] : (strpos($rangeAddress, ':') !== FALSE ? 128 : 32);
+  $packedAddress = @inet_pton((string)$ipAddress);
+  $packedRange = @inet_pton($rangeAddress);
+  // / Two addresses of different families have different lengths & never compare.
+  if ($packedAddress !== FALSE && $packedRange !== FALSE && strlen($packedAddress) === strlen($packedRange)) {
+    $IsInRange = TRUE;
+    $bitsLeft = $prefixLength;
+    for ($byteIndex = 0; $byteIndex < strlen($packedAddress) && $bitsLeft > 0; $byteIndex++) {
+      $mask = $bitsLeft >= 8 ? 0xFF : (0xFF << (8 - $bitsLeft)) & 0xFF;
+      if ((ord($packedAddress[$byteIndex]) & $mask) !== (ord($packedRange[$byteIndex]) & $mask)) {
+        $IsInRange = FALSE;
+        break; }
+      $bitsLeft = $bitsLeft - 8; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $rangeParts, $rangeAddress, $packedAddress, $packedRange, $prefixLength, $byteIndex, $bitsLeft, $mask, $ipAddress, $cidrRange);
+  return $IsInRange; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1849,7 +1926,12 @@ function dnsLookup($URLHost) {
 // / The information obtained here binds downstream dependencies like CURL & FFMPEG to these locations.
 function gatherRemoteHostInfo($StreamURL) {
   // / Set variables.
-  global $Verbose, $engineAllowPlainHTTP, $EnableMemoryProtection;
+  global $Verbose, $EnableMemoryProtection;
+  // / The resolved policy values are LOCALS & are deliberately not declared global.
+  // / Each is lowercase, so convention three forbids it transcending this function, & an
+  // / earlier version declared them global anyway. That achieved nothing, because every
+  // / caller assigns them from networkPolicy() before reading them, & it left the last
+  // / stream's settings sitting in the global scope between requests.
   // / The network policy is resolved once & every setting below comes from it.
   $networkPolicy = networkPolicy();
   $engineAllowPlainHTTP = $networkPolicy['AllowPlainHTTP'];
@@ -2070,7 +2152,7 @@ function inspectContentForDomains($streamFileContents) {
 // / $engineWatchTimeout is documented in minutes & is converted once here.
 function downloadRemoteFileForInspection($StreamURL, $URLHost, $URLPort, $URLIP, $URLScheme, $FileNumber) {
   // / Set variables.
-  global $Verbose, $engineAllowPlainHTTP, $engineConnectionTimeout, $engineWatchTimeout, $DirSep, $engineMaxInspectionBytes, $engineFetchTemp, $EnableMemoryProtection;
+  global $Verbose, $DirSep, $EnableMemoryProtection;
   // / The network policy is resolved once & every setting below comes from it.
   $networkPolicy = networkPolicy();
   $engineAllowPlainHTTP = $networkPolicy['AllowPlainHTTP'];
@@ -2111,6 +2193,15 @@ function downloadRemoteFileForInspection($StreamURL, $URLHost, $URLPort, $URLIP,
       .' -m '.((int)$engineWatchTimeout * 60)
       .' -sS -o '.escapeshellarg($LocalStreamPath)
       .' -- '.escapeshellarg($StreamURL).' 2>&1';
+    // / The fetch runs INSIDE the sandbox, with a network & without a resolver.
+    // / curl needs no resolver, because --resolve above hands it the one address the
+    // / application already inspected. A namespace with no resolver is the enforcement of
+    // / that. If the pin were ever malformed, curl would have nothing to fall back on &
+    // / would fail rather than quietly resolving for itself, which is the failure wanted.
+    // / The generic profile is used, because curl needs nothing beyond the base sandbox.
+    // / The output path is also given as the input path. There is no input file & the
+    // / sandbox requires a directory to bind; the one it binds is the one being written.
+    $curlCommand = sandboxCommand($curlCommand, $LocalStreamPath, $LocalStreamPath, TRUE, 'generic');
     exec($curlCommand, $curlOutput, $curlExitCode);
     // / A successful download requires exit code 0 AND a file that exists with content.
     // / Either one alone is not proof of success.
@@ -2602,7 +2693,13 @@ function verifyBwrap() {
 // / names a shell feature that was never involved.
 // / A value naming the read only resource is rewritten to its path inside the namespace.
 // / An unsandboxed command is run through a shell & takes the same variables as a prefix.
-function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandboxProfile, $readOnlyResourcePath = '', $environmentVariables = array()) {
+// / The eighth argument is a hosts file the application wrote, bound at /etc/hosts.
+// / It is the ONLY name resolution a networked command is permitted. The application
+// / resolves every name itself, inspects the address, & writes the approved pairs here.
+// / A name absent from the file cannot resolve, because no resolver is bound either.
+// / A redirect to an unapproved name therefore fails at lookup, & a certificate still
+// / validates, because the tool connects by the real name & only the address was pinned.
+function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandboxProfile, $readOnlyResourcePath = '', $environmentVariables = array(), $pinnedHostsFile = '') {
   // / Set variables.
   global $Verbose, $RequireSandbox, $RequireSandboxOnDocker, $ThrowSandboxWarning, $RunningInContainer, $EnableMemoryProtection;
   $CommandMayRun = FALSE;
@@ -2669,7 +2766,18 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandb
     $CommandMayRun = TRUE;
     // / --unshare-all removes every namespace the command has no business holding.
     // / --share-net gives back ONLY the network, for the one caller that needs it.
-    if ($allowNetwork) $networkFlag = ' --share-net';
+    // / The network is shared & the resolver configuration is NOT. That is deliberate & it
+    // / is a security boundary rather than an oversight.
+    // / A tool given this application's resolver would resolve names for itself, at the
+    // / moment of use, after the application had already inspected & approved the address.
+    // / A name that answered one way to the inspection & another way to the tool is the
+    // / whole of a DNS rebinding attack, & a redirect the tool follows on its own is the
+    // / whole of a redirect based one.
+    // / A namespace with a network & no resolver can reach an address it is given & cannot
+    // / look one up. That is exactly the capability the application means to grant.
+    if ($allowNetwork) {
+      $networkFlag = ' --share-net';
+      if (trim((string)$pinnedHostsFile) !== '' && is_file((string)$pinnedHostsFile)) $networkFlag = $networkFlag.' --ro-bind '.escapeshellarg((string)$pinnedHostsFile).' /etc/hosts'; }
     // / The rewrite is an exact match on the escaped paths rather than a pattern, so nothing
     // / else in the command can be altered by accident. Neither escaped path can appear
     // / inside the other's replacement, so a single pass is safe.
@@ -2730,7 +2838,7 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandb
   // / when the administrator has turned the sandbox off.
   if ($CommandMayRun) $SandboxedCommand = limitCommand($SandboxedCommand, $sandboxProfile);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $environmentFlags, $environmentPrefix, $environmentName, $environmentValue, $environmentVariables, $resourceFlags, $rewriteSearch, $rewriteReplace, $readOnlyResourcePath, $bwrapBinary, $sandboxIsRequired, $networkFlag, $mountFlags, $profileFlags, $workingDir, $inputDir, $outputDir, $sandboxInput, $sandboxOutput, $command, $inputPath, $outputPath, $allowNetwork, $sandboxProfile);
+  purgeSensitiveMemory($EnableMemoryProtection, $pinnedHostsFile, $environmentFlags, $environmentPrefix, $environmentName, $environmentValue, $environmentVariables, $resourceFlags, $rewriteSearch, $rewriteReplace, $readOnlyResourcePath, $bwrapBinary, $sandboxIsRequired, $networkFlag, $mountFlags, $profileFlags, $workingDir, $inputDir, $outputDir, $sandboxInput, $sandboxOutput, $command, $inputPath, $outputPath, $allowNetwork, $sandboxProfile);
   return array($CommandMayRun, $SandboxedCommand); }
 // / -----------------------------------------------------------------------------------
 

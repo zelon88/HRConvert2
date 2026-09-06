@@ -203,6 +203,37 @@ somebody learns to ignore.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About Where They Live--
 
+A DEPENDENCY PROBE RUNS IN A DISPOSABLE ENVIRONMENT & IN A DISPOSABLE DIRECTORY.
+dependencyEnvironmentPrefix() in Dependency Core points HOME & every XDG location at
+/tmp/<application>-probe & moves the working directory there before the command runs.
+Both halves are needed. A tool that reads HOME writes to the first; a tool that ignores it
+& writes to a relative path writes to the second, & for a probe that would be the
+installation root. That is where the .cache & .config directories came from.
+It is applied to every version probe, the capability probe & the source build. It is NOT
+applied to a package manager, which installs to the machine on purpose.
+A sandboxed command needs none of this. sandboxCommand sets the same four variables to its
+own tmpfs, so a conversion has never been able to write into the installation.
+
+A PHP BUILD TOOL MUST REFUSE TO RUN OVER HTTP & THE CHECK IS ONE LINE.
+  if (PHP_SAPI !== 'cli') { if (!headers_sent()) http_response_code(404); die(); }
+Documentation/Build sits inside the web root, so a php file there is EXECUTED by the web
+server rather than served as text. Both test tools extract functions from convertCore.php &
+evaluate them, which is what a build tool needs to do & what nothing reachable over HTTP
+should ever do. A python or shell tool leaks its source instead, which is untidy rather
+than dangerous, & neither is secret.
+A BUILD TOOL RESOLVES ITS PATHS FROM THE WORKING DIRECTORY & NEVER FROM __DIR__.
+That looks like a convenience & is a second layer of the same protection. A web request
+gets a working directory of the SCRIPT'S OWN FOLDER under every common configuration, so a
+tool asked for Resources/Engine/engine.php finds nothing & stops. Two separate things have
+to fail before anything runs: the SAPI check, & then the process has to be standing in the
+installation root, which is not something a request can arrange.
+Rewriting these paths as __DIR__ relative would make the tools work from anywhere, which is
+exactly what is not wanted. Leave them relative.
+
+Anything new added to that directory in PHP carries the same line, & its filename ends in
+-cli so the constraint is visible in a directory listing. Reading a file to discover that
+it will not run over HTTP is a thing nobody should have to do twice.
+
 Documentation/Build is inside the web root & is served like anything else there.
 A python file has no handler configured, so a web server hands back its source rather than
 running it. Nothing in either tool is secret & this project is open source, so that is

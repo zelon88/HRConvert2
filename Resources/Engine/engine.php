@@ -13,7 +13,7 @@
 // / that carries it.
 // /
 // / File Information ...
-// / v3.9.0.
+// / v3.9.1.
 // / This file is the Engine. It provides the environment an application runs in.
 // / It is pinned EXACTLY by the application via $RequiredEngineVersion.
 // / Error block 35000 through 35019 reserved. None are used yet.
@@ -54,7 +54,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-35000,
 
 // / -----------------------------------------------------------------------------------
 // / The version of this Engine. Read by the application WITHOUT executing this file.
-$EngineVersion = 'v3.9.0';
+$EngineVersion = 'v3.9.1';
 // / -----------------------------------------------------------------------------------
 
 

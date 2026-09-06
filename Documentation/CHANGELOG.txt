@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.9.0.
+v3.9.1.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -29,8 +29,9 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia
 
 --------------------
 COMMIT 9/6/2026
-v3.9.0 - Absorb Core Manager, sandbox every dependency.
+v3.9.1 - Absorb Core Manager, sandbox every dependency.
 
+-v3.9.1.
 -Absorb coreManager.php into the engine. Delete it.
   -Four manager roles move to Resources/Engine/Managers, one file each.
   -Everything shared moves to the engine. Sockets, budgets, worker registry.

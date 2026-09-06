@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.9.0.
+// / v3.9.1.
 // / This file is the Worker Manager. It is a manager subcomponent of the Engine.
 // / The Worker Manager tracks live workers & terminates one that has outlived its expected runtime.
 // /
@@ -38,7 +38,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-35000,
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v3.9.0';
+$ManagerVersion = 'v3.9.1';
 // / -----------------------------------------------------------------------------------
 
 

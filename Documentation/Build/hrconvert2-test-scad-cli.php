@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.0.
+// / v3.9.1.
 // / This file attacks sanitizeSCAD() with every evasion shape known to it.
 // /
 // / The sanitizer decides which OpenSCAD statements read a file. A miss hands OpenSCAD a

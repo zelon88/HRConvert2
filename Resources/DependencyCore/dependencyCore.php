@@ -48,7 +48,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependencyCoreVersion = 'v3.9.0';
+$DependencyCoreVersion = 'v3.9.1';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

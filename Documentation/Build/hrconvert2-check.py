@@ -12,7 +12,7 @@
 # / on a server for users of any web browser without authentication.
 # /
 # / File Information ...
-# / v3.9.0.
+# / v3.9.1.
 # / This file checks the source for faults a human reading it will not reliably see.
 # /
 # / Run it from the installation root, beside convertCore.php.

@@ -1,6 +1,6 @@
 #!/bin/sh
 # / -----------------------------------------------------------------------------------
-# / HRConvert2 v3.9.0. Egress filter, installed INSIDE a sandbox before the tool runs.
+# / HRConvert2 v3.9.1. Egress filter, installed INSIDE a sandbox before the tool runs.
 # /
 # / This script is the first thing executed in a networked namespace. It installs a
 # / destination allowlist with nftables & then replaces itself with the tool, so the tool

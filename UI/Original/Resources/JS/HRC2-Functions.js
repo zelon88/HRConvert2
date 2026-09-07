@@ -653,6 +653,30 @@ window.HRC2 = {
   // / Called once when the document is ready. This is what loads the list.
   init: function () {
     if (document.getElementById('hrc2FileList')) this.refreshFileList();
+    this.startDropzone();
+  },
+
+  // / Creates the upload dropzone.
+  // / Dropzone 5 found a form carrying class='dropzone' & wired itself up. Version 6 removed
+  // / that behaviour entirely, so the instance is created here by name.
+  // / This is better than what it replaces. The options are visible in the file that owns
+  // / them rather than inferred from a class name, & a page without the form simply does
+  // / nothing instead of relying on a library scan finding nothing.
+  // / The message comes from the language pack through dropzoneText, which header.php sets.
+  startDropzone: function () {
+    var element = document.getElementById('filesToUpload');
+    if (!element || typeof Dropzone === 'undefined') return;
+    if (element.dropzone) return;
+    new Dropzone(element, {
+      url: 'convertCore.php',
+      paramName: 'fileToUpload',
+      dictDefaultMessage: (typeof dropzoneText !== 'undefined') ? dropzoneText : 'Drop files here to upload',
+      addRemoveLinks: false,
+      // / The server decides what it will accept & says so. A limit repeated here would be a
+      // / second opinion that disagrees with the first the moment either changes.
+      maxFilesize: null,
+      timeout: 0
+    });
   }
 };
 // / -----------------------------------------------------------------------------------

@@ -44,8 +44,8 @@ $DropzonePath = $GuiJSDir.'dropzone.js';
 $StylesheetPath = $GuiCSSDir.'HRConvert2.css';
 $DropzoneStylesheetPath = $GuiCSSDir.'dropzone.css';
 // / -----------------------------------------------------------------------------------
-// / A PAGE IS GENERATED EVERY REQUEST. THE FILES BESIDE IT ARE CACHED FOR AS LONG AS A
-// / BROWSER LIKES. THOSE TWO FACTS DISAGREE EVERY TIME EITHER FILE IS EDITED.
+// / A page is generated every request. The files beside it are CACHED for as long as a
+// / browser likes. Those two facts DISAGREE every time either file is edited.
 // /
 // / An interface page carries values & calls into the script library for behaviour, so a
 // / new page running against an old cached library is a new caller talking to functions
@@ -82,5 +82,16 @@ if (file_exists($StylesheetPath)) $StylesheetPath .= '?v='.filemtime($Stylesheet
         font-family: <?php echo $Font; ?>; }
         <?php if (isset($ButtonCode)) echo $ButtonCode; ?>
     </style>
+    <?php
+    // / The dropdown arrow is placed by the LANGUAGE PACK, which knows its own reading
+    // / direction. This rule comes after the stylesheets on purpose, so the cascade puts
+    // / the arrow at the end of the control a reader of this language finishes on.
+    // / It overrides only the POSITION. The image, the size & the colour behind it stay as
+    // / the colour scheme set them, & a shorthand here would silently discard all three.
+    // / A pack that sets nothing falls back to the left to right position rather than
+    // / emitting an empty value, because a malformed shorthand is dropped whole by every
+    // / browser & would take the arrow & its background with it.
+    ?>
+    <style type='text/css'>select { background-position: <?php echo (isset($SelectArrowSide) && trim((string)$SelectArrowSide) !== '') ? htmlspecialchars($SelectArrowSide, ENT_QUOTES, 'UTF-8') : '96%'; ?> center; }</style>
     <title><?php echo $ApplicationName; ?> - <?php echo $ApplicationTitle; ?></title>
   </head>

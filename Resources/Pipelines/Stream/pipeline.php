@@ -213,7 +213,7 @@ function inspectStreamFile($StreamFile, $ParentURL, $CurrentLayer) {
 // / $TotalBudget never resets because it bounds the entire tree regardless of shape.
 // / $Halt is one-way. Once anything sets it, nothing may clear it.
 function streamFileWalker($StreamFile) {
-  global $Verbose, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $EnableMemoryProtection;
+  global $Verbose, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $EnableMemoryProtection, $StreamBaseURL;
   // / Set variables.
   $Halt = $StreamBudgetExhausted = $InspectionFailed = $DownloadFailed = $StreamFileTruncated = FALSE;
   $looksLikePlaylist = $looksLikeSegment = $StreamContainsLAN = $StreamContainsIP = $StreamContainsHTTP = FALSE;
@@ -228,7 +228,20 @@ function streamFileWalker($StreamFile) {
   // / Per-layer budgets bound each file individually. This bounds the whole tree.
   $TotalBudget = $StreamInspectionLayers * $StreamInspectionFilesPerLayer;
   // / Layer 0 is the user's uploaded file. It has no SourceURL because nobody fetched it.
-  $currentLayerFiles[] = array('LocalPath' => $StreamFile, 'SourceURL' => '');
+  // / The base address an operator supplied becomes the parent of the FIRST file, which is
+  // / the only thing a relative URI in an uploaded playlist can be resolved against.
+  // / Empty is the normal case & leaves behaviour exactly as it was.
+  // / It is normalized here rather than where it was typed, so the reason a bad one was
+  // / refused reaches the log beside the conversion it stopped.
+  // / Nothing about being supplied by an operator exempts what it produces. Every URL
+  // / resolved against it still goes through gatherRemoteHostInfo & the address filter.
+  $baseIsUsable = FALSE;
+  $normalizedBase = $baseReason = '';
+  if (isset($StreamBaseURL) && trim((string)$StreamBaseURL) !== '') {
+    list ($baseIsUsable, $normalizedBase, $baseReason) = normalizeStreamBaseURL($StreamBaseURL);
+    if ($baseIsUsable) logEntry('A stream base address was supplied. '.$baseReason);
+    else warningEntry('A stream base address was supplied & refused. '.$baseReason); }
+  $currentLayerFiles[] = array('LocalPath' => $StreamFile, 'SourceURL' => $normalizedBase);
   // / Walk one whole layer at a time until we run out of layers, work, or patience.
   while (!$Halt && !empty($currentLayerFiles) && $LayerBudget > 0) {
     $FileBudget = $StreamInspectionFilesPerLayer;
@@ -267,7 +280,12 @@ function streamFileWalker($StreamFile) {
           $streamURIs[$index]['FailReason'] = 'Unresolvable URI';
           $Halt = TRUE;
           $InspectionFailed = TRUE;
-          $HaltReason = 'Unresolvable URI "'.$uriRecord['RawURI'].'" at layer '.$currentLayer;
+          // / A relative URI in an UPLOADED playlist cannot be resolved & that is not a
+          // / fault in the file. A player fetching that playlist from a website resolves
+          // / entries against the address it fetched them from, & an upload has no such
+          // / address. The reason says so, because Unresolvable URI on its own reads as a
+          // / malformed playlist & sends somebody looking for a defect that is not there.
+          $HaltReason = 'Unresolvable URI "'.$uriRecord['RawURI'].'" at layer '.$currentLayer.'. It is a relative path & the playlist it came from was uploaded as a file, so the address it was relative TO is not known. Supply a playlist whose entries carry a full https URL.';
           break; }
         // / Skip anything already seen. Prevents cycles from burning the budget.
         // / No budget is refunded here because none was ever spent on this URL.
@@ -358,7 +376,7 @@ function streamFileWalker($StreamFile) {
   else if ($Verbose) logEntry('Stream Walk Result: ALLOWED, Layers Walked: '.$currentLayer.', Files Downloaded: '.$FileNumber.', URIs Examined: '.count($AllStreamURIs).', Unique URLs Seen: '.count($SeenURLs).', Budget Exhausted: '.($StreamBudgetExhausted ? 'TRUE' : 'FALSE').', Reason: '.($HaltReason === '' ? 'NONE' : $HaltReason).'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $layerFile & $uriRecord hold whole records including validated IPs & local paths, so they matter most here.
-  purgeSensitiveMemory($EnableMemoryProtection, $looksLikePlaylist, $looksLikeSegment, $currentLayerFiles, $nextLayerFiles, $streamURIs, $layerFile, $uriRecord, $currentLayer, $index, $urlHost, $urlPort, $urlScheme, $urlIP);
+  purgeSensitiveMemory($EnableMemoryProtection, $baseIsUsable, $normalizedBase, $baseReason, $looksLikePlaylist, $looksLikeSegment, $currentLayerFiles, $nextLayerFiles, $streamURIs, $layerFile, $uriRecord, $currentLayer, $index, $urlHost, $urlPort, $urlScheme, $urlIP);
   return array($InspectionFailed, $StreamBudgetExhausted, $HaltReason, $AllStreamURIs, $SeenURLs); }
 // / -----------------------------------------------------------------------------------
 

@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.1.
+// / v3.9.2.
 // / This file tests redeclare() against every idiom the application uses on it.
 // /
 // / redeclare() shreds a variable & then writes a new value into it. Twenty callers outside

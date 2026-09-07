@@ -32,12 +32,18 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.8.3';
+$LanguageVersion = 'v3.9.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
 // / Set the side of the page to float elements to.
 $GUIAlignment = 'left';
+// / Which end of a dropdown the arrow sits at, as a percentage across the control.
+// / This pack knows its own reading direction & is therefore the right place to decide.
+// / A reader finishes at the left of a right to left line, so the arrow belongs there.
+// / An arrow pinned to the right edge sits at the START of the box in this language &
+// / reads as a stray icon rather than as the thing that opens the list.
+$SelectArrowSide = ($GUIAlignment === 'right') ? '4%' : '96%';
 // / Define an error message to display for if the core has not been loaded.
 $CoreError = 'ERROR!!! HRConvert2-2, Diese Datei kann Ihre Anfrage nicht verarbeiten! Bitte senden Sie Ihre Datei stattdessen an convertCore.php!';
 // / Check if the core is loaded.
@@ -81,7 +87,7 @@ $GuiSelectorText4 = 'Optionen für Sprache, Farbe und Oberfläche anzeigen';
 
 // / -----------------------------------------------------------------------------------
 // / Set GUI - 1 Related Variables.
-// / Online File Converter, Extractor, Compressor'
+// / 'Online File Converter, Extractor, Compressor'
 $Gui1Text1 = 'Online-Dateikonverter, Extraktor, Kompressor';
 // / $ApplicationName.' is based off the open-source web-app <a href=\'https://github.com/zelon88/HRConvert2\'>HRConvert2</a> by <a href=\'https://github.com/zelon88\'>Zelon88</a> that converts files without tracking users across the net or infringing on your intellectual property.'
 $Gui1Text2 = $ApplicationName.' basiert auf der Open-Source-Web-App HRConvert2 von <a href=\'https://github.com/zelon88\'>Zelon88</a>, die Dateien konvertiert, ohne Benutzer über das Internet zu verfolgen oder Ihr geistiges Eigentum zu verletzen.';
@@ -260,7 +266,7 @@ $Gui2Text45 = 'Dieses Audio Konvertieren';
 $Gui2Text46 = 'Dieses Video Konvertieren';
 // / 'Convert This Stream'
 $Gui2Text47 = 'Diesen Stream Konvertieren';
-// / Convert This 3D Model'
+// / 'Convert This 3D Model'
 $Gui2Text48 = 'Dieses Modell Konvertieren';
 // / 'Convert This Technical Drawing Or Vector File'
 $Gui2Text49 = 'Konvertieren Sie diese technische Zeichnung oder Vektordatei';
@@ -328,6 +334,12 @@ $Gui2Text80 = 'Modell Rendern';
 $Gui2Text81 = 'Dieses E-Book konvertieren';
 // / 'Convert E-Book'
 $Gui2Text82 = 'E-Book konvertieren';
+// / 'Playlist source URL, only needed if the playlist uses relative paths'
+$Gui2Text83 = 'Quell-URL der Wiedergabeliste, nur nötig wenn die Liste relative Pfade verwendet';
+// / 'Download A File From A URL'
+$Gui2Text84 = 'Eine Datei von einer URL herunterladen';
+// / 'Fetch'
+$Gui2Text85 = 'Abrufen';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

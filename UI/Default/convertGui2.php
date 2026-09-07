@@ -65,7 +65,7 @@ if ($NoGui) redeclare($selectorBase, $selectorBase.'noGui=TRUE&');
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / THE CHROME BUTTONS CARRY THE SESSION. THEY DO NOT NAVIGATE THE BROWSER.
+// / The chrome buttons CARRY the session. They do not navigate the browser.
 // /
 // / Which page the core renders is decided by showFiles, & showFiles is read from GET
 // / only. The session is carried by the token pair, & the token pair is read from POST
@@ -95,7 +95,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
 // / -----------------------------------------------------------------------------------
 ?>
         <?php if (!$FileListOnly) {
-          // / A FRAGMENT OPENS NO BODY & LOADS NO LIBRARY.
+          // / A fragment opens no body & loads NO library.
           // / <body> belongs to the document & footer.php is what closes it. A fragment
           // / loads neither header nor footer, so opening a body here left an unclosed one
           // / inside the div the fragment gets injected into.
@@ -108,7 +108,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
   <body>
     <script type='text/javascript' src='<?php echo $JqueryPath; ?>'></script>
         <?php
-          // / THE HELPER IS DEFINED ONCE, BY THE PAGE, & NEVER BY A FRAGMENT.
+          // / The helper is defined ONCE, by the page, & never by a fragment.
           // / A fragment is injected INTO the page that already defines this. Sending a
           // / second copy redefines the object mid flight & re-runs its ready handler,
           // / which fetches the fragment again. That is a request loop, & every pass
@@ -155,7 +155,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
      <?php echo $Gui2Text30; ?>
       <?php echo $Gui2Text31; ?><p>
    
-    <div id='compressAll' name='compressAll' style='max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;'>
+    <div id='compressAll' name='compressAll' style='max-width:<?php echo $GuiWidth; ?>; margin-left:auto; margin-right:auto; text-align:center;'>
       <?php // / The form action is the refresh destination, so the refresh button needs no
             // / formaction of its own. The back button overrides it with one.
             // / EVERY BUTTON IN HERE DECLARES ITS TYPE. A button inside a form defaults to
@@ -296,7 +296,15 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
       // / this file. The list belongs to list only mode. Closing here would end the branch
       // / immediately & print the list on the full page as well as inside the frame. ?>
     <div>
-    <div style='max-width:500px; margin-left:auto; margin-right:auto; background-color: #fff7e9; padding: 8px; border: 2px solid rgba(0, 0, 0, 0.3); border-radius: 10px;'>
+    <?php
+    // / The panel takes its colour from the scheme, through .file-list-panel in
+    // / styleCore.php, which defines one shade per scheme.
+    // / It was a hardcoded cream here, so six of the seven schemes drew a pale panel on a
+    // / page of an unrelated colour & the dark scheme drew a bright one.
+    // / inherit was tried & was worse. A panel the same colour as the page behind it is not
+    // / a panel, it is a border floating in the middle of nothing.
+    ?>
+    <div class='file-list-panel' style='max-width:500px; margin-left:auto; margin-right:auto; padding: 8px; border: 2px solid rgba(0, 0, 0, 0.3); border-radius: 10px;'>
      
 
       <?php
@@ -369,9 +377,9 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='archiveButton<?php echo $ConvertGuiCounter1; ?>' name='archiveButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>convert.png' style='float:<?php echo $GUIAlignment; ?>; display:block;'
-           onclick='toggle_visibility("archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archiveButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archiveXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
+           onclick='toggle_visibility("archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); <?php if ($AllowUserURLDownload) { ?>toggle_visibility("urlfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); <?php } ?> toggle_visibility("archiveButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archiveXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id="archiveXButton<?php echo $ConvertGuiCounter1; ?>" name="archiveXButton<?php echo $ConvertGuiCounter1; ?>" src='<?php echo $GuiImageDir; ?>x.png' style="float:<?php echo $GUIAlignment; ?>; display:none;" 
-           onclick="toggle_visibility('archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archiveButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archiveXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
+           onclick="toggle_visibility('archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); <?php if ($AllowUserURLDownload) { ?>toggle_visibility('urlfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); <?php } ?> toggle_visibility('archiveButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archiveXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
           <?php } 
 
           if (in_array($extension, $DocumentArray) && in_array('Document', $SupportedConversionTypes)) { ?>
@@ -601,7 +609,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
         </div>
         <?php } 
 
-        // / THIS GATE MUST MATCH THE BUTTON THAT TOGGLES IT.
+        // / This gate must MATCH the button that toggles it.
         // / The button above tests $DearchiveArray & this panel tested $ArchiveArray.
         // / config.php ships gz, bz, bz2, vhd, vdi, cbr, cbz, tar.gz & tar.bz2 in the
         // / first & not the second, so those files drew a button that toggled a panel
@@ -628,6 +636,28 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           </script>
 
         </div>
+
+        <?php if ($AllowUserURLDownload) { ?>
+        <?php
+        // / Fetching a URL into the session. Shown only when an administrator has enabled it,
+        // / because this server has no authentication & a server that fetches any address a
+        // / stranger names is an open proxy. See --Allow User URL Download-- in config.php.
+        // / The address is not sanitized in the browser & is not meant to be. Every check is
+        // / applied by the core, which rebuilds the URL & refuses anything that does not
+        // / resolve to a publicly routable address.
+        ?>
+        <div id='urlfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='urlfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
+          <p style="max-width:500px;"></p>
+          <p><strong><?php echo htmlspecialchars($Gui2Text84, ENT_QUOTES, 'UTF-8'); ?></strong></p>
+          <p><input type="text" size="60" style="width:100%; max-width:520px; box-sizing:border-box;" id='userURLDownload<?php echo $ConvertGuiCounter1; ?>' name='userURLDownload<?php echo $ConvertGuiCounter1; ?>' value='' placeholder="https://example.com/file.m3u8"></p>
+          <input type="submit" id="urlDownloadSubmit<?php echo $ConvertGuiCounter1; ?>" name="urlDownloadSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text85, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <script type='text/javascript'>
+            HRC2.bindRun('urlDownloadSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array()); ?>,
+              <?php echo json_encode(array('userURLDownload' => 'userURLDownload'.$ConvertGuiCounter1)); ?>);
+          </script>
+        </div>
+        <?php } ?>
         <?php } 
 
         if (in_array($extension, $DocumentArray) && in_array('Document', $SupportedConversionTypes)) {
@@ -794,11 +824,22 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
             <option value="<?php echo $gui2StreamArr; ?>"><?php echo $gui2StreamArr; ?></option>
             <?php } ?>
           </select></p>
+          <?php
+          // / An uploaded playlist has no address, so a relative entry inside it resolves
+          // / against nothing. A player fetching the same playlist from a website resolves
+          // / against the address it fetched it from, & this field is how an operator supplies
+          // / that address by hand.
+          // / It is OPTIONAL & empty is the normal case. A playlist whose entries carry full
+          // / https URLs needs nothing here.
+            ?>
+          <p><?php echo htmlspecialchars($Gui2Text83, ENT_QUOTES, 'UTF-8'); ?><br>
+          <input type="text" size="60" style="width:100%; max-width:520px; box-sizing:border-box;" id='streamBaseURL<?php echo $ConvertGuiCounter1; ?>' name='streamBaseURL<?php echo $ConvertGuiCounter1; ?>' value='' placeholder="https://example.com/hls/master.m3u8"></p>
           <input type="submit" id="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text59, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
               <?php echo json_encode(array('convertSelected' => $File)); ?>,
-              <?php echo json_encode(array('extension' => 'streamextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userstreamfilename'.$ConvertGuiCounter1)); ?>);
+              <?php // / The base address is posted as streamBaseURL, which is the name the core reads. ?>
+              <?php echo json_encode(array('extension' => 'streamextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userstreamfilename'.$ConvertGuiCounter1, 'streamBaseURL' => 'streamBaseURL'.$ConvertGuiCounter1)); ?>);
           </script>
 
         </div>

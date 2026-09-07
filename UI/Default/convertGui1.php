@@ -56,7 +56,7 @@ if ($NoGui) $selectorBase .= 'noGui=TRUE&';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / THE REFRESH BUTTON CARRIES THE SESSION. IT DOES NOT RELOAD THE BROWSER.
+// / The refresh button CARRIES the session. It does not reload the browser.
 // /
 // / This page is reached by POST whenever the user arrived from the file list, so
 // / location.reload() would ask the browser to replay that POST, & a browser will either
@@ -352,12 +352,20 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
     </div>
     <?php } ?>
     <div align='center'>
-      <div id='call-to-action1' title='' style='max-width:1000px; text-align:center;'>
+      <div id='call-to-action1' title='' style='max-width:<?php echo $GuiWidth; ?>; text-align:center;'>
         <p><?php echo $Gui1Text28; ?></p>
       </div>
     </div>
     <div align='center'>
-      <div id='dropzone' style='max-height:800px; max-width:1000px; margin:25px;'>
+      <?php
+      // / The height ceiling is NOT here. It is on the .dropzone form in dropzone.css,
+      // / which is the element Dropzone fills with previews & therefore the element that
+      // / grows. Constraining this wrapper instead did nothing, because the child simply
+      // / grew past it.
+      // / A ceiling in both places would give two nested scrollbars, which is worse than
+      // / the overflow it was meant to fix.
+      ?>
+      <div id='dropzone' style='max-width:<?php echo $GuiWidth; ?>; margin:25px;'>
         <form action='convertCore.php' class='dropzone' id='filesToUpload' name='filesToUpload' method='post' enctype='multipart/form-data'>
         <input type='hidden' id='token1' name='Token1' value='<?php echo htmlspecialchars($Token1, ENT_QUOTES, 'UTF-8'); ?>'>
         <input type='hidden' id='token2' name='Token2' value='<?php echo htmlspecialchars($Token2, ENT_QUOTES, 'UTF-8'); ?>'>

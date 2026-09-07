@@ -203,8 +203,19 @@
   box-sizing: border-box;
 }
 
+/* / The form is what Dropzone fills with previews, so the height ceiling belongs here.
+ * / It was constrained on the parent div instead, which does nothing. A child with no
+ * / maximum grows to whatever it needs & the parent scrolls or spills depending on which
+ * / one has the overflow rule. Putting both on the element that actually grows removes the
+ * / question.
+ * / Without this a large upload pushed its previews out of the box & over the footer.
+ * / The ceiling is a proportion of the viewport as well as a pixel value, because 800px is
+ * / most of a phone screen & all of it once a keyboard opens. */
 .dropzone {
   min-height: 150px;
+  max-height: min(800px, 60vh);
+  overflow-y: auto;
+  overflow-x: hidden;
   border: 2px solid rgba(0, 0, 0, 0.3);
   background: #fff7e9;
   padding: 20px 20px;

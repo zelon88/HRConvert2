@@ -41,12 +41,18 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.8.3';
+$LanguageVersion = 'v3.9.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
 // / Set the side of the page to float elements to.
 $GUIAlignment = 'left';
+// / Which end of a dropdown the arrow sits at, as a percentage across the control.
+// / This pack knows its own reading direction & is therefore the right place to decide.
+// / A reader finishes at the left of a right to left line, so the arrow belongs there.
+// / An arrow pinned to the right edge sits at the START of the box in this language &
+// / reads as a stray icon rather than as the thing that opens the list.
+$SelectArrowSide = ($GUIAlignment === 'right') ? '4%' : '96%';
 // / Define an error message to display for if the core has not been loaded.
 $CoreError = 'ERROR!!! HRConvert2-2, Bu dosya isteğinizi işleyemez. Lütfen dosyanızı bunun yerine convertCore.php adresine gönderin.';
 // / Check if the core is loaded.
@@ -339,6 +345,16 @@ $Gui2Text78 = 'Bu XPS Dosyasını Dönüştür';
 $Gui2Text79 = 'Bu OpenSCAD Modelini İşle';
 // / 'Render Model'
 $Gui2Text80 = 'Modeli İşle';
+// / 'Convert This E-Book'
+$Gui2Text81 = 'Bu E-Kitabı Dönüştür';
+// / 'Convert E-Book'
+$Gui2Text82 = 'E-Kitap Dönüştür';
+// / 'Playlist source URL, only needed if the playlist uses relative paths'
+$Gui2Text83 = 'Oynatma listesinin kaynak URL adresi, yalnızca göreli yollar kullanılıyorsa gerekir';
+// / 'Download A File From A URL'
+$Gui2Text84 = 'Bir URL adresinden dosya indir';
+// / 'Fetch'
+$Gui2Text85 = 'Getir';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

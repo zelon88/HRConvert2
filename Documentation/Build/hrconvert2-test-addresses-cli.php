@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.1.
+// / v3.9.2.
 // / This file tests isPubliclyRoutableIP() against every address bypass known to it.
 // /
 // / A range this refuses is a range no dependency can ever be pointed at. A miss here is an

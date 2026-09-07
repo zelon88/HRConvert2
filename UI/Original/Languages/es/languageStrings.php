@@ -32,12 +32,18 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.8.3';
+$LanguageVersion = 'v3.9.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
 // / Set the side of the page to float elements to.
 $GUIAlignment = 'left';
+// / Which end of a dropdown the arrow sits at, as a percentage across the control.
+// / This pack knows its own reading direction & is therefore the right place to decide.
+// / A reader finishes at the left of a right to left line, so the arrow belongs there.
+// / An arrow pinned to the right edge sits at the START of the box in this language &
+// / reads as a stray icon rather than as the thing that opens the list.
+$SelectArrowSide = ($GUIAlignment === 'right') ? '4%' : '96%';
 // / Define an error message to display for if the core has not been loaded.
 $CoreError = 'ERROR!!! HRConvert2-2, ¡Este archivo no puede procesar su solicitud! ¡Envíe su archivo a convertCore.php en su lugar!';
 // / Check if the core is loaded.
@@ -82,7 +88,7 @@ $GuiSelectorText4 = 'Mostrar opciones de idioma, color e interfaz';
 
 // / -----------------------------------------------------------------------------------
 // / Set GUI - 1 Related Variables.
-// / Online File Converter, Extractor, Compressor'
+// / 'Online File Converter, Extractor, Compressor'
 $Gui1Text1 = 'Convertidor de archivos en línea, Extractor, Compresor';
 // / $ApplicationName.' is based off the open-source web-app <a href=\'https://github.com/zelon88/HRConvert2\'>HRConvert2</a> by <a href=\'https://github.com/zelon88\'>Zelon88</a> that converts files without tracking users across the net or infringing on your intellectual property.'
 $Gui1Text2 = $ApplicationName.' se basa en la aplicación web de código abierto <a href=\'https://github.com/zelon88/HRConvert2\'>HRConvert2</a> de <a href=\'https://github.com/ zelon88\'>Zelon88</a> que convierte archivos sin rastrear a los usuarios a través de la red o infringir su propiedad intelectual.';
@@ -261,7 +267,7 @@ $Gui2Text45 = 'Convertir Este Audio';
 $Gui2Text46 = 'Convertir Este Video';
 // / 'Convert This Stream'
 $Gui2Text47 = 'Convertir Este Flujo';
-// / Convert This 3D Model'
+// / 'Convert This 3D Model'
 $Gui2Text48 = 'Convertir Este Modelo 3D';
 // / 'Convert This Technical Drawing Or Vector File'
 $Gui2Text49 = 'Convertir Este Dibujo Técnico O Archivo Vectorial';
@@ -329,6 +335,12 @@ $Gui2Text80 = 'Generar Modelo';
 $Gui2Text81 = 'Convertir este libro electrónico';
 // / 'Convert E-Book'
 $Gui2Text82 = 'Convertir libro electrónico';
+// / 'Playlist source URL, only needed if the playlist uses relative paths'
+$Gui2Text83 = 'URL de origen de la lista, solo necesaria si la lista usa rutas relativas';
+// / 'Download A File From A URL'
+$Gui2Text84 = 'Descargar un archivo desde una URL';
+// / 'Fetch'
+$Gui2Text85 = 'Obtener';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

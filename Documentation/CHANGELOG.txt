@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.9.1.
+v3.9.2.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -29,9 +29,9 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia
 
 --------------------
 COMMIT 9/6/2026
-v3.9.1 - Absorb Core Manager, sandbox every dependency.
+v3.9.2 - Absorb Core Manager, sandbox every dependency.
 
--v3.9.1.
+-v3.9.2.
 -Absorb coreManager.php into the engine. Delete it.
   -Four manager roles move to Resources/Engine/Managers, one file each.
   -Everything shared moves to the engine. Sockets, budgets, worker registry.
@@ -57,7 +57,23 @@ v3.9.1 - Absorb Core Manager, sandbox every dependency.
 -Prove the hostname where it lands, not where it came from. /etc/hosts is line based.
 -Network policy values are locals again. They were lowercase & declared global.
 -Print the dependency verdict once. The component that owns the table owns the summary.
--Document network isolation, quality control, logging.
+-Resolve the Engine contract. It named six application functions & now names none.
+  -It checks Bubblewrap & calls one provider the application declares in engineConfig.
+-Add the Environment Manager. Root, no socket, wakes on a timer & exits.
+  -Watches by default. Repair is a setting & calls the same function -fp calls.
+  -Not dispatchable. The listener is www-data & this refuses to be anything but root.
+-Fix --kill-all-workers. It called a function with no argument & died every time.
+-Delete the Wide interface. It was Original with one number changed.
+  -Interface width is now --GUI Maximum Width--, fluid between the device & that ceiling.
+-Add a playlist source URL field. An uploaded playlist has no address to resolve against.
+-Add downloading a file from a URL. Off by default. This server has no authentication.
+  -Every fetch takes the same path a playlist URL takes. Pinned, no redirects, no resolver.
+-Upgrade the bundled Dropzone to 6.2.0. autoDiscover is gone, so the instance is explicit.
+-The dropdown arrow follows the reading direction. The language pack decides.
+-The file list panel takes a colour from the scheme instead of a hardcoded cream.
+-The dropzone scrolls instead of pushing its previews over the footer.
+-Fix 92 language pack labels missing an opening quote.
+-Document network isolation, quality control, logging, the Environment Manager.
 
 --------------------
 COMMIT 9/4/2026

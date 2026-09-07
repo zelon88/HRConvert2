@@ -32,12 +32,18 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.8.3';
+$LanguageVersion = 'v3.9.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
 // / Set the side of the page to float elements to.
 $GUIAlignment = 'right';
+// / Which end of a dropdown the arrow sits at, as a percentage across the control.
+// / This pack knows its own reading direction & is therefore the right place to decide.
+// / A reader finishes at the left of a right to left line, so the arrow belongs there.
+// / An arrow pinned to the right edge sits at the START of the box in this language &
+// / reads as a stray icon rather than as the thing that opens the list.
+$SelectArrowSide = ($GUIAlignment === 'right') ? '4%' : '96%';
 // / Define an error message to display for if the core has not been loaded.
 $CoreError = 'خطأ!!! HRConvert2-2 ، لا يمكن لهذا الملف معالجة طلبك! يرجى إرسال ملفك إلى convertCore.php بدلاً من ذلك!';
 // / Check if the core is loaded.
@@ -86,7 +92,7 @@ $GuiSelectorText4 = 'عرض خيارات اللغة واللون والواجه�
 
 // / -----------------------------------------------------------------------------------
 // / Set GUI - 1 Related Variables.
-// / Online File Converter, Extractor, Compressor'
+// / 'Online File Converter, Extractor, Compressor'
 $Gui1Text1 = 'محول الملفات عبر الإنترنت ، النازع ، الضاغط';
 // / $ApplicationName.' is based off the open-source web-app <a href=\'https://github.com/zelon88/HRConvert2\'>HRConvert2</a> by <a href=\'https://github.com/zelon88\'>Zelon88</a> that converts files without tracking users across the net or infringing on your intellectual property.'
 $Gui1Text2 = 'يعتمد '.$ApplicationName.' على تطبيق الويب المفتوح المصدر HRConvert2 بواسطة Zelon88 الذي يحول الملفات دون تتبع المستخدمين عبر الشبكة أو انتهاك حقوق الملكية الفكرية الخاصة بك.';
@@ -265,7 +271,7 @@ $Gui2Text45 = 'تحويل هذا الصوت';
 $Gui2Text46 = 'تحويل هذا الفيديو';
 // / 'Convert This Stream'
 $Gui2Text47 = 'تحويل هذا التدفق';
-// / Convert This 3D Model'
+// / 'Convert This 3D Model'
 $Gui2Text48 = 'تحويل هذا النموذج ثلاثي الأبعاد';
 // / 'Convert This Technical Drawing Or Vector File'
 $Gui2Text49 = 'قم بتحويل هذا الرسم الفني أو ملف المتجه';
@@ -333,6 +339,12 @@ $Gui2Text80 = 'إنشاء النموذج';
 $Gui2Text81 = 'تحويل هذا الكتاب الإلكتروني';
 // / 'Convert E-Book'
 $Gui2Text82 = 'تحويل الكتاب الإلكتروني';
+// / 'Playlist source URL, only needed if the playlist uses relative paths'
+$Gui2Text83 = 'عنوان URL لمصدر قائمة التشغيل، مطلوب فقط إذا كانت تستخدم مسارات نسبية';
+// / 'Download A File From A URL'
+$Gui2Text84 = 'تنزيل ملف من عنوان URL';
+// / 'Fetch'
+$Gui2Text85 = 'جلب';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

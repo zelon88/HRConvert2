@@ -32,12 +32,18 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.8.3';
+$LanguageVersion = 'v3.9.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
 // / Set the side of the page to float elements to.
 $GUIAlignment = 'right';
+// / Which end of a dropdown the arrow sits at, as a percentage across the control.
+// / This pack knows its own reading direction & is therefore the right place to decide.
+// / A reader finishes at the left of a right to left line, so the arrow belongs there.
+// / An arrow pinned to the right edge sits at the START of the box in this language &
+// / reads as a stray icon rather than as the thing that opens the list.
+$SelectArrowSide = ($GUIAlignment === 'right') ? '4%' : '96%';
 // / Define an error message to display for if the core has not been loaded.
 $CoreError = 'ܦܵܘܕܵܐ!!! HRConvert2-2، ܗܵܢܵܐ ܦܸܬܩܵܐ ܠܹܐ ܡܵܨܹܐ ܕܦܵܠܹܚ ܠܒܵܥܘܼܬܵܘܟ݂ܘܿܢ! ܒܒܵܥܘܼ ܫܲܕܸܪܘܼܢ ܦܸܬܩܵܘܟ݂ܘܿܢ ܠܕܘܼܟܬܵܐ ܕ-convertCore.php ܚܠܵܦ ܗܵܕܹܐ!';
 // / Check if the core is loaded.
@@ -83,7 +89,7 @@ $GuiSelectorText4 = 'ܚܘܝ ܓܒܝܬܐ ܕܠܫܢܐ ܘܓܘܢܐ ܘܚܙܘܐ';
 
 // / -----------------------------------------------------------------------------------
 // / Set GUI - 1 Related Variables.
-// / Online File Converter, Extractor, Compressor'
+// / 'Online File Converter, Extractor, Compressor'
 $Gui1Text1 = 'ܡܫܲܚܠܦܵܢܵܐ، ܡܦܸܩܵܢܵܐ، ܘܡܥܝܼܨܵܢܵܐ ܕܦܸܬܩܹܐ ܒܢܸܘܠܵܐ';
 // / $ApplicationName.' is based off the open-source web-app <a href=\'https://github.com\'>HRConvert2</a> by <a href=\'https://github.com\'>Zelon88</a> that converts files without tracking users across the net or infringing on your intellectual property.'
 $Gui1Text2 = $ApplicationName.' ܟܹܐ ܡܸܫܬܲܬܸܣ ܥܲܠ ܬܘܼܩܵܢܵܐ ܕܢܸܘܠܵܐ ܕܡܲܥܝܵܢܵܐ ܦܬܝܼܚܵܐ <a href=\'https://github.com\'>HRConvert2</a> ܕܥܒ݂ܝܼܕܵܐ ܝܠܹܗ ܡܸܢ <a href=\'https://github.com\'>Zelon88</a> ܕܟܹܐ ܡܫܲܚܠܸܦ ܦܸܬܩܹܐ ܕܠܵܐ ܥܸܩܒܵܐ ܕܡܦܲܠܚܵܢܹܐ ܒܐܸܣܵܪܵܐ ܐܵܘ ܚܒܵܠܘܼܬܵܐ ܕܩܸܢܝܵܢܵܐ ܪܸܕܝܵܢܵܝܵܐ ܕܝܼܵܘܟ݂ܘܿܢ.';
@@ -262,7 +268,7 @@ $Gui2Text45 = 'ܫܲܚܠܸܦ ܗܵܢܵܐ ܩܵܠܵܐ';
 $Gui2Text46 = 'ܫܲܚܠܸܦ ܗܵܢܵܐ ܚܸܙܘܵܐ';
 // / 'Convert This Stream'
 $Gui2Text47 = 'ܫܲܚܠܸܦ ܗܵܢܵܐ ܪܕܵܝܬܵܐ';
-// / Convert This 3D Model'
+// / 'Convert This 3D Model'
 $Gui2Text48 = 'ܫܲܚܠܸܦ ܗܵܢܵܐ ܛܘܼܦܸܣܵܐ ܕතܠܵܬܵܐ ܡܫܘܼܚܝܼܢ';
 // / 'Convert This Technical Drawing Or Vector File'
 $Gui2Text49 = 'ܫܲܚܠܸܦ ܗܵܢܵܐ ܪܸܫܡܵܐ ܝܕܲܥܬܢܵܝܵܐ ܐܵܘ ܦܸܬܩܵܐ ܘܩܛܘܿܪܝܵܐ';
@@ -330,6 +336,12 @@ $Gui2Text80 = 'ܥܒܸܕ ܛܘܼܦܸܣܵܐ';
 $Gui2Text81 = 'ܫܲܚܠܸܦ ܐܵܗܵܐ ܟܬܵܒ݂ܵܐ ܐܸܠܸܩܛܪܘܿܢܵܝܵܐ';
 // / 'Convert E-Book'
 $Gui2Text82 = 'ܫܲܚܠܸܦ ܟܬܵܒ݂ܵܐ ܐܸܠܸܩܛܪܘܿܢܵܝܵܐ';
+// / 'Playlist source URL, only needed if the playlist uses relative paths'
+$Gui2Text83 = 'ܐܘܪܚܐ ܕܡܒܘܥܐ ܕܠܝܣܬܐ، ܣܢܝܩܐ ܐܢ ܠܝܣܬܐ ܟܡܚܫܚܐ ܐܘܪܚܬܐ ܢܣܝܒܬܐ';
+// / 'Download A File From A URL'
+$Gui2Text84 = 'ܡܚܬ ܦܝܠܐ ܡܢ ܐܘܪܚܐ';
+// / 'Fetch'
+$Gui2Text85 = 'ܡܝܬܐ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

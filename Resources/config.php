@@ -44,7 +44,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. Replacing config.php with a newer one is the correct fix.
-$ConfigVersion = 'v3.9.1';
+$ConfigVersion = 'v3.9.2';
 // / ------------------------------
 
 // / ------------------------------
@@ -709,7 +709,9 @@ $UpdateConnectionTimeout = 1000;
 // /   Before adding a supported GUI be sure to add the matching folder full of GUI files to /UI.
 // /   Errors will occur if you add an element to this array without also adding a matching GUI folder.
 // /   Default is 'Default', 'Wide'.
-$SupportedGuis = array('Default', 'Wide', 'Original');
+// / Wide was removed at v3.9.1. It was Original with one number changed, & that number is
+// /   now --GUI Maximum Width-- above. Set that to 2000 for the layout Wide used to give.
+$SupportedGuis = array('Default', 'Original');
 // /  --Default GUI--
 // /   The default GUI to use.
 // /   See README.md for the latest GUI support information.
@@ -1149,12 +1151,66 @@ $UserDrawingOutputArray = array('dxf', 'vdx', 'fig', 'dia', 'wpg');
 $UserSVGInputArray = array('svg', 'plain-svg');
 // /  --Supported SVG Output Formats--.
 $UserSVGOutputArray = array('png', 'pdf', 'ps', 'eps', 'emf', 'wmf');
+// /  --GUI Maximum Width--
+// /   The widest the interface is allowed to become, in pixels, on a large display.
+// /   This is a CEILING & not a fixed width. The interface is fluid below it & takes the
+// /   width of the device it is on, so a phone gets the whole screen & a wide monitor gets
+// /   this number rather than a line of text running the full two metres of glass.
+// /   1400 suits most desktops. 1000 is the classic narrow layout this application shipped
+// /   with for years. 2000 is what the separate Wide interface used to be, & is why that
+// /   interface no longer needs to exist.
+// /   Anything below 600 or above 3840 is ignored & the default is used, because a value
+// /   outside that range is a typo rather than a preference.
+// /   Default is 1400.
+$GuiMaxWidth = 1400;
+
+// /  --Allow User URL Download--
+// /   Whether a user may type a URL & have this server fetch it into their session.
+// /   THIS SERVER HAS NO AUTHENTICATION. Anyone who can reach the page can use this, & a
+// /   server that fetches any address a stranger names is an open proxy. It can be used to
+// /   scan, to launder traffic, or to make this host's address appear in somebody else's
+// /   logs. That is why it is FALSE by default & why an appliance on a public network
+// /   should probably leave it that way.
+// /   What it is NOT is an SSRF hole. Every fetch goes through the same address filter a URL
+// /   inside a playlist receives, so a private, reserved or loopback address is refused, the
+// /   address is pinned with curl --resolve, no redirect is followed, & the fetch runs in a
+// /   namespace with a network & no resolver.
+// /   Turn it on for a trusted network where users need to convert something they can only
+// /   reach by link. Leave it off everywhere else.
+// /   Default is FALSE.
+$AllowUserURLDownload = FALSE;
+
+// /  --Environment Manager May Repair--
+// /   Whether the Environment Manager may change this host, or only report on it.
+// /   It runs as root on a timer, opens no socket & reads no input from anywhere but this
+// /   file. See Documentation/ABOUT_ENVIRONMENT_MANAGER.txt.
+// /   FALSE means it looks, logs what has drifted & changes nothing. That is the default &
+// /   is what a new installation should run until an administrator has read what it WOULD
+// /   have done.
+// /   TRUE means it also repairs, & a repair is exactly what --fix-permissions does. It
+// /   calls the same function, so there is no second definition of a correct installation.
+// /   A repair is logged as a warning rather than as normal activity, because an
+// /   installation repairing the same thing every hour is not healthy.
+// /   Default is FALSE.
+$EnvironmentManagerMayRepair = FALSE;
+
+// /  --Environment Manager May Rewrite Configs--
+// /   Whether a permitted repair may rewrite the configuration files this application owns.
+// /   Only ever applies when --Environment Manager May Repair-- is TRUE.
+// /   Those files are HRConvert2's OWN drop-ins & profiles. 99-hrconvert2.ini in the php
+// /   conf.d, hrconvert2.conf in the Apache conf-available, & the AppArmor profiles this
+// /   application ships. Nothing belonging to the distribution is touched, which is why
+// /   this defaults to TRUE while repair itself defaults to FALSE.
+// /   Set it FALSE if you have tuned one of those files by hand. A rewrite reverts it to
+// /   the shipped version silently & you will find out at the next conversion.
+// /   Default is TRUE.
+$EnvironmentManagerMayRewriteConfigs = TRUE;
+
 // /  --Supported Model Formats--
 // /   This array was offered as both the input list & the output list, which the audio,
 // /   video & vector converters each split in two. The two below carry those directions.
-// /   All three are required. --setup --merge-config adds whichever are missing & scales
-// /   itself from the required list in convertCore.php, so a setting left out of that list
-// /   is never added to anybody's configuration.
+// /   All three are required. A config missing any of them is refused at startup & no
+// /   command adds a missing setting, so take the shipped file or add them by hand.
 // /   This one remains because other code reads the combined list.
 $UserModelArray = array('stl', 'ply', 'off', '3ds', 'fbx', 'dae', 'gltf', 'glb', 'obj', '3mf', 'x3d', 'dxf', 'x', 'ctm');
 

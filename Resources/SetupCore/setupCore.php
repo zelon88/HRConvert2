@@ -40,7 +40,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$SetupCoreVersion = 'v3.8.6';
+$SetupCoreVersion = 'v3.9.2';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -139,6 +139,12 @@ function setupConfigModel() {
       'AllowUnprivilegedNamespaces' => array('Type' => 'bool', 'Default' => 'TRUE', 'Depends' => '', 'Description' => 'Allow Unprivileged Namespaces'),
       'RequireSandbox' => array('Type' => 'bool', 'Default' => 'TRUE', 'Depends' => '', 'Description' => 'Require Sandbox'),
       'RequireSandboxOnDocker' => array('Type' => 'bool', 'Default' => 'FALSE', 'Depends' => 'RequireSandbox', 'Description' => 'Require Sandbox On Docker'),
+      // / The Environment Manager settings. Both belong to the model as well as to
+      // / config.php, because a repair can only add a setting this utility knows about.
+      // / They were added to config.php alone at first, & --config --repair then reported
+      // / that it would add nothing while the file was demonstrably short of them.
+      'EnvironmentManagerMayRepair' => array('Type' => 'bool', 'Default' => 'FALSE', 'Depends' => '', 'Description' => 'Environment Manager May Repair'),
+      'EnvironmentManagerMayRewriteConfigs' => array('Type' => 'bool', 'Default' => 'TRUE', 'Depends' => 'EnvironmentManagerMayRepair', 'Description' => 'Environment Manager May Rewrite Configs'),
       'ThrowSandboxWarning' => array('Type' => 'bool', 'Default' => 'TRUE', 'Depends' => '', 'Description' => 'Throw Sandbox Warning'),
       'StreamWatchTimeout' => array('Type' => 'int', 'Default' => '15', 'Depends' => '', 'Description' => 'Stream Duration Timeout'),
       'StreamConnectionTimeout' => array('Type' => 'int', 'Default' => '10', 'Depends' => '', 'Description' => 'Stream Connection Timeout'),
@@ -447,6 +453,63 @@ function writeConfigFile($configPath, $configContents) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to ADD a setting that the configuration file does not contain.
+// / Accepts the file lines by reference, the setting name, its formatted value & the name
+// / of the section it belongs to. Returns whether the line was added.
+// /
+// / replaceConfigAssignment() rewrites a line that exists. This writes one that does not,
+// / & the difference is what makes a configuration self healing rather than merely
+// / correctable.
+// / A release that adds a required setting leaves every existing file short of it. Without
+// / this, the only remedies were editing by hand or adopting the shipped file & losing
+// / every local value, which is not a remedy an automated tool can use.
+// /
+// / The setting is placed at the END of the section it belongs to, so a file keeps the
+// / shape its author gave it. A section that is not in the file gets one, appended at the
+// / end with its own header, because a setting written into no section reads as though it
+// / belongs to whichever section happens to precede it.
+// / The default is written with a comment saying it was added & when. A value that appeared
+// / on its own with no explanation is the thing an administrator finds a year later &
+// / cannot account for.
+function appendConfigAssignment(&$configLines, $variableName, $newValue, $sectionName, $detectedSections) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $AssignmentWasAdded = FALSE;
+  $insertIndex = $lineIndex = 0;
+  $variableRecord = $newLines = array();
+  $sectionExists = FALSE;
+  $sectionExists = isset($detectedSections[$sectionName]) && isset($detectedSections[$sectionName]['Variables']);
+  if ($sectionExists) {
+    // / The end of the section is the last line of its last setting.
+    foreach ($detectedSections[$sectionName]['Variables'] as $variableRecord) {
+      if (isset($variableRecord['EndLine']) && (int)$variableRecord['EndLine'] > $insertIndex) $insertIndex = (int)$variableRecord['EndLine']; } }
+  // / A section with no settings, or no section at all, means the end of the file. The end
+  // / of the FILE is not the end of the php block, & a setting written after the closing
+  // / tag is text the interpreter never reads.
+  // / An earlier version appended past it & produced a file that looked repaired & was not.
+  if ($insertIndex === 0) {
+    $insertIndex = count($configLines) - 1;
+    for ($lineIndex = count($configLines) - 1; $lineIndex >= 0; $lineIndex--) {
+      if (strpos((string)$configLines[$lineIndex], '?>') !== FALSE) {
+        $insertIndex = $lineIndex - 1;
+        break; } } }
+  $newLines[] = '';
+  if (!$sectionExists) {
+    $newLines[] = '// / -----------------------------------------------------------------------------------';
+    $newLines[] = '// /  --'.$sectionName.'--'; }
+  $newLines[] = '// /   Added automatically on '.date('F j, Y').' because this release requires it.';
+  $newLines[] = '// /   The value below is the shipped default. Read the documentation for this setting';
+  $newLines[] = '// /   before relying on it.';
+  $newLines[] = '$'.$variableName.' = '.$newValue.';';
+  // / Splice rather than append, so the setting lands inside its own section.
+  array_splice($configLines, $insertIndex + 1, 0, $newLines);
+  $AssignmentWasAdded = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $insertIndex, $lineIndex, $variableRecord, $newLines, $sectionExists, $variableName, $newValue, $sectionName, $detectedSections);
+  return $AssignmentWasAdded; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to replace the value of one variable in a configuration file.
 // / Accepts the file lines by reference, the detected variable record & the new value.
 // / Returns TRUE when the assignment was replaced.
@@ -698,7 +761,11 @@ function applyConfigChanges($configPath, $detectedSections, $pendingChanges) {
     else {
       $configLines = file($configPath, FILE_IGNORE_NEW_LINES);
       foreach ($pendingChanges as $variableName => $changeRecord) {
-        if (replaceConfigAssignment($configLines, $changeRecord['Record'], $variableName, $changeRecord['Value'])) $ChangesApplied++; }
+        // / A change with no record names a setting the file does not contain, & it is
+        // / ADDED rather than skipped. Skipping it is what made a repair do nothing.
+        if (!isset($changeRecord['Record']) or !isset($changeRecord['Record']['StartLine'])) {
+          if (appendConfigAssignment($configLines, $variableName, $changeRecord['Value'], $changeRecord['Section'], $detectedSections)) $ChangesApplied++; }
+        else if (replaceConfigAssignment($configLines, $changeRecord['Record'], $variableName, $changeRecord['Value'])) $ChangesApplied++; }
       // / A blanked continuation line is dropped here rather than during the replacement,
       // / so every line number stayed correct while the replacements were being made.
       $newContents = implode(PHP_EOL, array_filter($configLines, function($lineText) { return $lineText !== NULL; })).PHP_EOL;
@@ -839,13 +906,39 @@ function runConfigUtility($suppliedPath, $utilityMode, $modeTarget, $operatorCon
               foreach ($sectionModel['Variables'] as $variableName => $variableModel) {
                 if ((string)$variableModel['Default'] === '') continue;
                 // / A repair only touches what is absent or unreadable. A reset touches everything.
-                if ($utilityMode === 'repair' && isset($detectedSections[$sectionName]['Variables'][$variableName])) continue;
-                if (!isset($detectedSections[$sectionName]['Variables'][$variableName])) continue;
+                // / A REPAIR takes what is ABSENT. A RESET takes what is PRESENT.
+                // / Both lines below used to skip during a repair, one for a setting that
+                // / was there & one for a setting that was not. A repair therefore queued
+                // / nothing & reported success, & a self healing configuration healed
+                // / nothing at all.
+                // / Adding what is missing is the whole point of the mode. It is what lets
+                // / an operator or an automated tool normalize a coherent file across a
+                // / release that added a required setting, without touching one existing
+                // / value.
+                // / Presence is looked for across the WHOLE FILE rather than in the section
+                // / the model happens to name. A setting an administrator moved, or one filed
+                // / under a different heading by an earlier release, is present either way &
+                // / appending a second copy of it is not a repair.
+                list ($foundSection, $foundRecord) = findConfigVariable($detectedSections, $variableName);
+                if ($utilityMode === 'repair' && $foundSection !== '') continue;
+                if ($utilityMode !== 'repair' && $foundSection === '') continue;
                 list ($valueIsValid, $formattedValue) = formatConfigValue($variableModel['Type'], $variableModel['Default']);
-                if ($valueIsValid) $pendingChanges[$variableName] = array('Section' => $sectionName, 'Value' => $formattedValue, 'Record' => $detectedSections[$sectionName]['Variables'][$variableName]); } }
+                // / A repair reaches here for a setting the file does NOT contain, so there
+                // / is no record to attach & an empty one is passed instead.
+                // / Reading it unconditionally raised an undefined key warning naming the
+                // / very setting that was missing, which read like a fault in the utility
+                // / rather than the thing it had correctly found.
+                // / applyConfigChanges treats a record with no StartLine as one to ADD.
+                if ($valueIsValid) $pendingChanges[$variableName] = array('Section' => $sectionName, 'Value' => $formattedValue, 'Record' => $foundRecord); } }
             if ($utilityMode === 'reset-section' && empty($pendingChanges)) print($Lol.'No writable section named '.$modeTarget.' was found. Nothing was done.'.$Lol.$Lol);
             else if (!$operatorConfirmed) {
-              print($Lol.'This will rewrite '.count($pendingChanges).' setting(s) in '.$configTarget.'.'.$Lol);
+              // / A repair ADDS & a reset REWRITES, & the prompt says which. An operator asked to
+              // / confirm a rewrite of a setting that is not in the file has been told the wrong
+              // / thing about what is going to happen to their configuration.
+              // / The names are listed, because a count on its own does not let anybody decide.
+              print($Lol.'This will '.($utilityMode === 'repair' ? 'ADD ' : 'rewrite ').count($pendingChanges).' setting(s) in '.$configTarget.'.'.$Lol);
+              foreach ($pendingChanges as $changeName => $changeRecord) print('  $'.$changeName.' = '.$changeRecord['Value'].$Lol);
+              print($Lol.($utilityMode === 'repair' ? 'No existing value is changed. A backup is written first.' : 'A backup is written first.').$Lol);
               $operatorChoice = askOperator('Type YES to continue. Anything else cancels. ');
               if ($operatorChoice !== 'YES') print($Lol.'Cancelled. Nothing was written.'.$Lol.$Lol);
               else { list ($changesWereApplied, $changesApplied) = applyConfigChanges($configTarget, $detectedSections, $pendingChanges); $UtilityCompleted = $changesWereApplied; } }
@@ -873,8 +966,36 @@ function runConfigUtility($suppliedPath, $utilityMode, $modeTarget, $operatorCon
               if ($operatorChoice !== 'YES') print($Lol.'Cancelled. Nothing was written.'.$Lol.$Lol);
               else { list ($changesWereApplied, $changesApplied) = applyConfigChanges($configTarget, $detectedSections, $pendingChanges); $UtilityCompleted = $changesWereApplied; } } } } } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $configTarget, $detectedConfigVersion, $sectionName, $variableName, $operatorChoice, $configModel, $detectedSections, $validationFindings, $dependencyFindings, $pendingChanges, $sectionModel, $variableModel, $finding, $targetWasResolved, $parseSucceeded, $configIsAuthentic, $sectionsAreTrusted, $configIsCoherent, $valueIsValid, $changesWereApplied, $formattedValue, $changesApplied, $suppliedPath, $utilityMode, $modeTarget, $operatorConfirmed);
+  purgeSensitiveMemory($EnableMemoryProtection, $foundSection, $foundRecord, $changeName, $changeRecord, $configTarget, $detectedConfigVersion, $sectionName, $variableName, $operatorChoice, $configModel, $detectedSections, $validationFindings, $dependencyFindings, $pendingChanges, $sectionModel, $variableModel, $finding, $targetWasResolved, $parseSucceeded, $configIsAuthentic, $sectionsAreTrusted, $configIsCoherent, $valueIsValid, $changesWereApplied, $formattedValue, $changesApplied, $suppliedPath, $utilityMode, $modeTarget, $operatorConfirmed);
   return $UtilityCompleted; }
+// / -----------------------------------------------------------------------------------
+// / A function to find a setting anywhere in a configuration file.
+// / Accepts the detected sections & the setting name. Returns the section it was found in
+// / & its record, in that order. The section is an empty string when it is not there.
+// /
+// / Presence is a property of the FILE rather than of a section.
+// / A repair used to ask whether a setting was in the section the MODEL puts it in. An
+// / administrator who moved a setting, or a release that filed one under a different
+// / heading, therefore looked absent & a second copy was appended.
+// / A duplicate assignment is not harmless. PHP takes the last one, so the file says one
+// / thing at the top & another at the bottom & the reader has to know which wins.
+function findConfigVariable($detectedSections, $variableName) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $FoundSection = '';
+  $FoundRecord = array();
+  $sectionName = '';
+  $sectionRecord = array();
+  foreach ($detectedSections as $sectionName => $sectionRecord) {
+    if (!isset($sectionRecord['Variables'][$variableName])) continue;
+    $FoundSection = $sectionName;
+    $FoundRecord = $sectionRecord['Variables'][$variableName];
+    break; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $sectionName, $sectionRecord, $detectedSections, $variableName);
+  return array($FoundSection, $FoundRecord); }
+// / -----------------------------------------------------------------------------------
+
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1047,6 +1168,95 @@ function generateListenerService() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to build the Environment Manager timer & the service the timer starts.
+// / Accepts nothing. Returns the service text & the timer text, in that order.
+// /
+// / TWO units, because systemd separates what runs from when it runs. The service is
+// / Type=oneshot & is never enabled on its own. The timer is what an administrator enables
+// / & it is the only thing that starts the service.
+// /
+// / This unit runs as ROOT & the listener unit deliberately does not. That is not an
+// / inconsistency. The listener owns sockets that the web server account must reach, & root
+// / would break it. This one reads AppArmor policies & kernel settings that only root can
+// / read, & anything less cannot do the job at all.
+// / Because it is root it is confined harder than the listener is. It gets a private tmp,
+// / no new privileges, and a read only view of everything it does not need to write.
+function generateEnvironmentTimer() {
+  // / Set variables.
+  global $InstLoc, $DirSep, $EnableMemoryProtection;
+  $ServiceContents = $TimerContents = '';
+  $corePath = $documentationPath = '';
+  $corePath = $InstLoc.$DirSep.'convertCore.php';
+  $documentationPath = $InstLoc.$DirSep.'Documentation'.$DirSep.'ABOUT_ENVIRONMENT_MANAGER.txt';
+  $ServiceContents = '# / -----------------------------------------------------------------------------------'.PHP_EOL
+    .'# / HRConvert2 Environment Manager. Written by --setup --install-service.'.PHP_EOL
+    .'# / Do not edit this by hand. Re-run the command above to rewrite it.'.PHP_EOL
+    .'# /'.PHP_EOL
+    .'# / This runs as root & is started ONLY by hrconvert2-environment.timer. It looks at the'.PHP_EOL
+    .'# / host, records what it found & exits. It opens no socket & accepts nothing from'.PHP_EOL
+    .'# / anywhere, so there is no way to ask it to do something.'.PHP_EOL
+    .'# /'.PHP_EOL
+    .'# / It reports & does not repair, unless --Environment Manager May Repair-- is TRUE in'.PHP_EOL
+    .'# / config.php. Read what it reports before turning that on.'.PHP_EOL
+    .PHP_EOL
+    .'[Unit]'.PHP_EOL
+    .'Description=HRConvert2 Environment Manager'.PHP_EOL
+    .'Documentation=file:'.$documentationPath.PHP_EOL
+    .'After=local-fs.target'.PHP_EOL
+    .PHP_EOL
+    .'[Service]'.PHP_EOL
+    .'# / It wakes, works & exits. Nothing stays resident.'.PHP_EOL
+    .'Type=oneshot'.PHP_EOL
+    .'# / Root is required & is the whole reason this unit exists apart from the listener.'.PHP_EOL
+    .'User=root'.PHP_EOL
+    .'Group=root'.PHP_EOL
+    .'ExecStart='.locateDependency('php').' '.$corePath.' --run-environment-manager'.PHP_EOL
+    .'# / A pass that hangs must not hold a root process open until the next one starts.'.PHP_EOL
+    .'TimeoutStartSec=300'.PHP_EOL
+    .'# / A root process gets confined harder than the listener, not less.'.PHP_EOL
+    .'NoNewPrivileges=yes'.PHP_EOL
+    .'PrivateTmp=yes'.PHP_EOL
+    .'ProtectHome=yes'.PHP_EOL
+    .'ProtectKernelTunables=no'.PHP_EOL
+    .'RestrictSUIDSGID=yes'.PHP_EOL
+    .'# / ProtectSystem is deliberately NOT full. A permitted repair writes to /etc, & a'.PHP_EOL
+    .'# / read only /etc would make every repair fail in a way nobody could diagnose.'.PHP_EOL
+    .'ProtectSystem=no'.PHP_EOL
+    .PHP_EOL
+    .'[Install]'.PHP_EOL
+    .'# / Deliberately empty of WantedBy. The TIMER is what an administrator enables.'.PHP_EOL
+    .'# / Enabling this service on its own would run one pass at boot & never again.'.PHP_EOL;
+  $TimerContents = '# / -----------------------------------------------------------------------------------'.PHP_EOL
+    .'# / HRConvert2 Environment Manager timer. Written by --setup --install-service.'.PHP_EOL
+    .'# / Do not edit this by hand. Re-run the command above to rewrite it.'.PHP_EOL
+    .'# /'.PHP_EOL
+    .'# / Enable it with:  sudo systemctl enable --now hrconvert2-environment.timer'.PHP_EOL
+    .'# / See what it last found with:  sudo systemctl status hrconvert2-environment'.PHP_EOL
+    .PHP_EOL
+    .'[Unit]'.PHP_EOL
+    .'Description=HRConvert2 Environment Manager schedule'.PHP_EOL
+    .'Documentation=file:'.$documentationPath.PHP_EOL
+    .PHP_EOL
+    .'[Timer]'.PHP_EOL
+    .'# / Hourly is often enough to catch drift & rare enough that a root process is not a'.PHP_EOL
+    .'# / constant presence. A distribution upgrade that replaces a policy is found within'.PHP_EOL
+    .'# / the hour rather than at the next failed conversion.'.PHP_EOL
+    .'OnCalendar=hourly'.PHP_EOL
+    .'# / A host that was off runs the pass it missed rather than skipping it silently.'.PHP_EOL
+    .'Persistent=true'.PHP_EOL
+    .'# / Every installation on a fleet would otherwise wake on the same second.'.PHP_EOL
+    .'RandomizedDelaySec=300'.PHP_EOL
+    .'Unit=hrconvert2-environment.service'.PHP_EOL
+    .PHP_EOL
+    .'[Install]'.PHP_EOL
+    .'WantedBy=timers.target'.PHP_EOL;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $corePath, $documentationPath);
+  return array($ServiceContents, $TimerContents); }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
 // / A function to install the listener service unit.
 // / Accepts a boolean permitting the unit to be enabled & started.
 // / Returns a success boolean & a status word, in that order.
@@ -1055,7 +1265,14 @@ function generateListenerService() {
 // / safe to run on every update & will not restart a healthy listener for no reason.
 // / NOTHING IS INSTALLED WHEN RESOURCE AWARENESS IS DISABLED. A unit that starts a listener
 // / the configuration does not want is a process running for no reason.
-function installListenerService($enableService) {
+// / $startIfStopped decides whether a listener that is DOWN gets started.
+// / It is separate from $enableService because those are two different questions.
+// / Enabling writes the boot state. Starting it now overrides whatever state an
+// / administrator has the service in RIGHT NOW, & one who stopped it has a reason.
+// / Setup & -fp pass TRUE, because an installation with no listener running is not
+// / installed. The Environment Manager passes FALSE, so a stopped listener stays stopped &
+// / is reported rather than restarted underneath somebody who is looking at it.
+function installListenerService($enableService, $startIfStopped = FALSE) {
   // / Set variables.
   global $EnableResourceAwareness, $RunningAsRoot, $Lol, $EnableMemoryProtection;
   $ServiceWasInstalled = $serviceSystemdUsable = FALSE;
@@ -1102,7 +1319,9 @@ function installListenerService($enableService) {
         print('  '.str_pad(($existingContents === '' ? 'Installed' : 'Updated'), 12).$unitPath.$Lol);
         if ($enableService) {
           $commandOutput = array();
-          exec('systemctl enable --now hrconvert2-listener 2>&1', $commandOutput, $commandExitCode);
+          // / --now is what starts it, & it is passed only when starting was asked for.
+          // / enable alone writes the boot state & leaves a stopped service stopped.
+          exec('systemctl enable '.($startIfStopped ? '--now ' : '').'hrconvert2-listener 2>&1', $commandOutput, $commandExitCode);
           if ($commandExitCode === 0) {
             $ServiceWasInstalled = TRUE;
             $ServiceStatus = 'installed';
@@ -1118,10 +1337,79 @@ function installListenerService($enableService) {
           $ServiceStatus = 'installed';
           print('  '.str_pad('Ready', 12).'systemctl enable --now hrconvert2-listener'.$Lol); } } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $unitPath, $unitContents, $existingContents, $commandOutput, $commandExitCode, $bytesWritten, $serviceSystemdUsable, $serviceSystemdReason, $enableService);
+  purgeSensitiveMemory($EnableMemoryProtection, $startIfStopped, $unitPath, $unitContents, $existingContents, $commandOutput, $commandExitCode, $bytesWritten, $serviceSystemdUsable, $serviceSystemdReason, $enableService);
   return array($ServiceWasInstalled, $ServiceStatus); }
 // / -----------------------------------------------------------------------------------
 
+
+// / -----------------------------------------------------------------------------------
+// / A function to install the Environment Manager timer & the service it starts.
+// / Accepts whether the timer should be enabled. Returns whether it was installed & a
+// / status word, in that order.
+// /
+// / The timer is written & NOT enabled unless asked. An administrator should read what a
+// / pass reports before putting a root process on a schedule, & this is the last moment
+// / anybody is looking.
+// / systemd is required. A host without it gets nothing, & that is not a failure. The
+// / manager still runs by hand, which is the documented alternative.
+function installEnvironmentTimer($enableTimer) {
+  // / Set variables.
+  global $RunningAsRoot, $Lol, $EnableMemoryProtection;
+  $TimerWasInstalled = FALSE;
+  $TimerStatus = 'skipped';
+  $timerSystemdUsable = FALSE;
+  $timerSystemdReason = $servicePath = $timerPath = $serviceContents = $timerContents = '';
+  $existingService = $existingTimer = '';
+  $commandOutput = array();
+  $commandExitCode = 1;
+  $servicePath = '/etc/systemd/system/hrconvert2-environment.service';
+  $timerPath = '/etc/systemd/system/hrconvert2-environment.timer';
+  if (!$RunningAsRoot) {
+    $TimerStatus = 'failed';
+    errorEntry('The Environment Manager timer can only be installed while running as root!', 32014, FALSE); }
+  else if (!systemdIsUsable()[0]) {
+    list ($timerSystemdUsable, $timerSystemdReason) = systemdIsUsable();
+    print('  '.str_pad('Skipped', 12).$timerSystemdReason.$Lol);
+    print('  '.str_pad('', 12).'Run the manager by hand instead. See ABOUT_ENVIRONMENT_MANAGER.txt.'.$Lol); }
+  else if (!is_dir('/etc/systemd/system')) print('  '.str_pad('Skipped', 12).'/etc/systemd/system does not exist.'.$Lol);
+  else {
+    list ($serviceContents, $timerContents) = generateEnvironmentTimer();
+    if (file_exists($servicePath)) $existingService = (string)@file_get_contents($servicePath);
+    if (file_exists($timerPath)) $existingTimer = (string)@file_get_contents($timerPath);
+    if ($existingService === $serviceContents && $existingTimer === $timerContents) {
+      $TimerWasInstalled = TRUE;
+      $TimerStatus = 'unchanged';
+      print('  '.str_pad('Unchanged', 12).$timerPath.$Lol); }
+    else if (@file_put_contents($servicePath, $serviceContents) !== strlen($serviceContents) or @file_put_contents($timerPath, $timerContents) !== strlen($timerContents)) {
+      $TimerStatus = 'failed';
+      errorEntry('The Environment Manager timer could not be written to '.$timerPath.'!', 32015, FALSE); }
+    else {
+      @chmod($servicePath, 0644);
+      @chmod($timerPath, 0644);
+      exec('systemctl daemon-reload 2>&1', $commandOutput, $commandExitCode);
+      $TimerWasInstalled = TRUE;
+      $TimerStatus = 'installed';
+      print('  '.str_pad(($existingTimer === '' ? 'Installed' : 'Updated'), 12).$timerPath.$Lol);
+      logEntry('The Environment Manager timer was written to '.$timerPath.'.'); } }
+  // / Enabling is separate & is never implied by writing the file.
+  if ($TimerWasInstalled && $enableTimer) {
+    $commandOutput = array();
+    exec('systemctl enable --now hrconvert2-environment.timer 2>&1', $commandOutput, $commandExitCode);
+    if ($commandExitCode === 0) {
+      $TimerStatus = 'enabled';
+      print('  '.str_pad('Enabled', 12).'hrconvert2-environment.timer, hourly from now'.$Lol);
+      warningEntry('The Environment Manager timer was enabled. A root process now runs hourly.'); }
+    else {
+      $TimerStatus = 'failed';
+      errorEntry('The Environment Manager timer was written & could not be enabled!', 32016, FALSE); } }
+  else if ($TimerWasInstalled && $TimerStatus !== 'unchanged') {
+    print('  '.str_pad('', 12).'The timer is NOT enabled. Read one pass before scheduling root.'.$Lol);
+    print('  '.str_pad('', 12).'  sudo php convertCore.php --run-environment-manager'.$Lol);
+    print('  '.str_pad('', 12).'  sudo systemctl enable --now hrconvert2-environment.timer'.$Lol); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $timerSystemdUsable, $timerSystemdReason, $servicePath, $timerPath, $serviceContents, $timerContents, $existingService, $existingTimer, $commandOutput, $commandExitCode, $enableTimer);
+  return array($TimerWasInstalled, $TimerStatus); }
+// / -----------------------------------------------------------------------------------
 // / -----------------------------------------------------------------------------------
 // / A function to perform a complete installation.
 // / Accepts the dependency authorization token & a confirmation boolean, in that order.
@@ -1198,8 +1486,15 @@ function runCompleteInstall($authorizationToken, $operatorConfirmed) {
           else print('  Configuration was cancelled. The shipped defaults remain in place.'.$Lol);
           // / Stage five. The service unit, generated from the configuration above.
           print($Lol.'Stage 5 of 7. Listener service.'.$Lol);
-          list ($serviceWasInstalled, $serviceStatus) = installListenerService(TRUE);
+          // / TRUE, TRUE. An installation with no listener running is not installed yet.
+          list ($serviceWasInstalled, $serviceStatus) = installListenerService(TRUE, TRUE);
           if ($serviceWasInstalled or $serviceStatus === 'skipped') $StagesCompleted++;
+          // / The Environment Manager timer is written here & is deliberately NOT enabled.
+          // / The listener is enabled because nothing works without it. This one puts a ROOT
+          // / process on a schedule, & that is a decision an administrator makes after reading
+          // / what one pass reports rather than something a setup wizard does on their behalf.
+          print($Lol.'Environment Manager schedule.'.$Lol);
+          installEnvironmentTimer(FALSE);
           // / Stage six. Report what actually works. An installation that says it finished
           // / & then refuses every conversion has helped nobody.
           // / Stage six. Permissions again, because stages four & five both wrote files.

@@ -214,6 +214,25 @@ applied to a package manager, which installs to the machine on purpose.
 A sandboxed command needs none of this. sandboxCommand sets the same four variables to its
 own tmpfs, so a conversion has never been able to write into the installation.
 
+A SCRIPTED EDIT WRITES AFTER EVERY CHANGE, NEVER ONCE AT THE END.
+Anyone editing this codebase with a script rather than by hand will reach for the obvious
+shape, which reads the file, applies several changes to a string, & writes at the end. That
+shape is a trap & it cost four rounds during v3.9.1.
+
+When any one change fails to match, the write never runs & EVERY change is discarded,
+including the ones that worked. Worse, a message printed beside each change prints before
+the write, so the script reports success for edits that never reached the disk. A function
+signature was changed, reported as changed, & was not changed. It was found later by a
+checker noticing a symptom, & the time in between was spent reading correct code looking
+for a fault that was not there.
+
+  Write after each change & print only once the write has returned.
+  Then a failure costs exactly the change that failed, & every message is true.
+
+The failure to match usually has its own cause. An anchor built from memory, or from a grep
+run several commands ago, does not match a file that has moved on. Anchor on a line number
+from a grep in the SAME command, & re-read before constructing anything.
+
 A PHP BUILD TOOL MUST REFUSE TO RUN OVER HTTP & THE CHECK IS ONE LINE.
   if (PHP_SAPI !== 'cli') { if (!headers_sent()) http_response_code(404); die(); }
 Documentation/Build sits inside the web root, so a php file there is EXECUTED by the web

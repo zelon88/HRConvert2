@@ -225,10 +225,17 @@ moment somebody bundles this Engine on its own.
 They fall into three groups & each group has a different answer.
 
   THE POLICY GROUP, reached from validateOperatingEnvironment.
-  verifySandboxKernel, verifySandboxPolicy, verifyImageMagickPolicy, verifyOpenScadPolicy,
-  policyDisplayStatus & describePolicyStatus.
-  These write to /etc & /usr & need root, so they belong with the privileged side rather
-  than with the Engine as it stands. Roughly three hundred lines.
+  RESOLVED AT v3.9.1. The Engine named six application functions & could not load without
+  an application that defined all six. That is not a shared Engine.
+  It now checks what the Engine PROVIDES, which is Bubblewrap & nothing else, & calls one
+  provider named by the application in $EngineEnvironmentProvider. The provider returns a
+  readiness boolean & a list of findings & the Engine appends them to its own.
+  HRConvert2 supplies applicationEnvironmentFindings() in convertCore.php, beside
+  getSandboxProfiles(), which is handed over the same way & for the same reason.
+  An installation declaring no provider gets the Bubblewrap check alone, which is correct
+  rather than degraded. An application with no ImageMagick policy is not asked about one.
+  A name declared & not defined is a warning, because a check nobody notices is missing is
+  worse than one that was never claimed.
 
   THE LIMIT GROUP, reached from limitCommand.
   resolveConversionLimit & verifySystemdRun.

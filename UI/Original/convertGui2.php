@@ -63,7 +63,7 @@ if ($NoGui) redeclare($selectorBase, $selectorBase.'noGui=TRUE&');
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / THE CHROME BUTTONS CARRY THE SESSION. THEY DO NOT NAVIGATE THE BROWSER.
+// / The chrome buttons CARRY the session. They do not navigate the browser.
 // /
 // / Which page the core renders is decided by showFiles, & showFiles is read from GET
 // / only. The session is carried by the token pair, & the token pair is read from POST
@@ -93,7 +93,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
 // / -----------------------------------------------------------------------------------
 ?>
         <?php if (!$FileListOnly) {
-          // / A FRAGMENT OPENS NO BODY & LOADS NO LIBRARY.
+          // / A fragment opens no body & loads NO library.
           // / <body> belongs to the document & footer.php is what closes it. A fragment
           // / loads neither header nor footer, so opening a body here left an unclosed one
           // / inside the div the fragment gets injected into.
@@ -106,7 +106,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
   <body>
     <script type='text/javascript' src='<?php echo $JqueryPath; ?>'></script>
         <?php
-          // / THE HELPER IS DEFINED ONCE, BY THE PAGE, & NEVER BY A FRAGMENT.
+          // / The helper is defined ONCE, by the page, & never by a fragment.
           // / A fragment is injected INTO the page that already defines this. Sending a
           // / second copy redefines the object mid flight & re-runs its ready handler,
           // / which fetches the fragment again. That is a request loop, & every pass
@@ -145,7 +145,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         <?php } // / End of the helper, which a fragment never carries. ?>
 
     <?php if (!$FileListOnly) { // / Skipped when only the file list is wanted. ?>
-<div id='header-text' style='max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;'>
+<div id='header-text' style='max-width:<?php echo $GuiWidth; ?>; margin-left:auto; margin-right:auto; text-align:center;'>
       <?php if (!$NoGui) { ?><h1><?php echo $ApplicationName; ?></h1>
       <hr /><?php } ?>
       <h3><?php echo $Gui2Text1; ?></h3>
@@ -153,7 +153,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
       <p><?php echo $Gui2Text31; ?></p>
     </div>
     <div>
-    <div id='compressAll' name='compressAll' style='max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;'>
+    <div id='compressAll' name='compressAll' style='max-width:<?php echo $GuiWidth; ?>; margin-left:auto; margin-right:auto; text-align:center;'>
       <?php // / The form action is the refresh destination, so the refresh button needs no
             // / formaction of its own. The back button overrides it with one.
             // / EVERY BUTTON IN HERE DECLARES ITS TYPE. A button inside a form defaults to
@@ -294,7 +294,15 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
       // / this file. The list belongs to list only mode. Closing here would end the branch
       // / immediately & print the list on the full page as well as inside the frame. ?>
     <div>
-    <div style='max-width:1000px; margin-left:auto; margin-right:auto; background-color: #fff7e9; padding: 8px; border: 2px solid rgba(0, 0, 0, 0.3); border-radius: 10px;'>
+    <?php
+    // / The panel takes its colour from the scheme, through .file-list-panel in
+    // / styleCore.php, which defines one shade per scheme.
+    // / It was a hardcoded cream here, so six of the seven schemes drew a pale panel on a
+    // / page of an unrelated colour & the dark scheme drew a bright one.
+    // / inherit was tried & was worse. A panel the same colour as the page behind it is not
+    // / a panel, it is a border floating in the middle of nothing.
+    ?>
+    <div class='file-list-panel' style='max-width:<?php echo $GuiWidth; ?>; margin-left:auto; margin-right:auto; padding: 8px; border: 2px solid rgba(0, 0, 0, 0.3); border-radius: 10px;'>
      
 
       <?php
@@ -367,9 +375,9 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='archiveButton<?php echo $ConvertGuiCounter1; ?>' name='archiveButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>convert.png' style='float:<?php echo $GUIAlignment; ?>; display:block;'
-           onclick='toggle_visibility("archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archiveButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archiveXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
+           onclick='toggle_visibility("archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); <?php if ($AllowUserURLDownload) { ?>toggle_visibility("urlfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); <?php } ?> toggle_visibility("archiveButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archiveXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id="archiveXButton<?php echo $ConvertGuiCounter1; ?>" name="archiveXButton<?php echo $ConvertGuiCounter1; ?>" src='<?php echo $GuiImageDir; ?>x.png' style="float:<?php echo $GUIAlignment; ?>; display:none;" 
-           onclick="toggle_visibility('archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archiveButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archiveXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
+           onclick="toggle_visibility('archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); <?php if ($AllowUserURLDownload) { ?>toggle_visibility('urlfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); <?php } ?> toggle_visibility('archiveButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archiveXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
           <?php } 
 
           if (in_array($extension, $DocumentArray) && in_array('Document', $SupportedConversionTypes)) { ?>
@@ -504,7 +512,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         </div>
 
         <div id='archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style='max-width:750px; display:none;'>
-          <p style='max-width:1000px;'></p>
+          <p style='max-width:<?php echo $GuiWidth; ?>;'></p>
           <p><strong><?php echo $Gui2Text16; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type='text' id='userarchfilefilename<?php echo $ConvertGuiCounter1; ?>' name='userarchfilefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='archfileextension<?php echo $ConvertGuiCounter1; ?>' name='archfileextension<?php echo $ConvertGuiCounter1; ?>'> 
@@ -524,7 +532,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
 
         <?php if ($AllowUserShare) { ?>
         <div id='sharefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='sharefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"></p>
+          <p style="max-width:<?php echo $GuiWidth; ?>;"></p>
           <p><strong><?php echo $Gui2Text23; ?></strong></p>
           <p id='sharelinkStatus<?php echo $ConvertGuiCounter1; ?>' name='sharelinkStatus<?php echo $ConvertGuiCounter1; ?>'><?php echo $Gui2Text24; ?><i><?php echo $Gui2Text25; ?></i></p>
           <p id='shareclipStatus<?php echo $ConvertGuiCounter1; ?>' name='shareclipStatus<?php echo $ConvertGuiCounter1; ?>'><?php echo $Gui2Text27; ?><i><?php echo $Gui2Text25; ?></i></p>
@@ -548,7 +556,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         <?php } ?>
 
         <div id='deletefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='deletefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"></p>
+          <p style="max-width:<?php echo $GuiWidth; ?>;"></p>
           <p><strong><?php echo $Gui2Text69; ?></strong></p>
           <input type='submit' id='confirmdeletefilebutton<?php echo $ConvertGuiCounter1; ?>' name='confirmdeletefilebutton<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars($Gui2Text70, ENT_QUOTES, 'UTF-8'); ?>' onclick='toggle_visibility("loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>");'>
           <script type='text/javascript'>
@@ -558,7 +566,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
 
         <?php if ($AllowUserVirusScan) { ?>
         <div id='scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"></p>
+          <p style="max-width:<?php echo $GuiWidth; ?>;"></p>
           <p><strong><?php echo $Gui2Text34; ?></strong></p>
           <input type="submit" id="scancorebutton<?php echo $ConvertGuiCounter1; ?>" name="scancorebutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text35, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <input type="submit" id="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" name="clamscanbutton<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text36, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
@@ -576,7 +584,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         if (in_array($extension, $PDFWorkArr) && in_array('OCR', $SupportedConversionTypes)) { 
         ?>
         <div id='pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"></p>
+          <p style="max-width:<?php echo $GuiWidth; ?>;"></p>
           <p><strong><?php echo $Gui2Text38; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type="text" id='userpdffilename<?php echo $ConvertGuiCounter1; ?>' name='userpdffilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='pdfmethod<?php echo $ConvertGuiCounter1; ?>' name='pdfmethod<?php echo $ConvertGuiCounter1; ?>'>   
@@ -599,7 +607,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         </div>
         <?php } 
 
-        // / THIS GATE MUST MATCH THE BUTTON THAT TOGGLES IT.
+        // / This gate must MATCH the button that toggles it.
         // / The button above tests $DearchiveArray & this panel tested $ArchiveArray.
         // / config.php ships gz, bz, bz2, vhd, vdi, cbr, cbz, tar.gz & tar.bz2 in the
         // / first & not the second, so those files drew a button that toggled a panel
@@ -609,7 +617,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         if (in_array($extension, $DearchiveArray) && in_array('Archive', $SupportedConversionTypes)) {
         ?>
         <div id='archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"></p>
+          <p style="max-width:<?php echo $GuiWidth; ?>;"></p>
           <p><strong><?php echo $Gui2Text42; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type="text" id='userarchivefilename<?php echo $ConvertGuiCounter1; ?>' name='userarchivefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='archiveextension<?php echo $ConvertGuiCounter1; ?>' name='archiveextension<?php echo $ConvertGuiCounter1; ?>'> 
@@ -626,12 +634,34 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
           </script>
 
         </div>
+
+        <?php if ($AllowUserURLDownload) { ?>
+        <?php
+        // / Fetching a URL into the session. Shown only when an administrator has enabled it,
+        // / because this server has no authentication & a server that fetches any address a
+        // / stranger names is an open proxy. See --Allow User URL Download-- in config.php.
+        // / The address is not sanitized in the browser & is not meant to be. Every check is
+        // / applied by the core, which rebuilds the URL & refuses anything that does not
+        // / resolve to a publicly routable address.
+        ?>
+        <div id='urlfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='urlfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
+          <p style="max-width:500px;"></p>
+          <p><strong><?php echo htmlspecialchars($Gui2Text84, ENT_QUOTES, 'UTF-8'); ?></strong></p>
+          <p><input type="text" size="60" style="width:100%; max-width:520px; box-sizing:border-box;" id='userURLDownload<?php echo $ConvertGuiCounter1; ?>' name='userURLDownload<?php echo $ConvertGuiCounter1; ?>' value='' placeholder="https://example.com/file.m3u8"></p>
+          <input type="submit" id="urlDownloadSubmit<?php echo $ConvertGuiCounter1; ?>" name="urlDownloadSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text85, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <script type='text/javascript'>
+            HRC2.bindRun('urlDownloadSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array()); ?>,
+              <?php echo json_encode(array('userURLDownload' => 'userURLDownload'.$ConvertGuiCounter1)); ?>);
+          </script>
+        </div>
+        <?php } ?>
         <?php } 
 
         if (in_array($extension, $DocumentArray) && in_array('Document', $SupportedConversionTypes)) {
         ?>
         <div id='docOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='docOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"></p>
+          <p style="max-width:<?php echo $GuiWidth; ?>;"></p>
           <p><strong><?php echo $Gui2Text43; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type="text" id='userdocfilename<?php echo $ConvertGuiCounter1; ?>' name='userdocfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='docextension<?php echo $ConvertGuiCounter1; ?>' name='docextension<?php echo $ConvertGuiCounter1; ?>'> 
@@ -652,7 +682,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         if (in_array($extension, $EbookInputArray) && in_array('Ebook', $SupportedConversionTypes)) {
         ?>
         <div id='ebookOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='ebookOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"></p>
+          <p style="max-width:<?php echo $GuiWidth; ?>;"></p>
           <p><strong><?php echo $Gui2Text81; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type="text" id='userebookfilename<?php echo $ConvertGuiCounter1; ?>' name='userebookfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='ebookextension<?php echo $ConvertGuiCounter1; ?>' name='ebookextension<?php echo $ConvertGuiCounter1; ?>'> 
@@ -673,7 +703,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         if (in_array($extension, $SpreadsheetArray) && in_array('Document', $SupportedConversionTypes)) {
         ?>
         <div id='spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"></p>
+          <p style="max-width:<?php echo $GuiWidth; ?>;"></p>
           <p><strong><?php echo $Gui2Text44; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type="text" id='userspreadfilename<?php echo $ConvertGuiCounter1; ?>' name='userspreadfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='spreadextension<?php echo $ConvertGuiCounter1; ?>' name='spreadextension<?php echo $ConvertGuiCounter1; ?>'>
@@ -695,7 +725,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         if (in_array($extension, $XPSInputArray) && in_array('Document', $SupportedConversionTypes)) {
         ?>
         <div id='xpsOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='xpsOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"></p>
+          <p style="max-width:<?php echo $GuiWidth; ?>;"></p>
           <p><strong><?php echo $Gui2Text78; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type="text" id='userxpsfilename<?php echo $ConvertGuiCounter1; ?>' name='userxpsfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='xpsextension<?php echo $ConvertGuiCounter1; ?>' name='xpsextension<?php echo $ConvertGuiCounter1; ?>'>
@@ -716,7 +746,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         if (in_array($extension, $PresentationInputArray) && in_array('Document', $SupportedConversionTypes)) {
         ?>
         <div id='presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"></p>
+          <p style="max-width:<?php echo $GuiWidth; ?>;"></p>
           <p><strong><?php echo $Gui2Text77; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type="text" id='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' name='userpresentationfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='presentationextension<?php echo $ConvertGuiCounter1; ?>' name='presentationextension<?php echo $ConvertGuiCounter1; ?>'>
@@ -738,7 +768,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         if (in_array($extension, $MediaInputArray) && in_array('Audio', $SupportedConversionTypes)) {
         ?>
         <div id='audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='audioOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"></p>
+          <p style="max-width:<?php echo $GuiWidth; ?>;"></p>
           <p><strong><?php echo $Gui2Text45; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type="text" id='useraudiofilename<?php echo $ConvertGuiCounter1; ?>' name='useraudiofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='audioextension<?php echo $ConvertGuiCounter1; ?>' name='audioextension<?php echo $ConvertGuiCounter1; ?>'> 
@@ -761,7 +791,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         if (in_array($extension, $VideoInputArray) && in_array('Video', $SupportedConversionTypes)) {
         ?>
         <div id='videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='videoOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"></p>
+          <p style="max-width:<?php echo $GuiWidth; ?>;"></p>
           <p><strong><?php echo $Gui2Text46; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type="text" id='uservideofilename<?php echo $ConvertGuiCounter1; ?>' name='uservideofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='videoextension<?php echo $ConvertGuiCounter1; ?>' name='videoextension<?php echo $ConvertGuiCounter1; ?>'>
@@ -783,7 +813,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         if (in_array($extension, $StreamArray) && in_array('Stream', $SupportedConversionTypes)) {
         ?>
         <div id='streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"></p>
+          <p style="max-width:<?php echo $GuiWidth; ?>;"></p>
           <p><strong><?php echo $Gui2Text47; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type="text" id='userstreamfilename<?php echo $ConvertGuiCounter1; ?>' name='userstreamfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='streamextension<?php echo $ConvertGuiCounter1; ?>' name='streamextension<?php echo $ConvertGuiCounter1; ?>'>
@@ -792,11 +822,22 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
             <option value="<?php echo $gui2StreamArr; ?>"><?php echo $gui2StreamArr; ?></option>
             <?php } ?>
           </select></p>
+          <?php
+          // / An uploaded playlist has no address, so a relative entry inside it resolves
+          // / against nothing. A player fetching the same playlist from a website resolves
+          // / against the address it fetched it from, & this field is how an operator supplies
+          // / that address by hand.
+          // / It is OPTIONAL & empty is the normal case. A playlist whose entries carry full
+          // / https URLs needs nothing here.
+            ?>
+          <p><?php echo htmlspecialchars($Gui2Text83, ENT_QUOTES, 'UTF-8'); ?><br>
+          <input type="text" size="60" style="width:100%; max-width:520px; box-sizing:border-box;" id='streamBaseURL<?php echo $ConvertGuiCounter1; ?>' name='streamBaseURL<?php echo $ConvertGuiCounter1; ?>' value='' placeholder="https://example.com/hls/master.m3u8"></p>
           <input type="submit" id="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text59, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
               <?php echo json_encode(array('convertSelected' => $File)); ?>,
-              <?php echo json_encode(array('extension' => 'streamextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userstreamfilename'.$ConvertGuiCounter1)); ?>);
+              <?php // / The base address is posted as streamBaseURL, which is the name the core reads. ?>
+              <?php echo json_encode(array('extension' => 'streamextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userstreamfilename'.$ConvertGuiCounter1, 'streamBaseURL' => 'streamBaseURL'.$ConvertGuiCounter1)); ?>);
           </script>
 
         </div>
@@ -805,7 +846,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         if (in_array($extension, $ModelArray) && in_array('Model', $SupportedConversionTypes)) {
         ?>
         <div id='modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"></p>
+          <p style="max-width:<?php echo $GuiWidth; ?>;"></p>
           <p><strong><?php echo $Gui2Text48; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type="text" id='usermodelfilename<?php echo $ConvertGuiCounter1; ?>' name='usermodelfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='modelextension<?php echo $ConvertGuiCounter1; ?>' name='modelextension<?php echo $ConvertGuiCounter1; ?>'>
@@ -827,7 +868,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         if ($extension === 'scad' && in_array('Scad', $SupportedConversionTypes)) {
         ?>
         <div id='scadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='scadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"></p>
+          <p style="max-width:<?php echo $GuiWidth; ?>;"></p>
           <p><strong><?php echo $Gui2Text79; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type="text" id='userscadfilename<?php echo $ConvertGuiCounter1; ?>' name='userscadfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='scadextension<?php echo $ConvertGuiCounter1; ?>' name='scadextension<?php echo $ConvertGuiCounter1; ?>'>
@@ -849,7 +890,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         if (in_array($extension, $SubtitleInputArray) && in_array('Subtitle', $SupportedConversionTypes)) {
         ?>
         <div id='subtitleOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='subtitleOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"></p>
+          <p style="max-width:<?php echo $GuiWidth; ?>;"></p>
           <p><strong><?php echo $Gui2Text75; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type="text" id='usersubtitlefilename<?php echo $ConvertGuiCounter1; ?>' name='usersubtitlefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='subtitleextension<?php echo $ConvertGuiCounter1; ?>' name='subtitleextension<?php echo $ConvertGuiCounter1; ?>'>
@@ -871,7 +912,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         if (in_array($extension, $DrawingArray) && in_array('Drawing', $SupportedConversionTypes)) {
         ?>
         <div id='drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"></p>
+          <p style="max-width:<?php echo $GuiWidth; ?>;"></p>
           <p><strong><?php echo $Gui2Text49; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type="text" id='userdrawingfilename<?php echo $ConvertGuiCounter1; ?>' name='userdrawingfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='drawingextension<?php echo $ConvertGuiCounter1; ?>' name='drawingextension<?php echo $ConvertGuiCounter1; ?>'>
@@ -893,7 +934,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         if (in_array($extension, $SVGInputArray) && in_array('SVG', $SupportedConversionTypes)) {
         ?>
         <div id='svgOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='svgOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
-          <p style="max-width:1000px;"></p>
+          <p style="max-width:<?php echo $GuiWidth; ?>;"></p>
           <p><strong><?php echo $Gui2Text49; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type="text" id='svgfilename<?php echo $ConvertGuiCounter1; ?>' name='usersvgfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='svgextension<?php echo $ConvertGuiCounter1; ?>' name='svgextension<?php echo $ConvertGuiCounter1; ?>'>

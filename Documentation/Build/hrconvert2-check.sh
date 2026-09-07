@@ -12,7 +12,7 @@
 # / on a server for users of any web browser without authentication.
 # /
 # / File Information ...
-# / v3.9.1.
+# / v3.9.2.
 # / This file is a SECOND OPINION on the source & is not the authoritative one.
 # / hrconvert2-check.py is authoritative. This exists so two implementations written in
 # / two languages can be asked the same question, & so a disagreement between them is a
@@ -129,7 +129,13 @@ prepare() {
 
 # / Every PHP file this project owns. A data location & a log directory hold no source.
 php_files() {
+  # / A build tool is a harness rather than application code & is never linted.
+  # / They define stubs named for real functions, take deliberately terse parameters & exit
+  # / in more than one place, all correct for a test & wrong for the application.
+  # / The python tool excludes the same directory. The two must agree or the disagreement
+  # / is itself the bug this pair exists to catch.
   find . -name '*.php' -not -path './.git/*' -not -path './DATA/*' -not -path './Logs/*' \
+    -not -path './Documentation/Build/*' \
     -not -path './node_modules/*' | sort
 }
 
@@ -271,6 +277,10 @@ check_caps() {
         body = substr(line, 5)
         sub(/^[[:space:]]+/, "", body)
         if (length(body) < 12) next
+        # / A file header LABEL is structure rather than shouting. The ellipsis is what
+        # / tells it apart from a sentence somebody wrote in capitals.
+        # / The python tool exempts the same shape. The two must agree.
+        if (body ~ /\.\.\.[[:space:]]*$/) next
         letters = 0; upper = 0
         for (i = 1; i <= length(body); i++) {
           c = substr(body, i, 1)

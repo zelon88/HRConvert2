@@ -129,6 +129,124 @@ WHAT TO GATHER BEFORE ASKING FOR HELP.
 
 ---------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31009, <SESSION_IDENTIFIER>: The installation location resolved to a system directory & was NOT deleted. Check $InstLoc in config.php.
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  An update was about to delete the installation & replace it, & the path it was given
+  resolved to a directory the operating system needs.
+  NOTHING WAS DELETED. This is the guard working, not a failure of the update.
+  Correct $InstLoc in config.php & run the update again. The path is resolved through
+  symlinks & .. before it is judged, so check what it actually points at rather than what
+  it looks like.
+---------------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31010, <SESSION_IDENTIFIER>: The backup location resolved to a system directory & was NOT emptied. Check $BackupLoc in config.php.
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A backup was about to empty its destination & the path resolved to a directory the
+  operating system needs.
+  NOTHING WAS DELETED. Correct $BackupLoc in config.php.
+  An empty $BackupLoc is fine & means backups are off. A wrong one is not.
+---------------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32015, <SESSION_IDENTIFIER>: The Environment Manager timer could not be written to <PATH>!
+
+FILE
+  Resources/SetupCore/setupCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  One of the two unit files could not be written to /etc/systemd/system.
+  The service & the timer are written together, so this reports either one failing.
+  The usual cause is a read only /etc or a full disk. Neither is specific to this
+  application, & the listener unit would fail the same way at the same moment.
+  Nothing else is affected. The Environment Manager still runs by hand.
+
+    sudo php convertCore.php --run-environment-manager
+---------------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32016, <SESSION_IDENTIFIER>: The Environment Manager timer was written & could not be enabled!
+
+FILE
+  Resources/SetupCore/setupCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Both unit files exist & systemctl refused to enable the timer.
+  The files are correct, so this is systemd declining rather than a fault in what was
+  written. Read what it said & enable it by hand once the cause is dealt with.
+
+    sudo systemctl enable --now hrconvert2-environment.timer
+
+  A timer that is written & not enabled changes nothing. The manager is simply not
+  scheduled, which is the same state a new installation is in.
+---------------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-36000, <SESSION_IDENTIFIER>: The Environment Manager was
+  started as <USER> & requires root. Nothing was checked.
+
+FILE
+  Resources/Engine/Managers/environmentManager.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The Environment Manager reads AppArmor policies & kernel settings that only root can read,
+  so a pass by any other account reports every one of them as unreadable & logs a page of
+  failures that mean nothing. It refuses instead.
+  This is not a fault in the manager. It is the manager saying it was started the wrong way.
+  Run it as root, or leave it to the systemd timer that already does.
+
+    sudo php convertCore.php --run-environment-manager
+---------------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13107, <SESSION_IDENTIFIER>: A hybrid bootable image requires the
   isohybrid utility from syslinux-utils, which is missing or too old!
 
@@ -387,9 +505,15 @@ ERROR DESCRIPTION
   in the message.
   An undefined setting reads as NULL in PHP, which silently becomes FALSE or zero at every
   point of use, so a missing setting is a silently changed behaviour rather than an error.
-  Run --setup --merge-config as root, which adds every missing setting at its default &
-  leaves every existing value alone.
-  A backup is written before anything is changed.
+  Run --config --repair as root. It adds every missing setting at its shipped default,
+  inside the section that setting belongs to, & does not touch one existing value.
+  A backup is written before anything is changed & the file is checked with php -l before
+  it replaces the original, so a repair that would not parse never lands.
+
+    sudo php convertCore.php --config --repair
+
+  The version stamp is reported & never enforced by that utility. An out of date file is
+  exactly the file somebody has opened it to fix.
 ---------------------------------------------------------------------------------------------------------
 
 

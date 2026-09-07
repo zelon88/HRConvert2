@@ -32,12 +32,18 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.8.3';
+$LanguageVersion = 'v3.9.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
 // / Set the side of the page to float elements to.
 $GUIAlignment = 'left';
+// / Which end of a dropdown the arrow sits at, as a percentage across the control.
+// / This pack knows its own reading direction & is therefore the right place to decide.
+// / A reader finishes at the left of a right to left line, so the arrow belongs there.
+// / An arrow pinned to the right edge sits at the START of the box in this language &
+// / reads as a stray icon rather than as the thing that opens the list.
+$SelectArrowSide = ($GUIAlignment === 'right') ? '4%' : '96%';
 // / Define an error message to display for if the core has not been loaded.
 $CoreError = 'ERROR!!! HRConvert2-2, 该文件无法处理您的请求！ 请将您的文件提交到convertCore.php！';
 // / Check if the core is loaded.
@@ -79,7 +85,7 @@ $GuiSelectorText4 = '显示语言、颜色和界面选项';
 
 // / -----------------------------------------------------------------------------------
 // / Set GUI - 1 Related Variables.
-// / Online File Converter, Extractor, Compressor'
+// / 'Online File Converter, Extractor, Compressor'
 $Gui1Text1 = '在线文件转换器、提取器、压缩器';
 // / $ApplicationName.' is based off the open-source web-app <a href=\'https://github.com/zelon88/HRConvert2\'>HRConvert2</a> by <a href=\'https://github.com/zelon88\'>Zelon88</a> that converts files without tracking users across the net or infringing on your intellectual property.'
 $Gui1Text2 = $ApplicationName.' 基于 <a href=\'https://github.com/zelon88\'>Zelon88</a> 开发的开源网络应用 <a href=\'https://github.com/zelon88/HRConvert2\'>HRConvert2</a> 转换文件时不会跟踪网络上的用户或侵犯您的知识产权。';
@@ -258,7 +264,7 @@ $Gui2Text45 = '转换此音频';
 $Gui2Text46 = '转换该视频';
 // / 'Convert This Stream'
 $Gui2Text47 = '转换此流';
-// / Convert This 3D Model'
+// / 'Convert This 3D Model'
 $Gui2Text48 = '转换此 3D 模型';
 // / 'Convert This Technical Drawing Or Vector File'
 $Gui2Text49 = '转换此技术绘图或矢量文件';
@@ -326,6 +332,12 @@ $Gui2Text80 = '渲染模型';
 $Gui2Text81 = '转换此电子书';
 // / 'Convert E-Book'
 $Gui2Text82 = '转换电子书';
+// / 'Playlist source URL, only needed if the playlist uses relative paths'
+$Gui2Text83 = '播放列表来源网址，仅当列表使用相对路径时需要';
+// / 'Download A File From A URL'
+$Gui2Text84 = '从网址下载文件';
+// / 'Fetch'
+$Gui2Text85 = '获取';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

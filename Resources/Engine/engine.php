@@ -13,7 +13,7 @@
 // / that carries it.
 // /
 // / File Information ...
-// / v3.9.1.
+// / v3.9.2.
 // / This file is the Engine. It provides the environment an application runs in.
 // / It is pinned EXACTLY by the application via $RequiredEngineVersion.
 // / Error block 35000 through 35019 reserved. None are used yet.
@@ -54,7 +54,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-35000,
 
 // / -----------------------------------------------------------------------------------
 // / The version of this Engine. Read by the application WITHOUT executing this file.
-$EngineVersion = 'v3.9.1';
+$EngineVersion = 'v3.9.2';
 // / -----------------------------------------------------------------------------------
 
 
@@ -287,46 +287,43 @@ function validateStartupKey($keyPurpose, $suppliedKey, $singleUse = FALSE) {
 // / has drifted is reported & does not fail the check, because conversions still run.
 function validateOperatingEnvironment() {
   // / Set variables.
-  global $RequireSandbox, $RunningInContainer, $RequireSandboxOnDocker, $EnableMemoryProtection;
+  global $RequireSandbox, $RunningInContainer, $RequireSandboxOnDocker, $EngineEnvironmentProvider, $EnableMemoryProtection;
   $EnvironmentIsReady = TRUE;
   $EnvironmentFindings = array();
-  $sandboxIsRequired = $policyIsValid = $kernelIsReady = $dataIsProtected = FALSE;
-  $policyStatus = $exposureStatus = $exposureDetail = '';
-  $kernelFindings = $kernelFinding = array();
+  $sandboxIsRequired = $providerIsReady = FALSE;
+  $environmentProvider = '';
+  $providerFindings = $providerFinding = array();
   // / The sandbox is the one thing a conversion cannot proceed without when it is required.
   $sandboxIsRequired = (bool)$RequireSandbox;
   if ($RunningInContainer && !$RequireSandboxOnDocker) $sandboxIsRequired = FALSE;
-  // / Report the kernel settings first. A sandbox failure is almost always one of these &
-  // / naming the setting is more use than naming the symptom.
-  list ($kernelIsReady, $kernelFindings) = verifySandboxKernel(FALSE);
-  foreach ($kernelFindings as $kernelFinding) $EnvironmentFindings[] = $kernelFinding;
-  if (!$kernelIsReady) $EnvironmentIsReady = FALSE;
+  // / The Engine checks what the ENGINE provides & nothing else.
+  // / Bubblewrap is the one thing here that belongs to it, because sandboxCommand is what
+  // / builds the namespace & this is that namespace being proved.
   if (verifyBwrap() === FALSE) {
     $EnvironmentFindings[] = array('Check' => 'Sandbox', 'Status' => 'FAILED', 'Detail' => 'Bubblewrap cannot build a namespace.'.($sandboxIsRequired ? ' Every conversion will be refused.' : ' Conversions will run unprotected.'));
     if ($sandboxIsRequired) $EnvironmentIsReady = FALSE; }
   else $EnvironmentFindings[] = array('Check' => 'Sandbox', 'Status' => 'ok', 'Detail' => 'Bubblewrap can build a namespace.');
-  // / Policies are validated & never repaired here. A drifted policy is reported.
-  // / The status word is reported as it is, rather than flattened to ok, & the sentence
-  // / beside it says whether anything needs doing. Flattening lost the difference between
-  // / a policy that matches & a host that never needed one.
-  list ($policyIsValid, $policyStatus) = verifySandboxPolicy(FALSE);
-  $EnvironmentFindings[] = array('Check' => 'Sandbox AppArmor', 'Status' => policyDisplayStatus($policyStatus), 'Detail' => describePolicyStatus('Sandbox AppArmor', $policyStatus));
-  list ($policyIsValid, $policyStatus) = verifyImageMagickPolicy(FALSE);
-  $EnvironmentFindings[] = array('Check' => 'ImageMagick policy', 'Status' => policyDisplayStatus($policyStatus), 'Detail' => describePolicyStatus('ImageMagick', $policyStatus));
-  list ($policyIsValid, $policyStatus) = verifyOpenScadPolicy(FALSE);
-  $EnvironmentFindings[] = array('Check' => 'OpenSCAD AppArmor', 'Status' => policyDisplayStatus($policyStatus), 'Detail' => describePolicyStatus('OpenSCAD AppArmor', $policyStatus));
-  // / The DATA tree is part of the environment & is counted with everything else.
-  // / It was reported separately & AFTER the summary line, so a run could print that every
-  // / check passed & then say the tree was exposed directly underneath it. A summary that
-  // / does not cover a check is worse than no summary, because it is read instead of the
-  // / thing it failed to include. It is a finding now, so the count is honest & an exposed
-  // / tree appears in the problems list where an operator is already looking.
-  list ($dataIsProtected, $exposureStatus, $exposureDetail) = verifyDataExposure();
-  $EnvironmentFindings[] = array('Check' => 'DATA exposure', 'Status' => ($exposureStatus === 'protected' ? 'ok' : strtoupper($exposureStatus)), 'Detail' => $exposureDetail);
+  // / Everything else an installation wants checked is the APPLICATION'S to check.
+  // / The kernel namespace settings, three AppArmor policies & the DATA exposure test all
+  // / used to be called from here by name, which meant the Engine could not load without an
+  // / application that happened to define those six functions. That is not a shared Engine.
+  // / The application names one provider in engineConfig.php & the Engine calls whatever it
+  // / was told, exactly as it reads $EngineSandboxProfiles rather than knowing any profile.
+  // / A provider returns a readiness boolean & a list of findings, same shape as this
+  // / function returns, & the two lists are concatenated.
+  // / An installation that declares none gets the Bubblewrap check & nothing else, which is
+  // / correct rather than degraded. Another application using this Engine has no AppArmor
+  // / policy for ImageMagick & should not be asked about one.
+  $environmentProvider = (isset($EngineEnvironmentProvider) && is_string($EngineEnvironmentProvider)) ? trim($EngineEnvironmentProvider) : '';
+  if ($environmentProvider !== '' && function_exists($environmentProvider)) {
+    list ($providerIsReady, $providerFindings) = $environmentProvider();
+    if (is_array($providerFindings)) foreach ($providerFindings as $providerFinding) $EnvironmentFindings[] = $providerFinding;
+    if ($providerIsReady === FALSE) $EnvironmentIsReady = FALSE; }
+  else if ($environmentProvider !== '') warningEntry('An environment provider named '.$environmentProvider.' was declared & is not defined. Only the Engine checks ran.');
   // / An exposed or broken tree does not stop a conversion, so it does not make the
   // / environment unready. It is reported loudly & the operator decides.
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $sandboxIsRequired, $policyIsValid, $policyStatus, $kernelIsReady, $kernelFindings, $kernelFinding, $dataIsProtected, $exposureStatus, $exposureDetail);
+  purgeSensitiveMemory($EnableMemoryProtection, $sandboxIsRequired, $environmentProvider, $providerIsReady, $providerFindings, $providerFinding);
   return array($EnvironmentIsReady, $EnvironmentFindings); }
 // / -----------------------------------------------------------------------------------
 
@@ -348,10 +345,10 @@ function getAcceptedManagers() {
   global $EnableMemoryProtection;
   $AcceptedManagers = array();
   $AcceptedManagers = array(
-    'coreManager.php' => 'v3.9.0',
-    'resourceManager.php' => 'v3.9.0',
-    'workerManager.php' => 'v3.9.0',
-    'requestManager.php' => 'v3.9.0');
+    'coreManager.php' => 'v3.9.2',
+    'resourceManager.php' => 'v3.9.2',
+    'workerManager.php' => 'v3.9.2',
+    'requestManager.php' => 'v3.9.2');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $AcceptedManagers is not purged, because it is the return value.
   purgeSensitiveMemory($EnableMemoryProtection);
@@ -500,7 +497,11 @@ function cleanFiles($path, $allowedRoots) {
   $defaultApps = array('.', '..');
   $variableIsSanitized = $CleanSuccess = $pathCheck = $pathIsContained = FALSE;
   $loopCheck = TRUE;
-  $dirContents = $allowedRoots = array();
+  // / $allowedRoots is a PARAMETER & is not initialized here. Listing it beside the locals
+  // / emptied the caller's authorization before a single root was read, so nothing was ever
+  // / contained & nothing was ever cleaned. The directory then failed its emptiness check &
+  // / the caller reported a failure on work that had succeeded.
+  $dirContents = array();
   $dirEntry = $childPath = $realPath = $realRoot = $allowedRoot = '';
   list ($path, $variableIsSanitized) = sanitize($path, FALSE);
   // / Assemble every location this function is permitted to operate inside.
@@ -515,7 +516,10 @@ function cleanFiles($path, $allowedRoots) {
     foreach ($allowedRoots as $allowedRoot) {
       if (empty($allowedRoot)) continue;
       $realRoot = realpath($allowedRoot);
-      if ($realRoot !== FALSE && strpos($realPath, $realRoot.$DirSep) === 0) {
+      // / A path is contained by a root it is EQUAL to as well as one it sits beneath.
+      // / Requiring a separator meant a caller authorizing exactly the directory it wanted
+      // / cleaned was refused, which is the most obvious way to call this function.
+      if ($realRoot !== FALSE && ($realPath === $realRoot or strpos($realPath, $realRoot.$DirSep) === 0)) {
         $pathIsContained = TRUE;
         break; } } }
   // / Make sure the selected directory is contained, sanitized, & actually a directory.
@@ -1850,6 +1854,51 @@ function isPubliclyRoutableIP($ipAddress) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to decide whether a path may be handed to a RECURSIVE operation.
+// / Accepts the path. Returns TRUE only when a recursive change to it cannot wreck the host.
+// /
+// / chown -R & chmod -R are the two most destructive things this application can do, & they
+// / run as root. A path that is empty, or missing, or is a system directory, would take the
+// / operating system with it & no backup short of a full image would bring it back.
+// /
+// / The only guard used to be that the path was not an empty string & was a directory.
+// / An administrator who set a data location to / or to /usr, or who left a trailing
+// / variable unset in a way that resolved to one, would have chowned the entire host to the
+// / web server account on the next --fix-permissions. There is no undo for that.
+// /
+// / Symbolic links & .. are resolved before judging, because /srv/data/../../ is / & a
+// / comparison against the text would not have noticed.
+// / A path this refuses is REPORTED rather than skipped silently. An installation pointed
+// / at a refused path is misconfigured & the operator needs to know which one.
+function pathIsSafeToModifyRecursively($candidatePath) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $PathIsSafe = FALSE;
+  $resolvedPath = $refusedPath = '';
+  $refusedPaths = array();
+  // / An EMPTY path is refused before realpath ever sees it.
+  // / realpath('') returns the current working directory rather than nothing, so an unset
+  // / configuration value resolved to wherever the process happened to be standing & passed
+  // / every check below. For the command line that is the installation root.
+  if (trim((string)$candidatePath) !== '') $resolvedPath = (string)@realpath((string)$candidatePath);
+  // / Everything below assumes a real directory. Nothing else is worth judging.
+  if ($resolvedPath !== '' && is_dir($resolvedPath)) {
+    $PathIsSafe = TRUE;
+    // / The filesystem root & every directory an operating system needs to boot.
+    // / A recursive change to any of these is unrecoverable on a running host.
+    $refusedPaths = array('/', '/bin', '/boot', '/dev', '/etc', '/home', '/lib', '/lib32',
+      '/lib64', '/media', '/mnt', '/opt', '/proc', '/root', '/run', '/sbin', '/srv', '/sys',
+      '/tmp', '/usr', '/var');
+    foreach ($refusedPaths as $refusedPath) {
+      if ($resolvedPath === $refusedPath) {
+        $PathIsSafe = FALSE;
+        break; } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $resolvedPath, $refusedPaths, $refusedPath, $candidatePath);
+  return $PathIsSafe; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to test whether an address falls inside a range written in CIDR notation.
 // / Accepts the address & the range. Returns TRUE when it does.
 // / IPv4 & IPv6 are compared as packed bytes, so a range of either family is written the
@@ -1916,6 +1965,64 @@ function dnsLookup($URLHost) {
   purgeSensitiveMemory($EnableMemoryProtection, $records, $record, $urlIP, $isPublic);
   return array($URLIP, $StreamContainsLAN, $LookupFailed); }
 // / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to fetch a URL an operator typed & place it in their session.
+// / Accepts the raw URL & the directory to write into. Returns whether it worked, the path
+// / it wrote & a reason.
+// /
+// / THIS IS THE ONE PLACE AN OPERATOR CAN MAKE THIS SERVER REACH OUT ON THEIR BEHALF, so
+// / every existing protection is used & none of it is re-implemented here.
+// / normalizeStreamBaseURL rebuilds the text into a URL, because sanitize() would return a
+// / filename rather than an address.
+// / gatherRemoteHostInfo resolves the name & refuses anything that is not publicly routable,
+// / which is the same check a URL found inside a playlist receives.
+// / downloadRemoteFileForInspection performs the fetch. It pins the address it was given
+// / with curl --resolve, follows no redirect, runs inside a namespace with a network & no
+// / resolver, & stops at the configured byte ceiling.
+// / The file is then MOVED into the session, so a fetch that failed leaves nothing behind.
+// /
+// / The name is taken from the URL path & is passed through sanitize(), which is correct
+// / here because a file name is exactly what sanitize() is for.
+// / A URL naming no file gets one, because a session file with no name cannot be listed,
+// / converted or deleted by the interface that has to show it.
+function fetchUserSuppliedURL($suppliedURL, $sessionDirectory) {
+  // / Set variables.
+  global $DirSep, $EnableMemoryProtection;
+  $FetchSucceeded = FALSE;
+  $FetchedPath = $FetchReason = '';
+  $baseIsUsable = $inspectionFailed = $resolutionFailed = $containsLAN = $lookupFailed = FALSE;
+  $downloadFailed = $wasTruncated = $nameIsSanitized = FALSE;
+  $cleanURL = $urlHost = $urlPort = $urlScheme = $urlIP = '';
+  $temporaryPath = $suggestedName = $targetPath = '';
+  $urlParts = array();
+  list ($baseIsUsable, $cleanURL, $FetchReason) = normalizeStreamBaseURL($suppliedURL);
+  if ($baseIsUsable) {
+    list ($inspectionFailed, $resolutionFailed, $containsLAN, $lookupFailed, $urlHost, $urlPort, $urlScheme, $urlIP) = gatherRemoteHostInfo($cleanURL);
+    if ($inspectionFailed) $FetchReason = 'The address was refused. '.($containsLAN ? 'It resolves to a private, reserved or loopback address.' : ($lookupFailed ? 'Its name could not be resolved.' : 'It did not pass inspection.'));
+    else {
+      list ($downloadFailed, $temporaryPath, $wasTruncated) = downloadRemoteFileForInspection($cleanURL, $urlHost, $urlPort, $urlIP, $urlScheme, 'user-'.bin2hex(random_bytes(8)));
+      if ($downloadFailed or $temporaryPath === '') $FetchReason = 'The address was accepted & nothing could be fetched from it.';
+      else {
+        $urlParts = @parse_url($cleanURL);
+        $suggestedName = isset($urlParts['path']) ? basename((string)$urlParts['path']) : '';
+        list ($suggestedName, $nameIsSanitized) = sanitize($suggestedName, TRUE);
+        if (!$nameIsSanitized or trim($suggestedName) === '' or $suggestedName === '.') $suggestedName = 'download-'.bin2hex(random_bytes(4));
+        $targetPath = rtrim((string)$sessionDirectory, $DirSep).$DirSep.$suggestedName;
+        // / A fetch never overwrites something already in the session.
+        if (file_exists($targetPath)) $targetPath = rtrim((string)$sessionDirectory, $DirSep).$DirSep.bin2hex(random_bytes(4)).'-'.$suggestedName;
+        if (!@rename($temporaryPath, $targetPath)) {
+          @unlink($temporaryPath);
+          $FetchReason = 'The file was fetched & could not be placed in the session.'; }
+        else {
+          $FetchedPath = $targetPath;
+          $FetchSucceeded = TRUE;
+          $FetchReason = 'Fetched '.basename($targetPath).' from '.$urlHost.'.'.($wasTruncated ? ' It reached the size ceiling & was truncated.' : ''); } } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $baseIsUsable, $inspectionFailed, $resolutionFailed, $containsLAN, $lookupFailed, $downloadFailed, $wasTruncated, $nameIsSanitized, $cleanURL, $urlHost, $urlPort, $urlScheme, $urlIP, $temporaryPath, $suggestedName, $targetPath, $urlParts, $suppliedURL, $sessionDirectory);
+  return array($FetchSucceeded, $FetchedPath, $FetchReason); }
+// / -----------------------------------------------------------------------------------
+
 
 // / -----------------------------------------------------------------------------------
 // / A function to scan a stream URL received from a stream file such as .m3u8.
@@ -1999,6 +2106,69 @@ function gatherRemoteHostInfo($StreamURL) {
   purgeSensitiveMemory($EnableMemoryProtection, $networkPolicy, $engineAllowPlainHTTP, $allowedSchemes, $urlParts, $StreamDNSContainsLAN, $urlIsSanitized, $partsAreSanitized, $schemeIsSanitized, $hostIsSanitized);
   return array($InspectionFailed, $StreamURLResolutionFailed, $StreamContainsLAN, $LookupFailed, $URLHost, $URLPort, $URLScheme, $URLIP); }
 // / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to make an operator supplied base URL safe to resolve stream URIs against.
+// / Accepts the raw text. Returns whether it is usable, the rebuilt URL & a reason.
+// /
+// / sanitize() CANNOT be used on a URL, & that is not a shortcoming of sanitize().
+// / It removes the characters a filename must never contain, which are the same characters
+// / a URL is built from. https://example.com/hls/master.m3u8 comes back as
+// / example.comhlsmaster.m3u8, which is a filename & is not an address.
+// /
+// / So this REBUILDS rather than filters. The text is parsed, each component is judged on
+// / its own terms, & a new URL is assembled from the parts that passed. Nothing typed by an
+// / operator is carried through unexamined, which is the guarantee sanitize() gives by a
+// / different route.
+// /
+// / The scheme must be http or https. file, gopher & dict are how an SSRF reaches something
+// / an ordinary fetch never could.
+// / The host goes through sanitize(), because a host IS filename shaped & the ban hammer is
+// / exactly right for it. gatherRemoteHostInfo() treats a parsed host the same way.
+// / The path keeps only what a path may contain. A traversal segment is REMOVED rather than
+// / resolved, because a base address has no business holding one & guessing what was meant
+// / by it is worse than refusing.
+// / A query string & a fragment are discarded. A base is a directory to resolve against &
+// / neither contributes to that.
+// /
+// / Nothing here decides whether an address may be reached. Every URL this produces still
+// / goes through gatherRemoteHostInfo() & isPubliclyRoutableIP(), exactly as one read out of
+// / a playlist does. This makes the text into a URL. That decides whether it may be used.
+function normalizeStreamBaseURL($suppliedBaseURL) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $BaseIsUsable = FALSE;
+  $BaseURL = $BaseReason = '';
+  $urlParts = array();
+  $cleanHost = $cleanPath = $cleanPort = '';
+  $hostIsSanitized = FALSE;
+  $suppliedBaseURL = trim((string)$suppliedBaseURL);
+  if ($suppliedBaseURL === '') $BaseReason = 'No base address was supplied.';
+  else if (strlen($suppliedBaseURL) > 2048) $BaseReason = 'The base address is longer than any real one.';
+  else {
+    $urlParts = @parse_url($suppliedBaseURL);
+    if (!is_array($urlParts)) $BaseReason = 'The base address could not be read as a URL.';
+    else if (empty($urlParts['scheme']) or !in_array(strtolower($urlParts['scheme']), array('http', 'https'), TRUE)) $BaseReason = 'The base address must begin with http:// or https://.';
+    else if (empty($urlParts['host'])) $BaseReason = 'The base address names no host.';
+    else {
+      list ($cleanHost, $hostIsSanitized) = sanitize(strtolower($urlParts['host']), TRUE);
+      if (!$hostIsSanitized or $cleanHost === '' or $cleanHost !== strtolower($urlParts['host'])) $BaseReason = 'The host in the base address contains something a host name cannot.';
+      else {
+        // / A port is a number & anything else in that position is not a port.
+        if (isset($urlParts['port'])) $cleanPort = ':'.(int)$urlParts['port'];
+        $cleanPath = isset($urlParts['path']) ? (string)$urlParts['path'] : '/';
+        $cleanPath = preg_replace('#[^A-Za-z0-9._~/%+-]#', '', $cleanPath);
+        $cleanPath = str_replace('..', '', $cleanPath);
+        $cleanPath = preg_replace('#/+#', '/', $cleanPath);
+        if ($cleanPath === '' or $cleanPath[0] !== '/') $cleanPath = '/'.$cleanPath;
+        $BaseURL = strtolower($urlParts['scheme']).'://'.$cleanHost.$cleanPort.$cleanPath;
+        $BaseIsUsable = TRUE;
+        $BaseReason = 'The base address was accepted as '.$BaseURL.'.'; } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $urlParts, $cleanHost, $cleanPath, $cleanPort, $hostIsSanitized, $suppliedBaseURL);
+  return array($BaseIsUsable, $BaseURL, $BaseReason); }
+// / -----------------------------------------------------------------------------------
+
 
 // / -----------------------------------------------------------------------------------
 // / A function to turn a URI found inside a stream file into a complete, absolute URL.

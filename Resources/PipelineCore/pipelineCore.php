@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by convertCore.php WITHOUT executing this file.
-$PipelineCoreVersion = 'v3.9.1';
+$PipelineCoreVersion = 'v3.9.2';
 // / -----------------------------------------------------------------------------------
 
 
@@ -52,19 +52,19 @@ function getAcceptedPipelines() {
   // / There is no built in dispatcher left behind it. Comment one out only to test that.
   // / Adding a community pipeline is one line here plus a version bump on this file.
   $AcceptedPipelines = array(
-    'Stream' => 'v3.8.8',
-    'Scad' => 'v3.8.8',
+    'Stream' => 'v3.9.2',
+    'Scad' => 'v3.9.2',
     'OCR' => 'v3.8.8',
     'Document' => 'v3.8.8',
     'Subtitle' => 'v3.8.8',
     'SVG' => 'v3.8.8',
     'Drawing' => 'v3.8.8',
     'Image' => 'v3.8.8',
-    'Model' => 'v3.9.0',
-    'Video' => 'v3.9.0',
+    'Model' => 'v3.9.2',
+    'Video' => 'v3.9.2',
     'Ebook' => 'v3.8.8',
     'Audio' => 'v3.8.8',
-    'Archive' => 'v3.8.8');
+    'Archive' => 'v3.9.2');
   return $AcceptedPipelines; }
 // / -----------------------------------------------------------------------------------
 

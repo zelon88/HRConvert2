@@ -201,7 +201,8 @@ function verifyConfigVersion($RequiredConfigVersion) {
     'UserMediaInputArray', 'UserMediaOutputArray', 'UserBootableIsoArray',
     'UserVideoInputArray', 'UserVideoOutputArray', 'UserStreamArray',
     'UserDrawingArray', 'UserSVGInputArray', 'UserSVGOutputArray', 'UserModelArray',
-    'UserModelInputArray', 'UserModelOutputArray',
+    'UserModelInputArray', 'UserModelOutputArray', 'EnvironmentManagerMayRepair', 'AllowUserURLDownload', 'GuiMaxWidth',
+    'EnvironmentManagerMayRewriteConfigs',
     'UserDrawingInputArray', 'UserDrawingOutputArray', 'UserImageInputArray',
     'UserImageOutputArray', 'UserSCADInputArray', 'UserSCADOutputArray',
     'UserSCADArray', 'UserSubtitleInputArray', 'UserSubtitleOutputArray', 'UserPDFWorkArr',
@@ -424,7 +425,15 @@ function purgeSensitiveMemory($FailureIsFatal, &...$variables) {
     // / Drop the reference. This is a permanent property of the type rather than an event,
     // / so it is recorded as normal activity & not as a warning.
     if (!$variableIsDestroyed) {
-      if ($loggingIsReady && $Verbose) logEntry('Dropped unshreddable reference type '.gettype($variable).' for the '.$callerName.' function.');
+      // / A RESOURCE is expected to be unshreddable & saying so is noise rather than news.
+      // / A socket handle holds no bytes this process can overwrite, so dropping the
+      // / reference is the only thing available & is exactly the right outcome.
+      // / Every manager pass closes several sockets & logging each one buried the entries
+      // / an operator actually needs to see.
+      // / Any OTHER type reaching here is still reported. An object that cannot be
+      // / shredded is worth knowing about, because it may hold a value in a property this
+      // / function never reached.
+      if ($loggingIsReady && $Verbose && strpos(gettype($variable), 'resource') === FALSE) logEntry('Dropped unshreddable reference type '.gettype($variable).' for the '.$callerName.' function.');
       $variable = NULL;
       if (is_null($variable)) $variableIsDestroyed = TRUE; }
     // / Halt or alert only once the fallback above has also failed to release the variable.
@@ -640,7 +649,7 @@ function resolveSecretFile($secretFile, $requiredSecretVersion) {
 function verifyInstallation() {
   // / Set variables.
   global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $LogFile, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $SecretFile, $RequiredSecretVersion, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumImageVersion, $UsePyMeshLab, $MinimumMeshlabVersion, $MinimumAssimpVersion, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $Minimum7zVersion, $MinimumZipVersion, $MinimumRarVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumDiaVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection, $ResourceAwarenessActive, $EnableResourceAwareness, $RequireResourceAwareness, $ManagerSocketDir, $DirSep, $CoreManagerVersion, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $CoreLoaded, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $RequiredSetupCoreVersion, $RequiredConfigScript, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $RequiredEngineVersion, $AllowUnprivilegedNamespaces, $MaintainHTAccess,
-    $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray;
+    $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth;
   putenv('HOME='.$HomeLoc);
   $CoreLoaded = TRUE;
   $InstallationIsVerified = $RunningFromCLI = $RunningAsRoot = $RunningInContainer = FALSE;
@@ -687,25 +696,25 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
-  $HRConvertVersion = 'v3.9.1';
+  $HRConvertVersion = 'v3.9.2';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
   // / A release that changes no settings leaves this alone, so existing config files keep working.
   // / Any config.php version that is greater (newer) than the version listed below is considered acceptable.
-  $RequiredConfigVersion = 'v3.9.1';
+  $RequiredConfigVersion = 'v3.9.2';
   $RequiredConfigVersion = ltrim($RequiredConfigVersion, 'vV');
   // / Define the minimum acceptable GUI version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / Gui version that do not exactly match the version listed below are not considered acceptable.
   // / This is because Guis are not always guaranteed to be forward or reverse compatible.
-  $RequiredGuiVersion = 'v3.8.3';
+  $RequiredGuiVersion = 'v3.9.2';
   $RequiredGuiVersion = ltrim($RequiredGuiVersion, 'vV');
   // / Define the minimum acceptable Language Pack version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / Language version that do not exactly match the version listed below are not considered acceptable.
   // / This is because Language Packs are not always guaranteed to be forward or reverse compatible.
-  $RequiredLanguageVersion = 'v3.8.3';
+  $RequiredLanguageVersion = 'v3.9.2';
   $RequiredLanguageVersion = ltrim($RequiredLanguageVersion, 'vV');
   // / The Core Manager component version this core requires.
   // / This is an EXACT match. A component built for another core may not be called safely.
@@ -716,30 +725,30 @@ function verifyInstallation() {
   // / Setup Core holds the configuration model, so this MUST be raised whenever
   // / $RequiredConfigVersion is raised. Forgetting does not break anything immediately.
   // / The utility reports a variable it does not know as unaccounted & carries on.
-  $RequiredSetupCoreVersion = 'v3.8.6';
+  $RequiredSetupCoreVersion = 'v3.9.2';
   $RequiredSetupCoreVersion = ltrim($RequiredSetupCoreVersion, 'vV');
   // / The Dependency Core component version this core requires.
   // / This is an EXACT match. A component built for another core may not be called safely.
-  $RequiredDependencyCoreVersion = 'v3.9.1';
+  $RequiredDependencyCoreVersion = 'v3.9.2';
   $RequiredDependencyCoreVersion = ltrim($RequiredDependencyCoreVersion, 'vV');
   // / The dependency manifest version this core requires.
   // / Raise this whenever a dependency is added, removed, or its minimum version moves.
   // / A manifest from another release may name a package that no longer exists.
-  $RequiredDependsVersion = 'v3.9.1';
+  $RequiredDependsVersion = 'v3.9.2';
   $RequiredDependsVersion = ltrim($RequiredDependsVersion, 'vV');
   // / The Pipeline Core component version this core requires.
   // / This is an EXACT match. A component built for another core may declare an entry point
   // / whose arguments have moved, or capabilities this core cannot honour.
   // / Raise this whenever a pipeline is added, removed, or its own version pin moves.
   // / The manager carries the pin list for every pipeline it accepts.
-  $RequiredPipelineCoreVersion = 'v3.9.1';
+  $RequiredPipelineCoreVersion = 'v3.9.2';
   // / The Engine version this application requires.
   // / This is an EXACT match & it is free, because the Engine is bundled with this release
   // / rather than installed beside it. The updater replaces both together, so the pin & the
   // / file it points at cannot drift apart on an installation nobody has edited by hand.
   // / An administrator who edits the Engine by hand loses the edit at the next update. That
   // / is the same bargain every bundled component makes.
-  $RequiredEngineVersion = 'v3.9.1';
+  $RequiredEngineVersion = 'v3.9.2';
   $RequiredEngineVersion = ltrim($RequiredEngineVersion, 'vV');
   $RequiredPipelineCoreVersion = ltrim($RequiredPipelineCoreVersion, 'vV');
   // / The bootstrap script version this core expects.
@@ -1300,7 +1309,7 @@ function verifyTokens($Token1, $Token2) {
 // / A function to verify that all required POST & GET inputs are properly sanitized.
 function verifyInputs() {
   // / Set variables.
-  global $ShowGUI, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly;
+  global $ShowGUI, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $StreamBaseURL, $UserURLDownload;
   $var = FALSE;
   $InputsAreVerified = TRUE;
   $GUI = $Color = $Language = $Token1 = $Token2 = $Height = $Width = $Rotate = $Bitrate = $Method = $Download = $UserFilename = $UserExtension = $Archive = $UserScanType = $ScanAll = $UserClamScan = $UserScanCoreScan = $var = '';
@@ -1336,6 +1345,8 @@ function verifyInputs() {
   if (isset($_POST['Token2'])) list ($Token2, $variableIsSanitized[$key++]) = sanitize($_POST['Token2'], TRUE);
   if (isset($_POST['height'])) list ($Height, $variableIsSanitized[$key++]) = sanitize($_POST['height'], TRUE);
   if (isset($_POST['width'])) list ($Width, $variableIsSanitized[$key++]) = sanitize($_POST['width'], TRUE);
+  // / An empty base is the normal case & means the playlist must carry full URLs.
+  $StreamBaseURL = $UserURLDownload = '';
   if (isset($_POST['rotate'])) list ($Rotate, $variableIsSanitized[$key++]) = sanitize($_POST['rotate'], TRUE);
   if (isset($_POST['bitrate'])) list ($Bitrate, $variableIsSanitized[$key++]) = sanitize($_POST['bitrate'], TRUE);
   if (isset($_POST['method'])) list ($Method, $variableIsSanitized[$key++]) = sanitize($_POST['method'], TRUE);
@@ -1348,6 +1359,19 @@ function verifyInputs() {
   if (isset($_POST['userconvertfilename'])) list ($UserFilename, $variableIsSanitized[$key++]) = sanitize($_POST['userconvertfilename'], TRUE);
   if (isset($_POST['pdfworkSelected'])) list ($PDFWorkSelected, $variableIsSanitized[$key++]) = sanitize($_POST['pdfworkSelected'], TRUE);
   if (isset($_POST['convertSelected'])) list ($ConvertSelected, $variableIsSanitized[$key++]) = sanitize($_POST['convertSelected'], TRUE);
+  // / The stream base address is NOT passed through sanitize() & that is deliberate.
+  // / sanitize() removes the characters a filename must never hold, which are the ones a
+  // / URL is made of. It would return a filename rather than an address.
+  // / normalizeStreamBaseURL() in the Engine rebuilds it from parsed components instead &
+  // / applies sanitize() to the host, which is the one part that is filename shaped.
+  // / It is stored raw here & normalized at the point of use, so the reason a bad one was
+  // / refused can be reported to the operator who typed it.
+  if (isset($_POST['streamBaseURL'])) $StreamBaseURL = (string)$_POST['streamBaseURL'];
+  // / The download address is read raw for the same reason the stream base is. A URL that
+  // / has been through sanitize() is a filename & is no longer an address.
+  // / fetchUserSuppliedURL rebuilds it & every check a playlist URL receives is applied to
+  // / it before anything is fetched.
+  if (isset($_POST['userURLDownload'])) $UserURLDownload = (string)$_POST['userURLDownload'];
   if (isset($_POST['pdfextension'])) list ($UserExtension, $variableIsSanitized[$key++]) = sanitize($_POST['pdfextension'], TRUE);
   if (isset($_POST['userpdfconvertfilename'])) list ($UserFilename, $variableIsSanitized[$key++]) = sanitize($_POST['userpdfconvertfilename'], TRUE);
   if (isset($_POST['scanallbutton'])) list ($ScanAll, $variableIsSanitized[$key++]) = sanitize($_POST['scanallbutton'], TRUE);
@@ -1363,7 +1387,7 @@ function verifyInputs() {
   foreach ($variableIsSanitized as $var) if (!$var) ($InputsAreVerified = FALSE);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $variableIsSanitized, $key, $var);
-  return array($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType); }
+  return array($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType, $UserURLDownload); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1405,11 +1429,27 @@ function verifyColors($ButtonStyle) {
 // / A function to set the GUI to use for the session.
 function verifyGui() {
   // / Set variables.
-  global $GUI, $DefaultGui, $SupportedGuis, $AllowUserSelectableGui, $GuiFiles, $GuiDir, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $OrangeButtonCode, $PurpleButtonCode, $DarkButtonCode, $DefaultButtonCode, $Font, $GuiVersion, $RequiredGuiVersion, $EnableMemoryProtection, $CoreLoaded;
+  global $GUI, $DefaultGui, $SupportedGuis, $AllowUserSelectableGui, $GuiFiles, $GuiDir, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $OrangeButtonCode, $PurpleButtonCode, $DarkButtonCode, $DefaultButtonCode, $Font, $GuiVersion, $RequiredGuiVersion, $EnableMemoryProtection, $CoreLoaded, $GuiWidth, $GuiMaxWidth, $GUIAlignment;
+  // / The interface width is decided ONCE, here, before the stylesheet that uses it loads.
+  // / $GuiWidth is FLUID rather than fixed. min() takes whichever is smaller, so a phone is
+  // / bounded by its own viewport & a wide monitor by the configured ceiling.
+  // / A fixed pixel width does one of two wrong things. Too small & a large display wastes
+  // / most of itself. Too large & a phone scrolls sideways, which is the most irritating
+  // / thing an interface can do on a device held in one hand.
+  // / 96vw rather than 100vw leaves room for a scrollbar. A page sized to the whole viewport
+  // / gains a horizontal scrollbar the moment it gains a vertical one.
+  // / A value outside the sane range is a typo rather than a preference & the default is
+  // / used instead of trusting it.
+  // / This is what makes the separate Wide interface unnecessary. It differed from Original
+  // / by one number hardcoded in four files, & that number is a setting now.
+  $GuiWidth = 'min('.((isset($GuiMaxWidth) && (int)$GuiMaxWidth >= 600 && (int)$GuiMaxWidth <= 3840) ? (int)$GuiMaxWidth : 1400).'px, 96vw)';
+
   $reqFile = $GuiIsSet = FALSE;
   $GuiToUse = $defaultGui = 'Default';
   $GuiFiles = $guiFiles = array();
-  $defaultGuis = array('Default', 'Original', 'Wide');
+  // / Wide was removed at v3.9.1 & is not a fallback either. A fallback naming an
+  // / interface that is not installed is the failure this local list exists to prevent.
+  $defaultGuis = array('Default', 'Original');
   // / Make sure $SupportedGuis is valid.
   if (!isset($SupportedGuis) or !is_array($SupportedGuis)) $SupportedGuis = $defaultGuis;
   // / Make sure the Default GUI is valid.
@@ -1656,7 +1696,7 @@ function requestConvertLoc($dailyHash, $sessionHash) {
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
   global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $ProtectedRootDirs, $ResourcesDir, $BootloadersDir, $AllowBootableIsoImage, $UserBootableIsoArray, $BootableIsoArray, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $ManagerSocketDir, $ManagerSocketTimeout, $ManagerMessageBatchSize, $ManagerMessageSkew, $StartupKeyWindow, $ResourceAwarenessActive, $CoreManagerVersion, $EnableResourceAwareness, $RequireResourceAwareness, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EffectiveConversionLimits, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $AllowUnprivilegedNamespaces, $PipelineCoreActive, $PipelinesAreEnumerated, $Pipelines, $PipelineCount, $LogSequence, $LogBuffer, $LogBufferOverflowed, $LogRole, $EngineSandboxProfiles, $ModelInputArray, $ModelOutputArray, $ImageInputArray, $ImageOutputArray, $SCADInputArray, $DrawingInputArray, $DrawingOutputArray,
-    $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray;
+    $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth;
   // / Application related variables.
   $GlobalsAreVerified = $sanitizeGlobalCheck = $sanitizeGlobalCheckA = $sanitizeGlobalCheckB = $sanitizeGlobalCheckC = $sanitizeGlobalCheckD = $sanitizeGlobalCheckE = FALSE;
   $SleepTimer = 0;
@@ -1804,8 +1844,8 @@ function verifyGlobals() {
   // / list & a configuration missing either one never reaches this line.
   // / An earlier version read them with a fallback & left them out of that list, so an
   // / installation would keep starting on an old config. That was wrong twice over.
-  // / The required list is what --setup --merge-config scales itself from, so a setting
-  // / absent from it is never added to anybody's config & the fallback becomes permanent.
+  // / The required list is what the startup check reads, so a setting absent from it is
+  // / never verified & a fallback for it would become permanent.
   // / It is also how the core decides a configuration is valid at all.
   // / $UserModelArray remains required & still feeds $ModelArray, which other code reads.
   if (in_array('Model', $SupportedConversionTypes)) {
@@ -3757,14 +3797,17 @@ function showHelpInfo() {
 // / one falls through to the web interface, which is what a request with no arguments is.
 function parseCommandLine() {
   // / Set variables.
-  global $Lol, $DeleteThreshold, $ConvertLoc, $ConvertTempDir, $RunningFromCLI, $RunningAsRoot, $CurrentUser, $ApacheUser, $ResourceAwarenessActive, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $EnableMemoryProtection, $DirSep, $ProtectedRootDirs;
+  global $Lol, $DeleteThreshold, $ConvertLoc, $ConvertTempDir, $RunningFromCLI, $RunningAsRoot, $CurrentUser, $ApacheUser, $ResourceAwarenessActive, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $EnableMemoryProtection, $DirSep, $ProtectedRootDirs, $ManagerSocketTimeout, $InstLoc, $CoreLoaded;
   $CommandLineHandled = $cliTempCleaned = $cliTempDeepCleaned = $cliDataCleaned = $cliDataDeepCleaned = FALSE;
   $UserType = 'web';
   $cliArgumentCount = $cliThreshold = $cliPathsCorrected = 0;
   $cliArguments = $cliParts = $cliStatus = $listenerCommands = $setupCommands = array();
   $cliCommand = $rawFirstArg = $cliTarget = $cliSecondTarget = $cliWhoami = $cliSetupVersion = '';
   $cliConfirmed = $cliListenerAuthorized = $cliActionConfirmed = $cliPermissionsFixed = $cliListenerRunning = $cliSetupIsAvailable = FALSE;
-  $cliDependencyIsAvailable = $cliDependenciesReady = $cliSetupSucceeded = FALSE;
+  $cliDependencyIsAvailable = $cliDependenciesReady = $cliSetupSucceeded = $cliMessageDelivered = FALSE;
+  $cliMessageReply = $cliPassFindings = $cliPassFinding = array();
+  $cliPassCompleted = FALSE;
+  $cliEnvironmentFile = '';
   $cliDependencyVersion = $cliSubsystem = $cliDependencyToken = '';
   // / Capability detection reports how many dependencies were able to answer.
   $cliCacheWasBuilt = FALSE;
@@ -3882,6 +3925,20 @@ function parseCommandLine() {
       // / Each command loads only what it actually needs.
       // / --config needs Setup Core. --setup needs Dependency Core. An operator asking what
       // / is installed must not be stopped because a component they are not using is absent.
+      // / Every setup & config command is root only, & is refused here rather than partway
+      // / through its own work.
+      // / --detect-capabilities used to probe every installed dependency as a standard user
+      // / & then fail on the last line when it could not write the cache. Minutes of work
+      // / for a message that arrived too late to be useful.
+      // / --config writes to config.php, which a standard user cannot write either.
+      // / Nothing below this point is readable-only, so nothing below is worth attempting
+      // / without the privilege to finish it.
+      else if (in_array($cliCommand, $setupCommands, TRUE) && !$RunningAsRoot) {
+        warningEntry('A setup command was refused for an unauthorized user.');
+        print($Lol.'The '.$cliCommand.' command is only available to root.'.$Lol);
+        print('You are running as '.$cliWhoami.'.'.$Lol);
+        print($Lol.'  sudo php convertCore.php '.$cliCommand.$Lol.$Lol);
+        $CommandLineHandled = TRUE; }
       else if (in_array($cliCommand, $setupCommands, TRUE)) {
         // / The configuration utility. Setup Core owns the model, so it is the only
         // / component this path requires.
@@ -3969,7 +4026,7 @@ function parseCommandLine() {
             else {
               logEntry('Command line invocation. Installing the listener service unit.');
               print($Lol.'Installing the listener service unit.'.$Lol);
-              installListenerService(TRUE);
+              installListenerService(TRUE, TRUE);
               print($Lol); } }
           // / These two install dependencies AND configure, so both components are needed.
           else if (in_array('--install-complete', $cliArguments, TRUE) or in_array('--reinstall-existing', $cliArguments, TRUE)) {
@@ -4033,7 +4090,20 @@ function parseCommandLine() {
           $cliActionConfirmed = confirmDestructiveAction('This ends every tracked conversion in progress. Users will lose work.', $cliConfirmed);
           if ($cliActionConfirmed) {
             warningEntry('Command line invocation. Terminating every tracked worker.');
-            print($Lol.'Terminated '.killTrackedWorkers().' tracked worker(s).'.$Lol); } }
+            // / The Resource Manager is ASKED to do this rather than the registry being walked
+            // / from here. It owns the registry & this process does not have one.
+            // / An earlier version called killTrackedWorkers() with no argument at all. That
+            // / function takes the registry by reference & has no default, so the command was a
+            // / fatal every time somebody confirmed it, which is the worst moment to fail.
+            // / kill-tracked is a request type the Resource Manager already answers, & it is
+            // / what the Worker Manager sends for the same purpose.
+            list ($cliMessageDelivered, $cliMessageReply) = sendManagerMessage(buildManagerSocketPath('resource-manager'), array('RequestType' => 'kill-tracked'), $ManagerSocketTimeout);
+            if ($cliMessageDelivered && isset($cliMessageReply['Reason'])) print($Lol.$cliMessageReply['Reason'].$Lol);
+            else if ($cliMessageDelivered) print($Lol.'The Resource Manager accepted the request & said nothing about it.'.$Lol);
+            else {
+              warningEntry('The Resource Manager could not be reached, so no tracked worker was ended.');
+              print($Lol.'The Resource Manager is not reachable. Nothing was ended.'.$Lol);
+              print('Start the listener, or use --kill-every-worker to end every process directly.'.$Lol); } } }
         // / End every PHP process owned by the web server user.
         // / This reaches unrelated applications sharing the host & says so before it runs.
         else if ($cliCommand === '--kill-every-worker') {
@@ -4045,7 +4115,34 @@ function parseCommandLine() {
       // / Gate root-only, filesystem breaking command line operations behind a security context awareness check.
       else if ($RunningAsRoot) {
         // / Handle the -fp or --fix-permissions arguments.
-        if ($cliCommand === '-fp' or $cliCommand === '--fix-permissions') {
+        // / Root only, & it sits here rather than with the listener commands.
+        // / It was written into the listener block by mistake & was unreachable there,
+        // / because that block is only entered for a command in $listenerCommands.
+        // / It does not belong there anyway. A listener command is authorized for root OR
+        // / the web server account, & this one needs root & nothing less.
+        if ($cliCommand === '--run-environment-manager') {
+          // / This is NOT dispatched through dispatchManagerRole(). That path is for the four
+          // / roles the listener starts, each of which opens a socket & runs as the web server
+          // / account. This one is root, opens nothing & exits when it is done.
+          // / It is loaded here by name rather than through loadEngineManager() for the same
+          // / reason. Putting it in getAcceptedManagers() would make it dispatchable, & a root
+          // / role that the listener can reach is exactly what this design refuses to have.
+          $cliEnvironmentFile = $InstLoc.$DirSep.'Resources'.$DirSep.'Engine'.$DirSep.'Managers'.$DirSep.'environmentManager.php';
+          if (!file_exists($cliEnvironmentFile)) print($Lol.'The Environment Manager is not installed at '.$cliEnvironmentFile.'.'.$Lol);
+          else {
+            require_once ($cliEnvironmentFile);
+            if (!function_exists('runEnvironmentManager')) print($Lol.'The Environment Manager file is present & defines no entry point.'.$Lol);
+            else {
+              list ($cliPassCompleted, $cliPassFindings) = runEnvironmentManager();
+              if (!$cliPassCompleted) print($Lol.'The Environment Manager pass did not complete. It requires root.'.$Lol);
+              else {
+                print($Lol.'Environment Manager pass complete. '.count($cliPassFindings).' check(s) examined.'.$Lol);
+                foreach ($cliPassFindings as $cliPassFinding) {
+                  if (!isset($cliPassFinding['Status'])) continue;
+                  printf('  %-28s %-14s %s'.PHP_EOL, (isset($cliPassFinding['Check']) ? $cliPassFinding['Check'] : ''), (string)$cliPassFinding['Status'], (isset($cliPassFinding['Detail']) ? $cliPassFinding['Detail'] : '')); }
+                print($Lol); } } }
+          $CommandLineHandled = TRUE; }
+        else if ($cliCommand === '-fp' or $cliCommand === '--fix-permissions') {
           logEntry('Command line invocation. Correcting managed permissions.');
           print($Lol.'Correcting permissions on managed paths.'.$Lol);
           list ($cliPermissionsFixed, $cliPathsCorrected) = fixManagedPermissions();
@@ -4084,7 +4181,17 @@ function parseCommandLine() {
           reportUnrecognizedArgument($cliCommand, $subOptionOwners);
           $CommandLineHandled = TRUE; } }
       // / A root only command issued by a standard user is named rather than dismissed.
-      else if (in_array($cliCommand, array('-fp', '--fix-permissions', '-u', '--update', '-c', '--clean'), TRUE)) {
+      // / Every command that changes this host or ends somebody else's work is named here.
+      // / A standard user asking for one is TOLD it needs root rather than being allowed to
+      // / run it & watch it quietly achieve nothing.
+      // / --kill-every-worker was the reason this list grew. As a standard user it found
+      // / every worker, failed to signal a single one because they belong to another
+      // / account, & then logged that every process was terminated. Zero ended & the
+      // / sentence said otherwise, which is the worst combination available.
+      // / The listener commands are matched BEFORE this, so the destructive ones among them
+      // / are gated where they are handled rather than here. Naming them in this list would
+      // / read as protection & would never once be reached.
+      else if (in_array($cliCommand, array('-fp', '--fix-permissions', '-u', '--update', '-c', '--clean', '--run-environment-manager'), TRUE)) {
         warningEntry('A root only command was refused for an unauthorized user.');
         print($Lol.'The '.$cliCommand.' command is only available to root.'.$Lol);
         print('You are running as '.$cliWhoami.'.'.$Lol);
@@ -4098,7 +4205,7 @@ function parseCommandLine() {
   // / Determine if the user is using the application via command line (CLI) or Apache+PHP through a web browser.
   if ($CommandLineHandled === TRUE) $UserType = 'cli';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $cliCacheWasBuilt, $cliDetectedCount, $cliStartupKey, $cliArguments, $cliCommand, $cliArgumentCount, $rawFirstArg, $cliParts, $cliTarget, $cliSecondTarget, $cliThreshold, $cliTempCleaned, $cliTempDeepCleaned, $cliDataCleaned, $cliDataDeepCleaned, $cliConfirmed, $cliListenerAuthorized, $cliActionConfirmed, $cliPermissionsFixed, $cliListenerRunning, $cliPathsCorrected, $cliStatus, $cliWhoami, $cliSetupIsAvailable, $cliSetupVersion, $listenerCommands, $setupCommands, $cliDependencyIsAvailable, $cliDependencyVersion, $cliSubsystem, $cliDependencyToken, $cliDependencyFindings, $cliDependenciesReady, $cliSetupSucceeded, $cliSetupCount, $subOptionOwners, $cliOptionalProblems);
+  purgeSensitiveMemory($EnableMemoryProtection, $cliEnvironmentFile, $cliPassCompleted, $cliPassFindings, $cliPassFinding, $cliMessageDelivered, $cliMessageReply, $cliCacheWasBuilt, $cliDetectedCount, $cliStartupKey, $cliArguments, $cliCommand, $cliArgumentCount, $rawFirstArg, $cliParts, $cliTarget, $cliSecondTarget, $cliThreshold, $cliTempCleaned, $cliTempDeepCleaned, $cliDataCleaned, $cliDataDeepCleaned, $cliConfirmed, $cliListenerAuthorized, $cliActionConfirmed, $cliPermissionsFixed, $cliListenerRunning, $cliPathsCorrected, $cliStatus, $cliWhoami, $cliSetupIsAvailable, $cliSetupVersion, $listenerCommands, $setupCommands, $cliDependencyIsAvailable, $cliDependencyVersion, $cliSubsystem, $cliDependencyToken, $cliDependencyFindings, $cliDependenciesReady, $cliSetupSucceeded, $cliSetupCount, $subOptionOwners, $cliOptionalProblems);
   return array($CommandLineHandled, $UserType); }
 // / -----------------------------------------------------------------------------------
 
@@ -4383,6 +4490,60 @@ function getSandboxProfiles() {
   purgeSensitiveMemory($EnableMemoryProtection);
   return $SandboxProfiles; }
 // / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to report on the parts of the environment that belong to HRConvert2.
+// / Accepts nothing. Returns a readiness boolean & a list of findings, in that order.
+// / Each finding is an array of Check, Status & Detail, which is the shape the Engine
+// / appends to its own findings.
+// /
+// / The Engine calls this because engineConfig.php names it in $EngineEnvironmentProvider,
+// / & not because the Engine knows anything about it. It is handed over the same way
+// / getSandboxProfiles() above is, & for the same reason.
+// / Every check below is specific to this application. The kernel namespace settings, the
+// / three AppArmor policies & the DATA exposure test are HRConvert2's business, & another
+// / application on the same Engine has no ImageMagick policy to check.
+// /
+// / NOTHING HERE REPAIRS ANYTHING. Repair needs root & the listener does not have it, so a
+// / validator that tried would fail confusingly on every pass. It reports, & -fp fixes.
+// / A drifted policy is reported & does not fail readiness, because conversions still run.
+function applicationEnvironmentFindings() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $ApplicationIsReady = TRUE;
+  $ApplicationFindings = array();
+  $policyIsValid = $kernelIsReady = $dataIsProtected = FALSE;
+  $policyStatus = $exposureStatus = $exposureDetail = '';
+  $kernelFindings = $kernelFinding = array();
+  // / Report the kernel settings first. A sandbox failure is almost always one of these &
+  // / naming the setting is more use than naming the symptom.
+  list ($kernelIsReady, $kernelFindings) = verifySandboxKernel(FALSE);
+  foreach ($kernelFindings as $kernelFinding) $ApplicationFindings[] = $kernelFinding;
+  if (!$kernelIsReady) $ApplicationIsReady = FALSE;
+  // / Policies are validated & never repaired here. A drifted policy is reported.
+  // / The status word is reported as it is, rather than flattened to ok, & the sentence
+  // / beside it says whether anything needs doing. Flattening lost the difference between
+  // / a policy that matches & a host that never needed one.
+  list ($policyIsValid, $policyStatus) = verifySandboxPolicy(FALSE);
+  $ApplicationFindings[] = array('Check' => 'Sandbox AppArmor', 'Status' => policyDisplayStatus($policyStatus), 'Detail' => describePolicyStatus('Sandbox AppArmor', $policyStatus));
+  list ($policyIsValid, $policyStatus) = verifyImageMagickPolicy(FALSE);
+  $ApplicationFindings[] = array('Check' => 'ImageMagick policy', 'Status' => policyDisplayStatus($policyStatus), 'Detail' => describePolicyStatus('ImageMagick', $policyStatus));
+  list ($policyIsValid, $policyStatus) = verifyOpenScadPolicy(FALSE);
+  $ApplicationFindings[] = array('Check' => 'OpenSCAD AppArmor', 'Status' => policyDisplayStatus($policyStatus), 'Detail' => describePolicyStatus('OpenSCAD AppArmor', $policyStatus));
+  // / The DATA tree is part of the environment & is counted with everything else.
+  // / It was reported separately & AFTER the summary line, so a run could print that every
+  // / check passed & then say the tree was exposed directly underneath it. A summary that
+  // / does not cover a check is worse than no summary, because it is read instead of the
+  // / thing it failed to include.
+  // / An exposed tree does not stop a conversion, so it does not make the environment
+  // / unready. It is reported loudly & the operator decides.
+  list ($dataIsProtected, $exposureStatus, $exposureDetail) = verifyDataExposure();
+  $ApplicationFindings[] = array('Check' => 'DATA exposure', 'Status' => ($exposureStatus === 'protected' ? 'ok' : strtoupper($exposureStatus)), 'Detail' => $exposureDetail);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $policyIsValid, $policyStatus, $kernelIsReady, $kernelFindings, $kernelFinding, $dataIsProtected, $exposureStatus, $exposureDetail);
+  return array($ApplicationIsReady, $ApplicationFindings); }
+// / -----------------------------------------------------------------------------------
+
 
 
 
@@ -4853,6 +5014,11 @@ function updateApplication($requestedVersion) {
       warningEntry('The updated installation failed validation. Rolling back.');
       // / Return the data directory to the installation being restored.
       if (is_dir($InstLoc.$DirSep.'DATA')) @rename($InstLoc.$DirSep.'DATA', $oldDir.$DirSep.'DATA');
+      // / The installation is about to be REPLACED, so this deletes it. That is the single
+      // / most destructive line in this application & it runs as root.
+      // / A configuration pointing $InstLoc at a system directory would delete the operating
+      // / system instead. The guard resolves symlinks & .. before judging.
+      if (!pathIsSafeToModifyRecursively($InstLoc)) errorEntry('The installation location resolved to a system directory & was NOT deleted. Check $InstLoc in config.php. Path: '.$InstLoc.'.', 31009, TRUE);
       exec('rm -rf '.escapeshellarg($InstLoc).' 2>&1');
       // / Rollback is a single rename because the previous installation never left the
       // / filesystem it lived on. This is the reason .old exists at all.
@@ -4869,7 +5035,10 @@ function updateApplication($requestedVersion) {
   // / DATA is excluded. It holds live user sessions, it has already been moved into the
   // / new installation, & a copy of it would be swept on the delete threshold anyway.
   if ($UpdateSucceeded && is_dir($oldDir)) {
-    if (is_dir($BackupLoc)) exec('rm -rf '.escapeshellarg($BackupLoc).' 2>&1');
+    // / The backup location is emptied before a new backup is written into it.
+    // / A misconfigured $BackupLoc would empty whatever it points at instead.
+    if (is_dir($BackupLoc) && !pathIsSafeToModifyRecursively($BackupLoc)) errorEntry('The backup location resolved to a system directory & was NOT emptied. Check $BackupLoc in config.php. Path: '.$BackupLoc.'.', 31010, TRUE);
+    else if (is_dir($BackupLoc)) exec('rm -rf '.escapeshellarg($BackupLoc).' 2>&1');
     exec('cp -a '.escapeshellarg($oldDir).' '.escapeshellarg($BackupLoc).' 2>&1', $backupOutput, $backupExitCode);
     if ($backupExitCode === 0 && is_dir($BackupLoc)) {
       if (is_dir($BackupLoc.$DirSep.'DATA')) exec('rm -rf '.escapeshellarg($BackupLoc.$DirSep.'DATA').' 2>&1');
@@ -5030,8 +5199,9 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
 // / pack is required from inside this function. Nothing outside this call can read them.
 function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   // / Set variables.
-  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $LanguageBaselineFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $Verbose;
+  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $LanguageBaselineFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $Verbose, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth;
   $GUIDisplayed = FALSE;
+
   $guiUIFile = $GuiUI1File;
   $Files = array();
   $FileCount = 0;
@@ -6832,9 +7002,22 @@ function fixManagedPermissions() {
   else {
     $managedPaths = array($InstLoc, $ConvertLoc, $ConvertTemp, $LogDir, $HomeLoc, $ProprietaryLoc, $BackupLoc, $ManagerSocketDir);
     foreach ($managedPaths as $managedPath) {
-      if ($managedPath !== '' && is_dir($managedPath)) {
+      // / A recursive change as root is refused on anything that could take the host with
+      // / it. The guard resolves symlinks & .. before judging, so a data location that
+      // / points at / by accident is caught rather than obeyed.
+      // / A refusal is REPORTED. An installation aimed at a system directory is
+      // / misconfigured, & skipping it silently would leave the operator believing the
+      // / permissions had been corrected.
+      if ($managedPath !== '' && is_dir($managedPath) && !pathIsSafeToModifyRecursively($managedPath)) {
+        print('  '.str_pad('REFUSED', 12).$managedPath.' is a system directory & will not be changed recursively.'.$Lol);
+        warningEntry('A managed path resolved to a system directory & was refused. Check the data locations in config.php. Path: '.$managedPath.'.'); }
+      else if ($managedPath !== '' && is_dir($managedPath)) {
+        // / The same guard as --fix-permissions. A path is judged once & the same way
+        // / wherever a recursive change is about to happen.
+        if (!pathIsSafeToModifyRecursively($managedPath)) warningEntry('A managed path resolved to a system directory & was refused during setup. Path: '.$managedPath.'.');
+        else {
         exec('chown -R '.escapeshellarg($ApacheUser).':'.escapeshellarg($ApacheUser).' '.escapeshellarg($managedPath).' 2>&1', $commandOutput, $commandExitCode);
-        exec('chmod -R 0755 '.escapeshellarg($managedPath).' 2>&1', $commandOutput, $commandExitCode);
+        exec('chmod -R 0755 '.escapeshellarg($managedPath).' 2>&1', $commandOutput, $commandExitCode); }
         $PathsCorrected++; } }
     // / The socket directory is never world readable, whatever the sweep above set.
     if (is_dir($ManagerSocketDir)) exec('chmod 0700 '.escapeshellarg($ManagerSocketDir).' 2>&1', $commandOutput, $commandExitCode);
@@ -6888,7 +7071,7 @@ function fixManagedPermissions() {
     print($Lol.'Listener service'.$Lol);
     list ($setupIsAvailable, $setupVersion) = verifyCoreComponent('Setup Core', 'SetupCore'.$DirSep.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
     if (!$setupIsAvailable) print('  Skipped     The Setup Core component is unavailable.'.$Lol);
-    else installListenerService(TRUE);
+    else installListenerService(TRUE, TRUE);
     // / Prove the repairs worked. Writing an AppArmor profile & never re-testing the
     // / sandbox is how an operator ends up with a green permissions run & a server that
     // / refuses every conversion.
@@ -7026,7 +7209,7 @@ list ($InstallationIsVerified, $ConfigFile, $Version, $CoreLoaded) = verifyInsta
 if (!$InstallationIsVerified) quickDie('Could not verify installation!', 5);
 
 // / The following code verifies that string inputs to the core are properly sanitized.
-list ($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType) = verifyInputs();
+list ($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType, $UserURLDownload) = verifyInputs();
 if (!$InputsAreVerified) quickDie('Could not verify inputs!', 6);
 
 // / The following code verifies enough user information to generate a unique session identifier.
@@ -7293,6 +7476,26 @@ if (!$CommandLineHandled && $UserType === 'web') {
         $BudgetWasReleased = giveBackOperationBudget('OCR'); }
 
       // / The following code is performed when a user performs a virus scan on a selection of files.
+      // / A URL the operator typed is fetched into their session, & only when an
+      // / administrator has turned it on.
+      // / This server has no authentication, so an open fetcher is an open proxy & is off by
+      // / default. See --Allow User URL Download-- in config.php.
+      // / It takes an operation budget like every other unit of work, because a fetch costs
+      // / time & bandwidth & a queue of them is a queue.
+      if (isset($_POST['userURLDownload']) && trim($UserURLDownload) !== '') {
+        if (!$AllowUserURLDownload) {
+          warningEntry('A URL download was requested & the feature is disabled.');
+          print('Downloading from a URL is disabled on this server.'.$Lol); }
+        else if (!takeOperationBudget('user url download')) print($Alert3.$Lol);
+        else {
+          logEntry('Initiating a user requested download.');
+          list ($URLFetchSucceeded, $URLFetchedPath, $URLFetchReason) = fetchUserSuppliedURL($UserURLDownload, $ConvertDir);
+          if ($URLFetchSucceeded) logEntry('A user requested download completed. '.$URLFetchReason);
+          else warningEntry('A user requested download did not complete. '.$URLFetchReason);
+          print($URLFetchReason.$Lol);
+          giveBackOperationBudget('user url download'); } }
+
+
       if (isset($_POST['filesToScan']) && $AllowUserVirusScan) {
         if (!takeOperationBudget('user virus scan')) print($Alert3.$Lol);
         else {

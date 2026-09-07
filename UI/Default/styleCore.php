@@ -36,6 +36,14 @@
 
 // / Grey color scheme (default).
 $defaultButtonCode = '.info-button {
+/* / The file list panel, in a shade that belongs to this scheme.
+   / It was a hardcoded cream in every scheme, so six of the seven showed a pale panel
+   / on a page of an unrelated colour, & the dark scheme showed a bright one.
+   / One step from the page background rather than the same as it, so the panel still
+   / reads as a panel & still has an edge. */
+.file-list-panel {
+  background-color: #ffffff;
+  color: #333333; }
   -moz-box-shadow: 3px 4px 0px 0px #f3f6f4;
   -webkit-box-shadow: 3px 4px 0px 0px #f3f6f4;
   box-shadow: 3px 4px 0px 0px #f3f6f4;
@@ -62,7 +70,7 @@ $defaultButtonCode = '.info-button {
   text-shadow:0px 1px 0px #bcbcbc;
   min-width:100px; 
   width:250px;
-  max-width:1000px; }
+  max-width:<?php echo $GuiWidth; ?>; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #bcbcbc), color-stop(1, #eeeeee));
   background:-moz-linear-gradient(top, #bcbcbc 5%, #eeeeee 100%);
@@ -82,6 +90,14 @@ body {
 
 // / Green color scheme.
 $greenButtonCode = '.info-button {
+/* / The file list panel, in a shade that belongs to this scheme.
+   / It was a hardcoded cream in every scheme, so six of the seven showed a pale panel
+   / on a page of an unrelated colour, & the dark scheme showed a bright one.
+   / One step from the page background rather than the same as it, so the panel still
+   / reads as a panel & still has an edge. */
+.file-list-panel {
+  background-color: #f6fff3;
+  color: #2f4f2f; }
   -moz-box-shadow: 3px 4px 0px 0px #b9ccb3;
   -webkit-box-shadow: 3px 4px 0px 0px #b9ccb3;
   box-shadow: 3px 4px 0px 0px #b9ccb3;
@@ -108,7 +124,7 @@ $greenButtonCode = '.info-button {
   text-shadow:0px 1px 0px #1e9409;
   min-width:100px; 
   width:250px;
-  max-width:1000px; }
+  max-width:<?php echo $GuiWidth; ?>; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #298040), color-stop(1, #50c20e));
   background:-moz-linear-gradient(top, #298040 5%, #50c20e 100%);
@@ -128,6 +144,14 @@ body {
 
 // / Blue color scheme.
 $blueButtonCode = '.info-button {
+/* / The file list panel, in a shade that belongs to this scheme.
+   / It was a hardcoded cream in every scheme, so six of the seven showed a pale panel
+   / on a page of an unrelated colour, & the dark scheme showed a bright one.
+   / One step from the page background rather than the same as it, so the panel still
+   / reads as a panel & still has an edge. */
+.file-list-panel {
+  background-color: #f2f6fa;
+  color: #22303c; }
   -moz-box-shadow: 3px 4px 0px 0px #cfe2f3;
   -webkit-box-shadow: 3px 4px 0px 0px #cfe2f3;
   box-shadow: 3px 4px 0px 0px #cfe2f3;
@@ -154,7 +178,7 @@ $blueButtonCode = '.info-button {
   text-shadow:0px 1px 0px #16537e;
   min-width:100px; 
   width:250px;
-  max-width:1000px; }
+  max-width:<?php echo $GuiWidth; ?>; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #295680), color-stop(1, #2d60b2));
   background:-moz-linear-gradient(top, #295680 5%, #2d60b2 100%);
@@ -177,6 +201,14 @@ body {
 
 // / Red color scheme.
 $redButtonCode = '.info-button {
+/* / The file list panel, in a shade that belongs to this scheme.
+   / It was a hardcoded cream in every scheme, so six of the seven showed a pale panel
+   / on a page of an unrelated colour, & the dark scheme showed a bright one.
+   / One step from the page background rather than the same as it, so the panel still
+   / reads as a panel & still has an edge. */
+.file-list-panel {
+  background-color: #fff5f2;
+  color: #4f2f2f; }
   -moz-box-shadow: 3px 4px 0px 0px #bcbcbc;
   -webkit-box-shadow: 3px 4px 0px 0px #bcbcbc;
   box-shadow: 3px 4px 0px 0px #bcbcbc;
@@ -203,7 +235,7 @@ $redButtonCode = '.info-button {
   text-shadow:0px 1px 0px #660000;
   min-width:100px; 
   width:250px;
-  max-width:1000px; }
+  max-width:<?php echo $GuiWidth; ?>; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #9b443b), color-stop(1, #c20e0e));
   background:-moz-linear-gradient(top, #9b443b 5%, #c20e0e 100%);
@@ -223,6 +255,14 @@ body {
 
 // / Orange color scheme.
 $orangeButtonCode = '.info-button {
+/* / The file list panel, in a shade that belongs to this scheme.
+   / It was a hardcoded cream in every scheme, so six of the seven showed a pale panel
+   / on a page of an unrelated colour, & the dark scheme showed a bright one.
+   / One step from the page background rather than the same as it, so the panel still
+   / reads as a panel & still has an edge. */
+.file-list-panel {
+  background-color: #fffaf2;
+  color: #4f3a1f; }
   -moz-box-shadow: 3px 4px 0px 0px #ffdcb3;
   -webkit-box-shadow: 3px 4px 0px 0px #ffdcb3;
   box-shadow: 3px 4px 0px 0px #ffdcb3;
@@ -249,7 +289,7 @@ $orangeButtonCode = '.info-button {
   text-shadow:0px 1px 0px #803300;
   min-width:100px; 
   width:250px;
-  max-width:1000px; }
+  max-width:<?php echo $GuiWidth; ?>; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #b35900), color-stop(1, #ff9900));
   background:-moz-linear-gradient(top, #b35900 5%, #ff9900 100%);
@@ -269,6 +309,14 @@ body {
 
 // / Purple color scheme.
 $purpleButtonCode = '.info-button {
+/* / The file list panel, in a shade that belongs to this scheme.
+   / It was a hardcoded cream in every scheme, so six of the seven showed a pale panel
+   / on a page of an unrelated colour, & the dark scheme showed a bright one.
+   / One step from the page background rather than the same as it, so the panel still
+   / reads as a panel & still has an edge. */
+.file-list-panel {
+  background-color: #fbf7fd;
+  color: #3f2f4f; }
   -moz-box-shadow: 3px 4px 0px 0px #e1cfea;
   -webkit-box-shadow: 3px 4px 0px 0px #e1cfea;
   box-shadow: 3px 4px 0px 0px #e1cfea;
@@ -295,7 +343,7 @@ $purpleButtonCode = '.info-button {
   text-shadow:0px 1px 0px #4a235a;
   min-width:100px; 
   width:250px;
-  max-width:1000px; }
+  max-width:<?php echo $GuiWidth; ?>; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #5b2c6f), color-stop(1, #8e44ad));
   background:-moz-linear-gradient(top, #5b2c6f 5%, #8e44ad 100%);
@@ -315,6 +363,14 @@ body {
 
 // / Dark / Night mode color scheme.
 $darkButtonCode = '.info-button {
+/* / The file list panel, in a shade that belongs to this scheme.
+   / It was a hardcoded cream in every scheme, so six of the seven showed a pale panel
+   / on a page of an unrelated colour, & the dark scheme showed a bright one.
+   / One step from the page background rather than the same as it, so the panel still
+   / reads as a panel & still has an edge. */
+.file-list-panel {
+  background-color: #2e2e2e;
+  color: #e8e8e8; }
   -moz-box-shadow: 3px 4px 0px 0px #1a1a1a;
   -webkit-box-shadow: 3px 4px 0px 0px #1a1a1a;
   box-shadow: 3px 4px 0px 0px #1a1a1a;
@@ -341,7 +397,7 @@ $darkButtonCode = '.info-button {
   text-shadow:0px 1px 0px #111111;
   min-width:100px; 
   width:250px;
-  max-width:1000px; }
+  max-width:<?php echo $GuiWidth; ?>; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #262626), color-stop(1, #454545));
   background:-moz-linear-gradient(top, #262626 5%, #454545 100%);

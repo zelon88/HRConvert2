@@ -39,12 +39,18 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.8.3';
+$LanguageVersion = 'v3.9.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
 // / Set the side of the page to float elements to.
 $GUIAlignment = 'left';
+// / Which end of a dropdown the arrow sits at, as a percentage across the control.
+// / This pack knows its own reading direction & is therefore the right place to decide.
+// / A reader finishes at the left of a right to left line, so the arrow belongs there.
+// / An arrow pinned to the right edge sits at the START of the box in this language &
+// / reads as a stray icon rather than as the thing that opens the list.
+$SelectArrowSide = ($GUIAlignment === 'right') ? '4%' : '96%';
 // / Define an error message to display for if the core has not been loaded.
 $CoreError = 'ERROR!!! HRConvert2-2, Berkas ini tidak dapat memproses permintaan Anda. Silakan kirim berkas Anda ke convertCore.php.';
 // / Check if the core is loaded.
@@ -338,6 +344,12 @@ $Gui2Text80 = 'Render Model';
 $Gui2Text81 = 'Konversi E-Book Ini';
 // / 'Convert E-Book'
 $Gui2Text82 = 'Konversi E-Book';
+// / 'Playlist source URL, only needed if the playlist uses relative paths'
+$Gui2Text83 = 'URL sumber playlist, hanya diperlukan jika playlist memakai jalur relatif';
+// / 'Download A File From A URL'
+$Gui2Text84 = 'Unduh berkas dari URL';
+// / 'Fetch'
+$Gui2Text85 = 'Ambil';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

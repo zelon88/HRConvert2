@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.9.1.
+// / v3.9.2.
 // / This file configures the Engine for the application that bundles it.
 // /
 // / This file is NOT the administrator's configuration & is not edited by a user.
@@ -43,7 +43,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-35000,
 // / The version of this configuration. Matched as a MINIMUM by the Engine, the same way
 // / an application matches its own configuration. A newer file carrying every required
 // / setting is fine, because a setting this Engine does not know is simply not read.
-$EngineConfigVersion = 'v3.9.1';
+$EngineConfigVersion = 'v3.9.2';
 // / -----------------------------------------------------------------------------------
 
 
@@ -205,6 +205,20 @@ $EnginePerWorkerLogFiles = FALSE;
 // /   Falls back to --Stream Temp-- & then to the system temporary directory.
 // $EngineFetchTemp = '';
 // / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// /  --Engine Environment Provider--
+// /   The name of an application function that reports on THIS application's environment.
+// /   The Engine checks what the Engine provides, which is Bubblewrap & nothing else. Every
+// /   other check an installation wants belongs to the application that wants it.
+// /   The named function accepts nothing & returns a readiness boolean & a list of findings,
+// /   each finding an array of Check, Status & Detail. The Engine appends them to its own.
+// /   Leave it empty & only the Engine's own checks run, which is correct rather than
+// /   degraded. An application with no AppArmor policy should not be asked about one.
+// /   A name that is declared & not defined is a warning, because a check nobody notices is
+// /   missing is worse than one that was never claimed.
+$EngineEnvironmentProvider = 'applicationEnvironmentFindings';
 
 
 // / -----------------------------------------------------------------------------------

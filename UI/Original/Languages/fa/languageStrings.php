@@ -32,12 +32,18 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.8.3';
+$LanguageVersion = 'v3.9.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
 // / Set the side of the page to float elements to.
 $GUIAlignment = 'right';
+// / Which end of a dropdown the arrow sits at, as a percentage across the control.
+// / This pack knows its own reading direction & is therefore the right place to decide.
+// / A reader finishes at the left of a right to left line, so the arrow belongs there.
+// / An arrow pinned to the right edge sits at the START of the box in this language &
+// / reads as a stray icon rather than as the thing that opens the list.
+$SelectArrowSide = ($GUIAlignment === 'right') ? '4%' : '96%';
 // / Define an error message to display for if the core has not been loaded.
 $CoreError = 'خطا!!! HRConvert2-2، این فایل نمی‌تواند درخواست شما را پردازش کند! لطفاً فایل خود را به جای آن به convertCore.php ارسال کنید!';
 // / Check if the core is loaded.
@@ -83,7 +89,7 @@ $GuiSelectorText4 = 'نمایش گزینه‌های زبان، رنگ و راب�
 
 // / -----------------------------------------------------------------------------------
 // / Set GUI - 1 Related Variables.
-// / Online File Converter, Extractor, Compressor'
+// / 'Online File Converter, Extractor, Compressor'
 $Gui1Text1 = 'مبدل، استخراج‌کننده و فشرده‌ساز آنلاین فایل';
 // / $ApplicationName.' is based off the open-source web-app <a href=\'https://github.com\'>HRConvert2</a> by <a href=\'https://github.com\'>Zelon88</a> that converts files without tracking users across the net or infringing on your intellectual property.'
 $Gui1Text2 = $ApplicationName.' بر اساس برنامه وب متن‌باز <a href=\'https://github.com\'>HRConvert2</a> اثر <a href=\'https://github.com\'>Zelon88</a> توسعه یافته است که فایل‌ها را بدون ردیابی کاربران در اینترنت یا نقض مالکیت معنوی شما تبدیل می‌کند.';
@@ -262,7 +268,7 @@ $Gui2Text45 = 'تبدیل این فایل صوتی';
 $Gui2Text46 = 'تبدیل این ویدئو';
 // / 'Convert This Stream'
 $Gui2Text47 = 'تبدیل این استریم';
-// / Convert This 3D Model'
+// / 'Convert This 3D Model'
 $Gui2Text48 = 'تبدیل این مدل سه‌بعدی';
 // / 'Convert This Technical Drawing Or Vector File'
 $Gui2Text49 = 'تبدیل این نقشه فنی یا فایل برداری';
@@ -330,6 +336,12 @@ $Gui2Text80 = 'رندر مدل';
 $Gui2Text81 = 'تبدیل این کتاب الکترونیکی';
 // / 'Convert E-Book'
 $Gui2Text82 = 'تبدیل کتاب الکترونیکی';
+// / 'Playlist source URL, only needed if the playlist uses relative paths'
+$Gui2Text83 = 'نشانی مبدأ فهرست پخش، تنها در صورت استفاده از مسیرهای نسبی لازم است';
+// / 'Download A File From A URL'
+$Gui2Text84 = 'دانلود یک فایل از نشانی اینترنتی';
+// / 'Fetch'
+$Gui2Text85 = 'دریافت';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

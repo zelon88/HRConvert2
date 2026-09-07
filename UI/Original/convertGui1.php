@@ -52,7 +52,7 @@ if ($NoGui) $selectorBase .= 'noGui=TRUE&';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / THE REFRESH BUTTON CARRIES THE SESSION. IT DOES NOT RELOAD THE BROWSER.
+// / The refresh button CARRIES the session. It does not reload the browser.
 // /
 // / This page is reached by POST whenever the user arrived from the file list, so
 // / location.reload() would ask the browser to replay that POST, & a browser will either
@@ -74,7 +74,7 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
 // / -----------------------------------------------------------------------------------
 ?>
   <body>
-    <div id='page' style='max-width:1000px; margin-left:auto; margin-right:auto;'>
+    <div id='page' style='max-width:<?php echo $GuiWidth; ?>; margin-left:auto; margin-right:auto;'>
       <?php // / A CENTERED CHROME ROW, MATCHING convertGui2.php.
             // / The settings toggle previously opened a PHP tag inside its own style
             // / attribute that ASSIGNED $oppositeAlignment & echoed nothing, leaving a
@@ -199,13 +199,13 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
 
     <?php
     if (!isset($_GET['noGui'])) { ?>
-    <div id='header-text' style='max-width:1000px; margin-left:auto; margin-right:auto; text-align:center;'>
+    <div id='header-text' style='max-width:<?php echo $GuiWidth; ?>; margin-left:auto; margin-right:auto; text-align:center;'>
       <h1><img src='<?php echo $GuiImageDir; ?>convert-banner.png' style='max-height:72px; margin-right: 10px;'/><?php //echo $ApplicationName; ?></h1>
       <h3><?php echo $Gui1Text1; ?></h3>
       <hr />
     </div>
     <div id='main' align='center'>
-      <div id='overview' style='max-width:1000px; text-align:<?php echo $GUIAlignment; ?>; margin:25px;'><?php echo $Gui1Text2; ?>
+      <div id='overview' style='max-width:<?php echo $GuiWidth; ?>; text-align:<?php echo $GUIAlignment; ?>; margin:25px;'><?php echo $Gui1Text2; ?>
         <p id='info' style='display:block;'></p>
         <button id='more-info-button' class='info-button' onclick='toggle_visibility("more-info"); toggle_visibility("more-info-button"); toggle_visibility("supported-formats-show-button"); toggle_visibility("less-info-button");' style='text-align:center; display:block; margin-left:auto; margin-right:auto;'><?php echo $Gui1Text3; ?></button>
         <button id='less-info-button' class='info-button' onclick='toggle_visibility("more-info"); toggle_visibility("more-info-button"); toggle_visibility("supported-formats-show-button"); toggle_visibility("less-info-button");' style='text-align:center; display:none; margin-left:auto; margin-right:auto;'><?php echo $Gui1Text4; ?></button>
@@ -348,12 +348,20 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
     </div>
     <?php } ?>
     <div align='center'>
-      <div id='call-to-action1' title='' style='max-width:1000px; text-align:center;'>
+      <div id='call-to-action1' title='' style='max-width:<?php echo $GuiWidth; ?>; text-align:center;'>
         <p><?php echo $Gui1Text28; ?></p>
       </div>
     </div>
     <div align='center'>
-      <div id='dropzone' style='max-height:1000px; max-width:1000px; margin:25px;'>
+      <?php
+      // / The height ceiling is NOT here. It is on the .dropzone form in dropzone.css,
+      // / which is the element Dropzone fills with previews & therefore the element that
+      // / grows. Constraining this wrapper instead did nothing, because the child simply
+      // / grew past it.
+      // / A ceiling in both places would give two nested scrollbars, which is worse than
+      // / the overflow it was meant to fix.
+      ?>
+      <div id='dropzone' style='max-width:<?php echo $GuiWidth; ?>; margin:25px;'>
         <form action='convertCore.php' class='dropzone' id='filesToUpload' name='filesToUpload' method='post' enctype='multipart/form-data'>
         <input type='hidden' id='token1' name='Token1' value='<?php echo htmlspecialchars($Token1, ENT_QUOTES, 'UTF-8'); ?>'>
         <input type='hidden' id='token2' name='Token2' value='<?php echo htmlspecialchars($Token2, ENT_QUOTES, 'UTF-8'); ?>'>
@@ -361,7 +369,7 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
       </div>
     </div>
     <div align='center'>
-      <div id='continue' style='max-width:1000px; text-align:center;'>
+      <div id='continue' style='max-width:<?php echo $GuiWidth; ?>; text-align:center;'>
         <?php // / THIS BUTTON IS THE OTHER HALF OF THE SESSION. IT RETURNS THE USER TO
               // / THEIR FILES, so it is built from the same parameters as the refresh
               // / button above & differs only by carrying showFiles.

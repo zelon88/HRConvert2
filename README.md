@@ -102,6 +102,7 @@ This validates every installed component, every dependency, every feature. Every
 | **Bootable ISO** | x86, ARM, UEFI, MBR/GPT hybrid |
 | **OCR** | Extract text from images and PDFs |
 | **Live Streams** | Capture and convert .m3u8 playlists |
+| **Remote Files** | Fetch a file from a URL, off by default |
 | **Subtitles** | srt, vtt, ass, sub, sbv, ttml, + more |
 
 ---
@@ -149,7 +150,8 @@ Users switch languages instantly from the interface—no language packs to insta
 ## 🎨 Customizable Interfaces & Appearance
 
 Users can personalize their experience:
-- **3 interface layouts:** Default, Wide, Original
+- **2 interface layouts:** Default, Original
+- **Fluid width:** Every layout fits the device, up to a ceiling you set
 - **7 color schemes:** Red, Green, Blue, Grey, Orange, Purple, Dark
 - **In-page switching:** No reload needed
 

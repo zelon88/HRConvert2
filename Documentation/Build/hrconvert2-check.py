@@ -12,7 +12,7 @@
 # / on a server for users of any web browser without authentication.
 # /
 # / File Information ...
-# / v3.9.1.
+# / v3.9.2.
 # / This file checks the source for faults a human reading it will not reliably see.
 # /
 # / Run it from the installation root, beside convertCore.php.
@@ -89,6 +89,11 @@ def project_files(root):
         for name in files:
             if name.endswith('.php'):
                 found.append(os.path.join(base, name))
+    # / A build tool is a harness rather than application code & is never linted.
+    # / They define stubs with the same names as real functions, take deliberately terse
+    # / parameters & exit in more than one place, all of which is correct for a test & wrong
+    # / for the application. Linting them buries the findings that matter.
+    found = [f for f in found if os.path.join('Documentation', 'Build') not in f]
     return sorted(found)
 
 
@@ -370,6 +375,9 @@ def check_undefined_reads(files, report):
                     if depth == 0:
                         finish = position
                         break
+            # / Every name between the parentheses is a parameter, including one with a
+            # / default. An earlier version stopped at the equals sign & then reported the
+            # / optional parameter as an undefined read in its own function.
             parameters = set(re.findall(r'\$(\w+)', signature[start:finish]))
             declared = set()
             assigned = set()
@@ -434,6 +442,14 @@ def check_comment_case(files, report):
                 continue
             body = stripped[4:].strip()
             if len(body) < 12:
+                continue
+            # / A file header LABEL is structure rather than shouting, & every file in this
+            # / project carries the same six. They end in an ellipsis, which is what tells them
+            # / apart from a sentence somebody wrote in capitals.
+            # / The UI tree writes them in capitals & the core writes them in title case, so
+            # / linting the UI reported five thousand findings that were all the same six lines
+            # / repeated across seventy eight language packs.
+            if body.rstrip().endswith('...'):
                 continue
             letters = [c for c in body if c.isalpha()]
             if letters and all(c.isupper() for c in letters):
@@ -883,12 +899,22 @@ def check_comment_sentences(files, report):
             while index < len(lines) and lines[index].strip().startswith('// /') and not lines[index].strip()[4:].strip().startswith('---'):
                 index += 1
             block = [lines[k].strip()[4:].strip() for k in range(block_start, index)]
+            # / A php close tag riding on the end of the last comment line is not part of the
+            # / sentence. A template writes  // / ...text. ?>  & the tag made every one of those
+            # / blocks look unterminated.
+            block = [re.sub(r'\s*\?>\s*$', '', b) for b in block]
             block = [b for b in block if b != '']
             if not block:
                 continue
             last = block[-1]
             # / A header line, a URL, a table row & a bare label are not prose.
             if re.search(r'https?://|Copyright|<3 Open|\S {2,}\S', last) or re.match(r'^[A-Z][A-Za-z ]+\.\.\.', last):
+                continue
+            # / A comment that is entirely a QUOTED STRING is a label rather than prose.
+            # / A language pack comments every string with its English original in quotes, so
+            # / linting the UI reported five thousand of them for not being sentences.
+            # / They are not sentences & are not meant to be.
+            if (last.startswith(chr(39)) and last.endswith(chr(39))) or (last.startswith('"') and last.endswith('"')):
                 continue
             if re.search(r'[.!?:]["\')]*$', last):
                 continue

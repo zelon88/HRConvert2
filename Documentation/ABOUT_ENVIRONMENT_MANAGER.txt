@@ -1,0 +1,165 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 9/7/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v3.9.2.
+This plain text file describes the Environment Manager, what it is allowed to do, and the reasons it is shaped the way it is.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+systemd for the timer. Nothing else. It refuses to run without root.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Problem It Solves--
+
+EVERYTHING THAT CAN REPAIR THIS INSTALLATION NEEDS ROOT, & NOTHING THAT RUNS NEEDS ROOT.
+The web server runs as www-data. The listener & its four managers run as www-data. That is
+deliberate & is most of why a compromised dependency achieves so little.
+
+The cost is that a drifted AppArmor profile, a kernel setting somebody changed, a
+permission that moved, or a php.ini a distribution upgrade replaced can all be SEEN by the
+running application & repaired by none of it. validateOperatingEnvironment() reports them
+& says run -fp, which requires an administrator to read a log & type a command.
+
+An installation nobody is watching drifts until a conversion fails.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About What It Is--
+
+A ROOT PROCESS THAT WAKES ON A TIMER, LOOKS, & GOES BACK TO SLEEP.
+It is not a manager in the sense the other four are. It is not dispatched by the listener,
+it is not in getAcceptedManagers(), & it does not appear in the manager socket directory.
+The listener could not start it even if something convinced the listener to try, because
+the listener is www-data & this refuses to run as anything but root.
+
+It is started by a systemd timer & by an administrator running the command by hand.
+Those are the only two ways in.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Why It Has No Socket--
+
+THE OTHER FOUR MANAGERS LISTEN. THIS ONE NEVER DOES.
+A socket is a door, & a door on a root process is worth more to an attacker than everything
+else in this application put together. A worker that could ask a root process to repair a
+policy could ask it to repair a policy into something else.
+
+So it accepts no requests, reads no messages, & has no path anybody can write to. It reads
+the same environment every other component reads, decides for itself, & writes what it
+found where anything may read it.
+
+INFORMATION LEAVES IT & NOTHING ENTERS IT. That is the whole security model & it is worth
+more than any amount of validation on a request it does not accept.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Watching Before Repairing--
+
+IT REPORTS BY DEFAULT & REPAIRS ONLY WHEN AN ADMINISTRATOR SAYS SO.
+A root process that silently rewrites /etc on a timer is a liability even when every write
+is correct. The first release watches. Repair is a setting an administrator turns on
+deliberately, having read what it would have done.
+
+  $EnvironmentManagerMayRepair = FALSE   Look, log what drifted, change nothing.
+  $EnvironmentManagerMayRepair = TRUE    Look, log what drifted, & repair it.
+
+Repair, when enabled, does exactly what -fp does & nothing more. It calls the same
+functions. There is no second implementation of a repair to disagree with the first.
+
+IT LOOKS EVERY HOUR & REPAIRS ONCE A DAY.
+A repair walks the data tree, rewrites configuration & touches services. Doing that hourly
+on an appliance costs real work for nothing, because a drift that survived one repair will
+survive the next one an hour later. What it needs is an operator.
+So the first pass of a day that finds a problem repairs it. Every later pass that day
+reports the same problem & changes nothing. The next day it tries once more.
+An installation repairing every day is telling you something. A log full of daily repairs
+says it; a log full of hourly ones buries it.
+
+A REPAIR IS LOGGED AS A WARNING, NEVER AS NORMAL ACTIVITY. Silence is what a correct
+environment sounds like.
+
+IT NEVER STARTS A SERVICE THAT AN ADMINISTRATOR STOPPED.
+installListenerService() takes a start decision separately from an enable decision. Setup
+and -fp pass TRUE, because an installation with no listener running is not installed. This
+manager passes FALSE. A listener that is down stays down & is reported.
+An administrator who stopped the listener to look at something has a reason, & watching it
+come back an hour later with no explanation is the worst kind of surprise a root process on
+a timer can produce.
+
+WHAT A PERMITTED REPAIR ACTUALLY TOUCHES, STATED PLAINLY.
+  Ownership & permissions on the managed paths, recursively.
+  The AppArmor profiles this application ships.
+  99-hrconvert2.ini in the php conf.d, & hrconvert2.conf in the Apache conf-available.
+  The listener unit file, written but never started.
+Every one of those is a file this application owns. Nothing belonging to the distribution
+is touched. That is why --Environment Manager May Rewrite Configs-- defaults to TRUE while
+repair itself defaults to FALSE. Set it FALSE if you have tuned one of those files by hand,
+because a rewrite reverts it silently & you find out at the next conversion.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About What It Looks At--
+
+IT DOES NOT DECIDE WHAT MATTERS. THE APPLICATION DOES.
+$EngineEnvironmentProvider names the function that reports on an application's environment,
+& the Environment Manager reads the same findings validateOperatingEnvironment() returns.
+There is one definition of what a healthy installation looks like & three things read it.
+
+For HRConvert2 that is applicationEnvironmentFindings() in convertCore.php, covering the
+kernel namespace settings, three AppArmor policies & the DATA exposure test.
+
+An application supplying no provider gets the Engine's own check & a manager with very
+little to do, which is correct rather than broken.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About What It Leaves Behind--
+
+IT WRITES ONE STATE FILE & THAT FILE IS THE ONLY THING ANYTHING ELSE READS.
+The file records when it last ran, what it found, & what it repaired if anything.
+Every other component may read it. None of them may write it.
+
+That answers the question an operator actually asks, which is not whether the environment
+is healthy right now but whether anything has been quietly wrong since the last time
+somebody looked.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About What It Must Never Do--
+
+  It must never accept input from any source but its own configuration.
+  It must never run as anything but root, & must refuse rather than degrade.
+  It must never stay resident. It wakes, works, writes, & exits.
+  It must never repair anything -fp would not repair.
+  It must never touch a user file, a session, or a conversion in progress.
+  It must never start, stop or signal a worker. That is the Resource Manager's work &
+  giving a root process the ability to signal www-data processes buys an attacker a
+  privilege boundary for free.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Fifth Manager That Is Not This One--
+
+LOG ROTATION & CLEANUP ARE NOT ROOT WORK & DO NOT BELONG HERE.
+They were considered for this manager & rejected. They operate on files www-data already
+owns, so they need no privilege, & putting them in a root process would mean a root process
+touching the data tree on a timer for no reason at all.
+
+They belong in a manager under the listener, alongside the other four, with a socket like
+its siblings. That is a separate piece of work & is not started by this document.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

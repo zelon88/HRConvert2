@@ -1,0 +1,237 @@
+-----------------------------------------------------------------------------------------
+ABOUT MOVING DEPENDENCY CORE & SETUP CORE INTO THE ENGINE
+HRConvert2 v3.9.2
+-----------------------------------------------------------------------------------------
+
+This is a CONTRACT rather than a plan. It says what each component must stop knowing before
+it can move, what the application must start supplying, and what would be lost by moving a
+thing that should stay. Nothing here has been done yet.
+
+The pattern is already established twice in this codebase & neither move invents anything.
+Sandbox profiles are DATA the application hands over in $EngineSandboxProfiles. Environment
+findings come from a function the application NAMES in $EngineEnvironmentProvider. The
+Engine holds no knowledge of either & reads what it is given. Both moves below are the same
+shape applied to two more components.
+
+-----------------------------------------------------------------------------------------
+THE ASYMMETRY, WHICH IS THE WHOLE POINT
+-----------------------------------------------------------------------------------------
+
+These two files look alike from outside. They are not alike inside.
+
+  dependencyCore.php   1193 lines.  8 mentions of HRConvert2. No model of anything.
+  setupCore.php        1538 lines. 19 mentions. 127 lines that ARE HRConvert2.
+
+Dependency Core reads a manifest & acts on it. It has no opinion about what is in the
+manifest. Every application-specific fact it holds arrives through $DependencyManifest,
+which is already a variable rather than a hardcoded list.
+
+Setup Core contains setupConfigModel(), 127 lines naming every section, setting, type &
+default of THIS application's config.php. That function is not a component that happens to
+be used by HRConvert2. It is HRConvert2, written as data.
+
+So one file moves nearly whole & the other splits. Treating them the same would either
+drag an application's configuration schema into a shared Engine, or leave a generic
+dependency installer in an application that does not own it.
+
+-----------------------------------------------------------------------------------------
+DEPENDENCY CORE. MOVES TO Resources/Engine/Cores/dependencyCore.php
+-----------------------------------------------------------------------------------------
+
+WHAT IT MUST STOP KNOWING
+
+  $HRConvertVersion         Reads the application version to stamp its own reports.
+                            Replace with $EngineApplicationName & a version the
+                            application supplies. The Engine already carries both.
+
+  $ConvertLoc               Used as a scratch location for source builds.
+                            Replace with a location the Engine already knows, or one the
+                            application names. A dependency installer should not know that
+                            the thing it serves converts files.
+
+  'Subsystem' => 'Archives' The manifest groups dependencies by subsystem & the subsystem
+                            names are this application's. This needs nothing done. They
+                            arrive in the manifest, so they are already data.
+
+WHAT THE APPLICATION MUST SUPPLY
+
+  $EngineDependencyManifest The manifest. depends.php moves to Resources/Engine/Contract/depends.php.
+
+                            An earlier draft of this contract proposed TWO manifests, the
+                            Engine's own merged with the application's. That was wrong &
+                            is recorded here because the reasoning is instructive.
+
+                            Two manifests means a merge, a collision rule & a silent
+                            winner. It also means the same fact is written twice by two
+                            people who will not agree forever. The right answer is not a
+                            better merge. It is that a manifest DESCRIBES what an
+                            installation needs & an application adds entries to one
+                            manifest rather than bringing a rival.
+
+WHAT MOVES UNCHANGED
+
+  Architecture rules, the install & update paths, version comparison, the probe environment
+  prefix, capability detection. None of it names this application.
+
+WHAT MUST NOT MOVE
+
+  Nothing. This file is Engine work that happens to live in the application.
+
+-----------------------------------------------------------------------------------------
+SETUP CORE. SPLITS
+-----------------------------------------------------------------------------------------
+
+WHAT MOVES TO Resources/Engine/Cores/setupCore.php
+
+  The config utility MECHANISM. Eighteen functions that read a php configuration file,
+  parse it into sections & assignments, back it up, validate what they found against a
+  model, add what is missing, replace what is wrong, check the result with php -l & write
+  it atomically.
+
+  None of that knows what a setting means. It knows how a configuration FILE is shaped,
+  which is a property of php & of this project's conventions rather than of HRConvert2.
+
+  The service & timer generation moves too. It names $ApacheUser & $ManagerSocketDir, both
+  of which the Engine already owns, & it installs units for MANAGERS, which are the
+  Engine's own.
+
+WHAT STAYS IN THE APPLICATION
+
+  Nothing, & this is the part that changes everything.
+
+  setupConfigModel() does not become a provider the application supplies. It becomes the
+  SOURCE & config.php becomes its OUTPUT.
+
+-----------------------------------------------------------------------------------------
+THE MODEL IS THE CONFIGURATION. config.php IS BUILT FROM IT.
+-----------------------------------------------------------------------------------------
+
+Today there are two hand written descriptions of the same thing. config.php declares 149
+settings. setupConfigModel() describes 105 of them. Nobody decided the other 44 should be
+invisible to the config utility. They drifted, because two artifacts maintained by hand
+diverge & the only question is how fast.
+
+Everything that went wrong with configuration in this release came from that gap. A
+required setting the model had never heard of could not be repaired. --config --repair
+reported success having done nothing. An installation refused to start naming a setting no
+tool could add. Each of those was fixed individually & none of the fixes closed the gap
+that produced them.
+
+  THE MODEL IS THE UNCOMPILED CONFIGURATION. config.php IS A BUILD ARTIFACT.
+
+An application declares its settings once, with type, default, section, dependency & the
+prose that explains it. A generator writes config.php from that declaration. A developer
+regenerates when they change a setting & commits the result, exactly as they would commit
+any generated file.
+
+Drift stops being a bug to fix & becomes a state the system cannot enter.
+
+WHAT THIS REQUIRES THAT THE CURRENT MODEL DOES NOT CARRY
+
+  The prose. config.php is 1340 lines of which 1161 are comments, seven lines per setting.
+  That prose is the best documentation this project has & it is not decoration. It says why
+  a default is what it is, what breaks if you change it, & which other setting it fights
+  with.
+
+  It must move into the model. That is a real cost & it is also the point. Today the
+  explanation of a setting & the description of that setting live in different files, so
+  either can be updated without the other. Afterwards there is one place to write & one
+  place to read.
+
+WHAT MUST REMAIN TRUE OF THE GENERATOR
+
+  AN OPERATOR'S VALUES SURVIVE REGENERATION. Always. A generator that produced a clean
+  config.php by discarding what an administrator had set would be worse than the drift it
+  replaces. Values are preserved, structure & prose are generated, & a setting that no
+  longer exists is removed with its removal logged.
+
+  This is not new machinery. It is what --config --repair already does, pointed at the
+  whole file rather than at what is missing from it.
+
+  A GENERATED FILE MUST SAY SO. First line, unmissable. Anybody who hand edits structure
+  will lose that edit on the next generation & should learn it from the file rather than
+  from the diff.
+
+  THE GENERATOR IS NOT REQUIRED TO RUN. An installation ships with a generated config.php
+  already in it. Generation is a development step, not an installation step, & a host that
+  never runs it is unaffected.
+
+WHERE THIS ENDS
+
+  Once configuration is generated from a declaration, the verification functions in
+  convertCore.php have nothing application specific left in them. They check that a file
+  matches a model. The model came from the application, the check belongs to the Engine, &
+  $RequiredConfigVersion becomes a fact about the model rather than a number somebody
+  remembers to bump.
+
+  The command line handler goes the same way & for the same reason. --version, --status,
+  --setup, --config, the kill commands & the manager commands are Engine commands wearing
+  an application's name. What is left is the commands that convert something.
+
+  The end state is an application that is wiring, session handling & conversion logic, &
+  an Engine that is everything an application of this shape needs regardless of what it
+  converts. This document is the first step of that, not the whole of it.
+
+-----------------------------------------------------------------------------------------
+DEPENDS.PHP MOVES BESIDE ENGINECONFIG.PHP
+-----------------------------------------------------------------------------------------
+
+Resources/Engine/Contract/depends.php becomes Resources/Engine/Contract/depends.php.
+
+The reason is not tidiness. depends.php is READ BY dependencyCore.php & by nothing else,
+& a file belongs next to the thing that reads it. It sits beside config.php today because
+that is where the application's other data lived, which was true when Dependency Core was
+the application's.
+
+Once there are two manifests, the Engine's lives at Resources/Engine/Contract/depends.php & the
+application's at Resources/Engine/Contract/depends.php, & the paths say which is which without a comment.
+
+Version pins move with it. $RequiredDependsVersion becomes an Engine pin.
+
+-----------------------------------------------------------------------------------------
+WHAT THIS COSTS
+
+Stated plainly, because a contract that only lists benefits is a sales document.
+
+  MOVING 1161 LINES OF PROSE INTO A PHP ARRAY. It is the largest single piece of work here
+  & it is tedious rather than difficult. It is also the step most likely to be done badly
+  under time pressure, by summarising prose that was written carefully the first time.
+
+  A GENERATED FILE IS A FILE SOMEBODY WILL HAND EDIT ANYWAY. The header will say not to.
+  Somebody will, lose it, & be annoyed. The mitigation is that values survive & only
+  structure is lost, so the damage is an edit rather than a configuration.
+
+  A BAD MODEL NOW BREAKS THE FILE RATHER THAN JUST THE UTILITY. Today a wrong model makes
+  --config --repair unhelpful. Afterwards it makes config.php wrong. The blast radius of a
+  mistake in the model goes up, & the check that catches it is that a generated config
+  must parse & must satisfy its own required list before it replaces anything.
+
+  THE ENGINE GETS BIGGER & HARDER TO REASON ABOUT. Every move here adds surface to a
+  component whose value is that it is small enough to audit. That is worth watching. The
+  answer is not to stop moving things, it is that the Engine has to keep earning its size
+  by holding only what any application of this shape needs.
+
+  NOTHING HERE MAKES HRCONVERT2 WORK BETTER TODAY. It removes a class of bug that has
+  already cost this release several rounds, & it makes the second application possible.
+  There is no second application yet, so the bug removal is the whole of the near term
+  benefit & it should be judged on that alone.
+
+-----------------------------------------------------------------------------------------
+ORDER OF WORK
+-----------------------------------------------------------------------------------------
+
+  1. Move the prose from config.php into setupConfigModel() & extend the model to cover
+     all 149 settings rather than 105. Change nothing else. The model is now complete &
+     still describes rather than generates.
+  2. Write the generator & prove it reproduces the CURRENT config.php byte for byte from
+     the model. If it cannot, the model is still wrong & step 1 is not finished.
+  3. Switch config.php to being generated. Prove an operator's values survive.
+  4. Move dependencyCore.php & depends.php into Resources/Engine.
+  5. Move the config utility & the verification functions into Resources/Engine, leaving
+     the model behind as the application's declaration.
+  6. Split the command line handler.
+
+  Each step is separately testable & separately revertible. Doing them together produces a
+  failure nobody can bisect.
+
+-----------------------------------------------------------------------------------------

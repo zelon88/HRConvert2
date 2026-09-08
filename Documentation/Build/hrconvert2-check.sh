@@ -12,7 +12,7 @@
 # / on a server for users of any web browser without authentication.
 # /
 # / File Information ...
-# / v3.9.2.
+# / v3.9.3.
 # / This file is a SECOND OPINION on the source & is not the authoritative one.
 # / hrconvert2-check.py is authoritative. This exists so two implementations written in
 # / two languages can be asked the same question, & so a disagreement between them is a
@@ -422,6 +422,22 @@ check_order() {
 # / their configuration lacks a setting which is plainly present in it.
 # / No other check sees this. The settings are tested by name through a list at runtime, so
 # / nothing reads them anywhere & a search for a read finds nothing.
+# / -----------------------------------------------------------------------------------
+# / A tree that ships is unpacked over somebody's installation, so anything in it that is
+# / not part of the application lands on their disk.
+# / A .git directory shipped in three archives before anybody noticed. It was empty & it was
+# / still wrong. This is a build check rather than a code check.
+# / The python tool checks the same shapes. The two must agree.
+check_stray() {
+  find . \( -name '.git' -o -name '.svn' -o -name '.hg' -o -name '__pycache__' \) -type d 2>/dev/null | while IFS= read -r path; do
+    report 'STRAY' "$path does not belong in a shipped tree"
+  done
+  find . \( -name '*.bak' -o -name '*.orig' -o -name '*.rej' -o -name '*.swp' -o -name '*~' -o -name '.DS_Store' \) -type f 2>/dev/null | while IFS= read -r path; do
+    report 'STRAY' "$path does not belong in a shipped tree"
+  done
+}
+
+
 check_config() {
   if [ ! -f convertCore.php ]; then
     return
@@ -456,7 +472,7 @@ check_config() {
 # / first one seven times.
 
 # / Every check, in the order they run, keyed by the name --only accepts.
-CHECK_NAMES='syntax balance order duplicate pins errno guard contract config caps purge exit'
+CHECK_NAMES='syntax balance order duplicate pins errno guard contract config caps purge exit stray'
 
 describe() {
   case "$1" in
@@ -470,6 +486,7 @@ describe() {
     contract)  printf 'the Engine never calls application code' ;;
     config)    printf 'every required setting is declared where config.php loads' ;;
     caps)      printf 'no comment line is entirely capitals' ;;
+    stray)     printf 'nothing ships that is not part of the application' ;;
     purge)     printf 'every cleanup at a return carries its comment' ;;
     exit)      printf 'every function has one exit' ;;
   esac

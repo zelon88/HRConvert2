@@ -45,7 +45,7 @@ conversions it approved & reclaims the budget when they finish.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About The Listener--
 
-The listener is contained in Resources/coreManager.php.
+The listener is contained in Resources/Engine/Managers/coreManager.php.
 
 coreManager.php is a detachable component. It is validated the same way a GUI or a language pack
 is validated, it is loaded only after an install secret exists, & convertCore.php runs perfectly

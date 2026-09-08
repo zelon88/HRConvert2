@@ -35,15 +35,29 @@
 // / Set dynamic CSS related variables.
 
 // / Grey color scheme (default).
-$defaultButtonCode = '.info-button {
-/* / The file list panel, in a shade that belongs to this scheme.
-   / It was a hardcoded cream in every scheme, so six of the seven showed a pale panel
-   / on a page of an unrelated colour, & the dark scheme showed a bright one.
-   / One step from the page background rather than the same as it, so the panel still
-   / reads as a panel & still has an edge. */
-.file-list-panel {
+$defaultButtonCode = '
+/* / THREE LAYERS, & each has a different job.
+   / The page carries the scheme colour, or its pattern on blue.
+   / The card is the sheet the work sits on & is WHITE in every scheme but dark, so the
+   / application reads the same way whichever colour somebody picked.
+   / The panel inside the card is the only layer that carries the scheme, & it is defined
+   / below.
+   / Tinting the card was tried & was wrong. It competed with both the page behind it & the
+   / panel on top of it, & the layers stopped reading as layers. */
+.file-list-card {
   background-color: #ffffff;
-  color: #333333; }
+  color: #555555; }
+/* / The panel carries the scheme colour. It is the only one of the three layers that does.
+   / It sits on the WHITE card rather than on the page, so it is a light tint rather than a
+   / copy of the page colour. A panel matching the page would be right if it sat on the
+   / page, & it does not.
+   / Blue is the one worth saying out loud. The page of that scheme is grey with a pattern,
+   / so there is no page colour to tint toward & the panel takes the blue of the scheme.
+   / Every other scheme tints toward the page it belongs to. */
+.file-list-panel {
+  background-color: #eef0f2;
+  color: #3a3a3a; }
+.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #f3f6f4;
   -webkit-box-shadow: 3px 4px 0px 0px #f3f6f4;
   box-shadow: 3px 4px 0px 0px #f3f6f4;
@@ -70,7 +84,7 @@ $defaultButtonCode = '.info-button {
   text-shadow:0px 1px 0px #bcbcbc;
   min-width:100px; 
   width:250px;
-  max-width:<?php echo $GuiWidth; ?>; }
+  max-width:'.$GuiWidth.'; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #bcbcbc), color-stop(1, #eeeeee));
   background:-moz-linear-gradient(top, #bcbcbc 5%, #eeeeee 100%);
@@ -89,15 +103,29 @@ body {
   background-color: #F8F8F8; }';
 
 // / Green color scheme.
-$greenButtonCode = '.info-button {
-/* / The file list panel, in a shade that belongs to this scheme.
-   / It was a hardcoded cream in every scheme, so six of the seven showed a pale panel
-   / on a page of an unrelated colour, & the dark scheme showed a bright one.
-   / One step from the page background rather than the same as it, so the panel still
-   / reads as a panel & still has an edge. */
+$greenButtonCode = '
+/* / THREE LAYERS, & each has a different job.
+   / The page carries the scheme colour, or its pattern on blue.
+   / The card is the sheet the work sits on & is WHITE in every scheme but dark, so the
+   / application reads the same way whichever colour somebody picked.
+   / The panel inside the card is the only layer that carries the scheme, & it is defined
+   / below.
+   / Tinting the card was tried & was wrong. It competed with both the page behind it & the
+   / panel on top of it, & the layers stopped reading as layers. */
+.file-list-card {
+  background-color: #ffffff;
+  color: #555555; }
+/* / The panel carries the scheme colour. It is the only one of the three layers that does.
+   / It sits on the WHITE card rather than on the page, so it is a light tint rather than a
+   / copy of the page colour. A panel matching the page would be right if it sat on the
+   / page, & it does not.
+   / Blue is the one worth saying out loud. The page of that scheme is grey with a pattern,
+   / so there is no page colour to tint toward & the panel takes the blue of the scheme.
+   / Every other scheme tints toward the page it belongs to. */
 .file-list-panel {
-  background-color: #f6fff3;
-  color: #2f4f2f; }
+  background-color: #e6f6e0;
+  color: #2f4a2f; }
+.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #b9ccb3;
   -webkit-box-shadow: 3px 4px 0px 0px #b9ccb3;
   box-shadow: 3px 4px 0px 0px #b9ccb3;
@@ -124,7 +152,7 @@ $greenButtonCode = '.info-button {
   text-shadow:0px 1px 0px #1e9409;
   min-width:100px; 
   width:250px;
-  max-width:<?php echo $GuiWidth; ?>; }
+  max-width:'.$GuiWidth.'; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #298040), color-stop(1, #50c20e));
   background:-moz-linear-gradient(top, #298040 5%, #50c20e 100%);
@@ -143,15 +171,29 @@ body {
   background-color: #E8FFE1; }';
 
 // / Blue color scheme.
-$blueButtonCode = '.info-button {
-/* / The file list panel, in a shade that belongs to this scheme.
-   / It was a hardcoded cream in every scheme, so six of the seven showed a pale panel
-   / on a page of an unrelated colour, & the dark scheme showed a bright one.
-   / One step from the page background rather than the same as it, so the panel still
-   / reads as a panel & still has an edge. */
+$blueButtonCode = '
+/* / THREE LAYERS, & each has a different job.
+   / The page carries the scheme colour, or its pattern on blue.
+   / The card is the sheet the work sits on & is WHITE in every scheme but dark, so the
+   / application reads the same way whichever colour somebody picked.
+   / The panel inside the card is the only layer that carries the scheme, & it is defined
+   / below.
+   / Tinting the card was tried & was wrong. It competed with both the page behind it & the
+   / panel on top of it, & the layers stopped reading as layers. */
+.file-list-card {
+  background-color: #ffffff;
+  color: #555555; }
+/* / The panel carries the scheme colour. It is the only one of the three layers that does.
+   / It sits on the WHITE card rather than on the page, so it is a light tint rather than a
+   / copy of the page colour. A panel matching the page would be right if it sat on the
+   / page, & it does not.
+   / Blue is the one worth saying out loud. The page of that scheme is grey with a pattern,
+   / so there is no page colour to tint toward & the panel takes the blue of the scheme.
+   / Every other scheme tints toward the page it belongs to. */
 .file-list-panel {
-  background-color: #f2f6fa;
-  color: #22303c; }
+  background-color: #e4edf7;
+  color: #26384a; }
+.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #cfe2f3;
   -webkit-box-shadow: 3px 4px 0px 0px #cfe2f3;
   box-shadow: 3px 4px 0px 0px #cfe2f3;
@@ -178,7 +220,7 @@ $blueButtonCode = '.info-button {
   text-shadow:0px 1px 0px #16537e;
   min-width:100px; 
   width:250px;
-  max-width:<?php echo $GuiWidth; ?>; }
+  max-width:'.$GuiWidth.'; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #295680), color-stop(1, #2d60b2));
   background:-moz-linear-gradient(top, #295680 5%, #2d60b2 100%);
@@ -200,15 +242,29 @@ body {
   }';
 
 // / Red color scheme.
-$redButtonCode = '.info-button {
-/* / The file list panel, in a shade that belongs to this scheme.
-   / It was a hardcoded cream in every scheme, so six of the seven showed a pale panel
-   / on a page of an unrelated colour, & the dark scheme showed a bright one.
-   / One step from the page background rather than the same as it, so the panel still
-   / reads as a panel & still has an edge. */
+$redButtonCode = '
+/* / THREE LAYERS, & each has a different job.
+   / The page carries the scheme colour, or its pattern on blue.
+   / The card is the sheet the work sits on & is WHITE in every scheme but dark, so the
+   / application reads the same way whichever colour somebody picked.
+   / The panel inside the card is the only layer that carries the scheme, & it is defined
+   / below.
+   / Tinting the card was tried & was wrong. It competed with both the page behind it & the
+   / panel on top of it, & the layers stopped reading as layers. */
+.file-list-card {
+  background-color: #ffffff;
+  color: #555555; }
+/* / The panel carries the scheme colour. It is the only one of the three layers that does.
+   / It sits on the WHITE card rather than on the page, so it is a light tint rather than a
+   / copy of the page colour. A panel matching the page would be right if it sat on the
+   / page, & it does not.
+   / Blue is the one worth saying out loud. The page of that scheme is grey with a pattern,
+   / so there is no page colour to tint toward & the panel takes the blue of the scheme.
+   / Every other scheme tints toward the page it belongs to. */
 .file-list-panel {
-  background-color: #fff5f2;
-  color: #4f2f2f; }
+  background-color: #fbe6df;
+  color: #4a2f2f; }
+.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #bcbcbc;
   -webkit-box-shadow: 3px 4px 0px 0px #bcbcbc;
   box-shadow: 3px 4px 0px 0px #bcbcbc;
@@ -235,7 +291,7 @@ $redButtonCode = '.info-button {
   text-shadow:0px 1px 0px #660000;
   min-width:100px; 
   width:250px;
-  max-width:<?php echo $GuiWidth; ?>; }
+  max-width:'.$GuiWidth.'; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #9b443b), color-stop(1, #c20e0e));
   background:-moz-linear-gradient(top, #9b443b 5%, #c20e0e 100%);
@@ -254,15 +310,29 @@ body {
   background-color: #FFE9E1; }';
 
 // / Orange color scheme.
-$orangeButtonCode = '.info-button {
-/* / The file list panel, in a shade that belongs to this scheme.
-   / It was a hardcoded cream in every scheme, so six of the seven showed a pale panel
-   / on a page of an unrelated colour, & the dark scheme showed a bright one.
-   / One step from the page background rather than the same as it, so the panel still
-   / reads as a panel & still has an edge. */
+$orangeButtonCode = '
+/* / THREE LAYERS, & each has a different job.
+   / The page carries the scheme colour, or its pattern on blue.
+   / The card is the sheet the work sits on & is WHITE in every scheme but dark, so the
+   / application reads the same way whichever colour somebody picked.
+   / The panel inside the card is the only layer that carries the scheme, & it is defined
+   / below.
+   / Tinting the card was tried & was wrong. It competed with both the page behind it & the
+   / panel on top of it, & the layers stopped reading as layers. */
+.file-list-card {
+  background-color: #ffffff;
+  color: #555555; }
+/* / The panel carries the scheme colour. It is the only one of the three layers that does.
+   / It sits on the WHITE card rather than on the page, so it is a light tint rather than a
+   / copy of the page colour. A panel matching the page would be right if it sat on the
+   / page, & it does not.
+   / Blue is the one worth saying out loud. The page of that scheme is grey with a pattern,
+   / so there is no page colour to tint toward & the panel takes the blue of the scheme.
+   / Every other scheme tints toward the page it belongs to. */
 .file-list-panel {
-  background-color: #fffaf2;
-  color: #4f3a1f; }
+  background-color: #fdefdc;
+  color: #4a3a20; }
+.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #ffdcb3;
   -webkit-box-shadow: 3px 4px 0px 0px #ffdcb3;
   box-shadow: 3px 4px 0px 0px #ffdcb3;
@@ -289,7 +359,7 @@ $orangeButtonCode = '.info-button {
   text-shadow:0px 1px 0px #803300;
   min-width:100px; 
   width:250px;
-  max-width:<?php echo $GuiWidth; ?>; }
+  max-width:'.$GuiWidth.'; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #b35900), color-stop(1, #ff9900));
   background:-moz-linear-gradient(top, #b35900 5%, #ff9900 100%);
@@ -308,15 +378,29 @@ body {
   background-color: #fff4e6; }';
 
 // / Purple color scheme.
-$purpleButtonCode = '.info-button {
-/* / The file list panel, in a shade that belongs to this scheme.
-   / It was a hardcoded cream in every scheme, so six of the seven showed a pale panel
-   / on a page of an unrelated colour, & the dark scheme showed a bright one.
-   / One step from the page background rather than the same as it, so the panel still
-   / reads as a panel & still has an edge. */
+$purpleButtonCode = '
+/* / THREE LAYERS, & each has a different job.
+   / The page carries the scheme colour, or its pattern on blue.
+   / The card is the sheet the work sits on & is WHITE in every scheme but dark, so the
+   / application reads the same way whichever colour somebody picked.
+   / The panel inside the card is the only layer that carries the scheme, & it is defined
+   / below.
+   / Tinting the card was tried & was wrong. It competed with both the page behind it & the
+   / panel on top of it, & the layers stopped reading as layers. */
+.file-list-card {
+  background-color: #ffffff;
+  color: #555555; }
+/* / The panel carries the scheme colour. It is the only one of the three layers that does.
+   / It sits on the WHITE card rather than on the page, so it is a light tint rather than a
+   / copy of the page colour. A panel matching the page would be right if it sat on the
+   / page, & it does not.
+   / Blue is the one worth saying out loud. The page of that scheme is grey with a pattern,
+   / so there is no page colour to tint toward & the panel takes the blue of the scheme.
+   / Every other scheme tints toward the page it belongs to. */
 .file-list-panel {
-  background-color: #fbf7fd;
-  color: #3f2f4f; }
+  background-color: #f1e7f6;
+  color: #3f2f4a; }
+.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #e1cfea;
   -webkit-box-shadow: 3px 4px 0px 0px #e1cfea;
   box-shadow: 3px 4px 0px 0px #e1cfea;
@@ -343,7 +427,7 @@ $purpleButtonCode = '.info-button {
   text-shadow:0px 1px 0px #4a235a;
   min-width:100px; 
   width:250px;
-  max-width:<?php echo $GuiWidth; ?>; }
+  max-width:'.$GuiWidth.'; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #5b2c6f), color-stop(1, #8e44ad));
   background:-moz-linear-gradient(top, #5b2c6f 5%, #8e44ad 100%);
@@ -362,15 +446,33 @@ body {
   background-color: #f5eef8; }';
 
 // / Dark / Night mode color scheme.
-$darkButtonCode = '.info-button {
-/* / The file list panel, in a shade that belongs to this scheme.
-   / It was a hardcoded cream in every scheme, so six of the seven showed a pale panel
-   / on a page of an unrelated colour, & the dark scheme showed a bright one.
-   / One step from the page background rather than the same as it, so the panel still
-   / reads as a panel & still has an edge. */
+$darkButtonCode = '
+/* / THREE LAYERS, & each has a different job.
+   / The page carries the scheme colour, or its pattern on blue.
+   / The card is the sheet the work sits on & is WHITE in every scheme but dark, so the
+   / application reads the same way whichever colour somebody picked.
+   / The panel inside the card is the only layer that carries the scheme, & it is defined
+   / below.
+   / Tinting the card was tried & was wrong. It competed with both the page behind it & the
+   / panel on top of it, & the layers stopped reading as layers. */
+/* / The dark scheme is the one exception to the white card & it has to be.
+   / A white sheet in a dark interface is a light source, & the whole point of a dark
+   / scheme is that there is not one. The three layers still read as three layers,
+   / just inverted, so the card is lighter than the page & the panel is lighter again.
+.file-list-card {
+  background-color: #2a2a2a;
+  color: #d8d8d8; }
+/* / The panel carries the scheme colour. It is the only one of the three layers that does.
+   / It sits on the WHITE card rather than on the page, so it is a light tint rather than a
+   / copy of the page colour. A panel matching the page would be right if it sat on the
+   / page, & it does not.
+   / Blue is the one worth saying out loud. The page of that scheme is grey with a pattern,
+   / so there is no page colour to tint toward & the panel takes the blue of the scheme.
+   / Every other scheme tints toward the page it belongs to. */
 .file-list-panel {
-  background-color: #2e2e2e;
-  color: #e8e8e8; }
+  background-color: #3a3a3a;
+  color: #e4e4e4; }
+.info-button {
   -moz-box-shadow: 3px 4px 0px 0px #1a1a1a;
   -webkit-box-shadow: 3px 4px 0px 0px #1a1a1a;
   box-shadow: 3px 4px 0px 0px #1a1a1a;
@@ -397,7 +499,7 @@ $darkButtonCode = '.info-button {
   text-shadow:0px 1px 0px #111111;
   min-width:100px; 
   width:250px;
-  max-width:<?php echo $GuiWidth; ?>; }
+  max-width:'.$GuiWidth.'; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #262626), color-stop(1, #454545));
   background:-moz-linear-gradient(top, #262626 5%, #454545 100%);

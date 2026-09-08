@@ -233,6 +233,25 @@ The failure to match usually has its own cause. An anchor built from memory, or 
 run several commands ago, does not match a file that has moved on. Anchor on a line number
 from a grep in the SAME command, & re-read before constructing anything.
 
+A PHP BUILD TOOL IS GATED THREE WAYS & EACH ANSWERS A DIFFERENT QUESTION.
+
+PHP_SAPI says which interface php was BUILT to speak. It does not say who started the
+process. A web server that shells out, a cgi wrapper, or a php-cli invoked from a request
+handler all report cli & are all a web request wearing a different hat.
+
+So the ENVIRONMENT is asked as well. A request carries a method, a host, a gateway, a
+server name or a remote address, & a tool run from a terminal carries none of them. Either
+gate alone is a gate somebody can walk around.
+
+Then ROOT IS DROPPED if it was given. A test reads no secret, writes no file & touches
+nothing outside its own output, so somebody typing sudo out of habit should not hand that
+to it. SUDO_UID names whoever ran sudo & is where to land; without it the target is nobody.
+
+THE GROUP IS DROPPED BEFORE THE USER & the order is not a style choice. After setuid the
+process is no longer root & is no longer permitted to change its group, so dropping the
+user first leaves the group as root permanently. It looks like it worked. The tools print
+both ids for exactly that reason, so the failure is visible rather than assumed.
+
 A PHP BUILD TOOL MUST REFUSE TO RUN OVER HTTP & THE CHECK IS ONE LINE.
   if (PHP_SAPI !== 'cli') { if (!headers_sent()) http_response_code(404); die(); }
 Documentation/Build sits inside the web root, so a php file there is EXECUTED by the web

@@ -191,8 +191,11 @@ function verifyConfigVersion($RequiredConfigVersion) {
     'SupportedGuis', 'DefaultGui', 'AllowUserSelectableGui',
     'SupportedColors', 'AllowUserSelectableColor', 'ButtonStyle',
     'Font', 'SpinnerStyle', 'SpinnerColor', 'MinimumCalibreVersion', 'UserEbookInputArray',
-    'ShowGUI', 'ShowFinePrint', 'TOSURL', 'PPURL', 'AllowUserShare',
-    'SupportedConversionTypes', 'RetryCount', 'DocumentEngineSleepTimer',
+    'ShowGUI', 'ShowFinePrint', 'TOSURL', 'PPURL', 'LogoURL', 'AllowUserShare',
+    // / DocumentEngineSleepTimer was required & is read NOWHERE. It was removed from the
+    // / list rather than added to the configuration, because a required setting nothing
+    // / reads is a setting every installation must carry for no reason.
+    'SupportedConversionTypes', 'RetryCount',
     'UsePatchedDocumentEngine', 'RARArchiveMethod', 'AllowBootableIsoImage',
     'DeleteBuildEnvironment', 'DeleteDevelopmentDocumentation', 'UserEbookOutputArray',
     'UserArchiveArray', 'UserDearchiveArray', 'UserDocumentArray', 'UserSpreadsheetArray',
@@ -201,7 +204,8 @@ function verifyConfigVersion($RequiredConfigVersion) {
     'UserMediaInputArray', 'UserMediaOutputArray', 'UserBootableIsoArray',
     'UserVideoInputArray', 'UserVideoOutputArray', 'UserStreamArray',
     'UserDrawingArray', 'UserSVGInputArray', 'UserSVGOutputArray', 'UserModelArray',
-    'UserModelInputArray', 'UserModelOutputArray', 'EnvironmentManagerMayRepair', 'AllowUserURLDownload', 'GuiMaxWidth',
+    'UserModelInputArray', 'UserModelOutputArray', 'EnvironmentManagerMayRepair', 'AllowUserURLDownload', 'DefaultVirusScanner',
+    'URLDownloadMaximumBytes', 'URLDownloadsPerSession', 'ScanURLDownloads', 'PermittedPrivateRanges', 'GuiMaxWidth',
     'EnvironmentManagerMayRewriteConfigs',
     'UserDrawingInputArray', 'UserDrawingOutputArray', 'UserImageInputArray',
     'UserImageOutputArray', 'UserSCADInputArray', 'UserSCADOutputArray',
@@ -223,7 +227,16 @@ function verifyConfigVersion($RequiredConfigVersion) {
   // / config.php is required at global scope, so every setting it defines lands in $GLOBALS.
   // / isset() is deliberately not used because a setting legitimately set to NULL still exists.
   foreach ($requiredConfigVars as $requiredConfigVar) {
-    if (!array_key_exists($requiredConfigVar, $GLOBALS)) array_push($MissingConfigVars, $requiredConfigVar); }
+    // / isset RATHER THAN array_key_exists, & the difference is the whole check.
+    // / A global declaration anywhere in this file creates the key in $GLOBALS with a NULL
+    // / value, before config.php has assigned anything. array_key_exists then answers yes
+    // / for a setting the configuration never mentioned, so the check passed for every
+    // / required setting that some function had merely declared global.
+    // / Two settings were absent from config.php & from the template for an entire release
+    // / & this reported a valid configuration.
+    // / isset is FALSE for NULL & TRUE for FALSE, 0 & the empty string, which is exactly
+    // / the distinction wanted. A setting legitimately set to FALSE still passes.
+    if (!isset($GLOBALS[$requiredConfigVar])) array_push($MissingConfigVars, $requiredConfigVar); }
   if (!empty($MissingConfigVars)) $ConfigIsValid = FALSE;
   // / Compare the config version stamp against the version this core was written for.
   // / This is advisory. It explains why settings are missing but never passes a config that is incomplete.
@@ -649,7 +662,7 @@ function resolveSecretFile($secretFile, $requiredSecretVersion) {
 function verifyInstallation() {
   // / Set variables.
   global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $LogFile, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $SecretFile, $RequiredSecretVersion, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumImageVersion, $UsePyMeshLab, $MinimumMeshlabVersion, $MinimumAssimpVersion, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $Minimum7zVersion, $MinimumZipVersion, $MinimumRarVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumDiaVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection, $ResourceAwarenessActive, $EnableResourceAwareness, $RequireResourceAwareness, $ManagerSocketDir, $DirSep, $CoreManagerVersion, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $CoreLoaded, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $RequiredSetupCoreVersion, $RequiredConfigScript, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $RequiredEngineVersion, $AllowUnprivilegedNamespaces, $MaintainHTAccess,
-    $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth;
+    $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth, $DefaultVirusScanner, $URLDownloadMaximumBytes, $URLDownloadsPerSession, $ScanURLDownloads, $LogoURL, $ResolvedLogoURL, $PermittedPrivateRanges;
   putenv('HOME='.$HomeLoc);
   $CoreLoaded = TRUE;
   $InstallationIsVerified = $RunningFromCLI = $RunningAsRoot = $RunningInContainer = FALSE;
@@ -696,25 +709,25 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
-  $HRConvertVersion = 'v3.9.2';
+  $HRConvertVersion = 'v3.9.3';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
   // / A release that changes no settings leaves this alone, so existing config files keep working.
   // / Any config.php version that is greater (newer) than the version listed below is considered acceptable.
-  $RequiredConfigVersion = 'v3.9.2';
+  $RequiredConfigVersion = 'v3.9.3';
   $RequiredConfigVersion = ltrim($RequiredConfigVersion, 'vV');
   // / Define the minimum acceptable GUI version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / Gui version that do not exactly match the version listed below are not considered acceptable.
   // / This is because Guis are not always guaranteed to be forward or reverse compatible.
-  $RequiredGuiVersion = 'v3.9.2';
+  $RequiredGuiVersion = 'v3.9.3';
   $RequiredGuiVersion = ltrim($RequiredGuiVersion, 'vV');
   // / Define the minimum acceptable Language Pack version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / Language version that do not exactly match the version listed below are not considered acceptable.
   // / This is because Language Packs are not always guaranteed to be forward or reverse compatible.
-  $RequiredLanguageVersion = 'v3.9.2';
+  $RequiredLanguageVersion = 'v3.9.3';
   $RequiredLanguageVersion = ltrim($RequiredLanguageVersion, 'vV');
   // / The Core Manager component version this core requires.
   // / This is an EXACT match. A component built for another core may not be called safely.
@@ -725,30 +738,30 @@ function verifyInstallation() {
   // / Setup Core holds the configuration model, so this MUST be raised whenever
   // / $RequiredConfigVersion is raised. Forgetting does not break anything immediately.
   // / The utility reports a variable it does not know as unaccounted & carries on.
-  $RequiredSetupCoreVersion = 'v3.9.2';
+  $RequiredSetupCoreVersion = 'v3.9.3';
   $RequiredSetupCoreVersion = ltrim($RequiredSetupCoreVersion, 'vV');
   // / The Dependency Core component version this core requires.
   // / This is an EXACT match. A component built for another core may not be called safely.
-  $RequiredDependencyCoreVersion = 'v3.9.2';
+  $RequiredDependencyCoreVersion = 'v3.9.3';
   $RequiredDependencyCoreVersion = ltrim($RequiredDependencyCoreVersion, 'vV');
   // / The dependency manifest version this core requires.
   // / Raise this whenever a dependency is added, removed, or its minimum version moves.
   // / A manifest from another release may name a package that no longer exists.
-  $RequiredDependsVersion = 'v3.9.2';
+  $RequiredDependsVersion = 'v3.9.3';
   $RequiredDependsVersion = ltrim($RequiredDependsVersion, 'vV');
   // / The Pipeline Core component version this core requires.
   // / This is an EXACT match. A component built for another core may declare an entry point
   // / whose arguments have moved, or capabilities this core cannot honour.
   // / Raise this whenever a pipeline is added, removed, or its own version pin moves.
   // / The manager carries the pin list for every pipeline it accepts.
-  $RequiredPipelineCoreVersion = 'v3.9.2';
+  $RequiredPipelineCoreVersion = 'v3.9.3';
   // / The Engine version this application requires.
   // / This is an EXACT match & it is free, because the Engine is bundled with this release
   // / rather than installed beside it. The updater replaces both together, so the pin & the
   // / file it points at cannot drift apart on an installation nobody has edited by hand.
   // / An administrator who edits the Engine by hand loses the edit at the next update. That
   // / is the same bargain every bundled component makes.
-  $RequiredEngineVersion = 'v3.9.2';
+  $RequiredEngineVersion = 'v3.9.3';
   $RequiredEngineVersion = ltrim($RequiredEngineVersion, 'vV');
   $RequiredPipelineCoreVersion = ltrim($RequiredPipelineCoreVersion, 'vV');
   // / The bootstrap script version this core expects.
@@ -772,7 +785,59 @@ function verifyInstallation() {
   // / Check for required files & stop execution if they are missing.
   if (!file_exists($VersionInfoFile)) quickDie('Could not process the HRConvert2 Version Information file (versionInfo.php)!', 24000);
   else require_once ($VersionInfoFile);
-  if (!file_exists($configFile)) quickDie('Could not process the HRConvert2 Configuration file (config.php)!', 0);
+  // / A missing configuration is fatal EXCEPT to the one command that repairs it.
+  // / Every other path needs settings & cannot invent them, so dying here is right.
+  // / --config --repair exists to write a configuration & requiring one to run it is a
+  // / loop with no way in. An installation that has lost config.php could only be fixed
+  // / by copying a file from somewhere else, which is the situation this removes.
+  // / The check is on the RAW arguments because nothing has been parsed yet. Both words
+  // / are required, so a bare --config still dies rather than running against nothing.
+  $configRepairRequested = FALSE;
+  if (PHP_SAPI === 'cli' && isset($_SERVER['argv']) && is_array($_SERVER['argv'])) $configRepairRequested = in_array('--config', $_SERVER['argv'], TRUE) && in_array('--repair', $_SERVER['argv'], TRUE);
+  if (!file_exists($configFile) && !$configRepairRequested) quickDie('Could not process the HRConvert2 Configuration file (config.php)!', 0);
+  // / Generate & STOP. The boot sequence below this point reads settings at every step,
+  // / so there is nothing to be gained by continuing without them & a great deal to go
+  // / wrong. An operator runs the command again once the file exists.
+  else if (!file_exists($configFile)) {
+    $bootstrapSetup = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'Engine'.DIRECTORY_SEPARATOR.'Cores'.DIRECTORY_SEPARATOR.'setupCore.php');
+    if ($bootstrapSetup === FALSE) quickDie('No configuration file & no Setup Core to write one!', 0);
+    // / $InstLoc & $DirSep normally come FROM config.php, which is the file this branch
+    // / exists because it is missing. Without them a relative template path resolves from
+    // / the filesystem root & the template is reported missing when it is sitting right
+    // / there. That is what happened.
+    // / Everything the Engine reads on this path is set here, because nothing else will.
+    global $InstLoc, $DirSep, $ApplicationName, $Lol, $EnableMemoryProtection, $Verbose;
+    $InstLoc = dirname(__FILE__);
+    $DirSep = DIRECTORY_SEPARATOR;
+    $ApplicationName = 'HRConvert2';
+    $Lol = PHP_EOL;
+    $EnableMemoryProtection = FALSE;
+    $Verbose = TRUE;
+    // / The Engine reads the model by NAME & engineConfig.php is not loaded on this path,
+    // / so the name is supplied here. Without it the generator has no model & writes
+    // / nothing, which is a silent failure rather than a loud one.
+    // / GLOBAL, because the Engine reads it as one. Assigning it here without declaring it
+    // / makes a local that looks right, & collectConfigModel then finds nothing & returns an
+    // / empty model, & the generator writes a file with zero settings & reports success.
+    // / Convention three, caught by the thing it exists to prevent.
+    global $EngineConfigModelProvider, $EngineConfigTemplate;
+    $EngineConfigModelProvider = 'applicationConfigModel';
+    // / The bootstrap names the template too. engineConfig.php is not loaded on this path,
+    // / so nothing else would.
+    $EngineConfigTemplate = 'Engine/Contract/config-template.php';
+    // / Setup Core reaches the model through the Engine, so the Engine loads first.
+    // / A bootstrap that loads half the components it calls into is a bootstrap that fails
+    // / on the line where the missing half is first needed rather than on the line that
+    // / forgot to load it.
+    $bootstrapEngine = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'Engine'.DIRECTORY_SEPARATOR.'engine.php');
+    if ($bootstrapEngine === FALSE) quickDie('No configuration file & no Engine to write one!', 0);
+    require_once($bootstrapEngine);
+    require_once($bootstrapSetup);
+    print(PHP_EOL.'No configuration file was found. Writing a default one from the template.'.PHP_EOL);
+    list ($bootstrapWritten, $bootstrapCount) = generateConfigFile(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'config.php');
+    if ($bootstrapWritten) print('Wrote '.$bootstrapCount.' setting(s). Every value is a default & is yours to change.'.PHP_EOL.PHP_EOL);
+    else print('A configuration file could not be written. Check that Resources is writable by root.'.PHP_EOL.PHP_EOL);
+    exit($bootstrapWritten ? 0 : 1); }
   else require_once ($configFile);
   $ConfigVersion = ltrim($ConfigVersion, 'vV');
   // / Perform a version integrity check.
@@ -781,7 +846,16 @@ function verifyInstallation() {
   // / Confirm the config file carries every setting this core requires.
   // / An undefined setting reads as NULL, which silently becomes FALSE or zero at every point of use.
   list ($configIsValid, $missingConfigVars, $detectedConfigVersion) = verifyConfigVersion($RequiredConfigVersion);
-  if (!$configIsValid) quickDie('The config.php file is missing '.count($missingConfigVars).' required setting(s). Config version detected: v'.$detectedConfigVersion.'. Config version required: v'.$RequiredConfigVersion.'. Missing Variables: '.implode(', ', $missingConfigVars), 28000);
+    // / A CONFIGURATION MISSING A SETTING STILL LETS --config --repair RUN, & it has to.
+    // / Repair is the tool that ADDS a missing setting. Refusing to start because a setting
+    // / is missing means the only way to fix it is by hand, which is the loop this whole
+    // / mechanism exists to remove.
+    // / The same exception already covers a configuration that is missing ENTIRELY. This is
+    // / the same argument applied to a configuration that is merely incomplete.
+    // / Every other command still refuses, because every other command reads settings & a
+    // / setting read as NULL is a silently changed behaviour rather than an error.
+  if (!$configIsValid && !$configRepairRequested) quickDie('The config.php file is missing '.count($missingConfigVars).' required setting(s). Config version detected: v'.$detectedConfigVersion.'. Config version required: v'.$RequiredConfigVersion.'. Missing Variables: '.implode(', ', $missingConfigVars), 28000);
+    else if (!$configIsValid) warningEntry('The configuration is missing '.count($missingConfigVars).' required setting(s). Only --config --repair can run.');
   // / Derive a filesystem safe token from the application name.
   // / The name comes from config.php, so it is sanitized before it is used to build a path.
   // / A name that sanitizes to nothing falls back to the project name rather than to an
@@ -839,7 +913,7 @@ function verifyInstallation() {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $SecretKey is deliberately NOT cleared here because the rest of the core needs it.
   // / $SecretFile is deliberately NOT cleared here because it is a global the core reads later.
-  purgeSensitiveMemory($EnableMemoryProtection, $sandboxPolicyIsValid, $sandboxPolicyStatus, $secretAuthorized, $userSecretAuthorized, $secretIsReady, $configIsValid, $missingConfigVars, $detectedConfigVersion, $secretFolder, $applicationSlug, $legacySecretFile, $componentIsAvailable);
+  purgeSensitiveMemory($EnableMemoryProtection, $bootstrapEngine, $configRepairRequested, $bootstrapSetup, $bootstrapWritten, $bootstrapCount, $sandboxPolicyIsValid, $sandboxPolicyStatus, $secretAuthorized, $userSecretAuthorized, $secretIsReady, $configIsValid, $missingConfigVars, $detectedConfigVersion, $secretFolder, $applicationSlug, $legacySecretFile, $componentIsAvailable);
   return array($InstallationIsVerified, $configFile, $Version, $CoreLoaded); }
 // / -----------------------------------------------------------------------------------
 
@@ -1309,7 +1383,7 @@ function verifyTokens($Token1, $Token2) {
 // / A function to verify that all required POST & GET inputs are properly sanitized.
 function verifyInputs() {
   // / Set variables.
-  global $ShowGUI, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $StreamBaseURL, $UserURLDownload;
+  global $ShowGUI, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $StreamBaseURL, $UserURLDownload, $LogoURL, $ResolvedLogoURL, $SupportedLanguages, $SupportedColors, $SupportedGuis;
   $var = FALSE;
   $InputsAreVerified = TRUE;
   $GUI = $Color = $Language = $Token1 = $Token2 = $Height = $Width = $Rotate = $Bitrate = $Method = $Download = $UserFilename = $UserExtension = $Archive = $UserScanType = $ScanAll = $UserClamScan = $UserScanCoreScan = $var = '';
@@ -1366,6 +1440,37 @@ function verifyInputs() {
   // / applies sanitize() to the host, which is the one part that is filename shaped.
   // / It is stored raw here & normalized at the point of use, so the reason a bad one was
   // / refused can be reported to the operator who typed it.
+  // / The logo destination is computed here, where the session values already are.
+  // /
+  // / 'preserve-session' is not an address & is never emitted as one. It means build a link
+  // / back to this page carrying what a user has already chosen, so clicking the logo
+  // / returns them to a clean page rather than out of the application. This server has no
+  // / navigation, so a logo that leaves takes the session with it & the files with that.
+  // /
+  // / The three carried values are language, colour & interface. Each has ALREADY been
+  // / through sanitize() above, & each is checked against the list of what this
+  // / installation supports before it is put in a URL. A value that is not in the list is
+  // / left out rather than corrected, because a link is not the place to argue with input.
+  // /
+  // / The session tokens are deliberately NOT carried. A session belongs to the browser
+  // / that holds it & putting one in a link makes it something that can be copied out of a
+  // / history, a referrer header or somebody's shoulder.
+  // /
+  // / A configured address is used as written & is required to be http or https. Anything
+  // / else falls back to preserving the session, because a logo pointing at javascript: or
+  // / data: is a way to run something in a visitor's browser.
+  $ResolvedLogoURL = 'convertCore.php';
+  if (isset($LogoURL) && strtolower(trim((string)$LogoURL)) !== 'preserve-session') {
+    $logoParts = @parse_url(trim((string)$LogoURL));
+    if (is_array($logoParts) && isset($logoParts['scheme']) && in_array(strtolower($logoParts['scheme']), array('http', 'https'), TRUE)) $ResolvedLogoURL = trim((string)$LogoURL);
+    else warningEntry('The configured Logo URL is not an http or https address & was refused. The logo will return to this page instead.'); }
+  else {
+    $logoQuery = array();
+    if (isset($Language) && isset($SupportedLanguages) && is_array($SupportedLanguages) && array_key_exists($Language, $SupportedLanguages)) $logoQuery[] = 'language='.rawurlencode($Language);
+    if (isset($Color) && isset($SupportedColors) && is_array($SupportedColors) && in_array($Color, $SupportedColors, TRUE)) $logoQuery[] = 'color='.rawurlencode($Color);
+    if (isset($GUI) && isset($SupportedGuis) && is_array($SupportedGuis) && in_array($GUI, $SupportedGuis, TRUE)) $logoQuery[] = 'gui='.rawurlencode($GUI);
+    if (!empty($logoQuery)) $ResolvedLogoURL = 'convertCore.php?'.implode('&', $logoQuery); }
+
   if (isset($_POST['streamBaseURL'])) $StreamBaseURL = (string)$_POST['streamBaseURL'];
   // / The download address is read raw for the same reason the stream base is. A URL that
   // / has been through sanitize() is a filename & is no longer an address.
@@ -1386,7 +1491,7 @@ function verifyInputs() {
   // / Check the list of error check results and see if any errors occured.
   foreach ($variableIsSanitized as $var) if (!$var) ($InputsAreVerified = FALSE);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $variableIsSanitized, $key, $var);
+  purgeSensitiveMemory($EnableMemoryProtection, $logoParts, $logoQuery, $variableIsSanitized, $key, $var);
   return array($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType, $UserURLDownload); }
 // / -----------------------------------------------------------------------------------
 
@@ -1696,7 +1801,7 @@ function requestConvertLoc($dailyHash, $sessionHash) {
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
   global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $ProtectedRootDirs, $ResourcesDir, $BootloadersDir, $AllowBootableIsoImage, $UserBootableIsoArray, $BootableIsoArray, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $ManagerSocketDir, $ManagerSocketTimeout, $ManagerMessageBatchSize, $ManagerMessageSkew, $StartupKeyWindow, $ResourceAwarenessActive, $CoreManagerVersion, $EnableResourceAwareness, $RequireResourceAwareness, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EffectiveConversionLimits, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $AllowUnprivilegedNamespaces, $PipelineCoreActive, $PipelinesAreEnumerated, $Pipelines, $PipelineCount, $LogSequence, $LogBuffer, $LogBufferOverflowed, $LogRole, $EngineSandboxProfiles, $ModelInputArray, $ModelOutputArray, $ImageInputArray, $ImageOutputArray, $SCADInputArray, $DrawingInputArray, $DrawingOutputArray,
-    $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth;
+    $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth, $DefaultVirusScanner, $HostArchitecture, $HostMachineString, $URLDownloadMaximumBytes, $URLDownloadsPerSession, $ScanURLDownloads, $LogoURL, $ResolvedLogoURL, $PermittedPrivateRanges;
   // / Application related variables.
   $GlobalsAreVerified = $sanitizeGlobalCheck = $sanitizeGlobalCheckA = $sanitizeGlobalCheckB = $sanitizeGlobalCheckC = $sanitizeGlobalCheckD = $sanitizeGlobalCheckE = FALSE;
   $SleepTimer = 0;
@@ -3497,7 +3602,7 @@ function verifyIsoHybridVersion($MinimumVersion) {
 // / file, because loading twenty version files would overwrite the variable each time.
 function showVersionInfo() {
   // / Set variables.
-  global $RequiredEngineVersion, $SecretFile, $ManagerSocketDir, $InstLoc, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $PipelineCoreActive, $PipelineCount, $RequiredSecretVersion, $RequiredConfigScript, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $MinimumInkscapeVersion, $MinimumDiaVersion, $MinimumSCADVersion, $MinimumImageVersion, $MinimumAssimpVersion, $MinimumMeshlabVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EnableResourceAwareness, $RequireResourceAwareness, $ResourceAwarenessActive, $CoreManagerVersion, $ManagerSocketDir, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $ConvertTemp, $MaintainHTAccess, $EngineVersion;
+  global $RequiredEngineVersion, $SecretFile, $ManagerSocketDir, $InstLoc, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $PipelineCoreActive, $PipelineCount, $RequiredSecretVersion, $RequiredConfigScript, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $MinimumInkscapeVersion, $MinimumDiaVersion, $MinimumSCADVersion, $MinimumImageVersion, $MinimumAssimpVersion, $MinimumMeshlabVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EnableResourceAwareness, $RequireResourceAwareness, $ResourceAwarenessActive, $CoreManagerVersion, $ManagerSocketDir, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $ConvertTemp, $MaintainHTAccess, $EngineVersion, $HostArchitecture, $HostMachineString, $AllowUserURLDownload, $AllowUserVirusScan, $VirusScan, $AllowUserShare, $EnvironmentManagerMayRepair, $EnablePerConversionLimits, $Pipelines;
   $VersionInfoDisplayed = $modelsAreValid = $ocrToolsAreValid = $archiveToolsAreValid = $libreOfficeIsValid = FALSE;
   $ffmpegBinary = $streamFfmpegBinary = $inkscapeBinary = $diaBinary = $scadBinary = $imageBinary = $ebookBinary = FALSE;
   $assimpBinary = $meshlabBinary = $tesseractBinary = $pdftotextBinary = FALSE;
@@ -3533,27 +3638,49 @@ function showVersionInfo() {
   // / Every line is a fact. An explanation belongs in Documentation, not in this output.
   $failureCount = 0;
   print($Lol.$ApplicationName.' '.$HRConvertVersion.$Lol);
+  // / The Engine sits with the application rather than under detachable components.
+  // / It is what this application RUNS ON. Listing it beside the things that can be
+  // / removed suggested it was one of them.
+  print('  Engine     '.ltrim((string)readComponentVersion('Engine'.$DirSep.'engine.php', 'EngineVersion'), 'vV').', requires '.ltrim((string)$RequiredEngineVersion, 'vV').$Lol);
   print('  Config     '.$ConfigVersion.', requires '.$RequiredConfigVersion.' or later'.$Lol);
+  // / The machine, because a dependency that is unsupported here is unsupported because
+  // / of this line & an operator reading a report needs to see it before the reasons.
+  print('  Machine    '.$HostArchitecture.($HostMachineString !== '' && $HostMachineString !== $HostArchitecture ? ' ('.$HostMachineString.')' : '').$Lol);
 
   // / Detachable components. Each is an EXACT match & a mismatch removes what it provides.
   print($Lol.'Detachable components'.$Lol);
   $componentChecks = array(
-    'Engine' => array(readComponentVersion('Engine'.$DirSep.'engine.php', 'EngineVersion'), $RequiredEngineVersion),
-    'Setup Core' => array(readComponentVersion('SetupCore'.$DirSep.'setupCore.php', 'SetupCoreVersion'), $RequiredSetupCoreVersion),
-    'Dependency Core' => array(readComponentVersion('DependencyCore'.$DirSep.'dependencyCore.php', 'DependencyCoreVersion'), $RequiredDependencyCoreVersion),
-    'Dependency manifest' => array(readComponentVersion('depends.php', 'DependsVersion'), $RequiredDependsVersion),
+    'Setup Core' => array(readComponentVersion('Engine'.$DirSep.'Cores'.$DirSep.'setupCore.php', 'SetupCoreVersion'), $RequiredSetupCoreVersion),
+    'Dependency Core' => array(readComponentVersion('Engine'.$DirSep.'Cores'.$DirSep.'dependencyCore.php', 'DependencyCoreVersion'), $RequiredDependencyCoreVersion),
     'Pipeline Core' => array(readComponentVersion('PipelineCore'.$DirSep.'pipelineCore.php', 'PipelineCoreVersion'), $RequiredPipelineCoreVersion));
   foreach ($componentChecks as $componentName => $componentPair) {
     if (ltrim((string)$componentPair[0], 'vV') === ltrim((string)$componentPair[1], 'vV')) print('  '.str_pad($componentName, 28).'OK, '.ltrim((string)$componentPair[0], 'vV').$Lol);
     else {
       $failureCount++;
       print('  '.str_pad($componentName, 28).'FAILED, reports '.($componentPair[0] === '' ? 'no version' : ltrim((string)$componentPair[0], 'vV')).', requires '.$componentPair[1].$Lol); } }
+  // / Pipelines are listed as a SECTION with a line per kind, the same shape the language
+  // / packs use. One line saying thirteen verified hid that two of them scan rather than
+  // / convert, & a scanner missing is a different problem from a converter missing.
+  // / The kinds are counted from what enumeratePipelines already returned rather than
+  // / counted again here, so this cannot disagree with what was loaded.
+  print($Lol.'Installed pipelines'.$Lol);
   if (!$PipelineCoreActive) print('  '.str_pad('Conversion pipelines', 28).'UNAVAILABLE, no conversion can run'.$Lol);
-  else print('  '.str_pad('Conversion pipelines', 28).'OK, '.$PipelineCount.' verified'.$Lol);
+  else {
+    $conversionPipelineCount = $scannerPipelineCount = 0;
+    if (is_array($Pipelines)) foreach ($Pipelines as $pipelineRecord) {
+      if ($pipelineRecord['Kind'] === 'scanner') $scannerPipelineCount++;
+      else $conversionPipelineCount++; }
+    print('  '.str_pad('Conversion pipelines', 28).$conversionPipelineCount.' of '.$conversionPipelineCount.' OK'.$Lol);
+    print('  '.str_pad('Security pipelines', 28).$scannerPipelineCount.' of '.$scannerPipelineCount.' OK'.$Lol); }
 
   // / Dependencies. An optional one says so, because losing it costs a feature rather than
   // / a subsystem.
   print($Lol.'Dependencies'.$Lol);
+  // / The manifest is the first thing listed because everything below it is read FROM it.
+  // / A manifest that failed its version check makes every line under it unreliable.
+  $manifestVersion = readComponentVersion('Engine'.$DirSep.'Contract'.$DirSep.'depends.php', 'DependsVersion');
+  if (ltrim((string)$manifestVersion, 'vV') === ltrim((string)$RequiredDependsVersion, 'vV')) print('  '.str_pad('Manifest', 28).'OK, '.ltrim((string)$manifestVersion, 'vV').$Lol);
+  else { $failureCount++; print('  '.str_pad('Manifest', 28).'FAILED, reports '.($manifestVersion === '' ? 'no version' : ltrim((string)$manifestVersion, 'vV')).' & this core requires '.ltrim((string)$RequiredDependsVersion, 'vV').$Lol); }
   $dependencyChecks = array(
     'FFMPEG, audio & video' => array($ffmpegBinary !== FALSE, $MinimumFFMPEGVersion, TRUE),
     'FFMPEG, streams' => array($streamFfmpegBinary !== FALSE, $MinimumStreamFFMPEGVersion, TRUE),
@@ -3597,6 +3724,22 @@ function showVersionInfo() {
     print('  '.str_pad('Bootable disk images', 28).($mkisofsBinary === FALSE ? 'NOT READY' : 'READY').$Lol); }
 
   // / Every installed interface, named, & whether it matches the version the core requires.
+  // / Features that are installed & switched off.
+  // / A gated feature is invisible when it is off, so nothing tells an operator it exists.
+  // / Only the ones that are OFF are listed. A feature doing its job needs no announcement,
+  // / & a list of everything that is on is a list nobody reads.
+  $disabledFeatures = array();
+  if (!$AllowUserURLDownload) $disabledFeatures[] = array('Fetch from a URL', 'Allow User URL Download');
+  if (!$AllowUserVirusScan) $disabledFeatures[] = array('User virus scanning', 'Allow User Virus Scan');
+  if (!$VirusScan) $disabledFeatures[] = array('Virus scanning', 'Virus Scan');
+  if (!$AllowUserShare) $disabledFeatures[] = array('Share a file', 'Allow User Share');
+  if (!$EnvironmentManagerMayRepair) $disabledFeatures[] = array('Environment repair', 'Environment Manager May Repair');
+  if (!$EnablePerConversionLimits) $disabledFeatures[] = array('Per conversion limits', 'Enable Per Conversion Limits');
+  if (!empty($disabledFeatures)) {
+    print($Lol.'Available & switched off'.$Lol);
+    foreach ($disabledFeatures as $disabledFeature) print('  '.str_pad($disabledFeature[0], 28).'--'.$disabledFeature[1].'-- in config.php'.$Lol); }
+
+
   print($Lol.'Installed interfaces'.$Lol);
   foreach ($SupportedGuis as $installedGui) {
     $checkDir = $InstLoc.$DirSep.'UI'.$DirSep.$installedGui;
@@ -3699,7 +3842,7 @@ function showVersionInfo() {
   print($Lol);
   $VersionInfoDisplayed = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $modelsAreValid, $ocrToolsAreValid, $archiveToolsAreValid, $libreOfficeIsValid, $ffmpegBinary, $streamFfmpegBinary, $inkscapeBinary, $diaBinary, $scadBinary, $imageBinary, $assimpBinary, $meshlabBinary, $tesseractBinary, $pdftotextBinary, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary, $bwrapBinary, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $guiMatches, $langMatches, $langOk, $langTotal, $ebookBinary, $listenerStatus, $listenerIsRunning, $secretMode, $socketMode, $componentChecks, $componentPair, $componentName, $dependencyChecks, $dependencyState, $dependencyName, $subsystemChecks, $subsystemIsReady, $subsystemName, $failureCount, $maintainHtaccess, $apacheConfigIsInstalled, $dataIsProtected, $exposureStatus, $exposureDetail);
+  purgeSensitiveMemory($EnableMemoryProtection, $conversionPipelineCount, $scannerPipelineCount, $pipelineRecord, $manifestVersion, $disabledFeatures, $disabledFeature, $modelsAreValid, $ocrToolsAreValid, $archiveToolsAreValid, $libreOfficeIsValid, $ffmpegBinary, $streamFfmpegBinary, $inkscapeBinary, $diaBinary, $scadBinary, $imageBinary, $assimpBinary, $meshlabBinary, $tesseractBinary, $pdftotextBinary, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary, $bwrapBinary, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $guiMatches, $langMatches, $langOk, $langTotal, $ebookBinary, $listenerStatus, $listenerIsRunning, $secretMode, $socketMode, $componentChecks, $componentPair, $componentName, $dependencyChecks, $dependencyState, $dependencyName, $subsystemChecks, $subsystemIsReady, $subsystemName, $failureCount, $maintainHtaccess, $apacheConfigIsInstalled, $dataIsProtected, $exposureStatus, $exposureDetail);
   return $VersionInfoDisplayed; }
 // / -----------------------------------------------------------------------------------
 
@@ -3943,10 +4086,10 @@ function parseCommandLine() {
         // / The configuration utility. Setup Core owns the model, so it is the only
         // / component this path requires.
         if ($cliCommand === '--config') {
-          list ($cliSetupIsAvailable, $cliSetupVersion) = verifyCoreComponent('Setup Core', 'SetupCore'.$DirSep.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
+          list ($cliSetupIsAvailable, $cliSetupVersion) = verifyCoreComponent('Setup Core', 'Engine'.$DirSep.'Cores'.$DirSep.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
           if (!$cliSetupIsAvailable) {
             print($Lol.'The Setup Core component is unavailable.'.$Lol);
-            if ($cliSetupVersion === '') print('Resources/SetupCore/setupCore.php is missing, unreadable, or reports no version.'.$Lol.$Lol);
+            if ($cliSetupVersion === '') print('Resources/Engine/Cores/setupCore.php is missing, unreadable, or reports no version.'.$Lol.$Lol);
             else print('It reports v'.ltrim($cliSetupVersion, 'vV').' & this core requires v'.ltrim((string)$RequiredSetupCoreVersion, 'vV').'.'.$Lol.$Lol); }
           else {
             logEntry('Command line invocation. Running the configuration utility.');
@@ -3962,11 +4105,11 @@ function parseCommandLine() {
         // / Everything --setup owns. Dependency Core is required. Setup Core is loaded only
         // / by the two options that also configure & repair.
         else {
-          list ($cliDependencyIsAvailable, $cliDependencyVersion) = verifyCoreComponent('Dependency Core', 'DependencyCore'.$DirSep.'dependencyCore.php', 'DependencyCoreVersion', $RequiredDependencyCoreVersion);
+          list ($cliDependencyIsAvailable, $cliDependencyVersion) = verifyCoreComponent('Dependency Core', 'Engine'.$DirSep.'Cores'.$DirSep.'dependencyCore.php', 'DependencyCoreVersion', $RequiredDependencyCoreVersion);
           $cliSubsystem = extractCliOption($cliArguments, '--subsystem');
           if (!$cliDependencyIsAvailable) {
             print($Lol.'The Dependency Core component is unavailable.'.$Lol);
-            if ($cliDependencyVersion === '') print('Resources/DependencyCore/dependencyCore.php is missing, unreadable, or reports no version.'.$Lol.$Lol);
+            if ($cliDependencyVersion === '') print('Resources/Engine/Cores/dependencyCore.php is missing, unreadable, or reports no version.'.$Lol.$Lol);
             else print('It reports v'.ltrim($cliDependencyVersion, 'vV').' & this core requires v'.ltrim((string)$RequiredDependencyCoreVersion, 'vV').'.'.$Lol.$Lol); }
           // / Reading the machine needs no authorization at all.
           else if (in_array('--check-depends', $cliArguments, TRUE)) {
@@ -4017,7 +4160,7 @@ function parseCommandLine() {
           // / The listener service unit, generated from the live configuration.
           // / Setup Core owns it. Dependency Core is already loaded by the time we get here.
           else if (in_array('--install-service', $cliArguments, TRUE)) {
-            list ($cliSetupIsAvailable, $cliSetupVersion) = verifyCoreComponent('Setup Core', 'SetupCore'.$DirSep.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
+            list ($cliSetupIsAvailable, $cliSetupVersion) = verifyCoreComponent('Setup Core', 'Engine'.$DirSep.'Cores'.$DirSep.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
             if (!$cliSetupIsAvailable) print($Lol.'This operation needs the Setup Core component, which is unavailable.'.$Lol.$Lol);
             else if (!$RunningAsRoot) {
               warningEntry('A service unit installation was refused for an unauthorized user.');
@@ -4030,7 +4173,7 @@ function parseCommandLine() {
               print($Lol); } }
           // / These two install dependencies AND configure, so both components are needed.
           else if (in_array('--install-complete', $cliArguments, TRUE) or in_array('--reinstall-existing', $cliArguments, TRUE)) {
-            list ($cliSetupIsAvailable, $cliSetupVersion) = verifyCoreComponent('Setup Core', 'SetupCore'.$DirSep.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
+            list ($cliSetupIsAvailable, $cliSetupVersion) = verifyCoreComponent('Setup Core', 'Engine'.$DirSep.'Cores'.$DirSep.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
             if (!$cliSetupIsAvailable) {
               print($Lol.'This operation also needs the Setup Core component, which is unavailable.'.$Lol);
               print('Dependencies can still be managed with --setup --check-depends & --install-depends.'.$Lol.$Lol); }
@@ -4376,9 +4519,6 @@ function symlinkmtime($symlinkPath) {
 // / -----------------------------------------------------------------------------------
 
 
-
-
-
 // / -----------------------------------------------------------------------------------
 // / A function to declare every sandbox profile this application uses.
 // / Accepts nothing. Returns an array of profile name to a record describing it.
@@ -4492,6 +4632,256 @@ function getSandboxProfiles() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / MOVED OUT OF THE ENGINE AT v3.9.2 & renamed. It was 1272 lines of THIS application
+// / written as data, sitting inside a component meant to serve any application.
+// / The Engine reads it because engineConfig.php names it in $EngineConfigModelProvider.
+// / A function to hold this utility's understanding of config.php.
+// / Accepts no arguments.
+// / Returns a multidimensional array of sections, each holding its variables.
+// /
+// / THIS ARRAY IS THE ONLY BLOCK THAT CHANGES WHEN config.php CHANGES.
+// / Update it whenever $ConfigVersion is bumped. Update it WITHOUT FAIL whenever
+// / $RequiredConfigVersion is bumped. Forgetting does not break this utility. A variable
+// / it does not know about is reported as unaccounted, can still be edited by hand, &
+// / simply cannot be reset or repaired, because nothing here knows what it should be.
+// /
+// / THE SECTION NAMES MUST MATCH config.php EXACTLY, INCLUDING ANY TYPO.
+// / A section header in config.php is written as three dashes either side of the name.
+// / Security Informations is spelled that way in the file & is spelled that way here.
+// / Correcting it here without correcting the file would orphan forty one settings.
+// /
+// / Every default below was read from the configuration this release ships, so a reset
+// / restores exactly what a fresh installation would have had.
+// /
+// / Each variable carries the following.
+// /   Type          bool, int, string, array, path or version.
+// /   Default       The value a reset writes. An empty string means there is no default.
+// /   Depends       Another variable this one is meaningless without. Empty when free standing.
+// /   Description   The label config.php gives it. The comment block is shown alongside.
+// /
+// / A section that is not writable is shown & never touched, because its contents are
+// / order dependent & are not administrator tunable.
+function applicationConfigModel() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $ConfigModel = array();
+  $ConfigModel = array(
+    // / $ConfigVersion is declared above the first section header, so it belongs to no
+    // / section. It is modelled here as read only. config.php says not to change it by
+    // / hand & replacing the file with a newer one is the only correct way to move it.
+    'Unsectioned' => array('Writable' => FALSE, 'Variables' => array(
+      'ConfigVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Config Version. Read only. Replaced by an update.'))),
+    'General Information' => array('Writable' => TRUE, 'Variables' => array(
+      'ApplicationName' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Application Name String'),
+      'ApplicationTitle' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Application Title String'),
+      'EnableAutoUpdates' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Enable Automatic Updates'),
+      'AutoUpdateTargetVersion' => array('Type' => 'string', 'Depends' => 'EnableAutoUpdates', 'Description' => 'Automatic Update Target Version'),
+      'UpdateSourceRepository' => array('Type' => 'string', 'Depends' => 'EnableAutoUpdates', 'Description' => 'Update Source Repository'),
+      'MaxUpdatePackageSize' => array('Type' => 'int', 'Depends' => 'EnableAutoUpdates', 'Description' => 'Maximum Update Package Size'),
+      'UpdateConnectionTimeout' => array('Type' => 'int', 'Depends' => 'EnableAutoUpdates', 'Description' => 'Update Connection Timeout'),
+      'SupportedGuis' => array('Type' => 'array', 'Default' => 'array(\'Default\', \'Original\')', 'Depends' => '', 'Description' => 'Supported Guis'),
+      'DefaultGui' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Default GUI'),
+      'AllowUserSelectableGui' => array('Type' => 'bool', 'Depends' => 'SupportedGuis', 'Description' => 'Allow User Selectable GUI'),
+      'SupportedLanguages' => array('Type' => 'array', 'Default' => 'array( \'en\' => \'English\',   \'fr\' => \'Français\',    \'es\' => \'Español\', \'zh\' => \'中文\',      \'hi\' => \'हिन्दी\',        \'ar\' => \'العربية\', \'ru\' => \'Русский\',   \'uk\' => \'Українська\',  \'bn\' => \'বাংলা\', \'de\' => \'Deutsch\',   \'ko\' => \'한국어\',        \'it\' => \'Italiano\', \'pt\' => \'Português\', \'vi\' => \'Tiếng Việt\',  \'tr\' => \'Türkçe\', \'ja\' => \'日本語\',     \'id\' => \'Bahasa Indonesia\', \'pl\' => \'Polski\',    \'nl\' => \'Nederlands\',  \'sw\' => \'Kiswahili\', \'my\' => \'မြန်မာ\',      \'ur\' => \'اردو\',         \'fa\' => \'فارسی\', \'he\' => \'עברית\',     \'aii\' => \'ܣܘܪܝܝܐ\',     \'arc\' => \'ܐܪܡܝܐ\')', 'Depends' => '', 'Description' => 'Supported Languages'),
+      'DefaultLanguage' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Default Language'),
+      'AllowUserSelectableLanguage' => array('Type' => 'bool', 'Depends' => 'SupportedLanguages', 'Description' => 'Allow User Selectable Language'),
+      'AllowUserShare' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'User Shareable File Links'),
+      'SupportedConversionTypes' => array('Type' => 'array', 'Default' => 'array(\'Document\', \'Image\', \'Model\', \'Scad\', \'Drawing\', \'SVG\', \'Video\', \'Subtitle\', \'Audio\', \'Archive\', \'Stream\', \'OCR\', \'Ebook\')', 'Depends' => '', 'Description' => 'Allowed Conversion Types'),
+      'AllowBootableIsoImage' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Allow Creation Of Bootable ISO Images'),
+      'DeleteThreshold' => array('Type' => 'int', 'Depends' => '', 'Description' => 'File Deletion Age Theshold'),
+      'Verbose' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Enhanced Logging Verbosity'),
+      'MaxLogSize' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Maximum Log File Size'),
+      'Font' => array('Type' => 'string', 'Depends' => '', 'Description' => 'UI Element Font'),
+      'AllowUserSelectableColor' => array('Type' => 'bool', 'Depends' => 'SupportedColors', 'Description' => 'Allow User Selectable Colors'),
+      'SupportedColors' => array('Type' => 'array', 'Default' => 'array(\'red\', \'green\', \'blue\', \'grey\', \'orange\', \'purple\', \'dark\')', 'Depends' => '', 'Description' => 'Supported Colors'),
+      'ButtonStyle' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Button Color'),
+      'SpinnerStyle' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Spinner Style'),
+      'SpinnerColor' => array('Type' => 'expression', 'Depends' => '', 'Description' => 'Spinner Color'),
+      'ShowGUI' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Show Full GUI'),
+      'ShowFinePrint' => array('Type' => 'bool', 'Depends' => 'ShowGUI', 'Description' => 'Show Fine Print'),
+      'TOSURL' => array('Type' => 'string', 'Depends' => 'ShowFinePrint', 'Description' => 'Terms of Service URL'),
+      'PPURL' => array('Type' => 'string', 'Depends' => 'ShowFinePrint', 'Description' => 'Privacy Policy URL'),
+      'UsePatchedDocumentEngine' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Use Patched Document Engine'),
+      'RARArchiveMethod' => array('Type' => 'string', 'Depends' => '', 'Description' => 'RAR Archive Method'),
+      'RetryCount' => array('Type' => 'int', 'Depends' => '', 'Description' => 'File Operation Retry Count'),
+      'GuiMaxWidth' => array('Type' => 'int', 'Depends' => '', 'Description' => 'GUI Maximum Width'),
+      'LogoURL' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Logo URL'),
+      'SupportedFormatDetectionType' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Supported Format Detection Type'),
+      'WarnOnCapabilityMismatch' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Warn On Capability Mismatch'))),
+    'Directory Information' => array('Writable' => TRUE, 'Variables' => array(
+      'InstLoc' => array('Type' => 'path', 'Depends' => '', 'Description' => 'Installation Directory'),
+      'ProprietaryLoc' => array('Type' => 'path', 'Depends' => '', 'Description' => 'Proprietary Directory'),
+      'ServerRootDir' => array('Type' => 'path', 'Depends' => '', 'Description' => 'Server Root Directory'),
+      'ConvertLoc' => array('Type' => 'path', 'Depends' => '', 'Description' => 'Data Storage Directory'),
+      'LogDir' => array('Type' => 'expression', 'Default' => '$ConvertLoc.\'/Logs\'', 'Depends' => '', 'Description' => 'Log Storage Directory'),
+      'HomeLoc' => array('Type' => 'expression', 'Depends' => '', 'Description' => 'Home Directory'),
+      'BackupLoc' => array('Type' => 'expression', 'Default' => '$ConvertLoc.\'/Last-Installed-Version\'', 'Depends' => 'EnableAutoUpdates', 'Description' => 'Backup Location'),
+      'AppendLogHashToLogFiles' => array('Type' => 'bool', 'Depends' => 'UniqueDailyLogHash', 'Description' => 'Append Log Hash To Log Files'),
+      'UniqueDailyLogHash' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Unique Daily Log Hash Rotation'),
+      'AdditionalConvertLocs' => array('Type' => 'array', 'Default' => 'array( array(\'/DATA2/HRConvert2\', \'roundrobin\'), array(\'/DATA3/HRConvert2\', \'leastactive\'), array(\'/DATA4/HRConvert2\', \'redundant\'))', 'Depends' => '', 'Description' => 'Additional Data Locations'),
+      'StorageCleanupInterval' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Storage Cleanup Interval'))),
+    'Security Informations' => array('Writable' => TRUE, 'Variables' => array(
+      'MaintainHTAccess' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Maintain DATA Directory HTAccess'),
+      'URL' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Server URL'),
+      'EnableMemoryProtection' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Enable Memory Protection'),
+      'VirusScan' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Virus Scanning'),
+      'AllowUserVirusScan' => array('Type' => 'bool', 'Depends' => 'VirusScan', 'Description' => 'User Virus Scanning'),
+      'ScanCoreMemoryLimit' => array('Type' => 'int', 'Depends' => '', 'Description' => 'User Virus Scanning ScanCore Memory Limit'),
+      'ScanCoreChunkSize' => array('Type' => 'int', 'Depends' => '', 'Description' => 'User Virus Scanning ScanCore Chunk Size'),
+      'ScanCoreDebug' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'User Virus Scanning ScanCore Debug Mode'),
+      'ScanCoreVerbose' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'User Virus Scanning ScanCore Enhanced Verbosity'),
+      'DeleteBuildEnvironment' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Delete Build Environment'),
+      'DeleteDevelopmentDocumentation' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Delete Development Documentation'),
+      'AllowUnprivilegedNamespaces' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Allow Unprivileged Namespaces'),
+      'RequireSandbox' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Require Sandbox'),
+      'RequireSandboxOnDocker' => array('Type' => 'bool', 'Depends' => 'RequireSandbox', 'Description' => 'Require Sandbox On Docker'),
+      // / The Environment Manager settings. Both belong to the model as well as to
+      // / config.php, because a repair can only add a setting this utility knows about.
+      // / They were added to config.php alone at first, & --config --repair then reported
+      // / that it would add nothing while the file was demonstrably short of them.
+      'EnvironmentManagerMayRepair' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Environment Manager May Repair'),
+      'EnvironmentManagerMayRewriteConfigs' => array('Type' => 'bool', 'Depends' => 'EnvironmentManagerMayRepair', 'Description' => 'Environment Manager May Rewrite Configs'),
+      'ThrowSandboxWarning' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Throw Sandbox Warning'),
+      'StreamWatchTimeout' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Stream Duration Timeout'),
+      'StreamConnectionTimeout' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Stream Connection Timeout'),
+      'AllowStreamOverHTTP' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Allow Streams Over HTTP-'),
+      'StreamInspectionLayers' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Stream Inspection Layers-'),
+      'StreamInspectionFilesPerLayer' => array('Type' => 'int', 'Depends' => 'StreamInspectionLayers', 'Description' => 'Stream Inspection Files Per Layer-'),
+      'DefaultStreamInspectionForfeitAction' => array('Type' => 'string', 'Depends' => 'StreamInspectionLayers', 'Description' => 'Default Stream Inspection Forfeit Action-'),
+      'MaxStreamInspectionFileSize' => array('Type' => 'int', 'Depends' => 'StreamInspectionLayers', 'Description' => 'Maximum Stream Inspection Size'),
+      'AllowSCADIncludeResolution' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Allow SCAD Include Resolution'),
+      'SCADConversionTimeout' => array('Type' => 'int', 'Depends' => '', 'Description' => 'SCAD Conversion Timeout'),
+      'MinimumAssimpVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum Assimp Version'),
+      'UsePyMeshLab' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Use PyMeshLab Python Bindings'),
+      'MinimumMeshlabVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum MeshLab Version'),
+      'MinimumImageVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum ImageMagick Version'),
+      'MinimumInkscapeVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum Inkscape Version'),
+      'MinimumSCADVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum OpenSCAD Version'),
+      'MinimumFFMPEGVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum FFMPEG Version'),
+      'MinimumStreamFFMPEGVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum Stream FFMPEG Version'),
+      'MinimumLibreOfficeVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum LibreOffice Version'),
+      'Minimum7zVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum 7-Zip Version'),
+      'MinimumRarVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum Rar Version'),
+      'MinimumZipVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum Zip Version'),
+      'MinimumTarVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum Tar Version'),
+      'MinimumMkisofsVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum Mkisofs Version'),
+      'MinimumDiaVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum Dia Version'),
+      'MinimumTesseractVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum Tesseract Version'),
+      'MinimumPdftotextVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum Pdftotext Version'),
+      'MinimumIsoHybridVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum Isohybrid Version'),
+      'MinimumCalibreVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum Calibre Version'),
+      'AllowUserURLDownload' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Allow User URL Download'),
+      'ScanURLDownloads' => array('Type' => 'bool', 'Depends' => 'AllowUserURLDownload', 'Description' => 'Scan URL Downloads'),
+      'URLDownloadMaximumBytes' => array('Type' => 'int', 'Depends' => 'AllowUserURLDownload', 'Description' => 'URL Download Maximum Bytes'),
+      'URLDownloadsPerSession' => array('Type' => 'int', 'Depends' => 'AllowUserURLDownload', 'Description' => 'URL Downloads Per Session'),
+      'DefaultVirusScanner' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Default Virus Scanner'),
+      'MinimumClamVersion' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Minimum Clam Version'),
+      'PermittedPrivateRanges' => array('Type' => 'array', 'Depends' => '', 'Description' => 'Permitted Private Ranges'))),
+    'Resource Management Information' => array('Writable' => TRUE, 'Variables' => array(
+      'EnablePerConversionLimits' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Enable Per Conversion Limits'),
+      'MaximumPerConversionResources' => array('Type' => 'array', 'Default' => 'array( \'Document\'     => \'50,512\', \'Spreadsheet\'  => \'50,512\', \'Presentation\' => \'50,768\', \'Image\'        => \'75,1024\', \'Video\'        => \'90,2048\', \'Audio\'        => \'50,512\', \'Archive\'      => \'50,512\', \'Model\'        => \'75,2048\', \'Scad\'         => \'75,1024\', \'Drawing\'      => \'50,512\', \'SVG\'          => \'50,512\', \'Subtitle\'     => \'25,256\', \'Stream\'       => \'90,2048\', \'OCR\'          => \'75,1024\', \'Ebook\'        => \'50,768\')', 'Depends' => 'EnablePerConversionLimits', 'Description' => 'Maximum Per Conversion Resources'),
+      'DefaultPerConversionResources' => array('Type' => 'string', 'Depends' => 'EnablePerConversionLimits', 'Description' => 'Default Per Conversion Resources'),
+      'MinimumPerConversionResources' => array('Type' => 'string', 'Depends' => 'EnablePerConversionLimits', 'Description' => 'Minimum Per Conversion Resources'),
+      'EnableResourceAwareness' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Enable Resource Awareness'),
+      'RequireResourceAwareness' => array('Type' => 'bool', 'Depends' => 'EnableResourceAwareness', 'Description' => 'Require Resource Awareness'),
+      'CoreManagerSubprocessPollInterval' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Core Manager Subprocess Poll Interval'),
+      'ResourcePollInterval' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Resource Poll Interval'),
+      'WorkerReapInterval' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Worker Reap Interval'),
+      'WorkerStaleGracePeriod' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Worker Stale Grace Period'),
+      'TotalResourceBudget' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Total Resource Budget'),
+      'ReserveResourcePercentage' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Reserve Resource Percentage'),
+      'MaxConcurrentWorkers' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Maximum Concurrent Workers'),
+      'MaxExpectedRuntime' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Maximum Expected Runtime'),
+      'MaxRuntimeExtensions' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Maximum Runtime Extensions'),
+      'DefaultConversionCost' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Default Conversion Cost'),
+      'DefaultExpectedRuntime' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Default Expected Runtime'))),
+    // / The format lists ARE modelled & the section stays Writable FALSE.
+    // / Those answer different questions. Modelling them lets the utility say whether a
+    // / list is present & report the section honestly instead of as an unknown. Writable
+    // / FALSE keeps the utility from ever writing one, because a format list is a thing
+    // / an administrator curates & a tool that normalizes it would undo that work.
+    // / The defaults below are what this application ships. They are here so a generated
+    // / configuration can emit a list that is absent, & for nothing else.
+    'Supported File Format Information' => array('Writable' => FALSE, 'Variables' => array(
+      'UserArchiveArray' => array('Type' => 'array', 'Default' => 'array(\'zip\', \'rar\', \'tar\', \'7z\', \'iso\')', 'Depends' => '', 'Description' => 'User Archive Array'),
+      'UserBootableIsoArray' => array('Type' => 'array', 'Default' => 'array(\'iso_mbr-boot\', \'iso_gpt-boot\', \'iso_gpt-boot-x86\', \'iso_gpt-boot-x86-64\', \'iso_gpt-boot-arm32\', \'iso_gpt-boot-arm64\')', 'Depends' => '', 'Description' => 'User Bootable Iso Array'),
+      'UserDearchiveArray' => array('Type' => 'array', 'Default' => 'array(\'zip\', \'rar\', \'tar\', \'bz\', \'gz\', \'bz2\', \'7z\', \'iso\', \'vhd\', \'vdi\', \'tar.bz2\', \'tar.gz\', \'cbr\', \'cbz\')', 'Depends' => '', 'Description' => 'User Dearchive Array'),
+      'UserDocumentArray' => array('Type' => 'array', 'Default' => 'array(\'txt\', \'doc\', \'docx\', \'rtf\', \'odt\', \'pdf\')', 'Depends' => '', 'Description' => 'User Document Array'),
+      'UserSpreadsheetArray' => array('Type' => 'array', 'Default' => 'array(\'csv\', \'xls\', \'xlsx\', \'ods\')', 'Depends' => '', 'Description' => 'User Spreadsheet Array'),
+      'UserXPSInputArray' => array('Type' => 'array', 'Default' => 'array(\'xps\', \'oxps\')', 'Depends' => '', 'Description' => 'User X P S Input Array'),
+      'UserXPSOutputArray' => array('Type' => 'array', 'Default' => 'array(\'pdf\')', 'Depends' => '', 'Description' => 'User X P S Output Array'),
+      'UserPresentationInputArray' => array('Type' => 'array', 'Default' => 'array(\'pptx\', \'ppt\', \'potx\', \'potm\', \'pot\', \'ppa\', \'odp\')', 'Depends' => '', 'Description' => 'User Presentation Input Array'),
+      'UserPresentationOutputArray' => array('Type' => 'array', 'Default' => 'array(\'pptx\', \'ppt\', \'potx\', \'potm\', \'pot\', \'ppa\', \'odp\', \'pdf\')', 'Depends' => '', 'Description' => 'User Presentation Output Array'),
+      'UserImageArray' => array('Type' => 'array', 'Default' => 'array(\'jpeg\', \'jpg\', \'jpe\', \'png\', \'bmp\', \'gif\', \'webp\', \'cin\', \'dds\', \'dib\', \'flif\', \'avif\', \'gplt\', \'sct\', \'xcf\', \'heic\', \'ico\', \'tiff\', \'tif\', \'heif\', \'jp2\', \'j2k\', \'jxl\')', 'Depends' => '', 'Description' => 'User Image Array'),
+      'UserImageInputArray' => array('Type' => 'array', 'Default' => 'array(\'jpeg\', \'jpg\', \'png\', \'bmp\', \'gif\', \'webp\', \'dds\', \'avif\', \'heic\', \'ico\', \'tiff\', \'tif\', \'jp2\')', 'Depends' => '', 'Description' => 'User Image Input Array'),
+      'UserImageOutputArray' => array('Type' => 'array', 'Default' => 'array(\'jpeg\', \'jpg\', \'png\', \'bmp\', \'gif\', \'webp\', \'dds\', \'avif\', \'ico\', \'tiff\', \'tif\', \'jp2\')', 'Depends' => '', 'Description' => 'User Image Output Array'),
+      'UserMediaInputArray' => array('Type' => 'array', 'Default' => 'array(\'sox\', \'spdif\', \'spx\', \'tta\', \'u16be\', \'u16le\', \'u24be\', \'u24le\', \'u32be\', \'u32le\', \'u8\', \'voc\', \'wav\', \'wv\', \'wsaud\', \'mulaw\', \'mxf\', \'mxf_d10\', \'mxf_opatom\', \'oga\', \'ogg\', \'opus\', \'oss\', \'psp\', \'rawvideo\', \'s16be\', \'s16le\', \'s24be\', \'s24le\', \'s32be\', \'s32le\', \'s8\', \'sbc\', \'ilbc\', \'ircam\', \'latm\', \'lrc\', \'mp2\', \'mp3\', \'mlp\', \'flac\', \'g722\', \'g723_1\', \'g726\', \'g726le\', \'gsm\', \'caf\', \'daud\', \'dts\', \'eac3\', \'f32be\', \'f32le\', \'f64be\', \'f64le\', \'ac3\', \'ac4\', \'adts\', \'aiff\', \'alaw\', \'amr\', \'aptx\', \'aptx_hd\', \'argo_asf\', \'argo_cvg\', \'ast\', \'au\', \'a64\', \'aa\', \'aac\', \'aax\', \'acm\', \'act\', \'adp\', \'adx\', \'aea\', \'afc\', \'aix\', \'alp\', \'amrnb\', \'amrwb\', \'apac\', \'apc\', \'ape\', \'apm\', \'argo_asf\', \'binka\', \'bit\', \'boa\', \'bonk\', \'brstm\', \'dfpwm\', \'dsf\', \'dss\', \'epaf\', \'fsb\', \'fwse\', \'g729\', \'hca\', \'idf\', \'kux\', \'kvag\', \'laf\', \'lavfi\', \'loas\', \'luodat\', \'lvf\', \'lxf\', \'mca\', \'mcc\', \'megsts\', \'mlv\', \'mmf\', \'mods\', \'moflex\', \'mpc8\', \'msf\', \'msnwctcp\', \'mtaf\', \'musx\', \'nc\', \'nistsphere\', \'nsp\', \'paf\', \'pam_pipe\', \'pbm_pipe\', \'pfm_pipe\', \'pp_bnk\', \'psxstr\', \'pva\', \'pvf\', \'qcp\', \'rka\', \'rl2\', \'rpl\', \'rso\', \'s337m\', \'sap\', \'sbg\', \'scd\', \'sdns\', \'sdp\', \'sds\', \'sdx\', \'siff\', \'simbiosis_imx\', \'sln\', \'smk\', \'smush\', \'sol\', \'svag\', \'svs\', \'tak\', \'thp\', \'tierexseq\', \'tty\', \'ty\', \'usm\', \'vag\', \'vidc\', \'vpk\', \'vqf\', \'w64\', \'wady\', \'wavarc\', \'wsd\', \'wsvqa\', \'wve\', \'xa\', \'xbin\', \'xbm_pipe\', \'xmd\', \'xpm_pipe\', \'xwma\', \'yop\', \'wma\', \'m4a\')', 'Depends' => '', 'Description' => 'User Media Input Array'),
+      'UserMediaOutputArray' => array('Type' => 'array', 'Default' => 'array(\'mp3\', \'aac\', \'ogg\', \'wma\', \'mp2\', \'flac\', \'m4a\')', 'Depends' => '', 'Description' => 'User Media Output Array'),
+      'UserVideoInputArray' => array('Type' => 'array', 'Default' => 'array(\'smoothstreaming\', \'svcd\', \'swf\', \'truehd\', \'vc1\', \'vc1test\', \'vcd\', \'vob\', \'vvc\', \'webm\', \'yuv4mpegpipe\', \'mpjpeg\', \'mxf\', \'mxf_d10\', \'mxf_opatom\', \'nut\', \'obu\', \'ogv\', \'psp\', \'rawvideo\', \'rm\', \'roq\', \'rtp_mpegts\', \'smjpeg\', \'hevc\', \'hls\', \'image2\', \'image2pipe\', \'ipod\', \'ismv\', \'m4v\', \'matroska\', \'mjpeg\', \'mkvtimestamp_v2\', \'mov\', \'mp4\', \'mpeg\', \'mpeg1video\', \'mpeg2video\', \'mpegts\', \'mpegtsraw\', \'mpegvideo\', \'fbdev\', \'film_cpk\', \'filmstrip\', \'gxf\', \'h261\', \'h263\', \'h264\', \'hds\', \'avs2\', \'avs3\', \'cavsvideo\', \'cavs\', \'dirac\', \'dnxhd\', \'dv\', \'dvd\', \'evc\', \'3g2\', \'3gp\', \'apng\', \'argo_asf\', \'argo_cvg\', \'asf\', \'asf_stream\', \'avi\', \'avif\', \'avm2\', \'3dostr\', \'4xm\', \'adf\', \'ads\', \'alias_pix\', \'anm\', \'argo_brp\', \'asf_o\', \'av1\', \'avs\', \'bethsoftvid\', \'bfi\', \'bink\', \'bmv\', \'brender_pix\', \'brender\', \'cdg\', \'cdxl\', \'cine\', \'concat\', \'cri\', \'dcstr\', \'derf\', \'dfa\', \'dhav\', \'dsicin\', \'dtshd\', \'dxa\', \'ea\', \'exr\', \'fits\', \'flic\', \'frm\', \'gdv\', \'genh\', \'gif\', \'idcin\', \'iff\', \'ifv\', \'ingenient\', \'ipmovie\', \'iss\', \'iv8\', \'ivf\', \'ivr\', \'j2k\', \'jp2\', \'jv\', \'live_flv\', \'lmlm4\', \'mtv\', \'mv\', \'mvi\', \'mxg\', \'nsv\', \'nuv\', \'osq\', \'pcx_pipe\', \'pdv\', \'pgm_pipe\', \'pgmuv_pipe\', \'pgx_pipe\', \'phm_pipe\', \'protocol_pipe\', \'pictor_pipe\', \'png_pipe\', \'ppm_pipe\', \'psd_pipe\', \'qdraw_pipe\', \'qoi_pipe\', \'r3d\', \'redspark\', \'rroq\', \'rsd\', \'rtsp\', \'sdr2\', \'ser\', \'sga\', \'sgi_pipe\', \'shn\', \'sunrast_pipe\', \'svg_pipe\', \'tiff_pipe\', \'tmv\', \'v210\', \'v210x\', \'vbn_pipe\', \'video4linux2\', \'v4l2\', \'vividas\', \'vivo\', \'vmd\', \'wc3movie\', \'webm_dash_manifest\', \'webp_pipe\', \'wtv\', \'xmv\', \'xvag\', \'xwd_pipe\', \'mkv\', \'wmv\')', 'Depends' => '', 'Description' => 'User Video Input Array'),
+      'UserVideoOutputArray' => array('Type' => 'array', 'Default' => 'array(\'3gp\', \'mkv\', \'avi\', \'mp4\', \'mpeg\', \'wmv\', \'mov\', \'m4v\')', 'Depends' => '', 'Description' => 'User Video Output Array'),
+      'UserStreamArray' => array('Type' => 'array', 'Default' => 'array(\'m3u8\', \'ts\')', 'Depends' => '', 'Description' => 'User Stream Array'),
+      'UserDrawingArray' => array('Type' => 'array', 'Default' => 'array(\'dxf\', \'vdx\', \'fig\', \'dia\', \'wpg\')', 'Depends' => '', 'Description' => 'User Drawing Array'),
+      'UserDrawingInputArray' => array('Type' => 'array', 'Default' => 'array(\'dxf\', \'vdx\', \'fig\', \'dia\', \'wpg\')', 'Depends' => '', 'Description' => 'User Drawing Input Array'),
+      'UserDrawingOutputArray' => array('Type' => 'array', 'Default' => 'array(\'dxf\', \'vdx\', \'fig\', \'dia\', \'wpg\')', 'Depends' => '', 'Description' => 'User Drawing Output Array'),
+      'UserSVGInputArray' => array('Type' => 'array', 'Default' => 'array(\'svg\', \'plain-svg\')', 'Depends' => '', 'Description' => 'User S V G Input Array'),
+      'UserSVGOutputArray' => array('Type' => 'array', 'Default' => 'array(\'png\', \'pdf\', \'ps\', \'eps\', \'emf\', \'wmf\')', 'Depends' => '', 'Description' => 'User S V G Output Array'),
+      'UserModelArray' => array('Type' => 'array', 'Default' => 'array(\'stl\', \'ply\', \'off\', \'3ds\', \'fbx\', \'dae\', \'gltf\', \'glb\', \'obj\', \'3mf\', \'x3d\', \'dxf\', \'x\', \'ctm\')', 'Depends' => '', 'Description' => 'User Model Array'),
+      'UserModelInputArray' => array('Type' => 'array', 'Default' => 'array(\'stl\', \'ply\', \'off\', \'3ds\', \'fbx\', \'dae\', \'gltf\', \'glb\', \'obj\', \'3mf\', \'x3d\', \'dxf\', \'x\', \'ctm\')', 'Depends' => '', 'Description' => 'User Model Input Array'),
+      'UserModelOutputArray' => array('Type' => 'array', 'Default' => 'array(\'stl\', \'ply\', \'off\', \'3ds\', \'fbx\', \'dae\', \'gltf\', \'glb\', \'obj\', \'3mf\', \'x3d\', \'dxf\', \'x\', \'ctm\', \'wrl\', \'assbin\', \'json\')', 'Depends' => '', 'Description' => 'User Model Output Array'),
+      'UserSCADArray' => array('Type' => 'array', 'Default' => 'array(\'scad\', \'stl\', \'off\', \'amf\', \'3mf\', \'csg\')', 'Depends' => '', 'Description' => 'User S C A D Array'),
+      'UserSCADInputArray' => array('Type' => 'array', 'Default' => 'array(\'scad\')', 'Depends' => '', 'Description' => 'User S C A D Input Array'),
+      'UserSCADOutputArray' => array('Type' => 'array', 'Default' => 'array(\'stl\', \'off\', \'amf\', \'3mf\', \'csg\')', 'Depends' => '', 'Description' => 'User S C A D Output Array'),
+      'UserSubtitleInputArray' => array('Type' => 'array', 'Default' => 'array(\'sub\', \'sbv\', \'srt\', \'stream_segment\', \'ssegment\', \'streamhash\', \'sup\', \'subtitles\', \'ttml\', \'uncodedframecrc\', \'webvtt\', \'wtv\', \'oma\', \'rso\', \'rtp\', \'rtsp\', \'scc\', \'sdl\', \'sdl2\', \'segment\', \'sap\', \'jacosub\', \'kvag\', \'microdvd\', \'ffmetadata\', \'fifo\', \'fifo_test\', \'fits\', \'framecrc\', \'framehash\', \'framemd5\', \'dash\', \'crc\', \'dvbsub\', \'dvbtxt\', \'gsm\', \'ass\', \'vobsub\', \'mpl2\', \'mpsub\', \'pjs\', \'realtext\', \'sami\', \'stl\', \'subviewer\', \'subviewer1\', \'tedcaptions\', \'txd\', \'vtt\', \'ssa\', \'dvb\', \'vplayer\')', 'Depends' => '', 'Description' => 'User Subtitle Input Array'),
+      'UserSubtitleOutputArray' => array('Type' => 'array', 'Default' => 'array(\'vtt\', \'ssa\', \'ass\', \'srt\')', 'Depends' => '', 'Description' => 'User Subtitle Output Array'),
+      'UserPDFWorkArr' => array('Type' => 'array', 'Default' => 'array(\'pdf\', \'jpg\', \'jpeg\', \'png\', \'bmp\', \'webp\', \'gif\')', 'Depends' => '', 'Description' => 'User P D F Work Arr'),
+      'UserEbookInputArray' => array('Type' => 'array', 'Default' => 'array(\'epub\', \'mobi\', \'azw\', \'azw3\', \'azw4\', \'fb2\', \'fbz\', \'lit\', \'lrf\', \'pdb\', \'pml\', \'rb\', \'snb\', \'tcr\', \'txt\', \'txtz\', \'rtf\', \'odt\', \'docx\', \'pdf\', \'chm\', \'cbz\', \'cbr\', \'cbc\', \'prc\', \'opf\', \'recipe\')', 'Depends' => '', 'Description' => 'User Ebook Input Array'),
+      'UserEbookOutputArray' => array('Type' => 'array', 'Default' => 'array(\'epub\', \'mobi\', \'azw3\', \'fb2\', \'lit\', \'lrf\', \'pdb\', \'pml\', \'rb\', \'snb\', \'tcr\', \'txt\', \'txtz\', \'rtf\', \'oeb\', \'docx\', \'pdf\')', 'Depends' => '', 'Description' => 'User Ebook Output Array')
+      ))
+    );
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection);
+  return $ConfigModel; }
+// / -----------------------------------------------------------------------------------
+// / A function to report whether this application's data tree is exposed by a web server.
+// / Accepts nothing. Returns display rows.
+// /
+// / The Engine calls this because engineConfig.php names it in $EngineDataPolicyProvider,
+// / & not because the Engine knows anything about web servers.
+// / It USED to be four calls made directly from Setup Core, which meant Setup Core knew
+// / this application serves files over http, that Apache reads a protection file only where
+// / AllowOverride is enabled, that nginx never reads one, & that an uploaded SVG runs script
+// / in its own origin. None of that is true of an engine.
+// /
+// / A row with a Label is a status line. A row with only Text is a paragraph. The Engine
+// / prints both without understanding either.
+function applicationDataPolicyFindings() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $PolicyFindings = array();
+  $dataPolicyIsValid = $dataIsProtected = FALSE;
+  $dataPolicyStatus = $exposureStatus = $exposureDetail = '';
+  list ($dataPolicyIsValid, $dataPolicyStatus) = verifyDataProtectionPolicy(TRUE);
+  $PolicyFindings[] = array('Label' => 'Protection file', 'Status' => policyDisplayStatus($dataPolicyStatus), 'Detail' => describePolicyStatus('DATA Directory', $dataPolicyStatus));
+  list ($dataIsProtected, $exposureStatus, $exposureDetail) = verifyDataExposure();
+  $PolicyFindings[] = array('Label' => 'Live exposure', 'Status' => strtoupper($exposureStatus), 'Detail' => $exposureDetail);
+  if ($exposureStatus === 'exposed') {
+    $PolicyFindings[] = array('Text' => '');
+    $PolicyFindings[] = array('Text' => '  THE DATA DIRECTORY IS EXPOSED. A file a user uploads is served back as a');
+    $PolicyFindings[] = array('Text' => '  document rather than as a download, so an uploaded SVG runs its own script');
+    $PolicyFindings[] = array('Text' => '  in this origin. The protection file is being ignored; Apache reads one only');
+    $PolicyFindings[] = array('Text' => '  where AllowOverride is enabled & nginx never reads one at all. Put the rules');
+    $PolicyFindings[] = array('Text' => '  in the server configuration. See Documentation/ABOUT_DATA_DIRECTORY_PROTECTION.txt.'); }
+  else if ($exposureStatus !== 'protected') {
+    $PolicyFindings[] = array('Text' => '');
+    $PolicyFindings[] = array('Text' => '  Exposure was NOT established, which is not a pass. If the web server is not');
+    $PolicyFindings[] = array('Text' => '  running yet this is expected; re-run the -fp argument once it is.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $dataPolicyIsValid, $dataIsProtected, $dataPolicyStatus, $exposureStatus, $exposureDetail);
+  return $PolicyFindings; }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
 // / A function to report on the parts of the environment that belong to HRConvert2.
 // / Accepts nothing. Returns a readiness boolean & a list of findings, in that order.
 // / Each finding is an array of Check, Status & Detail, which is the shape the Engine
@@ -4545,12 +4935,6 @@ function applicationEnvironmentFindings() {
 // / -----------------------------------------------------------------------------------
 
 
-
-
-
-
-
-
 // / -----------------------------------------------------------------------------------
 // / A function to scan an input file or folder for viruses with ClamAV.
 function virusScan($path) {
@@ -4599,7 +4983,6 @@ function virusScan($path) {
   purgeSensitiveMemory($EnableMemoryProtection, $returnData, $scanCommand, $clamBinary, $clamLogFileDATA, $path);
   return array($ScanComplete, $VirusFound); }
 // / -----------------------------------------------------------------------------------
-
 
 
 // / -----------------------------------------------------------------------------------
@@ -5018,7 +5401,7 @@ function updateApplication($requestedVersion) {
       // / most destructive line in this application & it runs as root.
       // / A configuration pointing $InstLoc at a system directory would delete the operating
       // / system instead. The guard resolves symlinks & .. before judging.
-      if (!pathIsSafeToModifyRecursively($InstLoc)) errorEntry('The installation location resolved to a system directory & was NOT deleted. Check $InstLoc in config.php. Path: '.$InstLoc.'.', 31009, TRUE);
+      if (!pathIsSafeToModifyRecursively($InstLoc)) errorEntry('The installation location resolved to a system directory & was NOT deleted. Check $InstLoc in config.php. Path: '.$InstLoc.'.', 31018, TRUE);
       exec('rm -rf '.escapeshellarg($InstLoc).' 2>&1');
       // / Rollback is a single rename because the previous installation never left the
       // / filesystem it lived on. This is the reason .old exists at all.
@@ -5037,7 +5420,7 @@ function updateApplication($requestedVersion) {
   if ($UpdateSucceeded && is_dir($oldDir)) {
     // / The backup location is emptied before a new backup is written into it.
     // / A misconfigured $BackupLoc would empty whatever it points at instead.
-    if (is_dir($BackupLoc) && !pathIsSafeToModifyRecursively($BackupLoc)) errorEntry('The backup location resolved to a system directory & was NOT emptied. Check $BackupLoc in config.php. Path: '.$BackupLoc.'.', 31010, TRUE);
+    if (is_dir($BackupLoc) && !pathIsSafeToModifyRecursively($BackupLoc)) errorEntry('The backup location resolved to a system directory & was NOT emptied. Check $BackupLoc in config.php. Path: '.$BackupLoc.'.', 31019, TRUE);
     else if (is_dir($BackupLoc)) exec('rm -rf '.escapeshellarg($BackupLoc).' 2>&1');
     exec('cp -a '.escapeshellarg($oldDir).' '.escapeshellarg($BackupLoc).' 2>&1', $backupOutput, $backupExitCode);
     if ($backupExitCode === 0 && is_dir($BackupLoc)) {
@@ -5073,13 +5456,6 @@ function updateApplication($requestedVersion) {
   purgeSensitiveMemory($EnableMemoryProtection, $backupExitCode, $backupOutput, $changedArray, $targetResolved, $packageDownloaded, $configMerged, $installationIsValid, $swapCompleted, $rolledBack, $targetVersion, $targetURL, $workDir, $downloadPath, $extractedDir, $stagedDir, $oldDir, $preservedSettings, $changedArrays, $extractOutput, $extractedRoots, $extractExitCode, $requestedVersion, $Lol, $updatePermissionsFixed, $updatePathsCorrected);
   return $UpdateSucceeded; }
 // / -----------------------------------------------------------------------------------
-
-
-
-
-
-
-
 
 
 // / -----------------------------------------------------------------------------------
@@ -5199,7 +5575,7 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
 // / pack is required from inside this function. Nothing outside this call can read them.
 function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   // / Set variables.
-  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $LanguageBaselineFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $Verbose, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth;
+  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $LanguageBaselineFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $Verbose, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth, $LogoURL, $ResolvedLogoURL;
   $GUIDisplayed = FALSE;
 
   $guiUIFile = $GuiUI1File;
@@ -6133,48 +6509,6 @@ function userVirusScan($FilesToScan, $type) {
   return array($ScanComplete, $ScanErrors, $UserVirusFound, $ConsolidatedLogFile, $ConsolidatedLogFileName); }
 // / -----------------------------------------------------------------------------------
 
-// / -----------------------------------------------------------------------------------
-// / A function to compare two version numbers numerically & report a minimum match.
-// / Accepts the detected version & the minimum version required, in that order.
-// / Returns TRUE when the detected version is the same as, or newer than, the required one.
-// / A leading v is stripped before comparison, because casting 'v3' to an integer yields 0
-// / & silently reduces a three part comparison to a two part one.
-// / Comparison is numeric part by part, because a string comparison ranks 24.2 below 7.6 &
-// / ranks 3.10 below 3.9.
-// / A version that cannot be parsed is REFUSED. An unknown build cannot be cleared.
-function compareVersionMinimum($detectedVersion, $requiredVersion) {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $VersionIsCurrent = FALSE;
-  $cleanDetected = $cleanRequired = '';
-  $detectedParts = $requiredParts = array();
-  $detectedMajor = $detectedMinor = $detectedPatch = 0;
-  $requiredMajor = $requiredMinor = $requiredPatch = 0;
-  $cleanDetected = ltrim(trim((string)$detectedVersion), 'vV');
-  $cleanRequired = ltrim(trim((string)$requiredVersion), 'vV');
-  // / A blank requirement means any version will do.
-  if ($cleanRequired === '') $VersionIsCurrent = TRUE;
-  else if ($cleanDetected === '') $VersionIsCurrent = FALSE;
-  else {
-    $detectedParts = explode('.', $cleanDetected);
-    $requiredParts = explode('.', $cleanRequired);
-    // / A version whose leading part is not a number is not a version.
-    if (!ctype_digit(trim($detectedParts[0]))) $VersionIsCurrent = FALSE;
-    else {
-      $detectedMajor = (int)$detectedParts[0];
-      $detectedMinor = isset($detectedParts[1]) ? (int)$detectedParts[1] : 0;
-      $detectedPatch = isset($detectedParts[2]) ? (int)$detectedParts[2] : 0;
-      $requiredMajor = (int)$requiredParts[0];
-      $requiredMinor = isset($requiredParts[1]) ? (int)$requiredParts[1] : 0;
-      $requiredPatch = isset($requiredParts[2]) ? (int)$requiredParts[2] : 0;
-      if ($detectedMajor > $requiredMajor) $VersionIsCurrent = TRUE;
-      else if ($detectedMajor === $requiredMajor) {
-        if ($detectedMinor > $requiredMinor) $VersionIsCurrent = TRUE;
-        else if ($detectedMinor === $requiredMinor && $detectedPatch >= $requiredPatch) $VersionIsCurrent = TRUE; } } }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $cleanDetected, $cleanRequired, $detectedParts, $requiredParts, $detectedMajor, $detectedMinor, $detectedPatch, $requiredMajor, $requiredMinor, $requiredPatch, $detectedVersion, $requiredVersion);
-  return $VersionIsCurrent; }
-// / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to read the version a component declares, without loading it.
@@ -6476,6 +6810,18 @@ function enableConversionLimits() {
     else {
       $StepsCompleted++;
       print('  Enabled    Lingering for '.$ApacheUser.$Lol); }
+    // / Lingering is enabled & that is not the same as a limit being possible.
+    // / A kernel that delegates no cgroup controllers cannot hold a per conversion limit no
+    // / matter how the accounts are configured, & many NAS & appliance kernels are built
+    // / that way deliberately.
+    // / Saying so HERE, while an administrator is watching a repair run, is worth more than
+    // / saying it in a log they read after a conversion behaved oddly.
+    if (function_exists('cgroupDelegationIsAvailable') && !cgroupDelegationIsAvailable()) {
+      print('  Note       This kernel delegates no cgroup controllers, so a per conversion'.$Lol);
+      print('             limit cannot be held here whatever is configured. Conversions are'.$Lol);
+      print('             still bounded by scheduling priority. This is a kernel decision'.$Lol);
+      print('             & is normal on a NAS or appliance.'.$Lol);
+      warningEntry('This kernel delegates no cgroup controllers, so per conversion limits fall back to scheduling priority.'); }
     // / A user manager is given the memory & pids controllers by default. The processor
     // / controller has to be delegated explicitly or CPUQuota is silently ignored.
     $dropInDirectory = '/etc/systemd/system/user@.service.d';
@@ -7069,7 +7415,7 @@ function fixManagedPermissions() {
     // / The listener service unit, generated from this configuration. Setup Core owns it,
     // / so it is loaded on demand. An installation without that component simply skips it.
     print($Lol.'Listener service'.$Lol);
-    list ($setupIsAvailable, $setupVersion) = verifyCoreComponent('Setup Core', 'SetupCore'.$DirSep.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
+    list ($setupIsAvailable, $setupVersion) = verifyCoreComponent('Setup Core', 'Engine'.$DirSep.'Cores'.$DirSep.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
     if (!$setupIsAvailable) print('  Skipped     The Setup Core component is unavailable.'.$Lol);
     else installListenerService(TRUE, TRUE);
     // / Prove the repairs worked. Writing an AppArmor profile & never re-testing the
@@ -7266,6 +7612,14 @@ $CapabilityRecords = array();
 $EngineActive = FALSE;
 $EngineVersion = $EngineConfigPath = '';
 list ($EngineActive, $EngineVersion) = verifyCoreComponent('Engine', 'Engine'.DIRECTORY_SEPARATOR.'engine.php', 'EngineVersion', $RequiredEngineVersion);
+// / What kind of machine this is, decided once & read everywhere.
+// / The dependency manifest uses it to know that a bundled x86 binary cannot run here, &
+// / that a package has a different name or a different download on arm.
+// / It is read AFTER the Engine loads, because the Engine is what knows how to ask, & the
+// / answer is needed before any dependency is probed.
+$HostArchitecture = 'unknown';
+$HostMachineString = '';
+if ($EngineActive && function_exists('detectHostArchitecture')) list ($HostArchitecture, $HostMachineString) = detectHostArchitecture();
 if (!$EngineActive) warningEntry('The Engine is unavailable. Dependency location, startup keys, environment validation & per operation resource limits are unavailable until it is repaired.');
 else {
   // / The configuration was read before verifyLogs & is already in scope.
@@ -7486,10 +7840,24 @@ if (!$CommandLineHandled && $UserType === 'web') {
         if (!$AllowUserURLDownload) {
           warningEntry('A URL download was requested & the feature is disabled.');
           print('Downloading from a URL is disabled on this server.'.$Lol); }
+        // / One visitor may fetch a limited number of files per session.
+        // / A fetch costs bandwidth & disk whether or not anything is ever converted, so
+        // / without a count one visitor can queue as many as they can type.
+        // / The tally is a file in the session directory rather than anything held in
+        // / memory, because each request is a separate process & a counter that does not
+        // / survive the request counts to one forever.
+        // / A session ending takes the tally with it, which is the reset.
+        else if ((int)$URLDownloadsPerSession > 0 && countSessionURLDownloads($ConvertDir) >= (int)$URLDownloadsPerSession) {
+          warningEntry('A session reached its URL download limit of '.(int)$URLDownloadsPerSession.'.');
+          print('This session has fetched '.(int)$URLDownloadsPerSession.' file(s), which is the limit.'.$Lol); }
         else if (!takeOperationBudget('user url download')) print($Alert3.$Lol);
         else {
           logEntry('Initiating a user requested download.');
           list ($URLFetchSucceeded, $URLFetchedPath, $URLFetchReason) = fetchUserSuppliedURL($UserURLDownload, $ConvertDir);
+          // / Recorded only on success. A refused fetch cost bandwidth & should not also
+          // / cost somebody one of their attempts, or a user with a typo runs out of tries
+          // / without ever having fetched anything.
+          if ($URLFetchSucceeded) countSessionURLDownloads($ConvertDir, TRUE);
           if ($URLFetchSucceeded) logEntry('A user requested download completed. '.$URLFetchReason);
           else warningEntry('A user requested download did not complete. '.$URLFetchReason);
           print($URLFetchReason.$Lol);

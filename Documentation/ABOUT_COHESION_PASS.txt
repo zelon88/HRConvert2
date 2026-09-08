@@ -1,0 +1,168 @@
+-----------------------------------------------------------------------------------------
+ABOUT THE COHESION PASS
+What moves into the Engine, what stays in the application, & what is genuinely fallback
+HRConvert2 v3.9.2
+-----------------------------------------------------------------------------------------
+
+This is analysis rather than a plan. Nothing here has been done.
+
+THE TEST used throughout, & it is the only one that matters:
+would an anti virus with no conversion pipelines need this? If yes it is Engine. If the
+answer depends on knowing what a file IS, it stays in the application.
+
+-----------------------------------------------------------------------------------------
+WHAT THE ENGINE STILL CALLS INTO THE APPLICATION FOR
+-----------------------------------------------------------------------------------------
+
+Eleven functions. They are not one category & should not move as one.
+
+  MOVE. Nothing about these is specific to converting anything.
+
+    sanitize                 14 calls.  20 lines, no application words.
+                             Removing what a value must never contain. An anti virus
+                             sanitizes a filename for exactly the same reason.
+                             THE ONE CAUTION: it is the ban hammer & every caller depends
+                             on its exact behaviour. Move it unchanged or not at all.
+
+    locateDependency         12 calls.  24 lines, no application words.
+                             Finding an executable. Already described as kernel rather
+                             than Engine because boot reaches it early. That reasoning
+                             still holds & the Engine is where it belongs.
+
+    readComponentVersion      1 call.   14 lines, no application words.
+                             Reading a version WITHOUT executing the file. The Engine
+                             already version checks its own components.
+
+    getExtension              1 call.   11 lines, no application words.
+                             Taking an extension off a path. Trivial & universal.
+
+  MOVE, & THE DIRECTION IS THE POINT.
+
+  The Engine does not borrow these from the application. It OWNS them & the applications
+  use them. HRConvert2 & HRProtect both call the Engine's logger, the Engine's memory
+  purge, the Engine's sanitizer. Neither defines its own.
+  That is the difference between an engine an application lends functions to & an engine
+  an application is built on.
+
+    purgeSensitiveMemory    138 calls.  The most called function in the entire contract.
+    warningEntry            110 calls.
+    logEntry                 65 calls.
+    errorEntry               37 calls.
+
+                             350 call sites between them. All four are Engine concerns:
+                             every application of this shape destroys values & records what
+                             it did. But moving them means the application must still have
+                             them, because convertCore.php calls them everywhere too.
+                             THE ANSWER IS NOT TO MOVE THEM. It is to have the Engine
+                             DEFINE them & the application USE them, which reverses the
+                             current direction without changing a single call site.
+                             That is a bigger change than it looks. Logging needs a log
+                             path, a verbosity flag & an application name, all of which
+                             arrive from configuration the Engine now reads anyway.
+
+  STAY. These need to know what a file IS.
+
+    virusScan                 1 call.   45 lines.
+                             Now dispatches to a scanner pipeline. The Engine calling it is
+                             the Engine reaching through the application to reach a
+                             pipeline. Better: the Engine gets a SCAN PROVIDER the way it
+                             gets a repair provider, & stops knowing pipelines exist.
+
+    verifyFile                1 call.   40 lines, 4 application words.
+                             Judges whether a file is one this application will touch,
+                             which is a question about supported formats.
+
+    fixManagedPermissions     1 call.   Already behind $EngineRepairProvider. Nothing to do.
+
+-----------------------------------------------------------------------------------------
+WHAT THE ENGINE OWNS, STATED PLAINLY
+-----------------------------------------------------------------------------------------
+
+The environment, & everything that is true of an application of this shape regardless of
+what it does with a file.
+
+  Logging, at all three tiers.        Memory destruction.
+  Sanitizing a value.                 Finding a dependency & judging its version.
+  The installation location.          Secrets & the identity derived from them.
+  Sandboxing a command.               Reaching a remote address, or refusing to.
+  Resource budget & the managers.     Configuration, its template & its repair.
+  The command line, except one namespace.
+
+The application owns what it means to act on a file. Capabilities, pipelines, sessions in
+the sense of what a user's work IS, & its own arguments.
+
+-----------------------------------------------------------------------------------------
+COMMAND LINE OWNERSHIP
+-----------------------------------------------------------------------------------------
+
+The Engine should own the arguments that are true of every application of this shape.
+
+  ENGINE          -v --version, -h --help, --status, -l --listen, -k --kill, the manager
+                  commands, --setup & every dependency argument, --config & every
+                  configuration argument, -fp --fix-permissions, -u --update, -c --clean.
+
+  APPLICATION     Anything that converts, scans or otherwise acts on a file.
+
+THE SEAM: an argument beginning --app is handed to the application untouched.
+
+  php convertCore.php --app-convert-all
+  php hrprotect.php --app-quarantine
+
+The Engine parses its own, refuses what it does not recognize, & passes the --app namespace
+through without opinion. An application registering a handler by name, the same way it
+registers every other provider, is how it receives them.
+
+WHY A PREFIX RATHER THAN A REGISTRY OF NAMES. A registry means the Engine must ask the
+application what it accepts before it can report an unknown argument, & an application that
+answers badly makes the Engine report nonsense. A prefix needs no negotiation. Everything
+--app is yours, everything else is mine, & an unknown argument in either namespace is
+refused by whoever owns it.
+
+-----------------------------------------------------------------------------------------
+WHAT IS GENUINELY FALLBACK & MUST NOT BE REMOVED
+-----------------------------------------------------------------------------------------
+
+Some of what looks like duplication in convertCore.php is a deliberate floor.
+
+  $DefaultGui & the local fallback lists. A lowercase local the configuration cannot
+  overwrite. The whole point is that a broken configuration still renders a page. Removing
+  it because the Engine has a better value is removing the reason it exists.
+
+  quickDie & the pre Engine boot path. Everything before the Engine loads has to work with
+  no Engine, & that includes reporting why the Engine did not load.
+
+  The bootstrap block in verifyInstallation. It sets $InstLoc, $DirSep, $ApplicationName &
+  the provider names by hand because config.php is missing & nothing else will. It looks
+  like duplication of configuration & it is the opposite: it is what exists so a missing
+  configuration is recoverable.
+
+  compareVersionMinimum was moved to the Engine & the application copy deleted. That was
+  correct. It is listed here only so nobody restores it as a fallback.
+
+-----------------------------------------------------------------------------------------
+ORDER, & WHY THIS ONE
+-----------------------------------------------------------------------------------------
+
+  1. DONE IN PART. Resources/Engine/Cores/environmentCore.php now DEFINES sanitize,
+     locateDependency & getExtension, plus a new describeEnvironment. Every definition is
+     guarded by function_exists.
+     HRConvert2 still defines its own three & therefore keeps using them, because its boot
+     sequence reaches them before the Engine loads. A new application defines none & gets
+     all of them. Neither redeclares, which in php is fatal at load.
+     The guards come off one at a time as HRConvert2 moves its boot behind the Engine.
+     Removing them before that turns a working installation into a fatal error at line one.
+
+     readComponentVersion CANNOT MOVE & this is settled rather than pending. It is what
+     VERIFIES the Engine, so it has to exist before the Engine does. It stays in the
+     application permanently & that is correct rather than a compromise.
+  2. The scan provider. virusScan stops being called by name & the Engine stops knowing
+     pipelines exist.
+  3. The command line split, with the --app namespace.
+  4. Logging & memory LAST, & only after HRProtect exists.
+
+Four is last deliberately. Reversing the direction of 350 call sites is the largest change
+available here, & the second application is what will show whether the logging contract is
+right. Doing it now means designing it for one consumer & discovering the shape is wrong
+when the second arrives.
+
+-----------------------------------------------------------------------------------------

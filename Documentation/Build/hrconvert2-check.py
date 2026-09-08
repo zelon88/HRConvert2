@@ -12,7 +12,7 @@
 # / on a server for users of any web browser without authentication.
 # /
 # / File Information ...
-# / v3.9.2.
+# / v3.9.3.
 # / This file checks the source for faults a human reading it will not reliably see.
 # /
 # / Run it from the installation root, beside convertCore.php.
@@ -430,6 +430,75 @@ def check_undefined_reads(files, report):
 # / Convention nineteen. A comment that needs shouting is a comment describing something
 # / too important to be a comment. A capitalised word inside a sentence is fine & is not
 # / reported, because emphasis is not shouting.
+def check_stray_files(root, report):
+    # / A tree that ships is a tree somebody unpacks over their installation, so anything in
+    # / it that is not part of the application lands on their disk.
+    # / A .git directory shipped in three archives before anybody noticed. It was empty & it
+    # / was still wrong, because unpacking it over a real repository is a mess nobody asked
+    # / for. Editor leftovers & backups are the same class of accident.
+    # / This is a build check rather than a code check. It says nothing about whether the
+    # / application is correct & everything about whether the box is packed properly.
+    import os
+    faults = 0
+    unwanted_dirs = ('.git', '.svn', '.hg', '__pycache__', '.idea', '.vscode')
+    unwanted_suffix = ('.bak', '.orig', '.rej', '.swp', '~', '.pyc')
+    unwanted_names = ('.DS_Store', 'Thumbs.db', 'core')
+    for walked, dirs, names in os.walk(root):
+        for directory in list(dirs):
+            if directory in unwanted_dirs:
+                report('STRAY', os.path.join(walked, directory) + ' does not belong in a shipped tree')
+                faults += 1
+                dirs.remove(directory)
+        for name in names:
+            if name in unwanted_names or name.endswith(unwanted_suffix):
+                report('STRAY', os.path.join(walked, name) + ' does not belong in a shipped tree')
+                faults += 1
+    return faults
+
+
+def check_file_spacing(files, report):
+    # / The shape this project writes, measured from the files that were never edited by a
+    # / tool rather than decided here.
+    # / A separator is 88 characters. Two in a row is one separator written twice.
+    # / A separator is followed immediately by what it introduces, never by a blank line.
+    # / At most two blank lines anywhere. Three or more is an edit that removed something &
+    # / left its gap behind.
+    # / None of this changes behaviour, which is exactly why it drifts. A person reading a
+    # / diff sees the change they were looking for & not the blank line that came with it.
+    faults = 0
+    for path in files:
+        original, blanked = read_source(path)
+        run = 0
+        for index, line in enumerate(original):
+            stripped = line.strip()
+            if stripped == '':
+                run += 1
+                if run == 3:
+                    report('SPACING', path + ':' + str(index - 1) + ' three or more blank lines in a row')
+                    faults += 1
+                continue
+            run = 0
+            if not stripped.startswith('// / -') and not stripped.startswith('# / -'):
+                continue
+            # / Take the body by removing the comment marker from the front, not by
+            # / splitting on a separator that also appears inside the marker itself.
+            body = stripped[5:] if stripped.startswith('// / ') else stripped[4:]
+            if body == '' or set(body) - set('-'):
+                continue
+            if index + 1 < len(original) and original[index + 1].strip() == stripped:
+                report('SPACING', path + ':' + str(index + 1) + ' the same separator is written twice')
+                faults += 1
+            # / A separator followed by a blank line was ALSO checked here & the rule was
+            # / removed, which is worth recording so nobody adds it back.
+            # / A separator that OPENS a block is followed by what it introduces. One that
+            # / CLOSES a block is followed by a blank line & is correct. Nothing in the text
+            # / of the line says which it is, so the rule fired on roughly a hundred & seventy
+            # / correct closing separators across files nobody had touched.
+            # / A check that is wrong that often teaches an operator to ignore the whole
+            # / category, which costs more than the fault it was looking for.
+    return faults
+
+
 def check_comment_case(files, report):
     faults = 0
     for path in files:
@@ -1089,6 +1158,8 @@ def main():
         ('guard', 'every component refuses to load directly', lambda: check_component_guard(root, report)),
         ('contract', 'the Engine never calls application code', lambda: check_engine_independence(root, report)),
         ('config', 'every required setting is declared where config.php loads', lambda: check_config_globals(root, report)),
+        ('stray', 'nothing ships that is not part of the application', lambda: check_stray_files(root, report)),
+        ('spacing', 'separators & blank lines follow the house shape', lambda: check_file_spacing(files, report)),
         ('caps', 'no comment line is entirely capitals', lambda: check_comment_case(files, report)),
         ('purge', 'every cleanup at a return carries its comment', lambda: check_purge_comment(files, report)),
         ('locals', 'every lowercase local is destroyed before return', lambda: check_locals_purged(files, report)),

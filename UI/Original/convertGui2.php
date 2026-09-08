@@ -288,6 +288,13 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
        / work rather than inventing a parallel one to debug.
        / jQuery .html() executes the script blocks in what it injects, which the per file
        / panels depend on, & innerHTML would not. -->
+    <?php
+    // / A PLAIN container & it stays plain.
+    // / The javascript fetches the file list from the server & injects it here, & what
+    // / comes back already carries its own panel with its own border.
+    // / Styling this as a panel too put a panel inside a panel & drew two borders, one
+    // / just inside the other.
+    ?>
     <div id='hrc2FileList'></div>
     <?php } else {
       // / The else branch stays open through the entire file list & closes at the end of

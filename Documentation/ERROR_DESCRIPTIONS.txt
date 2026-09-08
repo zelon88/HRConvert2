@@ -129,7 +129,121 @@ WHAT TO GATHER BEFORE ASKING FOR HELP.
 
 ---------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31009, <SESSION_IDENTIFIER>: The installation location resolved to a system directory & was NOT deleted. Check $InstLoc in config.php.
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-28003, <SESSION_IDENTIFIER>: This application names no configuration template, so none can be written!
+
+FILE
+  Resources/Engine/Cores/setupCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  --Engine Config Template-- in engineConfig.php names the file this application uses to
+  say what its configuration looks like. Nothing named it.
+  An engine cannot invent a configuration. It does not know what settings this application
+  has, what they should default to, or what any of them mean.
+  Set it to a template & run the command again. NOTHING WAS WRITTEN.
+---------------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-28004, <SESSION_IDENTIFIER>: The configuration template at <PATH> is missing or unreadable!
+
+FILE
+  Resources/Engine/Cores/setupCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A template was named & is not there, or the account running the command cannot read it.
+  A path with no leading separator is taken as relative to Resources.
+  Check the path & that the file is readable by root.
+  NOTHING WAS WRITTEN. The installation still has no configuration.
+---------------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-28002, <SESSION_IDENTIFIER>: A configuration file could not be written to <PATH>!
+
+FILE
+  Resources/Engine/Cores/setupCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  --config --repair found no configuration file & tried to write a default one from the
+  model, & the write did not complete.
+  The usual cause is that the Resources directory is not writable by the account running
+  the command. Run it as root.
+  A generated file is staged, checked with php -l & only then moved into place, so a
+  failure here leaves nothing behind rather than half a configuration.
+  NOTHING WAS WRITTEN. The installation still has no configuration & will not start.
+---------------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34007, <SESSION_IDENTIFIER>: A virus scan was requested & no scanner was named or configured!
+
+FILE
+  Resources/PipelineCore/pipelineCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Nothing asked for a particular scanner & --Default Virus Scanner-- in config.php is
+  empty, so there was nothing to run.
+  Set it to scancore, which ships inside this application, or to clamav if ClamAV is
+  installed on this host.
+  THE FILE WAS NOT SCANNED. Whether that stops the operation is the caller's decision &
+  is reported separately.
+---------------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34008, <SESSION_IDENTIFIER>: The <SCANNER> scanner was requested & no pipeline provides it!
+
+FILE
+  Resources/PipelineCore/pipelineCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A scanner was named & no installed pipeline declares that family.
+  A scanner is chosen by NAME rather than by file type, so the name in config.php must
+  match a scanner pipeline's family exactly, allowing for case.
+  Run -v to list what is installed. Two ship with this application, ScanCore & ClamAV.
+  This is deliberately NOT a fall back to whatever scanner happens to be present. A scan
+  that quietly used a different scanner than the one an administrator configured is worse
+  than a scan that refused, because the log would say a scan ran.
+---------------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31018, <SESSION_IDENTIFIER>: The installation location resolved to a system directory & was NOT deleted. Check $InstLoc in config.php.
 
 FILE
   convertCore.php
@@ -152,7 +266,7 @@ ERROR DESCRIPTION
 
 ---------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31010, <SESSION_IDENTIFIER>: The backup location resolved to a system directory & was NOT emptied. Check $BackupLoc in config.php.
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31019, <SESSION_IDENTIFIER>: The backup location resolved to a system directory & was NOT emptied. Check $BackupLoc in config.php.
 
 FILE
   convertCore.php
@@ -176,7 +290,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32015, <SESSION_IDENTIFIER>: The Environment Manager timer could not be written to <PATH>!
 
 FILE
-  Resources/SetupCore/setupCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -200,7 +314,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32016, <SESSION_IDENTIFIER>: The Environment Manager timer was written & could not be enabled!
 
 FILE
-  Resources/SetupCore/setupCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -273,7 +387,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15010, <SESSION_IDENTIFIER>: Could not verify the Document Conversion Engine!
 
 FILE
-  Resources/Pipelines/Document/pipeline.php
+  Resources/Pipelines/OCR/pipeline.php
 
 FATAL
   NO
@@ -294,7 +408,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15011, <SESSION_IDENTIFIER>: Could not create a file at <PATH>!
 
 FILE
-  Resources/Pipelines/Document/pipeline.php
+  Resources/Pipelines/OCR/pipeline.php
 
 FATAL
   NO
@@ -1513,7 +1627,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-2005, <SESSION_IDENTIFIER>: An XPS conversion was refused because no sandbox could be built!
 
 FILE
-  /Resources/Pipelines/Document/pipelineCore.php
+  Resources/Pipelines/Document/pipeline.php
 
 FATAL
   NO
@@ -2068,7 +2182,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-7000, <SESSION_IDENTIFIER>: Could not verify the document conversion engine!
 
 FILE
-  /Resources/Pipelines/Document/pipelineCore.php
+  Resources/Pipelines/Document/pipeline.php
 
 FATAL
   NO
@@ -2089,7 +2203,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-7001, <SESSION_IDENTIFIER>: The document converter timed out!
 
 FILE
-  /Resources/Pipelines/Document/pipelineCore.php
+  Resources/Pipelines/Document/pipeline.php
 
 FATAL
   NO
@@ -2121,7 +2235,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-8000, <SESSION_IDENTIFIER>: The image converter timed out!
 
 FILE
-  /Resources/Pipelines/Image/pipelineCore.php
+  Resources/Pipelines/Image/pipeline.php
 
 FATAL
   NO
@@ -2153,8 +2267,8 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-8001, <SESSION_IDENTIFIER>: The installed ImageMagick version is missing, unidentifiable, or too old!
 
 FILE
-  /Resources/Pipelines/Image/pipelineCore.php
-  /Resources/Pipelines/OCR/pipelineCore.php
+  Resources/Pipelines/Image/pipeline.php
+  /Resources/Pipelines/OCR/pipeline.php
 
 FATAL
   YES
@@ -2182,7 +2296,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-8002, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this image conversion cannot be isolated!
 
 FILE
-  /Resources/Pipelines/Image/pipelineCore.php
+  Resources/Pipelines/Image/pipeline.php
 
 FATAL
   NO
@@ -2213,7 +2327,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9000, <SESSION_IDENTIFIER>: The model converter timed out!
 
 FILE
-  /Resources/Pipelines/Model/pipelineCore.php
+  Resources/Pipelines/Model/pipeline.php
 
 FATAL
   NO
@@ -2245,7 +2359,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9001, <SESSION_IDENTIFIER>: The installed Assimp version is missing, unidentifiable, or too old!
 
 FILE
-  /Resources/Pipelines/Model/pipelineCore.php
+  Resources/Pipelines/Model/pipeline.php
 
 FATAL
   YES
@@ -2271,7 +2385,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9002, <SESSION_IDENTIFIER>: The installed MeshLab version is missing, unidentifiable, or too old!
 
 FILE
-  /Resources/Pipelines/Model/pipelineCore.php
+  Resources/Pipelines/Model/pipeline.php
 
 FATAL
   NO
@@ -2300,7 +2414,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9003, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this model conversion cannot be isolated!
 
 FILE
-  /convertCore.php
+  Resources/Pipelines/Model/pipeline.php
 
 FATAL
   NO
@@ -2323,7 +2437,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9004, <SESSION_IDENTIFIER>: Neither Assimp nor MeshLab can write the <FILE_TYPE> format!
 
 FILE
-  /Resources/Pipelines/Model/pipelineCore.php
+  Resources/Pipelines/Model/pipeline.php
 
 FATAL
   NO
@@ -2343,31 +2457,6 @@ ERROR DESCRIPTION
   An earlier version routed on the input extension alone, so an obj to off conversion reached Assimp, which answered that it could not guess the output format, and the retry loop repeated the identical command until it timed out with error 9000.
   Remove the format from --Supported Model Formats-- in config.php, or install a utility that can write it.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9002, <SESSION_IDENTIFIER>: The installed Meshlab version is missing, unidentifiable, or too old!
-
-FILE
-  /Resources/Pipelines/Model/pipelineCore.php
-
-FATAL
-  YES
-
-LOGGED
-  YES
-
-ERROR DESCRIPTION
-  If you get this error, try enabling --Use PyMeshLab Python Bindings-- in config.php.
-  By setting to --Use PyMeshLab Python Bindings-- TRUE, HRConvert2 will use it's bundled version of PyMeshLab instead of the system version of Meshlab.
-  MeshLab is one of the engines behind every 3D model geometry optimization, rectification, & format conversion.
-  The Model Conversion Engine passes work to them, so no model conversion can succeed without them.
-  MeshLab or Assimp may not be installed, or may not be reachable on the system path used by the web server user.
-  The installed binaries may be older than the Minimum MeshLab Version settings in config.php.
-  This minimum exists for broad format export array coverage & topological mesh cleaning stabilization & is not a security control.
-  HRConvert2 compares these values numerically down to the minor release branch depth, so all releases are ranked correctly.
-  HRConvert2 refuses any build it cannot positively identify, because an unknown build cannot be cleared.
-  Check the installed versions by running 'meshlabserver --help' as the web server user.
-  The conversion sequence is aborted to protect the processing pipeline from invalid command parameters or missing dependencies.
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2375,7 +2464,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-10000, <SESSION_IDENTIFIER>: The drawing converter timed out!
 
 FILE
-  /Resources/Pipelines/Drawing/pipelineCore.php
+  Resources/Pipelines/Drawing/pipeline.php
 
 FATAL
   NO
@@ -2407,7 +2496,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-10001, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this drawing conversion cannot be isolated!
 
 FILE
-  /Resources/Pipelines/Drawing/pipelineCore.php
+  Resources/Pipelines/Drawing/pipeline.php
 
 FATAL
   NO
@@ -2431,7 +2520,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-10002, <SESSION_IDENTIFIER>: The installed Dia version is missing, unidentifiable, or too old!
 
 FILE
-  /Resources/Pipelines/Drawing/pipelineCore.php
+  Resources/Pipelines/Drawing/pipeline.php
 
 FATAL
   NO
@@ -2465,7 +2554,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-11000, <SESSION_IDENTIFIER>: The video converter timed out!
 
 FILE
-  /Resources/Pipelines/Video/pipelineCore.php
+  Resources/Pipelines/Video/pipeline.php
 
 FATAL
   NO
@@ -2497,7 +2586,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-11001, <SESSION_IDENTIFIER>: The installed FFMPEG version is missing, unidentifiable, or too old!
 
 FILE
-  /Resources/Pipelines/Video/pipelineCore.php
+  Resources/Pipelines/Video/pipeline.php
 
 FATAL
   NO
@@ -2523,7 +2612,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-11002, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this video conversion cannot be isolated!
 
 FILE
-  /Resources/Pipelines/Video/pipelineCore.php
+  Resources/Pipelines/Video/pipeline.php
 
 FATAL
   NO
@@ -2546,7 +2635,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-12000, <SESSION_IDENTIFIER>: The audio converter timed out!
 
 FILE
-  /Resources/Pipelines/Audio/pipelineCore.php
+  Resources/Pipelines/Audio/pipeline.php
 
 FATAL
   NO
@@ -2578,7 +2667,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-12001, <SESSION_IDENTIFIER>: The installed FFMPEG version is missing, unidentifiable, or too old!
 
 FILE
-  /Resources/Pipelines/Audio/pipelineCore.php
+  Resources/Pipelines/Audio/pipeline.php
 
 FATAL
   NO
@@ -2604,7 +2693,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-12002, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this audio conversion cannot be isolated!
 
 FILE
-  /Resources/Pipelines/Audio/pipelineCore.php
+  Resources/Pipelines/Audio/pipeline.php
 
 FATAL
   NO
@@ -2626,7 +2715,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13000, <SESSION_IDENTIFIER>: The archiver failed to produce an archive!
 
 FILE
-  /Resources/Pipelines/Archive/pipelineCore.php
+  Resources/Pipelines/Archive/pipeline.php
 
 FATAL
   NO
@@ -2819,7 +2908,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13006, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this archive operation cannot be isolated!
  
 FILE
-  /Resources/Pipelines/Archive/pipelineCore.php
+  Resources/Pipelines/Archive/pipeline.php
   /convertCore.php
  
 FATAL
@@ -2847,7 +2936,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13007, <SESSION_IDENTIFIER>: The extractor produced no files from the source archive!
 
 FILE
-  /Resources/Pipelines/Archive/pipelineCore.php
+  Resources/Pipelines/Archive/pipeline.php
 
 FATAL
   NO
@@ -2878,7 +2967,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13008, <SESSION_IDENTIFIER>: The installed 7-Zip version is missing, unidentifiable, or too old!
 
 FILE
-  /Resources/Pipelines/Archive/pipelineCore.php
+  Resources/Pipelines/Archive/pipeline.php
   /convertCore.php
 
 FATAL
@@ -2914,7 +3003,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13009, <SESSION_IDENTIFIER>: Mkisofs is missing, unidentifiable, or too old!
 
 FILE
-  /Resources/Pipelines/Archive/pipelineCore.php
+  Resources/Pipelines/Archive/pipeline.php
   /convertCore.php
 
 FATAL
@@ -2943,7 +3032,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13010, <SESSION_IDENTIFIER>: Zip is missing, unidentifiable, or too old!
 
 FILE
-  /Resources/Pipelines/Archive/pipelineCore.php
+  Resources/Pipelines/Archive/pipeline.php
   /convertCore.php
 
 FATAL
@@ -2970,7 +3059,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13011, <SESSION_IDENTIFIER>: Tar is missing, unidentifiable, or too old!
 
 FILE
-  /Resources/Pipelines/Archive/pipelineCore.php
+  Resources/Pipelines/Archive/pipeline.php
 
 FATAL
   NO
@@ -3027,7 +3116,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13013, <SESSION_IDENTIFIER>: Rar output requires the rar utility, which is missing or too old!
 
 FILE
-  /Resources/Pipelines/Archive/pipelineCore.php
+  Resources/Pipelines/Archive/pipeline.php
 
 FATAL
   NO
@@ -3066,7 +3155,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13105, <SESSION_IDENTIFIER>: Cryptographic validation failed for internal UEFI assets! Files are missing or corrupted.
 
 FILE
-  /Resources/Pipelines/Archive/pipelineCore.php
+  Resources/Pipelines/Archive/pipeline.php
 
 FATAL
   NO
@@ -3088,28 +3177,6 @@ ERROR DESCRIPTION
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13106, <SESSION_IDENTIFIER>: The installed Isohybrid version is missing, unidentifiable, or too old!
-
-FILE
-  /Resources/Pipelines/Archive/pipelineCore.php
-
-FATAL
-  NO
-
-LOGGED
-  YES
-
-ERROR DESCRIPTION
-  The Isohybrid dependency required to create bootable iso files could not be verified.
-  Isohybrid may not be installed, or may not be reachable on the system path used by the web server user.
-  The installed Isohybrid may be older than the --Minimum Isohybrid Version-- setting in config.php.
-  The installed Isohybrid may be a development or git build which does not report a parseable version number.
-  HRConvert2 refuses any build it cannot positively identify, because an unknown build cannot be cleared.
-  Verify the installed version by running 'isohybrid -version' as the web server user.
-  This minimum exists for feature and format support and is not a security control.
-  Bootable iso conversions using Isohybrid read a local file and never fetch anything remote.
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -3117,7 +3184,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13106, <SESSION_IDENTIFIER>: Could not generate required bootloader assets!
 
 FILE
-  /Resources/Pipelines/Archive/pipelineCore.php
+  Resources/Pipelines/Archive/pipeline.php
 
 FATAL
   NO
@@ -3257,7 +3324,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15000, <SESSION_IDENTIFIER>: Could not sanitize the input file!
 
 FILE
-  /Resources/Pipelines/OCR/pipelineCore.php
+  Resources/Pipelines/OCR/pipeline.php
 
 FATAL
   YES
@@ -3282,7 +3349,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15001, <SESSION_IDENTIFIER>: Could not verify the input file!
 
 FILE
-  /Resources/Pipelines/OCR/pipelineCore.php
+  Resources/Pipelines/OCR/pipeline.php
 
 FATAL
   NO
@@ -3312,7 +3379,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15002, <SESSION_IDENTIFIER>: Could not perform a virus scan!
 
 FILE
-  /Resources/Pipelines/OCR/pipelineCore.php
+  Resources/Pipelines/OCR/pipeline.php
 
 FATAL
   YES
@@ -3334,7 +3401,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15003, <SESSION_IDENTIFIER>: Virus detected!
 
 FILE
-  /Resources/Pipelines/OCR/pipelineCore.php
+  Resources/Pipelines/OCR/pipeline.php
 
 FATAL
   YES
@@ -3356,7 +3423,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15004, <SESSION_IDENTIFIER>: Could not complete the conversion using method 0. Reattempting using method 1.
 
 FILE
-  /Resources/Pipelines/OCR/pipelineCore.php
+  Resources/Pipelines/OCR/pipeline.php
 
 FATAL
   NO
@@ -3385,7 +3452,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15005, <SESSION_IDENTIFIER>: Could not complete the conversion using method 1.
 
 FILE
-  /Resources/Pipelines/OCR/pipelineCore.php
+  Resources/Pipelines/OCR/pipeline.php
 
 FATAL
   NO
@@ -3414,7 +3481,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15006, <SESSION_IDENTIFIER>: Could not OCR file!
 
 FILE
-  /Resources/Pipelines/OCR/pipelineCore.php
+  Resources/Pipelines/OCR/pipeline.php
 
 FATAL
   NO
@@ -3443,7 +3510,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15007, <SESSION_IDENTIFIER>: Could not verify the document conversion engine!
 
 FILE
-  /Resources/Pipelines/OCR/pipelineCore.php
+  Resources/Pipelines/OCR/pipeline.php
 
 FATAL
   NO
@@ -3464,7 +3531,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15008, <SESSION_IDENTIFIER>: Could not verify the document conversion engine!
 
 FILE
-  /Resources/Pipelines/OCR/pipelineCore.php
+  Resources/Pipelines/OCR/pipeline.php
 
 FATAL
   NO
@@ -3485,7 +3552,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15009, <SESSION_IDENTIFIER>: Could not create an intermediate directory at <FILE_PATH>!
 
 FILE
-  /Resources/Pipelines/OCR/pipelineCore.php
+  Resources/Pipelines/OCR/pipeline.php
 
 FATAL
   NO
@@ -3508,7 +3575,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15012, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!
 
 FILE
-  /Resources/Pipelines/OCR/pipelineCore.php
+  Resources/Pipelines/OCR/pipeline.php
 
 FATAL
   NO
@@ -3537,7 +3604,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15013, <SESSION_IDENTIFIER>: The installed Tesseract version is missing, unidentifiable, or too old!
 
 FILE
-  /Resources/Pipelines/OCR/pipelineCore.php
+  Resources/Pipelines/OCR/pipeline.php
 
 FATAL
   NO
@@ -3576,7 +3643,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15014, <SESSION_IDENTIFIER>: The installed pdftotext version is missing, unidentifiable, or too old!
 
 FILE
-  /Resources/Pipelines/OCR/pipelineCore.php
+  Resources/Pipelines/OCR/pipeline.php
 
 FATAL
   NO
@@ -3906,7 +3973,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-21000, <SESSION_IDENTIFIER>: The stream converter failed to launch!
 
 FILE
-  /Resources/Pipelines/Stream/pipelineCore.php
+  Resources/Pipelines/Stream/pipeline.php
 
 FATAL
   NO
@@ -3931,7 +3998,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-21001, <SESSION_IDENTIFIER>: Stream inspection denied this file. <ADDITIONAL_DATA>.
 
 FILE
-  /Resources/Pipelines/Stream/pipelineCore.php
+  Resources/Pipelines/Stream/pipeline.php
 
 FATAL
   NO
@@ -3961,7 +4028,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-21002, <SESSION_IDENTIFIER>: The installed FFMPEG version is missing, unidentifiable, or vulnerable to stream playlist protocol bypass!
 
 FILE
-  /Resources/Pipelines/Stream/pipelineCore.php
+  Resources/Pipelines/Stream/pipeline.php
 
 FATAL
   NO
@@ -3988,7 +4055,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-22000, <SESSION_IDENTIFIER>: The subtitle converter timed out!
 
 FILE
-  /Resources/Pipelines/Subtitle/pipelineCore.php
+  Resources/Pipelines/Subtitle/pipeline.php
 
 FATAL
   NO
@@ -4016,29 +4083,6 @@ ERROR DESCRIPTION
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-22001, <SESSION_IDENTIFIER>: The installed FFMPEG version is missing, unidentifiable, or too old!
-
-FILE
-  /Resources/Pipelines/Subtitle/pipelineCore.php
-
-FATAL
-  NO
-
-LOGGED
-  YES
-
-ERROR DESCRIPTION
-  The FFMPEG dependency required to convert audio files could not be verified.
-  FFMPEG may not be installed, or may not be reachable on the system path used by the web server user.
-  The installed FFMPEG may be older than the --Minimum FFMPEG Version-- setting in config.php.
-  The installed FFMPEG may be a development or git build which does not report a parseable version number.
-  HRConvert2 refuses any build it cannot positively identify, because an unknown build cannot be cleared.
-  Verify the installed version by running 'ffmpeg -version' as the web server user.
-  This minimum exists for feature and format support and is not a security control.
-  Audio conversions read a local file and never fetch anything remote.
-  The stream playlist protocol bypass affecting older builds cannot reach this operation.
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -4046,7 +4090,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-22002, <SESSION_IDENTIFIER>: The installed FFMPEG version is missing, unidentifiable, or too old!
 
 FILE
-  /Resources/Pipelines/Subtitle/pipelineCore.php
+  Resources/Pipelines/Subtitle/pipeline.php
 
 FATAL
   NO
@@ -4078,7 +4122,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-22001, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this subtitle conversion cannot be isolated!
 
 FILE
-  /Resources/Pipelines/Subtitle/pipelineCore.php
+  Resources/Pipelines/Subtitle/pipeline.php
 
 FATAL
   NO
@@ -4196,7 +4240,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-25000, <SESSION_IDENTIFIER>: The SVG converter timed out!
 
 FILE
-  /Resources/Pipelines/SVG/pipelineCore.php
+  Resources/Pipelines/SVG/pipeline.php
 
 FATAL
   NO
@@ -4228,7 +4272,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-25001, <SESSION_IDENTIFIER>: The installed Inkscape version is missing, unidentifiable, or too old!
 
 FILE
-  /Resources/Pipelines/SVG/pipelineCore.php
+  Resources/Pipelines/SVG/pipeline.php
 
 FATAL
   NO
@@ -4253,7 +4297,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-25002, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this SVG conversion cannot be isolated!
 
 FILE
-  /Resources/Pipelines/SVG/pipelineCore.php
+  Resources/Pipelines/SVG/pipeline.php
 
 FATAL
   NO
@@ -4323,7 +4367,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27000, <SESSION_IDENTIFIER>: Could not prepare the OpenSCAD sources for rendering!
 
 FILE
-  /Resources/Pipelines/Scad/pipelineCore.php
+  Resources/Pipelines/Scad/pipeline.php
 
 FATAL
   NO
@@ -4346,7 +4390,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27003, <SESSION_IDENTIFIER>: The OpenSCAD converter failed with exit code <ADDITIONAL_DATA>!
 
 FILE
-  /Resources/Pipelines/Scad/pipelineCore.php
+  Resources/Pipelines/Scad/pipeline.php
 
 FATAL
   NO
@@ -4373,7 +4417,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27007, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so OpenSCAD renders cannot be isolated!
 
 FILE
-  /Resources/Pipelines/Scad/pipelineCore.php
+  Resources/Pipelines/Scad/pipeline.php
 
 FATAL
   NO
@@ -4409,7 +4453,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27008, <SESSION_IDENTIFIER>: Could not move the rendered OpenSCAD model out of the sandbox!
 
 FILE
-  /Resources/Pipelines/Scad/pipelineCore.php
+  Resources/Pipelines/Scad/pipeline.php
 
 FATAL
   NO
@@ -4435,7 +4479,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27001, <SESSION_IDENTIFIER>: Could not stage the sanitized OpenSCAD source <FILE_NAME>!
 
 FILE
-  /Resources/Pipelines/Scad/pipelineCore.php
+  Resources/Pipelines/Scad/pipeline.php
 
 FATAL
   NO
@@ -4458,7 +4502,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27002, <SESSION_IDENTIFIER>: The OpenSCAD converter timed out after <ADDITIONAL_DATA> seconds!
 
 FILE
-  /Resources/Pipelines/Scad/pipelineCore.php
+  Resources/Pipelines/Scad/pipeline.php
 
 FATAL
   NO
@@ -4480,28 +4524,6 @@ ERROR DESCRIPTION
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27003, <SESSION_IDENTIFIER>: The OpenSCAD converter failed with exit code <ADDITIONAL_DATA>!
-
-FILE
-  /Resources/Pipelines/Scad/pipelineCore.php
-
-FATAL
-  NO
-
-LOGGED
-  YES
-
-ERROR DESCRIPTION
-  OpenSCAD ran but exited with a failure status and produced no usable output.
-  The source may contain a syntax error, or may reference a variable or module that does not exist.
-  The source may reference an include which HRConvert2 removed, leaving the remaining code unable to render.
-  The requested export format may be one this OpenSCAD build was not compiled to support.
-  The source may produce two dimensional geometry, which cannot be exported to a three dimensional format.
-  OpenSCAD standard output and standard error are deliberately discarded and never written to the log.
-  A failed parse quotes the offending line, which would turn the log into a file exfiltration channel.
-  Only the exit code is recorded, because an exit code cannot carry the contents of a file.
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -4509,7 +4531,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27004, <SESSION_IDENTIFIER>: Could not remove the sanitized OpenSCAD sources!
 
 FILE
-  /Resources/Pipelines/Scad/pipelineCore.php
+  Resources/Pipelines/Scad/pipeline.php
 
 FATAL
   NO
@@ -4532,7 +4554,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27005, <SESSION_IDENTIFIER>: The installed OpenSCAD version is missing or too old!
 
 FILE
-  /Resources/Pipelines/Scad/pipelineCore.php
+  Resources/Pipelines/Scad/pipeline.php
 
 FATAL
   NO
@@ -4556,7 +4578,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27006, <SESSION_IDENTIFIER>: Could not read the OpenSCAD source file <FILE_NAME>!
 
 FILE
-  /Resources/Pipelines/Scad/pipelineCore.php
+  Resources/Pipelines/Scad/pipeline.php
 
 FATAL
   NO
@@ -5136,7 +5158,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31000, <SESSION_IDENTIFIER>: The Core Manager could not open its socket!
 
 FILE
-  Resources/coreManager.php
+  Resources/Engine/Managers/coreManager.php
 
 FATAL
   YES
@@ -5160,7 +5182,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31001, <SESSION_IDENTIFIER>: The Request Manager could not open its socket!
 
 FILE
-  Resources/coreManager.php
+  Resources/Engine/Managers/requestManager.php
 
 FATAL
   YES
@@ -5185,7 +5207,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31002, <SESSION_IDENTIFIER>: The Resource Manager could not open its socket!
 
 FILE
-  Resources/coreManager.php
+  Resources/Engine/Managers/resourceManager.php
 
 FATAL
   YES
@@ -5210,7 +5232,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31003, <SESSION_IDENTIFIER>: The Worker Manager could not open its socket!
 
 FILE
-  Resources/coreManager.php
+  Resources/Engine/Managers/workerManager.php
 
 FATAL
   YES
@@ -5235,7 +5257,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31004, <SESSION_IDENTIFIER>: The Core Manager socket directory could not be prepared!
 
 FILE
-  Resources/coreManager.php
+  Resources/Engine/engine.php
 
 FATAL
   NO
@@ -5259,7 +5281,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31005, <SESSION_IDENTIFIER>: The Core Manager listener could not be started!
 
 FILE
-  Resources/coreManager.php
+  Resources/Engine/engine.php
 
 FATAL
   NO
@@ -5286,7 +5308,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31006, <SESSION_IDENTIFIER>: A manager process was started with an invalid startup key!
 
 FILE
-  Resources/coreManager.php
+  Resources/Engine/engine.php
 
 FATAL
   YES
@@ -5312,7 +5334,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31007, <SESSION_IDENTIFIER>: An unrecognized manager role was requested!
 
 FILE
-  Resources/coreManager.php
+  Resources/Engine/engine.php
 
 FATAL
   YES
@@ -5608,7 +5630,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29, <SESSION_IDENTIFIER>: An invalid clean operation has been blocked!
 
 FILE
-  /convertCore.php
+  Resources/Engine/engine.php
 
 FATAL
   NO
@@ -5656,100 +5678,14 @@ ERROR DESCRIPTION
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-2005, <SESSION_IDENTIFIER>: An XPS conversion was refused because no sandbox could be built!
 
-FILE
-  /Resources/Pipelines/Document/pipelineCore.php
 
-FATAL
-  NO
-
-LOGGED
-  YES
-
-ERROR DESCRIPTION
-  Bubblewrap is missing or non functional & sandboxing is required by config.php.
-  This error only occurs if --Require Sandbox-- is set to TRUE in config.php.
-  This error only occurs if --Require Sandbox On Docker-- is set to TRUE when running in a container.
-  An XPS or OXPS file is converted by xpstopdf, which parses a document format from an untrusted upload.
-  The sandbox removes the network namespace, which is what stops a linked resource being fetched.
-  ERROR 2004 is the same condition raised for every other document conversion.
-  Run the -fp argument as root, which corrects every kernel setting & policy the sandbox needs.
-  This error is not fatal but the file that causes it will be skipped.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31011, <SESSION_IDENTIFIER>: Conversion limits can only be enabled while running as root!
-
-FILE
-  /convertCore.php
-
-FATAL
-  NO
-
-LOGGED
-  YES
-
-ERROR DESCRIPTION
-  The enableConversionLimits routine was reached by an account other than root.
-  Enabling lingering & writing a systemd delegation drop-in both require root.
-  This is normally reached through the -fp argument, which is already refused to a standard user.
-  Re-run the command with sudo.
-  ERROR 31008 is raised when permissions cannot be corrected for the same reason.
-  This error is not fatal. Per conversion limits fall back to scheduling priority.
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31012, <SESSION_IDENTIFIER>: A subordinate manager start was requested but the component is unavailable!
-
-FILE
-  /convertCore.php
-
-FATAL
-  YES
-
-LOGGED
-  YES
-
-ERROR DESCRIPTION
-  The --start-manager argument was used while the Core Manager component was missing or invalid.
-  The coreManager.php file was removed or replaced between the launch & the start.
-  The component version does not exactly match the version this core requires.
-  --Enable Resource Awareness-- was set to FALSE in config.php between the launch & the start.
-  The install secret was rotated, so the component could not be loaded on the new process.
-  ERROR 31009 is the same condition raised for the --start-core-manager argument.
-  The Core Manager will attempt to restart the subordinate & will raise this again if nothing changed.
-  This error halts the launched process only. The web interface is unaffected.
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31013, <SESSION_IDENTIFIER>: Resource awareness is required by config.php but is disabled or has no install secret!
-
-FILE
-  /convertCore.php
-
-FATAL
-  YES
-
-LOGGED
-  YES
-
-ERROR DESCRIPTION
-  --Require Resource Awareness-- is TRUE while --Enable Resource Awareness-- is FALSE.
-  These two settings contradict each other & the application refuses rather than guessing which was meant.
-  No install secret is available, so the component could not be loaded even if it were enabled.
-  A secret is unavailable when the secret file belongs to another account, which -fp corrects.
-  ERROR 31010 is raised when the component itself is missing or does not match this core.
-  Set --Enable Resource Awareness-- to TRUE, or set --Require Resource Awareness-- to FALSE.
-  This error halts the application, because the administrator has declared that this server must
-  never accept work it cannot account for.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -5758,7 +5694,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31014, <SESSION_IDENTIFIER>: The foreground listener was started by an account that may not operate it!
 
 FILE
-  Resources/coreManager.php
+  Resources/Engine/engine.php
 
 FATAL
   YES
@@ -5782,7 +5718,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31015, <SESSION_IDENTIFIER>: The foreground listener could not derive a startup key. No install secret is available!
 
 FILE
-  Resources/coreManager.php
+  Resources/Engine/engine.php
 
 FATAL
   YES
@@ -5830,7 +5766,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31017, <SESSION_IDENTIFIER>: A startup key for <ADDITIONAL_DATA> was presented a second time & refused as a replay!
 
 FILE
-  /convertCore.php
+  Resources/Engine/engine.php
 
 FATAL
   NO
@@ -5856,7 +5792,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32000, <SESSION_IDENTIFIER>: A configuration backup was requested but the source does not exist!
 
 FILE
-  Resources/SetupCore/setupCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -5878,7 +5814,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32001, <SESSION_IDENTIFIER>: A configuration backup was requested but <DIRECTORY> is not writable by this account!
 
 FILE
-  Resources/SetupCore/setupCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -5900,7 +5836,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32002, <SESSION_IDENTIFIER>: A configuration backup was requested but <PATH> already exists. Nothing was overwritten!
 
 FILE
-  Resources/SetupCore/setupCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -5922,7 +5858,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32003, <SESSION_IDENTIFIER>: A configuration backup to <PATH> did not complete!
 
 FILE
-  Resources/SetupCore/setupCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -5945,7 +5881,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32004, <SESSION_IDENTIFIER>: A configuration could not be staged at <PATH>!
 
 FILE
-  Resources/SetupCore/setupCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -5968,7 +5904,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32005, <SESSION_IDENTIFIER>: The staged configuration does not parse & was discarded. <PARSER OUTPUT>
 
 FILE
-  Resources/SetupCore/setupCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -5994,7 +5930,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32006, <SESSION_IDENTIFIER>: A staged configuration could not be moved into place at <PATH>!
 
 FILE
-  Resources/SetupCore/setupCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -6017,7 +5953,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32007, <SESSION_IDENTIFIER>: The configuration file supplied on the command line does not exist!
 
 FILE
-  Resources/SetupCore/setupCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -6039,7 +5975,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32008, <SESSION_IDENTIFIER>: The configuration path supplied on the command line is not a file!
 
 FILE
-  Resources/SetupCore/setupCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -6060,7 +5996,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32009, <SESSION_IDENTIFIER>: This installation has no configuration file to operate on!
 
 FILE
-  Resources/SetupCore/setupCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -6083,7 +6019,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32010, <SESSION_IDENTIFIER>: Data locations can only be created while running as root!
 
 FILE
-  Resources/SetupCore/setupCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -6104,7 +6040,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32011, <SESSION_IDENTIFIER>: A required data location could not be created at <PATH>!
 
 FILE
-  Resources/SetupCore/setupCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -6131,7 +6067,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32012, <SESSION_IDENTIFIER>: A service unit can only be installed while running as root!
 
 FILE
-  Resources/SetupCore/setupCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -6153,7 +6089,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32013, <SESSION_IDENTIFIER>: The listener service unit could not be written to <PATH>!
 
 FILE
-  Resources/SetupCore/setupCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -6176,7 +6112,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32014, <SESSION_IDENTIFIER>: The web served DATA location could not be created at <PATH>!
 
 FILE
-  Resources/SetupCore/setupCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -6202,7 +6138,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-33000, <SESSION_IDENTIFIER>: A dependency operation was attempted without a valid authorization token!
 
 FILE
-  Resources/DependencyCore/dependencyCore.php
+  Resources/Engine/Cores/dependencyCore.php
 
 FATAL
   NO
@@ -6227,7 +6163,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-33001, <SESSION_IDENTIFIER>: A supply chain report could not be written!
 
 FILE
-  Resources/DependencyCore/dependencyCore.php
+  Resources/Engine/Cores/dependencyCore.php
 
 FATAL
   NO
@@ -6276,7 +6212,7 @@ ERROR MESSAGE
   ERROR!!! HRConvert2-34000, A pipeline component cannot be loaded directly!
 
 FILE
-  /Resources/Pipelines/pipelineManager.php
+  /Resources/PipelineCore/pipelineCore.php
   /Resources/Pipelines/<PIPELINE_NAME>/pipelineConfig.php
   /Resources/Pipelines/<PIPELINE_NAME>/pipelineCore.php
   /Resources/Pipelines/Shared/<MODULE_NAME>.php
@@ -6305,7 +6241,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34001, <SESSION_IDENTIFIER>: The Pipeline Manager could not verify a single conversion pipeline!
 
 FILE
-  /Resources/Pipelines/pipelineManager.php
+  Resources/PipelineCore/pipelineCore.php
 
 FATAL
   NO
@@ -6331,7 +6267,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34002, <SESSION_IDENTIFIER>: The <PIPELINE_NAME> pipeline declared the entry point <FUNCTION_NAME>, which does not exist!
 
 FILE
-  /Resources/Pipelines/pipelineManager.php
+  Resources/PipelineCore/pipelineCore.php
 
 FATAL
   NO
@@ -6356,7 +6292,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34003, <SESSION_IDENTIFIER>: All <ADDITIONAL_DATA> installed <FILE_TYPE> pipelines failed to convert <FILE_TYPE> to <FILE_TYPE> & none reported a reason!
 
 FILE
-  /Resources/Pipelines/pipelineManager.php
+  Resources/PipelineCore/pipelineCore.php
 
 FATAL
   NO
@@ -6382,7 +6318,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34004, <SESSION_IDENTIFIER>: The <PIPELINE_NAME> pipeline declared the entry point <FUNCTION_NAME>, which the <PIPELINE_NAME> pipeline already claimed. It was refused.
 
 FILE
-  /Resources/Pipelines/pipelineManager.php
+  Resources/PipelineCore/pipelineCore.php
 
 FATAL
   NO
@@ -6432,7 +6368,7 @@ ERROR MESSAGE
 
 FILE
   /convertCore.php
-  /Resources/Pipelines/pipelineManager.php
+  /Resources/PipelineCore/pipelineCore.php
 
 FATAL
   NO

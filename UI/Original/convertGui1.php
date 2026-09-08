@@ -200,7 +200,13 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
     <?php
     if (!isset($_GET['noGui'])) { ?>
     <div id='header-text' style='max-width:<?php echo $GuiWidth; ?>; margin-left:auto; margin-right:auto; text-align:center;'>
-      <h1><img src='<?php echo $GuiImageDir; ?>convert-banner.png' style='max-height:72px; margin-right: 10px;'/><?php //echo $ApplicationName; ?></h1>
+      <?php
+      // / The logo returns to this page carrying the language, colour & interface,
+      // / unless --Logo URL-- names somewhere else. This application has no navigation,
+      // / so a logo that leaves takes the session & the user's files with it.
+      // / verifyInputs computes the address. Nothing is decided here.
+      ?>
+      <h1><a href='<?php echo htmlspecialchars($ResolvedLogoURL, ENT_QUOTES, 'UTF-8'); ?>'><img src='<?php echo $GuiImageDir; ?>convert-banner.png' style='max-height:72px; margin-right: 10px;'/></a><?php //echo $ApplicationName; ?></h1>
       <h3><?php echo $Gui1Text1; ?></h3>
       <hr />
     </div>

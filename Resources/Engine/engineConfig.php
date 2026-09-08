@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.9.2.
+// / v3.9.3.
 // / This file configures the Engine for the application that bundles it.
 // /
 // / This file is NOT the administrator's configuration & is not edited by a user.
@@ -43,7 +43,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-35000,
 // / The version of this configuration. Matched as a MINIMUM by the Engine, the same way
 // / an application matches its own configuration. A newer file carrying every required
 // / setting is fine, because a setting this Engine does not know is simply not read.
-$EngineConfigVersion = 'v3.9.2';
+$EngineConfigVersion = 'v3.9.3';
 // / -----------------------------------------------------------------------------------
 
 
@@ -56,7 +56,7 @@ $EngineConfigVersion = 'v3.9.2';
 // /   reading a log can tell which application produced it on a host running several.
 // /   Valid options are any short text string.
 // /   Default is 'HRConvert2'.
-$EngineApplicationName = 'HRConvert2';
+$EngineApplicationName = 'Application';
 
 // /  --Engine Application Slug--
 // /   A short lowercase form of the name, safe to use in a file name or a socket path.
@@ -64,7 +64,7 @@ $EngineApplicationName = 'HRConvert2';
 // /   path may not.
 // /   Valid options are lowercase letters, digits & hyphens.
 // /   Default is 'hrconvert2'.
-$EngineApplicationSlug = 'hrconvert2';
+$EngineApplicationSlug = 'application';
 // / -----------------------------------------------------------------------------------
 
 
@@ -218,7 +218,58 @@ $EnginePerWorkerLogFiles = FALSE;
 // /   degraded. An application with no AppArmor policy should not be asked about one.
 // /   A name that is declared & not defined is a warning, because a check nobody notices is
 // /   missing is worse than one that was never claimed.
-$EngineEnvironmentProvider = 'applicationEnvironmentFindings';
+$EngineEnvironmentProvider = '';
+
+// /  --Engine Operator Prompt--
+// /   The name of a function that asks a human a question & returns their answer.
+// /   The Engine has work that must not proceed unasked, & it has no idea how this
+// /   application talks to anybody. A command line reads a line. A web request has no
+// /   operator at all & must refuse rather than block waiting for one.
+// /   An application that names nothing gets a REFUSAL for every such question, which is
+// /   the safe answer. Nothing destructive happens because nobody could be asked.
+$EngineOperatorPrompt = '';
+
+// /  --Engine Data Policy Provider--
+// /   The name of a function reporting whether this application's data is exposed.
+// /   Whether a data tree is reachable by a web server is a question about an application
+// /   that HAS a web server. An engine cannot know, & an application without one has no
+// /   equivalent question to answer.
+// /   It returns display rows the same shape the environment provider returns, & the
+// /   Engine prints what it is given without understanding any of it.
+// /   Naming nothing means the section is not shown.
+$EngineDataPolicyProvider = '';
+
+// /  --Engine Config Model Provider--
+// /   The name of a function returning this application's configuration model.
+// /   THE MODEL IS THE CONFIGURATION & IT BELONGS TO THE APPLICATION. It names every
+// /   section, setting, type, default & the prose explaining each one. An engine that
+// /   carried it would be an engine that knows this application has a
+// /   --Supported File Format Information-- section, which is exactly the knowledge that
+// /   keeping them separate exists to prevent.
+// /   An application that names nothing gets a config utility that can still back up,
+// /   view & verify a file, & cannot repair, reset or generate one. That degradation is
+// /   correct. Repairing a setting means knowing what it should be.
+// /   THERE IS NO FALLBACK MODEL & there must never be. A wrong model would rewrite an
+// /   installation's settings to another application's defaults, which is worse than
+// /   refusing to do anything at all.
+$EngineConfigModelProvider = '';
+
+// /  --Engine Config Template--
+// /   The file this application uses to say what its configuration looks like.
+// /   It is a real config.php at DEFAULT VALUES rather than a description of one, so the
+// /   Engine reads it with the same parser it reads a live configuration with.
+// /   A path with no leading separator is taken as relative to Resources.
+// /   A missing config.php is written from it. A repair adds whatever it holds that a
+// /   live configuration lacks. AN OPERATOR VALUE IS NEVER REPLACED by a default in it.
+// /   An application naming none cannot have a configuration written for it, & is told so
+// /   rather than being given somebody else's defaults.
+$EngineConfigTemplate = '';
+
+// /  --Engine Repair Provider--
+// /   The name of a function that repairs whatever this application manages.
+// /   Already read by the Environment Manager. Setup Core uses the same seam, so there is
+// /   one place an application declares how it fixes itself rather than two.
+$EngineRepairProvider = '';
 
 
 // / -----------------------------------------------------------------------------------
@@ -264,5 +315,22 @@ $EngineDispatchDirection = 'requests-upward';
 // /   Valid options are TRUE or FALSE.
 // /   Default is FALSE.
 $EngineStrictContract = FALSE;
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / The application's overrides are loaded LAST & win.
+// / Everything above is an Engine DEFAULT. An application drops a file in Contract that
+// / sets what it needs & leaves the rest alone, the way a package ships a configuration &
+// / the thing being configured drops one beside it.
+// /
+// / This file belongs to the ENGINE & is replaced wholesale when a newer Engine arrives.
+// / The override belongs to the APPLICATION & survives that. Before the split an upgrade
+// / meant reading this file line by line to find which values were the application's.
+// /
+// / An application with no override runs on these defaults, names no providers, & does
+// / less. That is the correct degradation rather than a failure.
+$engineApplicationOverride = dirname(__FILE__).DIRECTORY_SEPARATOR.'Contract'.DIRECTORY_SEPARATOR.'app-engine-config.php';
+if (file_exists($engineApplicationOverride)) require_once($engineApplicationOverride);
 // / -----------------------------------------------------------------------------------
 ?>

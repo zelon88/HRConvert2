@@ -35,9 +35,9 @@ A COMPONENT ADDS A CAPABILITY. IT IS NEVER LOAD BEARING FOR CONVERSION.
 Every component can be deleted from an installation & every conversion still works. What is
 lost is the capability that component provides, & the loss is reported rather than silent.
 
-  Resources/coreManager.php                     Resource awareness & the listener.
-  Resources/SetupCore/setupCore.php             Installation & configuration.
-  Resources/DependencyCore/dependencyCore.php   Dependency management & the supply chain audit.
+  Resources/Engine/Managers/coreManager.php                     Resource awareness & the listener.
+  Resources/Engine/Cores/setupCore.php             Installation & configuration.
+  Resources/Engine/Cores/dependencyCore.php   Dependency management & the supply chain audit.
   Resources/PipelineCore/pipelineCore.php       Conversion pipeline dispatch.
 
 Each core lives in a folder of its own, the same way ScanCore does. Configuration files do

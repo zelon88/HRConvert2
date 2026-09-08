@@ -44,7 +44,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. Replacing config.php with a newer one is the correct fix.
-$ConfigVersion = 'v3.9.2';
+$ConfigVersion = 'v3.9.3';
 // / ------------------------------
 
 // / ------------------------------
@@ -291,7 +291,7 @@ $StreamInspectionFilesPerLayer = 7;
 // /   Valid options are 'DENY' or 'ALLOW'.
 // /   Default is 'DENY'.
 $DefaultStreamInspectionForfeitAction = 'DENY';
-// /  -- Maximum Stream Inspection Size--
+// /  --Maximum Stream Inspection Size--
 // /   The Stream Inspector will download up to this many bytes of a manifest file for validation during operation.
 // /   The max file potential download amount observed at the server per stream request is...
 // /   --Stream Inspection Layers--  X  --StreamInspectionFilesPerLayer--  X  --MaxStreamInspectionFileSize--
@@ -540,6 +540,128 @@ $MinimumCalibreVersion = '9.13';
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
 $AllowUnprivilegedNamespaces = TRUE;
+// /  --Permitted Private Ranges--
+// /   Private address ranges this server MAY fetch from, as CIDR, for stream inspection &
+// /   URL downloads only.
+// /
+// /   Empty is the default & means what it has always meant. A private, reserved or
+// /   loopback address is refused, & that is the right answer for anything a stranger can
+// /   reach.
+// /
+// /   It is not the right answer everywhere. An intranet installation with a media server
+// /   at 10.0.4.20 or a NAS at 192.168.1.50 is asking this application to reach a resource
+// /   the administrator owns, on a network nobody outside can address. Refusing that is
+// /   not security, it is an application refusing to do its job on the network it was
+// /   installed on.
+// /
+// /   Example:
+// /     $PermittedPrivateRanges = array('10.0.4.0/24', '192.168.1.0/24');
+// /
+// /   NAME THE SMALLEST RANGE THAT CONTAINS WHAT YOU NEED. '10.0.0.0/8' permits sixteen
+// /   million addresses & every service on all of them, including things nobody remembers
+// /   installing. A /24 around one server is a decision. A /8 is a shrug.
+// /
+// /   Three ranges are refused NO MATTER WHAT IS LISTED HERE & listing them does nothing.
+// /     127.0.0.0/8 & ::1     This host. Every service bound to localhost was bound there
+// /                           precisely so nothing off this machine could reach it, & a
+// /                           fetcher that reaches them hands that decision to whoever can
+// /                           type a URL.
+// /     169.254.0.0/16        Link local, which is where cloud metadata lives. Reaching
+// /                           169.254.169.254 on a cloud host returns credentials.
+// /     ::ffff:0:0/96 forms   IPv4 written as IPv6. The address is judged after unwrapping,
+// /                           so this is not a range you can list your way around.
+// /
+// /   Every fetch from a permitted range is logged as a warning naming the address, because
+// /   an allowance an administrator forgot they made should be visible in a log rather than
+// /   only in this file.
+// /   Default is an empty array.
+$PermittedPrivateRanges = array();
+
+// /  --URL Download Maximum Bytes--
+// /   The largest file this server will fetch on a user's behalf, in bytes.
+// /   A fetch is a stranger spending YOUR bandwidth & YOUR disk, so it needs a ceiling that
+// /   an upload does not, because an upload is bounded by what a browser will push.
+// /   The fetch stops at this figure rather than failing at it, so an oversized file is
+// /   truncated & reported rather than silently half written.
+// /   0 means no ceiling. Do not use 0 on anything a stranger can reach.
+// /   Default is 2147483648, which is two gigabytes.
+$URLDownloadMaximumBytes = 2147483648;
+
+// /  --URL Downloads Per Session--
+// /   How many files one visitor may fetch before this server stops accepting more.
+// /   Without this, one visitor can queue as many fetches as they can type, & each one
+// /   costs bandwidth & disk whether or not anything is ever converted.
+// /   The count is per session, so it resets when a session does.
+// /   0 means no limit. Do not use 0 on anything a stranger can reach.
+// /   Default is 10.
+$URLDownloadsPerSession = 10;
+
+// /  --Scan URL Downloads--
+// /   Whether a fetched file is scanned before it is placed in the session.
+// /   An upload is scanned. A fetch was not, which meant the easiest way to get an
+// /   unscanned file onto this server was to ask it to fetch one.
+// /   The scanner is whichever --Default Virus Scanner-- names.
+// /   A file that fails a scan is NOT placed in the session & the temporary copy is
+// /   removed, so nothing infected reaches a place a user can convert or download it from.
+// /   Default is TRUE.
+$ScanURLDownloads = TRUE;
+
+// /  --Allow User URL Download--
+// /   Whether a user may type a URL & have this server fetch it into their session.
+// /   THIS SERVER HAS NO AUTHENTICATION. Anyone who can reach the page can use this, & a
+// /   server that fetches any address a stranger names is an open proxy. It can be used to
+// /   scan, to launder traffic, or to make this host's address appear in somebody else's
+// /   logs. That is why it is FALSE by default & why an appliance on a public network
+// /   should probably leave it that way.
+// /   What it is NOT is an SSRF hole. Every fetch goes through the same address filter a URL
+// /   inside a playlist receives, so a private, reserved or loopback address is refused, the
+// /   address is pinned with curl --resolve, no redirect is followed, & the fetch runs in a
+// /   namespace with a network & no resolver.
+// /   Turn it on for a trusted network where users need to convert something they can only
+// /   reach by link. Leave it off everywhere else.
+// /   Default is FALSE.
+$AllowUserURLDownload = FALSE;
+
+// /  --Default Virus Scanner--
+// /   Which scanner runs when this application scans a file on its own.
+// /   The name matches a scanner pipeline's family, case insensitively. Two ship with this
+// /   application & an installation may add more.
+// /     scancore   Ships inside HRConvert2, so it is present wherever this is. The default.
+// /     clamav     Installed on the host. Better signatures, & it has to be there.
+// /   A user may choose the other one if the interface offers it. This decides what runs
+// /   when nobody chose.
+// /   A name no pipeline provides is an error rather than a silent fall back to whatever
+// /   happens to be installed, because a scan that quietly used a different scanner than
+// /   the one an administrator configured is worse than a scan that refused.
+// /   Default is 'scancore'.
+$DefaultVirusScanner = 'scancore';
+
+// /  --Environment Manager May Repair--
+// /   Whether the Environment Manager may change this host, or only report on it.
+// /   It runs as root on a timer, opens no socket & reads no input from anywhere but this
+// /   file. See Documentation/ABOUT_ENVIRONMENT_MANAGER.txt.
+// /   FALSE means it looks, logs what has drifted & changes nothing. That is the default &
+// /   is what a new installation should run until an administrator has read what it WOULD
+// /   have done.
+// /   TRUE means it also repairs, & a repair is exactly what --fix-permissions does. It
+// /   calls the same function, so there is no second definition of a correct installation.
+// /   A repair is logged as a warning rather than as normal activity, because an
+// /   installation repairing the same thing every hour is not healthy.
+// /   Default is FALSE.
+$EnvironmentManagerMayRepair = FALSE;
+
+// /  --Environment Manager May Rewrite Configs--
+// /   Whether a permitted repair may rewrite the configuration files this application owns.
+// /   Only ever applies when --Environment Manager May Repair-- is TRUE.
+// /   Those files are HRConvert2's OWN drop-ins & profiles. 99-hrconvert2.ini in the php
+// /   conf.d, hrconvert2.conf in the Apache conf-available, & the AppArmor profiles this
+// /   application ships. Nothing belonging to the distribution is touched, which is why
+// /   this defaults to TRUE while repair itself defaults to FALSE.
+// /   Set it FALSE if you have tuned one of those files by hand. A rewrite reverts it to
+// /   the shipped version silently & you will find out at the next conversion.
+// /   Default is TRUE.
+$EnvironmentManagerMayRewriteConfigs = TRUE;
+
 // / ------------------------------
 
 // / ------------------------------
@@ -875,20 +997,101 @@ $TOSURL = 'https://www.honestrepair.net/index.php/terms-of-service/';
 // /   Set the URL to use for the Privacy Policy link at te bottom of the GUI.
 // /   Only takes effect if --Show Fine Print-- is set to TRUE.
 $PPURL = 'https://www.honestrepair.net/index.php/privacy-policy/';
-// / --RAR Archive Method--
+
+// /  --Logo URL--
+// /   Where the logo at the top of the page sends somebody who clicks it.
+// /   'preserve-session' is the default & is not an address. It means come back HERE,
+// /   carrying the session, the language, the colour & the interface, so a click on the
+// /   logo is a way back to a clean page rather than a way out of the application.
+// /   That matters because this application has no navigation. A logo that leaves takes
+// /   a user's session with it & their files are gone.
+// /   Any http or https address is used as written. Use one to send visitors to your own
+// /   site, & accept that they lose their session by going there.
+// /   Anything else is refused & treated as 'preserve-session'.
+// /   Default is 'preserve-session'.
+$LogoURL = 'preserve-session';
+// /  --RAR Archive Method--
 // /   Set the software package to use for creating .rar archives.
 // /   This setting allows you to specify which software to use when creating .rar archives.
 // /   Currently only RAR is supported.
 // /   Valid options are 'rar'.
 // /   Default is rar.
 $RARArchiveMethod = 'rar';
-// / --File Operation Retry Count--
+// /  --File Operation Retry Count--
 // /   Set this to the number of attempts to make during file operations.
 // /   The core will attempt significant file operations this many times, with a pause in between.
 // /   If a significant file operation fails, the core will retry the operation this many times.
 // /   Valid options are integers smaller than 10.
 // /   Default is 5.
 $RetryCount = 5;
+// /  --GUI Maximum Width--
+// /   The widest the interface is allowed to become, in pixels, on a large display.
+// /   This is a CEILING & not a fixed width. The interface is fluid below it & takes the
+// /   width of the device it is on, so a phone gets the whole screen & a wide monitor gets
+// /   this number rather than a line of text running the full two metres of glass.
+// /   1400 suits most desktops. 1000 is the classic narrow layout this application shipped
+// /   with for years. 2000 is what the separate Wide interface used to be, & is why that
+// /   interface no longer needs to exist.
+// /   Anything below 600 or above 3840 is ignored & the default is used, because a value
+// /   outside that range is a typo rather than a preference.
+// /   Default is 1400.
+$GuiMaxWidth = 1400;
+
+// /  --Supported Format Detection Type--
+// /   Decides what decides which conversions this installation offers.
+// /   Three things have an opinion & this setting says how they are combined.
+// /   The arrays below are yours & say what is permitted on this machine.
+// /   Every conversion pipeline declares the formats it is willing to claim at all.
+// /   Dependency Core asks each installed tool what it can actually read & write.
+// /   Nothing here ever widens the accepted format surface past what a pipeline declares.
+// /   ImageMagick reports that it reads MSL, which is a scripting language it executes,
+// /   & http, https & file, which fetch a URL without passing any guard this application
+// /   owns. A tool's own opinion of itself is a filter & is never a source of formats.
+// /
+// /   Set this to hardcoded-only to let the arrays below decide everything.
+// /   Detection never runs & a pipeline declaration is never enforced.
+// /
+// /   Set this to detected-advisory to run detection & change nothing.
+// /   Every disagreement is logged & every conversion carries on exactly as before.
+// /   This is the setting to run first & to leave running for a while.
+// /   A tool names its formats after its own internals rather than after the extension a
+// /   user types. FFMPEG has no mkv & no wmv, it has matroska & asf. Assimp has no dae, it
+// /   has collada. Seven of Assimp's twenty two export names are not the extension.
+// /   Those are corrected by a table in depends.php, & a gap in that table looks exactly
+// /   like a tool that cannot do something it does perfectly well.
+// /   Advisory finds the gaps on your machine & names them in the log, without any of them
+// /   costing you a conversion while you are finding out.
+// /
+// /   Set this to detected-restrictive once the log is quiet.
+// /   A format no installed tool can produce is dropped, so the interface stops offering
+// /   conversions that were always going to fail. This can never widen anything.
+// /
+// /   Set this to detected-additive to also offer a format a pipeline declares & the
+// /   arrays below omit, where the tool confirms it. Still bounded by the declaration.
+// /   Use it only where you trust every installed pipeline.
+// /
+// /   A pipeline can always refuse a pair its own exclusion list names, in every mode.
+// /   Refusing is safe anywhere, because it only ever removes a broken pairing.
+// /   Valid options are 'hardcoded-only', 'detected-advisory', 'detected-restrictive'
+// /   or 'detected-additive'.
+// /   Default is 'detected-advisory'.
+$SupportedFormatDetectionType = 'detected-advisory';
+// /  --Warn On Capability Mismatch--
+// /   Logs a warning when a pipeline declaration disagrees with the arrays below.
+// /   The warning names the format, the conversion family & which side it came from.
+// /   This has no effect while --Supported Format Detection Type-- is hardcoded-only.
+// /   Detection never runs in that mode, so there is nothing to report.
+// /   Under detected-advisory this warning is the entire point of the setting.
+// /   Leaving this enabled is recommended wherever detection is active.
+// /   A format quietly appearing or disappearing is worth knowing about.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$WarnOnCapabilityMismatch = TRUE;
+
+// /   Added automatically on September 8, 2026 because this release requires it.
+// /   The value below is the shipped default. Read the documentation for this setting
+// /   before relying on it.
+$UsePatchedDocumentEngine = TRUE;
 // / ------------------------------
 
 // / ------------------------------
@@ -1032,58 +1235,8 @@ $DefaultExpectedRuntime = 120;
 // / ------------------------------
 
 // / ------------------------------
-// / --Supported File Format Information--
+// / ---Supported File Format Information---
 // /
-// /  --Supported Format Detection Type--
-// /   Decides what decides which conversions this installation offers.
-// /   Three things have an opinion & this setting says how they are combined.
-// /   The arrays below are yours & say what is permitted on this machine.
-// /   Every conversion pipeline declares the formats it is willing to claim at all.
-// /   Dependency Core asks each installed tool what it can actually read & write.
-// /   Nothing here ever widens the accepted format surface past what a pipeline declares.
-// /   ImageMagick reports that it reads MSL, which is a scripting language it executes,
-// /   & http, https & file, which fetch a URL without passing any guard this application
-// /   owns. A tool's own opinion of itself is a filter & is never a source of formats.
-// /
-// /   Set this to hardcoded-only to let the arrays below decide everything.
-// /   Detection never runs & a pipeline declaration is never enforced.
-// /
-// /   Set this to detected-advisory to run detection & change nothing.
-// /   Every disagreement is logged & every conversion carries on exactly as before.
-// /   This is the setting to run first & to leave running for a while.
-// /   A tool names its formats after its own internals rather than after the extension a
-// /   user types. FFMPEG has no mkv & no wmv, it has matroska & asf. Assimp has no dae, it
-// /   has collada. Seven of Assimp's twenty two export names are not the extension.
-// /   Those are corrected by a table in depends.php, & a gap in that table looks exactly
-// /   like a tool that cannot do something it does perfectly well.
-// /   Advisory finds the gaps on your machine & names them in the log, without any of them
-// /   costing you a conversion while you are finding out.
-// /
-// /   Set this to detected-restrictive once the log is quiet.
-// /   A format no installed tool can produce is dropped, so the interface stops offering
-// /   conversions that were always going to fail. This can never widen anything.
-// /
-// /   Set this to detected-additive to also offer a format a pipeline declares & the
-// /   arrays below omit, where the tool confirms it. Still bounded by the declaration.
-// /   Use it only where you trust every installed pipeline.
-// /
-// /   A pipeline can always refuse a pair its own exclusion list names, in every mode.
-// /   Refusing is safe anywhere, because it only ever removes a broken pairing.
-// /   Valid options are 'hardcoded-only', 'detected-advisory', 'detected-restrictive'
-// /   or 'detected-additive'.
-// /   Default is 'detected-advisory'.
-$SupportedFormatDetectionType = 'detected-advisory';
-// /  --Warn On Capability Mismatch--
-// /   Logs a warning when a pipeline declaration disagrees with the arrays below.
-// /   The warning names the format, the conversion family & which side it came from.
-// /   This has no effect while --Supported Format Detection Type-- is hardcoded-only.
-// /   Detection never runs in that mode, so there is nothing to report.
-// /   Under detected-advisory this warning is the entire point of the setting.
-// /   Leaving this enabled is recommended wherever detection is active.
-// /   A format quietly appearing or disappearing is worth knowing about.
-// /   Valid options are TRUE or FALSE.
-// /   Default is TRUE.
-$WarnOnCapabilityMismatch = TRUE;
 // /  --Supported Archive Formats--.
 $UserArchiveArray = array('zip', 'rar', 'tar', '7z', 'iso');
 // /  --Supported Bootable ISO Output Formats--.
@@ -1151,61 +1304,6 @@ $UserDrawingOutputArray = array('dxf', 'vdx', 'fig', 'dia', 'wpg');
 $UserSVGInputArray = array('svg', 'plain-svg');
 // /  --Supported SVG Output Formats--.
 $UserSVGOutputArray = array('png', 'pdf', 'ps', 'eps', 'emf', 'wmf');
-// /  --GUI Maximum Width--
-// /   The widest the interface is allowed to become, in pixels, on a large display.
-// /   This is a CEILING & not a fixed width. The interface is fluid below it & takes the
-// /   width of the device it is on, so a phone gets the whole screen & a wide monitor gets
-// /   this number rather than a line of text running the full two metres of glass.
-// /   1400 suits most desktops. 1000 is the classic narrow layout this application shipped
-// /   with for years. 2000 is what the separate Wide interface used to be, & is why that
-// /   interface no longer needs to exist.
-// /   Anything below 600 or above 3840 is ignored & the default is used, because a value
-// /   outside that range is a typo rather than a preference.
-// /   Default is 1400.
-$GuiMaxWidth = 1400;
-
-// /  --Allow User URL Download--
-// /   Whether a user may type a URL & have this server fetch it into their session.
-// /   THIS SERVER HAS NO AUTHENTICATION. Anyone who can reach the page can use this, & a
-// /   server that fetches any address a stranger names is an open proxy. It can be used to
-// /   scan, to launder traffic, or to make this host's address appear in somebody else's
-// /   logs. That is why it is FALSE by default & why an appliance on a public network
-// /   should probably leave it that way.
-// /   What it is NOT is an SSRF hole. Every fetch goes through the same address filter a URL
-// /   inside a playlist receives, so a private, reserved or loopback address is refused, the
-// /   address is pinned with curl --resolve, no redirect is followed, & the fetch runs in a
-// /   namespace with a network & no resolver.
-// /   Turn it on for a trusted network where users need to convert something they can only
-// /   reach by link. Leave it off everywhere else.
-// /   Default is FALSE.
-$AllowUserURLDownload = FALSE;
-
-// /  --Environment Manager May Repair--
-// /   Whether the Environment Manager may change this host, or only report on it.
-// /   It runs as root on a timer, opens no socket & reads no input from anywhere but this
-// /   file. See Documentation/ABOUT_ENVIRONMENT_MANAGER.txt.
-// /   FALSE means it looks, logs what has drifted & changes nothing. That is the default &
-// /   is what a new installation should run until an administrator has read what it WOULD
-// /   have done.
-// /   TRUE means it also repairs, & a repair is exactly what --fix-permissions does. It
-// /   calls the same function, so there is no second definition of a correct installation.
-// /   A repair is logged as a warning rather than as normal activity, because an
-// /   installation repairing the same thing every hour is not healthy.
-// /   Default is FALSE.
-$EnvironmentManagerMayRepair = FALSE;
-
-// /  --Environment Manager May Rewrite Configs--
-// /   Whether a permitted repair may rewrite the configuration files this application owns.
-// /   Only ever applies when --Environment Manager May Repair-- is TRUE.
-// /   Those files are HRConvert2's OWN drop-ins & profiles. 99-hrconvert2.ini in the php
-// /   conf.d, hrconvert2.conf in the Apache conf-available, & the AppArmor profiles this
-// /   application ships. Nothing belonging to the distribution is touched, which is why
-// /   this defaults to TRUE while repair itself defaults to FALSE.
-// /   Set it FALSE if you have tuned one of those files by hand. A rewrite reverts it to
-// /   the shipped version silently & you will find out at the next conversion.
-// /   Default is TRUE.
-$EnvironmentManagerMayRewriteConfigs = TRUE;
-
 // /  --Supported Model Formats--
 // /   This array was offered as both the input list & the output list, which the audio,
 // /   video & vector converters each split in two. The two below carry those directions.

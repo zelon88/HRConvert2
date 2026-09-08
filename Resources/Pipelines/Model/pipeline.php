@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.2.
+// / v3.9.3.
 // / This file is the converter for the Model pipeline. It is loaded by pipelineCore.php
 // / ONLY when a Model conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
@@ -143,10 +143,30 @@ function resolvePyMeshLabInterpreter($pyMeshLabDir) {
   // / Set variables.
   global $EnableMemoryProtection;
   $InterpreterName = '';
+  $PyMeshLabIsInstalled = FALSE;
   $objectPaths = $tagMatches = array();
   $candidateName = $objectPath = $probeCommand = '';
   $probeOutput = array();
   $probeExitCode = 1;
+  // / AN INSTALLED PyMeshLab IS TRIED FIRST & a bundled one second.
+  // / pip publishes wheels for this, including for arm64 since 2025.07, & an installed
+  // / copy needs no path insertion & no Qt environment because the wheel places its own
+  // / libraries where python already looks.
+  // / The bundled copy is kept as a fallback so an installation that has one keeps working
+  // / without being touched. An installation with neither reports absent, as before.
+  // / The probe proves the IMPORT rather than the presence of a file. A directory that
+  // / exists & cannot be imported is the failure this used to report as success.
+  foreach (array('python3.14', 'python3') as $candidateName) {
+    if (locateDependency($candidateName) === '') continue;
+    $probeOutput = array();
+    $probeExitCode = 1;
+    exec('QT_QPA_PLATFORM=offscreen '.escapeshellarg($candidateName).' -c '.escapeshellarg('import pymeshlab').' 2>&1', $probeOutput, $probeExitCode);
+    if ($probeExitCode !== 0) continue;
+    $InterpreterName = $candidateName;
+    $PyMeshLabIsInstalled = TRUE;
+    break; }
+  // / Only look for a bundle when nothing is installed.
+  if ($InterpreterName === '') {
   $objectPaths = glob(rtrim((string)$pyMeshLabDir, '/').'/pymeshlab/*.cpython-*.so');
   if (is_array($objectPaths)) {
     foreach ($objectPaths as $objectPath) {
@@ -175,9 +195,11 @@ function resolvePyMeshLabInterpreter($pyMeshLabDir) {
         break; }
       warningEntry('PyMeshLab was found & could not be imported by '.$candidateName.'. It reported: '.trim(implode(' ', array_slice($probeOutput, -2))));
       break; } }
+  // / Closes the bundle search opened above.
+  }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $probeCommand, $probeOutput, $probeExitCode, $objectPaths, $tagMatches, $candidateName, $objectPath, $pyMeshLabDir);
-  return $InterpreterName; }
+  return array($InterpreterName, $PyMeshLabIsInstalled); }
 // / -----------------------------------------------------------------------------------
 
 
@@ -335,7 +357,10 @@ function convertModels($pathname, $newPathname, $extension) {
     // / It did so on a machine where meshlabserver was installed & working perfectly.
     $pyMeshLabInUse = FALSE;
     if ($UsePyMeshLab) {
-      $pyMeshLabInterpreter = resolvePyMeshLabInterpreter($pyMeshLabDir);
+      list ($pyMeshLabInterpreter, $pyMeshLabIsInstalled) = resolvePyMeshLabInterpreter($pyMeshLabDir);
+      // / An installed copy needs no bundle directory. Passing one would insert a path
+      // / that may not exist onto sys.path & set Qt variables pointing at nothing.
+      if ($pyMeshLabIsInstalled) $pyMeshLabDir = '';
       if ($pyMeshLabInterpreter !== '') $pyMeshLabInUse = TRUE;
       else warningEntry('PyMeshLab is enabled & could not be used. Either no interpreter matching the bundled build is installed, or one is & the module did not import. Falling back to the MeshLab binary.'); }
     // / Now that it is known which of the two will run, the one that will run is required.
@@ -465,7 +490,7 @@ function convertModels($pathname, $newPathname, $extension) {
     // / The output file is the only verdict on whether the conversion produced anything.
     if (file_exists($newPathname)) $ConversionSuccess = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $sidecarPathname, $meshlabEnvironment, $pyMeshLabInUse, $pyMeshLabInterpreter, $returnData, $assimpData, $stopper, $pathname, $intermediatePathname, $assimpInput, $inputExt, $outputExt, $conversionRoute, $meshlabOnly, $assimpCanWrite, $meshlabCanWrite, $meshlabCanRead, $pyMeshLabDir, $sleepTime, $modelsValid, $readyToConvert, $meshlabCommand, $assimpCommand, $commandMayRun, $meshlabBinary, $assimpBinary);
+  purgeSensitiveMemory($EnableMemoryProtection, $pyMeshLabIsInstalled, $sidecarPathname, $meshlabEnvironment, $pyMeshLabInUse, $pyMeshLabInterpreter, $returnData, $assimpData, $stopper, $pathname, $intermediatePathname, $assimpInput, $inputExt, $outputExt, $conversionRoute, $meshlabOnly, $assimpCanWrite, $meshlabCanWrite, $meshlabCanRead, $pyMeshLabDir, $sleepTime, $modelsValid, $readyToConvert, $meshlabCommand, $assimpCommand, $commandMayRun, $meshlabBinary, $assimpBinary);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

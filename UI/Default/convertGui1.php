@@ -78,7 +78,12 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
 // / -----------------------------------------------------------------------------------
 ?>
   <body>
-    <div style= "background-color: #fff; margin: 20px; width: 500px; color: #777777; margin-left:auto; margin-right:auto; padding: 20px; border-radius: 12px; -webkit-box-shadow: 1px 1px 5px 1px rgba(0,0,0,.2);box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);">
+    <?php
+    // / The card takes its colour from the scheme, through .file-list-card in
+    // / styleCore.php. It was a hardcoded white on every scheme, which reads as a card
+    // / on the grey blue page & as an unfinished rectangle on the coloured ones.
+    ?>
+    <div class='file-list-card' style= "margin: 20px; width: 500px; margin-left:auto; margin-right:auto; padding: 20px; border-radius: 12px; -webkit-box-shadow: 1px 1px 5px 1px rgba(0,0,0,.2);box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);">
       <?php // / A CENTERED CHROME ROW, MATCHING convertGui2.php.
             // / The settings toggle previously opened a PHP tag inside its own style
             // / attribute that ASSIGNED $oppositeAlignment & echoed nothing, leaving a
@@ -204,7 +209,13 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
     <?php
     if (!isset($_GET['noGui'])) { ?>
     <div id='header-text' style='max-width:500px; margin-left:auto; margin-right:auto; text-align:left;'>
-      <h1><img src='<?php echo $GuiImageDir; ?>convert-banner.png' style='max-height:72px; margin-right: 10px;'/><?php //echo $ApplicationName; ?></h1>
+      <?php
+      // / The logo returns to this page carrying the language, colour & interface,
+      // / unless --Logo URL-- names somewhere else. This application has no navigation,
+      // / so a logo that leaves takes the session & the user's files with it.
+      // / verifyInputs computes the address. Nothing is decided here.
+      ?>
+      <h1><a href='<?php echo htmlspecialchars($ResolvedLogoURL, ENT_QUOTES, 'UTF-8'); ?>'><img src='<?php echo $GuiImageDir; ?>convert-banner.png' style='max-height:72px; margin-right: 10px;'/></a><?php //echo $ApplicationName; ?></h1>
       <h3><?php echo $Gui1Text1; ?></h3>
       <hr style="border: 1px solid #eeeeee;"/>
     </div>

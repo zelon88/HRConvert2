@@ -87,7 +87,7 @@ $defaultButtonCode = '
   text-shadow:0px 1px 0px #bcbcbc;
   min-width:100px; 
   width:250px;
-  max-width:<?php echo $GuiWidth; ?>; }
+  max-width:'.$GuiWidth.'; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #bcbcbc), color-stop(1, #eeeeee));
   background:-moz-linear-gradient(top, #bcbcbc 5%, #eeeeee 100%);
@@ -162,7 +162,7 @@ $greenButtonCode = '
   text-shadow:0px 1px 0px #1e9409;
   min-width:100px; 
   width:250px;
-  max-width:<?php echo $GuiWidth; ?>; }
+  max-width:'.$GuiWidth.'; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #298040), color-stop(1, #50c20e));
   background:-moz-linear-gradient(top, #298040 5%, #50c20e 100%);
@@ -237,7 +237,7 @@ $blueButtonCode = '
   text-shadow:0px 1px 0px #16537e;
   min-width:100px; 
   width:250px;
-  max-width:<?php echo $GuiWidth; ?>; }
+  max-width:'.$GuiWidth.'; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #295680), color-stop(1, #2d60b2));
   background:-moz-linear-gradient(top, #295680 5%, #2d60b2 100%);
@@ -312,7 +312,7 @@ $redButtonCode = '
   text-shadow:0px 1px 0px #660000;
   min-width:100px; 
   width:250px;
-  max-width:<?php echo $GuiWidth; ?>; }
+  max-width:'.$GuiWidth.'; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #9b443b), color-stop(1, #c20e0e));
   background:-moz-linear-gradient(top, #9b443b 5%, #c20e0e 100%);
@@ -387,7 +387,7 @@ $orangeButtonCode = '
   text-shadow:0px 1px 0px #803300;
   min-width:100px; 
   width:250px;
-  max-width:<?php echo $GuiWidth; ?>; }
+  max-width:'.$GuiWidth.'; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #b35900), color-stop(1, #ff9900));
   background:-moz-linear-gradient(top, #b35900 5%, #ff9900 100%);
@@ -462,7 +462,7 @@ $purpleButtonCode = '
   text-shadow:0px 1px 0px #4a235a;
   min-width:100px; 
   width:250px;
-  max-width:<?php echo $GuiWidth; ?>; }
+  max-width:'.$GuiWidth.'; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #5b2c6f), color-stop(1, #8e44ad));
   background:-moz-linear-gradient(top, #5b2c6f 5%, #8e44ad 100%);
@@ -537,7 +537,7 @@ $darkButtonCode = '
   text-shadow:0px 1px 0px #111111;
   min-width:100px; 
   width:250px;
-  max-width:<?php echo $GuiWidth; ?>; }
+  max-width:'.$GuiWidth.'; }
 .info-button:hover {
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #262626), color-stop(1, #454545));
   background:-moz-linear-gradient(top, #262626 5%, #454545 100%);

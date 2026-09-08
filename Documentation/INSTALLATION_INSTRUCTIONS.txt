@@ -19,7 +19,7 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ...
-Nothing is listed here on purpose. Resources/depends.php is the manifest & the installer
+Nothing is listed here on purpose. Resources/Engine/Contract/depends.php is the manifest & the installer
 reads it, so a dependency added there is installed without anybody editing this guide.
 Run  php convertCore.php --setup --check-depends  to see the current list & its state.
 <3 Open-Source
@@ -53,7 +53,7 @@ Six stages, in the order an installation depends on. A stage that fails stops th
 after it, because continuing produces an installation that looks finished & is not.
 
   1  DEPENDENCIES
-     Installs every entry in Resources/depends.php, in the order that file lists them.
+     Installs every entry in Resources/Engine/Contract/depends.php, in the order that file lists them.
      A dependency whose own requirements are missing is skipped rather than attempted.
      RAR is never installed automatically. Its licence forbids redistribution.
 

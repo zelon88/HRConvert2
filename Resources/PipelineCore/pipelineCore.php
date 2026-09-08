@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by convertCore.php WITHOUT executing this file.
-$PipelineCoreVersion = 'v3.9.2';
+$PipelineCoreVersion = 'v3.9.3';
 // / -----------------------------------------------------------------------------------
 
 
@@ -52,19 +52,22 @@ function getAcceptedPipelines() {
   // / There is no built in dispatcher left behind it. Comment one out only to test that.
   // / Adding a community pipeline is one line here plus a version bump on this file.
   $AcceptedPipelines = array(
-    'Stream' => 'v3.9.2',
-    'Scad' => 'v3.9.2',
+    'Stream' => 'v3.9.3',
+    'Scad' => 'v3.9.3',
     'OCR' => 'v3.8.8',
     'Document' => 'v3.8.8',
     'Subtitle' => 'v3.8.8',
     'SVG' => 'v3.8.8',
     'Drawing' => 'v3.8.8',
     'Image' => 'v3.8.8',
-    'Model' => 'v3.9.2',
-    'Video' => 'v3.9.2',
+    'Model' => 'v3.9.3',
+    'Video' => 'v3.9.3',
     'Ebook' => 'v3.8.8',
     'Audio' => 'v3.8.8',
-    'Archive' => 'v3.9.2');
+    'Archive' => 'v3.9.3',
+    // / Scanner pipelines. They declare no formats & are chosen by name.
+    'ClamAV' => 'v3.9.3',
+    'ScanCore' => 'v3.9.3');
   return $AcceptedPipelines; }
 // / -----------------------------------------------------------------------------------
 
@@ -204,7 +207,13 @@ function validatePipelineDeclarations($pipelineFolderName, $pipelineConverterPat
   else if (!is_string($declaredEntryPoint) or !preg_match('/^[A-Za-z][A-Za-z0-9_]*$/', (string)$declaredEntryPoint)) warningEntry('The '.$pipelineFolderName.' pipeline declared an unusable entry point name & was refused.');
   else if (!is_array($declaredCapabilities) or !isset($declaredCapabilities['Input']) or !isset($declaredCapabilities['Output'])) warningEntry('The '.$pipelineFolderName.' pipeline declared no usable capabilities & was refused.');
   else if (!is_array($declaredCapabilities['Input']) or !is_array($declaredCapabilities['Output'])) warningEntry('The '.$pipelineFolderName.' pipeline declared capabilities that are not arrays & was refused.');
-  else if (count($declaredCapabilities['Input']) === 0 or count($declaredCapabilities['Output']) === 0) warningEntry('The '.$pipelineFolderName.' pipeline declared an empty capability list & was refused.');
+    // / A SCANNER DECLARES NO FORMATS ON PURPOSE & is the one kind exempt from this.
+    // / Every scanner claims every file, so there is nothing for an extension to decide &
+    // / an empty list is the honest declaration rather than an omission.
+    // / This rule was written when every pipeline converted something. It refused both
+    // / scanner pipelines silently, so they were pinned, installed, syntactically valid &
+    // / never enumerated, & the version report counted zero of them without saying why.
+  else if ($declaredKind !== 'scanner' && (count($declaredCapabilities['Input']) === 0 or count($declaredCapabilities['Output']) === 0)) warningEntry('The '.$pipelineFolderName.' pipeline declared an empty capability list & was refused.');
   else {
     // / Extensions are compared lowercased everywhere else, so they are lowercased here once.
     $inputExtensions = array_map('strtolower', $declaredCapabilities['Input']);
@@ -229,7 +238,16 @@ function validatePipelineDeclarations($pipelineFolderName, $pipelineConverterPat
     // / conversion contract would have meant describing a batch as a single file.
     // / An undeclared kind is a conversion pipeline, so every pipeline written before this
     // / declaration existed keeps working without being edited.
-    $PipelineRecord['Kind'] = (is_string($declaredKind) && trim((string)$declaredKind) === 'operation') ? 'operation' : 'conversion';
+    // / THREE KINDS, & the difference is what a pipeline is asked to do.
+    // / A CONVERSION reads one format & writes another. It is chosen by the extensions it
+    // / declares & every one is interchangeable with any other that claims the same pair.
+    // / An OPERATION does something to a file that is not a format change. OCR is one.
+    // / A SCANNER inspects a file & reports on it without changing it. It is chosen by
+    // / NAME rather than by extension, because an administrator picks a scanner & every
+    // / scanner claims every file.
+    // / A scanner returns findings rather than an output path, so it cannot be dispatched
+    // / through the conversion path & is not offered as one.
+    $PipelineRecord['Kind'] = (is_string($declaredKind) && in_array(trim((string)$declaredKind), array('operation', 'scanner'), TRUE)) ? trim((string)$declaredKind) : 'conversion';
     $PipelineRecord['SharedModules'] = is_array($declaredSharedModules) ? $declaredSharedModules : array();
     // / A pipeline with no converter beside it is one whose entry point is defined
     // / elsewhere. That was how every family was migrated out of convertCore.php one at a
@@ -560,6 +578,66 @@ function loadPipelineCore($pipelineFolderName) {
   // / $PipelineEntryPointName is not purged, because it is a return value.
   purgeSensitiveMemory($EnableMemoryProtection, $sharedModuleName, $pipelineRecord, $pipelineFolderName);
   return array($PipelineIsReady, $PipelineEntryPointName); }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / A function to run a virus scan through a scanner pipeline.
+// / Accepts the paths to scan & the scanner name, or an empty name for the configured
+// / default. Returns whether the scan completed, whether anything was found, the findings
+// / & the name of the scanner that ran, in that order.
+// /
+// / A SCANNER IS CHOSEN BY NAME & NOT BY EXTENSION. Every scanner claims every file, so
+// / there is nothing for an extension to decide. An administrator picks one, & a user may
+// / pick another if the interface offers it.
+// / That is the whole reason scanner is a kind of its own rather than an operation. An
+// / operation is selected by what it does to a file. A scanner is selected by which scanner
+// / you want, & the two cannot share a lookup.
+// /
+// / A scanner NEVER changes the file it was given. It reports. What happens to an infected
+// / file afterwards is the application's decision & is made by the caller, because deleting
+// / a user's upload is not a thing a pipeline should decide on its own.
+// /
+// / The findings come back as a list of strings, one per line a scanner produced that an
+// / operator should read. They are written to the worker log by the caller & consolidated
+// / into the user facing log there too, so a scanner never writes to a log itself & no
+// / scanner has to know how this application presents anything.
+function runVirusScan($pathsToScan, $requestedScanner) {
+  // / Set variables.
+  global $Pipelines, $DefaultVirusScanner, $Verbose, $EnableMemoryProtection;
+  $ScanCompleted = FALSE;
+  $ThreatWasFound = FALSE;
+  $ScanFindings = array();
+  $ScannerUsed = '';
+  $chosenFolder = $chosenScanner = $entryPointName = '';
+  $folderName = '';
+  $pipelineRecord = array();
+  $pipelineIsReady = FALSE;
+  $chosenScanner = (is_string($requestedScanner) && trim($requestedScanner) !== '') ? strtolower(trim($requestedScanner)) : strtolower(trim((string)$DefaultVirusScanner));
+  if ($chosenScanner === '') {
+    errorEntry('A virus scan was requested & no scanner was named or configured!', 34007, FALSE);
+    $ScanFindings[] = 'No scanner was named & no default is configured.'; }
+  else {
+    if (is_array($Pipelines)) {
+      foreach ($Pipelines as $folderName => $pipelineRecord) {
+        if ($pipelineRecord['Kind'] !== 'scanner') continue;
+        if (strtolower((string)$pipelineRecord['Family']) !== $chosenScanner) continue;
+        $chosenFolder = $folderName;
+        break; } }
+    if ($chosenFolder === '') {
+      errorEntry('The '.$chosenScanner.' scanner was requested & no pipeline provides it!', 34008, FALSE);
+      $ScanFindings[] = 'The '.$chosenScanner.' scanner is not installed.'; }
+    else {
+      list ($pipelineIsReady, $entryPointName) = loadPipelineCore($chosenFolder);
+      if (!$pipelineIsReady) $ScanFindings[] = 'The '.$chosenScanner.' scanner could not be loaded.';
+      else {
+        if ($Verbose) logEntry('Dispatching a virus scan to the '.$chosenFolder.' scanner.');
+        list ($ScanCompleted, $ThreatWasFound, $ScanFindings) = $entryPointName($pathsToScan);
+        $ScannerUsed = $chosenScanner;
+        if (!is_array($ScanFindings)) $ScanFindings = array(); } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $chosenFolder, $chosenScanner, $entryPointName, $folderName, $pipelineRecord, $pipelineIsReady, $pathsToScan, $requestedScanner);
+  return array($ScanCompleted, $ThreatWasFound, $ScanFindings, $ScannerUsed); }
 // / -----------------------------------------------------------------------------------
 
 

@@ -13,7 +13,7 @@
 // / that carries it.
 // /
 // / File Information ...
-// / v3.9.2.
+// / v3.9.3.
 // / This file is the Engine. It provides the environment an application runs in.
 // / It is pinned EXACTLY by the application via $RequiredEngineVersion.
 // / Error block 35000 through 35019 reserved. None are used yet.
@@ -54,7 +54,19 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-35000,
 
 // / -----------------------------------------------------------------------------------
 // / The version of this Engine. Read by the application WITHOUT executing this file.
-$EngineVersion = 'v3.9.2';
+$EngineVersion = 'v3.9.3';
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / The environment every application built on this Engine is given.
+// / Loaded here rather than by the application, because an application should not have to
+// / know which files the Engine is made of.
+// / Every definition inside is guarded, so an application that already defines one keeps
+// / its own & nothing is redeclared. See the file for why that matters.
+$engineEnvironmentFile = dirname(__FILE__).DIRECTORY_SEPARATOR.'Cores'.DIRECTORY_SEPARATOR.'environmentCore.php';
+if (file_exists($engineEnvironmentFile)) require_once($engineEnvironmentFile);
+else warningEntry('The Engine environment at '.$engineEnvironmentFile.' is missing. An application supplying its own definitions still runs.');
 // / -----------------------------------------------------------------------------------
 
 
@@ -345,10 +357,10 @@ function getAcceptedManagers() {
   global $EnableMemoryProtection;
   $AcceptedManagers = array();
   $AcceptedManagers = array(
-    'coreManager.php' => 'v3.9.2',
-    'resourceManager.php' => 'v3.9.2',
-    'workerManager.php' => 'v3.9.2',
-    'requestManager.php' => 'v3.9.2');
+    'coreManager.php' => 'v3.9.3',
+    'resourceManager.php' => 'v3.9.3',
+    'workerManager.php' => 'v3.9.3',
+    'requestManager.php' => 'v3.9.3');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $AcceptedManagers is not purged, because it is the return value.
   purgeSensitiveMemory($EnableMemoryProtection);
@@ -1794,6 +1806,60 @@ function networkPolicy() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to say whether an address may be reached, allowing for an administrator who
+// / has permitted particular private ranges.
+// / Accepts the address. Returns whether it may be reached & whether it was allowed only
+// / because a range permitted it, in that order.
+// /
+// / isPubliclyRoutableIP() is unchanged & still answers exactly what it always did. This
+// / wraps it. A publicly routable address is permitted because it is publicly routable, & a
+// / private one is permitted only when an administrator has named the range it sits in.
+// /
+// / THREE RANGES ARE REFUSED WHATEVER IS CONFIGURED, & they are refused HERE rather than
+// / left to documentation, because a setting that can be misconfigured into a serious hole
+// / is a setting that should not accept the misconfiguration.
+// /   127.0.0.0/8 & ::1     This host. A service bound to localhost was bound there so that
+// /                         nothing off the machine could reach it. A fetcher that reaches
+// /                         it hands that decision to whoever can type a URL.
+// /   169.254.0.0/16        Link local, & where cloud metadata answers. 169.254.169.254 on
+// /                         a cloud host returns credentials to anything that asks.
+// / The address is judged AFTER any IPv4 in IPv6 unwrapping that isPubliclyRoutableIP
+// / already performs, so ::ffff:7f00:1 is loopback here as well.
+// /
+// / An administrator who genuinely needs this host to fetch from itself has a different
+// / problem & a local path solves it without a network.
+function addressMayBeReached($ipAddress) {
+  // / Set variables.
+  global $PermittedPrivateRanges, $EnableMemoryProtection;
+  $AddressIsPermitted = FALSE;
+  $PermittedByRange = FALSE;
+  $neverPermitted = array('127.0.0.0/8', '169.254.0.0/16', '::1/128', 'fe80::/10');
+  $refusedRange = $permittedRange = '';
+  $addressIsRefusedOutright = FALSE;
+  if (isPubliclyRoutableIP($ipAddress)) $AddressIsPermitted = TRUE;
+  else {
+    foreach ($neverPermitted as $refusedRange) {
+      if (!addressIsInRange($ipAddress, $refusedRange)) continue;
+      $addressIsRefusedOutright = TRUE;
+      break; }
+    if ($addressIsRefusedOutright) warningEntry('An address in '.$refusedRange.' was refused. That range is never permitted, whatever is configured.');
+    else if (isset($PermittedPrivateRanges) && is_array($PermittedPrivateRanges)) {
+      foreach ($PermittedPrivateRanges as $permittedRange) {
+        if (trim((string)$permittedRange) === '') continue;
+        if (!addressIsInRange($ipAddress, trim((string)$permittedRange))) continue;
+        $AddressIsPermitted = TRUE;
+        $PermittedByRange = TRUE;
+        break; } } }
+  // / An allowance an administrator forgot they made should be visible in a log rather than
+  // / only in a configuration file nobody has opened this year.
+  if ($PermittedByRange) warningEntry('A private address was reached because '.$permittedRange.' is a permitted range.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $neverPermitted, $refusedRange, $permittedRange, $addressIsRefusedOutright, $ipAddress);
+  return array($AddressIsPermitted, $PermittedByRange); }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
 // / A function to decide whether an address is one this application may ever connect to.
 // / Accepts the address as a string. Returns TRUE only for a public unicast address.
 // /
@@ -1941,6 +2007,7 @@ function addressIsInRange($ipAddress, $cidrRange) {
 function dnsLookup($URLHost) {
   // / Set variables.
   global $EnableMemoryProtection;
+  $permittedByRange = FALSE;
   $records = $record = array();
   $urlIP = $URLIP = $LookupFailed = $StreamContainsLAN = $isPublic = FALSE;
   // / Perform the actual DNS lookup against the $URLHost.
@@ -1951,7 +2018,10 @@ function dnsLookup($URLHost) {
       // / Parse the received DNS records.
       $urlIP = $record['ip'] ?? $record['ipv6'] ?? NULL;
       if ($urlIP === NULL) continue;
-      $isPublic = isPubliclyRoutableIP($urlIP);
+      // / A resolved address may be reached because it is public, or because an
+      // / administrator permitted the private range it sits in. Both paths end here, so
+      // / both stream inspection & user fetches get the same answer.
+      list ($isPublic, $permittedByRange) = addressMayBeReached($urlIP);
       if ($isPublic) $URLIP = $urlIP;
       else {
         // / A private/reserved answer means this host is untrustworthy regardless of what else it returned.
@@ -1962,9 +2032,40 @@ function dnsLookup($URLHost) {
   // / Set a flag to tell if the lookup failed outright.
   else $LookupFailed = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $records, $record, $urlIP, $isPublic);
+  purgeSensitiveMemory($EnableMemoryProtection, $permittedByRange, $records, $record, $urlIP, $isPublic);
   return array($URLIP, $StreamContainsLAN, $LookupFailed); }
 // / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to count how many files a session has already fetched, & to record one more.
+// / Accepts the session directory & whether this call is recording rather than asking.
+// / Returns the count, including the one just recorded when recording.
+// /
+// / The tally lives in the session directory as a file. It is not held in memory because
+// / each request is a separate process, & a counter that does not survive the request
+// / counts to one forever.
+// / A session ending removes its directory & takes the tally with it, which is the reset.
+// /
+// / A tally that cannot be read counts as zero rather than as a refusal. Failing to count
+// / should not stop somebody using the application, & the operation budget is a second
+// / limit underneath this one.
+function countSessionURLDownloads($sessionDirectory, $recordOne = FALSE) {
+  // / Set variables.
+  global $DirSep, $EnableMemoryProtection;
+  $DownloadCount = 0;
+  $tallyPath = $tallyContents = '';
+  $tallyPath = rtrim((string)$sessionDirectory, $DirSep).$DirSep.'.hrc2-url-downloads';
+  if (file_exists($tallyPath)) {
+    $tallyContents = (string)@file_get_contents($tallyPath);
+    $DownloadCount = (int)trim($tallyContents); }
+  if ($recordOne) {
+    $DownloadCount++;
+    @file_put_contents($tallyPath, (string)$DownloadCount, LOCK_EX); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $tallyPath, $tallyContents, $sessionDirectory, $recordOne);
+  return $DownloadCount; }
+// / -----------------------------------------------------------------------------------
+
 
 // / -----------------------------------------------------------------------------------
 // / A function to fetch a URL an operator typed & place it in their session.
@@ -1988,24 +2089,64 @@ function dnsLookup($URLHost) {
 // / converted or deleted by the interface that has to show it.
 function fetchUserSuppliedURL($suppliedURL, $sessionDirectory) {
   // / Set variables.
-  global $DirSep, $EnableMemoryProtection;
+  global $DirSep, $EnableMemoryProtection, $URLDownloadMaximumBytes, $ScanURLDownloads, $Allowed;
   $FetchSucceeded = FALSE;
   $FetchedPath = $FetchReason = '';
   $baseIsUsable = $inspectionFailed = $resolutionFailed = $containsLAN = $lookupFailed = FALSE;
   $downloadFailed = $wasTruncated = $nameIsSanitized = FALSE;
   $cleanURL = $urlHost = $urlPort = $urlScheme = $urlIP = '';
   $temporaryPath = $suggestedName = $targetPath = '';
+  $scanCompleted = $threatWasFound = FALSE;
+  $scanFindings = array();
+  $scannerUsed = $scanFinding = '';
+  $fetchedExtension = '';
   $urlParts = array();
   list ($baseIsUsable, $cleanURL, $FetchReason) = normalizeStreamBaseURL($suppliedURL);
   if ($baseIsUsable) {
     list ($inspectionFailed, $resolutionFailed, $containsLAN, $lookupFailed, $urlHost, $urlPort, $urlScheme, $urlIP) = gatherRemoteHostInfo($cleanURL);
     if ($inspectionFailed) $FetchReason = 'The address was refused. '.($containsLAN ? 'It resolves to a private, reserved or loopback address.' : ($lookupFailed ? 'Its name could not be resolved.' : 'It did not pass inspection.'));
     else {
-      list ($downloadFailed, $temporaryPath, $wasTruncated) = downloadRemoteFileForInspection($cleanURL, $urlHost, $urlPort, $urlIP, $urlScheme, 'user-'.bin2hex(random_bytes(8)));
+      // / A user's fetch gets the ceiling an administrator set for user fetches, which is a
+      // / different question from how much of a playlist is worth reading.
+      list ($downloadFailed, $temporaryPath, $wasTruncated) = downloadRemoteFileForInspection($cleanURL, $urlHost, $urlPort, $urlIP, $urlScheme, 'user-'.bin2hex(random_bytes(8)), (isset($URLDownloadMaximumBytes) ? (int)$URLDownloadMaximumBytes : 0));
       if ($downloadFailed or $temporaryPath === '') $FetchReason = 'The address was accepted & nothing could be fetched from it.';
       else {
+        // / A FETCHED FILE IS SCANNED BEFORE IT IS PLACED, & an upload always was.
+        // / Without this the easiest way to get an unscanned file onto this server was to
+        // / ask the server to fetch one, which made the scanner optional in exactly the case
+        // / it was least optional.
+        // / A file that fails is not placed & the temporary copy is removed, so nothing
+        // / infected reaches anywhere a user can convert or download it from.
+        // / A scanner that could not RUN is not the same as a file that failed. The first is
+        // / reported & the fetch is refused, because placing an unscanned file when scanning
+        // / was asked for is the thing this setting exists to prevent.
+        if (isset($ScanURLDownloads) && $ScanURLDownloads === TRUE && function_exists('runVirusScan')) {
+          list ($scanCompleted, $threatWasFound, $scanFindings, $scannerUsed) = runVirusScan(array($temporaryPath), '');
+          if (!$scanCompleted or $threatWasFound) {
+            @unlink($temporaryPath);
+            foreach ($scanFindings as $scanFinding) warningEntry('A fetched file was refused. '.$scanFinding);
+            $FetchReason = $threatWasFound ? 'The fetched file was refused by the '.$scannerUsed.' scanner & was not kept.' : 'The fetched file could not be scanned, so it was not kept.'; } }
+        if ($FetchReason !== '' && !$FetchSucceeded && $temporaryPath !== '' && !file_exists($temporaryPath)) {
+          // / The scan refused it. Nothing further happens & the reason above is what is
+          // / reported.
+          $temporaryPath = ''; }
+        else {
         $urlParts = @parse_url($cleanURL);
         $suggestedName = isset($urlParts['path']) ? basename((string)$urlParts['path']) : '';
+        // / A FETCHED FILE MUST BE A FORMAT THIS INSTALLATION ACCEPTS, & an upload always
+        // / had to be. Without this, asking the server to fetch a file was the way around
+        // / whatever an administrator had decided this installation would handle.
+        // / $Allowed is every extension any enabled subsystem reads or writes, which is the
+        // / same list an upload is judged against. A format nobody enabled is refused here
+        // / for the same reason it is refused there.
+        // / The extension comes from the URL path & is the only thing available before the
+        // / file exists. Content is judged afterwards, by the scanner & by whichever
+        // / pipeline is eventually asked to read it.
+        $fetchedExtension = strtolower((string)pathinfo($suggestedName, PATHINFO_EXTENSION));
+        if (isset($Allowed) && is_array($Allowed) && !in_array($fetchedExtension, $Allowed, TRUE)) {
+          @unlink($temporaryPath);
+          $FetchReason = ($fetchedExtension === '') ? 'That address names no file type, so there is nothing to convert.' : 'This server does not handle '.$fetchedExtension.' files.'; }
+        else {
         list ($suggestedName, $nameIsSanitized) = sanitize($suggestedName, TRUE);
         if (!$nameIsSanitized or trim($suggestedName) === '' or $suggestedName === '.') $suggestedName = 'download-'.bin2hex(random_bytes(4));
         $targetPath = rtrim((string)$sessionDirectory, $DirSep).$DirSep.$suggestedName;
@@ -2017,9 +2158,9 @@ function fetchUserSuppliedURL($suppliedURL, $sessionDirectory) {
         else {
           $FetchedPath = $targetPath;
           $FetchSucceeded = TRUE;
-          $FetchReason = 'Fetched '.basename($targetPath).' from '.$urlHost.'.'.($wasTruncated ? ' It reached the size ceiling & was truncated.' : ''); } } } }
+          $FetchReason = 'Fetched '.basename($targetPath).' from '.$urlHost.'.'.($wasTruncated ? ' It reached the size ceiling & was truncated.' : ''); } } } } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $baseIsUsable, $inspectionFailed, $resolutionFailed, $containsLAN, $lookupFailed, $downloadFailed, $wasTruncated, $nameIsSanitized, $cleanURL, $urlHost, $urlPort, $urlScheme, $urlIP, $temporaryPath, $suggestedName, $targetPath, $urlParts, $suppliedURL, $sessionDirectory);
+  purgeSensitiveMemory($EnableMemoryProtection, $fetchedExtension, $scanCompleted, $threatWasFound, $scanFindings, $scannerUsed, $scanFinding, $baseIsUsable, $inspectionFailed, $resolutionFailed, $containsLAN, $lookupFailed, $downloadFailed, $wasTruncated, $nameIsSanitized, $cleanURL, $urlHost, $urlPort, $urlScheme, $urlIP, $temporaryPath, $suggestedName, $targetPath, $urlParts, $suppliedURL, $sessionDirectory);
   return array($FetchSucceeded, $FetchedPath, $FetchReason); }
 // / -----------------------------------------------------------------------------------
 
@@ -2040,6 +2181,7 @@ function gatherRemoteHostInfo($StreamURL) {
   // / caller assigns them from networkPolicy() before reading them, & it left the last
   // / stream's settings sitting in the global scope between requests.
   // / The network policy is resolved once & every setting below comes from it.
+  $permittedByRange = $hostIsPublic = FALSE;
   $networkPolicy = networkPolicy();
   $engineAllowPlainHTTP = $networkPolicy['AllowPlainHTTP'];
   $LookupFailed = $InspectionFailed = TRUE;
@@ -2087,7 +2229,10 @@ function gatherRemoteHostInfo($StreamURL) {
   if (!$StreamURLResolutionFailed) {
     // / If the host is already a literal IP, validate it directly & skip DNS entirely.
     if (filter_var($URLHost, FILTER_VALIDATE_IP)) {
-      if (isPubliclyRoutableIP($URLHost)) {
+      // / A literal address gets the same treatment as a resolved one. An operator who
+      // / permitted a range means it whether they typed a name or an address.
+      list ($hostIsPublic, $permittedByRange) = addressMayBeReached($URLHost);
+      if ($hostIsPublic) {
         $URLIP = $URLHost;
         $LookupFailed = FALSE; }
       else $StreamContainsLAN = TRUE; }
@@ -2103,7 +2248,7 @@ function gatherRemoteHostInfo($StreamURL) {
   // / Write the information obtained to the log file.
   if ($Verbose) logEntry('URL Inspection Result: '.($InspectionFailed ? 'FAILED' : 'PASSED').', Host: '.$URLHost.', Port: '.$URLPort.', Scheme: '.$URLScheme.', Contains LAN: '.($StreamContainsLAN ? 'TRUE' : 'FALSE').', URL Resolution Failed: '.($StreamURLResolutionFailed ? 'TRUE' : 'FALSE').', Lookup Failed: '.($LookupFailed ? 'TRUE' : 'FALSE').'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $networkPolicy, $engineAllowPlainHTTP, $allowedSchemes, $urlParts, $StreamDNSContainsLAN, $urlIsSanitized, $partsAreSanitized, $schemeIsSanitized, $hostIsSanitized);
+  purgeSensitiveMemory($EnableMemoryProtection, $permittedByRange, $hostIsPublic, $networkPolicy, $engineAllowPlainHTTP, $allowedSchemes, $urlParts, $StreamDNSContainsLAN, $urlIsSanitized, $partsAreSanitized, $schemeIsSanitized, $hostIsSanitized);
   return array($InspectionFailed, $StreamURLResolutionFailed, $StreamContainsLAN, $LookupFailed, $URLHost, $URLPort, $URLScheme, $URLIP); }
 // / -----------------------------------------------------------------------------------
 
@@ -2320,13 +2465,22 @@ function inspectContentForDomains($streamFileContents) {
 // / We are classifying files here, not streaming them.
 // / $engineConnectionTimeout is documented in seconds & is used directly.
 // / $engineWatchTimeout is documented in minutes & is converted once here.
-function downloadRemoteFileForInspection($StreamURL, $URLHost, $URLPort, $URLIP, $URLScheme, $FileNumber) {
+// / $ByteCeiling overrides the inspection ceiling for a caller that is fetching a FILE
+// / rather than reading a playlist. Zero or absent keeps the inspection ceiling.
+// / The two are different sizes for different reasons. An inspection reads enough of a
+// / playlist to understand it & should stop early. A file a user asked for is only useful
+// / whole, so its ceiling is about what this server is willing to spend rather than about
+// / how much is worth reading.
+function downloadRemoteFileForInspection($StreamURL, $URLHost, $URLPort, $URLIP, $URLScheme, $FileNumber, $ByteCeiling = 0) {
   // / Set variables.
   global $Verbose, $DirSep, $EnableMemoryProtection;
   // / The network policy is resolved once & every setting below comes from it.
   $networkPolicy = networkPolicy();
   $engineAllowPlainHTTP = $networkPolicy['AllowPlainHTTP'];
   $engineMaxInspectionBytes = $networkPolicy['MaxInspectionBytes'];
+  // / A caller that named its own ceiling gets it. A ceiling of zero means no limit, which
+  // / curl expresses by being given no limit rather than by being given nothing.
+  if ((int)$ByteCeiling > 0) $engineMaxInspectionBytes = (int)$ByteCeiling;
   $engineConnectionTimeout = $networkPolicy['ConnectionTimeout'];
   $engineWatchTimeout = $networkPolicy['WatchTimeout'];
   $engineFetchTemp = $networkPolicy['FetchTemp'];
@@ -2388,7 +2542,7 @@ function downloadRemoteFileForInspection($StreamURL, $URLHost, $URLPort, $URLIP,
   // / The caller reads this file immediately after this function returns.
   if ($DownloadFailed) $LocalStreamPath = '';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $networkPolicy, $engineAllowPlainHTTP, $engineMaxInspectionBytes, $engineConnectionTimeout, $engineWatchTimeout, $engineFetchTemp, $curlCommand, $curlOutput, $protoString, $curlExitCode, $downloadedBytes, $pinIsComplete);
+  purgeSensitiveMemory($EnableMemoryProtection, $ByteCeiling, $networkPolicy, $engineAllowPlainHTTP, $engineMaxInspectionBytes, $engineConnectionTimeout, $engineWatchTimeout, $engineFetchTemp, $curlCommand, $curlOutput, $protoString, $curlExitCode, $downloadedBytes, $pinIsComplete);
   return array($DownloadFailed, $LocalStreamPath, $StreamFileTruncated); }
 // / -----------------------------------------------------------------------------------
 
@@ -2563,6 +2717,41 @@ function resolveConversionLimit($sandboxProfile) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to say whether this kernel will delegate cgroup controllers to a user.
+// / Accepts nothing. Returns TRUE when a user scope could hold a real limit.
+// /
+// / This is the difference between a host an administrator can fix & one they cannot.
+// / An ordinary Linux box that cannot make a scope usually needs lingering enabled, which
+// / --fix-permissions does. A NAS or appliance kernel frequently ships with cgroup
+// / controllers unavailable to users at all, & no amount of configuration changes that.
+// / Telling the second operator to run --fix-permissions sends them round a loop with no
+// / end, & they conclude the application is broken when the kernel simply cannot do it.
+// /
+// / The test is whether the unified cgroup hierarchy exists & offers controllers to
+// / delegate. cgroup.controllers listing nothing means the kernel has the hierarchy &
+// / hands out no controllers, which is exactly the appliance case.
+// / A host with no unified hierarchy at all is the older cgroup v1 layout, which cannot
+// / delegate to a user either.
+// /
+// / A limit is never the only protection. Scheduling priority still applies & a conversion
+// / is still bounded, just less precisely, so a FALSE here degrades rather than fails.
+function cgroupDelegationIsAvailable() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $DelegationIsAvailable = FALSE;
+  $controllerFile = $controllerList = '';
+  $controllerFile = '/sys/fs/cgroup/cgroup.controllers';
+  if (file_exists($controllerFile)) {
+    $controllerList = trim((string)@file_get_contents($controllerFile));
+    // / A kernel that lists controllers can delegate at least one of them.
+    if ($controllerList !== '') $DelegationIsAvailable = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $controllerFile, $controllerList);
+  return $DelegationIsAvailable; }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
 // / A function to verify how, or whether, a resource scope can be created.
 // / Accepts no arguments.
 // / Returns the mode, the systemd-run binary & the environment prefix, in that order.
@@ -2626,7 +2815,15 @@ function verifySystemdRun() {
           $ScopeBinary = $locatedBinary;
           $ScopeEnvironment = '';
           warningEntry('Per conversion limits are using a SYSTEM scope. This account holds systemd manage-units, which is enough to start a unit as root. Enable lingering for '.$ApacheUser.' with the -fp argument & remove that permission.'); }
-        else warningEntry('A resource scope could not be created. Run the -fp argument as root to enable lingering for '.$ApacheUser.'. Per conversion limits fall back to scheduling priority only.'); } }
+        // / The reason matters more than the failure. Two hosts reach this line for
+        // / completely different causes & only one of them is fixable.
+        // / An ordinary Linux box gets here because lingering is off, & -fp turns it on.
+        // / A NAS or appliance kernel frequently ships without cgroup controllers delegated
+        // / to a user, & nothing an administrator does will change that. Telling them to run
+        // / -fp sends them round a loop that cannot end.
+        // / Scheduling priority still applies either way, so a conversion is still bounded,
+        // / just less precisely.
+        else warningEntry('A resource scope could not be created. '.(cgroupDelegationIsAvailable() ? 'Run the -fp argument as root to enable lingering for '.$ApacheUser.'.' : 'This kernel does not delegate cgroup controllers, which many NAS & appliance kernels do not. There is nothing to fix here & no scope can be made on this host.').' Per conversion limits fall back to scheduling priority alone.'); } }
     $probedMode = $ScopeMode;
     $probedBinary = $ScopeBinary;
     $probedEnvironment = $ScopeEnvironment; }
@@ -2763,6 +2960,216 @@ function limitCommand($command, $sandboxProfile) {
   purgeSensitiveMemory($EnableMemoryProtection, $scopeMode, $scopeBinary, $scopeEnvironment, $scopePrefix, $limitIsValid, $cpuPercentage, $memoryMegabytes, $nicePriority, $command, $sandboxProfile);
   return $LimitedCommand; }
 // / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to ask the operator a question, through whatever the application provides.
+// / Accepts the question. Returns their answer, or an empty string when nobody can be asked.
+// /
+// / THE ENGINE HAS NO IDEA HOW THIS APPLICATION TALKS TO ANYBODY. A command line reads a
+// / line from the terminal. A web request has no operator at all & must not block waiting
+// / for one that will never arrive.
+// / So the application names a function in $EngineOperatorPrompt & this calls it.
+// /
+// / AN EMPTY ANSWER IS A REFUSAL & every caller must treat it as one. That is deliberate.
+// / A question nobody could be asked has not been answered yes, & the destructive branch
+// / that was waiting on a yes does not run. An application that declares no prompt gets a
+// / tool that reports & never destroys, which is a reasonable tool.
+function promptOperator($operatorQuestion) {
+  // / Set variables.
+  global $EngineOperatorPrompt, $EnableMemoryProtection;
+  $OperatorAnswer = '';
+  $promptFunction = '';
+  $promptFunction = (isset($EngineOperatorPrompt) && is_string($EngineOperatorPrompt)) ? trim($EngineOperatorPrompt) : '';
+  if ($promptFunction !== '' && function_exists($promptFunction)) $OperatorAnswer = (string)$promptFunction($operatorQuestion);
+  else if ($promptFunction !== '') warningEntry('An operator prompt named '.$promptFunction.' was declared & does not exist. Every question will be refused.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $promptFunction, $operatorQuestion);
+  return $OperatorAnswer; }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / A function to run whatever repair the application declares.
+// / Accepts nothing. Returns whether it succeeded & how many things were corrected.
+// /
+// / The Environment Manager already reads this seam. Setup Core reads the same one, so an
+// / application declares how it fixes itself ONCE rather than twice.
+// / An application that declares no repair reports that nothing was changed, which is true.
+function runApplicationRepair() {
+  // / Set variables.
+  global $EngineRepairProvider, $EnableMemoryProtection;
+  $RepairSucceeded = FALSE;
+  $PathsCorrected = 0;
+  $repairFunction = '';
+  $repairFunction = (isset($EngineRepairProvider) && is_string($EngineRepairProvider)) ? trim($EngineRepairProvider) : '';
+  if ($repairFunction !== '' && function_exists($repairFunction)) list ($RepairSucceeded, $PathsCorrected) = $repairFunction();
+  else {
+    if ($repairFunction !== '') warningEntry('A repair provider named '.$repairFunction.' was declared & does not exist.');
+    else warningEntry('This application declares no repair. Nothing was changed.');
+    $RepairSucceeded = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $repairFunction);
+  return array($RepairSucceeded, $PathsCorrected); }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / A function to fetch the configuration model the application declares.
+// / Accepts nothing. Returns the model, which is empty when none is declared.
+// /
+// / An empty model is not an error & is not repaired around. Every caller must check it &
+// / refuse the work rather than proceed on nothing. A config utility that repaired against
+// / an empty model would delete every setting it could not find.
+function collectConfigModel() {
+  // / Set variables.
+  global $EngineConfigModelProvider, $EngineConfigTemplate, $InstLoc, $DirSep, $EnableMemoryProtection;
+  $ConfigModel = array();
+  $modelFunction = $templatePath = $sectionName = $variableName = '';
+  $templateValues = $templateMatches = $templateMatch = $sectionRecord = $modelledNames = array();
+  $guessedType = $variableValue = $appendSection = '';
+  $templateText = '';
+  $appendSection = 'Unsectioned';
+  $modelFunction = (isset($EngineConfigModelProvider) && is_string($EngineConfigModelProvider)) ? trim($EngineConfigModelProvider) : '';
+  if ($modelFunction !== '' && function_exists($modelFunction)) $ConfigModel = (array)$modelFunction();
+  else if ($modelFunction !== '') warningEntry('A configuration model provider named '.$modelFunction.' was declared & does not exist. Nothing can be repaired or generated.');
+  else warningEntry('This application declares no configuration model. The utility can view & back up & nothing else.');
+  // / THE DEFAULTS COME FROM THE TEMPLATE & are not in the model at all.
+  // / The template is a real configuration at default values, so every default is already
+  // / written there in the exact form it will be written back. Holding it twice was how a
+  // / model & a config file drifted apart in the first place.
+  // / The model keeps what a config file CANNOT say about itself. A type, because a path & a
+  // / string are both quoted & validate differently. A dependency between two settings. A
+  // / section an operator owns & the utility must not write.
+  // / A template that cannot be read leaves the model exactly as the application gave it,
+  // / so an application that supplies its own defaults still works.
+  // / The template is read with a plain match rather than with parseConfigFile.
+  // / parseConfigFile asks for the model, & the model is what this function returns, so
+  // / calling it here is a loop that ends in exhausted memory rather than in an error.
+  // / A name & its value is all that is needed, & a setting name is unique across the file,
+  // / so the section it sits in does not have to be worked out again.
+  $templatePath = (isset($EngineConfigTemplate) && trim((string)$EngineConfigTemplate) !== '') ? trim((string)$EngineConfigTemplate) : '';
+  if ($templatePath !== '' && !empty($ConfigModel)) {
+    if (strpos($templatePath, $DirSep) !== 0) $templatePath = $InstLoc.$DirSep.'Resources'.$DirSep.$templatePath;
+    $templateText = (string)@file_get_contents($templatePath);
+    if ($templateText === '') warningEntry('The configuration template at '.$templatePath.' could not be read, so the model carries no defaults.');
+    else {
+      preg_match_all('/^\\$([A-Za-z_][A-Za-z0-9_]*)\\s*=\\s*(.*?);\\s*$/ms', $templateText, $templateMatches, PREG_SET_ORDER);
+      foreach ($templateMatches as $templateMatch) $templateValues[$templateMatch[1]] = trim($templateMatch[2]);
+      foreach ($ConfigModel as $sectionName => $sectionRecord) {
+        foreach ($sectionRecord['Variables'] as $variableName => $variableModel) {
+          if (!isset($templateValues[$variableName])) continue;
+          $ConfigModel[$sectionName]['Variables'][$variableName]['Default'] = $templateValues[$variableName];
+          $modelledNames[$variableName] = TRUE; } } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $modelFunction, $templatePath, $templateText, $sectionName, $variableName, $templateValues, $templateMatches, $templateMatch, $sectionRecord, $variableModel, $modelledNames, $guessedType, $variableValue, $appendSection);
+  return $ConfigModel; }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / A function to collect whatever the application says about its own data exposure.
+// / Accepts nothing. Returns display rows, which may be empty.
+// /
+// / Whether a data tree is reachable by a web server is a question about an application
+// / that HAS a web server. An application without one has nothing to answer & the section
+// / is simply not shown, rather than shown empty or shown as a failure.
+function collectDataPolicyFindings() {
+  // / Set variables.
+  global $EngineDataPolicyProvider, $EnableMemoryProtection;
+  $PolicyFindings = array();
+  $policyFunction = '';
+  $policyFunction = (isset($EngineDataPolicyProvider) && is_string($EngineDataPolicyProvider)) ? trim($EngineDataPolicyProvider) : '';
+  if ($policyFunction !== '' && function_exists($policyFunction)) $PolicyFindings = (array)$policyFunction();
+  else if ($policyFunction !== '') warningEntry('A data policy provider named '.$policyFunction.' was declared & does not exist.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $policyFunction);
+  return $PolicyFindings; }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / MOVED FROM THE APPLICATION AT v3.9.2. Comparing versions is not something one
+// / application does differently from another, & the Engine compares them too.
+// / A function to compare two version numbers numerically & report a minimum match.
+// / Accepts the detected version & the minimum version required, in that order.
+// / Returns TRUE when the detected version is the same as, or newer than, the required one.
+// / A leading v is stripped before comparison, because casting 'v3' to an integer yields 0
+// / & silently reduces a three part comparison to a two part one.
+// / Comparison is numeric part by part, because a string comparison ranks 24.2 below 7.6 &
+// / ranks 3.10 below 3.9.
+// / A version that cannot be parsed is REFUSED. An unknown build cannot be cleared.
+function compareVersionMinimum($detectedVersion, $requiredVersion) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $VersionIsCurrent = FALSE;
+  $cleanDetected = $cleanRequired = '';
+  $detectedParts = $requiredParts = array();
+  $detectedMajor = $detectedMinor = $detectedPatch = 0;
+  $requiredMajor = $requiredMinor = $requiredPatch = 0;
+  $cleanDetected = ltrim(trim((string)$detectedVersion), 'vV');
+  $cleanRequired = ltrim(trim((string)$requiredVersion), 'vV');
+  // / A blank requirement means any version will do.
+  if ($cleanRequired === '') $VersionIsCurrent = TRUE;
+  else if ($cleanDetected === '') $VersionIsCurrent = FALSE;
+  else {
+    $detectedParts = explode('.', $cleanDetected);
+    $requiredParts = explode('.', $cleanRequired);
+    // / A version whose leading part is not a number is not a version.
+    if (!ctype_digit(trim($detectedParts[0]))) $VersionIsCurrent = FALSE;
+    else {
+      $detectedMajor = (int)$detectedParts[0];
+      $detectedMinor = isset($detectedParts[1]) ? (int)$detectedParts[1] : 0;
+      $detectedPatch = isset($detectedParts[2]) ? (int)$detectedParts[2] : 0;
+      $requiredMajor = (int)$requiredParts[0];
+      $requiredMinor = isset($requiredParts[1]) ? (int)$requiredParts[1] : 0;
+      $requiredPatch = isset($requiredParts[2]) ? (int)$requiredParts[2] : 0;
+      if ($detectedMajor > $requiredMajor) $VersionIsCurrent = TRUE;
+      else if ($detectedMajor === $requiredMajor) {
+        if ($detectedMinor > $requiredMinor) $VersionIsCurrent = TRUE;
+        else if ($detectedMinor === $requiredMinor && $detectedPatch >= $requiredPatch) $VersionIsCurrent = TRUE; } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $cleanDetected, $cleanRequired, $detectedParts, $requiredParts, $detectedMajor, $detectedMinor, $detectedPatch, $requiredMajor, $requiredMinor, $requiredPatch, $detectedVersion, $requiredVersion);
+  return $VersionIsCurrent; }
+// / -----------------------------------------------------------------------------------
+// / A function to report what kind of machine this is.
+// / Accepts nothing. Returns a short architecture name & the raw machine string, in that
+// / order.
+// /
+// / The short name is one of x86_64, arm64, arm or unknown, & it is what a manifest entry
+// / matches against. The raw string is kept because a host reports itself in more ways than
+// / are worth enumerating & an operator reading a log wants to see what the machine
+// / actually said.
+// /
+// / This exists because not every dependency runs EVERYWHERE.
+// / A bundled binary is built for one architecture. A package has a different name, or no
+// / package at all, on another. An application that assumes x86 tells a Raspberry Pi owner
+// / their installation is broken when the truth is that one optional tool was never going
+// / to work there.
+// / Knowing the architecture is what lets a dependency say so instead.
+// /
+// / uname is used rather than php_uname(), because php_uname('m') reports what PHP was
+// / BUILT for rather than what it is running on. A 32 bit PHP on a 64 bit ARM host answers
+// / armv7l & the host is arm64, which is exactly the case this needs to get right.
+function detectHostArchitecture() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $ArchitectureName = 'unknown';
+  $MachineString = '';
+  $commandOutput = array();
+  $commandExitCode = 1;
+  exec('uname -m 2>/dev/null', $commandOutput, $commandExitCode);
+  if ($commandExitCode === 0 && isset($commandOutput[0])) $MachineString = strtolower(trim($commandOutput[0]));
+  if ($MachineString === '') $MachineString = strtolower(trim((string)php_uname('m')));
+  // / Each family answers to several names & the list is what hosts actually report.
+  if (in_array($MachineString, array('x86_64', 'amd64'), TRUE)) $ArchitectureName = 'x86_64';
+  else if (in_array($MachineString, array('aarch64', 'arm64', 'aarch64_be', 'armv8b', 'armv8l'), TRUE)) $ArchitectureName = 'arm64';
+  else if (strpos($MachineString, 'arm') === 0) $ArchitectureName = 'arm';
+  else if (in_array($MachineString, array('i386', 'i486', 'i586', 'i686'), TRUE)) $ArchitectureName = 'x86';
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $commandOutput, $commandExitCode);
+  return array($ArchitectureName, $MachineString); }
+// / -----------------------------------------------------------------------------------
+
 
 // / -----------------------------------------------------------------------------------
 // / A function to confirm this server can actually isolate a dependency invocation.

@@ -1,5 +1,5 @@
 # / -----------------------------------------------------------------------------------
-# / HRConvert2 v3.9.2. Bundles the Dropzone source into the single script this application
+# / HRConvert2 v3.9.3. Bundles the Dropzone source into the single script this application
 # / loads. Run it from the installation root with the source tree beside it:
 # /   python3 Documentation/Build/hrconvert2-build-dropzone.py
 # / Then copy the result over UI/<pack>/Resources/JS/dropzone.js in every interface.
@@ -41,7 +41,7 @@ if tpl_js.startswith('var defaultPreviewTemplate = "'):
 tpl_js = 'var defaultPreviewTemplate = ' + '"' + tpl.replace('\\','\\\\').replace('"','\\"').replace('\n','\\n') + '";'
 
 HEAD = """/* / -----------------------------------------------------------------------------------
- * / Dropzone 6.2.0, bundled for HRConvert2 v3.9.2.
+ * / Dropzone 6.2.0, bundled for HRConvert2 v3.9.3.
  * /
  * / Assembled from the official src/ tree by Documentation/Build/hrconvert2-build-dropzone.py.
  * / It is NOT taken from a package registry & nothing was downloaded to produce it. The

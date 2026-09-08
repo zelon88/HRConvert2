@@ -1,5 +1,90 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
+
+
+-----------------------------------------------------------------------------------------
+THE SHAPE THIS IS GROWING TOWARD
+-----------------------------------------------------------------------------------------
+
+NOT IN SCOPE. Recorded so that decisions made now do not quietly foreclose it.
+
+Three applications are anticipated & they differ in what a pipeline DOES rather than in
+how one is declared, loaded, versioned or dispatched.
+
+  HRConvert2    conversion pipelines & file pipelines.
+  HRProtect     scanner pipelines.
+  HRCloud3      file operation pipelines & user automation pipelines.
+
+The Pipeline Core already carries a Kind, & already knows three of them. conversion, chosen
+by the formats it declares. operation, chosen by what it does. scanner, chosen by name.
+That field was added for one reason & turns out to be the seed of the contract these three
+applications need. A fourth kind is a value & a dispatch rule, not a redesign.
+
+WHAT THAT MEANS FOR WORK DONE NOW. A pipeline change should ask whether the rule being
+written is true of pipelines or true of CONVERSION pipelines. The rule that a pipeline must
+declare an input & an output format was written when every pipeline converted something,
+& it silently refused both scanner pipelines for two releases. That is the shape of mistake
+to watch for.
+
+THE SESSION MECHANISM IS ALSO ENGINE WORK IN WAITING.
+
+HRConvert2 derives a session identity from an install secret & a supplied token, with a
+daily parent directory for domain separation, & uses NO COOKIE ANYWHERE. A token cannot be
+replayed into a different day or a different vhost.
+
+That is not a conversion feature. It is stateful identity without client side storage, &
+HRCloud3 would need exactly it for authentication rather than for grouping uploads.
+
+The application keeps what a session MEANS, which is whose files these are & what may be
+done with them. The Engine would keep how an identity is derived, bound & expired. The
+split is the same one every other seam here uses & the mechanism is already written.
+
+-----------------------------------------------------------------------------------------
+THE ENGINE IS A DROP IN REPLACEMENT FOR ITSELF
+-----------------------------------------------------------------------------------------
+
+The seam is VISIBLE IN THE TREE rather than described in a document.
+
+  Resources/Engine/Contract/     Belongs to the APPLICATION. The Engine reads it & never
+                                 writes it.
+    depends.php                  What this installation needs & how to get it.
+    config-template.php          A real config.php at defaults. What this application's
+                                 configuration looks like.
+
+    app-engine-config.php        Which providers this application supplies, & anything it
+                                 needs to differ from an Engine default.
+
+  Resources/Engine/engineConfig.php
+                                 THE ENGINE's, & replaceable with everything else. It holds
+                                 defaults & loads the override above LAST, so the
+                                 application wins wherever the two disagree.
+                                 This is the arrangement Apache & php use. A package ships
+                                 a configuration that works, & the thing being configured
+                                 drops a file beside it that changes what it needs.
+                                 Before the split, upgrading the Engine meant reading
+                                 engineConfig.php line by line to find which values were
+                                 the application's. Now it is a directory copy.
+
+  Resources/Engine/Cores/        The Engine. Replaceable.
+  Resources/Engine/Managers/     The Engine. Replaceable.
+  Resources/Engine/engine.php    The Engine. Replaceable.
+
+Everything else there is the Engine. engine.php, the Managers, the Cores. Replacing all of
+it with a newer Engine is a copy, & keeping those three is the whole of the migration.
+
+That is deliberate & it is why the Engine ships INSIDE an application rather than beside
+it. An application carries the Engine it was tested against. A newer Engine arrives when
+somebody chooses it, not when a package manager decides.
+
+It also means two applications iterating on the same Engine can trade improvements by
+copying a directory. Whichever one last needed a thing has it, & the other takes it when it
+wants it. There is no shared installation to coordinate & no version of the Engine that
+everything must move to at once.
+
+The three files are the seam. Anything that starts to feel like a fourth is worth arguing
+about before it is written, because the argument is really about whether the Engine has
+started to know something about one application.
+
 HRProprietary Engine, Copyright on 9/4/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
@@ -251,7 +336,7 @@ They fall into three groups & each group has a different answer.
 The Engine is USABLE in this state, because HRConvert2 loads both files. It is not yet
 PORTABLE, & the difference is exactly this list.
 
-MANAGER SUBCOMPONENTS ARE POPULATED & Resources/coreManager.php IS GONE.
+MANAGER SUBCOMPONENTS ARE POPULATED & Resources/Engine/Managers/coreManager.php IS GONE.
 getAcceptedManagers names four files under Resources/Engine/Managers & loadEngineManager
 verifies & loads one when a process is dispatched to that role.
 Twenty eight functions of shared machinery went into the Engine rather than into any one

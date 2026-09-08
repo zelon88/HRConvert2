@@ -40,7 +40,7 @@ Resource rate limiting adds a **budget mechanism** (configured in `config.php`) 
 
 ## 📡 About the Listener
 
-The listener is implemented in `Resources/coreManager.php` and acts as a detachable component.
+The listener is implemented in `Resources/Engine/Managers/coreManager.php` and acts as a detachable component.
 
 ### 🔐 Security & Validation
 - **Decoupled Design:** Validated the same way as a GUI or language pack.

@@ -147,9 +147,20 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
         <?php } // / End of the helper, which a fragment never carries. ?>
 
     <?php if (!$FileListOnly) { // / Skipped when only the file list is wanted. ?>
-<div style= 'background-color: #fff; margin: 20px; width: 500px; color: #777777; margin-left:auto; margin-right:auto; padding: 20px; border-radius: 12px; -webkit-box-shadow: 1px 1px 5px 1px rgba(0,0,0,.2);
+    <?php
+    // / The card takes its colour from the scheme, through .file-list-card in
+    // / styleCore.php. It was a hardcoded white on every scheme, which reads as a card
+    // / on the grey blue page & as an unfinished rectangle on the coloured ones.
+    ?>
+<div class='file-list-card' style= 'margin: 20px; width: 500px; margin-left:auto; margin-right:auto; padding: 20px; border-radius: 12px; -webkit-box-shadow: 1px 1px 5px 1px rgba(0,0,0,.2);
 box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
-      <?php if (!$NoGui) { ?><h1><img src='<?php echo $GuiImageDir; ?>convert-banner.png' style='max-height:72px; margin-right: 10px;'/><?php //echo $ApplicationName; ?></h1>
+      <?php
+      // / The logo returns to this page carrying the language, colour & interface,
+      // / unless --Logo URL-- names somewhere else. This application has no navigation,
+      // / so a logo that leaves takes the session & the user's files with it.
+      // / verifyInputs computes the address. Nothing is decided here.
+      ?>
+      <?php if (!$NoGui) { ?><h1><a href='<?php echo htmlspecialchars($ResolvedLogoURL, ENT_QUOTES, 'UTF-8'); ?>'><img src='<?php echo $GuiImageDir; ?>convert-banner.png' style='max-height:72px; margin-right: 10px;'/></a><?php //echo $ApplicationName; ?></h1>
      <hr style="border: 1px solid #eeeeee;"/><?php } ?>
      <b><?php echo $Gui2Text1; ?></b><br>
      <?php echo $Gui2Text30; ?>
@@ -290,6 +301,13 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
        / work rather than inventing a parallel one to debug.
        / jQuery .html() executes the script blocks in what it injects, which the per file
        / panels depend on, & innerHTML would not. -->
+    <?php
+    // / A PLAIN container & it stays plain.
+    // / The javascript fetches the file list from the server & injects it here, & what
+    // / comes back already carries its own panel with its own border.
+    // / Styling this as a panel too put a panel inside a panel & drew two borders, one
+    // / just inside the other.
+    ?>
     <div id='hrc2FileList'></div>
     <?php } else {
       // / The else branch stays open through the entire file list & closes at the end of

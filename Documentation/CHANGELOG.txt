@@ -116,6 +116,15 @@ v3.9.3 - Absorb Core Manager & the Cores. The Engine owns the environment.
  names the file that raises it, & nothing raised is undocumented.
 -The template no longer carries two headers & two load guards. It explains itself above a
  copy marker, & only what is below the marker reaches a generated config.php.
+-Fix the container build. It copied Resources/depends.php, Resources/DependencyCore &
+ Resources/SetupCore, all of which moved into Resources/Engine this release, & the
+ GitHub action failed at the COPY.
+  -The Engine directory is copied whole. The Cores reach into engine.php now, so a
+   partial copy fails at load rather than at the missing file.
+  -versionInfo.php & config.php are copied too, since the core needs both to start.
+  -680K against a 6.3M tree. UI & Documentation are 4.5M & still arrive later, so the
+   dependency layer still caches.
+-Update hrconvert2-setup.sh to v3.9.3 & correct its Setup Core path.
 -Correct 16 stale paths across 8 documents. SetupCore, DependencyCore, depends.php,
  coreManager & one pipelineCore all moved this release & the documentation had not.
 -Verify every --setup argument responds. All nine.

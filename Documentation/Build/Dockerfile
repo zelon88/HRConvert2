@@ -37,7 +37,7 @@
 # An alternative to the capability is  --security-opt seccomp=unconfined  on some hosts.
 #
 # DEPENDENCY REQUIREMENTS ...
-# Nothing is listed here on purpose. Resources/depends.php is the manifest & this file
+# Nothing is listed here on purpose. Resources/Engine/Contract/depends.php is the manifest & this file
 # installs from it, so a dependency added there arrives here without editing this file.
 #
 # <3 Open-Source
@@ -62,10 +62,17 @@ WORKDIR /var/www/html/HRProprietary/HRConvert2
 # / The core & the manifest are enough to run a dependency install, so they are copied on
 # / their own & the install is cached against them. It re-runs when depends.php changes,
 # / which is exactly when it should.
+# / THE ENGINE MOVED AT v3.9.3 & these paths moved with it.
+# / depends.php is Resources/Engine/Contract/depends.php. Setup Core & Dependency Core are
+# / Resources/Engine/Cores. The Engine directory is copied whole rather than file by file,
+# / because the Cores now reach into engine.php & a partial copy fails at load rather than
+# / at the missing file, which is a much harder error to read.
+# / It is 680K against a 6.3M tree. UI & Documentation are 4.5M of that & arrive later, so
+# / the cache still does its job.
 COPY convertCore.php ./convertCore.php
-COPY Resources/depends.php ./Resources/depends.php
-COPY Resources/DependencyCore ./Resources/DependencyCore
-COPY Resources/SetupCore ./Resources/SetupCore
+COPY Resources/versionInfo.php ./Resources/versionInfo.php
+COPY Resources/config.php ./Resources/config.php
+COPY Resources/Engine ./Resources/Engine
 
 RUN php ./convertCore.php --setup --install-depends -y \
     || echo "Dependency installation reported problems. The image will still build & -v will report what is missing."

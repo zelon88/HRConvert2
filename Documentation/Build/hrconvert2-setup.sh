@@ -1,11 +1,11 @@
 #!/bin/bash
 # / -----------------------------------------------------------------------------------
 # / HRConvert2 Bootstrap.
-# / v3.8.0.
+# / v3.9.3.
 # /
 # / This script does ONE job. It makes sure PHP exists, then hands over to convertCore.php.
 # / Every decision about installing, configuring, updating or repairing an installation is
-# / made in Resources/SetupCore/setupCore.php, which is version pinned against the core &
+# / made in Resources/Engine/Cores/setupCore.php, which is version pinned against the core &
 # / is the only place that understands config.php.
 # /
 # / A configuration utility written in bash would be a second implementation of the same
@@ -30,7 +30,7 @@
 # / Do not edit it by hand. Reinstall the script instead.
 DisabledByCore="FALSE"
 
-SCRIPT_VERSION="v3.8.0"
+SCRIPT_VERSION="v3.9.3"
 set -u
 
 # / The core lives two directories above this one when the script is where it ships.

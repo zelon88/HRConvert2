@@ -3,6 +3,34 @@ COPYRIGHT INFORMATION ...
 
 
 -----------------------------------------------------------------------------------------
+DECIDING WHETHER SOMETHING IS A PIPELINE
+-----------------------------------------------------------------------------------------
+
+The question is NOT whether it moves bytes on disk. That is a question about mechanism &
+it gives the wrong answer.
+
+The question is WHETHER IT IS A CAPABILITY AN APPLICATION WIRES IN.
+
+Delivering a file to a requester is a capability. That it verifies paths rather than
+copying them is an implementation detail, & a second application would not want to write it
+again. It is a pipeline.
+
+Bundling files together is a capability, & it is not the same as converting between archive
+formats even though both shell out to the same tools. One packages arbitrary files for
+delivery. The other transforms a zip into a tar. Same binaries, different job, different
+pipeline.
+
+Deciding whether a path is one this application will touch is NOT a capability an
+application wires in. Every pipeline needs it, the Engine itself calls it, & an application
+that had to supply it would be supplying something every other application also supplies.
+That is Engine work.
+
+THE FAILURE MODE THIS EXISTS TO PREVENT. A list of candidates written from function NAMES
+will put things on it that sound like file work & leave off things that are. Read what a
+function DOES. A function operating on paths another function handed it is a caller rather
+than an operation, & a function that only counts is not doing the thing it appears to do.
+
+-----------------------------------------------------------------------------------------
 THE SHAPE THIS IS GROWING TOWARD
 -----------------------------------------------------------------------------------------
 

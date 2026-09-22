@@ -119,6 +119,10 @@ sudo chmod 0600 "/DATA/HRConvert2/secret.php"
 | `--kill-all-workers` | End every tracked conversion in progress. | root or `www-data` |
 | `--kill-every-worker` | End every PHP process owned by the web server user. | root or `www-data` |
 | `-y`, `--yes` | Skip the confirmation prompt on the two above. | — |
+| `--config <argument>` | Configure, view, verify, repair & back up `config.php`. | root, except `--backup` |
+| `--setup <argument>` | Install, check & audit dependencies. | root, except `--check-depends` |
+| `--pipeline <argument>` | List, describe & verify the installed pipelines. | any user |
+| `--app<name>` | Handed to the application untouched. HRConvert2 declares none yet. | — |
 
 ---
 

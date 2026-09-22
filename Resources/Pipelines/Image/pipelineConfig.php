@@ -94,6 +94,9 @@ $Capabilities = array(
 // / A conversion that produces the format it was handed is not a conversion. It re-encodes
 // / a lossy format a second time & hands back something visibly worse than the original.
 // / jpg to jpeg & jpeg to jpg are NOT excluded. Those are the same format under two names &
+// / What this pipeline shells out to. Names must match the manifest exactly.
+$PipelineDependencies = array('ImageMagick', 'Bubblewrap');
+
 // / a user renaming one to the other is doing something reasonable.
 $PipelineExclude = array(
     'jpg>jpg', 'jpeg>jpeg', 'png>png', 'gif>gif', 'bmp>bmp', 'tif>tif', 'tiff>tiff', 'webp>webp',

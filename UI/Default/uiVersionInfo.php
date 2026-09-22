@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / HRConvert2, Copyright on 8/28/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 9/21/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.l
 // /
 // / FILE INFORMATION ...
-// / v3.8.3.
+// / v3.9.4.
 // / This file contains the current HRConvert2 version for update verification purposes.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -31,6 +31,6 @@
 // / -----------------------------------------------------------------------------------
 // / The version of this GUI pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, verifyGui() function.
-$GuiVersion = 'v3.9.3';
+$GuiVersion = 'v3.9.4';
 $GuiVersion = ltrim($GuiVersion, 'vV');
 // / -----------------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/zelon88/HRConvert2/blob/master/UI/Default/Resources/Image/logo.png" alt="HRConvert2" width="200"/>
+  <img src="https://github.com/zelon88/HRConvert2/blob/master/UI/Default/Resources/Image/convert-banner.png?raw=true" alt="HRConvert2" width="100%"/>
 </p>
 
 <h1 align="center">🔁 HRConvert2</h1>
@@ -161,6 +161,11 @@ Admins can lock down preferences in `config.php`. Each interface lives in its ow
 
 ## 🚀 Advanced Features
 
+### 🧱 Built on the HRProprietary Engine
+HRConvert2 is a thin application on top of a reusable engine: sandboxing, dependency management,
+self-repairing configuration & resource budgets. Conversions, scans & file handling are
+version-pinned **pipelines** you can inspect with `--pipeline` or drop into your own project.
+
 ### ⚙️ Resource-Aware Load Management (Optional)
 Turn on smart resource management to prevent overload:
 - CPU & memory caps scale with system load
@@ -182,9 +187,12 @@ php convertCore.php -fp             # Fix permissions & repair
 php convertCore.php --config        # Interactive config wizard
 php convertCore.php -l              # Start resource listener
 php convertCore.php -k              # Stop resource listener
+php convertCore.php --setup --check-depends   # Audit every dependency
+php convertCore.php --config --repair         # Rebuild or repair config.php
+php convertCore.php --pipeline --verify       # Confirm every pipeline loaded
 ```
 
-[Full command reference](https://github.com/zelon88/HRConvert2/blob/master/Documentation/USING_COMMAND_LINE.txt)
+[Full command reference](https://github.com/zelon88/HRConvert2/blob/master/Documentation/ABOUT_COMMAND_LINE_ARGUMENTS.txt)
 
 ### 🗄️ Storage Distribution
 Span storage across multiple drives with your choice of strategy:

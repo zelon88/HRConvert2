@@ -609,6 +609,76 @@ function countDataLocationSessions($locationPath, $protectedRootDirs) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / MOVED FROM THE APPLICATION AT v3.9.3. It asks the listener for a data location &
+// / resolves one, which is the Engine on both counts.
+// / A function to ask the listener which data location this session must use.
+// / Accepts the daily hash & the session hash, in that order.
+// / Returns an absolute path as a string, ALWAYS.
+// / The managers hold the session map, so the answer is the same for every front end that
+// / shares this secret. With no listener the configured location is used, which is exactly
+// / how a standalone installation has always behaved.
+// / A command line invocation never asks. Administrative work operates on the configured
+// / location & must not stall waiting on a listener that may not be running.
+function requestConvertLoc($dailyHash, $sessionHash) {
+  // / Set variables.
+  global $ResourceAwarenessActive, $RunningFromCLI, $ManagerSocketTimeout, $DirSep, $Verbose, $EnableMemoryProtection, $PrimaryConvertLoc, $AdditionalConvertLocs, $ProtectedRootDirs, $ConvertLoc;
+  $ResolvedConvertLoc = '';
+  $requestPayload = $replyPayload = array();
+  $messageWasDelivered = FALSE;
+  $answerSource = 'config.php';
+  // / The fallback is discovery, not the configured location.
+  // / An earlier release fell back to whatever config.php named, which is correct for a
+  // / session that does not exist yet & CATASTROPHIC for one that does. A session already
+  // / holding files in a second data location was sent to the first, found an empty
+  // / directory, & reported that the user had uploaded nothing. The files were never lost.
+  // / They were simply no longer where anything was looking.
+  // / resolveConvertLoc reads the pool from disk & returns the location that actually holds
+  // / this session before it distributes anything, so an unanswered request degrades to the
+  // / correct answer rather than to a plausible one.
+  $ResolvedConvertLoc = rtrim(resolveDataLocation($dailyHash, $sessionHash, $PrimaryConvertLoc, $ConvertLoc, $AdditionalConvertLocs, $ProtectedRootDirs), $DirSep);
+  if (!$ResourceAwarenessActive) $answerSource = 'discovery, no listener component';
+  else if ($RunningFromCLI) $answerSource = 'discovery, command line context';
+  else {
+    $requestPayload = array('RequestType' => 'convertloc', 'DailyHash' => (string)$dailyHash, 'SessionHash' => (string)$sessionHash, 'WorkerPid' => getmypid());
+    list ($messageWasDelivered, $replyPayload) = sendManagerMessage(buildManagerSocketPath('request-manager'), $requestPayload, 'worker', (int)$ManagerSocketTimeout * 3);
+    // / An unanswered request is a listener that is slow or absent, not an instruction to
+    // / move this session somewhere else. The configured location is the safe answer.
+    // / A location discovered on disk is not a guess. It is where this session's files are.
+    if (!$messageWasDelivered) { warningEntry('The Core Manager listener did not answer a data location request. Using '.$ResolvedConvertLoc.', located by searching the configured pool for this session.'); $answerSource = 'discovery, listener silent'; }
+    else if (!isset($replyPayload['ConvertLoc']) or !is_string($replyPayload['ConvertLoc']) or trim($replyPayload['ConvertLoc']) === '') { warningEntry('The Core Manager listener returned no usable data location. Using '.$ResolvedConvertLoc.', located by searching the configured pool for this session.'); $answerSource = 'discovery, listener unusable'; }
+    else {
+      $ResolvedConvertLoc = rtrim(trim($replyPayload['ConvertLoc']), $DirSep);
+      $answerSource = 'listener'; } }
+  if ($Verbose) logEntry('Data Location: '.$ResolvedConvertLoc.', Source: '.$answerSource.'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $ResolvedConvertLoc is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $requestPayload, $replyPayload, $messageWasDelivered, $answerSource, $dailyHash, $sessionHash);
+  return $ResolvedConvertLoc; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / MOVED FROM THE APPLICATION AT v3.9.3. It asks whether a data location was actually
+// / configured, which is a question about the locations the Engine already enumerates.
+// / A function to report whether a path is one of the configured data locations.
+// / Accepts the absolute path to test.
+// / Returns TRUE only when the path appears in the configured set.
+// / A scheduled sweep uses this so it can clean a location this worker is not using, while
+// / an arbitrary path is still refused.
+function convertLocIsConfigured($candidatePath) {
+  // / Set variables.
+  global $PrimaryConvertLoc, $ConvertLoc, $AdditionalConvertLocs, $DirSep, $EnableMemoryProtection;
+  $PathIsConfigured = FALSE;
+  $convertLocPool = $poolEntry = array();
+  $cleanCandidate = rtrim(trim((string)$candidatePath), $DirSep);
+  $convertLocPool = enumerateDataLocations($PrimaryConvertLoc, $ConvertLoc, $AdditionalConvertLocs);
+  if ($cleanCandidate !== '') {
+    foreach ($convertLocPool as $poolEntry) { if ($poolEntry['Path'] === $cleanCandidate) $PathIsConfigured = TRUE; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $convertLocPool, $poolEntry, $cleanCandidate, $candidatePath);
+  return $PathIsConfigured; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to enumerate every data location this installation may use.
 // / Accepts no arguments.
 // / Returns an array of entries, each carrying a Path & a Type, with the primary first.
@@ -1048,6 +1118,236 @@ function replyToManagerMessage($socketConnection, $replyPayload, $keyPurpose) {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $socketConnection, $encryptedReply, $bytesWritten, $replyPayload, $keyPurpose);
   return $ReplyWasSent; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to take a resource budget for an expensive operation & arm its return.
+// / Accepts a human readable operation name used only for logging.
+// / Returns TRUE when the operation may proceed.
+// /
+// / Every expensive operation takes a budget, not only conversion.
+// / Resource awareness existed to stop a machine from accepting more expensive work than it
+// / can carry, but only convertFiles() ever asked permission. Archiving, OCR & the user
+// / virus scan ran unmetered. That is not a small gap. Tesseract on a large PDF, 7-Zip on a
+// / multi-gigabyte folder & a ClamAV scan are each as heavy as the conversions the budget
+// / was written to hold back, & because they took nothing they also counted for nothing.
+// / A machine saturated by them still reported itself idle & kept approving conversions on
+// / top. The limiter was measuring a fraction of the load & guarding against a fraction of
+// / the problem.
+// /
+// / All four operations take the same $DefaultConversionCost & $DefaultExpectedRuntime.
+// / Weighting them separately would be more precise, but precision here would be invented;
+// / there are no measurements behind a number that says an archive costs half of an OCR.
+// / One unit of expensive work is a claim this code can actually support, & an administrator
+// / who needs finer control has the per-conversion limit table already.
+// /
+// / This FAILS OPEN exactly as requestConversionBudget() does. When resource awareness is
+// / unavailable the operation is approved & the core behaves as it did before.
+function takeOperationBudget($operationName) {
+  // / Set variables.
+  global $BudgetToken, $BudgetTokenIsReleased, $DefaultConversionCost, $DefaultExpectedRuntime, $Verbose, $EnableMemoryProtection;
+  $BudgetWasApproved = FALSE;
+  list ($BudgetWasApproved, $BudgetToken) = requestConversionBudget($DefaultConversionCost, $DefaultExpectedRuntime);
+  // / Every message names the operation the same way, so $operationName is a bare noun &
+  // / the sentence supplies the rest. A name of 'OCR operation' rendered 'The OCR operation
+  // / operation holds', & an article written into the sentence rendered 'A OCR'.
+  if (!$BudgetWasApproved) warningEntry('The '.$operationName.' operation was refused because the server is at its resource budget.');
+  else {
+    // / The token is out from here. Register its return before anything can die.
+    // / Every one of these operations has a fatal exit between taking a budget & returning
+    // / it, so the release cannot live only at the bottom of the caller's block.
+    $BudgetTokenIsReleased = FALSE;
+    register_shutdown_function('releaseBudgetOnShutdown');
+    if ($Verbose) logEntry('The '.$operationName.' operation holds budget token '.$BudgetToken.'.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $operationName);
+  return $BudgetWasApproved; }
+// / -----------------------------------------------------------------------------------
+// / A function to return a conversion budget token however the request ends.
+// / Registered as a shutdown handler the moment a budget is approved, & also called
+// / directly on the normal completion path. The guard makes it safe to run twice.
+// /
+// / A conversion has three fatal exits between taking a budget & returning it.
+// / Error 21 when the conversion itself fails, & errors 5002 & 5003 when the virus scan of
+// / the result cannot run or finds something. Each calls errorEntry with a fatal flag,
+// / which reaches quickDie & then die(), so the release that sits AFTER the conversion in
+// / the request handler was simply never reached.
+// / Nothing was lost permanently, because findStaleWorkers() tests whether the process is
+// / still alive & reclaims a token whose worker has exited. But that happens on the next
+// / sweep, so a failed conversion held its share of the budget for up to one
+// / $WorkerReapInterval, & on a small machine that is enough to refuse the next
+// / conversion that arrives. It also announced every ordinary failure as a warning about
+// / a worker that had to be reaped, which is not what happened & not what an
+// / administrator reading that warning should go looking for.
+// / A conversion that fails is a normal outcome. It returns what it borrowed on the way
+// / out, & the reaper goes back to being the fallback it was written to be.
+// /
+// / PHP runs a registered shutdown function after die(), so this is reached from a fatal
+// / exit as well as from a clean one. It writes to the log & to the manager socket only.
+// / Nothing here prints, because the connection to the user is already closed by then.
+function releaseBudgetOnShutdown() {
+  // / Set variables.
+  global $BudgetToken, $BudgetTokenIsReleased;
+  $BudgetWasReleased = TRUE;
+  // / Already returned, or there was never one to return.
+  if (!empty($BudgetTokenIsReleased)) return TRUE;
+  if (!isset($BudgetToken) or (string)$BudgetToken === '') return TRUE;
+  // / The flag is set BEFORE the attempt, not after. A release that fails has already
+  // / warned & handed the token to the reaper, & a second attempt from the other caller
+  // / would warn about the same token all over again.
+  $BudgetTokenIsReleased = TRUE;
+  $BudgetWasReleased = releaseConversionBudget($BudgetToken);
+  return $BudgetWasReleased; }
+// / -----------------------------------------------------------------------------------
+// / A function to return the resource budget an operation took.
+// / Accepts a human readable operation name used only for logging.
+// / Returns TRUE when the release was acknowledged, or when there was nothing to release.
+// / Safe to call when the budget was refused & safe to call twice, because the guard inside
+// / releaseBudgetOnShutdown() is what decides whether there is anything to do.
+function giveBackOperationBudget($operationName) {
+  // / Set variables.
+  global $Verbose, $EnableMemoryProtection;
+  $BudgetWasReleased = releaseBudgetOnShutdown();
+  // / releaseConversionBudget() has already warned if it could not deliver, so a failure
+  // / here is noted at the normal activity tier only.
+  if ($Verbose && !$BudgetWasReleased) logEntry('The '.$operationName.' operation budget token was not confirmed as returned. The reaper remains as the fallback.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $operationName);
+  return $BudgetWasReleased; }
+// / -----------------------------------------------------------------------------------
+// / THE CONVERSION BUDGET CLIENTS, moved from the application at v3.9.3.
+// / Asking the listener for a budget, extending one & handing it back are three halves of
+// / one conversation & they belong with the protocol they speak, not with the thing that
+// / happens to be spending the budget.
+// / They were tried in a manager first with killTargetedWorker & that was wrong for the
+// / same reason: a manager runs as its own process & is never loaded in request.
+// / Nothing in them knows what a conversion IS. They send a message & read a reply.
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to request permission to consume resources before a conversion begins.
+// / Accepts the conversion cost & the expected runtime in seconds.
+// / Returns an approval boolean & the issued budget token, in that order.
+// / This FAILS OPEN. When resource awareness is unavailable the request is approved & the
+// / core behaves exactly as it did before this component existed.
+function requestConversionBudget($conversionCost, $expectedRuntime) {
+  // / Set variables.
+  global $ResourceAwarenessActive, $ManagerSocketTimeout, $EffectiveConversionLimits, $EnableMemoryProtection, $Verbose;
+  $BudgetWasApproved = FALSE;
+  $BudgetToken = '';
+  $requestPayload = $replyPayload = array();
+  $messageWasDelivered = FALSE;
+  $requestSocket = '';
+  if (!$ResourceAwarenessActive) $BudgetWasApproved = TRUE;
+  else {
+    $requestSocket = buildManagerSocketPath('request-manager');
+    $requestPayload = array(
+      'RequestType' => 'budget',
+      'ConversionCost' => (int)$conversionCost,
+      'ExpectedRuntime' => (int)$expectedRuntime,
+      'WorkerPid' => getmypid());
+    // / The worker waits longer than the chain it is waiting on. The request crosses three
+    // / processes & each inner hop waits less than the one outside it, so a slow manager
+    // / times out inside rather than leaving the worker with half an answer.
+    list ($messageWasDelivered, $replyPayload) = sendManagerMessage($requestSocket, $requestPayload, 'worker', (int)$ManagerSocketTimeout * 3);
+    // / A listener that cannot be reached must not stop a conversion that would have run.
+    if (!$messageWasDelivered) {
+      warningEntry('The Core Manager listener did not answer a budget request. Proceeding without resource awareness.');
+      $BudgetWasApproved = TRUE; }
+    // / A delivered message with no usable reply is a listener that is slow or broken rather
+    // / than a budget that declined. Refusing here would stop a conversion nothing refused.
+    // / Only an explicit answer is allowed to refuse a conversion.
+    else if (!isset($replyPayload['Approved'])) {
+      warningEntry('The Core Manager listener returned no usable answer to a budget request. Proceeding without resource awareness.');
+      $BudgetWasApproved = TRUE; }
+    else if ($replyPayload['Approved'] === TRUE) {
+      $BudgetWasApproved = TRUE;
+      $BudgetToken = isset($replyPayload['BudgetToken']) ? (string)$replyPayload['BudgetToken'] : '';
+      // / The listener scales the configured maxima against current load & hands back the
+      // / table this session converts under. It is used for every file in this request.
+      if (isset($replyPayload['Limits']) && is_array($replyPayload['Limits'])) $EffectiveConversionLimits = $replyPayload['Limits']; 
+      if ($Verbose) logEntry('Worker '.getmypid().' was granted budget token '.$BudgetToken.'.'); }
+    else logEntry('A conversion was refused by the resource budget. '.(isset($replyPayload['Reason']) && $replyPayload['Reason'] !== '' ? $replyPayload['Reason'] : 'No reason was supplied.')); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $requestPayload, $replyPayload, $messageWasDelivered, $requestSocket, $conversionCost, $expectedRuntime);
+  return array($BudgetWasApproved, $BudgetToken); }
+// / -----------------------------------------------------------------------------------
+// / A function to request more runtime for a conversion that is still working.
+// / Accepts the budget token & the number of additional seconds required.
+// / Returns TRUE when the extension was granted or was not needed.
+function requestRuntimeExtension($budgetToken, $requestedSeconds) {
+  // / Set variables.
+  global $ResourceAwarenessActive, $ManagerSocketTimeout, $EnableMemoryProtection;
+  $ExtensionWasGranted = FALSE;
+  $requestPayload = $replyPayload = array();
+  $messageWasDelivered = FALSE;
+  if (!$ResourceAwarenessActive or (string)$budgetToken === '') $ExtensionWasGranted = TRUE;
+  else {
+    $requestPayload = array('RequestType' => 'extend', 'BudgetToken' => (string)$budgetToken, 'RequestedSeconds' => (int)$requestedSeconds, 'WorkerPid' => getmypid());
+    list ($messageWasDelivered, $replyPayload) = sendManagerMessage(buildManagerSocketPath('request-manager'), $requestPayload, 'worker', (int)$ManagerSocketTimeout * 3);
+    // / An extension that was never answered is granted, for the same reason a budget request is.
+    if (!isset($replyPayload['Approved'])) $ExtensionWasGranted = TRUE;
+    else if ($replyPayload['Approved'] === TRUE) $ExtensionWasGranted = TRUE;
+    else warningEntry('A runtime extension was refused. This worker may be reaped.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $requestPayload, $replyPayload, $messageWasDelivered, $budgetToken, $requestedSeconds);
+  return $ExtensionWasGranted; }
+// / -----------------------------------------------------------------------------------
+// / A function to report that a conversion has finished & release its budget.
+// / Accepts the budget token issued at approval.
+// / Returns TRUE when the release was acknowledged, or when there was nothing to release.
+function releaseConversionBudget($budgetToken) {
+  // / Set variables.
+  global $ResourceAwarenessActive, $ManagerSocketTimeout, $EnableMemoryProtection, $Verbose;
+  $BudgetWasReleased = FALSE;
+  $requestPayload = $replyPayload = array();
+  $messageWasDelivered = FALSE;
+  if (!$ResourceAwarenessActive or (string)$budgetToken === '') $BudgetWasReleased = TRUE;
+  else {
+    $requestPayload = array('RequestType' => 'release', 'BudgetToken' => (string)$budgetToken, 'WorkerPid' => getmypid());
+    list ($messageWasDelivered, $replyPayload) = sendManagerMessage(buildManagerSocketPath('request-manager'), $requestPayload, 'worker', (int)$ManagerSocketTimeout * 3);
+    if ($messageWasDelivered && isset($replyPayload['Approved']) && $replyPayload['Approved'] === TRUE) $BudgetWasReleased = TRUE;
+    else warningEntry('A budget token could not be released. The reaper will reclaim it.'); 
+    if ($Verbose && $BudgetWasReleased) logEntry('Worker '.getmypid().' released budget token '.(string)$budgetToken.'.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $requestPayload, $replyPayload, $messageWasDelivered, $budgetToken);
+  return $BudgetWasReleased; }
+// / -----------------------------------------------------------------------------------
+// / MOVED FROM THE APPLICATION AT v3.9.3. It sits beside the protocol it speaks.
+// / It was tried in workerManager.php first & that was wrong: a manager runs as its OWN
+// / PROCESS & is never loaded in request, so a CLI kill could not reach it there.
+// / readManagerState, sendManagerMessage & buildManagerSocketPath are all here, & this is
+// / a client of them rather than part of the manager it talks to.
+// / A function to ask the listener to terminate one tracked worker.
+// / Accepts the budget token or the process identifier of the worker.
+// / Returns TRUE when the worker was terminated.
+function killTargetedWorker($workerTarget) {
+  // / Set variables.
+  global $ResourceAwarenessActive, $ManagerSocketTimeout, $Lol, $EnableMemoryProtection;
+  $WorkerWasKilled = FALSE;
+  $requestPayload = $replyPayload = $workerRegistry = array();
+  $messageWasDelivered = $registryWasRead = FALSE;
+  $cleanTarget = trim((string)$workerTarget);
+  $targetPid = 0;
+  $targetToken = '';
+  if (!$ResourceAwarenessActive) print($Lol.'Resource awareness is unavailable, so no worker is tracked.'.$Lol);
+  else if ($cleanTarget === '') print($Lol.'Supply a worker identifier or process identifier.'.$Lol);
+  else {
+    // / A numeric target is a process identifier. Anything else is treated as a token.
+    if (ctype_digit($cleanTarget)) $targetPid = (int)$cleanTarget;
+    else {
+      $targetToken = preg_replace('/[^a-f0-9]/', '', strtolower($cleanTarget));
+      list ($registryWasRead, $workerRegistry) = readManagerState('workers');
+      if (isset($workerRegistry[$targetToken])) $targetPid = (int)$workerRegistry[$targetToken]['WorkerPid']; }
+    if ($targetPid < 2) print($Lol.'That worker is not tracked.'.$Lol);
+    else {
+      $requestPayload = array('RequestType' => 'kill', 'WorkerPid' => $targetPid, 'BudgetToken' => $targetToken);
+      list ($messageWasDelivered, $replyPayload) = sendManagerMessage(buildManagerSocketPath('core-manager'), $requestPayload, 'core', (int)$ManagerSocketTimeout);
+      if ($messageWasDelivered && isset($replyPayload['Approved']) && $replyPayload['Approved'] === TRUE) $WorkerWasKilled = TRUE;
+      print($Lol.($WorkerWasKilled ? 'Worker '.$targetPid.' terminated.' : 'Worker '.$targetPid.' could not be terminated.').$Lol); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $requestPayload, $replyPayload, $workerRegistry, $messageWasDelivered, $registryWasRead, $cleanTarget, $targetPid, $targetToken, $workerTarget);
+  return $WorkerWasKilled; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

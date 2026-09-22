@@ -128,6 +128,44 @@ WHAT TO GATHER BEFORE ASKING FOR HELP.
 
 
 ---------------------------------------------------------------------------------------------------------
+DEPENDENCY STATUS
+  misconfigured
+
+FILE
+  Resources/Engine/Cores/dependencyCore.php
+
+DESCRIPTION
+  The manifest names a PATH for a dependency & nothing executable is at that path.
+  This is not the same as a dependency being absent & is reported separately on purpose.
+  An operator who named a path wants to know the path is wrong. Telling them to install a
+  tool they already installed sends them the wrong way entirely.
+  A Binary containing a path separator is treated as a file the operator chose & is
+  verified where they put it. A Binary with no separator is a name & is looked up.
+  FIX. Correct the path in Resources/Engine/Contract/depends.php, or make the file
+  executable if it is there & is not.
+---------------------------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------------------
+DEPENDENCY STATUS
+  refused
+
+FILE
+  Resources/Engine/Cores/dependencyCore.php
+
+DESCRIPTION
+  A policy gate refused this entry before it was probed. The tool may well be installed &
+  working. Nothing was checked, because the entry was not allowed to be checked.
+  Two settings can cause it & the reported reason names which one.
+  --Engine Enforce GPL Compliant Deps-- refuses an entry declaring no license, or one not
+  on the compatible list. GPL-2.0 only is deliberately absent from that list, because it is
+  not compatible with GPLv3.
+  --Engine Allow Incomplete Deps-- refuses an entry missing License, Source or Purpose.
+  FIX. Complete the entry in Resources/Engine/Contract/depends.php, or turn the setting off
+  in engineConfig.php if the policy is not one this installation wants.
+---------------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-28003, <SESSION_IDENTIFIER>: This application names no configuration template, so none can be written!
 
@@ -656,7 +694,6 @@ ERROR DESCRIPTION
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-
 ~~START OF EXAMPLE~~
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
@@ -690,7 +727,6 @@ ERROR DESCRIPTION
   A brief and concise description of the error message as well as possible causes & solutions.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ~~END OF EXAMPLE~~
-
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1058,7 +1094,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-17, <SESSION_IDENTIFIER>: Could not display the GUI!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-17, <SESSION_IDENTIFIER>: Could not display GUI!
 
 FILE
   /convertCore.php
@@ -1270,7 +1306,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-300, <SESSION_IDENTIFIER>: 'Could not process extension for file <FILE_PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-300, <SESSION_IDENTIFIER>: Could not process extension for file <FILE_PATH>!
 
 FILE
   /convertCore.php
@@ -1336,7 +1372,44 @@ ERROR DESCRIPTION
   ClamAV has determined that this file is infected or suspicious.
   This error only occurs during virus scans.
   This error only occurs if --Virus Scanning-- is enabled in config.php.
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-505, <SESSION_IDENTIFIER>: A virus scan could not be completed for <FILE_PATH>!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The scanner pipeline was reached & did not finish. The file was NOT scanned.
+  Usually the chosen scanner is not installed, or is too old. --setup --check-depends says which.
+  The file is neither passed nor removed. A scan that did not run is not a clean result.
+---------------------------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-506, <SESSION_IDENTIFIER>: The Pipeline Core is unavailable, so <FILE_PATH> was not scanned!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Virus scanning dispatches through the Pipeline Core & it did not load. Nothing was scanned.
+  Check -v, which reports the Pipeline Core & every scanner pipeline.
+---------------------------------------------------------------------------------------------------------
+------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1384,7 +1457,6 @@ ERROR DESCRIPTION
   --Virus Scanning-- enabled & no usable scanner refuses to process files rather than processing
   them unscanned.
   Install ClamAV, or disable --Virus Scanning-- in config.php if scanning is not wanted.
-
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1469,7 +1541,6 @@ ERROR DESCRIPTION
   cause & read the DATA exposure line it prints to confirm the tree is protected.
 
 
-
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-1001, <SESSION_IDENTIFIER>: Could not create a directory at <FILE_PATH>!
@@ -1494,7 +1565,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-2000, <SESSION_IDENTIFIER>: Could not verify the Document Conversion Engine installation at <FILE_PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-2000, <SESSION_IDENTIFIER>: Could not locate the LibreOffice binary!
 
 FILE
   /Resources/Pipelines/Shared/libreOffice.php
@@ -2039,7 +2110,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5005, <SESSION_IDENTIFIER>: Could not archive <FILE_NAME> to <FILE_PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5005, <SESSION_IDENTIFIER>: Could not create <NEW_FILE_PATH> from <OLD_FILE_PATH>!
 
 FILE
   /convertCore.php
@@ -2488,7 +2559,8 @@ ERROR DESCRIPTION
   The device where data is stored has an insufficient amount of storage space available.
   The request contained character types or encoded data that are not supported.
   One of the $_POST or $_GET variables submitted was empty after sanitization.
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------
+------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2930,7 +3002,6 @@ ERROR DESCRIPTION
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13007, <SESSION_IDENTIFIER>: The extractor produced no files from the source archive!
@@ -3080,7 +3151,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13012, <SESSION_IDENTIFIER>: The archiver timed out!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13012, <SESSION_IDENTIFIER>: Rar output requires the rar utility, which is missing or too old!
 
 FILE
   /convertCore.php
@@ -3844,10 +3915,9 @@ ERROR DESCRIPTION
   Install ClamAV, or disable --User Virus Scanning-- in config.php if on-demand scanning is not wanted.
 
 
-
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-18000, <SESSION_IDENTIFIER>: Could not verify ScanCore Virus Scanner!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-18000, <SESSION_IDENTIFIER>: Could not verify the ScanCore Virus Scanner!
 
 FILE
   /convertCore.php
@@ -3948,7 +4018,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-20001, <SESSION_IDENTIFIER>: Could create a file at <FILE_PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-20001, <SESSION_IDENTIFIER>: Could not create a file at <FILE_PATH>!
 
 FILE
   /convertCore.php
@@ -4189,7 +4259,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-23002, <SESSION_IDENTIFIER>: Could not delete file <FILE_NAME>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-23002, <SESSION_IDENTIFIER>: Could not delete the requested file(s)!
 
 FILE
   /convertCore.php
@@ -4207,7 +4277,25 @@ ERROR DESCRIPTION
   This may be the result of incorrect file permission levels on the directory where the specified file or directory is stored.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-23003, <SESSION_IDENTIFIER>: The Files pipeline is not available, so nothing was deleted!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Deleting a file goes through the Files pipeline & it could not be loaded. Nothing was removed.
+  Run --pipeline --verify, which compares the pinned pipelines against those that loaded.
+---------------------------------------------------------------------------------------------------------
+------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -6132,8 +6220,25 @@ ERROR DESCRIPTION
   the -fp argument as root once the cause is corrected & read the exposure line it prints.
 
 
+----------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32017, <SESSION_IDENTIFIER>: The Environment Manager timer can only be installed while running as root!
 
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+FILE
+  /Resources/Engine/Cores/setupCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Installing the timer writes a systemd unit, which needs root. Nothing was installed.
+  Re-run the command with sudo.
+---------------------------------------------------------------------------------------------------------
+------------------------------------------------------
 ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-33000, <SESSION_IDENTIFIER>: A dependency operation was attempted without a valid authorization token!
 
@@ -6238,7 +6343,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34001, <SESSION_IDENTIFIER>: The Pipeline Manager could not verify a single conversion pipeline!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34001, <SESSION_IDENTIFIER>: The Pipeline Core could not verify a single conversion pipeline!
 
 FILE
   Resources/PipelineCore/pipelineCore.php

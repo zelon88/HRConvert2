@@ -1,7 +1,7 @@
 <?php if (php_sapi_name() !== 'cli') print('<!DOCTYPE HTML>'.PHP_EOL);
 // / -----------------------------------------------------------------------------------
 // / Copyright Information ...
-// / HRConvert2, Copyright on 9/4/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 9/21/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.8.8.
+// / v3.9.4.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -58,15 +58,6 @@ function verifyTime() {
   return array($TimeIsSet, $Date, $Time, $EpochTime); }
 // / -----------------------------------------------------------------------------------
 
-// / -----------------------------------------------------------------------------------
-// / A function to close the web server connection.
-function closeHRC2Connection() {
-  ignore_user_abort(TRUE);
-  if (function_exists('fastcgi_finish_request')) fastcgi_finish_request();
-  else {
-    if (ob_get_level() > 0) ob_end_flush();
-    flush(); } }
-// / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to sanitize input strings with varying degrees of tolerance.
@@ -142,22 +133,6 @@ function generateRandomNumber() {
   return array($RandomNumber, $RandomNumberCheck); }
 // / -----------------------------------------------------------------------------------
 
-// / -----------------------------------------------------------------------------------
-// / A function to generate the per-install secret used to derive session identifiers.
-// / 32 bytes gives 256 bits of entropy & returns as a 64 hexadecimal character string.
-function generateInstallSecret() {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $InstallSecret = FALSE;
-  $InstallSecretCheck = TRUE;
-  // / random_bytes() throws rather than returning a poor result when entropy is unavailable.
-  // / Fail closed. A predictable secret is worse than no installation at all.
-  try { $InstallSecret = bin2hex(random_bytes(32)); }
-  catch (Throwable $error) { $InstallSecretCheck = FALSE; }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $error);
-  return array($InstallSecret, $InstallSecretCheck); }
-// / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to confirm the config.php file carries every setting this core requires.
@@ -262,38 +237,6 @@ function verifyConfigVersion($RequiredConfigVersion) {
   return array($ConfigIsValid, $MissingConfigVars, $detectedConfigVersion); }
 // / -----------------------------------------------------------------------------------
 
-// / -----------------------------------------------------------------------------------
-// / A function to detect whether this installation is running inside a container.
-// / Returns TRUE only when two independent signals agree, because a false positive would
-// / silently relax the sandbox requirement on a bare metal server.
-// / A false negative is preferable. It refuses conversions in a container, which is
-// / visible & correctable, rather than running unprotected on hardware, which is neither.
-function verifyContainerEnvironment() {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $RunningInContainer = FALSE;
-  $dockerEnvExists = $cgroupIndicatesContainer = FALSE;
-  $cgroupContents = '';
-  // / Docker creates this file in every container it starts. Podman creates its own.
-  // / Neither file exists anywhere else, so either one on its own is conclusive.
-  if (file_exists('/.dockerenv') or file_exists('/run/.containerenv')) $dockerEnvExists = TRUE;
-  // / Several runtimes announce themselves in the environment.
-  if (getenv('container') !== FALSE && trim((string)getenv('container')) !== '') $dockerEnvExists = TRUE;
-  // / The init process of a container reports a container runtime in its cgroup path.
-  // / Under cgroup version two this often reads 0::/ and names nothing at all.
-  // / That is why this can no longer be required. An earlier release demanded that this
-  // / signal AND the file above both agree, which every modern Docker host fails, so a
-  // / container was never once detected & --Require Sandbox On Docker-- never applied.
-  $cgroupContents = @file_get_contents('/proc/1/cgroup');
-  if (is_string($cgroupContents)) {
-    if (strpos($cgroupContents, 'docker') !== FALSE or strpos($cgroupContents, 'containerd') !== FALSE or strpos($cgroupContents, 'kubepods') !== FALSE or strpos($cgroupContents, 'lxc') !== FALSE) $cgroupIndicatesContainer = TRUE; }
-  // / ANY ONE OF THESE IS CONCLUSIVE. None of them is true on a host that is not a
-  // / container, so requiring agreement between them only produced false negatives.
-  if ($dockerEnvExists or $cgroupIndicatesContainer) $RunningInContainer = TRUE;
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $dockerEnvExists, $cgroupIndicatesContainer, $cgroupContents);
-  return $RunningInContainer; }
-// / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to give a variable a second value without leaving the first one behind.
@@ -335,7 +278,15 @@ function redeclare(&$targetVariable, $newValue) {
   return $VariableIsRedeclared; }
 // / -----------------------------------------------------------------------------------
 
+
 // / -----------------------------------------------------------------------------------
+// / THIS STAYS IN THE APPLICATION & the reason is worth reading before moving it again.
+// / purgeSensitiveMemory calls it, & purgeSensitiveMemory is called by EVERYTHING,
+// / including code that runs long before the Engine is loaded. It was moved to the
+// / Engine once & took the whole application down at line 57.
+// / The pre Engine check did not catch it because it looks for TOP LEVEL calls, & this
+// / is reached from inside a function that everything calls. A caller that ubiquitous
+// / has no single call site to find.
 // / A function to determine what function called the function that called this function.
 // / This function uses naieve memory cleanup routine deliberately out of neccesity.
 // / Only a human brain could have written that last comment. Just sit with it. I promise it makes sense.
@@ -649,6 +600,43 @@ function resolveSecretFile($secretFile, $requiredSecretVersion) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / THIS STAYS. verifyInstallation calls it & verifyInstallation runs BEFORE the Engine
+// / is loaded, so an application needs its own. It was moved once & took -v down.
+// / The top level check does not catch this: verifyInstallation is what runs at top
+// / level, & this is one call deeper. Check the callers of the callers too.
+// / A function to detect whether this installation is running inside a container.
+// / Returns TRUE only when two independent signals agree, because a false positive would
+// / silently relax the sandbox requirement on a bare metal server.
+// / A false negative is preferable. It refuses conversions in a container, which is
+// / visible & correctable, rather than running unprotected on hardware, which is neither.
+function verifyContainerEnvironment() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $RunningInContainer = FALSE;
+  $dockerEnvExists = $cgroupIndicatesContainer = FALSE;
+  $cgroupContents = '';
+  // / Docker creates this file in every container it starts. Podman creates its own.
+  // / Neither file exists anywhere else, so either one on its own is conclusive.
+  if (file_exists('/.dockerenv') or file_exists('/run/.containerenv')) $dockerEnvExists = TRUE;
+  // / Several runtimes announce themselves in the environment.
+  if (getenv('container') !== FALSE && trim((string)getenv('container')) !== '') $dockerEnvExists = TRUE;
+  // / The init process of a container reports a container runtime in its cgroup path.
+  // / Under cgroup version two this often reads 0::/ and names nothing at all.
+  // / That is why this can no longer be required. An earlier release demanded that this
+  // / signal AND the file above both agree, which every modern Docker host fails, so a
+  // / container was never once detected & --Require Sandbox On Docker-- never applied.
+  $cgroupContents = @file_get_contents('/proc/1/cgroup');
+  if (is_string($cgroupContents)) {
+    if (strpos($cgroupContents, 'docker') !== FALSE or strpos($cgroupContents, 'containerd') !== FALSE or strpos($cgroupContents, 'kubepods') !== FALSE or strpos($cgroupContents, 'lxc') !== FALSE) $cgroupIndicatesContainer = TRUE; }
+  // / ANY ONE OF THESE IS CONCLUSIVE. None of them is true on a host that is not a
+  // / container, so requiring agreement between them only produced false negatives.
+  if ($dockerEnvExists or $cgroupIndicatesContainer) $RunningInContainer = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $dockerEnvExists, $cgroupIndicatesContainer, $cgroupContents);
+  return $RunningInContainer; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to verify that this installation is complete, current & usable.
 // / Returns a verification boolean, the path of the config file & the version reported by
 // / versionInfo.php, in that order.
@@ -709,19 +697,19 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
-  $HRConvertVersion = 'v3.9.3';
+  $HRConvertVersion = 'v3.9.4';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
   // / A release that changes no settings leaves this alone, so existing config files keep working.
   // / Any config.php version that is greater (newer) than the version listed below is considered acceptable.
-  $RequiredConfigVersion = 'v3.9.3';
+  $RequiredConfigVersion = 'v3.9.4';
   $RequiredConfigVersion = ltrim($RequiredConfigVersion, 'vV');
   // / Define the minimum acceptable GUI version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / Gui version that do not exactly match the version listed below are not considered acceptable.
   // / This is because Guis are not always guaranteed to be forward or reverse compatible.
-  $RequiredGuiVersion = 'v3.9.3';
+  $RequiredGuiVersion = 'v3.9.4';
   $RequiredGuiVersion = ltrim($RequiredGuiVersion, 'vV');
   // / Define the minimum acceptable Language Pack version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
@@ -1317,15 +1305,6 @@ function errorEntry($entry, $errorNumber, $die) {
   return $LogWritten; }
 // / -----------------------------------------------------------------------------------
 
-// / -----------------------------------------------------------------------------------
-// / A function to set an echo variable that adjusts printed URL's to https when SSL is enabled.
-function verifyEncryption() {
-  $EncryptionVerified = TRUE;
-  // / Determine if the connection is encrypted and adjust the $URLEcho accordingly.
-  if (!empty($_SERVER['HTTPS']) && $_SERVER['SERVER_PORT'] == 443) $URLEcho = 's';
-  else $URLEcho = '';
-  return array($EncryptionVerified, $URLEcho); }
-// / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to set or validate the token pair used to identify a session.
@@ -1726,71 +1705,6 @@ function verifyLanguage() {
   return array($LanguageIsSet, $LanguageToUse, $LanguageDir, $LanguageFiles); }
 // / -----------------------------------------------------------------------------------
 
-// / -----------------------------------------------------------------------------------
-// / A function to report whether a path is one of the configured data locations.
-// / Accepts the absolute path to test.
-// / Returns TRUE only when the path appears in the configured set.
-// / A scheduled sweep uses this so it can clean a location this worker is not using, while
-// / an arbitrary path is still refused.
-function convertLocIsConfigured($candidatePath) {
-  // / Set variables.
-  global $PrimaryConvertLoc, $ConvertLoc, $AdditionalConvertLocs, $DirSep, $EnableMemoryProtection;
-  $PathIsConfigured = FALSE;
-  $convertLocPool = $poolEntry = array();
-  $cleanCandidate = rtrim(trim((string)$candidatePath), $DirSep);
-  $convertLocPool = enumerateDataLocations($PrimaryConvertLoc, $ConvertLoc, $AdditionalConvertLocs);
-  if ($cleanCandidate !== '') {
-    foreach ($convertLocPool as $poolEntry) { if ($poolEntry['Path'] === $cleanCandidate) $PathIsConfigured = TRUE; } }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $convertLocPool, $poolEntry, $cleanCandidate, $candidatePath);
-  return $PathIsConfigured; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to ask the listener which data location this session must use.
-// / Accepts the daily hash & the session hash, in that order.
-// / Returns an absolute path as a string, ALWAYS.
-// / The managers hold the session map, so the answer is the same for every front end that
-// / shares this secret. With no listener the configured location is used, which is exactly
-// / how a standalone installation has always behaved.
-// / A command line invocation never asks. Administrative work operates on the configured
-// / location & must not stall waiting on a listener that may not be running.
-function requestConvertLoc($dailyHash, $sessionHash) {
-  // / Set variables.
-  global $ResourceAwarenessActive, $RunningFromCLI, $ManagerSocketTimeout, $DirSep, $Verbose, $EnableMemoryProtection, $PrimaryConvertLoc, $AdditionalConvertLocs, $ProtectedRootDirs, $ConvertLoc;
-  $ResolvedConvertLoc = '';
-  $requestPayload = $replyPayload = array();
-  $messageWasDelivered = FALSE;
-  $answerSource = 'config.php';
-  // / The fallback is discovery, not the configured location.
-  // / An earlier release fell back to whatever config.php named, which is correct for a
-  // / session that does not exist yet & CATASTROPHIC for one that does. A session already
-  // / holding files in a second data location was sent to the first, found an empty
-  // / directory, & reported that the user had uploaded nothing. The files were never lost.
-  // / They were simply no longer where anything was looking.
-  // / resolveConvertLoc reads the pool from disk & returns the location that actually holds
-  // / this session before it distributes anything, so an unanswered request degrades to the
-  // / correct answer rather than to a plausible one.
-  $ResolvedConvertLoc = rtrim(resolveDataLocation($dailyHash, $sessionHash, $PrimaryConvertLoc, $ConvertLoc, $AdditionalConvertLocs, $ProtectedRootDirs), $DirSep);
-  if (!$ResourceAwarenessActive) $answerSource = 'discovery, no listener component';
-  else if ($RunningFromCLI) $answerSource = 'discovery, command line context';
-  else {
-    $requestPayload = array('RequestType' => 'convertloc', 'DailyHash' => (string)$dailyHash, 'SessionHash' => (string)$sessionHash, 'WorkerPid' => getmypid());
-    list ($messageWasDelivered, $replyPayload) = sendManagerMessage(buildManagerSocketPath('request-manager'), $requestPayload, 'worker', (int)$ManagerSocketTimeout * 3);
-    // / An unanswered request is a listener that is slow or absent, not an instruction to
-    // / move this session somewhere else. The configured location is the safe answer.
-    // / A location discovered on disk is not a guess. It is where this session's files are.
-    if (!$messageWasDelivered) { warningEntry('The Core Manager listener did not answer a data location request. Using '.$ResolvedConvertLoc.', located by searching the configured pool for this session.'); $answerSource = 'discovery, listener silent'; }
-    else if (!isset($replyPayload['ConvertLoc']) or !is_string($replyPayload['ConvertLoc']) or trim($replyPayload['ConvertLoc']) === '') { warningEntry('The Core Manager listener returned no usable data location. Using '.$ResolvedConvertLoc.', located by searching the configured pool for this session.'); $answerSource = 'discovery, listener unusable'; }
-    else {
-      $ResolvedConvertLoc = rtrim(trim($replyPayload['ConvertLoc']), $DirSep);
-      $answerSource = 'listener'; } }
-  if ($Verbose) logEntry('Data Location: '.$ResolvedConvertLoc.', Source: '.$answerSource.'.');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  // / $ResolvedConvertLoc is not purged, because it is the return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $requestPayload, $replyPayload, $messageWasDelivered, $answerSource, $dailyHash, $sessionHash);
-  return $ResolvedConvertLoc; }
-// / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to set the global variables for the session.
@@ -2476,8 +2390,11 @@ function dataProtectionContents() {
     .'# this whole tree, which takes out every download & every share link on the server.'."\n"
     .'# An <IfModule> guard does NOT prevent that; it tests whether a module is loaded, not'."\n"
     .'# whether the directive is permitted, so a guarded php_flag still returns 500 under'."\n"
-    .'# AllowOverride FileInfo. Options & php_flag therefore live in the server'."\n"
-    .'# configuration only. Do not add them here.'."\n"
+    .'# AllowOverride FileInfo. Options, DirectoryIndex & php_flag therefore live in the'."\n"
+    .'# server configuration only. Do not add them here.'."\n"
+    .'# DirectoryIndex needs AllowOverride Indexes & Options needs AllowOverride Options.'."\n"
+    .'# Neither is implied by FileInfo, which is why naming index.html as the index cannot'."\n"
+    .'# be done from here & is done in the <Directory> block the -fp argument writes.'."\n"
     ."\n"
     .'<IfModule mod_headers.c>'."\n"
     .'  # index.html is this application\'s own document root protection page & is the one'."\n"
@@ -2903,35 +2820,6 @@ function verifySandboxPolicy($mayRepair) {
   return array($PolicyIsValid, $PolicyStatus); }
 // / -----------------------------------------------------------------------------------
 
-// / -----------------------------------------------------------------------------------
-// / A function to report whether an AppArmor profile is loaded into the kernel.
-// / Accepts the profile name as it is declared inside the profile file.
-// / Returns a loaded boolean & a status word, in that order.
-// / A profile on disk is not a profile in force.
-// / Writing one & running apparmor_parser only at the moment it is written means a load
-// / that failed, or a host that rebooted before AppArmor read it, leaves a file that
-// / matches perfectly & is enforcing nothing. The check reported ok & the sandbox stayed
-// / broken, which is the worst combination a diagnostic can produce.
-// / The loaded set is read from securityfs, which is what the kernel is actually using.
-function apparmorProfileIsLoaded($profileName) {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $ProfileIsLoaded = FALSE;
-  $ProfileStatus = 'unknown';
-  $profilesPath = '/sys/kernel/security/apparmor/profiles';
-  $loadedProfiles = '';
-  if (!file_exists($profilesPath)) $ProfileStatus = 'apparmor not active';
-  else if (!is_readable($profilesPath)) $ProfileStatus = 'not readable by this account';
-  else {
-    $loadedProfiles = (string)@file_get_contents($profilesPath);
-    if (strpos($loadedProfiles, (string)$profileName) !== FALSE) {
-      $ProfileIsLoaded = TRUE;
-      $ProfileStatus = 'loaded'; }
-    else $ProfileStatus = 'NOT LOADED'; }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $profilesPath, $loadedProfiles, $profileName);
-  return array($ProfileIsLoaded, $ProfileStatus); }
-// / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to unload an AppArmor profile from the kernel.
@@ -2973,32 +2861,6 @@ function unloadApparmorProfile($profilePath, $profileName) {
   return $ProfileWasUnloaded; }
 // / -----------------------------------------------------------------------------------
 
-// / -----------------------------------------------------------------------------------
-// / A function to load an AppArmor profile that has just been written.
-// / Accepts the absolute path of the profile.
-// / Returns TRUE when the parser accepted it.
-// / A profile that is written but never loaded changes nothing until the next reboot, which
-// / makes a repair look like it failed.
-function reloadApparmorProfile($profilePath) {
-  // / Set variables.
-  global $RunningAsRoot, $EnableMemoryProtection;
-  $ProfileWasLoaded = FALSE;
-  $parserBinary = '';
-  $parserOutput = array();
-  $parserExitCode = 1;
-  $parserBinary = locateDependency('apparmor_parser');
-  if (!$RunningAsRoot) warningEntry('An AppArmor profile was written but could not be loaded, because loading one requires root.');
-  else if ($parserBinary === '') warningEntry('An AppArmor profile was written but apparmor_parser is not installed, so it was not loaded.');
-  else {
-    exec(escapeshellarg($parserBinary).' -r '.escapeshellarg($profilePath).' 2>&1', $parserOutput, $parserExitCode);
-    if ($parserExitCode === 0) {
-      $ProfileWasLoaded = TRUE;
-      logEntry('The AppArmor profile at '.$profilePath.' was loaded.'); }
-    else warningEntry('apparmor_parser refused the profile at '.$profilePath.'. '.implode(' ', $parserOutput)); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $parserBinary, $parserOutput, $parserExitCode, $profilePath);
-  return $ProfileWasLoaded; }
-// / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to confirm the installed ImageMagick meets the minimum version required.
@@ -3666,12 +3528,17 @@ function showVersionInfo() {
   print($Lol.'Installed pipelines'.$Lol);
   if (!$PipelineCoreActive) print('  '.str_pad('Conversion pipelines', 28).'UNAVAILABLE, no conversion can run'.$Lol);
   else {
-    $conversionPipelineCount = $scannerPipelineCount = 0;
+    // / A line per KIND, & a kind with none installed is not shown at all rather than shown
+    // / as zero. An application with no scanners should not be told it has none.
+    $pipelineKindCounts = array('conversion' => 0, 'file' => 0, 'operation' => 0, 'scanner' => 0);
     if (is_array($Pipelines)) foreach ($Pipelines as $pipelineRecord) {
-      if ($pipelineRecord['Kind'] === 'scanner') $scannerPipelineCount++;
-      else $conversionPipelineCount++; }
-    print('  '.str_pad('Conversion pipelines', 28).$conversionPipelineCount.' of '.$conversionPipelineCount.' OK'.$Lol);
-    print('  '.str_pad('Security pipelines', 28).$scannerPipelineCount.' of '.$scannerPipelineCount.' OK'.$Lol); }
+      if (isset($pipelineKindCounts[$pipelineRecord['Kind']])) $pipelineKindCounts[$pipelineRecord['Kind']]++;
+      else $pipelineKindCounts['conversion']++; }
+    $pipelineKindLabels = array('conversion' => 'Conversion pipelines', 'file' => 'File pipelines',
+      'operation' => 'Operation pipelines', 'scanner' => 'Security pipelines');
+    foreach ($pipelineKindCounts as $pipelineKind => $pipelineKindCount) {
+      if ($pipelineKindCount === 0) continue;
+      print('  '.str_pad($pipelineKindLabels[$pipelineKind], 28).$pipelineKindCount.' of '.$pipelineKindCount.' OK'.$Lol); } }
 
   // / Dependencies. An optional one says so, because losing it costs a feature rather than
   // / a subsystem.
@@ -3842,7 +3709,7 @@ function showVersionInfo() {
   print($Lol);
   $VersionInfoDisplayed = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $conversionPipelineCount, $scannerPipelineCount, $pipelineRecord, $manifestVersion, $disabledFeatures, $disabledFeature, $modelsAreValid, $ocrToolsAreValid, $archiveToolsAreValid, $libreOfficeIsValid, $ffmpegBinary, $streamFfmpegBinary, $inkscapeBinary, $diaBinary, $scadBinary, $imageBinary, $assimpBinary, $meshlabBinary, $tesseractBinary, $pdftotextBinary, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary, $bwrapBinary, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $guiMatches, $langMatches, $langOk, $langTotal, $ebookBinary, $listenerStatus, $listenerIsRunning, $secretMode, $socketMode, $componentChecks, $componentPair, $componentName, $dependencyChecks, $dependencyState, $dependencyName, $subsystemChecks, $subsystemIsReady, $subsystemName, $failureCount, $maintainHtaccess, $apacheConfigIsInstalled, $dataIsProtected, $exposureStatus, $exposureDetail);
+  purgeSensitiveMemory($EnableMemoryProtection, $pipelineKindCounts, $pipelineKindLabels, $pipelineKind, $pipelineKindCount, $pipelineRecord, $manifestVersion, $disabledFeatures, $disabledFeature, $modelsAreValid, $ocrToolsAreValid, $archiveToolsAreValid, $libreOfficeIsValid, $ffmpegBinary, $streamFfmpegBinary, $inkscapeBinary, $diaBinary, $scadBinary, $imageBinary, $assimpBinary, $meshlabBinary, $tesseractBinary, $pdftotextBinary, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary, $bwrapBinary, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $guiMatches, $langMatches, $langOk, $langTotal, $ebookBinary, $listenerStatus, $listenerIsRunning, $secretMode, $socketMode, $componentChecks, $componentPair, $componentName, $dependencyChecks, $dependencyState, $dependencyName, $subsystemChecks, $subsystemIsReady, $subsystemName, $failureCount, $maintainHtaccess, $apacheConfigIsInstalled, $dataIsProtected, $exposureStatus, $exposureDetail);
   return $VersionInfoDisplayed; }
 // / -----------------------------------------------------------------------------------
 
@@ -3940,11 +3807,20 @@ function showHelpInfo() {
 // / one falls through to the web interface, which is what a request with no arguments is.
 function parseCommandLine() {
   // / Set variables.
-  global $Lol, $DeleteThreshold, $ConvertLoc, $ConvertTempDir, $RunningFromCLI, $RunningAsRoot, $CurrentUser, $ApacheUser, $ResourceAwarenessActive, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $EnableMemoryProtection, $DirSep, $ProtectedRootDirs, $ManagerSocketTimeout, $InstLoc, $CoreLoaded;
+  global $Lol, $DeleteThreshold, $ConvertLoc, $ConvertTempDir, $RunningFromCLI, $RunningAsRoot, $CurrentUser, $ApacheUser, $ResourceAwarenessActive, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $EnableMemoryProtection, $DirSep, $ProtectedRootDirs, $ManagerSocketTimeout, $InstLoc, $CoreLoaded, $ApplicationArgumentHandler, $Pipelines, $DependsManifest;
   $CommandLineHandled = $cliTempCleaned = $cliTempDeepCleaned = $cliDataCleaned = $cliDataDeepCleaned = FALSE;
   $UserType = 'web';
   $cliArgumentCount = $cliThreshold = $cliPathsCorrected = 0;
   $cliArguments = $cliParts = $cliStatus = $listenerCommands = $setupCommands = array();
+  $manifestPath = '';
+  $manifestNames = $missingDependencies = $manifestEntry = array();
+  $declaredDependency = $missingDependency = '';
+  $declaringCount = 0;
+  $pipelineAction = $pipelineWanted = $pipelineName = '';
+  $pipelineRecord = $pinnedPipelines = array();
+  $pipelineFailures = 0;
+  $pinnedVersion = '';
+  $applicationHandler = '';
   $cliCommand = $rawFirstArg = $cliTarget = $cliSecondTarget = $cliWhoami = $cliSetupVersion = '';
   $cliConfirmed = $cliListenerAuthorized = $cliActionConfirmed = $cliPermissionsFixed = $cliListenerRunning = $cliSetupIsAvailable = FALSE;
   $cliDependencyIsAvailable = $cliDependenciesReady = $cliSetupSucceeded = $cliMessageDelivered = FALSE;
@@ -3977,7 +3853,7 @@ function parseCommandLine() {
     // / Every command the listener owns. Recognized for all users & refused for the wrong one.
     $listenerCommands = array('-l', '--listen', '-k', '--kill', '--kill-all-workers', '--kill-every-worker');
     // / Every command Setup Core owns. The component decides what each one requires.
-    $setupCommands = array('--config', '--setup');
+    $setupCommands = array('--config', '--setup', '--pipeline');
     // / An option belongs to a command. Typed on its own it is not a command, & saying only
     // / that it is unrecognized sends an operator hunting for a typo that is not there.
     // / Naming the parent is the difference between a dead end & an answer.
@@ -3989,7 +3865,11 @@ function parseCommandLine() {
       '--install-service' => '--setup',
       '--reset-all-defaults' => '--config', '--reset-default-section' => '--config',
       '--reset-default-variable' => '--config', '--backup' => '--config', '--repair' => '--config',
-      '--view' => '--config');
+      '--view' => '--config',
+        // / --pipeline reaches into the components themselves, the way --setup reaches into
+        // / dependencies & --config reaches into settings. Same shape, same place.
+        '--list' => '--pipeline', '--describe' => '--pipeline', '--verify' => '--pipeline',
+        '--check-depends' => '--pipeline');
     // / A command line invocation with no argument is a request for help.
     if ($cliArgumentCount < 1) {
       logEntry('Command line invocation with no argument. Displaying help.');
@@ -4004,6 +3884,28 @@ function parseCommandLine() {
       if (isset($cliParts[1])) $cliTarget = strtolower(trim($cliParts[1]));
       else $cliTarget = isset($cliArguments[1]) ? trim($cliArguments[1]) : '';
       $cliSecondTarget = isset($cliArguments[2]) ? trim($cliArguments[2]) : '';
+        // / THE APPLICATION'S NAMESPACE IS CHECKED FIRST, before any engine argument.
+        // / Everything beginning --app belongs to the application. Checking it first means
+        // / the engine never has to know what the application accepts, & an application
+        // / argument can never collide with an engine one however many are added later.
+        // / It is checked HERE rather than at the end because there are three separate
+        // / if chains below & the last one is not reached when an earlier one has already
+        // / claimed the argument. A branch added to the end of the last chain lints, runs
+        // / & never fires, which is exactly what happened the first time this was tried.
+        // / A PREFIX RATHER THAN A REGISTRY OF NAMES. A registry means asking the
+        // / application what it accepts before an unknown argument can be reported, & an
+        // / application that answers badly makes the core report nonsense.
+        if (strpos($cliCommand, '--app') === 0) {
+          $applicationHandler = (isset($ApplicationArgumentHandler) && is_string($ApplicationArgumentHandler)) ? trim($ApplicationArgumentHandler) : '';
+          if ($applicationHandler !== '' && function_exists($applicationHandler)) {
+            logEntry('The application argument '.$cliCommand.' was handed to '.$applicationHandler.'.');
+            $applicationHandler($cliCommand, $cliTarget, $cliSecondTarget); }
+          else {
+            warningEntry('The application argument '.$cliCommand.' was supplied & this application declares no handler.');
+            print($Lol.'This application accepts no '.$cliCommand.' command.'.$Lol);
+            print('Arguments beginning --app belong to the application & this one declares none.'.$Lol.$Lol); }
+          $CommandLineHandled = TRUE;
+          $UserType = 'cli'; }
       // / Handle the -v or --version arguments.
       if ($cliCommand === '-v' or $cliCommand === '--version') {
         logEntry('Command line invocation. Displaying version information.');
@@ -4085,7 +3987,87 @@ function parseCommandLine() {
       else if (in_array($cliCommand, $setupCommands, TRUE)) {
         // / The configuration utility. Setup Core owns the model, so it is the only
         // / component this path requires.
-        if ($cliCommand === '--config') {
+        // / --pipeline reaches into the components the way --setup reaches into dependencies.
+        // / It reports what is INSTALLED & verified rather than what is pinned, because a
+        // / pinned pipeline that does not load is exactly the failure worth surfacing. Two
+        // / scanner pipelines were pinned, installed, valid & never enumerated for an entire
+        // / release, & nothing reported it.
+        if ($cliCommand === '--pipeline') {
+          $pipelineAction = ($cliTarget !== '') ? $cliTarget : '--list';
+          if (!is_array($Pipelines) or empty($Pipelines)) print($Lol.'No pipeline is loaded. The Pipeline Core reports why.'.$Lol.$Lol);
+          else if ($pipelineAction === '--list' or $pipelineAction === '') {
+            print($Lol.'Installed pipelines'.$Lol.$Lol);
+            printf('  %-14s %-11s %-18s %s'.$Lol, 'PIPELINE', 'KIND', 'USAGE', 'VERSION');
+            foreach ($Pipelines as $pipelineName => $pipelineRecord) printf('  %-14s %-11s %-18s %s'.$Lol, $pipelineName, $pipelineRecord['Kind'], implode(', ', $pipelineRecord['Usage']), $pipelineRecord['Version']);
+            print($Lol); }
+          else if ($pipelineAction === '--describe') {
+            $pipelineWanted = ($cliSecondTarget !== '') ? $cliSecondTarget : '';
+            if ($pipelineWanted === '') print($Lol.'Name a pipeline to describe. --pipeline --describe Image'.$Lol.$Lol);
+            else if (!isset($Pipelines[$pipelineWanted])) print($Lol.'No pipeline named '.$pipelineWanted.' is loaded.'.$Lol.$Lol);
+            else {
+              $pipelineRecord = $Pipelines[$pipelineWanted];
+              print($Lol.$pipelineWanted.$Lol.$Lol);
+              printf('  %-16s %s'.$Lol, 'Kind', $pipelineRecord['Kind']);
+              printf('  %-16s %s'.$Lol, 'Usage', implode(', ', $pipelineRecord['Usage']));
+              printf('  %-16s %s'.$Lol, 'Version', $pipelineRecord['Version']);
+              printf('  %-16s %s'.$Lol, 'Entry point', $pipelineRecord['EntryPoint']);
+              printf('  %-16s %s'.$Lol, 'Subsystem', isset($pipelineRecord['Subsystem']) ? $pipelineRecord['Subsystem'] : 'none');
+              printf('  %-16s %s'.$Lol, 'Reads', empty($pipelineRecord['Capabilities']['Input']) ? 'every file' : implode(' ', $pipelineRecord['Capabilities']['Input']));
+              printf('  %-16s %s'.$Lol, 'Writes', empty($pipelineRecord['Capabilities']['Output']) ? 'nothing' : implode(' ', $pipelineRecord['Capabilities']['Output']));
+              print($Lol); } }
+          else if ($pipelineAction === '--verify') {
+            // / PINNED AGAINST LOADED. The one comparison nothing else makes.
+            $pinnedPipelines = getAcceptedPipelines();
+            $pipelineFailures = 0;
+            print($Lol.'Pinned against loaded'.$Lol.$Lol);
+            foreach ($pinnedPipelines as $pipelineName => $pinnedVersion) {
+              if (isset($Pipelines[$pipelineName])) printf('  %-14s %s'.$Lol, $pipelineName, 'OK, '.$Pipelines[$pipelineName]['Version']);
+              else { $pipelineFailures++; printf('  %-14s %s'.$Lol, $pipelineName, 'PINNED & NOT LOADED, expected '.$pinnedVersion); } }
+            if ($pipelineFailures > 0) print($Lol.$pipelineFailures.' pinned pipeline(s) did not load. See the warnings above.'.$Lol.$Lol);
+            else print($Lol.'All '.count($pinnedPipelines).' pinned pipeline(s) loaded.'.$Lol.$Lol); }
+          else if ($pipelineAction === '--check-depends') {
+            // / What the pipelines declare, against what the manifest holds.
+            // / A pipeline names the binaries it shells out to. The manifest decides what
+            // / gets installed. Nothing compared the two, so a pipeline could depend on a
+            // / tool no installation would ever be told to install.
+            // / It REPORTS rather than writes. Adding an entry to the manifest is an edit to
+            // / a file the application owns, & doing it silently during a boot that happens
+            // / on every request is not a repair, it is a surprise.
+            $manifestNames = array();
+            // / The manifest is a global the Dependency Core has already loaded. There is no
+            // / accessor for it & inventing one here would be a second way to read the same
+            // / array, which is how two readers drift.
+            // / The manifest is loaded by the Dependency Core & the Dependency Core only loads
+            // / for --setup, so at this point the global is empty. It is required here when
+            // / it is not already present.
+            // / Checked rather than assumed: reporting every dependency as missing, including
+            // / two that were plainly in the manifest, is what surfaced this.
+            if (!isset($DependsManifest) or !is_array($DependsManifest)) {
+              $manifestPath = $InstLoc.$DirSep.'Resources'.$DirSep.'Engine'.$DirSep.'Contract'.$DirSep.'depends.php';
+              if (file_exists($manifestPath)) require_once($manifestPath); }
+            if (isset($DependsManifest) && is_array($DependsManifest)) foreach ($DependsManifest as $manifestEntry) $manifestNames[] = (string)$manifestEntry['Name'];
+            else warningEntry('The dependency manifest could not be read, so nothing could be compared against it.');
+            $missingDependencies = array();
+            foreach ($Pipelines as $pipelineName => $pipelineRecord) {
+              if (empty($pipelineRecord['Dependencies'])) continue;
+              foreach ($pipelineRecord['Dependencies'] as $declaredDependency) {
+                if (in_array($declaredDependency, $manifestNames, TRUE)) continue;
+                $missingDependencies[] = $pipelineName.' needs '.$declaredDependency; } }
+            print($Lol.'Pipeline dependencies against the manifest'.$Lol.$Lol);
+            $declaringCount = 0;
+            foreach ($Pipelines as $pipelineName => $pipelineRecord) {
+              if (empty($pipelineRecord['Dependencies'])) continue;
+              $declaringCount++;
+              printf('  %-14s %s'.$Lol, $pipelineName, implode(', ', $pipelineRecord['Dependencies'])); }
+            if ($declaringCount === 0) print('  No pipeline declares a dependency yet.'.$Lol);
+            if (empty($missingDependencies)) print($Lol.'Every declared dependency is in the manifest.'.$Lol.$Lol);
+            else {
+              print($Lol.'Not in the manifest. These would never be installed.'.$Lol);
+              foreach ($missingDependencies as $missingDependency) print('  '.$missingDependency.$Lol);
+              print($Lol.'Add them to Resources/Engine/Contract/depends.php.'.$Lol.$Lol); } }
+          else print($Lol.'Unrecognized. --pipeline accepts --list, --describe, --verify & --check-depends.'.$Lol.$Lol);
+          $CommandLineHandled = TRUE; }
+        else if ($cliCommand === '--config') {
           list ($cliSetupIsAvailable, $cliSetupVersion) = verifyCoreComponent('Setup Core', 'Engine'.$DirSep.'Cores'.$DirSep.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
           if (!$cliSetupIsAvailable) {
             print($Lol.'The Setup Core component is unavailable.'.$Lol);
@@ -4348,7 +4330,7 @@ function parseCommandLine() {
   // / Determine if the user is using the application via command line (CLI) or Apache+PHP through a web browser.
   if ($CommandLineHandled === TRUE) $UserType = 'cli';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $cliEnvironmentFile, $cliPassCompleted, $cliPassFindings, $cliPassFinding, $cliMessageDelivered, $cliMessageReply, $cliCacheWasBuilt, $cliDetectedCount, $cliStartupKey, $cliArguments, $cliCommand, $cliArgumentCount, $rawFirstArg, $cliParts, $cliTarget, $cliSecondTarget, $cliThreshold, $cliTempCleaned, $cliTempDeepCleaned, $cliDataCleaned, $cliDataDeepCleaned, $cliConfirmed, $cliListenerAuthorized, $cliActionConfirmed, $cliPermissionsFixed, $cliListenerRunning, $cliPathsCorrected, $cliStatus, $cliWhoami, $cliSetupIsAvailable, $cliSetupVersion, $listenerCommands, $setupCommands, $cliDependencyIsAvailable, $cliDependencyVersion, $cliSubsystem, $cliDependencyToken, $cliDependencyFindings, $cliDependenciesReady, $cliSetupSucceeded, $cliSetupCount, $subOptionOwners, $cliOptionalProblems);
+  purgeSensitiveMemory($EnableMemoryProtection, $manifestPath, $manifestNames, $missingDependencies, $manifestEntry, $declaredDependency, $missingDependency, $declaringCount, $pinnedVersion, $pipelineAction, $pipelineWanted, $pipelineName, $pipelineRecord, $pinnedPipelines, $pipelineFailures, $applicationHandler, $cliEnvironmentFile, $cliPassCompleted, $cliPassFindings, $cliPassFinding, $cliMessageDelivered, $cliMessageReply, $cliCacheWasBuilt, $cliDetectedCount, $cliStartupKey, $cliArguments, $cliCommand, $cliArgumentCount, $rawFirstArg, $cliParts, $cliTarget, $cliSecondTarget, $cliThreshold, $cliTempCleaned, $cliTempDeepCleaned, $cliDataCleaned, $cliDataDeepCleaned, $cliConfirmed, $cliListenerAuthorized, $cliActionConfirmed, $cliPermissionsFixed, $cliListenerRunning, $cliPathsCorrected, $cliStatus, $cliWhoami, $cliSetupIsAvailable, $cliSetupVersion, $listenerCommands, $setupCommands, $cliDependencyIsAvailable, $cliDependencyVersion, $cliSubsystem, $cliDependencyToken, $cliDependencyFindings, $cliDependenciesReady, $cliSetupSucceeded, $cliSetupCount, $subOptionOwners, $cliOptionalProblems);
   return array($CommandLineHandled, $UserType); }
 // / -----------------------------------------------------------------------------------
 
@@ -4461,61 +4443,45 @@ function getExtension($pathToFile) {
   return $Pathinfo;  }
 // / -----------------------------------------------------------------------------------
 
-// / -----------------------------------------------------------------------------------
-// / A function to return the filesize of a specified file.
-function getFilesize($File) {
-  // / Set variables.
-  $Size = @filesize($File);
-  // / Determine the most efficient unit of measure to represent the specified value in.
-  if ($Size < 1024) $Size = $Size." Bytes";
-  elseif (($Size < 1048576) && ($Size > 1023)) $Size = round($Size / 1024, 1)." KB";
-  elseif (($Size < 1073741824) && ($Size > 1048575)) $Size = round($Size / 1048576, 1)." MB";
-  else $Size = round($Size/1073741824, 1)." GB";
-  return $Size; }
-// / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to sanitize & verify an array of files.
 function getFiles($pathToFiles) {
   // / Set variables.
-  global $DangerousFiles, $DirSep, $EnableMemoryProtection;
-  $Files = $dirtyFileArr = array();
-  if (is_dir($pathToFiles)) $dirtyFileArr = @scandir($pathToFiles);
-  // / Iterate through each detected file & make sure it's not dangerous before adding it to the output array.
-  foreach ($dirtyFileArr as $dirtyFile) {
-    $dirtyExt = getExtension($pathToFiles.$DirSep.$dirtyFile);
-    // / This filter compared two different shapes & therefore never fired.
-    // / getExtension() returns an extension with NO leading dot, & $DangerousFiles holds
-    // / dotted extensions such as .html alongside bare filenames such as index.html. A
-    // / dotless extension matches neither form, so every dangerous file this list exists to
-    // / hide was handed to the caller anyway. The only entry it ever matched was NULL, which
-    // / a file with no extension matches loosely, & that is why the fault was not obvious.
-    // / convertGui2.php hid the result a second time by filtering on $Allowed, so the list
-    // / looked correct on screen. Anything that trusted this function instead got index.html
-    // / back & then tried to work with it.
-    // / All three forms are tested now. The dotless form is kept so that a file with no
-    // / extension is still excluded exactly as it was before.
-    $dirtyIsDangerous = FALSE;
-    if (in_array(strtolower($dirtyExt), $DangerousFiles)) $dirtyIsDangerous = TRUE;
-    if (in_array('.'.strtolower($dirtyExt), $DangerousFiles)) $dirtyIsDangerous = TRUE;
-    if (in_array(strtolower($dirtyFile), $DangerousFiles)) $dirtyIsDangerous = TRUE;
-    // / Add the selected file to the array of clean files only if it is safe to handle.
-    if (!$dirtyIsDangerous && !is_dir($pathToFiles.$DirSep.$dirtyFile)) array_push($Files, $dirtyFile);
-    else if ($dirtyExt === '.' or $dirtyExt === '..') errorEntry('Could not display file '.$dirtyFile.'!', 400, FALSE); }
+  global $DangerousFiles, $Pipelines, $EnableMemoryProtection;
+  $Files = array();
+  $listedNames = array();
+  $directoryWasRead = FALSE;
+  $candidateName = $candidateExtension = '';
+  $candidateIsDangerous = FALSE;
+  $filesPipelineIsReady = FALSE;
+  $filesEntryPoint = '';
+  // / Listing is the COMPONENT & filtering is the POLICY.
+  // / The Files pipeline reads the directory & returns plain names. Which of those names
+  // / this application is willing to show is $DangerousFiles, which no other application
+  // / has & an engine cannot guess.
+  // / The pipeline omits directories & the dot entries, so nothing here has to.
+  // / A pipeline's code is loaded ON DEMAND & is not loaded by enumeration.
+  // / Enumeration reads pipelineConfig.php, which declares what a pipeline IS. The functions
+  // / live in pipeline.php & are required by loadPipelineCore, which until now only ran when
+  // / a conversion dispatched.
+  // / Checking function_exists without loading first is therefore always FALSE on a page
+  // / render, which is exactly what happened: an upload landed & the file list came back
+  // / empty because the pipeline that lists it had never been loaded.
+  // / loadPipelineCore is idempotent, it requires once, so asking every time costs nothing.
+  list ($filesPipelineIsReady, $filesEntryPoint) = loadPipelineCore('Files');
+  if ($filesPipelineIsReady && function_exists('listFilesInDirectory')) list ($directoryWasRead, $listedNames) = listFilesInDirectory($pathToFiles);
+  else warningEntry('The Files pipeline could not be loaded, so no file list could be built.');
+  if ($directoryWasRead) foreach ($listedNames as $candidateName) {
+    $candidateExtension = getExtension($candidateName);
+    $candidateIsDangerous = FALSE;
+    if (in_array(strtolower($candidateExtension), $DangerousFiles)) $candidateIsDangerous = TRUE;
+    if (in_array('.'.strtolower($candidateExtension), $DangerousFiles)) $candidateIsDangerous = TRUE;
+    if (in_array(strtolower($candidateName), $DangerousFiles)) $candidateIsDangerous = TRUE;
+    if (!$candidateIsDangerous) array_push($Files, $candidateName); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $dirtyFile, $pathToFiles, $dirtyFileArr, $dirtyExt, $dirtyIsDangerous);
+  purgeSensitiveMemory($EnableMemoryProtection, $filesPipelineIsReady, $filesEntryPoint, $pathToFiles, $listedNames, $directoryWasRead, $candidateName, $candidateExtension, $candidateIsDangerous);
   return $Files; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to return the file time of a specified symlink.
-function symlinkmtime($symlinkPath) {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $Stat = @lstat($symlinkPath);
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $symlinkPath);
-  return isset($Stat['mtime']) ? $Stat['mtime'] : NULL; }
 // / -----------------------------------------------------------------------------------
 
 
@@ -4936,51 +4902,39 @@ function applicationEnvironmentFindings() {
 
 
 // / -----------------------------------------------------------------------------------
-// / A function to scan an input file or folder for viruses with ClamAV.
+// / A function to scan a path & act on the verdict.
+// / Accepts the path. Returns whether the scan ran & whether a threat was found.
+// /
+// / IT DISPATCHES TO A SCANNER PIPELINE & does not know which scanner ran.
+// / This used to shell out to ClamAV directly, which meant the two scanner pipelines were
+// / pinned, installed, verified & never actually used by the application that shipped them.
+// / A scanner is chosen by NAME through $DefaultVirusScanner, so an installation can run
+// / ScanCore where ClamAV is not wanted & this function does not change.
+// /
+// / THE SCANNER REPORTS & THE CALLER DECIDES. A pipeline never deletes anything. Removing an
+// / infected file is a policy this application holds & another application may not want.
+// /
+// / NOTHING THE SCANNER SAID IS REPEATED ANYWHERE. Not to the user & not to the log. The
+// / findings are read for a verdict & discarded. A signature name comes from a database this
+// / application does not control & is chosen by whoever wrote it.
 function virusScan($path) {
   // / Set variables.
-  global $ClamLogFile, $AllowUserVirusScan, $MinimumClamVersion, $Lol, $Lolol, $EnableMemoryProtection;
+  global $AllowUserVirusScan, $DefaultVirusScanner, $Verbose, $EnableMemoryProtection;
   $ScanComplete = FALSE;
   $VirusFound = FALSE;
-  $returnData = $scanCommand = $clamLogFileDATA = '';
-  $clamBinary = FALSE;
-  // / Locate & verify the scanner before trusting anything this function is about to say.
-  // / A scan that cannot run reports FAILURE, never a clean result. $ScanComplete therefore
-  // / starts FALSE & is earned, where it used to start TRUE & be assumed. Every caller
-  // / already answers a FALSE with a fatal 'Could not perform a virus scan!', so refusing
-  // / here lands in handling that already exists & already behaves correctly.
-  $clamBinary = verifyClamVersion(isset($MinimumClamVersion) ? (string)$MinimumClamVersion : '');
-  if ($clamBinary === FALSE) errorEntry('ClamAV is missing, too old, or unusable, so '.$path.' was NOT scanned!', 502, FALSE);
+  $scanFindings = array();
+  $scannerUsed = '';
+  if (!function_exists('runVirusScan')) errorEntry('The Pipeline Core is unavailable, so '.$path.' was not scanned!', 506, FALSE);
   else {
-    $ScanComplete = TRUE;
-    // / Every argument is escaped. A filename carrying a shell metacharacter would otherwise
-    // / be executed rather than scanned, & a filename is the one thing a user controls here.
-    // / The binary is the verified path rather than a bare command name, so the clamscan
-    // / whose version was checked is provably the clamscan that runs.
-    // / The scan runs under the same resource ceiling every conversion runs under. A scan is
-    // / one of the most expensive things this application does & it was the only expensive
-    // / thing running with nothing above it.
-    // / The ceiling wraps clamscan ALONE & not the pipeline. grep costs nothing worth
-    // / measuring, & wrapping the pipe would put a shell inside the scope rather than the
-    // / scanner, which measures the wrong process & keeps the unit alive for the wrong reason.
-    $scanCommand = limitCommand(escapeshellarg($clamBinary).' -r '.escapeshellarg($path), 'clamav');
-    $returnData = shell_exec($scanCommand.' | grep FOUND >> '.escapeshellarg($ClamLogFile));
-    $clamLogFileDATA = @file_get_contents($ClamLogFile); }
-  // / Check if ClamAV found an infection in the specified file.
-  if (strpos($clamLogFileDATA, 'Virus Detected') !== FALSE or strpos($clamLogFileDATA, 'FOUND') !== FALSE) {
-    // / $virusFound, lower case, was assigned here instead of the $VirusFound this function
-    // / returns. A lower case name cannot leave the function it is written in, so the
-    // / detection was recorded into a local that nothing ever read & the function reported
-    // / VirusFound as FALSE for a file it had just found a virus in. Error 501 is fatal.
-    // / Execution stopped anyway & the fault never surfaced, which is exactly how it
-    // / survived. The caller's own 'Virus detected!' branch has never once run.
-    $ScanComplete = $VirusFound = TRUE;
-    // / If the specified file exists, is infected, is not a directory, & $AllowUserVirusScan is set to FALSE then delete the infected file. 
-    if (file_exists($path)) if (is_file($path) && !is_dir($path) && !$AllowUserVirusScan) @unlink($path);
-    errorEntry('There were potentially infected files detected at '.$path.'!', 500, FALSE);
-    errorEntry('ClamAV output the following: '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))), 501, TRUE); }
+    list ($ScanComplete, $VirusFound, $scanFindings, $scannerUsed) = runVirusScan(array($path), isset($DefaultVirusScanner) ? (string)$DefaultVirusScanner : '');
+    if (!$ScanComplete) errorEntry('A virus scan could not be completed for '.$path.'!', 505, FALSE);
+    else if ($Verbose) logEntry('Scanned '.$path.' with '.($scannerUsed !== '' ? $scannerUsed : 'the default scanner').'. Findings: '.count($scanFindings).'.');
+    if ($VirusFound) {
+      // / The file goes unless the operator asked to keep it for their own inspection.
+      if (!$AllowUserVirusScan && is_file($path) && !is_dir($path)) @unlink($path);
+      errorEntry('There were potentially infected files detected at '.$path.'!', 500, FALSE); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $scanCommand, $clamBinary, $clamLogFileDATA, $path);
+  purgeSensitiveMemory($EnableMemoryProtection, $scanFindings, $scannerUsed, $path);
   return array($ScanComplete, $VirusFound); }
 // / -----------------------------------------------------------------------------------
 
@@ -5070,6 +5024,8 @@ function maintainDataProtection() {
 function verifyRequiredDirs() {
   // /  Set variables.
   global $ConvertLoc, $RequiredDirs, $RequiredIndexes, $RequiredCleanupFolders, $Verbose, $PermissionLevels, $ApacheUser, $DirSep, $InstLoc, $RunningAsRoot, $EnableMemoryProtection;
+  $directoriesVerified = $directoriesProtected = 0;
+  $locationIsProtected = $protectionWasWritten = FALSE;
   $RequiredDirsExist = TRUE;
   $cleanupContents = array();
   $requiredDir = $requiredIndex = $requiredCleanupFolder = $cleanupEntry = $cleanupPath = '';
@@ -5092,7 +5048,21 @@ function verifyRequiredDirs() {
         @chmod($requiredDir, $PermissionLevels);
         @chown($requiredDir, $ApacheUser);
         @chgrp($requiredDir, $ApacheUser); }
-      if ($Verbose) logEntry('Verified a directory at '.$requiredDir.'.'); }
+        // / A directory that was ALREADY there is not news. Ten of these on every request
+        // / buries the one line that matters, which is the summary at the end saying every
+        // / required directory is present.
+        // / A directory that had to be CREATED is still logged, because that is a change.
+        $directoriesVerified++;
+        // / Every directory this application creates is treated as HOSTED.
+        // / Deciding which of them a web server can actually reach means knowing that
+        // / server's configuration, which changes without this application being told.
+        // / Protecting all of them costs one small file each & removes the question.
+        // / The Engine writes it & the setting decides whether it does. Only a directory
+        // / without an index is touched, so an application with a real one keeps it.
+        if (function_exists('protectHostedLocation')) {
+          list ($locationIsProtected, $protectionWasWritten) = protectHostedLocation($requiredDir);
+          if ($protectionWasWritten) $directoriesProtected++;
+          if (!$locationIsProtected) warningEntry('A required directory has no document root protection: '.$requiredDir); } }
     // / A single missing directory invalidates the whole check.
     else {
       $RequiredDirsExist = FALSE;
@@ -5120,8 +5090,8 @@ function verifyRequiredDirs() {
     // / The folder itself is removed only once its contents are gone.
     @rmdir($requiredCleanupFolder); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $allowedCleanupRoots, $requiredDir, $requiredIndex, $requiredCleanupFolder, $cleanupEntry, $cleanupPath, $cleanupContents);
-  return array($RequiredDirsExist, $RequiredDirs); }
+  purgeSensitiveMemory($EnableMemoryProtection, $directoriesProtected, $locationIsProtected, $protectionWasWritten, $allowedCleanupRoots, $requiredDir, $requiredIndex, $requiredCleanupFolder, $cleanupEntry, $cleanupPath, $cleanupContents);
+  return array($RequiredDirsExist, $RequiredDirs, $directoriesVerified); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -5275,29 +5245,6 @@ function mergeConfigFile($oldConfigPath, $newConfigPath) {
   return array($ConfigMerged, $PreservedSettings, $ChangedArrays); }
 // / -----------------------------------------------------------------------------------
 
-// / -----------------------------------------------------------------------------------
-// / A function to prove that an installation actually runs.
-// / Called after the swap. The new installation is asked to report its own version as a
-// / separate process. A core that cannot parse, cannot load its config, & cannot reach
-// / the command line branch will not answer, & that is the condition worth catching.
-// / A file count or a directory listing proves nothing about whether the code executes.
-function validateInstallation($installPath) {
-  // / Set variables.
-  global $Verbose, $EnableMemoryProtection;
-  $InstallationIsValid = FALSE;
-  $validateCommand = '';
-  $validateOutput = array();
-  $validateExitCode = 1;
-  $validateCommand = 'php '.escapeshellarg($installPath.'/convertCore.php').' -v 2>&1';
-  exec($validateCommand, $validateOutput, $validateExitCode);
-  // / The exit code proves it ran. The marker proves it ran far enough to report.
-  if ($validateExitCode === 0 && is_array($validateOutput)) {
-    if (strpos(implode(' ', $validateOutput), 'Core version') !== FALSE) $InstallationIsValid = TRUE; }
-  if ($Verbose) logEntry('Installation validation: '.($InstallationIsValid ? 'PASSED' : 'FAILED').', exit code '.$validateExitCode.'.');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $validateCommand, $validateOutput, $validateExitCode, $installPath);
-  return $InstallationIsValid; }
-// / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to update the application in place.
@@ -5684,48 +5631,56 @@ function showGUI($ShowGUI, $ButtonCode) {
 // / A function to upload a selection of files.
 function uploadFiles() {
   // / Set variables.
-  global $DangerousFiles, $VirusScan, $AllowUserVirusScan, $ConvertDir, $Verbose, $PermissionLevels, $Allowed, $EnableMemoryProtection;
+  global $DangerousFiles, $VirusScan, $AllowUserVirusScan, $ConvertDir, $Verbose, $PermissionLevels, $Allowed, $OperationErrors, $Pipelines, $EnableMemoryProtection;
   $UploadComplete = $UploadErrors = $virusFound = $variableIsSanitized = FALSE;
-  $file = $f0 = $f1 = '';
-  // / Make sure the input files are formatted into an array.
+  $file = $fileExtension = $placedName = $sourcePath = '';
+  $uploadIndex = 0;
+  $scanComplete = $fileWasPlaced = FALSE;
+  $filesPipelineIsReady = FALSE;
+  $filesEntryPoint = '';
+  // / What may be uploaded is this application's policy. Putting the bytes somewhere is not.
+  // / $Allowed & $DangerousFiles are HRConvert2's lists & stay here. The placement is the
+  // / Files pipeline, which sanitizes the destination name, resolves it & refuses anything
+  // / landing outside the directory it was permitted.
   if (!is_array($_FILES['file']['name'])) $_FILES['file']['name'] = array($_FILES['file']['name']);
-  // / Iterate through the array of input files.
-  foreach ($_FILES['file']['name'] as $file) {
+  foreach ($_FILES['file']['name'] as $uploadIndex => $file) {
     $UploadComplete = FALSE;
-    // / Make sure the file is sanitized before processing it.
     list ($file, $variableIsSanitized) = sanitize($file, TRUE);
     if (!$variableIsSanitized or !is_string($file) or $file === '' or $file === '.' or $file === '..' or $file === 'index.html') {
       $OperationErrors = TRUE;
-      errorEntry('Could not sanitize the input file!', 6000, FALSE); 
+      errorEntry('Could not sanitize the input file!', 6000, FALSE);
       continue; }
     if ($Verbose) logEntry('User selected to Upload file '.$file.'.');
-    $f0 = getExtension($file);
-    // / Make sure the file is not in the list of dangerous formats.
-    if (in_array(strtolower($f0), $DangerousFiles) or !in_array(strtolower($f0), $Allowed)) {
-      errorEntry('Unsupported file format, '.$f0.'!', 6001, FALSE);
+    $fileExtension = getExtension($file);
+    if (in_array(strtolower($fileExtension), $DangerousFiles) or !in_array(strtolower($fileExtension), $Allowed)) {
+      errorEntry('Unsupported file format, '.$fileExtension.'!', 6001, FALSE);
       continue; }
-    list ($f1, $variableIsSanitized) = sanitize($ConvertDir.pathinfo($file, PATHINFO_BASENAME), FALSE);
-    // / Code to remove an output file that already exists.
-    if (file_exists($f1)) @unlink($f1);
-    @copy($_FILES['file']['tmp_name'], $f1);
-    if (!file_exists($f1)) {
+    // / THE TEMPORARY NAME IS INDEXED. It was read unindexed inside this loop, so a multiple
+    // / file upload handed copy() an array & landed nothing. A single file upload, which is
+    // / what the interface sends, worked & hid it.
+    $sourcePath = is_array($_FILES['file']['tmp_name']) ? (isset($_FILES['file']['tmp_name'][$uploadIndex]) ? $_FILES['file']['tmp_name'][$uploadIndex] : '') : $_FILES['file']['tmp_name'];
+    // / Loaded on demand. See the note in getFiles for why enumeration is not enough.
+    list ($filesPipelineIsReady, $filesEntryPoint) = loadPipelineCore('Files');
+    if ($filesPipelineIsReady && function_exists('placeFileInDirectory')) list ($fileWasPlaced, $placedName) = placeFileInDirectory($ConvertDir, $sourcePath, pathinfo($file, PATHINFO_BASENAME), $PermissionLevels);
+    else {
+      $fileWasPlaced = FALSE;
+      warningEntry('The Files pipeline is not available, so nothing was uploaded.'); }
+    if (!$fileWasPlaced) {
       $UploadErrors = TRUE;
-      errorEntry('Could not upload file '.$file.' to '.$f1.'!', 6002, FALSE); }
+      errorEntry('Could not upload file '.$file.'!', 6002, FALSE); }
     else {
       $UploadComplete = TRUE;
-      if ($Verbose) logEntry('Uploaded file '.$file.' to '.$f1.'.'); }
-    @chmod($f1, $PermissionLevels);
-    // / Scan with ClamAV if $AllowUserVirusScan is set to FALSE in config.php.
-    if (!$AllowUserVirusScan) {
-      // / Scan with ClamAV if $VirusScan is set to TRUE in config.php.
-      if ($VirusScan) {
-        if ($Verbose) logEntry('Starting virus scan.');
-        list ($scanComplete, $virusFound) = virusScan($f1);
-        if (!$scanComplete) errorEntry('Could not perform a virus scan!', 6003, TRUE);
-        if ($virusFound) errorEntry('Virus detected!', 6004, TRUE);
-        if ($Verbose) logEntry('Virus scan complete.'); } } }
+      if ($Verbose) logEntry('Uploaded file '.$file.'.'); }
+    // / The scan runs on what LANDED rather than on what was offered, & only when something
+    // / did. Scanning a file that was refused reports on nothing.
+    if ($fileWasPlaced && !$AllowUserVirusScan && $VirusScan) {
+      if ($Verbose) logEntry('Starting virus scan.');
+      list ($scanComplete, $virusFound) = virusScan($ConvertDir.$placedName);
+      if (!$scanComplete) errorEntry('Could not perform a virus scan!', 6003, TRUE);
+      if ($virusFound) errorEntry('Virus detected!', 6004, TRUE);
+      if ($Verbose) logEntry('Virus scan complete.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $file, $f0, $f1, $variableIsSanitized, $scanComplete, $virusFound);
+  purgeSensitiveMemory($EnableMemoryProtection, $filesPipelineIsReady, $filesEntryPoint, $file, $fileExtension, $placedName, $sourcePath, $uploadIndex, $variableIsSanitized, $scanComplete, $virusFound, $fileWasPlaced);
   return array($UploadComplete, $UploadErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -5827,61 +5782,60 @@ function downloadFiles($Download) {
 // / Each location is now unlinked using its own variable.
 function deleteFiles($FilesToDelete) {
   // / Set variables.
-  global $DangerousFiles, $Verbose, $ConvertDir, $ConvertTempDir, $EnableMemoryProtection;
+  global $DangerousFiles, $Verbose, $ConvertDir, $ConvertTempDir, $Pipelines, $EnableMemoryProtection;
   $DeleteComplete = $DeleteErrors = $variableIsSanitized = FALSE;
-  $file = $f0 = $f1 = '';
-  // / The result describes the operation, not the last file in the list.
-  // / $DeleteComplete was previously reset to FALSE at the top of every iteration & set
-  // / TRUE only by a successful one, so the value that survived the loop was whatever
-  // / happened to the LAST entry. A list whose final entry was refused reported total
-  // / failure even though every other file had been deleted, & the caller answers a
-  // / failure here with a fatal error 21 that prints ERROR!!! to the page. Deleting nine
-  // / files out of ten looked to a user exactly like deleting none of them.
-  // / Counting instead. An entry that is refused before it is attempted is recorded as an
-  // / error for the caller but is not counted as an attempt, because refusing input the
-  // / application was right to refuse is not a failure of the deletion.
+  $file = $fileExtension = '';
   $filesAttempted = $filesDeleted = 0;
+  $permittedNames = array();
+  $permittedDirectory = '';
+  $filesPipelineIsReady = FALSE;
+  $filesEntryPoint = '';
+  $removalSucceeded = FALSE;
+  $namesAttempted = $namesRemoved = 0;
+  // / WHAT MAY BE DELETED IS THIS APPLICATION'S DECISION. Doing the deleting is not.
+  // / $DangerousFiles is a list of formats HRConvert2 refuses to touch. No other
+  // / application has that list & an engine cannot guess it, so the policy stays here.
+  // / The removal itself is the Files pipeline, which is handed a directory it may operate
+  // / in & refuses anything resolving outside it.
+  // / The result describes the operation, not the last file in the list.
   list ($FilesToDelete, $variableIsSanitized) = sanitize($FilesToDelete, FALSE);
-  // / Make sure the input files are formatted into an array.
-  // / A single filename & a list of them are the same operation with a different count.
   if (!is_array($FilesToDelete)) $FilesToDelete = array($FilesToDelete);
-  // / Iterate through the array of input files.
   foreach ($FilesToDelete as $file) {
-    // / Make sure the file is sanitized before processing it.
     list ($file, $variableIsSanitized) = sanitize($file, TRUE);
     if (!$variableIsSanitized or !is_string($file) or $file === '' or $file === '.' or $file === '..' or $file === 'index.html') {
       $DeleteErrors = TRUE;
       errorEntry('Could not sanitize the input file!', 23000, FALSE);
       continue; }
     if ($Verbose) logEntry('User selected to Delete file '.$file.'.');
-    $f0 = getExtension($file);
-    // / Make sure the file is not in the list of dangerous formats.
-    if (in_array(strtolower($f0), $DangerousFiles) or in_array('.'.strtolower($f0), $DangerousFiles) or in_array(strtolower($file), $DangerousFiles)) {
+    $fileExtension = getExtension($file);
+    if (in_array(strtolower($fileExtension), $DangerousFiles) or in_array('.'.strtolower($fileExtension), $DangerousFiles) or $fileExtension === '') {
       $DeleteErrors = TRUE;
-      errorEntry('Unsupported file format, '.$f0.'!', 23001, FALSE);
+      errorEntry('Unsupported file format, '.$fileExtension.'!', 23001, FALSE);
       continue; }
-    // / Past this point the file is one this function agreed to act on, so it counts.
     $filesAttempted++;
-    // / Remove the selected file from the hosted location.
-    list ($f0, $variableIsSanitized) = sanitize($ConvertTempDir.pathinfo($file, PATHINFO_BASENAME), FALSE);
-    if (file_exists($f0)) @unlink($f0);
-    // / Remove the selected file from the working location.
-    list ($f1, $variableIsSanitized) = sanitize($ConvertDir.pathinfo($file, PATHINFO_BASENAME), FALSE);
-    if (file_exists($f1)) @unlink($f1);
-    // / Check that the selected files were deleted.
-    if (!file_exists($f0) && !file_exists($f1)) {
-      if ($Verbose) logEntry('Deleted file '.$file.'.');
-      $filesDeleted++; }
+    $permittedNames[] = pathinfo($file, PATHINFO_BASENAME); }
+  // / BOTH DIRECTORIES, because a file exists in the session directory & may also exist in
+  // / the temporary one, & leaving either behind is a file a user asked to be gone.
+  // / A name absent from one of them is not an error. It is a file that was never there.
+  if (!empty($permittedNames)) {
+    // / Loaded on demand. See the note in getFiles for why enumeration is not enough.
+    list ($filesPipelineIsReady, $filesEntryPoint) = loadPipelineCore('Files');
+    if ($filesPipelineIsReady && function_exists('removeFilesFromDirectory')) {
+      foreach (array($ConvertTempDir, $ConvertDir) as $permittedDirectory) {
+        list ($removalSucceeded, $namesAttempted, $namesRemoved) = removeFilesFromDirectory($permittedDirectory, $permittedNames);
+        $filesDeleted += $namesRemoved; }
+      // / Counted across both directories, so a file removed from each counts twice. What
+      // / matters is that every name asked for is gone from everywhere it could have been.
+      $DeleteComplete = ($filesDeleted > 0);
+      if (!$DeleteComplete) {
+        $DeleteErrors = TRUE;
+        errorEntry('Could not delete the requested file(s)!', 23002, FALSE); } }
     else {
       $DeleteErrors = TRUE;
-      errorEntry('Could not delete file '.$file.'!', 23002, FALSE); } }
-  // / The operation is complete when every file it agreed to act on is gone.
-  // / An empty list is complete because there was nothing to remove, & reporting a fatal
-  // / failure for asking to delete nothing would be a worse answer than doing nothing.
-  $DeleteComplete = ($filesDeleted === $filesAttempted);
-  if ($Verbose) logEntry('Delete result: Attempted: '.$filesAttempted.', Deleted: '.$filesDeleted.', Errors: '.($DeleteErrors ? 'YES' : 'NO').'.');
+      errorEntry('The Files pipeline is not available, so nothing was deleted!', 23003, FALSE); } }
+  if ($Verbose) logEntry('Delete result: Attempted: '.$filesAttempted.', Deleted: '.$filesDeleted.', Errors: '.($DeleteErrors ? 'yes' : 'no').'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $file, $f0, $f1, $variableIsSanitized, $filesAttempted, $filesDeleted);
+  purgeSensitiveMemory($EnableMemoryProtection, $filesPipelineIsReady, $filesEntryPoint, $permittedDirectory, $file, $fileExtension, $variableIsSanitized, $filesAttempted, $filesDeleted, $permittedNames, $removalSucceeded, $namesAttempted, $namesRemoved);
   return array($DeleteComplete, $DeleteErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -6242,19 +6196,36 @@ function userClamScan($FilesToScan) {
     // / The verified path runs, not a bare command name, so the clamscan whose version was
     // / checked is provably the clamscan that scans.
     $scanCommand = limitCommand(escapeshellarg($clamBinary).' -r '.escapeshellarg($ConvertDir.$file), 'clamav');
-    $returnData = shell_exec($scanCommand.' | grep FOUND >> '.escapeshellarg($UserClamLogFile));
-    // / Write the full ClamAV output to the normal $LogFile.
-    // / Normally we don't write dependency output if it is blank, but for virus scans we do. 
-    // / Blank virus scan output means scanner malfunction or potential tampering of the results. 
-    if ($Verbose) logEntry('The Virus Scanner returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-    // / Load the contents of the User Clam Log File for processing because it has been sanitized of unnecessary data & whitespace.
-    $clamLogFileDATA = @file_get_contents($UserClamLogFile);
-    // / Check the contents of the User Clam Log File for virus detections.
-    if (strpos($clamLogFileDATA, 'FOUND') !== FALSE or strpos($clamLogFileDATA, 'FOUND') === TRUE) {
-      $UserVirusFound = TRUE;
-      $txt = 'Potentially infected file detected at '.$file.'!';
-      warningEntry($txt);
-      userVirusLogEntry($txt, 'clamav'); }
+      // / THE SCANNER'S OUTPUT IS READ & THROWN AWAY. It never reaches the user's report.
+      // /
+      // / What this replaced piped ClamAV straight into the file a user downloads. That is
+      // / an exfiltration channel wearing a report's clothes. The output of a privileged
+      // / tool carries absolute paths, the scanner's own internals & whatever text an
+      // / attacker managed to influence, & it was handed over as though the user wrote it.
+      // /
+      // / A signature name is the clearest example. It comes from a database this
+      // / application does not control, it is chosen by whoever wrote the signature, & it
+      // / lands in a document another person may open. THE VERDICT IS THE ONLY THING A USER
+      // / NEEDS. Clean or not clean, & which of their own files.
+      // /
+      // / The output is captured IN PROCESS rather than redirected to a file, so the verdict
+      // / is decided from what the scanner actually said on this run. Reading it back out of
+      // / a file it had been appending to meant a second scan could inherit the first one's
+      // / verdict, & a file that failed to write read as clean.
+      $scanOutput = array();
+      $scanExitCode = 1;
+      exec($scanCommand.' 2>&1', $scanOutput, $scanExitCode);
+      // / The full output still goes to the ADMINISTRATOR's log, which is not user facing.
+      // / Blank output there means a scanner malfunction or tampering & is worth seeing.
+      if ($Verbose) logEntry('The virus scanner returned '.count($scanOutput).' line(s), exit code '.$scanExitCode.'.');
+      foreach ($scanOutput as $scanLine) if (trim($scanLine) !== '' && strpos($scanLine, 'FOUND') !== FALSE) $UserVirusFound = TRUE;
+      // / Exit code 1 is ClamAV for a detection. It is checked as well as the text, because
+      // / a scanner that changes its wording should not quietly start reporting clean.
+      if ($scanExitCode === 1) $UserVirusFound = TRUE;
+      if ($UserVirusFound) {
+        $txt = 'Potentially infected file detected at '.$file.'!';
+        warningEntry($txt);
+        userVirusLogEntry($txt, 'clamav'); }
       // / Write the results of the scan to both log files.
     else {
       $txt = 'No infection detected in '.$file.'.';
@@ -6265,7 +6236,7 @@ function userClamScan($FilesToScan) {
   if ($Verbose) logEntry($txt);
   userVirusLogEntry($txt, 'clamav');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $file, $fileIsVerified, $newPathname, $oldExtension, $oldPathname, $pathname, $variableIsSanitized, $clean, $copy, $skip, $returnData, $scanCommand, $clamBinary, $txt, $userFilename, $userExtension, $clamLogFileDATA);
+  purgeSensitiveMemory($EnableMemoryProtection, $scanOutput, $scanExitCode, $scanLine, $file, $fileIsVerified, $newPathname, $oldExtension, $oldPathname, $pathname, $variableIsSanitized, $clean, $copy, $skip, $returnData, $scanCommand, $clamBinary, $txt, $userFilename, $userExtension, $clamLogFileDATA);
   return array($OperationSuccessful, $OperationErrors, $UserVirusFound); }
 // / -----------------------------------------------------------------------------------
 
@@ -6579,277 +6550,6 @@ function verifyCoreComponent($componentName, $componentRelativePath, $versionVar
   return array($ComponentIsAvailable, $DetectedComponentVersion); }
 // / -----------------------------------------------------------------------------------
 
-// / -----------------------------------------------------------------------------------
-// / A function to request permission to consume resources before a conversion begins.
-// / Accepts the conversion cost & the expected runtime in seconds.
-// / Returns an approval boolean & the issued budget token, in that order.
-// / This FAILS OPEN. When resource awareness is unavailable the request is approved & the
-// / core behaves exactly as it did before this component existed.
-function requestConversionBudget($conversionCost, $expectedRuntime) {
-  // / Set variables.
-  global $ResourceAwarenessActive, $ManagerSocketTimeout, $EffectiveConversionLimits, $EnableMemoryProtection, $Verbose;
-  $BudgetWasApproved = FALSE;
-  $BudgetToken = '';
-  $requestPayload = $replyPayload = array();
-  $messageWasDelivered = FALSE;
-  $requestSocket = '';
-  if (!$ResourceAwarenessActive) $BudgetWasApproved = TRUE;
-  else {
-    $requestSocket = buildManagerSocketPath('request-manager');
-    $requestPayload = array(
-      'RequestType' => 'budget',
-      'ConversionCost' => (int)$conversionCost,
-      'ExpectedRuntime' => (int)$expectedRuntime,
-      'WorkerPid' => getmypid());
-    // / The worker waits longer than the chain it is waiting on. The request crosses three
-    // / processes & each inner hop waits less than the one outside it, so a slow manager
-    // / times out inside rather than leaving the worker with half an answer.
-    list ($messageWasDelivered, $replyPayload) = sendManagerMessage($requestSocket, $requestPayload, 'worker', (int)$ManagerSocketTimeout * 3);
-    // / A listener that cannot be reached must not stop a conversion that would have run.
-    if (!$messageWasDelivered) {
-      warningEntry('The Core Manager listener did not answer a budget request. Proceeding without resource awareness.');
-      $BudgetWasApproved = TRUE; }
-    // / A delivered message with no usable reply is a listener that is slow or broken rather
-    // / than a budget that declined. Refusing here would stop a conversion nothing refused.
-    // / Only an explicit answer is allowed to refuse a conversion.
-    else if (!isset($replyPayload['Approved'])) {
-      warningEntry('The Core Manager listener returned no usable answer to a budget request. Proceeding without resource awareness.');
-      $BudgetWasApproved = TRUE; }
-    else if ($replyPayload['Approved'] === TRUE) {
-      $BudgetWasApproved = TRUE;
-      $BudgetToken = isset($replyPayload['BudgetToken']) ? (string)$replyPayload['BudgetToken'] : '';
-      // / The listener scales the configured maxima against current load & hands back the
-      // / table this session converts under. It is used for every file in this request.
-      if (isset($replyPayload['Limits']) && is_array($replyPayload['Limits'])) $EffectiveConversionLimits = $replyPayload['Limits']; 
-      if ($Verbose) logEntry('Worker '.getmypid().' was granted budget token '.$BudgetToken.'.'); }
-    else logEntry('A conversion was refused by the resource budget. '.(isset($replyPayload['Reason']) && $replyPayload['Reason'] !== '' ? $replyPayload['Reason'] : 'No reason was supplied.')); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $requestPayload, $replyPayload, $messageWasDelivered, $requestSocket, $conversionCost, $expectedRuntime);
-  return array($BudgetWasApproved, $BudgetToken); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to report that a conversion has finished & release its budget.
-// / Accepts the budget token issued at approval.
-// / Returns TRUE when the release was acknowledged, or when there was nothing to release.
-function releaseConversionBudget($budgetToken) {
-  // / Set variables.
-  global $ResourceAwarenessActive, $ManagerSocketTimeout, $EnableMemoryProtection, $Verbose;
-  $BudgetWasReleased = FALSE;
-  $requestPayload = $replyPayload = array();
-  $messageWasDelivered = FALSE;
-  if (!$ResourceAwarenessActive or (string)$budgetToken === '') $BudgetWasReleased = TRUE;
-  else {
-    $requestPayload = array('RequestType' => 'release', 'BudgetToken' => (string)$budgetToken, 'WorkerPid' => getmypid());
-    list ($messageWasDelivered, $replyPayload) = sendManagerMessage(buildManagerSocketPath('request-manager'), $requestPayload, 'worker', (int)$ManagerSocketTimeout * 3);
-    if ($messageWasDelivered && isset($replyPayload['Approved']) && $replyPayload['Approved'] === TRUE) $BudgetWasReleased = TRUE;
-    else warningEntry('A budget token could not be released. The reaper will reclaim it.'); 
-    if ($Verbose && $BudgetWasReleased) logEntry('Worker '.getmypid().' released budget token '.(string)$budgetToken.'.'); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $requestPayload, $replyPayload, $messageWasDelivered, $budgetToken);
-  return $BudgetWasReleased; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to return a conversion budget token however the request ends.
-// / Registered as a shutdown handler the moment a budget is approved, & also called
-// / directly on the normal completion path. The guard makes it safe to run twice.
-// /
-// / A conversion has three fatal exits between taking a budget & returning it.
-// / Error 21 when the conversion itself fails, & errors 5002 & 5003 when the virus scan of
-// / the result cannot run or finds something. Each calls errorEntry with a fatal flag,
-// / which reaches quickDie & then die(), so the release that sits AFTER the conversion in
-// / the request handler was simply never reached.
-// / Nothing was lost permanently, because findStaleWorkers() tests whether the process is
-// / still alive & reclaims a token whose worker has exited. But that happens on the next
-// / sweep, so a failed conversion held its share of the budget for up to one
-// / $WorkerReapInterval, & on a small machine that is enough to refuse the next
-// / conversion that arrives. It also announced every ordinary failure as a warning about
-// / a worker that had to be reaped, which is not what happened & not what an
-// / administrator reading that warning should go looking for.
-// / A conversion that fails is a normal outcome. It returns what it borrowed on the way
-// / out, & the reaper goes back to being the fallback it was written to be.
-// /
-// / PHP runs a registered shutdown function after die(), so this is reached from a fatal
-// / exit as well as from a clean one. It writes to the log & to the manager socket only.
-// / Nothing here prints, because the connection to the user is already closed by then.
-function releaseBudgetOnShutdown() {
-  // / Set variables.
-  global $BudgetToken, $BudgetTokenIsReleased;
-  $BudgetWasReleased = TRUE;
-  // / Already returned, or there was never one to return.
-  if (!empty($BudgetTokenIsReleased)) return TRUE;
-  if (!isset($BudgetToken) or (string)$BudgetToken === '') return TRUE;
-  // / The flag is set BEFORE the attempt, not after. A release that fails has already
-  // / warned & handed the token to the reaper, & a second attempt from the other caller
-  // / would warn about the same token all over again.
-  $BudgetTokenIsReleased = TRUE;
-  $BudgetWasReleased = releaseConversionBudget($BudgetToken);
-  return $BudgetWasReleased; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to take a resource budget for an expensive operation & arm its return.
-// / Accepts a human readable operation name used only for logging.
-// / Returns TRUE when the operation may proceed.
-// /
-// / Every expensive operation takes a budget, not only conversion.
-// / Resource awareness existed to stop a machine from accepting more expensive work than it
-// / can carry, but only convertFiles() ever asked permission. Archiving, OCR & the user
-// / virus scan ran unmetered. That is not a small gap. Tesseract on a large PDF, 7-Zip on a
-// / multi-gigabyte folder & a ClamAV scan are each as heavy as the conversions the budget
-// / was written to hold back, & because they took nothing they also counted for nothing.
-// / A machine saturated by them still reported itself idle & kept approving conversions on
-// / top. The limiter was measuring a fraction of the load & guarding against a fraction of
-// / the problem.
-// /
-// / All four operations take the same $DefaultConversionCost & $DefaultExpectedRuntime.
-// / Weighting them separately would be more precise, but precision here would be invented;
-// / there are no measurements behind a number that says an archive costs half of an OCR.
-// / One unit of expensive work is a claim this code can actually support, & an administrator
-// / who needs finer control has the per-conversion limit table already.
-// /
-// / This FAILS OPEN exactly as requestConversionBudget() does. When resource awareness is
-// / unavailable the operation is approved & the core behaves as it did before.
-function takeOperationBudget($operationName) {
-  // / Set variables.
-  global $BudgetToken, $BudgetTokenIsReleased, $DefaultConversionCost, $DefaultExpectedRuntime, $Verbose, $EnableMemoryProtection;
-  $BudgetWasApproved = FALSE;
-  list ($BudgetWasApproved, $BudgetToken) = requestConversionBudget($DefaultConversionCost, $DefaultExpectedRuntime);
-  // / Every message names the operation the same way, so $operationName is a bare noun &
-  // / the sentence supplies the rest. A name of 'OCR operation' rendered 'The OCR operation
-  // / operation holds', & an article written into the sentence rendered 'A OCR'.
-  if (!$BudgetWasApproved) warningEntry('The '.$operationName.' operation was refused because the server is at its resource budget.');
-  else {
-    // / The token is out from here. Register its return before anything can die.
-    // / Every one of these operations has a fatal exit between taking a budget & returning
-    // / it, so the release cannot live only at the bottom of the caller's block.
-    $BudgetTokenIsReleased = FALSE;
-    register_shutdown_function('releaseBudgetOnShutdown');
-    if ($Verbose) logEntry('The '.$operationName.' operation holds budget token '.$BudgetToken.'.'); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $operationName);
-  return $BudgetWasApproved; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to return the resource budget an operation took.
-// / Accepts a human readable operation name used only for logging.
-// / Returns TRUE when the release was acknowledged, or when there was nothing to release.
-// / Safe to call when the budget was refused & safe to call twice, because the guard inside
-// / releaseBudgetOnShutdown() is what decides whether there is anything to do.
-function giveBackOperationBudget($operationName) {
-  // / Set variables.
-  global $Verbose, $EnableMemoryProtection;
-  $BudgetWasReleased = releaseBudgetOnShutdown();
-  // / releaseConversionBudget() has already warned if it could not deliver, so a failure
-  // / here is noted at the normal activity tier only.
-  if ($Verbose && !$BudgetWasReleased) logEntry('The '.$operationName.' operation budget token was not confirmed as returned. The reaper remains as the fallback.');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $operationName);
-  return $BudgetWasReleased; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to request more runtime for a conversion that is still working.
-// / Accepts the budget token & the number of additional seconds required.
-// / Returns TRUE when the extension was granted or was not needed.
-function requestRuntimeExtension($budgetToken, $requestedSeconds) {
-  // / Set variables.
-  global $ResourceAwarenessActive, $ManagerSocketTimeout, $EnableMemoryProtection;
-  $ExtensionWasGranted = FALSE;
-  $requestPayload = $replyPayload = array();
-  $messageWasDelivered = FALSE;
-  if (!$ResourceAwarenessActive or (string)$budgetToken === '') $ExtensionWasGranted = TRUE;
-  else {
-    $requestPayload = array('RequestType' => 'extend', 'BudgetToken' => (string)$budgetToken, 'RequestedSeconds' => (int)$requestedSeconds, 'WorkerPid' => getmypid());
-    list ($messageWasDelivered, $replyPayload) = sendManagerMessage(buildManagerSocketPath('request-manager'), $requestPayload, 'worker', (int)$ManagerSocketTimeout * 3);
-    // / An extension that was never answered is granted, for the same reason a budget request is.
-    if (!isset($replyPayload['Approved'])) $ExtensionWasGranted = TRUE;
-    else if ($replyPayload['Approved'] === TRUE) $ExtensionWasGranted = TRUE;
-    else warningEntry('A runtime extension was refused. This worker may be reaped.'); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $requestPayload, $replyPayload, $messageWasDelivered, $budgetToken, $requestedSeconds);
-  return $ExtensionWasGranted; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to give the web server user its own systemd manager & cgroup controllers.
-// / Accepts no arguments & must be run as root.
-// / Returns a success boolean & the number of steps that succeeded, in that order.
-// / This is the safe way to let an unprivileged account set resource limits. A user manager
-// / governs only the cgroup subtree systemd delegated to it & cannot start a unit as any
-// / other account, so nothing granted here can be turned into privilege.
-// / The alternative, granting the web server user manage-units on the system bus, would let
-// / that account start a transient service with User=root. Never do that on the account
-// / which parses uploaded files.
-// / Every step is idempotent & is safe to run again.
-function enableConversionLimits() {
-  // / Set variables.
-  global $ApacheUser, $RunningAsRoot, $Lol, $EnableMemoryProtection;
-  $LimitsWereEnabled = $limitsSystemdUsable = FALSE;
-  $StepsCompleted = 0;
-  $limitsSystemdReason = '';
-  $dropInDirectory = $dropInFile = $dropInContents = '';
-  $commandOutput = array();
-  $commandExitCode = 1;
-  $bytesWritten = 0;
-  if (!$RunningAsRoot) errorEntry('Conversion limits can only be enabled while running as root!', 31011, FALSE);
-  // / Ask whether systemd is RUNNING, not whether its tools are installed. A container
-  // / ships the tools & runs something else as PID 1, & lingering there writes a file
-  // / nothing will ever read.
-  else if (!systemdIsUsable()[0]) {
-    list ($limitsSystemdUsable, $limitsSystemdReason) = systemdIsUsable();
-    print('  Skipped    '.$limitsSystemdReason.$Lol);
-    print('             Per conversion limits fall back to scheduling priority.'.$Lol); }
-  else {
-    // / Lingering starts a user manager for the account at boot, with no login session.
-    // / Without it there is no user bus for systemd-run --user to reach.
-    exec('loginctl enable-linger '.escapeshellarg($ApacheUser).' 2>&1', $commandOutput, $commandExitCode);
-    if ($commandExitCode !== 0) print('  FAILED     Could not enable lingering for '.$ApacheUser.'.'.$Lol);
-    else {
-      $StepsCompleted++;
-      print('  Enabled    Lingering for '.$ApacheUser.$Lol); }
-    // / Lingering is enabled & that is not the same as a limit being possible.
-    // / A kernel that delegates no cgroup controllers cannot hold a per conversion limit no
-    // / matter how the accounts are configured, & many NAS & appliance kernels are built
-    // / that way deliberately.
-    // / Saying so HERE, while an administrator is watching a repair run, is worth more than
-    // / saying it in a log they read after a conversion behaved oddly.
-    if (function_exists('cgroupDelegationIsAvailable') && !cgroupDelegationIsAvailable()) {
-      print('  Note       This kernel delegates no cgroup controllers, so a per conversion'.$Lol);
-      print('             limit cannot be held here whatever is configured. Conversions are'.$Lol);
-      print('             still bounded by scheduling priority. This is a kernel decision'.$Lol);
-      print('             & is normal on a NAS or appliance.'.$Lol);
-      warningEntry('This kernel delegates no cgroup controllers, so per conversion limits fall back to scheduling priority.'); }
-    // / A user manager is given the memory & pids controllers by default. The processor
-    // / controller has to be delegated explicitly or CPUQuota is silently ignored.
-    $dropInDirectory = '/etc/systemd/system/user@.service.d';
-    $dropInFile = $dropInDirectory.'/hrconvert2-delegate.conf';
-    $dropInContents = '[Service]'.PHP_EOL.'Delegate=cpu cpuset io memory pids'.PHP_EOL;
-    if (!is_dir($dropInDirectory)) @mkdir($dropInDirectory, 0755, TRUE);
-    if (!is_dir($dropInDirectory)) print('  FAILED     Could not create '.$dropInDirectory.'.'.$Lol);
-    else {
-      $bytesWritten = @file_put_contents($dropInFile, $dropInContents);
-      if ($bytesWritten !== strlen($dropInContents)) print('  FAILED     Could not write '.$dropInFile.'.'.$Lol);
-      else {
-        @chmod($dropInFile, 0644);
-        $StepsCompleted++;
-        print('  Wrote      '.$dropInFile.$Lol);
-        exec('systemctl daemon-reload 2>&1', $commandOutput, $commandExitCode);
-        if ($commandExitCode === 0) {
-          $StepsCompleted++;
-          print('  Reloaded   systemd unit configuration'.$Lol); }
-        else print('  FAILED     Could not reload systemd. Reload it by hand.'.$Lol); } }
-    if ($StepsCompleted >= 2) {
-      $LimitsWereEnabled = TRUE;
-      logEntry('Conversion limits were enabled for '.$ApacheUser.'. '.$StepsCompleted.' step(s) completed.');
-      print('  Note       A running user manager must be restarted before delegation applies.'.$Lol);
-      print('             systemctl restart user@$(id -u '.$ApacheUser.').service'.$Lol); } }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $dropInDirectory, $dropInFile, $dropInContents, $commandOutput, $commandExitCode, $bytesWritten, $limitsSystemdUsable, $limitsSystemdReason);
-  return array($LimitsWereEnabled, $StepsCompleted); }
-// / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to write the PHP settings HRConvert2 cannot run without.
@@ -7003,25 +6703,6 @@ function verifyApacheModule($moduleName, $mayRepair) {
   return array($ModuleIsLoaded, $ModuleStatus); }
 // / -----------------------------------------------------------------------------------
 
-// / -----------------------------------------------------------------------------------
-// / A function to find a module name in the output of apachectl -M.
-// / Accepts the module name & the captured output lines, in that order.
-// / Returns TRUE when that module is listed.
-// / The output is one module per line, indented, & suffixed with (shared) or (static). A
-// / plain comparison against the whole line therefore never matches, & a substring search
-// / for a short name would match a longer one that contains it.
-function apacheModuleIsListed($moduleName, $commandOutput) {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $ModuleWasFound = FALSE;
-  $outputLine = '';
-  if (is_array($commandOutput)) {
-    foreach ($commandOutput as $outputLine) {
-      if (strtok(trim((string)$outputLine), ' ') === (string)$moduleName) $ModuleWasFound = TRUE; } }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $outputLine, $commandOutput, $moduleName);
-  return $ModuleWasFound; }
-// / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to write & activate the Apache configuration HRConvert2 needs.
@@ -7082,7 +6763,20 @@ function verifyApacheConfiguration($mayRepair) {
       .'  AllowOverride None'.PHP_EOL
       .'  Require all granted'.PHP_EOL
       .'  # / No listing, & nothing here is ever a program.'.PHP_EOL
-      .'  Options -Indexes -ExecCGI'.PHP_EOL
+      .'  # / SymLinksIfOwnerMatch rather than FollowSymLinks. A link is followed only when'.PHP_EOL
+      .'  # / the link & its target have the same owner, so a link written by an uploader'.PHP_EOL
+      .'  # / cannot reach a file owned by somebody else.'.PHP_EOL
+      .'  # / Nothing here creates a link into a session today. This is set now because the'.PHP_EOL
+      .'  # / default is FollowSymLinks on most builds, & the first time somebody serves a'.PHP_EOL
+      .'  # / stored file through a link is not the moment to discover that.'.PHP_EOL
+      .'  Options -Indexes -ExecCGI -FollowSymLinks +SymLinksIfOwnerMatch'.PHP_EOL
+      .'  # / index.html is the ONLY index. Without this, a request for the directory'.PHP_EOL
+      .'  # / falls to whatever the server was configured to prefer, which on a default'.PHP_EOL
+      .'  # / installation is index.php first. That name is refused by this application'.PHP_EOL
+      .'  # / & cannot be staged, so the effect today is a 403 rather than a listing.'.PHP_EOL
+      .'  # / Naming it explicitly serves the protection page instead of the 403, & stops'.PHP_EOL
+      .'  # / this depending on what a server happens to prefer.'.PHP_EOL
+      .'  DirectoryIndex index.html'.PHP_EOL
       .'  <IfModule mod_headers.c>'.PHP_EOL
       .'    # / index.html is the document root protection page & is the one file here meant'.PHP_EOL
       .'    # / to render. It cannot be user supplied; index.html is a literal entry in'.PHP_EOL
@@ -7207,48 +6901,6 @@ function verifyApacheConfiguration($mayRepair) {
   return array($ConfigurationIsValid, $ConfigurationsWritten); }
 // / -----------------------------------------------------------------------------------
 
-// / -----------------------------------------------------------------------------------
-// / A function to render a filesystem path safely inside an Apache configuration file.
-// / Accepts the path.
-// / Returns the path quoted, with any quote or backslash in it escaped.
-// / A directory name is not necessarily a bare word.
-// / Apache treats whitespace as an argument separator, so an installation under a path with
-// / a space in it silently produces a <Directory> block governing the wrong directory. A
-// / quoted path is correct in every case & costs nothing in the ordinary one.
-function escapeApacheConfigPath($configPath) {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $EscapedPath = '';
-  $EscapedPath = '"'.str_replace(array('\\', '"'), array('\\\\', '\\"'), (string)$configPath).'"';
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $configPath);
-  return $EscapedPath; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to turn an internal policy status into the word an operator should read.
-// / Accepts the internal status word.
-// / Returns 'ok' when nothing needs doing, or the status unchanged when something does.
-// /
-// / A STATUS COLUMN IS SCANNED, NOT READ. IT MUST ONLY SAY ok WHEN NOTHING IS WRONG.
-// / unrestricted, unconfined & distribution all describe a host that is already correct,
-// / & all three read like something is missing. An administrator skimming a wall of output
-// / for problems should not have to know which of the unusual looking words are the good
-// / ones. The word becomes ok & the sentence beside it explains why.
-// /
-// / A state that changed something keeps its own word.
-// / installed, repaired & corrected are not problems, but they did alter this machine, &
-// / an operator is entitled to see that at a glance rather than have it flattened into ok.
-function policyDisplayStatus($policyStatus) {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $DisplayStatus = (string)$policyStatus;
-  $benignStatuses = array('ok', 'unchanged', 'unrestricted', 'unconfined', 'distribution', 'absent', 'n/a');
-  if (in_array((string)$policyStatus, $benignStatuses, TRUE)) $DisplayStatus = 'ok';
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $benignStatuses, $policyStatus);
-  return $DisplayStatus; }
-// / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to explain a policy status in a sentence.
@@ -7289,37 +6941,6 @@ function describePolicyStatus($policyName, $policyStatus) {
   return $StatusDescription; }
 // / -----------------------------------------------------------------------------------
 
-// / -----------------------------------------------------------------------------------
-// / A function to print an environment report.
-// / Accepts the findings array & a boolean limiting the report to problems, in that order.
-// / Returns the number of checks that were not ok.
-// /
-// / The same check reported twice in one run is noise, not thoroughness.
-// / The -fp argument repairs the policies & then revalidates to prove the repairs took. Both
-// / steps produce the same rows, so an operator was reading the AppArmor, ImageMagick &
-// / OpenSCAD lines twice in a single run & the kernel line twice on top of that. Printing a
-// / clean check a second time tells nobody anything; printing a check that is STILL wrong
-// / after a repair tells them the repair did not work, which is the entire point of the
-// / second pass. So the confirmation pass reports only what is still a problem & says so in
-// / one line when there is nothing left to report.
-function showEnvironmentFindings($environmentFindings, $onlyProblems) {
-  // / Set variables.
-  global $Lol, $EnableMemoryProtection;
-  $ProblemsFound = 0;
-  $finding = array();
-  $findingIsBenign = FALSE;
-  foreach ($environmentFindings as $finding) {
-    // / policyDisplayStatus has already reduced every benign policy state to ok, so the
-    // / column can be trusted. The words left here are the ones that changed something or
-    // / went wrong, & only the second kind is a problem.
-    $findingIsBenign = in_array($finding['Status'], array('ok', 'installed', 'repaired', 'corrected', 'removed', 'disabled'), TRUE);
-    if (!$findingIsBenign) $ProblemsFound++;
-    if (!$onlyProblems or !$findingIsBenign) print('  '.str_pad($finding['Check'], 28).str_pad($finding['Status'], 14).$finding['Detail'].$Lol); }
-  if ($onlyProblems && $ProblemsFound === 0) print('  '.str_pad('All checks', 28).str_pad('ok', 14).count($environmentFindings).' check(s) passed. Nothing above needs attention.'.$Lol);
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $finding, $findingIsBenign, $onlyProblems, $environmentFindings);
-  return $ProblemsFound; }
-// / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to correct ownership & permissions on every managed path.
@@ -7342,29 +6963,20 @@ function fixManagedPermissions() {
   $policyStatus = '';
   $managedPaths = array();
   $managedPath = '';
+  $pathCorrectionRan = FALSE;
+  $pathsRefused = 0;
   $commandOutput = array();
   $commandExitCode = 1;
   if (!$RunningAsRoot) errorEntry('Permissions can only be corrected while running as root!', 31008, FALSE);
   else {
     $managedPaths = array($InstLoc, $ConvertLoc, $ConvertTemp, $LogDir, $HomeLoc, $ProprietaryLoc, $BackupLoc, $ManagerSocketDir);
-    foreach ($managedPaths as $managedPath) {
-      // / A recursive change as root is refused on anything that could take the host with
-      // / it. The guard resolves symlinks & .. before judging, so a data location that
-      // / points at / by accident is caught rather than obeyed.
-      // / A refusal is REPORTED. An installation aimed at a system directory is
-      // / misconfigured, & skipping it silently would leave the operator believing the
-      // / permissions had been corrected.
-      if ($managedPath !== '' && is_dir($managedPath) && !pathIsSafeToModifyRecursively($managedPath)) {
-        print('  '.str_pad('REFUSED', 12).$managedPath.' is a system directory & will not be changed recursively.'.$Lol);
-        warningEntry('A managed path resolved to a system directory & was refused. Check the data locations in config.php. Path: '.$managedPath.'.'); }
-      else if ($managedPath !== '' && is_dir($managedPath)) {
-        // / The same guard as --fix-permissions. A path is judged once & the same way
-        // / wherever a recursive change is about to happen.
-        if (!pathIsSafeToModifyRecursively($managedPath)) warningEntry('A managed path resolved to a system directory & was refused during setup. Path: '.$managedPath.'.');
-        else {
-        exec('chown -R '.escapeshellarg($ApacheUser).':'.escapeshellarg($ApacheUser).' '.escapeshellarg($managedPath).' 2>&1', $commandOutput, $commandExitCode);
-        exec('chmod -R 0755 '.escapeshellarg($managedPath).' 2>&1', $commandOutput, $commandExitCode); }
-        $PathsCorrected++; } }
+      // / The list is this application's. The correcting is Setup Core's.
+      // / HRConvert2 knows it owns a DATA directory, a temporary tree, a log directory & a
+      // / socket directory. No engine can guess that & no other application will have it.
+      // / Everything below the list is the same work whoever asked, including refusing a
+      // / path that resolves to a system directory.
+      if (function_exists('correctManagedPaths')) list ($pathCorrectionRan, $PathsCorrected, $pathsRefused) = correctManagedPaths($managedPaths, $ApacheUser, '0755');
+      else warningEntry('Setup Core is unavailable, so no path could be corrected.');
     // / The socket directory is never world readable, whatever the sweep above set.
     if (is_dir($ManagerSocketDir)) exec('chmod 0700 '.escapeshellarg($ManagerSocketDir).' 2>&1', $commandOutput, $commandExitCode);
     // / The secret is the one file that must not be group or world readable.
@@ -7410,7 +7022,12 @@ function fixManagedPermissions() {
     // / & it is what lets an unprivileged account set a resource ceiling later.
     if ($EnablePerConversionLimits) {
       print($Lol.'Per conversion resource limits'.$Lol);
-      list ($limitsWereEnabled, $limitSteps) = enableConversionLimits();
+      // / Setup Core owns the limits work now, so it is loaded before it is asked for.
+      // / It was already loaded five lines further down for the listener unit, which is
+      // / how this reached an undefined function the moment the work moved.
+      list ($setupIsAvailable, $setupVersion) = verifyCoreComponent('Setup Core', 'Engine'.$DirSep.'Cores'.$DirSep.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
+      if (!$setupIsAvailable) print('  Skipped     The Setup Core component is unavailable.'.$Lol);
+      else list ($limitsWereEnabled, $limitSteps) = enableConversionLimits();
       if (!$limitsWereEnabled) warningEntry('Per conversion resource limits could not be fully enabled. '.$limitSteps.' step(s) completed.'); }
     // / The listener service unit, generated from this configuration. Setup Core owns it,
     // / so it is loaded on demand. An installation without that component simply skips it.
@@ -7455,42 +7072,10 @@ function fixManagedPermissions() {
     $PermissionsWereFixed = TRUE;
     logEntry('Permissions were corrected on '.$PathsCorrected.' managed path(s).'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $managedPaths, $managedPath, $commandOutput, $commandExitCode, $limitsWereEnabled, $limitSteps, $policyIsValid, $policyStatus, $exposureStatus, $setupIsAvailable, $setupVersion, $environmentIsReady, $environmentFindings, $kernelIsReady, $kernelFindings, $phpConfigIsValid, $phpConfigsWritten, $apacheConfigIsValid, $apacheConfigsWritten, $policyLines, $policyChecks, $policyName, $policyLine, $policiesOk, $policiesTotal);
+  purgeSensitiveMemory($EnableMemoryProtection, $pathCorrectionRan, $pathsRefused, $managedPaths, $managedPath, $commandOutput, $commandExitCode, $limitsWereEnabled, $limitSteps, $policyIsValid, $policyStatus, $exposureStatus, $setupIsAvailable, $setupVersion, $environmentIsReady, $environmentFindings, $kernelIsReady, $kernelFindings, $phpConfigIsValid, $phpConfigsWritten, $apacheConfigIsValid, $apacheConfigsWritten, $policyLines, $policyChecks, $policyName, $policyLine, $policiesOk, $policiesTotal);
   return array($PermissionsWereFixed, $PathsCorrected); }
 // / -----------------------------------------------------------------------------------
 
-// / -----------------------------------------------------------------------------------
-// / A function to ask the listener to terminate one tracked worker.
-// / Accepts the budget token or the process identifier of the worker.
-// / Returns TRUE when the worker was terminated.
-function killTargetedWorker($workerTarget) {
-  // / Set variables.
-  global $ResourceAwarenessActive, $ManagerSocketTimeout, $Lol, $EnableMemoryProtection;
-  $WorkerWasKilled = FALSE;
-  $requestPayload = $replyPayload = $workerRegistry = array();
-  $messageWasDelivered = $registryWasRead = FALSE;
-  $cleanTarget = trim((string)$workerTarget);
-  $targetPid = 0;
-  $targetToken = '';
-  if (!$ResourceAwarenessActive) print($Lol.'Resource awareness is unavailable, so no worker is tracked.'.$Lol);
-  else if ($cleanTarget === '') print($Lol.'Supply a worker identifier or process identifier.'.$Lol);
-  else {
-    // / A numeric target is a process identifier. Anything else is treated as a token.
-    if (ctype_digit($cleanTarget)) $targetPid = (int)$cleanTarget;
-    else {
-      $targetToken = preg_replace('/[^a-f0-9]/', '', strtolower($cleanTarget));
-      list ($registryWasRead, $workerRegistry) = readManagerState('workers');
-      if (isset($workerRegistry[$targetToken])) $targetPid = (int)$workerRegistry[$targetToken]['WorkerPid']; }
-    if ($targetPid < 2) print($Lol.'That worker is not tracked.'.$Lol);
-    else {
-      $requestPayload = array('RequestType' => 'kill', 'WorkerPid' => $targetPid, 'BudgetToken' => $targetToken);
-      list ($messageWasDelivered, $replyPayload) = sendManagerMessage(buildManagerSocketPath('core-manager'), $requestPayload, 'core', (int)$ManagerSocketTimeout);
-      if ($messageWasDelivered && isset($replyPayload['Approved']) && $replyPayload['Approved'] === TRUE) $WorkerWasKilled = TRUE;
-      print($Lol.($WorkerWasKilled ? 'Worker '.$targetPid.' terminated.' : 'Worker '.$targetPid.' could not be terminated.').$Lol); } }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $requestPayload, $replyPayload, $workerRegistry, $messageWasDelivered, $registryWasRead, $cleanTarget, $targetPid, $targetToken, $workerTarget);
-  return $WorkerWasKilled; }
-// / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to read one line of input from the operator.
@@ -7515,29 +7100,6 @@ function askOperator($promptText) {
   return $OperatorResponse; }
 // / -----------------------------------------------------------------------------------
 
-// / -----------------------------------------------------------------------------------
-// / A function to ask for confirmation on a destructive command line action.
-// / Accepts the prompt text & a boolean indicating confirmation was already given.
-// / Returns TRUE when the action may proceed.
-function confirmDestructiveAction($promptText, $confirmationSupplied) {
-  // / Set variables.
-  global $Lol, $EnableMemoryProtection;
-  $ActionIsConfirmed = FALSE;
-  $inputHandle = FALSE;
-  $typedAnswer = '';
-  if ($confirmationSupplied) $ActionIsConfirmed = TRUE;
-  else {
-    print($Lol.$promptText.$Lol.'Type YES to continue. Anything else cancels. '.$Lol);
-    $inputHandle = @fopen('php://stdin', 'r');
-    if ($inputHandle !== FALSE) {
-      $typedAnswer = trim((string)fgets($inputHandle));
-      @fclose($inputHandle);
-      if ($typedAnswer === 'YES') $ActionIsConfirmed = TRUE; }
-    if (!$ActionIsConfirmed) print($Lol.'Cancelled.'.$Lol); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $inputHandle, $typedAnswer, $promptText, $confirmationSupplied);
-  return $ActionIsConfirmed; }
-// / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / The main logic of the program that makes use of the functions above.
@@ -7666,6 +7228,10 @@ else if ($Verbose) logEntry('Verified the Pipeline Core. '.$PipelineCount.' conv
 // / The following code decides if the security context being attempted matches a valid CLI or web request.
 // / Error 27 should not be possible & should never be able to fire. If it does something is seriously wrong.
 list($CommandLineHandled, $UserType) = parseCommandLine();
+// / The application tells the Engine how it was reached, once it knows.
+// / A CLI invocation & an HTTP request reach the same file, so the Engine cannot work
+// / this out & is told. A pipeline declaring a surface it does not permit is refused.
+$EngineActiveSurface = $UserType;
 if ($CommandLineHandled && $UserType === 'web') errorEntry('Could not verify user type!', 27, TRUE);
 
 // / If this is a CLI operation log a warning that conversion operations will be disabled.
@@ -7688,9 +7254,11 @@ if (!$CommandLineHandled && $UserType === 'web') {
     else if ($Verbose) logEntry('Verified inbound connection.');
 
     // / The following code verifies that required directories exist & creates them where needed.
-    list ($RequiredDirsExist, $RequiredDirs) = verifyRequiredDirs();
+    list ($RequiredDirsExist, $RequiredDirs, $RequiredDirsVerified) = verifyRequiredDirs();
     if (!$RequiredDirsExist) errorEntry('Could not verify required directories!', 12, TRUE);
-    else if ($Verbose) logEntry('Verified required directories.');
+    // / One line rather than one per directory. It says how many, so a count that drops is
+    // / visible without every path being printed on every request.
+    else if ($Verbose) logEntry('Verified '.$RequiredDirsVerified.' required directories.');
 
     // / The following code removes the build & development environments if config.php asks for it.
     list ($BuildEnvCleaned, $BuildEnvDeleted, $DevDocsDeleted) = cleanBuildEnvironment();

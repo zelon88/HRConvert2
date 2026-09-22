@@ -90,6 +90,9 @@ $Capabilities = array(
 // / Pairs removed from the cross product above, written as 'input>output'.
 // / A conversion that produces the format it was handed is not a conversion. FFMPEG will
 // / happily re-encode a file into its own container & the result is a slower, larger, lossier
+// / What this pipeline shells out to. Names must match the manifest exactly.
+$PipelineDependencies = array('FFMPEG', 'Bubblewrap');
+
 // / copy of what the user already had.
 $PipelineExclude = array(
   'mp4>mp4', 'm4v>m4v', 'mkv>mkv', 'avi>avi', 'mov>mov', 'wmv>wmv', 'flv>flv',

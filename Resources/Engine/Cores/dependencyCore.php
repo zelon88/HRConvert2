@@ -304,6 +304,56 @@ function resolveTargetVersion($dependencyEntry) {
 
 
 // / -----------------------------------------------------------------------------------
+// / A function to judge a manifest entry before anything is probed.
+// / Accepts the entry. Returns whether it is complete, whether its license is clear & the
+// / reason it was refused, in that order.
+// /
+// / Provenance & mechanism are different things. An entry with no License & no Source can
+// / still name a working binary & a version command that answers. It tells the application
+// / everything needed to USE the tool & nothing about where the tool came from.
+// / Whether that is acceptable is an installation's decision rather than this function's,
+// / which is why both gates are settings & both default to what already happened.
+// /
+// / GPL compatibility is checked BY NAME against a list, & the list is deliberately short.
+// / A license this does not recognize is treated as unclear rather than as incompatible,
+// / because a wrong refusal & a wrong acceptance are both bad & only one of them is loud.
+// / GPL-2.0 only is absent on purpose. It is not compatible with GPLv3 & listing it would
+// / be the wrong kind of convenient.
+function judgeDependencyEntry($dependencyEntry) {
+  // / Set variables.
+  global $EngineEnforceGPLCompliantDeps, $EngineAllowIncompleteDeps, $EnableMemoryProtection;
+  $EntryIsComplete = TRUE;
+  $EntryIsLicenseClear = TRUE;
+  $GateReason = '';
+  $declaredLicense = $provenanceField = '';
+  $compatibleLicenses = $missingFields = array();
+  $compatibleLicenses = array('GPL-3.0', 'GPL-2.0-or-later', 'LGPL-2.1', 'LGPL-3.0', 'MIT',
+    'BSD-2-Clause', 'BSD-3-Clause', 'Apache-2.0', 'ISC', 'MPL-2.0', 'Zlib', 'Unlicense',
+    'CC0-1.0', 'PHP-3.01', 'Public Domain');
+  $declaredLicense = isset($dependencyEntry['License']) ? trim((string)$dependencyEntry['License']) : '';
+  if (isset($EngineEnforceGPLCompliantDeps) && $EngineEnforceGPLCompliantDeps === TRUE) {
+    if ($declaredLicense === '') {
+      $EntryIsLicenseClear = FALSE;
+      $GateReason = 'It declares no license & --Engine Enforce GPL Compliant Deps-- is on.'; }
+    else if (!in_array($declaredLicense, $compatibleLicenses, TRUE)) {
+      $EntryIsLicenseClear = FALSE;
+      $GateReason = 'It declares '.$declaredLicense.', which is not on the compatible list.'; } }
+  // / Completeness is about the fields that say where a thing came from, never about the
+  // / fields needed to run it. A missing Binary or VersionCommand is a broken entry & is
+  // / caught by the probe rather than here.
+  if ($EntryIsLicenseClear && (!isset($EngineAllowIncompleteDeps) or $EngineAllowIncompleteDeps !== TRUE)) {
+    foreach (array('License', 'Source', 'Purpose') as $provenanceField) {
+      if (!isset($dependencyEntry[$provenanceField]) or trim((string)$dependencyEntry[$provenanceField]) === '') $missingFields[] = $provenanceField; }
+    if (!empty($missingFields)) {
+      $EntryIsComplete = FALSE;
+      $GateReason = 'It declares no '.implode(' or ', $missingFields).' & --Engine Allow Incomplete Deps-- is off.'; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $declaredLicense, $provenanceField, $compatibleLicenses, $missingFields, $dependencyEntry);
+  return array($EntryIsComplete, $EntryIsLicenseClear, $GateReason); }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
 // / A function to read the installed version of one dependency.
 // / Accepts one manifest entry.
 // / Returns a presence boolean, the detected version & a status word, in that order.
@@ -316,6 +366,9 @@ function resolveTargetVersion($dependencyEntry) {
 function resolveDependencyState($dependencyEntry) {
   // / Set variables.
   global $HostArchitecture, $EnableMemoryProtection;
+  $entryIsComplete = $entryIsLicenseClear = TRUE;
+  $entryWasRefused = FALSE;
+  $entryGateReason = '';
   $DependencyIsPresent = FALSE;
   $DetectedVersion = '';
   $DependencyStatus = 'absent';
@@ -332,15 +385,56 @@ function resolveDependencyState($dependencyEntry) {
   // / version command for a binary that was never built for this architecture produces a
   // / confusing error rather than a clear answer.
   list ($dependencyEntry, $architectureIsSupported, $unsupportedReason) = applyArchitectureRules($dependencyEntry, (string)$HostArchitecture);
+  // / The entry is judged before it is probed, & a refusal short circuits the architecture
+  // / check below by making it unsupported for a different stated reason.
+  // / A SEPARATE STATEMENT rather than another arm of the chain. Adding a branch to the
+  // / if/else below is what broke this function the first time it was attempted.
+  // / Both gates default to off, so an installation setting neither reaches the probe with
+  // / $architectureIsSupported exactly as applyArchitectureRules left it.
+  list ($entryIsComplete, $entryIsLicenseClear, $entryGateReason) = judgeDependencyEntry($dependencyEntry);
+  if (!$entryIsLicenseClear or !$entryIsComplete) {
+    $architectureIsSupported = FALSE;
+    $unsupportedReason = $entryGateReason;
+    $entryWasRefused = TRUE;
+    warningEntry((string)$dependencyEntry['Name'].' was refused. '.$entryGateReason); }
   if (!$architectureIsSupported) {
-    $DependencyStatus = 'unsupported';
+    // / A refusal & an unsupported architecture reach here the same way & mean different
+    // / things. An operator whose entry was refused by a policy needs to read that, not be
+    // / told their machine is wrong.
+    $DependencyStatus = $entryWasRefused ? 'refused' : 'unsupported';
     $RawOutput = $unsupportedReason; }
   else {
   // / A dependency with no binary is a library. Its version command is the only evidence.
   if ((string)$dependencyEntry['Binary'] !== '') {
-    $binaryPath = locateDependency((string)$dependencyEntry['Binary']);
-    if ($binaryPath === '') $DependencyStatus = 'absent';
-    else $DependencyIsPresent = TRUE; }
+      // / A PATH & A NAME ARE DIFFERENT QUESTIONS & asking the wrong one refuses a working
+      // / tool.
+      // / locateDependency finds a binary BY NAME. It refuses anything containing a path
+      // / separator, & its own comment says why: a caller supplying a path has already
+      // / decided where the thing is. That contract is reasonable & was never the problem.
+      // / The problem was handing it a path anyway & reading its refusal as absence. A
+      // / developer who builds their own ffmpeg, puts it somewhere deliberate & names that
+      // / path in the manifest was told the tool was ABSENT while it sat there working.
+      // /
+      // / So the kind of value decides the question. A separator means the operator CHOSE
+      // / this file & it is verified where they put it. A bare name means find it, & the
+      // / search order & the command -v fallback are unchanged.
+      // / Nothing about locateDependency changed. It was never wrong.
+      if (strpos((string)$dependencyEntry['Binary'], DIRECTORY_SEPARATOR) !== FALSE) {
+        $binaryPath = (string)$dependencyEntry['Binary'];
+        if (is_file($binaryPath) && is_executable($binaryPath)) $DependencyIsPresent = TRUE;
+        else {
+          // / A path that is not there is a CONFIGURATION MISTAKE rather than a missing
+          // / tool, & it reads differently. Reporting both as absent is what hid this.
+          // / An operator who named a path wants to know the path is wrong. Telling them to
+          // / install something they already installed sends them the wrong way entirely.
+          $DependencyStatus = 'misconfigured';
+          $RawOutput = 'The manifest names '.$binaryPath.' & nothing executable is there.';
+          warningEntry('The manifest names a path for '.(string)$dependencyEntry['Name'].' & nothing executable is at it: '.$binaryPath);
+          $binaryPath = ''; } }
+      else {
+        $binaryPath = locateDependency((string)$dependencyEntry['Binary']);
+        if ($binaryPath === '') $DependencyStatus = 'absent';
+        else $DependencyIsPresent = TRUE; } }
   else if ((string)$dependencyEntry['VersionCommand'] !== '') {
     // / A library has no binary, so its version command is both the presence test & the
     // / version read. The output is kept & reused below rather than running it a second
@@ -387,7 +481,7 @@ function resolveDependencyState($dependencyEntry) {
   // / status already set & nothing having been executed on its behalf.
   }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $architectureIsSupported, $unsupportedReason, $binaryPath, $versionOutput, $versionMatches, $commandOutput, $commandExitCode, $commandWasExecuted, $dependencyEntry);
+  purgeSensitiveMemory($EnableMemoryProtection, $entryIsComplete, $entryIsLicenseClear, $entryWasRefused, $entryGateReason, $architectureIsSupported, $unsupportedReason, $binaryPath, $versionOutput, $versionMatches, $commandOutput, $commandExitCode, $commandWasExecuted, $dependencyEntry);
   return array($DependencyIsPresent, $DetectedVersion, $DependencyStatus, $RawOutput); }
 // / -----------------------------------------------------------------------------------
 
@@ -441,7 +535,7 @@ function checkDepends($subsystemFilter) {
       // / Nothing shipped is both required & architecture limited today. The rule is here
       // / because the alternative is an installation that reports itself ready while a tool
       // / it cannot run without was quietly skipped.
-      if ($dependencyEntry['Required'] && in_array($dependencyStatus, array('absent', 'outdated', 'unsupported', 'too-new'), TRUE)) $DependenciesAreReady = FALSE;
+      if ($dependencyEntry['Required'] && in_array($dependencyStatus, array('absent', 'outdated', 'unsupported', 'too-new', 'misconfigured', 'refused'), TRUE)) $DependenciesAreReady = FALSE;
       $DependencyFindings[] = array(
         'Name' => (string)$dependencyEntry['Name'],
         'Status' => $dependencyStatus,
@@ -458,7 +552,7 @@ function checkDepends($subsystemFilter) {
   // / every requirement is met, printed directly beneath two failures, invites an operator
   // / to believe the failures do not matter without ever saying that they do not.
   foreach ($DependencyFindings as $finding) {
-    if (!$finding['Required'] && (in_array($finding['Status'], array('absent', 'outdated', 'too-new'), TRUE))) $OptionalProblems++; }
+    if (!$finding['Required'] && (in_array($finding['Status'], array('absent', 'outdated', 'too-new', 'misconfigured', 'refused'), TRUE))) $OptionalProblems++; }
   if ($Verbose) logEntry('Dependency check completed across '.count($DependencyFindings).' dependenc(ies). Ready: '.($DependenciesAreReady ? 'YES' : 'NO').'. Optional problems: '.$OptionalProblems.'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $dependsManifest, $dependencyEntry, $missingRequirements, $manifestIsAvailable, $dependencyIsPresent, $detectedVersion, $dependencyStatus, $detectedDependsVersion, $requirementName, $rawOutput, $presenceMap, $stateMap, $finding, $subsystemFilter);
@@ -489,7 +583,7 @@ function showDependencyFindings($dependencyFindings) {
     if (!empty($finding['Missing'])) print(str_pad('', 20).'waiting on '.implode(', ', $finding['Missing']).$Lol);
     // / A version command that ran & produced something the pattern did not match. Showing
     // / what it actually printed is the only way to correct the pattern in depends.php.
-    if (($finding['Status'] === 'unknown-version' or $finding['Status'] === 'absent') && trim((string)$finding['Output']) !== '') print(str_pad('', 20).'reported: '.substr(trim((string)$finding['Output']), 0, 90).$Lol);
+    if (($finding['Status'] === 'unknown-version' or $finding['Status'] === 'absent' or $finding['Status'] === 'misconfigured' or $finding['Status'] === 'refused') && trim((string)$finding['Output']) !== '') print(str_pad('', 20).'reported: '.substr(trim((string)$finding['Output']), 0, 90).$Lol);
     // / A problem is anything that is not ok & not deliberately unverifiable.
     if ($finding['Status'] !== 'ok' && $finding['Status'] !== 'unverifiable') {
       if ($finding['Required']) $requiredProblems++;
@@ -517,10 +611,29 @@ function installOneDependency($dependencyEntry, $packageManager) {
   // / Set variables.
   // / $Lol is declared because a source build reports its progress. A build takes minutes
   // / & an operator watching a silent terminal has no way to tell it apart from a hang.
-  global $Lol, $EnableMemoryProtection, $HostArchitecture;
+  global $Lol, $EnableMemoryProtection, $HostArchitecture, $EngineAllowIncompleteDepsUpdate;
   $chosenVersion = $choiceReason = $chosenVersionPrefix = '';
   $InstallSucceeded = FALSE;
   $ReturnData = '';
+  // / Using what an operator supplied & CHANGING it are different risks.
+  // / An entry with no declared Source names nowhere to fetch from. Running an update
+  // / against it means acting on a binary somebody deliberately placed, using whatever a
+  // / package manager decides, & the operator finds out afterwards.
+  // / So a blocked entry is SKIPPED rather than acted on. Nothing is removed & nothing is
+  // / overwritten, & the reason is reported rather than logged quietly.
+  // / --Engine Allow Incomplete Deps Update-- turns this off for an installation that
+  // / would rather have the update than the certainty.
+  list ($entryIsComplete, $entryIsLicenseClear, $entryGateReason) = judgeDependencyEntry($dependencyEntry);
+  if (!$entryIsLicenseClear) {
+    warningEntry('Refusing to install '.(string)$dependencyEntry['Name'].'. '.$entryGateReason);
+    $ReturnData = 'Refused. '.$entryGateReason;
+    $entryIsBlocked = TRUE; }
+  else if (!$entryIsComplete && (!isset($EngineAllowIncompleteDepsUpdate) or $EngineAllowIncompleteDepsUpdate !== TRUE)) {
+    warningEntry('Skipping '.(string)$dependencyEntry['Name'].'. '.$entryGateReason.' Nothing was changed.');
+    $ReturnData = 'Skipped. '.$entryGateReason;
+    $entryIsBlocked = TRUE; }
+  // / A blocked entry does no work. Everything below reaches the return untouched.
+  if (!$entryIsBlocked) {
   $installCommand = $packageList = '';
   $commandOutput = array();
   $commandExitCode = 1;
@@ -615,8 +728,10 @@ function installOneDependency($dependencyEntry, $packageManager) {
     exec($installCommand, $commandOutput, $commandExitCode);
     $ReturnData = implode(PHP_EOL, $commandOutput);
     if ($commandExitCode === 0) $InstallSucceeded = TRUE; }
+  // / Closes the blocked check above.
+  }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $chosenVersion, $choiceReason, $chosenVersionPrefix, $installCommand, $packageList, $commandOutput, $commandExitCode, $dependencyEntry, $packageManager);
+  purgeSensitiveMemory($EnableMemoryProtection, $entryIsComplete, $entryIsLicenseClear, $entryGateReason, $entryIsBlocked, $chosenVersion, $choiceReason, $chosenVersionPrefix, $installCommand, $packageList, $commandOutput, $commandExitCode, $dependencyEntry, $packageManager);
   return array($InstallSucceeded, $ReturnData); }
 // / -----------------------------------------------------------------------------------
 

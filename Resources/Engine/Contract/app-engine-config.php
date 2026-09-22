@@ -69,6 +69,10 @@ $EngineRepairProvider = 'fixManagedPermissions';
 
 // /   A real config.php at defaults. What this application's configuration looks like.
 $EngineConfigTemplate = 'Engine/Contract/config-template.php';
+
+// /   Handles arguments beginning --app. This application has none yet, & the first
+// /   will be conversion from the command line.
+$EngineApplicationArgumentHandler = '';
 // / -----------------------------------------------------------------------------------
 
 

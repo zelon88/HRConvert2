@@ -67,6 +67,8 @@ function getAcceptedPipelines() {
     'Archive' => 'v3.9.3',
     // / Scanner pipelines. They declare no formats & are chosen by name.
     'ClamAV' => 'v3.9.3',
+    // / The first pipeline of kind file. Operations that do not care what is in a file.
+    'Files' => 'v3.9.3',
     'ScanCore' => 'v3.9.3');
   return $AcceptedPipelines; }
 // / -----------------------------------------------------------------------------------
@@ -178,9 +180,9 @@ function verifyPipelineComponent($pipelineFolderName, $requiredPipelineVersion) 
         // / Clear every declaration so a config that omits one cannot inherit the last one.
         $PipelineVersion = $PipelineFamily = $PipelineDisplayName = $PipelineEntryPoint = $PipelineSubsystem = NULL;
         $PipelinePriority = $PipelineRequestFields = $Capabilities = $PipelineExclude = NULL;
-        $PipelineKind = $PipelineSharedModules = NULL;
+        $PipelineKind = $PipelineSharedModules = $PipelineUsage = $PipelineDependencies = NULL;
         require ($configPath);
-        list ($declarationsAreValid, $PipelineRecord) = validatePipelineDeclarations($pipelineFolderName, $converterPath, $PipelineFamily, $PipelineDisplayName, $PipelinePriority, $PipelineEntryPoint, $PipelineSubsystem, $PipelineRequestFields, $Capabilities, $PipelineExclude, $PipelineKind, $PipelineSharedModules);
+        list ($declarationsAreValid, $PipelineRecord) = validatePipelineDeclarations($pipelineFolderName, $converterPath, $PipelineFamily, $PipelineDisplayName, $PipelinePriority, $PipelineEntryPoint, $PipelineSubsystem, $PipelineRequestFields, $Capabilities, $PipelineExclude, $PipelineKind, $PipelineSharedModules, $PipelineUsage, $PipelineDependencies);
         if ($declarationsAreValid) {
           $PipelineRecord['Version'] = $cleanDetected;
           $PipelineIsAvailable = TRUE; } } } }
@@ -197,9 +199,12 @@ function verifyPipelineComponent($pipelineFolderName, $requiredPipelineVersion) 
 // / Returns a validity boolean & the assembled declaration record, in that order.
 // / A refusal names the folder & the declaration that was wrong, because a pipeline author
 // / reading only that the pipeline was refused cannot correct anything.
-function validatePipelineDeclarations($pipelineFolderName, $pipelineConverterPath, $declaredFamily, $declaredDisplayName, $declaredPriority, $declaredEntryPoint, $declaredSubsystem, $declaredRequestFields, $declaredCapabilities, $declaredExclusions, $declaredKind, $declaredSharedModules) {
+function validatePipelineDeclarations($pipelineFolderName, $pipelineConverterPath, $declaredFamily, $declaredDisplayName, $declaredPriority, $declaredEntryPoint, $declaredSubsystem, $declaredRequestFields, $declaredCapabilities, $declaredExclusions, $declaredKind, $declaredSharedModules, $declaredUsage, $declaredDependencies) {
   // / Set variables.
   global $EnableMemoryProtection;
+  $dependencyEntry = '';
+  $acceptedUsage = array();
+  $usageEntry = '';
   $DeclarationsAreValid = FALSE;
   $PipelineRecord = array();
   $inputExtensions = $outputExtensions = $cleanExclusions = array();
@@ -207,13 +212,16 @@ function validatePipelineDeclarations($pipelineFolderName, $pipelineConverterPat
   else if (!is_string($declaredEntryPoint) or !preg_match('/^[A-Za-z][A-Za-z0-9_]*$/', (string)$declaredEntryPoint)) warningEntry('The '.$pipelineFolderName.' pipeline declared an unusable entry point name & was refused.');
   else if (!is_array($declaredCapabilities) or !isset($declaredCapabilities['Input']) or !isset($declaredCapabilities['Output'])) warningEntry('The '.$pipelineFolderName.' pipeline declared no usable capabilities & was refused.');
   else if (!is_array($declaredCapabilities['Input']) or !is_array($declaredCapabilities['Output'])) warningEntry('The '.$pipelineFolderName.' pipeline declared capabilities that are not arrays & was refused.');
-    // / A SCANNER DECLARES NO FORMATS ON PURPOSE & is the one kind exempt from this.
+    // / A scanner or a file pipeline declares NO FORMATS on purpose.
+    // / A file pipeline moves, lists, deletes or shares a file & does not care what is in
+    // / it. Upload, download & delete are the same operation whatever the extension says,
+    // / which is why an empty capability list is the honest declaration for one.
     // / Every scanner claims every file, so there is nothing for an extension to decide &
     // / an empty list is the honest declaration rather than an omission.
     // / This rule was written when every pipeline converted something. It refused both
     // / scanner pipelines silently, so they were pinned, installed, syntactically valid &
     // / never enumerated, & the version report counted zero of them without saying why.
-  else if ($declaredKind !== 'scanner' && (count($declaredCapabilities['Input']) === 0 or count($declaredCapabilities['Output']) === 0)) warningEntry('The '.$pipelineFolderName.' pipeline declared an empty capability list & was refused.');
+  else if (!in_array($declaredKind, array('scanner', 'file'), TRUE) && (count($declaredCapabilities['Input']) === 0 or count($declaredCapabilities['Output']) === 0)) warningEntry('The '.$pipelineFolderName.' pipeline declared an empty capability list & was refused.');
   else {
     // / Extensions are compared lowercased everywhere else, so they are lowercased here once.
     $inputExtensions = array_map('strtolower', $declaredCapabilities['Input']);
@@ -247,7 +255,30 @@ function validatePipelineDeclarations($pipelineFolderName, $pipelineConverterPat
     // / scanner claims every file.
     // / A scanner returns findings rather than an output path, so it cannot be dispatched
     // / through the conversion path & is not offered as one.
-    $PipelineRecord['Kind'] = (is_string($declaredKind) && in_array(trim((string)$declaredKind), array('operation', 'scanner'), TRUE)) ? trim((string)$declaredKind) : 'conversion';
+      // / WHERE THIS PIPELINE IS APPROVED TO RUN, & it is a separate question from KIND.
+      // / Kind says what a pipeline does. Usage says which doors it may be reached through.
+      // / A conversion that is safe to offer a browser is not automatically safe to offer a
+      // / command line running as root, & a maintenance operation nobody should reach over
+      // / http may be exactly right from a terminal.
+      // / Declaring nothing means web & gui, which is every pipeline that existed before
+      // / this field did. An existing pipeline keeps behaving exactly as it did.
+      // / A pipeline that wants a command line must SAY SO. That is the safe direction for
+      // / a default to fail in.
+      // / WHAT THIS PIPELINE NEEDS INSTALLED, declared rather than discovered.
+      // / A pipeline knows which binaries it shells out to & the manifest does not know
+      // / which pipeline wanted a thing. Declaring it here is how a component becomes
+      // / portable: dropping it into another application brings its requirements with it.
+      // / Names must match the manifest exactly, because that is what a comparison is.
+      $PipelineRecord['Dependencies'] = array();
+      if (is_array($declaredDependencies)) foreach ($declaredDependencies as $dependencyEntry) {
+        if (is_string($dependencyEntry) && trim($dependencyEntry) !== '') $PipelineRecord['Dependencies'][] = trim($dependencyEntry); }
+      $PipelineRecord['Usage'] = array('web', 'gui');
+      if (is_array($declaredUsage)) {
+        $acceptedUsage = array();
+        foreach ($declaredUsage as $usageEntry) if (in_array(trim(strtolower((string)$usageEntry)), array('cli', 'web', 'gui'), TRUE)) $acceptedUsage[] = trim(strtolower((string)$usageEntry));
+        if (!empty($acceptedUsage)) $PipelineRecord['Usage'] = array_values(array_unique($acceptedUsage));
+        else warningEntry('The '.$pipelineFolderName.' pipeline declared a usage naming nothing recognized. It was left at web & gui.'); }
+    $PipelineRecord['Kind'] = (is_string($declaredKind) && in_array(trim((string)$declaredKind), array('operation', 'scanner', 'file'), TRUE)) ? trim((string)$declaredKind) : 'conversion';
     $PipelineRecord['SharedModules'] = is_array($declaredSharedModules) ? $declaredSharedModules : array();
     // / A pipeline with no converter beside it is one whose entry point is defined
     // / elsewhere. That was how every family was migrated out of convertCore.php one at a
@@ -259,7 +290,7 @@ function validatePipelineDeclarations($pipelineFolderName, $pipelineConverterPat
     $DeclarationsAreValid = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $PipelineRecord is not purged, because it is a return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $inputExtensions, $outputExtensions, $cleanExclusions, $pipelineFolderName, $pipelineConverterPath, $declaredFamily, $declaredDisplayName, $declaredPriority, $declaredEntryPoint, $declaredSubsystem, $declaredRequestFields, $declaredCapabilities, $declaredExclusions, $declaredKind, $declaredSharedModules);
+  purgeSensitiveMemory($EnableMemoryProtection, $declaredDependencies, $dependencyEntry, $declaredUsage, $acceptedUsage, $usageEntry, $inputExtensions, $outputExtensions, $cleanExclusions, $pipelineFolderName, $pipelineConverterPath, $declaredFamily, $declaredDisplayName, $declaredPriority, $declaredEntryPoint, $declaredSubsystem, $declaredRequestFields, $declaredCapabilities, $declaredExclusions, $declaredKind, $declaredSharedModules);
   return array($DeclarationsAreValid, $PipelineRecord); }
 // / -----------------------------------------------------------------------------------
 
@@ -550,14 +581,31 @@ function familyHasPipeline($conversionFamily, $inputExtension, $outputExtension)
 // / time, so the entry point is tested rather than the file.
 function loadPipelineCore($pipelineFolderName) {
   // / Set variables.
-  global $Pipelines, $CoreLoaded, $Verbose, $EnableMemoryProtection;
+  global $Pipelines, $CoreLoaded, $Verbose, $EnableMemoryProtection, $EngineActiveSurface;
   $PipelineIsReady = FALSE;
   $PipelineEntryPointName = '';
   $pipelineRecord = array();
+  // / Declared rather than left to the foreach that may not run. A pipeline declaring no
+  // / shared modules never enters that loop, & purging a variable the loop never created is
+  // / a warning on every scan.
+  $activeSurface = $sharedModuleName = '';
   if (!isset($Pipelines[$pipelineFolderName])) warningEntry('Dispatch asked for the '.$pipelineFolderName.' pipeline, which was never verified.');
   else {
     $pipelineRecord = $Pipelines[$pipelineFolderName];
     $PipelineEntryPointName = $pipelineRecord['EntryPoint'];
+    // / A pipeline is refused from a surface it does not permit.
+    // / Usage was declared & displayed & never checked, which made it documentation.
+    // / A scanner is useful from a terminal & from a schedule. A download has no meaning
+    // / from a terminal at all. Those are different answers & the declaration is where an
+    // / application says which it wants.
+    // / An EMPTY $EngineActiveSurface enforces nothing. An application that has not said
+    // / how it was reached gets every pipeline, which is what happened before this existed
+    // / & is the only safe default for one that has not been wired up.
+    // / The refusal is a WARNING rather than an error. Asking from the wrong surface is a
+    // / caller mistake, & the caller is told without it taking anything else down.
+    $activeSurface = (isset($EngineActiveSurface) && is_string($EngineActiveSurface)) ? trim(strtolower($EngineActiveSurface)) : '';
+    if ($activeSurface !== '' && !empty($pipelineRecord['Usage']) && !in_array($activeSurface, $pipelineRecord['Usage'], TRUE)) warningEntry('The '.$pipelineFolderName.' pipeline permits '.implode(', ', $pipelineRecord['Usage']).' & was asked for from '.$activeSurface.'. It was refused.');
+    else {
     // / Shared modules load FIRST. A converter that calls into one would otherwise be
     // / parsed & called before the functions it depends on exist. A module that refuses to
     // / load only warns here, because the entry point check below is what actually decides
@@ -575,9 +623,75 @@ function loadPipelineCore($pipelineFolderName) {
       $PipelineIsReady = TRUE;
       if ($Verbose) logEntry('Loaded the '.$pipelineFolderName.' pipeline, entry point '.$PipelineEntryPointName.'.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+    // / Closes the surface check above.
+    }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $PipelineEntryPointName is not purged, because it is a return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $sharedModuleName, $pipelineRecord, $pipelineFolderName);
+  purgeSensitiveMemory($EnableMemoryProtection, $activeSurface, $sharedModuleName, $pipelineRecord, $pipelineFolderName);
   return array($PipelineIsReady, $PipelineEntryPointName); }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / A function to hand a pipeline a verified tool by manifest name.
+// / Accepts the name as the dependency manifest spells it. Returns the path to the binary,
+// / or FALSE when it is missing, too old or unusable.
+// /
+// / THIRTEEN PIPELINES EACH CARRIED THEIR OWN VERSION OF THIS & every one of them called a
+// / verify<Tool>Version function living in convertCore.php. A pipeline copied into another
+// / application fatals on its first run, because that function is not there.
+// / That is the whole product promise broken: a component that only works inside one
+// / application is not a component.
+// /
+// / The manifest ALREADY carries everything the check needs. VersionCommand, VersionPattern
+// / & MinimumVersion, for every tool any pipeline uses. Thirteen near identical probes were
+// / re deriving what one file already states.
+// /
+// / IT ASKS THE DEPENDENCY CORE rather than probing. That means a pipeline gets the same
+// / answer --setup --check-depends gives, including the architecture rules, the version
+// / window & the policy gates. A tool refused by a licence gate is refused here too, which
+// / would not have been true of thirteen separate probes.
+// /
+// / FALSE MEANS DO NOT RUN. Every caller must treat it that way. Returning a path that has
+// / not been verified would be worse than returning nothing.
+function verifiedToolPath($manifestName) {
+  // / Set variables.
+  // / $CoreLoaded is declared because the manifest is required INSIDE this function, & every
+  // / component checks it at file scope. Without it the require sees an undefined variable &
+  // / the component refuses to load, which reads as a missing manifest rather than a scope
+  // / mistake.
+  global $CoreLoaded, $DependsManifest, $InstLoc, $DirSep, $Verbose, $EnableMemoryProtection;
+  $VerifiedPath = FALSE;
+  $manifestPath = $dependencyStatus = $detectedVersion = $rawOutput = '';
+  $manifestEntry = array();
+  $entryWasFound = $dependencyIsPresent = FALSE;
+  // / The manifest is loaded by the Dependency Core & the Dependency Core only loads for
+  // / --setup, so on a conversion request the global is empty & is required here.
+  if (!isset($DependsManifest) or !is_array($DependsManifest)) {
+    $manifestPath = $InstLoc.$DirSep.'Resources'.$DirSep.'Engine'.$DirSep.'Contract'.$DirSep.'depends.php';
+    if (file_exists($manifestPath)) require_once($manifestPath); }
+  if (!isset($DependsManifest) or !is_array($DependsManifest)) warningEntry('The dependency manifest could not be read, so '.(string)$manifestName.' could not be verified.');
+  else if (!function_exists('resolveDependencyState')) warningEntry('The Dependency Core is unavailable, so '.(string)$manifestName.' could not be verified.');
+  else {
+    foreach ($DependsManifest as $manifestEntry) {
+      if ((string)$manifestEntry['Name'] !== (string)$manifestName) continue;
+      $entryWasFound = TRUE;
+      // / FOUR values & the status is THIRD. Guessing the shape returned the presence flag
+      // / as the status, so every tool reported as status 1 & was refused.
+      list ($dependencyIsPresent, $detectedVersion, $dependencyStatus, $rawOutput) = resolveDependencyState($manifestEntry);
+      // / ok is the only status a pipeline may run on. absent, outdated, too-new,
+      // / unsupported, misconfigured & refused all mean the same thing to a caller.
+      if ($dependencyStatus === 'ok') {
+        $VerifiedPath = (string)$manifestEntry['Binary'];
+        if (strpos($VerifiedPath, $DirSep) === FALSE) $VerifiedPath = locateDependency($VerifiedPath);
+        if ($VerifiedPath === '') $VerifiedPath = FALSE;
+        else if ($Verbose) logEntry((string)$manifestName.' verified at '.$VerifiedPath.', version '.$detectedVersion.'.'); }
+      else warningEntry((string)$manifestName.' is '.$dependencyStatus.' & will not be used.');
+      break; }
+    if (!$entryWasFound) warningEntry('No manifest entry is named '.(string)$manifestName.', so it could not be verified.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $manifestPath, $dependencyIsPresent, $dependencyStatus, $detectedVersion, $rawOutput, $manifestEntry, $entryWasFound, $manifestName);
+  return $VerifiedPath; }
 // / -----------------------------------------------------------------------------------
 
 

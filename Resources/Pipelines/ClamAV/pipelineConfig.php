@@ -56,6 +56,12 @@ $Capabilities = array(
 // / The subsystem this belongs to, for the readiness report.
 $PipelineSubsystem = 'Security';
 
+// / WHERE THIS PIPELINE MAY BE REACHED FROM. A scanner is useful from a terminal & from
+// / a schedule, not only from a browser, so it declares cli as well.
+// / Declaring nothing means web & gui, which is what every pipeline written before this
+// / field existed gets. A pipeline that wants a command line must say so.
+$PipelineUsage = array('cli', 'web', 'gui');
+
 // / A scanner takes no request fields. It is handed paths by the caller & nothing else.
 $PipelineRequestFields = array();
 
@@ -64,6 +70,9 @@ $PipelineSharedModules = array();
 
 
 // / -----------------------------------------------------------------------------------
+// / What this pipeline shells out to. Names must match the manifest exactly.
+$PipelineDependencies = array('ClamAV');
+
 // / No pair is excluded, because no pair exists.
 $PipelineExclude = array();
 // / -----------------------------------------------------------------------------------

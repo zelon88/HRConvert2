@@ -129,10 +129,12 @@ Do not run the above against the data location without restoring the secret file
   -y, --yes                   Skip the confirmation prompt on the two above.
   --config <argument>         An entire suite of commands for configuring HRConvert2 installations.
   --setup <argument>          An entire suite of commands for installing & managing HRConvert2 installations.
+  --pipeline <argument>       Inspect & verify the installed pipelines.
+  --app<name>                 Handed to the application untouched. See --About --app.
 
 The -c, -u & -fp arguments require root.
 The -l, -k, --kill-all-workers & --kill-every-worker arguments require root or the web server user.
-The -v, -h & --status arguments work when run as any user.
+The -v, -h, --status & --pipeline arguments work when run as any user.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -232,6 +234,45 @@ config.php already declares, which for a fresh clone is the shipped defaults.
 The supply chain report is comma separated & opens in any spreadsheet. It carries one dependency
 per row with its licence, upstream source, purpose & detected version filled in, & eight columns
 left deliberately blank. Those columns are the audit.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ 
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About   --pipeline----
+ 
+Reports on the installed pipelines & checks that they are wired correctly.
+ 
+Requires the Pipeline Core component. Needs no privileges. It reads & reports & changes nothing.
+ 
+  --pipeline --list                        Every loaded pipeline with its kind, usage & version.
+  --pipeline --describe <Name>             One pipeline in full: kind, usage, entry point, what
+                                           it reads & what it writes.
+  --pipeline --verify                      Compare the pinned pipelines against those that loaded.
+  --pipeline --check-depends               Compare what each pipeline says it needs against the
+                                           dependency manifest.
+ 
+--verify is the one worth running after any change. A pipeline can be pinned, installed &
+syntactically valid & still never load, & nothing else reports it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ 
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About   --app----
+ 
+Arguments beginning --app belong to the application rather than to the Engine.
+ 
+Every other argument documented here is the Engine's. Setup, configuration, the managers, the
+listener, cleanup & self update are true of any application of this shape. An argument that
+begins --app is handed to the application untouched & the Engine takes no view on it.
+ 
+A prefix is used rather than a list of names, so the Engine never has to ask the application
+what it accepts. Everything --app is the application's & everything else is not.
+ 
+HRConvert2 declares no --app argument yet. Any one given is refused with a message saying so.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
  
 

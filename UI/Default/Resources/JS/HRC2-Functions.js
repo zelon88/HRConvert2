@@ -669,7 +669,12 @@ window.HRC2 = {
     if (element.dropzone) return;
     new Dropzone(element, {
       url: 'convertCore.php',
-      paramName: 'fileToUpload',
+      // / MUST MATCH $_FILES['file'] in uploadFiles, which is the key the server reads.
+      // / This said fileToUpload & the server has always read file, so an upload arrived
+      // / under a name nothing looked for. uploadFiles then read a missing key, got NULL,
+      // / failed to sanitize it & logged error 6000, while Dropzone showed a finished
+      // / upload. file is also Dropzone's own default, which is what version 5 sent.
+      paramName: 'file',
       dictDefaultMessage: (typeof dropzoneText !== 'undefined') ? dropzoneText : 'Drop files here to upload',
       addRemoveLinks: false,
       // / The server decides what it will accept & says so. A limit repeated here would be a
@@ -679,4 +684,19 @@ window.HRC2 = {
     });
   }
 };
+
+// / THE DROPZONE STARTS ITSELF, on any page that carries the form.
+// / Version 5 did this through autoDiscover. Version 6 removed it, & the replacement was
+// / reached ONLY through init(), which only convertGui2.php calls. convertGui1.php is the
+// / page with the upload form & it never called init(), so no instance was ever created.
+// / The box rendered, stayed empty, showed no text & accepted nothing.
+// / Starting here means no page has to remember to ask. startDropzone returns at once on a
+// / page without the form & refuses to start twice, so calling it from init() as well is
+// / harmless.
+// / DOMContentLoaded rather than immediately, because this file loads BEFORE dropzone.js
+// / in header.php. Run at load time, Dropzone is not defined yet & startDropzone returns
+// / silently, which is the very failure this fixes.
+// / No jQuery, because the upload page does not load it.
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { window.HRC2.startDropzone(); });
+else window.HRC2.startDropzone();
 // / -----------------------------------------------------------------------------------

@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.9.3.
+v3.9.4.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -26,6 +26,117 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+
+--------------------
+COMMIT 9/8/2026
+v3.9.4 - Absorb Core Manager & the Cores. The Engine owns the environment.
+
+-v3.9.4.
+-Renumber four errors that shared a number with an unrelated one: 505, 506, 23003 & 32017.
+-Correct 8 error descriptions that no longer matched the code.
+-Document --pipeline & --app.
+-Document --Pipeline Usage--, --Pipeline Dependencies--, the file kind & verifiedToolPath.
+-Add the banner to README.md & fix its broken command reference link.
+-Absorb coreManager.php into the engine.
+-Sandbox the Stream pipeline.
+-Never give a tool a resolver.
+-Split Model, Image, SCAD & Drawing config arrays into input and output.
+-Add five model output formats.
+-Replace su with a fork that drops privilege & cannot climb back.
+-Move socket directory ownership to -fp.
+-Give dependency probes a disposable environment & directory.
+-Grow the linters to 18 checks.
+-Fix redeclare().
+-Add test tools for the address filter, redeclare & the SCAD sanitizer.
+-Prove the hostname where it lands, not where it came from.
+-Network policy values are locals again.
+-Print the dependency verdict once.
+-Resolve the Engine contract.
+-Add the Environment Manager.
+-Fix --kill-all-workers.
+-Delete the Wide interface.
+-Add a playlist source URL field.
+-Add downloading a file from a URL.
+-Upgrade the bundled Dropzone to 6.2.0.
+-The dropdown arrow follows the reading direction.
+-The file list panel takes a colour from the scheme instead of a hardcoded cream.
+-The dropzone scrolls instead of pushing its previews over the footer.
+-Fix 92 language pack labels missing an opening quote.
+-Add --Logo URL--.
+-The Default file list card takes a colour from the scheme.
+-List features that are installed & switched off in -v.
+-PyMeshLab installs with pip.
+-Add --Version Source-- to the manifest.
+-Python builds from Documentation/Build, like FFMPEG & ImageMagick already did.
+-Add --Maximum Version-- to the dependency manifest.
+-Python updates within the 3.14 line & refuses to leave it.
+-Name pip as a dependency.
+-Know what machine this is.
+-Both scanner pipelines were never enumerated.
+-Virus scanning becomes pipelines.
+-Correct 81 file locations in ERROR_DESCRIPTIONS.txt against where each number is actually raised.
+-Errors 31009 & 31010 were each raising two different errors.
+-Remove 8 stale error blocks.
+-The template no longer carries two headers & two load guards.
+-Add three dependency policy gates.
+-Respect a developer supplied dependency.
+-Pipelines declare what they need installed.
+-Record how to decide whether something is a pipeline, in ABOUT_ENGINE_CONTRACT.txt.
+-Move symlinkmtime & getFilesize into Cores/environmentCore.php & keep them, though nothing calls either today.
+-Constrain symlink following in the <Directory> block -fp writes.
+-Move enableConversionLimits into Setup Core.
+-Move convertLocIsConfigured into the Engine, beside enumerateDataLocations.
+-The function level migration is complete.
+-FIX. Uploads were impossible on convertGui1.php in both interfaces.
+-Remove 56 dead CSS declarations from both stylesheets, 28 each.
+-Add verifiedToolPath to the Pipeline Core.
+-Wire virusScan to the scanner pipelines.
+-FIX. A PHP warning on every scan, from an undeclared loop variable in loadPipelineCore.
+-SECURITY. The virus scanner's raw output no longer reaches the user's report.
+-FIX. A virus detection stuck forever once anything had ever been found.
+-Move reloadApparmorProfile, closeHRC2Connection & validateInstallation into Cores/environmentCore.php.
+-Move apparmorProfileIsLoaded, confirmDestructiveAction & generateInstallSecret into Cores/environmentCore.php.
+-Move giveBackOperationBudget into the Engine.
+-Move four environment utilities into Cores/environmentCore.php.
+-Move takeOperationBudget & releaseBudgetOnShutdown into the Engine, completing the budget family.
+-Move requestConvertLoc into the Engine, beside convertLocIsConfigured & the data location work.
+-Move the three conversion budget clients into the Engine, beside the protocol they speak.
+-Split fixManagedPermissions.
+-Move killTargetedWorker out of convertCore.php into the Engine, beside the manager protocol it speaks.
+-Move showEnvironmentFindings out of convertCore.php into Cores/environmentCore.php.
+-Enforce --Pipeline Usage--.
+-Name index.html as the DirectoryIndex in the <Directory> block -fp writes.
+-Stop logging every required directory that was already there.
+-Add --Engine Protect Hosted Locations--.
+-FIX. The file list came back empty after an upload.
+-uploadFiles now places through the Files pipeline.
+-getFiles now lists through the Files pipeline.
+-deleteFiles now removes through the Files pipeline.
+-Add the file pipeline kind, & Resources/Pipelines/Files as the first one.
+-Report a line per pipeline kind in -v.
+-Add --pipeline, an engine level command beside --setup & --config.
+-Add --Pipeline Usage-- to the pipeline contract.
+-Add --Application Argument Handler-- to the engine contract.
+-Fix the container build.
+-Update hrconvert2-setup.sh to v3.9.3 & correct its Setup Core path.
+-Correct 16 stale paths across 8 documents.
+-Verify every --setup argument responds.
+-Restore 30 documents the working tree had been missing.
+-Fix the required settings check.
+-Split engineConfig.php the way Apache & php split a configuration.
+-Move the application's two contract files into Resources/Engine/Contract.
+-Name the environment file environmentCore.php, matching the other Cores.
+-Add Resources/Engine/Cores/environmentCore.php.
+-Record the shape this is growing toward in ABOUT_ENGINE_CONTRACT.txt.
+-Add Documentation/ABOUT_COHESION_PASS.txt.
+-Add Resources/Engine/Contract/config-template.php.
+-Move depends.php to Resources/Engine, beside the Engine that reads it.
+-The config model moves out of the Engine into convertCore.php.
+-Move Setup Core & Dependency Core into Resources/Engine/Cores.
+-Write the contract for absorbing Dependency Core & Setup Core into the Engine.
+-Add --Permitted Private Ranges--.
+-A fetched file is scanned & format checked before it is placed.
+-Document network isolation, quality control, logging, the Environment Manager.
 
 --------------------
 COMMIT 9/8/2026

@@ -265,6 +265,77 @@ $EngineConfigModelProvider = '';
 // /   rather than being given somebody else's defaults.
 $EngineConfigTemplate = '';
 
+// /  --Application Argument Handler--
+// /   The name of a function that handles this application's own command line
+// /   arguments. Every argument beginning --app is handed to it untouched.
+// /   THE ENGINE OWNS EVERY OTHER ARGUMENT. Setup, configuration, the managers, the
+// /   listener, cleanup & self update are true of any application of this shape.
+// /   A PREFIX RATHER THAN A REGISTRY OF NAMES. A registry means the Engine must ask
+// /   the application what it accepts before it can report an unknown argument, & an
+// /   application that answers badly makes the Engine report nonsense. A prefix needs
+// /   no negotiation. Everything --app is the application's & everything else is not.
+// /   It is checked BEFORE any engine argument, so an application argument can never
+// /   collide with an engine one however many are added later.
+// /   The handler receives the command, its =target & a second positional argument.
+// /   An application that names none is told plainly that it accepts no --app command.
+$EngineApplicationArgumentHandler = '';
+
+// /  --Engine Enforce GPL Compliant Deps--
+// /   Whether a dependency must declare a license this project can legally depend on.
+// /   A GPLv3 application that ships alongside a tool under an incompatible license is a
+// /   licensing problem rather than a technical one, & it is the kind that surfaces years
+// /   later when somebody redistributes.
+// /   With this on, an entry declaring no license or an incompatible one is REFUSED &
+// /   reported. With it off, the license field is documentation.
+// /   Default FALSE, because turning it on will refuse entries that work today & that is
+// /   an administrator's decision rather than an upgrade's.
+$EngineEnforceGPLCompliantDeps = FALSE;
+
+// /  --Engine Allow Incomplete Deps--
+// /   Whether an entry missing its optional fields is accepted.
+// /   License, Source & Purpose are provenance rather than mechanism. A developer who
+// /   builds their own tool & names its path has told the application everything it needs
+// /   to USE the thing, & refusing it teaches them the manifest is decoration.
+// /   Default TRUE. An installation that wants every entry documented sets it FALSE.
+$EngineAllowIncompleteDeps = TRUE;
+
+// /  --Engine Allow Incomplete Deps Update--
+// /   Whether an INCOMPLETE entry may be updated or reinstalled.
+// /   Using what an operator supplied & changing it are different risks, which is why this
+// /   is separate from the setting above. Using a tool at a path somebody chose is their
+// /   decision. Running an update against an entry with no declared source means fetching
+// /   from somewhere nobody wrote down, over a binary somebody deliberately placed.
+// /   Default FALSE. An incomplete entry is REPORTED & SKIPPED by an update rather than
+// /   acted on, & the operator is told which entries were skipped & why.
+$EngineAllowIncompleteDepsUpdate = FALSE;
+
+// /  --Engine Protect Hosted Locations--
+// /   Whether every location this application declares as HOSTED is given a document root
+// /   protection page.
+// /   A directory a web server can reach & that has no index will LIST ITSELF on most
+// /   default configurations. Every file in it, to anybody who asks for the directory.
+// /   That is one misconfigured AllowOverride away on any installation & is not something
+// /   to leave to a server directive nobody checked.
+// /   The page is generated rather than copied, so it exists even on an installation
+// /   missing whatever file used to be copied from.
+// /   IT IS A SECOND LAYER & NOT THE FIRST. The first is the server refusing to serve the
+// /   directory at all. This is what stands when that refusal is not in place, which is
+// /   the case worth planning for because it is the case nobody notices.
+// /   Default TRUE. Writing an index file into a directory this application already
+// /   created costs nothing & the failure it prevents is a directory listing of user data.
+$EngineProtectHostedLocations = TRUE;
+
+// /  --Engine Active Surface--
+// /   Which surface this application is currently being reached through. cli, web or gui.
+// /   A pipeline declares which surfaces it may be reached from & this is what that is
+// /   compared against. A pipeline that permits only web is refused from a terminal, & one
+// /   that permits only cli is refused from a browser.
+// /   AN EMPTY VALUE ENFORCES NOTHING, which is what an application that has not wired
+// /   this up gets. It is set by the application at boot once it knows how it was reached,
+// /   because the Engine cannot know that. A CLI invocation & an HTTP request reach the
+// /   same file.
+$EngineActiveSurface = '';
+
 // /  --Engine Repair Provider--
 // /   The name of a function that repairs whatever this application manages.
 // /   Already read by the Environment Manager. Setup Core uses the same seam, so there is

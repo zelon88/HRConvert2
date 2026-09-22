@@ -58,7 +58,6 @@ $defaultButtonCode = '
   background-color: #eef0f2;
   color: #3a3a3a; }
 .info-button {
-  -moz-box-shadow: 3px 4px 0px 0px #f3f6f4;
   -webkit-box-shadow: 3px 4px 0px 0px #f3f6f4;
   box-shadow: 3px 4px 0px 0px #f3f6f4;
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #eeeeee), color-stop(1, #bcbcbc));
@@ -67,9 +66,7 @@ $defaultButtonCode = '
   background:-o-linear-gradient(top, #eeeeee 5%, #bcbcbc 100%);
   background:-ms-linear-gradient(top, #eeeeee 5%, #bcbcbc 100%);
   background:linear-gradient(to bottom, #eeeeee 5%, #bcbcbc 100%);
-  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#eeeeee\', endColorstr=\'#bcbcbc\',GradientType=0);
   background-color:#eeeeee;
-  -moz-border-radius:5px;
   -webkit-border-radius:5px;
   border-radius:5px;
   border:1px solid #5B5B5B;
@@ -92,7 +89,6 @@ $defaultButtonCode = '
   background:-o-linear-gradient(top, #bcbcbc 5%, #eeeeee 100%);
   background:-ms-linear-gradient(top, #bcbcbc 5%, #eeeeee 100%);
   background:linear-gradient(to bottom, #bcbcbc 5%, #eeeeee 100%);
-  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#bcbcbc\', endColorstr=\'#eeeeee\',GradientType=0);
   background-color:#bcbcbc; }
 .info-button:active {
   position:relative;
@@ -126,7 +122,6 @@ $greenButtonCode = '
   background-color: #e6f6e0;
   color: #2f4a2f; }
 .info-button {
-  -moz-box-shadow: 3px 4px 0px 0px #b9ccb3;
   -webkit-box-shadow: 3px 4px 0px 0px #b9ccb3;
   box-shadow: 3px 4px 0px 0px #b9ccb3;
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #50c20e), color-stop(1, #298040));
@@ -135,9 +130,7 @@ $greenButtonCode = '
   background:-o-linear-gradient(top, #50c20e 5%, #298040 100%);
   background:-ms-linear-gradient(top, #50c20e 5%, #298040 100%);
   background:linear-gradient(to bottom, #50c20e 5%, #298040 100%);
-  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#50c20e\', endColorstr=\'#298040\',GradientType=0);
   background-color:#50c20e;
-  -moz-border-radius:5px;
   -webkit-border-radius:5px;
   border-radius:5px;
   border:1px solid #054d0c;
@@ -160,7 +153,6 @@ $greenButtonCode = '
   background:-o-linear-gradient(top, #298040 5%, #50c20e 100%);
   background:-ms-linear-gradient(top, #298040 5%, #50c20e 100%);
   background:linear-gradient(to bottom, #298040 5%, #50c20e 100%);
-  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#298040\', endColorstr=\'#50c20e\',GradientType=0);
   background-color:#298040; }
 .info-button:active {
   position:relative;
@@ -194,7 +186,6 @@ $blueButtonCode = '
   background-color: #e4edf7;
   color: #26384a; }
 .info-button {
-  -moz-box-shadow: 3px 4px 0px 0px #cfe2f3;
   -webkit-box-shadow: 3px 4px 0px 0px #cfe2f3;
   box-shadow: 3px 4px 0px 0px #cfe2f3;
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #2d60b2), color-stop(1, #295680));
@@ -203,9 +194,7 @@ $blueButtonCode = '
   background:-o-linear-gradient(top, #2d60b2 5%, #295680 100%);
   background:-ms-linear-gradient(top, #2d60b2 5%, #295680 100%);
   background:linear-gradient(to bottom, #2d60b2 5%, #295680 100%);
-  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#2d60b2\', endColorstr=\'#295680\',GradientType=0);
   background-color:#2d60b2;
-  -moz-border-radius:5px;
   -webkit-border-radius:5px;
   border-radius:5px;
   border:1px solid #16537e;
@@ -228,7 +217,6 @@ $blueButtonCode = '
   background:-o-linear-gradient(top, #295680 5%, #2d60b2 100%);
   background:-ms-linear-gradient(top, #295680 5%, #2d60b2 100%);
   background:linear-gradient(to bottom, #295680 5%, #2d60b2 100%);
-  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#295680\', endColorstr=\'#2d60b2\',GradientType=0);
   background-color:#295680; }
 .info-button:active {
   position:relative;
@@ -265,7 +253,6 @@ $redButtonCode = '
   background-color: #fbe6df;
   color: #4a2f2f; }
 .info-button {
-  -moz-box-shadow: 3px 4px 0px 0px #bcbcbc;
   -webkit-box-shadow: 3px 4px 0px 0px #bcbcbc;
   box-shadow: 3px 4px 0px 0px #bcbcbc;
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #c20e0e), color-stop(1, #9b443b));
@@ -274,9 +261,7 @@ $redButtonCode = '
   background:-o-linear-gradient(top, #c20e0e 5%, #9b443b 100%);
   background:-ms-linear-gradient(top, #c20e0e 5%, #9b443b 100%);
   background:linear-gradient(to bottom, #c20e0e 5%, #9b443b 100%);
-  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#c20e0e\', endColorstr=\'#9b443b\',GradientType=0);
   background-color:#c20e0e;
-  -moz-border-radius:5px;
   -webkit-border-radius:5px;
   border-radius:5px;
   border:1px solid #990000;
@@ -299,7 +284,6 @@ $redButtonCode = '
   background:-o-linear-gradient(top, #9b443b 5%, #c20e0e 100%);
   background:-ms-linear-gradient(top, #9b443b 5%, #c20e0e 100%);
   background:linear-gradient(to bottom, #9b443b 5%, #c20e0e 100%);
-  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#9b443b\', endColorstr=\'#c20e0e\',GradientType=0);
   background-color:#9b443b; }
 .info-button:active {
   position:relative;
@@ -333,7 +317,6 @@ $orangeButtonCode = '
   background-color: #fdefdc;
   color: #4a3a20; }
 .info-button {
-  -moz-box-shadow: 3px 4px 0px 0px #ffdcb3;
   -webkit-box-shadow: 3px 4px 0px 0px #ffdcb3;
   box-shadow: 3px 4px 0px 0px #ffdcb3;
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #ff9900), color-stop(1, #b35900));
@@ -342,9 +325,7 @@ $orangeButtonCode = '
   background:-o-linear-gradient(top, #ff9900 5%, #b35900 100%);
   background:-ms-linear-gradient(top, #ff9900 5%, #b35900 100%);
   background:linear-gradient(to bottom, #ff9900 5%, #b35900 100%);
-  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#ff9900\', endColorstr=\'#b35900\',GradientType=0);
   background-color:#ff9900;
-  -moz-border-radius:5px;
   -webkit-border-radius:5px;
   border-radius:5px;
   border:1px solid #803300;
@@ -367,7 +348,6 @@ $orangeButtonCode = '
   background:-o-linear-gradient(top, #b35900 5%, #ff9900 100%);
   background:-ms-linear-gradient(top, #b35900 5%, #ff9900 100%);
   background:linear-gradient(to bottom, #b35900 5%, #ff9900 100%);
-  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#b35900\', endColorstr=\'#ff9900\',GradientType=0);
   background-color:#b35900; }
 .info-button:active {
   position:relative;
@@ -401,7 +381,6 @@ $purpleButtonCode = '
   background-color: #f1e7f6;
   color: #3f2f4a; }
 .info-button {
-  -moz-box-shadow: 3px 4px 0px 0px #e1cfea;
   -webkit-box-shadow: 3px 4px 0px 0px #e1cfea;
   box-shadow: 3px 4px 0px 0px #e1cfea;
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #8e44ad), color-stop(1, #5b2c6f));
@@ -410,9 +389,7 @@ $purpleButtonCode = '
   background:-o-linear-gradient(top, #8e44ad 5%, #5b2c6f 100%);
   background:-ms-linear-gradient(top, #8e44ad 5%, #5b2c6f 100%);
   background:linear-gradient(to bottom, #8e44ad 5%, #5b2c6f 100%);
-  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#8e44ad\', endColorstr=\'#5b2c6f\',GradientType=0);
   background-color:#8e44ad;
-  -moz-border-radius:5px;
   -webkit-border-radius:5px;
   border-radius:5px;
   border:1px solid #4a235a;
@@ -435,7 +412,6 @@ $purpleButtonCode = '
   background:-o-linear-gradient(top, #5b2c6f 5%, #8e44ad 100%);
   background:-ms-linear-gradient(top, #5b2c6f 5%, #8e44ad 100%);
   background:linear-gradient(to bottom, #5b2c6f 5%, #8e44ad 100%);
-  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#5b2c6f\', endColorstr=\'#8e44ad\',GradientType=0);
   background-color:#5b2c6f; }
 .info-button:active {
   position:relative;
@@ -473,7 +449,6 @@ $darkButtonCode = '
   background-color: #3a3a3a;
   color: #e4e4e4; }
 .info-button {
-  -moz-box-shadow: 3px 4px 0px 0px #1a1a1a;
   -webkit-box-shadow: 3px 4px 0px 0px #1a1a1a;
   box-shadow: 3px 4px 0px 0px #1a1a1a;
   background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #454545), color-stop(1, #262626));
@@ -482,9 +457,7 @@ $darkButtonCode = '
   background:-o-linear-gradient(top, #454545 5%, #262626 100%);
   background:-ms-linear-gradient(top, #454545 5%, #262626 100%);
   background:linear-gradient(to bottom, #454545 5%, #262626 100%);
-  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#454545\', endColorstr=\'#262626\',GradientType=0);
   background-color:#454545;
-  -moz-border-radius:5px;
   -webkit-border-radius:5px;
   border-radius:5px;
   border:1px solid #111111;
@@ -507,7 +480,6 @@ $darkButtonCode = '
   background:-o-linear-gradient(top, #262626 5%, #454545 100%);
   background:-ms-linear-gradient(top, #262626 5%, #454545 100%);
   background:linear-gradient(to bottom, #262626 5%, #454545 100%);
-  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#262626\', endColorstr=\'#454545\',GradientType=0);
   background-color:#262626; }
 .info-button:active {
   position:relative;

@@ -172,7 +172,14 @@ Every administrator facing setting lives in config.php & is owned by Setup Core.
                          Read & write are judged separately, because reading a format is
                          not writing it. Assimp reads OFF & has no OFF exporter.
   $PipelineExclude       Array of 'input>output' pairs to remove from the cross product. Optional.
-  $PipelineKind          'conversion' or 'operation'. Optional. Undeclared means conversion.
+  $PipelineKind          'conversion', 'operation', 'scanner' or 'file'. Optional. Undeclared
+                         means conversion. A scanner or file pipeline declares no formats.
+  $PipelineUsage         Array of 'cli', 'web' & 'gui'. Where the pipeline may be reached from.
+                         Optional. Undeclared means web & gui, so a pipeline wanting the command
+                         line has to say so. Enforced when a pipeline is loaded.
+  $PipelineDependencies  Array of names from the dependency manifest. Optional. What the
+                         pipeline shells out to. --pipeline --check-depends reports any name the
+                         manifest does not have.
   $PipelineSharedModules Array of shared module file names to load first. Optional.
 
 $PipelineEntryPoint MUST BE UNIQUE ACROSS EVERY INSTALLED PIPELINE.
@@ -180,6 +187,13 @@ A fixed name such as runPipeline() would fatally redeclare the moment two pipeli
 one request, which happens whenever one upload batch spans two families & again whenever a
 fallback candidate loads after the primary failed. A copy-pasted pipeline that forgot to
 rename its entry point is refused with a warning naming both folders.
+
+  ASK FOR A TOOL BY MANIFEST NAME, rather than probing for it.
+  verifiedToolPath('FFMPEG') returns a verified path, or FALSE, & FALSE means do not run.
+  It asks the Dependency Core, so a pipeline gets the same answer --setup --check-depends
+  gives, including architecture rules, version windows & the licence gates.
+  A pipeline that carries its own version check, or calls one living in the application, is
+  not portable. It fails the first time it is copied into a different application.
 
 CAPABILITIES ARE A CROSS PRODUCT, NARROWED BY EXCLUSIONS.
 Every input extension is assumed convertible to every output extension unless a pair appears

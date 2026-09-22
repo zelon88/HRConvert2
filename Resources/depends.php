@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / Copyright information ...
-// / HRConvert2, Copyright on 8/28/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 9/21/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / License information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / Fileinformation ...
-// / v3.8.1.
+// / v3.9.4.
 // / HRConvert2 Dependency Manifest.
 // / This file is data. It defines nothing & does nothing.
 // / dependencyCore.php reads it. Nothing else may.
@@ -105,7 +105,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependsVersion = 'v3.9.2';
+$DependsVersion = 'v3.9.3';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

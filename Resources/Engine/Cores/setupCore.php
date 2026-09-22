@@ -678,6 +678,134 @@ function verifyConfigAuthenticity($detectedSections) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / MOVED FROM THE APPLICATION AT v3.9.3. Despite the name it knows nothing about a
+// / conversion. It writes a systemd drop in & reloads the daemon, which is host setup &
+// / is what Setup Core is for. The application decides WHETHER to ask for it.
+// / A function to give the web server user its own systemd manager & cgroup controllers.
+// / Accepts no arguments & must be run as root.
+// / Returns a success boolean & the number of steps that succeeded, in that order.
+// / This is the safe way to let an unprivileged account set resource limits. A user manager
+// / governs only the cgroup subtree systemd delegated to it & cannot start a unit as any
+// / other account, so nothing granted here can be turned into privilege.
+// / The alternative, granting the web server user manage-units on the system bus, would let
+// / that account start a transient service with User=root. Never do that on the account
+// / which parses uploaded files.
+// / Every step is idempotent & is safe to run again.
+function enableConversionLimits() {
+  // / Set variables.
+  global $ApacheUser, $RunningAsRoot, $Lol, $EnableMemoryProtection;
+  $LimitsWereEnabled = $limitsSystemdUsable = FALSE;
+  $StepsCompleted = 0;
+  $limitsSystemdReason = '';
+  $dropInDirectory = $dropInFile = $dropInContents = '';
+  $commandOutput = array();
+  $commandExitCode = 1;
+  $bytesWritten = 0;
+  if (!$RunningAsRoot) errorEntry('Conversion limits can only be enabled while running as root!', 31011, FALSE);
+  // / Ask whether systemd is RUNNING, not whether its tools are installed. A container
+  // / ships the tools & runs something else as PID 1, & lingering there writes a file
+  // / nothing will ever read.
+  else if (!systemdIsUsable()[0]) {
+    list ($limitsSystemdUsable, $limitsSystemdReason) = systemdIsUsable();
+    print('  Skipped    '.$limitsSystemdReason.$Lol);
+    print('             Per conversion limits fall back to scheduling priority.'.$Lol); }
+  else {
+    // / Lingering starts a user manager for the account at boot, with no login session.
+    // / Without it there is no user bus for systemd-run --user to reach.
+    exec('loginctl enable-linger '.escapeshellarg($ApacheUser).' 2>&1', $commandOutput, $commandExitCode);
+    if ($commandExitCode !== 0) print('  FAILED     Could not enable lingering for '.$ApacheUser.'.'.$Lol);
+    else {
+      $StepsCompleted++;
+      print('  Enabled    Lingering for '.$ApacheUser.$Lol); }
+    // / Lingering is enabled & that is not the same as a limit being possible.
+    // / A kernel that delegates no cgroup controllers cannot hold a per conversion limit no
+    // / matter how the accounts are configured, & many NAS & appliance kernels are built
+    // / that way deliberately.
+    // / Saying so HERE, while an administrator is watching a repair run, is worth more than
+    // / saying it in a log they read after a conversion behaved oddly.
+    if (function_exists('cgroupDelegationIsAvailable') && !cgroupDelegationIsAvailable()) {
+      print('  Note       This kernel delegates no cgroup controllers, so a per conversion'.$Lol);
+      print('             limit cannot be held here whatever is configured. Conversions are'.$Lol);
+      print('             still bounded by scheduling priority. This is a kernel decision'.$Lol);
+      print('             & is normal on a NAS or appliance.'.$Lol);
+      warningEntry('This kernel delegates no cgroup controllers, so per conversion limits fall back to scheduling priority.'); }
+    // / A user manager is given the memory & pids controllers by default. The processor
+    // / controller has to be delegated explicitly or CPUQuota is silently ignored.
+    $dropInDirectory = '/etc/systemd/system/user@.service.d';
+    $dropInFile = $dropInDirectory.'/hrconvert2-delegate.conf';
+    $dropInContents = '[Service]'.PHP_EOL.'Delegate=cpu cpuset io memory pids'.PHP_EOL;
+    if (!is_dir($dropInDirectory)) @mkdir($dropInDirectory, 0755, TRUE);
+    if (!is_dir($dropInDirectory)) print('  FAILED     Could not create '.$dropInDirectory.'.'.$Lol);
+    else {
+      $bytesWritten = @file_put_contents($dropInFile, $dropInContents);
+      if ($bytesWritten !== strlen($dropInContents)) print('  FAILED     Could not write '.$dropInFile.'.'.$Lol);
+      else {
+        @chmod($dropInFile, 0644);
+        $StepsCompleted++;
+        print('  Wrote      '.$dropInFile.$Lol);
+        exec('systemctl daemon-reload 2>&1', $commandOutput, $commandExitCode);
+        if ($commandExitCode === 0) {
+          $StepsCompleted++;
+          print('  Reloaded   systemd unit configuration'.$Lol); }
+        else print('  FAILED     Could not reload systemd. Reload it by hand.'.$Lol); } }
+    if ($StepsCompleted >= 2) {
+      $LimitsWereEnabled = TRUE;
+      logEntry('Conversion limits were enabled for '.$ApacheUser.'. '.$StepsCompleted.' step(s) completed.');
+      print('  Note       A running user manager must be restarted before delegation applies.'.$Lol);
+      print('             systemctl restart user@$(id -u '.$ApacheUser.').service'.$Lol); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $dropInDirectory, $dropInFile, $dropInContents, $commandOutput, $commandExitCode, $bytesWritten, $limitsSystemdUsable, $limitsSystemdReason);
+  return array($LimitsWereEnabled, $StepsCompleted); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to correct ownership & permissions on a list of paths.
+// / Accepts the paths, the account to own them & the mode to set. Returns whether it ran,
+// / how many were corrected & how many were refused, in that order.
+// /
+// / WHICH PATHS AN APPLICATION MANAGES IS THE APPLICATION'S TO SAY. Doing the correcting is
+// / not. HRConvert2 knows it owns a DATA directory, a temporary tree, a log directory & a
+// / socket directory. No engine can guess that list & no other application will have it.
+// / So the list arrives as an argument & everything below is the same work whoever asked.
+// /
+// / A PATH THAT RESOLVES TO A SYSTEM DIRECTORY IS REFUSED & the refusal is reported rather
+// / than logged quietly. chown -R on /usr because a configuration line was empty is not a
+// / mistake anybody recovers from quickly, & an empty value in a path list is exactly how
+// / that happens.
+// / It is checked per path rather than once, because a list is only as safe as its worst
+// / entry & a caller that got one right may still have got another wrong.
+// /
+// / A path that is not a directory is skipped in silence. A list may name something an
+// / installation has not created yet, & that is not a fault worth reporting on every run.
+function correctManagedPaths($pathsToCorrect, $ownerAccount, $permissionMode) {
+  // / Set variables.
+  global $Lol, $EnableMemoryProtection;
+  $CorrectionRan = FALSE;
+  $PathsCorrected = $PathsRefused = 0;
+  $managedPath = '';
+  $commandOutput = array();
+  $commandExitCode = 1;
+  if (!is_array($pathsToCorrect)) $pathsToCorrect = array($pathsToCorrect);
+  if (trim((string)$ownerAccount) === '') warningEntry('A path correction was asked for with no account to own the result. Nothing was changed.');
+  else {
+    $CorrectionRan = TRUE;
+    foreach ($pathsToCorrect as $managedPath) {
+      if (trim((string)$managedPath) === '' or !is_dir($managedPath)) continue;
+      if (!pathIsSafeToModifyRecursively($managedPath)) {
+        print('  '.str_pad('REFUSED', 12).$managedPath.' is a system directory & will not be changed recursively.'.$Lol);
+        warningEntry('A managed path resolved to a system directory & was refused: '.$managedPath);
+        $PathsRefused++;
+        continue; }
+      exec('chown -R '.escapeshellarg($ownerAccount).':'.escapeshellarg($ownerAccount).' '.escapeshellarg($managedPath).' 2>&1', $commandOutput, $commandExitCode);
+      exec('chmod -R '.escapeshellarg($permissionMode).' '.escapeshellarg($managedPath).' 2>&1', $commandOutput, $commandExitCode);
+      $PathsCorrected++; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $managedPath, $commandOutput, $commandExitCode, $pathsToCorrect, $ownerAccount, $permissionMode);
+  return array($CorrectionRan, $PathsCorrected, $PathsRefused); }
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
 // / A function to write a complete configuration file from the model.
 // / Accepts the path to write. Returns whether it was written & how many settings it holds.
 // /
@@ -1281,7 +1409,7 @@ function installEnvironmentTimer($enableTimer) {
   $timerPath = '/etc/systemd/system/hrconvert2-environment.timer';
   if (!$RunningAsRoot) {
     $TimerStatus = 'failed';
-    errorEntry('The Environment Manager timer can only be installed while running as root!', 32014, FALSE); }
+    errorEntry('The Environment Manager timer can only be installed while running as root!', 32017, FALSE); }
   else if (!systemdIsUsable()[0]) {
     list ($timerSystemdUsable, $timerSystemdReason) = systemdIsUsable();
     print('  '.str_pad('Skipped', 12).$timerSystemdReason.$Lol);

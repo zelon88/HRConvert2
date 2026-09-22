@@ -1,8 +1,7 @@
 <?php
-
 // / -----------------------------------------------------------------------------------
 // / Copyright information ...
-// / HRConvert2, Copyright on 8/28/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 9/21/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / License information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -13,7 +12,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / File information ...
-// / v3.8.6.
+// / v3.9.4.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -44,7 +43,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. Replacing config.php with a newer one is the correct fix.
-$ConfigVersion = 'v3.9.3';
+$ConfigVersion = 'v3.9.4';
 // / ------------------------------
 
 // / ------------------------------

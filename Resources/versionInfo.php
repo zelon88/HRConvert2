@@ -37,6 +37,6 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The version of this HRConvert2 installation.
-$Version = 'v3.9.4';
+$Version = 'v3.9.5';
 $Version = ltrim($Version, 'vV');
 // / -----------------------------------------------------------------------------------

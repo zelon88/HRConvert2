@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / Copyright Information ...
-// / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 9/22/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.3.
+// / v3.9.5.
 // / This file is the converter for the Model pipeline. It is loaded by pipelineCore.php
 // / ONLY when a Model conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
@@ -290,7 +290,7 @@ function buildMeshLabCommand($usePyMeshLab, $pyMeshLabDir, $meshlabBinary, $inpu
 // / is not checked. Assimp is checked on every path, because every path uses it.
 function convertModels($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumAssimpVersion, $MinimumMeshlabVersion, $UsePyMeshLab, $InstLoc, $DirSep, $EnableMemoryProtection;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $UsePyMeshLab, $InstLoc, $DirSep, $EnableMemoryProtection;
   // / The six value pipeline contract. Success, errors, path, extension, filename & PID.
   // / This converter produces neither of the last two itself, so it declares the defaults.
   // / $OutputFilename is the name the user is shown. $WorkerPID stays zero unless a
@@ -307,7 +307,13 @@ function convertModels($pathname, $newPathname, $extension) {
   $pyMeshLabInUse = FALSE;
   $assimpCanWrite = $meshlabCanWrite = $meshlabCanRead = array();
   // / Detect the installed versions of Assimp & MeshLab.
-  list ($modelsValid, $assimpBinary, $meshlabBinary) = verifyModelVersions($MinimumAssimpVersion, $MinimumMeshlabVersion);
+  // / Each tool by its manifest name. PyMeshLab stands in for MeshLab when it is enabled, so
+  // / MeshLab is required only when PyMeshLab is not. This matches the check it replaces.
+  $assimpBinary = verifiedToolPath('Assimp');
+  $meshlabBinary = verifiedToolPath('MeshLab');
+  $modelsValid = ($assimpBinary !== FALSE && ($UsePyMeshLab or $meshlabBinary !== FALSE));
+  // / Kept from the check this replaces: with PyMeshLab on & MeshLab absent there is no fallback.
+  if ($UsePyMeshLab && $meshlabBinary === FALSE) warningEntry('PyMeshLab is enabled & no usable MeshLab binary was found. A model conversion has no fallback if the bundle does not load.');
   // / Assimp is used by every route, so it is required unconditionally.
   if ($assimpBinary === FALSE) {
     $ConversionErrors = TRUE;

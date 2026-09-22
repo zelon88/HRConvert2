@@ -28,6 +28,23 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia
 
 
 --------------------
+COMMIT 9/22/2026
+v3.9.5 - Fix fresh installs. Pipelines ask the Engine for their tools.
+
+-v3.9.5.
+-FIX. Every fresh install & fresh container failed on its first boot.
+-Move four boot functions back from the Engine, because each runs before it loads.
+-FIX. --config --repair wrote a config the core then refused.
+-FIX. verifiedToolPath never loaded the Dependency Core, so it returned FALSE on every conversion.
+-A missing optional tool is logged rather than warned.
+-The dependency manifest is the only owner of a tool's minimum version. No overrides.
+-Every pipeline, -v, archiving & user scans ask it through verifiedToolPath.
+-FFMPEG requires 6.1 for Audio, Video & Subtitle, matching the manifest & Stream.
+-Retire 19 Minimum*Version settings from config.php, the template & the config model.
+-Remove 12 tool version functions from convertCore.php, now asked of the manifest instead.
+-Stamp all 13 migrated pipelines, the LibreOffice shared module & the Pipeline Core v3.9.5.
+
+--------------------
 COMMIT 9/8/2026
 v3.9.4 - Absorb Core Manager & the Cores. The Engine owns the environment.
 

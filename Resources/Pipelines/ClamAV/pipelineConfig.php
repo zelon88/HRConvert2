@@ -1,14 +1,14 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / Copyright Information ...
-// / HRConvert2, Copyright on 9/7/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 9/22/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.9.3.
+// / v3.9.5.
 // / This file declares the ClamAV scanner pipeline.
 // /
 // / A SCANNER declares no input or output formats & that is not an omission.
@@ -29,7 +29,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / -----------------------------------------------------------------------------------
 // / The version of this pipeline folder. Read WITHOUT executing this file, then matched
 // / EXACTLY against the pin in getAcceptedPipelines().
-$PipelineVersion = 'v3.9.3';
+$PipelineVersion = 'v3.9.5';
 
 // / A scanner inspects a file & reports on it. It changes nothing.
 $PipelineKind = 'scanner';

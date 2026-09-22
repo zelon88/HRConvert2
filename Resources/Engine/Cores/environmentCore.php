@@ -234,10 +234,10 @@ function verifyEncryption() {
   else $URLEcho = '';
   return array($EncryptionVerified, $URLEcho); }
 // / -----------------------------------------------------------------------------------
-// / Four more, moved from the application at v3.9.3.
-// / apparmorProfileIsLoaded asks the kernel whether a profile is active.
+// / Moved from the application at v3.9.3.
 // / confirmDestructiveAction asks a human to type a word before something irreversible.
-// / generateInstallSecret makes an install secret.
+// / apparmorProfileIsLoaded & generateInstallSecret were moved here too & went back at v3.9.5.
+// / Both are reached before the Engine loads, so the application has to own them.
 // /
 // / confirmDestructiveAction is the interesting one. It PRINTS & READS, which sounds
 // / like an application concern, & is not: every application of this shape has an
@@ -245,34 +245,6 @@ function verifyEncryption() {
 // / operator is reached, & that is already behind $EngineOperatorPrompt.
 // / -----------------------------------------------------------------------------------
 
-// / -----------------------------------------------------------------------------------
-// / A function to report whether an AppArmor profile is loaded into the kernel.
-// / Accepts the profile name as it is declared inside the profile file.
-// / Returns a loaded boolean & a status word, in that order.
-// / A profile on disk is not a profile in force.
-// / Writing one & running apparmor_parser only at the moment it is written means a load
-// / that failed, or a host that rebooted before AppArmor read it, leaves a file that
-// / matches perfectly & is enforcing nothing. The check reported ok & the sandbox stayed
-// / broken, which is the worst combination a diagnostic can produce.
-// / The loaded set is read from securityfs, which is what the kernel is actually using.
-function apparmorProfileIsLoaded($profileName) {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $ProfileIsLoaded = FALSE;
-  $ProfileStatus = 'unknown';
-  $profilesPath = '/sys/kernel/security/apparmor/profiles';
-  $loadedProfiles = '';
-  if (!file_exists($profilesPath)) $ProfileStatus = 'apparmor not active';
-  else if (!is_readable($profilesPath)) $ProfileStatus = 'not readable by this account';
-  else {
-    $loadedProfiles = (string)@file_get_contents($profilesPath);
-    if (strpos($loadedProfiles, (string)$profileName) !== FALSE) {
-      $ProfileIsLoaded = TRUE;
-      $ProfileStatus = 'loaded'; }
-    else $ProfileStatus = 'NOT LOADED'; }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $profilesPath, $loadedProfiles, $profileName);
-  return array($ProfileIsLoaded, $ProfileStatus); }
 // / -----------------------------------------------------------------------------------
 // / A function to ask for confirmation on a destructive command line action.
 // / Accepts the prompt text & a boolean indicating confirmation was already given.
@@ -296,45 +268,12 @@ function confirmDestructiveAction($promptText, $confirmationSupplied) {
   purgeSensitiveMemory($EnableMemoryProtection, $inputHandle, $typedAnswer, $promptText, $confirmationSupplied);
   return $ActionIsConfirmed; }
 // / -----------------------------------------------------------------------------------
-// / Four more environment functions, moved from the application at v3.9.3.
-// / reloadApparmorProfile reloads a kernel profile.
-// / closeHRC2Connection ends a request cleanly.
-// / validateInstallation checks an installation is intact.
-// / None of them asks what the installation is FOR.
+// / Moved from the application at v3.9.3.
+// / validateInstallation checks an installation is intact, & does not ask what it is for.
+// / reloadApparmorProfile & closeHRC2Connection were moved here too & went back at v3.9.5.
+// / Both are reached before the Engine loads, so the application has to own them.
 // / -----------------------------------------------------------------------------------
 
-// / -----------------------------------------------------------------------------------
-// / A function to load an AppArmor profile that has just been written.
-// / Accepts the absolute path of the profile.
-// / Returns TRUE when the parser accepted it.
-// / A profile that is written but never loaded changes nothing until the next reboot, which
-// / makes a repair look like it failed.
-function reloadApparmorProfile($profilePath) {
-  // / Set variables.
-  global $RunningAsRoot, $EnableMemoryProtection;
-  $ProfileWasLoaded = FALSE;
-  $parserBinary = '';
-  $parserOutput = array();
-  $parserExitCode = 1;
-  $parserBinary = locateDependency('apparmor_parser');
-  if (!$RunningAsRoot) warningEntry('An AppArmor profile was written but could not be loaded, because loading one requires root.');
-  else if ($parserBinary === '') warningEntry('An AppArmor profile was written but apparmor_parser is not installed, so it was not loaded.');
-  else {
-    exec(escapeshellarg($parserBinary).' -r '.escapeshellarg($profilePath).' 2>&1', $parserOutput, $parserExitCode);
-    if ($parserExitCode === 0) {
-      $ProfileWasLoaded = TRUE;
-      logEntry('The AppArmor profile at '.$profilePath.' was loaded.'); }
-    else warningEntry('apparmor_parser refused the profile at '.$profilePath.'. '.implode(' ', $parserOutput)); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $parserBinary, $parserOutput, $parserExitCode, $profilePath);
-  return $ProfileWasLoaded; }
-// / A function to close the web server connection.
-function closeHRC2Connection() {
-  ignore_user_abort(TRUE);
-  if (function_exists('fastcgi_finish_request')) fastcgi_finish_request();
-  else {
-    if (ob_get_level() > 0) ob_end_flush();
-    flush(); } }
 // / -----------------------------------------------------------------------------------
 // / A function to prove that an installation actually runs.
 // / Called after the swap. The new installation is asked to report its own version as a
@@ -358,20 +297,6 @@ function validateInstallation($installPath) {
   purgeSensitiveMemory($EnableMemoryProtection, $validateCommand, $validateOutput, $validateExitCode, $installPath);
   return $InstallationIsValid; }
 // / -----------------------------------------------------------------------------------
-// / A function to generate the per-install secret used to derive session identifiers.
-// / 32 bytes gives 256 bits of entropy & returns as a 64 hexadecimal character string.
-function generateInstallSecret() {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $InstallSecret = FALSE;
-  $InstallSecretCheck = TRUE;
-  // / random_bytes() throws rather than returning a poor result when entropy is unavailable.
-  // / Fail closed. A predictable secret is worse than no installation at all.
-  try { $InstallSecret = bin2hex(random_bytes(32)); }
-  catch (Throwable $error) { $InstallSecretCheck = FALSE; }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $error);
-  return array($InstallSecret, $InstallSecretCheck); }
 // / A function to give a directory a document root protection page.
 // / Accepts the directory. Returns whether it is protected & whether a page was written.
 // /

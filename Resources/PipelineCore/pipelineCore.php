@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / Copyright Information ...
-// / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 9/22/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.8.6.
+// / v3.9.5.
 // / This file is the Pipeline Core component. It owns the detachable conversion
 // / pipelines, their version pins, their capability declarations & their dispatch.
 // / It is pinned EXACTLY by convertCore.php via $RequiredPipelineCoreVersion.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by convertCore.php WITHOUT executing this file.
-$PipelineCoreVersion = 'v3.9.3';
+$PipelineCoreVersion = 'v3.9.5';
 // / -----------------------------------------------------------------------------------
 
 
@@ -52,21 +52,21 @@ function getAcceptedPipelines() {
   // / There is no built in dispatcher left behind it. Comment one out only to test that.
   // / Adding a community pipeline is one line here plus a version bump on this file.
   $AcceptedPipelines = array(
-    'Stream' => 'v3.9.3',
-    'Scad' => 'v3.9.3',
-    'OCR' => 'v3.8.8',
+    'Stream' => 'v3.9.5',
+    'Scad' => 'v3.9.5',
+    'OCR' => 'v3.9.5',
     'Document' => 'v3.8.8',
-    'Subtitle' => 'v3.8.8',
-    'SVG' => 'v3.8.8',
-    'Drawing' => 'v3.8.8',
-    'Image' => 'v3.8.8',
-    'Model' => 'v3.9.3',
-    'Video' => 'v3.9.3',
-    'Ebook' => 'v3.8.8',
-    'Audio' => 'v3.8.8',
-    'Archive' => 'v3.9.3',
+    'Subtitle' => 'v3.9.5',
+    'SVG' => 'v3.9.5',
+    'Drawing' => 'v3.9.5',
+    'Image' => 'v3.9.5',
+    'Model' => 'v3.9.5',
+    'Video' => 'v3.9.5',
+    'Ebook' => 'v3.9.5',
+    'Audio' => 'v3.9.5',
+    'Archive' => 'v3.9.5',
     // / Scanner pipelines. They declare no formats & are chosen by name.
-    'ClamAV' => 'v3.9.3',
+    'ClamAV' => 'v3.9.5',
     // / The first pipeline of kind file. Operations that do not care what is in a file.
     'Files' => 'v3.9.3',
     'ScanCore' => 'v3.9.3');
@@ -89,7 +89,7 @@ function getAcceptedPipelines() {
 function getAcceptedSharedModules() {
   // / Set variables.
   $AcceptedSharedModules = array(
-    'libreOffice.php' => 'v3.8.8');
+    'libreOffice.php' => 'v3.9.5');
   return $AcceptedSharedModules; }
 // / -----------------------------------------------------------------------------------
 
@@ -660,16 +660,26 @@ function verifiedToolPath($manifestName) {
   // / component checks it at file scope. Without it the require sees an undefined variable &
   // / the component refuses to load, which reads as a missing manifest rather than a scope
   // / mistake.
-  global $CoreLoaded, $DependsManifest, $InstLoc, $DirSep, $Verbose, $EnableMemoryProtection;
+  global $CoreLoaded, $DependsManifest, $InstLoc, $DirSep, $Verbose, $EnableMemoryProtection, $RequiredDependencyCoreVersion;
   $VerifiedPath = FALSE;
   $manifestPath = $dependencyStatus = $detectedVersion = $rawOutput = '';
   $manifestEntry = array();
-  $entryWasFound = $dependencyIsPresent = FALSE;
+  $entryWasFound = $dependencyIsPresent = $dependencyCoreLoaded = $toolIsRequired = FALSE;
+  $dependencyCoreVersion = '';
   // / The manifest is loaded by the Dependency Core & the Dependency Core only loads for
   // / --setup, so on a conversion request the global is empty & is required here.
   if (!isset($DependsManifest) or !is_array($DependsManifest)) {
     $manifestPath = $InstLoc.$DirSep.'Resources'.$DirSep.'Engine'.$DirSep.'Contract'.$DirSep.'depends.php';
     if (file_exists($manifestPath)) require_once($manifestPath); }
+  // / THE DEPENDENCY CORE IS LOADED HERE because nothing else loads it on a conversion.
+  // / It loads for --setup & for nothing else, so a real conversion request does not have
+  // / resolveDependencyState. Without this, every pipeline asking for a tool got FALSE & reported
+  // / its tool as missing, even with the tool installed.
+  // / This went unnoticed because the test that proved this function loaded the Dependency Core
+  // / by hand, which made the function work by construction & skipped the one thing broken.
+  // / verifyCoreComponent requires once, so asking on every call costs nothing, & it honours the
+  // / version pin, which a bare require would not.
+  if (!function_exists('resolveDependencyState') && function_exists('verifyCoreComponent')) list ($dependencyCoreLoaded, $dependencyCoreVersion) = verifyCoreComponent('Dependency Core', 'Engine'.$DirSep.'Cores'.$DirSep.'dependencyCore.php', 'DependencyCoreVersion', (string)$RequiredDependencyCoreVersion);
   if (!isset($DependsManifest) or !is_array($DependsManifest)) warningEntry('The dependency manifest could not be read, so '.(string)$manifestName.' could not be verified.');
   else if (!function_exists('resolveDependencyState')) warningEntry('The Dependency Core is unavailable, so '.(string)$manifestName.' could not be verified.');
   else {
@@ -686,11 +696,19 @@ function verifiedToolPath($manifestName) {
         if (strpos($VerifiedPath, $DirSep) === FALSE) $VerifiedPath = locateDependency($VerifiedPath);
         if ($VerifiedPath === '') $VerifiedPath = FALSE;
         else if ($Verbose) logEntry((string)$manifestName.' verified at '.$VerifiedPath.', version '.$detectedVersion.'.'); }
-      else warningEntry((string)$manifestName.' is '.$dependencyStatus.' & will not be used.');
+      // / A missing OPTIONAL tool is logged, not warned. RAR is optional to archiving & MeshLab to
+      // / modelling under PyMeshLab, & a warning on every request for a tool nobody needs is noise.
+      // / The old checks only logged these. A pipeline that truly needs a tool raises its own error
+      // / when it gets FALSE, so nothing actionable is lost by logging here instead.
+      // / Required is read from the manifest, which already says which tools the application needs.
+      else {
+        $toolIsRequired = (isset($manifestEntry['Required']) && $manifestEntry['Required'] === TRUE);
+        if ($toolIsRequired) warningEntry((string)$manifestName.' is '.$dependencyStatus.' & will not be used.');
+        else logEntry((string)$manifestName.' is '.$dependencyStatus.' & will not be used.'); }
       break; }
     if (!$entryWasFound) warningEntry('No manifest entry is named '.(string)$manifestName.', so it could not be verified.'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $manifestPath, $dependencyIsPresent, $dependencyStatus, $detectedVersion, $rawOutput, $manifestEntry, $entryWasFound, $manifestName);
+  purgeSensitiveMemory($EnableMemoryProtection, $manifestPath, $toolIsRequired, $dependencyCoreLoaded, $dependencyCoreVersion, $dependencyIsPresent, $dependencyStatus, $detectedVersion, $rawOutput, $manifestEntry, $entryWasFound, $manifestName);
   return $VerifiedPath; }
 // / -----------------------------------------------------------------------------------
 

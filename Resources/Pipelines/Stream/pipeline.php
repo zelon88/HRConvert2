@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / Copyright Information ...
-// / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 9/22/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.8.8.
+// / v3.9.5.
 // / This file is the converter for the Stream pipeline. It is loaded by pipelineCore.php
 // / ONLY when a Stream conversion is about to be dispatched to it.
 // / Error block 14000 through 14001 & 26000 through 26007 belong to this pipeline. Those
@@ -389,7 +389,7 @@ function streamFileWalker($StreamFile) {
 // / Stream inspection cannot protect an affected build, so those builds are refused outright.
 function convertStreams($pathname, $newPathname) {
   // / Set variables.
-  global $Verbose, $StreamConnectionTimeout, $AllowStreamOverHTTP, $MinimumStreamFFMPEGVersion, $EnableMemoryProtection, $DirSep;
+  global $Verbose, $StreamConnectionTimeout, $AllowStreamOverHTTP, $EnableMemoryProtection, $DirSep;
   $ConversionSuccess = $ConversionErrors = FALSE;
   $ffmpegVersionIsValid = $inspectionFailed = $streamBudgetExhausted = FALSE;
   $allStreamURIs = $seenURLs = array();
@@ -403,7 +403,7 @@ function convertStreams($pathname, $newPathname) {
   $OutputFilename = basename($newPathname);
   if ($Verbose) logEntry('Beginning stream conversion for '.$pathname.'.');
   // / Confirm the installed FFMPEG is not one of the builds that ignores our protocol whitelist.
-  $ffmpegVersionIsValid = verifyFFMPEGVersion($MinimumStreamFFMPEGVersion);
+  $ffmpegVersionIsValid = (verifiedToolPath('FFMPEG') !== FALSE);
   if (!$ffmpegVersionIsValid) {
     $ConversionErrors = TRUE;
     errorEntry('The installed FFMPEG version is missing, unidentifiable, or vulnerable to stream playlist protocol bypass!', 21002, FALSE); }

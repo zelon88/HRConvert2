@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / Copyright Information ...
-// / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 9/22/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.8.8.
+// / v3.9.5.
 // / This file declares what the Stream conversion pipeline is & what it can do.
 // / It is read by pipelineCore.php on EVERY request & it must stay cheap.
 // / It ASSIGNS VARIABLES & DOES NOTHING ELSE. No functions, no logic, no output.
@@ -35,7 +35,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read WITHOUT executing this file, then matched
 // / EXACTLY against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v3.9.3';
+$PipelineVersion = 'v3.9.5';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -69,9 +69,9 @@ $PipelineEntryPoint = 'convertStreams';
 // / This string must match a Subsystem name in depends.php exactly.
 // / Naming the subsystem rather than the package keeps one source of truth for the version.
 // / FOUR FAMILIES NAME THIS SUBSYSTEM. Stream, Video, Subtitle & Audio.
-// / Stream is gated on $MinimumStreamFFMPEGVersion rather than $MinimumFFMPEGVersion,
-// / because it is the only one of the four that fetches a remote URL & the protocol
-// / handling it relies on is newer than the file reading the others need.
+// / Stream asks for FFMPEG by manifest name like every other pipeline. It once had its own,
+// / higher minimum, but the manifest is now the only owner of a tool's minimum & already
+// / requires 6.1, which is what Stream needs.
 $PipelineSubsystem = 'Audio, Video & Streams';
 
 // / Shared modules this pipeline needs, loaded before its converter is loaded.

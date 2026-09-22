@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / Copyright Information ...
-// / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 9/22/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.8.8.
+// / v3.9.5.
 // / This file is the converter for the Scad pipeline. It is loaded by pipelineCore.php
 // / ONLY when a Scad conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
@@ -367,7 +367,7 @@ function sanitizeAllSCADUploads() {
 // / offending source line & that would turn the log into an exfiltration channel.
 function convertSCAD($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $DirSep, $SCADConversionTimeout, $ScadTemp, $MinimumSCADVersion, $EnableMemoryProtection;
+  global $Verbose, $DirSep, $SCADConversionTimeout, $ScadTemp, $EnableMemoryProtection;
   // / The six value pipeline contract. Success, errors, path, extension, filename & PID.
   // / This converter produces neither of the last two itself, so it declares the defaults.
   // / $OutputFilename is the name the user is shown. $WorkerPID stays zero unless a
@@ -389,7 +389,7 @@ function convertSCAD($pathname, $newPathname, $extension) {
     errorEntry('Bubblewrap is missing or non functional, so OpenSCAD renders cannot be isolated!', 27007, FALSE); }
   else {
     // / Locate & verify OpenSCAD. A path is returned only when both succeeded.
-    $scadBinary = verifySCADVersion($MinimumSCADVersion);
+    $scadBinary = verifiedToolPath('OpenSCAD');
     if ($scadBinary === FALSE) {
       $ConversionErrors = TRUE;
       errorEntry('The installed OpenSCAD version is missing or too old!', 27005, FALSE); }

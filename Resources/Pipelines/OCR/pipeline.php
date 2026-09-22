@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / Copyright Information ...
-// / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 9/22/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.8.8.
+// / v3.9.5.
 // / This file is the converter for the OCR pipeline. It is loaded by pipelineCore.php
 // / ONLY when a OCR operation is about to be dispatched to it, so a request that does
 // / something else never parses a line of it.
@@ -56,7 +56,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / left with no boundary at all.
 function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   // / Set variables.
-  global $Verbose, $VirusScan, $ConvertTempDir, $Lol, $Lolol, $Append, $MinimumTesseractVersion, $MinimumPdftotextVersion, $MinimumImageVersion, $EnableMemoryProtection;
+  global $Verbose, $VirusScan, $ConvertTempDir, $Lol, $Lolol, $Append, $EnableMemoryProtection;
   $documentConverted = $OperationSuccessful = $OperationErrors = $multiple = $virusFound = $skip = $variableIsSanitized = FALSE;
   $fileIsVerified = $scanComplete = $documentEngineStarted = $commandMayRun = $anyFileSucceeded = $loopCheck = FALSE;
   $ocrToolsAreValid = FALSE;
@@ -78,9 +78,12 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   // / Locate & verify every OCR utility before anything is read.
   // / Each route gates on the specific tool it uses rather than on the overall verdict.
   // / A missing pdftotext does not prevent an image from being read by Tesseract.
-  list ($ocrToolsAreValid, $tesseractBinary, $pdftotextBinary) = verifyOCRVersions($MinimumTesseractVersion, $MinimumPdftotextVersion);
+  // / Each tool by its manifest name. Both are required, matching the check it replaces.
+  $tesseractBinary = verifiedToolPath('Tesseract');
+  $pdftotextBinary = verifiedToolPath('Poppler Utils');
+  $ocrToolsAreValid = ($tesseractBinary !== FALSE && $pdftotextBinary !== FALSE);
   // / ImageMagick rasterizes a PDF page for the advanced route & is verified separately.
-  $imageBinary = verifyImageVersion($MinimumImageVersion);
+  $imageBinary = verifiedToolPath('ImageMagick');
   // / Make sure the input files are formatted into an array.
   if (!is_array($PDFWorkSelected)) $PDFWorkSelected = array($PDFWorkSelected);
   // / Iterate through the array of input files.

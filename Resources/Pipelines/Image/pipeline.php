@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / Copyright Information ...
-// / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 9/22/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.8.8.
+// / v3.9.5.
 // / This file is the converter for the Image pipeline. It is loaded by pipelineCore.php
 // / ONLY when a Image conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
@@ -43,7 +43,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / asked for both exactly.
 function convertImages($pathname, $newPathname, $extension, $height, $width, $rotate) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $MinimumImageVersion, $EnableMemoryProtection;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $EnableMemoryProtection;
   // / The six value pipeline contract. Success, errors, path, extension, filename & PID.
   // / This converter produces neither of the last two itself, so it declares the defaults.
   // / $OutputFilename is the name the user is shown. $WorkerPID stays zero unless a
@@ -56,7 +56,7 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
   $stopper = 0;
   $sleepTime = $SleepTimer;
   // / Locate & verify ImageMagick. A path is returned only when both succeeded.
-  $imageBinary = verifyImageVersion($MinimumImageVersion);
+  $imageBinary = verifiedToolPath('ImageMagick');
   if ($imageBinary === FALSE) {
     $ConversionErrors = TRUE;
     errorEntry('The installed ImageMagick version is missing, unidentifiable, or too old!', 8001, FALSE); }

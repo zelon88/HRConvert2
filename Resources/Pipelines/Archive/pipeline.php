@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / Copyright Information ...
-// / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 9/22/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.8.8.
+// / v3.9.5.
 // / This file is the converter for the Archive pipeline. It is loaded by pipelineCore.php
 // / ONLY when a Archive conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
@@ -231,7 +231,7 @@ function generateBootableIsoCommand($extension, $newPathname, $safedir2, $mkisof
 // / the image & isohybrid then rewrites its MBR in place.
 function convertArchives($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $ConvertDir, $Lol, $Lolol, $StopCounter, $SleepTimer, $PermissionLevels, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumIsoHybridVersion, $AllowBootableIsoImage, $BootableIsoArray, $EnableMemoryProtection;
+  global $Verbose, $ConvertDir, $Lol, $Lolol, $StopCounter, $SleepTimer, $PermissionLevels, $AllowBootableIsoImage, $BootableIsoArray, $EnableMemoryProtection;
   // / The six value pipeline contract. $UserFilename is this converter's fifth value,
   // / because an archive extraction renames what the user is given.
   $WorkerPID = 0;
@@ -254,7 +254,15 @@ function convertArchives($pathname, $newPathname, $extension) {
   // / Only populate the list of supported bootable iso formats if config.php enables it.
   if ($AllowBootableIsoImage) $array7zo3 = $BootableIsoArray;
   // / Verify every archive utility before anything is read or written.
-  list ($archiveToolsAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary) = verifyArchiveVersions($Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion);
+  // / Each tool by its manifest name. RAR is fetched & is deliberately NOT part of validity:
+  // / it is optional, & an installation without it still archives. This matches the check it
+  // / replaces, which required 7-Zip, zip, tar & mkisofs & nothing more.
+  $sevenZipBinary = verifiedToolPath('7-Zip');
+  $rarBinary = verifiedToolPath('RAR');
+  $zipBinary = verifiedToolPath('Zip');
+  $tarBinary = verifiedToolPath('Tar');
+  $mkisofsBinary = verifiedToolPath('Genisoimage');
+  $archiveToolsAreValid = ($sevenZipBinary !== FALSE && $zipBinary !== FALSE && $tarBinary !== FALSE && $mkisofsBinary !== FALSE);
   if ($sevenZipBinary === FALSE) {
     $ConversionErrors = TRUE;
     errorEntry('The installed 7-Zip version is missing, unidentifiable, or too old!', 13008, FALSE); }
@@ -289,7 +297,7 @@ function convertArchives($pathname, $newPathname, $extension) {
         $archiveError = 13100;
         // / isohybrid is only needed by the generic hybrid image, so its absence is fatal
         // / to that one format & irrelevant to every other bootable one.
-        $isoHybridBinary = verifyIsoHybridVersion($MinimumIsoHybridVersion);
+        $isoHybridBinary = verifiedToolPath('Syslinux Utils');
         if ($mkisofsBinary === FALSE) errorEntry('Mkisofs is missing, unidentifiable, or too old!', 13009, FALSE);
         else if ($extension === 'iso_gpt-boot' && $isoHybridBinary === FALSE) errorEntry('A hybrid bootable image requires the isohybrid utility from syslinux-utils, which is missing or too old!', 13107, FALSE);
         else {

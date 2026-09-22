@@ -1,7 +1,7 @@
 <?php if (php_sapi_name() !== 'cli') print('<!DOCTYPE HTML>'.PHP_EOL);
 // / -----------------------------------------------------------------------------------
 // / Copyright Information ...
-// / HRConvert2, Copyright on 9/21/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 9/22/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.4.
+// / v3.9.5.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -165,7 +165,7 @@ function verifyConfigVersion($RequiredConfigVersion) {
     'SupportedLanguages', 'DefaultLanguage', 'AllowUserSelectableLanguage',
     'SupportedGuis', 'DefaultGui', 'AllowUserSelectableGui',
     'SupportedColors', 'AllowUserSelectableColor', 'ButtonStyle',
-    'Font', 'SpinnerStyle', 'SpinnerColor', 'MinimumCalibreVersion', 'UserEbookInputArray',
+    'Font', 'SpinnerStyle', 'SpinnerColor', 'UserEbookInputArray',
     'ShowGUI', 'ShowFinePrint', 'TOSURL', 'PPURL', 'LogoURL', 'AllowUserShare',
     // / DocumentEngineSleepTimer was required & is read NOWHERE. It was removed from the
     // / list rather than added to the configuration, because a required setting nothing
@@ -185,15 +185,10 @@ function verifyConfigVersion($RequiredConfigVersion) {
     'UserDrawingInputArray', 'UserDrawingOutputArray', 'UserImageInputArray',
     'UserImageOutputArray', 'UserSCADInputArray', 'UserSCADOutputArray',
     'UserSCADArray', 'UserSubtitleInputArray', 'UserSubtitleOutputArray', 'UserPDFWorkArr',
-    'AllowStreamOverHTTP', 'StreamWatchTimeout', 'StreamConnectionTimeout', 'MinimumIsoHybridVersion',
-    'StreamInspectionLayers', 'StreamInspectionFilesPerLayer', 'MinimumPdftotextVersion',
-    'DefaultStreamInspectionForfeitAction', 'MaxStreamInspectionFileSize', 'RequireSandboxOnDocker',
+    'AllowStreamOverHTTP', 'StreamWatchTimeout', 'StreamConnectionTimeout', 'StreamInspectionLayers', 'StreamInspectionFilesPerLayer', 'DefaultStreamInspectionForfeitAction', 'MaxStreamInspectionFileSize', 'RequireSandboxOnDocker',
     'AllowSCADIncludeResolution', 'SCADConversionTimeout', 'RequireSandbox', 'ThrowSandboxWarning',
-    'MinimumSCADVersion', 'MinimumFFMPEGVersion', 'MinimumStreamFFMPEGVersion', 'MinimumDiaVersion',
-    'MinimumLibreOfficeVersion', 'MinimumInkscapeVersion', 'MinimumImageVersion', 'MinimumTesseractVersion',
-    'MinimumAssimpVersion', 'MinimumMeshlabVersion', 'UsePyMeshLab', 'EnableAutoUpdates',
+    'UsePyMeshLab', 'EnableAutoUpdates',
     'AutoUpdateTargetVersion', 'UpdateSourceRepository', 'MaxUpdatePackageSize', 'UpdateConnectionTimeout',
-    'Minimum7zVersion', 'MinimumZipVersion', 'MinimumRarVersion', 'MinimumTarVersion', 'MinimumMkisofsVersion',
     'EnableResourceAwareness', 'RequireResourceAwareness', 'CoreManagerSubprocessPollInterval',
     'ResourcePollInterval', 'WorkerReapInterval', 'WorkerStaleGracePeriod', 'TotalResourceBudget',
     'ReserveResourcePercentage', 'MaxConcurrentWorkers', 'MaxExpectedRuntime', 'MaxRuntimeExtensions',
@@ -477,6 +472,99 @@ function addSillyString($Secret, $secretVersion) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / FOUR BOOT FUNCTIONS THAT MUST LIVE IN THE APPLICATION. Do not move them to the Engine.
+// / Each is reached before the Engine loads: generateInstallSecret through verifyInstallation
+// / & resolveSecretFile, closeHRC2Connection through quickDie, & the two AppArmor functions
+// / through verifySandboxPolicy, which verifyInstallation calls.
+// / All four were moved to the Engine at v3.9.3 & it went unnoticed, because each is only
+// / reached on a first run, an error exit or a sandbox check. An existing install has a
+// / secret, so generateInstallSecret was never called & nothing failed. A FRESH install has
+// / none, so every fresh install & every fresh container fatally errored on its first boot.
+// / The check that would have caught it was written after the move & was only ever run
+// / against functions still in this file. Re-run a corrected check against everything it
+// / passed before, not just what is left.
+// / -----------------------------------------------------------------------------------
+
+// / A function to generate the per-install secret used to derive session identifiers.
+// / 32 bytes gives 256 bits of entropy & returns as a 64 hexadecimal character string.
+function generateInstallSecret() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $InstallSecret = FALSE;
+  $InstallSecretCheck = TRUE;
+  // / random_bytes() throws rather than returning a poor result when entropy is unavailable.
+  // / Fail closed. A predictable secret is worse than no installation at all.
+  try { $InstallSecret = bin2hex(random_bytes(32)); }
+  catch (Throwable $error) { $InstallSecretCheck = FALSE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $error);
+  return array($InstallSecret, $InstallSecretCheck); }
+// / -----------------------------------------------------------------------------------
+
+// / A function to close the web server connection.
+function closeHRC2Connection() {
+  ignore_user_abort(TRUE);
+  if (function_exists('fastcgi_finish_request')) fastcgi_finish_request();
+  else {
+    if (ob_get_level() > 0) ob_end_flush();
+    flush(); } }
+// / -----------------------------------------------------------------------------------
+
+// / A function to report whether an AppArmor profile is loaded into the kernel.
+// / Accepts the profile name as it is declared inside the profile file.
+// / Returns a loaded boolean & a status word, in that order.
+// / A profile on disk is not a profile in force.
+// / Writing one & running apparmor_parser only at the moment it is written means a load
+// / that failed, or a host that rebooted before AppArmor read it, leaves a file that
+// / matches perfectly & is enforcing nothing. The check reported ok & the sandbox stayed
+// / broken, which is the worst combination a diagnostic can produce.
+// / The loaded set is read from securityfs, which is what the kernel is actually using.
+function apparmorProfileIsLoaded($profileName) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $ProfileIsLoaded = FALSE;
+  $ProfileStatus = 'unknown';
+  $profilesPath = '/sys/kernel/security/apparmor/profiles';
+  $loadedProfiles = '';
+  if (!file_exists($profilesPath)) $ProfileStatus = 'apparmor not active';
+  else if (!is_readable($profilesPath)) $ProfileStatus = 'not readable by this account';
+  else {
+    $loadedProfiles = (string)@file_get_contents($profilesPath);
+    if (strpos($loadedProfiles, (string)$profileName) !== FALSE) {
+      $ProfileIsLoaded = TRUE;
+      $ProfileStatus = 'loaded'; }
+    else $ProfileStatus = 'NOT LOADED'; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $profilesPath, $loadedProfiles, $profileName);
+  return array($ProfileIsLoaded, $ProfileStatus); }
+// / -----------------------------------------------------------------------------------
+
+// / A function to load an AppArmor profile that has just been written.
+// / Accepts the absolute path of the profile.
+// / Returns TRUE when the parser accepted it.
+// / A profile that is written but never loaded changes nothing until the next reboot, which
+// / makes a repair look like it failed.
+function reloadApparmorProfile($profilePath) {
+  // / Set variables.
+  global $RunningAsRoot, $EnableMemoryProtection;
+  $ProfileWasLoaded = FALSE;
+  $parserBinary = '';
+  $parserOutput = array();
+  $parserExitCode = 1;
+  $parserBinary = locateDependency('apparmor_parser');
+  if (!$RunningAsRoot) warningEntry('An AppArmor profile was written but could not be loaded, because loading one requires root.');
+  else if ($parserBinary === '') warningEntry('An AppArmor profile was written but apparmor_parser is not installed, so it was not loaded.');
+  else {
+    exec(escapeshellarg($parserBinary).' -r '.escapeshellarg($profilePath).' 2>&1', $parserOutput, $parserExitCode);
+    if ($parserExitCode === 0) {
+      $ProfileWasLoaded = TRUE;
+      logEntry('The AppArmor profile at '.$profilePath.' was loaded.'); }
+    else warningEntry('apparmor_parser refused the profile at '.$profilePath.'. '.implode(' ', $parserOutput)); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $parserBinary, $parserOutput, $parserExitCode, $profilePath);
+  return $ProfileWasLoaded; }
+// / -----------------------------------------------------------------------------------
+
 // / A function to load an install secret from a file, or to create one when none exists.
 // / Accepts the absolute path of the secret file.
 // / Returns a readiness boolean & the secret key, in that order.
@@ -649,7 +737,7 @@ function verifyContainerEnvironment() {
 // / Any other combination gets no secret at all & fails verification.
 function verifyInstallation() {
   // / Set variables.
-  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $LogFile, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $SecretFile, $RequiredSecretVersion, $MinimumSCADVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $MinimumInkscapeVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $MinimumImageVersion, $UsePyMeshLab, $MinimumMeshlabVersion, $MinimumAssimpVersion, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $Minimum7zVersion, $MinimumZipVersion, $MinimumRarVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumDiaVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection, $ResourceAwarenessActive, $EnableResourceAwareness, $RequireResourceAwareness, $ManagerSocketDir, $DirSep, $CoreManagerVersion, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $CoreLoaded, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $RequiredSetupCoreVersion, $RequiredConfigScript, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $RequiredEngineVersion, $AllowUnprivilegedNamespaces, $MaintainHTAccess,
+  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $LogFile, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $UsePatchedDocumentEngine, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $SecretFile, $RequiredSecretVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $RequiredGuiVersion, $RequiredLanguageVersion, $UsePyMeshLab, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection, $ResourceAwarenessActive, $EnableResourceAwareness, $RequireResourceAwareness, $ManagerSocketDir, $DirSep, $CoreManagerVersion, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $CoreLoaded, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $RequiredSetupCoreVersion, $RequiredConfigScript, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $RequiredEngineVersion, $AllowUnprivilegedNamespaces, $MaintainHTAccess,
     $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth, $DefaultVirusScanner, $URLDownloadMaximumBytes, $URLDownloadsPerSession, $ScanURLDownloads, $LogoURL, $ResolvedLogoURL, $PermittedPrivateRanges;
   putenv('HOME='.$HomeLoc);
   $CoreLoaded = TRUE;
@@ -697,19 +785,19 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
-  $HRConvertVersion = 'v3.9.4';
+  $HRConvertVersion = 'v3.9.5';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Define the minimum acceptable config.php version that this convertCore.php can accept.
   // / This is only raised when a release adds or removes a config setting.
   // / A release that changes no settings leaves this alone, so existing config files keep working.
   // / Any config.php version that is greater (newer) than the version listed below is considered acceptable.
-  $RequiredConfigVersion = 'v3.9.4';
+  $RequiredConfigVersion = 'v3.9.5';
   $RequiredConfigVersion = ltrim($RequiredConfigVersion, 'vV');
   // / Define the minimum acceptable GUI version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / Gui version that do not exactly match the version listed below are not considered acceptable.
   // / This is because Guis are not always guaranteed to be forward or reverse compatible.
-  $RequiredGuiVersion = 'v3.9.4';
+  $RequiredGuiVersion = 'v3.9.5';
   $RequiredGuiVersion = ltrim($RequiredGuiVersion, 'vV');
   // / Define the minimum acceptable Language Pack version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
@@ -742,7 +830,7 @@ function verifyInstallation() {
   // / whose arguments have moved, or capabilities this core cannot honour.
   // / Raise this whenever a pipeline is added, removed, or its own version pin moves.
   // / The manager carries the pin list for every pipeline it accepts.
-  $RequiredPipelineCoreVersion = 'v3.9.3';
+  $RequiredPipelineCoreVersion = 'v3.9.5';
   // / The Engine version this application requires.
   // / This is an EXACT match & it is free, because the Engine is bundled with this release
   // / rather than installed beside it. The updater replaces both together, so the pin & the
@@ -1714,7 +1802,7 @@ function verifyLanguage() {
 // / Converting here as well produced a fifteen hour watch timeout & a ten million second connect timeout.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $ProtectedRootDirs, $ResourcesDir, $BootloadersDir, $AllowBootableIsoImage, $UserBootableIsoArray, $BootableIsoArray, $MinimumCalibreVersion, $UserEbookInputArray, $UserEbookOutputArray, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $ManagerSocketDir, $ManagerSocketTimeout, $ManagerMessageBatchSize, $ManagerMessageSkew, $StartupKeyWindow, $ResourceAwarenessActive, $CoreManagerVersion, $EnableResourceAwareness, $RequireResourceAwareness, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EffectiveConversionLimits, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $AllowUnprivilegedNamespaces, $PipelineCoreActive, $PipelinesAreEnumerated, $Pipelines, $PipelineCount, $LogSequence, $LogBuffer, $LogBufferOverflowed, $LogRole, $EngineSandboxProfiles, $ModelInputArray, $ModelOutputArray, $ImageInputArray, $ImageOutputArray, $SCADInputArray, $DrawingInputArray, $DrawingOutputArray,
+  global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $ProtectedRootDirs, $ResourcesDir, $BootloadersDir, $AllowBootableIsoImage, $UserBootableIsoArray, $BootableIsoArray, $UserEbookInputArray, $UserEbookOutputArray, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $ManagerSocketDir, $ManagerSocketTimeout, $ManagerMessageBatchSize, $ManagerMessageSkew, $StartupKeyWindow, $ResourceAwarenessActive, $CoreManagerVersion, $EnableResourceAwareness, $RequireResourceAwareness, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EffectiveConversionLimits, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $AllowUnprivilegedNamespaces, $PipelineCoreActive, $PipelinesAreEnumerated, $Pipelines, $PipelineCount, $LogSequence, $LogBuffer, $LogBufferOverflowed, $LogRole, $EngineSandboxProfiles, $ModelInputArray, $ModelOutputArray, $ImageInputArray, $ImageOutputArray, $SCADInputArray, $DrawingInputArray, $DrawingOutputArray,
     $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth, $DefaultVirusScanner, $HostArchitecture, $HostMachineString, $URLDownloadMaximumBytes, $URLDownloadsPerSession, $ScanURLDownloads, $LogoURL, $ResolvedLogoURL, $PermittedPrivateRanges;
   // / Application related variables.
   $GlobalsAreVerified = $sanitizeGlobalCheck = $sanitizeGlobalCheckA = $sanitizeGlobalCheckB = $sanitizeGlobalCheckC = $sanitizeGlobalCheckD = $sanitizeGlobalCheckE = FALSE;
@@ -1905,93 +1993,7 @@ function verifyGlobals() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to confirm the installed FFMPEG meets the minimum version required.
-// / Accepts the minimum version as major.minor.
-// / Returns the absolute path of the binary that was verified, or FALSE.
-// / A path is returned ONLY when the binary was found & its version satisfies the minimum,
-// / so a caller holding a path may use it without checking anything else.
-// / The binary is located rather than assumed, & the located binary is the one whose
-// / version is read, so the version verified is provably the version that will run.
-// / TWO different minimums are enforced against this one binary & the caller supplies the
-// / one it needs. An ordinary audio or video conversion reads a local file. A stream
-// / conversion fetches remote content & needs a build carrying the protocol handling fixes,
-// / so it passes a higher minimum than the others do.
-// / A git build reports a hash rather than a version & is refused, because an unknown build
-// / cannot be cleared against a minimum.
-function verifyFFMPEGVersion($MinimumVersion) {
-  // / Set variables.
-  global $Verbose, $EnableMemoryProtection;
-  $FFMPEGBinary = FALSE;
-  $locatedBinary = $detectedVersion = '';
-  $versionOutput = $versionMatches = $minimumParts = array();
-  $versionExitCode = 1;
-  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
-  $locatedBinary = locateDependency('ffmpeg');
-  if ($locatedBinary !== '') {
-    exec(escapeshellarg($locatedBinary).' -version 2>&1', $versionOutput, $versionExitCode);
-    if ($versionExitCode === 0 && !empty($versionOutput)) {
-      // / Anchor on the product name. A git build reports a hash where the version belongs
-      // / & will not match this pattern, which is the correct outcome.
-      if (preg_match('/ffmpeg version\s+n?(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
-        $detectedMajor = (int)$versionMatches[1];
-        $detectedMinor = (int)$versionMatches[2];
-        $detectedVersion = $detectedMajor.'.'.$detectedMinor;
-        $minimumParts = explode('.', $MinimumVersion);
-        $minimumMajor = (int)($minimumParts[0] ?? 0);
-        $minimumMinor = (int)($minimumParts[1] ?? 0);
-        // / Compare numerically, never as strings. A string comparison ranks 6.1 below 5.9.
-        if ($detectedMajor > $minimumMajor) $FFMPEGBinary = $locatedBinary;
-        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $FFMPEGBinary = $locatedBinary; } } }
-  if ($Verbose) logEntry('FFMPEG Version Check: '.($FFMPEGBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later'.($FFMPEGBinary === FALSE ? '' : ', Using: '.$FFMPEGBinary).'.');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
-  return $FFMPEGBinary; }
-// / -----------------------------------------------------------------------------------
 
-// / -----------------------------------------------------------------------------------
-// / A function to confirm the installed LibreOffice meets a minimum version.
-// / The minimum arrives as an argument so different operations can require different builds.
-// / LibreOffice reports its version as "LibreOffice 7.4.7.2 40(Build:2)" on standard output.
-// / LibreOffice changed versioning schemes in 2024, moving from 7.6 directly to 24.2.
-// / The new scheme is year.month, so a major of 24 or higher is NEWER than a major of 7.
-// / Comparing numerically rather than as strings is what makes that transition work correctly.
-// / Some distributions ship only the soffice binary, so that name is tried as a fallback.
-// / A build that reports no parseable version is refused, because an unknown build cannot be cleared.
-// / LibreOffice requires a writable HOME directory & will fail to start without one.
-// / The core sets HOME to the configured home location during verifyGlobals().
-function verifyLibreOfficeVersion($MinimumVersion) {
-  // / Set variables.
-  global $Verbose, $EnableMemoryProtection;
-  $LibreOfficeVersionIsValid = FALSE;
-  $versionOutput = $versionMatches = $minimumParts = array();
-  $versionExitCode = 1;
-  $detectedVersion = '';
-  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
-  // / Try the primary binary name first.
-  exec('libreoffice --version 2>&1', $versionOutput, $versionExitCode);
-  // / Some distributions ship only soffice, so try that name when the first attempt fails.
-  if ($versionExitCode !== 0) {
-    $versionOutput = array();
-    exec('soffice --version 2>&1', $versionOutput, $versionExitCode); }
-  if ($versionExitCode === 0 && !empty($versionOutput)) {
-    // / Match a major.minor pair immediately following the product name.
-    // / Anchoring on the name prevents a match against the build number later in the banner.
-    if (preg_match('/LibreOffice\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
-      $detectedMajor = (int)$versionMatches[1];
-      $detectedMinor = (int)$versionMatches[2];
-      $detectedVersion = $detectedMajor.'.'.$detectedMinor;
-      // / Split the supplied minimum into the same two parts.
-      $minimumParts = explode('.', $MinimumVersion);
-      $minimumMajor = (int)($minimumParts[0] ?? 0);
-      $minimumMinor = (int)($minimumParts[1] ?? 0);
-      // / Compare numerically, never as strings.
-      // / A string comparison would rank version 24.2 below version 7.6.
-      if ($detectedMajor > $minimumMajor) $LibreOfficeVersionIsValid = TRUE;
-      elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $LibreOfficeVersionIsValid = TRUE; } }
-  if ($Verbose) logEntry('LibreOffice Version Check: '.($LibreOfficeVersionIsValid ? 'PASSED' : 'FAILED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later.');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $versionOutput, $versionMatches, $versionExitCode, $detectedVersion, $minimumParts, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
-  return $LibreOfficeVersionIsValid; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -2863,591 +2865,70 @@ function unloadApparmorProfile($profilePath, $profileName) {
 
 
 // / -----------------------------------------------------------------------------------
-// / A function to confirm the installed ImageMagick meets the minimum version required.
-// / Accepts the minimum version as major.minor.
-// / Returns the absolute path of the binary that was verified, or FALSE.
-// / A path is returned ONLY when the binary was found & its version satisfies the minimum,
-// / so a caller holding a path may use it without checking anything else.
-// / The binary is located rather than assumed, & the located binary is the one whose
-// / version is read, so the version verified is provably the version that will run.
-// / ImageMagick v7 is required for the unified magick utility & its parameter ordering.
-// / A v6 installation provides convert with different argument semantics & is refused
-// / rather than accommodated, so the command built by the caller can be trusted as written.
-// / A build that reports no parseable version is refused, because an unknown build cannot
-// / be cleared against a minimum.
-function verifyImageVersion($MinimumVersion) {
-  // / Set variables.
-  global $Verbose, $RunningAsRoot, $EnableMemoryProtection;
-  $ImageBinary = FALSE;
-  $locatedBinary = $detectedVersion = '';
-  $versionOutput = $versionMatches = $minimumParts = array();
-  $versionExitCode = 1;
-  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
-  $locatedBinary = locateDependency('magick');
-  if ($locatedBinary !== '') {
-    // / The stock Debian policy blocks every document coder this application converts.
-    // / The policy is as much a dependency as the binary. A root run repairs it. Every
-    // / other context reports it & carries on, because a policy is not ours to rewrite
-    // / from a web request.
-    // / Consumed & not acted on. The callee logs its own findings.
-    list ($imageMagickPolicyIsValid, $imageMagickPolicyStatus) = verifyImageMagickPolicy($RunningAsRoot);
-    exec(escapeshellarg($locatedBinary).' -version 2>&1', $versionOutput, $versionExitCode);
-    if ($versionExitCode === 0 && !empty($versionOutput)) {
-      // / Anchor on the product name. The banner also carries a build date & a URL.
-      if (preg_match('/ImageMagick\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
-        $detectedMajor = (int)$versionMatches[1];
-        $detectedMinor = (int)$versionMatches[2];
-        $detectedVersion = $detectedMajor.'.'.$detectedMinor;
-        $minimumParts = explode('.', $MinimumVersion);
-        $minimumMajor = (int)($minimumParts[0] ?? 0);
-        $minimumMinor = (int)($minimumParts[1] ?? 0);
-        // / Compare numerically, never as strings. A string comparison ranks 7.1 below 6.9.
-        if ($detectedMajor > $minimumMajor) $ImageBinary = $locatedBinary;
-        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $ImageBinary = $locatedBinary; } } }
-  if ($Verbose) logEntry('ImageMagick Version Check: '.($ImageBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later'.($ImageBinary === FALSE ? '' : ', Using: '.$ImageBinary).'.');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $imageMagickPolicyIsValid, $imageMagickPolicyStatus, $locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
-  return $ImageBinary; }
-// / -----------------------------------------------------------------------------------
 
-// / A function to verify both utilities a 3D model conversion depends on.
-// / Accepts the minimum Assimp version & the minimum MeshLab version, in that order.
-// / Returns an overall boolean, the Assimp path & the MeshLab path, in that order.
-// / Each path is the absolute path of a verified binary, or FALSE.
-// / The overall boolean reports whether the model SUBSYSTEM is functional, which is not
-// / derivable from the two paths alone. MeshLab is only needed when the binary is the one
-// / being used, so a server running PyMeshLab is fully functional without it.
-// / Assimp is required by every route & MeshLab only by the mesh routes, so a caller taking
-// / the scene route tests the Assimp path alone rather than the overall boolean.
-// / Neither utility reports its version in the ordinary way.
-// / Assimp uses a subcommand rather than a flag, & prints a banner with the version several
-// / lines down, so the pattern anchors on the word Version rather than the first number.
-// / meshlabserver is a Qt application & will not start without a display, even to print its
-// / own version, so it runs under xvfb-run exactly as the conversion does.
-// / Neither exit code is consulted, because both print a usable banner while exiting non zero.
-// / MeshLab uses date style version numbers such as 2020.09, so the two parts are compared
-// / numerically & a build reporting 2020.9 satisfies a minimum of 2020.09.
-// / PyMeshLab is a bundled python module with no version to interrogate, so it is never
-// / checked & its use is what makes a missing MeshLab binary acceptable.
-function verifyModelVersions($MinimumAssimpVersion, $MinimumMeshlabVersion) {
-  // / Set variables.
-  global $Verbose, $UsePyMeshLab, $EnableMemoryProtection;
-  $ModelsAreValid = FALSE;
-  $AssimpBinary = $MeshlabBinary = FALSE;
-  $locatedBinary = $detectedAssimp = $detectedMeshlab = '';
-  $versionOutput = $versionMatches = $minimumParts = array();
-  $versionExitCode = 1;
-  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
-  // / Assimp reports its version through the version subcommand, not through a flag.
-  $locatedBinary = locateDependency('assimp');
-  if ($locatedBinary !== '') {
-    $versionOutput = array();
-    exec(escapeshellarg($locatedBinary).' version 2>&1', $versionOutput, $versionExitCode);
-    if (!empty($versionOutput)) {
-      if (preg_match('/Version\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
-        $detectedMajor = (int)$versionMatches[1];
-        $detectedMinor = (int)$versionMatches[2];
-        $detectedAssimp = $detectedMajor.'.'.$detectedMinor;
-        $minimumParts = explode('.', $MinimumAssimpVersion);
-        $minimumMajor = (int)($minimumParts[0] ?? 0);
-        $minimumMinor = (int)($minimumParts[1] ?? 0);
-        if ($detectedMajor > $minimumMajor) $AssimpBinary = $locatedBinary;
-        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $AssimpBinary = $locatedBinary; } } }
-  // / MeshLab is provided by the meshlabserver binary when PyMeshLab is not in use.
-  $locatedBinary = locateDependency('meshlabserver');
-  if ($locatedBinary !== '') {
-    $versionOutput = array();
-    exec('xvfb-run -a '.escapeshellarg($locatedBinary).' --version 2>&1', $versionOutput, $versionExitCode);
-    if (!empty($versionOutput)) {
-      if (preg_match('/(\d{4})\.(\d+)/', implode(' ', $versionOutput), $versionMatches)) {
-        $detectedMajor = (int)$versionMatches[1];
-        $detectedMinor = (int)$versionMatches[2];
-        $detectedMeshlab = $detectedMajor.'.'.$versionMatches[2];
-        $minimumParts = explode('.', $MinimumMeshlabVersion);
-        $minimumMajor = (int)($minimumParts[0] ?? 0);
-        $minimumMinor = (int)($minimumParts[1] ?? 0);
-        // / A leading zero must not survive into the comparison. 2020.09 is month nine &
-        // / (int)'09' is nine, so a build reporting 2020.9 satisfies it correctly.
-        if ($detectedMajor > $minimumMajor) $MeshlabBinary = $locatedBinary;
-        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $MeshlabBinary = $locatedBinary; } } }
-  // / The subsystem is functional when Assimp works & the MeshLab requirement is satisfied
-  // / either by the binary or by PyMeshLab standing in for it.
-  if ($AssimpBinary !== FALSE && ($UsePyMeshLab or $MeshlabBinary !== FALSE)) $ModelsAreValid = TRUE;
-  // / $UsePyMeshLab is a setting rather than a capability & is treated as one here.
-  // / It says an administrator would like PyMeshLab used. It does not say a bundle is
-  // / present, that an interpreter can load it, or that a conversion will work.
-  // / Whether it actually loads is decided by the Model pipeline, which attempts the
-  // / import & falls back to the binary when it fails. This function runs at boot & has
-  // / no pipeline loaded, so it cannot make that test itself.
-  // / The configuration below is the one that has no fallback at all & is worth saying so
-  // / at boot rather than at the first conversion somebody tries.
-  if ($UsePyMeshLab && $MeshlabBinary === FALSE) warningEntry('PyMeshLab is enabled & no usable MeshLab binary was found. A model conversion has no fallback if the bundle does not load.');
-  if ($Verbose) {
-    logEntry('Assimp Version Check: '.($AssimpBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedAssimp === '' ? 'NONE' : $detectedAssimp).', Required: '.$MinimumAssimpVersion.' or later'.($AssimpBinary === FALSE ? '' : ', Using: '.$AssimpBinary).'.');
-    logEntry('MeshLab Version Check: '.($MeshlabBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedMeshlab === '' ? 'NONE' : $detectedMeshlab).', Required: '.$MinimumMeshlabVersion.' or later'.($MeshlabBinary === FALSE ? '' : ', Using: '.$MeshlabBinary).($UsePyMeshLab ? ', PyMeshLab is preferred when it loads.' : '.')); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $detectedAssimp, $detectedMeshlab, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumAssimpVersion, $MinimumMeshlabVersion);
-  return array($ModelsAreValid, $AssimpBinary, $MeshlabBinary); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to confirm the installed Dia meets the minimum version required.
-// / Accepts the minimum version as major.minor.
-// / Returns the absolute path of the binary that was verified, or FALSE.
-// / A path is returned ONLY when the binary was found & its version satisfies the minimum,
-// / so a caller holding a path may use it without checking anything else.
-// / Dia reports its version as "Dia version 0.98.0" & is one of the few dependencies whose
-// / major version is zero, so the comparison must not assume a non zero major.
-// / Dia is a GTK application. It accepts --version without a display, but a CONVERSION may
-// / still need one. If a drawing conversion fails inside a working sandbox rather than
-// / being refused, a missing display is the first thing to suspect & xvfb-run is the answer.
-// / A build that reports no parseable version is refused, because an unknown build cannot
-// / be cleared against a minimum.
-function verifyDrawingVersion($MinimumVersion) {
-  // / Set variables.
-  global $Verbose, $EnableMemoryProtection;
-  $DrawingBinary = FALSE;
-  $locatedBinary = $detectedVersion = '';
-  $versionOutput = $versionMatches = $minimumParts = array();
-  $versionExitCode = 1;
-  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
-  $locatedBinary = locateDependency('dia');
-  if ($locatedBinary !== '') {
-    exec(escapeshellarg($locatedBinary).' --version 2>&1', $versionOutput, $versionExitCode);
-    if (!empty($versionOutput)) {
-      // / Anchor on the product name so nothing else in the banner can be matched instead.
-      if (preg_match('/Dia\s+version\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
-        $detectedMajor = (int)$versionMatches[1];
-        $detectedMinor = (int)$versionMatches[2];
-        $detectedVersion = $detectedMajor.'.'.$versionMatches[2];
-        $minimumParts = explode('.', $MinimumVersion);
-        $minimumMajor = (int)($minimumParts[0] ?? 0);
-        $minimumMinor = (int)($minimumParts[1] ?? 0);
-        // / Compare numerically, never as strings. A string comparison ranks 0.98 below 0.9.
-        if ($detectedMajor > $minimumMajor) $DrawingBinary = $locatedBinary;
-        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $DrawingBinary = $locatedBinary; } } }
-  if ($Verbose) logEntry('Dia Version Check: '.($DrawingBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later'.($DrawingBinary === FALSE ? '' : ', Using: '.$DrawingBinary).'.');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
-  return $DrawingBinary; }
+
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to verify both utilities an OCR operation depends on.
-// / Accepts the minimum Tesseract version & the minimum pdftotext version, in that order.
-// / Returns an overall boolean, the Tesseract path & the pdftotext path, in that order.
-// / Each path is the absolute path of a verified binary, or FALSE.
-// / The overall boolean reports whether the OCR SUBSYSTEM is functional, which means both,
-// / because the two routes through the OCR pipeline need different ones & a caller taking
-// / a single route tests that route's path rather than the overall boolean.
-// / This verifier stays in this file although ocrFiles() no longer does.
-// / showVersionInfo() reports on it whether or not the OCR pipeline is installed.
-// / Tesseract reads an image directly. pdftotext reads a PDF that already holds a text
-// / layer. Neither substitutes for the other.
-// / Tesseract prints a long banner listing every library it was built against, so the
-// / pattern anchors on the product name to avoid matching a dependency version instead.
-// / pdftotext is part of poppler-utils & reports a date style version such as 24.02.0,
-// / where the major is the year & the minor is the month.
-// / Neither exit code is consulted, because both print a usable banner while exiting non zero.
-function verifyOCRVersions($MinimumTesseractVersion, $MinimumPdftotextVersion) {
-  // / Set variables.
-  global $Verbose, $EnableMemoryProtection;
-  $OCRToolsAreValid = FALSE;
-  $TesseractBinary = $PdftotextBinary = FALSE;
-  $locatedBinary = $detectedTesseract = $detectedPdftotext = '';
-  $versionOutput = $versionMatches = $minimumParts = array();
-  $versionExitCode = 1;
-  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
-  // / Tesseract reads an image & produces text. It is the primary OCR engine.
-  $locatedBinary = locateDependency('tesseract');
-  if ($locatedBinary !== '') {
-    $versionOutput = array();
-    exec(escapeshellarg($locatedBinary).' --version 2>&1', $versionOutput, $versionExitCode);
-    if (!empty($versionOutput)) {
-      // / Anchor on the product name. The banner lists leptonica, libpng, zlib & a dozen
-      // / other versions, & an unanchored pattern would match whichever came first.
-      if (preg_match('/tesseract\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
-        $detectedMajor = (int)$versionMatches[1];
-        $detectedMinor = (int)$versionMatches[2];
-        $detectedTesseract = $detectedMajor.'.'.$versionMatches[2];
-        $minimumParts = explode('.', $MinimumTesseractVersion);
-        $minimumMajor = (int)($minimumParts[0] ?? 0);
-        $minimumMinor = (int)($minimumParts[1] ?? 0);
-        if ($detectedMajor > $minimumMajor) $TesseractBinary = $locatedBinary;
-        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $TesseractBinary = $locatedBinary; } } }
-  // / pdftotext extracts an existing text layer & cannot read a scanned page.
-  $locatedBinary = locateDependency('pdftotext');
-  if ($locatedBinary !== '') {
-    $versionOutput = array();
-    exec(escapeshellarg($locatedBinary).' -v 2>&1', $versionOutput, $versionExitCode);
-    if (!empty($versionOutput)) {
-      if (preg_match('/pdftotext\s+version\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
-        $detectedMajor = (int)$versionMatches[1];
-        $detectedMinor = (int)$versionMatches[2];
-        $detectedPdftotext = $detectedMajor.'.'.$versionMatches[2];
-        $minimumParts = explode('.', $MinimumPdftotextVersion);
-        $minimumMajor = (int)($minimumParts[0] ?? 0);
-        $minimumMinor = (int)($minimumParts[1] ?? 0);
-        // / The major is a YEAR & the minor is a MONTH, so a leading zero must not survive
-        // / into the comparison. 24.02 is month two & (int)'02' is two.
-        if ($detectedMajor > $minimumMajor) $PdftotextBinary = $locatedBinary;
-        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $PdftotextBinary = $locatedBinary; } } }
-  // / Both are required for the subsystem to be considered functional, because the two
-  // / routes through an OCR operation use different ones & neither substitutes for the other.
-  if ($TesseractBinary !== FALSE && $PdftotextBinary !== FALSE) $OCRToolsAreValid = TRUE;
-  if ($Verbose) {
-    logEntry('Tesseract Version Check: '.($TesseractBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedTesseract === '' ? 'NONE' : $detectedTesseract).', Required: '.$MinimumTesseractVersion.' or later'.($TesseractBinary === FALSE ? '' : ', Using: '.$TesseractBinary).'.');
-    logEntry('Pdftotext Version Check: '.($PdftotextBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedPdftotext === '' ? 'NONE' : $detectedPdftotext).', Required: '.$MinimumPdftotextVersion.' or later'.($PdftotextBinary === FALSE ? '' : ', Using: '.$PdftotextBinary).'.'); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $detectedTesseract, $detectedPdftotext, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumTesseractVersion, $MinimumPdftotextVersion);
-  return array($OCRToolsAreValid, $TesseractBinary, $PdftotextBinary); }
+
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to confirm the installed OpenSCAD meets the minimum version required.
-// / Accepts the minimum version as YYYY.MM.
-// / Returns the absolute path of the binary that was verified, or FALSE.
-// / A path is returned ONLY when the binary was found & its version satisfies the minimum,
-// / so a caller holding a path may use it without checking anything else.
-// / OpenSCAD writes its version banner to standard ERROR rather than standard output.
-// / Stderr is redirected into the captured output & the exit code cannot be relied upon.
-// / OpenSCAD uses a year & month rather than a major & minor, so the comparison is on the
-// / year first & the month second, both numerically.
-// / A build that reports no parseable version is refused, because an unknown build cannot
-// / be cleared against a minimum.
-function verifySCADVersion($MinimumVersion) {
-  // / Set variables.
-  global $Verbose, $RunningAsRoot, $EnableMemoryProtection;
-  $SCADBinary = FALSE;
-  $locatedBinary = $detectedVersion = '';
-  $versionOutput = $versionMatches = $minimumParts = array();
-  $versionExitCode = 1;
-  $detectedYear = $detectedMonth = $minimumYear = $minimumMonth = 0;
-  $locatedBinary = locateDependency('openscad');
-  if ($locatedBinary !== '') {
-    // / A distribution that confines OpenSCAD stops it reading the directory the sandbox
-    // / binds for it, which presents as a conversion that produces nothing & says nothing.
-    // / Consumed & not acted on. The callee logs its own findings.
-    list ($openScadPolicyIsValid, $openScadPolicyStatus) = verifyOpenScadPolicy($RunningAsRoot);
-    exec(escapeshellarg($locatedBinary).' --version 2>&1', $versionOutput, $versionExitCode);
-    if (!empty($versionOutput)) {
-      if (preg_match('/OpenSCAD\s+version\s+(\d{4})\.(\d{2})/i', implode(' ', $versionOutput), $versionMatches)) {
-        $detectedYear = (int)$versionMatches[1];
-        $detectedMonth = (int)$versionMatches[2];
-        $detectedVersion = $versionMatches[1].'.'.$versionMatches[2];
-        $minimumParts = explode('.', $MinimumVersion);
-        $minimumYear = (int)($minimumParts[0] ?? 0);
-        $minimumMonth = (int)($minimumParts[1] ?? 0);
-        // / Compare numerically. A string comparison ranks 2021.10 below 2021.09.
-        if ($detectedYear > $minimumYear) $SCADBinary = $locatedBinary;
-        elseif ($detectedYear === $minimumYear && $detectedMonth >= $minimumMonth) $SCADBinary = $locatedBinary; } } }
-  if ($Verbose) logEntry('OpenSCAD Version Check: '.($SCADBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later'.($SCADBinary === FALSE ? '' : ', Using: '.$SCADBinary).'.');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $openScadPolicyIsValid, $openScadPolicyStatus, $locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedYear, $detectedMonth, $minimumYear, $minimumMonth, $MinimumVersion);
-  return $SCADBinary; }
+
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to confirm the installed Inkscape meets the minimum version required.
-// / Accepts the minimum version as major.minor.
-// / Returns the absolute path of the binary that was verified, or FALSE.
-// / A path is returned ONLY when the binary was found & its version satisfies the minimum,
-// / so a caller holding a path may use it without checking anything else.
-// / The binary is located rather than assumed, & the located binary is the one whose
-// / version is read, so the version verified is provably the version that will run.
-// / Inkscape replaced its entire command line interface at version 1.0. The 0.92 flags such
-// / as --export-png were REMOVED rather than deprecated, so a command written for the
-// / current interface fails outright on an older build.
-// / Inkscape writes its version banner to standard output, unlike OpenSCAD.
-// / Standard error is redirected anyway, because a headless launch emits harmless warnings.
-// / A build that reports no parseable version is refused, because an unknown build cannot
-// / be cleared against a minimum.
-function verifySVGVersion($MinimumVersion) {
+
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / A function to look up a tool's verified path by its manifest name.
+// / Accepts the manifest name. Returns the path, or FALSE when the tool is unusable.
+// / The manifest is the only owner of a tool's minimum. This asks it through verifiedToolPath,
+// / so -v, archiving & scanning get the same answer the pipelines & --check-depends get.
+// / verifiedToolPath lives in the Pipeline Core, which may have failed to load. -v is what an
+// / operator runs to find out why, so this must not fatal: a missing Pipeline Core reads as every
+// / tool unusable, & -v's own component check reports the Pipeline Core itself.
+function toolPath($manifestName) {
   // / Set variables.
-  global $Verbose, $EnableMemoryProtection;
-  $SVGBinary = FALSE;
-  $locatedBinary = $detectedVersion = '';
-  $versionOutput = $versionMatches = $minimumParts = array();
-  $versionExitCode = 1;
-  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
-  $locatedBinary = locateDependency('inkscape');
-  if ($locatedBinary !== '') {
-    exec(escapeshellarg($locatedBinary).' --version 2>&1', $versionOutput, $versionExitCode);
-    if ($versionExitCode === 0 && !empty($versionOutput)) {
-      // / Anchor on the product name. The banner ends with a commit hash & a date, & an
-      // / unanchored pattern would happily match the date instead.
-      if (preg_match('/Inkscape\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
-        $detectedMajor = (int)$versionMatches[1];
-        $detectedMinor = (int)$versionMatches[2];
-        $detectedVersion = $detectedMajor.'.'.$detectedMinor;
-        $minimumParts = explode('.', $MinimumVersion);
-        $minimumMajor = (int)($minimumParts[0] ?? 0);
-        $minimumMinor = (int)($minimumParts[1] ?? 0);
-        // / Compare numerically, never as strings. A string comparison ranks 1.10 below 1.2.
-        if ($detectedMajor > $minimumMajor) $SVGBinary = $locatedBinary;
-        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $SVGBinary = $locatedBinary; } } }
-  if ($Verbose) logEntry('Inkscape Version Check: '.($SVGBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later'.($SVGBinary === FALSE ? '' : ', Using: '.$SVGBinary).'.');
+  global $EnableMemoryProtection;
+  $ToolPath = FALSE;
+  if (function_exists('verifiedToolPath')) $ToolPath = verifiedToolPath($manifestName);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
-  return $SVGBinary; }
+  purgeSensitiveMemory($EnableMemoryProtection, $manifestName);
+  return $ToolPath; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to confirm the installed Calibre meets the minimum version required.
-// / Accepts the minimum version as major.minor.
-// / Returns the absolute path of the binary that was verified, or FALSE.
-// / A path is returned ONLY when the binary was found & its version satisfies the minimum,
-// / so a caller holding a path may use it without checking anything else.
-// / The utility is named ebook-convert but the PRODUCT is Calibre, & the version banner
-// / reports the product rather than the utility. It looks like this.
-// /   ebook-convert (calibre 6.13)
-// / The pattern therefore anchors on the word calibre rather than on the binary name, which
-// / also prevents a match against the 2 in ebook-convert on a build with an odd banner.
-// / Calibre is a large application bundling its own Python interpreter, & the utility is a
-// / wrapper script rather than a compiled binary, so it may live outside the usual
-// / locations on a source installation. locateDependency() handles that.
-function verifyEbookVersion($MinimumVersion) {
+// / A function to read a tool's minimum version from the manifest, for display.
+// / Accepts the manifest name. Returns the minimum, or an empty string when there is none.
+// / -v shows each tool's minimum. That number is read from the manifest, the only owner of it,
+// / rather than from a setting that could disagree with what the pipelines actually enforce.
+// / It reads the manifest directly rather than through the Pipeline Core, so -v can still show
+// / minimums on an installation whose Pipeline Core failed to load.
+function toolMinimum($manifestName) {
   // / Set variables.
-  global $Verbose, $EnableMemoryProtection;
-  $EbookBinary = FALSE;
-  $locatedBinary = $detectedVersion = '';
-  $versionOutput = $versionMatches = $minimumParts = array();
-  $versionExitCode = 1;
-  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
-  $locatedBinary = locateDependency('ebook-convert');
-  if ($locatedBinary !== '') {
-    exec(escapeshellarg($locatedBinary).' --version 2>&1', $versionOutput, $versionExitCode);
-    if (!empty($versionOutput)) {
-      // / Anchor on the product name. The banner leads with the utility name, which carries
-      // / a digit of its own that an unanchored pattern would happily match instead.
-      if (preg_match('/calibre\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
-        $detectedMajor = (int)$versionMatches[1];
-        $detectedMinor = (int)$versionMatches[2];
-        $detectedVersion = $detectedMajor.'.'.$detectedMinor;
-        $minimumParts = explode('.', $MinimumVersion);
-        $minimumMajor = (int)($minimumParts[0] ?? 0);
-        $minimumMinor = (int)($minimumParts[1] ?? 0);
-        // / Compare numerically, never as strings. A string comparison ranks 6.13 below 6.9.
-        if ($detectedMajor > $minimumMajor) $EbookBinary = $locatedBinary;
-        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $EbookBinary = $locatedBinary; } } }
-  if ($Verbose) logEntry('Calibre Version Check: '.($EbookBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later'.($EbookBinary === FALSE ? '' : ', Using: '.$EbookBinary).'.');
+  global $DependsManifest, $CoreLoaded, $InstLoc, $DirSep, $EnableMemoryProtection;
+  $ToolMinimum = '';
+  $manifestPath = '';
+  $manifestEntry = array();
+  // / $CoreLoaded is in scope because the manifest is required inside this function, & every
+  // / component checks it at file scope.
+  if (!isset($DependsManifest) or !is_array($DependsManifest)) {
+    $manifestPath = $InstLoc.$DirSep.'Resources'.$DirSep.'Engine'.$DirSep.'Contract'.$DirSep.'depends.php';
+    if (file_exists($manifestPath)) require_once ($manifestPath); }
+  if (isset($DependsManifest) && is_array($DependsManifest)) foreach ($DependsManifest as $manifestEntry) {
+    if (!isset($manifestEntry['Name']) or (string)$manifestEntry['Name'] !== (string)$manifestName) continue;
+    $ToolMinimum = isset($manifestEntry['MinimumVersion']) ? (string)$manifestEntry['MinimumVersion'] : '';
+    break; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
-  return $EbookBinary; }
+  purgeSensitiveMemory($EnableMemoryProtection, $manifestPath, $manifestEntry, $manifestName);
+  return $ToolMinimum; }
 // / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to verify the ClamAV scanner.
-// / Accepts the minimum acceptable version, or an empty string to use the built-in floor.
-// / Returns the absolute path of a verified clamscan, or FALSE.
-// /
-// / A scanner that is not there must not look like a scanner that found nothing.
-// / clamscan was the one dependency in this application invoked as a bare command name &
-// / never verified at all. That is worse here than it would be anywhere else. Every other
-// / dependency announces its own absence, because a converter that cannot run produces no
-// / output file & the caller notices. A scanner announces absence as SILENCE, & silence is
-// / byte for byte what a clean scan looks like; the pipeline greps for FOUND, an absent
-// / binary writes no FOUND, & the core reported 'No infection detected' for a file nothing
-// / had ever opened. An administrator who enabled scanning was told their uploads were
-// / clean by a server with no scanner installed on it.
-// / Locating & verifying the binary up front is what converts that silence into a refusal.
-// /
-// / The version banner is 'ClamAV 1.0.3/27222/Tue Aug 22 08:29:16 2023', so the pattern
-// / anchors on the product name & takes only the first two parts. The trailing figures are
-// / the signature database revision & its build date, & both carry digits that an
-// / unanchored pattern would match instead of the version.
-function verifyClamVersion($MinimumVersion) {
-  // / Set variables.
-  global $Verbose, $EnableMemoryProtection;
-  $ClamBinary = FALSE;
-  $locatedBinary = $detectedVersion = '';
-  $versionOutput = $versionMatches = $minimumParts = array();
-  $versionExitCode = 1;
-  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
-  // / A local floor the configuration cannot remove by omission. config.php is accepted at
-  // / or above a minimum version, so an installation can take this core & keep a
-  // / configuration file written before --Minimum Clam Version-- existed. Refusing to scan
-  // / because the administrator's file predates the setting would be a worse answer than
-  // / scanning against a sensible floor. Any value they DO set wins.
-  $minimumClamVersion = '0.103';
-  if ((string)$MinimumVersion === '') $MinimumVersion = $minimumClamVersion;
-  $locatedBinary = locateDependency('clamscan');
-  if ($locatedBinary !== '') {
-    exec(escapeshellarg($locatedBinary).' --version 2>&1', $versionOutput, $versionExitCode);
-    if (!empty($versionOutput)) {
-      if (preg_match('/ClamAV\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
-        $detectedMajor = (int)$versionMatches[1];
-        $detectedMinor = (int)$versionMatches[2];
-        $detectedVersion = $detectedMajor.'.'.$detectedMinor;
-        $minimumParts = explode('.', $MinimumVersion);
-        $minimumMajor = (int)($minimumParts[0] ?? 0);
-        $minimumMinor = (int)($minimumParts[1] ?? 0);
-        // / Compare numerically, never as strings. A string comparison ranks 0.103 above
-        // / 1.0 & ranks 1.10 below 1.9, & ClamAV has shipped every one of those numbers.
-        if ($detectedMajor > $minimumMajor) $ClamBinary = $locatedBinary;
-        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $ClamBinary = $locatedBinary; } } }
-  if ($Verbose) logEntry('ClamAV Version Check: '.($ClamBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later'.($ClamBinary === FALSE ? '' : ', Using: '.$ClamBinary).'.');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $minimumClamVersion, $MinimumVersion);
-  return $ClamBinary; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to verify every archive utility HRConvert2 depends on.
-// / Accepts the minimum version of each utility, in the order they are returned.
-// / Returns an overall boolean followed by one path per utility, each being the absolute
-// / path of a verified binary or FALSE.
-// / 7-Zip is the ONLY extractor & is therefore required for every archive INPUT format.
-// / rar, zip, tar & mkisofs are creators & each is required only for its own OUTPUT format,
-// / so a caller creating a zip tests the zip path rather than the overall boolean.
-// / rar is EXCLUDED from the overall boolean because it is optional for input. It is NOT
-// / optional for rar output, because 7-Zip cannot create rar archives at all.
-// / mkisofs may be provided by cdrtools or by genisoimage & either satisfies the check.
-// / 7z & rar both print their banner when invoked with NO arguments & exit non zero doing
-// / so, which is why the exit code is not consulted for either of them.
-function verifyArchiveVersions($Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion) {
-  // / Set variables.
-  global $Verbose, $EnableMemoryProtection;
-  $ArchiveToolsAreValid = FALSE;
-  $SevenZipBinary = $RarBinary = $ZipBinary = $TarBinary = $MkisofsBinary = FALSE;
-  $locatedBinary = $detected7z = $detectedRar = $detectedZip = $detectedTar = $detectedMkisofs = '';
-  $versionOutput = $versionMatches = $minimumParts = array();
-  $versionExitCode = 1;
-  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
-  // / 7-Zip. The only extractor. Every archive input format depends on it.
-  $locatedBinary = locateDependency('7z');
-  if ($locatedBinary !== '') {
-    $versionOutput = array();
-    exec(escapeshellarg($locatedBinary).' 2>&1', $versionOutput, $versionExitCode);
-    if (!empty($versionOutput)) {
-      if (preg_match('/7-Zip[^\d]*(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
-        $detectedMajor = (int)$versionMatches[1];
-        $detectedMinor = (int)$versionMatches[2];
-        $detected7z = $detectedMajor.'.'.$versionMatches[2];
-        $minimumParts = explode('.', $Minimum7zVersion);
-        $minimumMajor = (int)($minimumParts[0] ?? 0);
-        $minimumMinor = (int)($minimumParts[1] ?? 0);
-        if ($detectedMajor > $minimumMajor) $SevenZipBinary = $locatedBinary;
-        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $SevenZipBinary = $locatedBinary; } } }
-  // / rar. Optional for input, mandatory for rar output.
-  $locatedBinary = locateDependency('rar');
-  if ($locatedBinary !== '') {
-    $versionOutput = array();
-    exec(escapeshellarg($locatedBinary).' 2>&1', $versionOutput, $versionExitCode);
-    if (!empty($versionOutput)) {
-      if (preg_match('/RAR\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
-        $detectedMajor = (int)$versionMatches[1];
-        $detectedMinor = (int)$versionMatches[2];
-        $detectedRar = $detectedMajor.'.'.$versionMatches[2];
-        $minimumParts = explode('.', $MinimumRarVersion);
-        $minimumMajor = (int)($minimumParts[0] ?? 0);
-        $minimumMinor = (int)($minimumParts[1] ?? 0);
-        if ($detectedMajor > $minimumMajor) $RarBinary = $locatedBinary;
-        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $RarBinary = $locatedBinary; } } }
-  // / zip.
-  $locatedBinary = locateDependency('zip');
-  if ($locatedBinary !== '') {
-    $versionOutput = array();
-    exec(escapeshellarg($locatedBinary).' -v 2>&1', $versionOutput, $versionExitCode);
-    if (!empty($versionOutput)) {
-      if (preg_match('/Zip\s+(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
-        $detectedMajor = (int)$versionMatches[1];
-        $detectedMinor = (int)$versionMatches[2];
-        $detectedZip = $detectedMajor.'.'.$versionMatches[2];
-        $minimumParts = explode('.', $MinimumZipVersion);
-        $minimumMajor = (int)($minimumParts[0] ?? 0);
-        $minimumMinor = (int)($minimumParts[1] ?? 0);
-        if ($detectedMajor > $minimumMajor) $ZipBinary = $locatedBinary;
-        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $ZipBinary = $locatedBinary; } } }
-  // / tar.
-  $locatedBinary = locateDependency('tar');
-  if ($locatedBinary !== '') {
-    $versionOutput = array();
-    exec(escapeshellarg($locatedBinary).' --version 2>&1', $versionOutput, $versionExitCode);
-    if ($versionExitCode === 0 && !empty($versionOutput)) {
-      if (preg_match('/tar[^\d]*(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
-        $detectedMajor = (int)$versionMatches[1];
-        $detectedMinor = (int)$versionMatches[2];
-        $detectedTar = $detectedMajor.'.'.$versionMatches[2];
-        $minimumParts = explode('.', $MinimumTarVersion);
-        $minimumMajor = (int)($minimumParts[0] ?? 0);
-        $minimumMinor = (int)($minimumParts[1] ?? 0);
-        if ($detectedMajor > $minimumMajor) $TarBinary = $locatedBinary;
-        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $TarBinary = $locatedBinary; } } }
-  // / mkisofs. May be cdrtools or the genisoimage fork wearing the same name.
-  $locatedBinary = locateDependency('mkisofs');
-  if ($locatedBinary !== '') {
-    $versionOutput = array();
-    exec(escapeshellarg($locatedBinary).' --version 2>&1', $versionOutput, $versionExitCode);
-    if (!empty($versionOutput)) {
-      if (preg_match('/(?:mkisofs|genisoimage)[^\d]*(\d+)\.(\d+)/i', implode(' ', $versionOutput), $versionMatches)) {
-        $detectedMajor = (int)$versionMatches[1];
-        $detectedMinor = (int)$versionMatches[2];
-        $detectedMkisofs = $detectedMajor.'.'.$versionMatches[2];
-        $minimumParts = explode('.', $MinimumMkisofsVersion);
-        $minimumMajor = (int)($minimumParts[0] ?? 0);
-        $minimumMinor = (int)($minimumParts[1] ?? 0);
-        if ($detectedMajor > $minimumMajor) $MkisofsBinary = $locatedBinary;
-        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $MkisofsBinary = $locatedBinary; } } }
-  // / rar is deliberately excluded. 7-Zip extracts rar archives, so a server without the
-  // / rar utility can still read them & only loses the ability to CREATE them.
-  if ($SevenZipBinary !== FALSE && $ZipBinary !== FALSE && $TarBinary !== FALSE && $MkisofsBinary !== FALSE) $ArchiveToolsAreValid = TRUE;
-  if ($Verbose) {
-    logEntry('7-Zip Check: '.($SevenZipBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detected7z === '' ? 'NONE' : $detected7z).', Required: '.$Minimum7zVersion.' or later'.($SevenZipBinary === FALSE ? '' : ', Using: '.$SevenZipBinary).'.');
-    logEntry('Rar Check: '.($RarBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedRar === '' ? 'NONE' : $detectedRar).', Required: '.$MinimumRarVersion.' or later'.($RarBinary === FALSE ? '' : ', Using: '.$RarBinary).'.');
-    logEntry('Zip Check: '.($ZipBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedZip === '' ? 'NONE' : $detectedZip).', Required: '.$MinimumZipVersion.' or later'.($ZipBinary === FALSE ? '' : ', Using: '.$ZipBinary).'.');
-    logEntry('Tar Check: '.($TarBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedTar === '' ? 'NONE' : $detectedTar).', Required: '.$MinimumTarVersion.' or later'.($TarBinary === FALSE ? '' : ', Using: '.$TarBinary).'.');
-    logEntry('Mkisofs Check: '.($MkisofsBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedMkisofs === '' ? 'NONE' : $detectedMkisofs).', Required: '.$MinimumMkisofsVersion.' or later'.($MkisofsBinary === FALSE ? '' : ', Using: '.$MkisofsBinary).'.'); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $detected7z, $detectedRar, $detectedZip, $detectedTar, $detectedMkisofs, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion);
-  return array($ArchiveToolsAreValid, $SevenZipBinary, $RarBinary, $ZipBinary, $TarBinary, $MkisofsBinary); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to confirm the installed isohybrid meets the minimum version required.
-// / Accepts the minimum version as major.minor.
-// / Returns the absolute path of the binary that was verified, or FALSE.
-// / A path is returned ONLY when the binary was found & its version satisfies the minimum.
-// / isohybrid is part of syslinux-utils rather than being a package of its own.
-// / It post processes a finished ISO so one image boots from optical media, from a USB
-// / stick presenting an MBR, & from UEFI firmware.
-// / ONLY the generic hybrid image needs it. An architecture specific UEFI image is not MBR
-// / bootable & has no isolinux record for an MBR to point at, so passing one through
-// / isohybrid would produce an unbootable image rather than a more compatible one.
-// / A server that never builds a hybrid image does not need this utility at all, which is
-// / why its absence is fatal to exactly one format rather than to bootable images generally.
-// / The version banner is the least certain thing here.
-// / isohybrid is a perl script in most distributions & its version output has changed
-// / between syslinux releases. The pattern anchors on a major.minor pair anywhere in the
-// / output & is deliberately loose. Confirm the detected number against a real installation.
-function verifyIsoHybridVersion($MinimumVersion) {
-  // / Set variables.
-  global $Verbose, $EnableMemoryProtection;
-  $IsoHybridBinary = FALSE;
-  $locatedBinary = $detectedVersion = '';
-  $versionOutput = $versionMatches = $minimumParts = array();
-  $versionExitCode = 1;
-  $detectedMajor = $detectedMinor = $minimumMajor = $minimumMinor = 0;
-  $locatedBinary = locateDependency('isohybrid');
-  if ($locatedBinary !== '') {
-    exec(escapeshellarg($locatedBinary).' --version 2>&1', $versionOutput, $versionExitCode);
-    if (!empty($versionOutput)) {
-      if (preg_match('/(\d+)\.(\d+)/', implode(' ', $versionOutput), $versionMatches)) {
-        $detectedMajor = (int)$versionMatches[1];
-        $detectedMinor = (int)$versionMatches[2];
-        $detectedVersion = $detectedMajor.'.'.$detectedMinor;
-        $minimumParts = explode('.', $MinimumVersion);
-        $minimumMajor = (int)($minimumParts[0] ?? 0);
-        $minimumMinor = (int)($minimumParts[1] ?? 0);
-        // / Compare numerically, never as strings. A string comparison ranks 6.4 below 6.10.
-        if ($detectedMajor > $minimumMajor) $IsoHybridBinary = $locatedBinary;
-        elseif ($detectedMajor === $minimumMajor && $detectedMinor >= $minimumMinor) $IsoHybridBinary = $locatedBinary; } } }
-  if ($Verbose) logEntry('Isohybrid Version Check: '.($IsoHybridBinary === FALSE ? 'FAILED' : 'PASSED').', Detected: '.($detectedVersion === '' ? 'NONE' : $detectedVersion).', Required: '.$MinimumVersion.' or later'.($IsoHybridBinary === FALSE ? '' : ', Using: '.$IsoHybridBinary).'.');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $detectedVersion, $versionOutput, $versionMatches, $minimumParts, $versionExitCode, $detectedMajor, $detectedMinor, $minimumMajor, $minimumMinor, $MinimumVersion);
-  return $IsoHybridBinary; }
-// / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to display version information about this installation.
@@ -3464,7 +2945,7 @@ function verifyIsoHybridVersion($MinimumVersion) {
 // / file, because loading twenty version files would overwrite the variable each time.
 function showVersionInfo() {
   // / Set variables.
-  global $RequiredEngineVersion, $SecretFile, $ManagerSocketDir, $InstLoc, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $PipelineCoreActive, $PipelineCount, $RequiredSecretVersion, $RequiredConfigScript, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $MinimumFFMPEGVersion, $MinimumStreamFFMPEGVersion, $MinimumLibreOfficeVersion, $MinimumInkscapeVersion, $MinimumDiaVersion, $MinimumSCADVersion, $MinimumImageVersion, $MinimumAssimpVersion, $MinimumMeshlabVersion, $MinimumTesseractVersion, $MinimumPdftotextVersion, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $MinimumIsoHybridVersion, $MinimumCalibreVersion, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EnableResourceAwareness, $RequireResourceAwareness, $ResourceAwarenessActive, $CoreManagerVersion, $ManagerSocketDir, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $ConvertTemp, $MaintainHTAccess, $EngineVersion, $HostArchitecture, $HostMachineString, $AllowUserURLDownload, $AllowUserVirusScan, $VirusScan, $AllowUserShare, $EnvironmentManagerMayRepair, $EnablePerConversionLimits, $Pipelines;
+  global $RequiredEngineVersion, $SecretFile, $ManagerSocketDir, $InstLoc, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $PipelineCoreActive, $PipelineCount, $RequiredSecretVersion, $RequiredConfigScript, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EnableResourceAwareness, $RequireResourceAwareness, $ResourceAwarenessActive, $CoreManagerVersion, $ManagerSocketDir, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $ConvertTemp, $MaintainHTAccess, $EngineVersion, $HostArchitecture, $HostMachineString, $AllowUserURLDownload, $AllowUserVirusScan, $VirusScan, $AllowUserShare, $EnvironmentManagerMayRepair, $EnablePerConversionLimits, $Pipelines;
   $VersionInfoDisplayed = $modelsAreValid = $ocrToolsAreValid = $archiveToolsAreValid = $libreOfficeIsValid = FALSE;
   $ffmpegBinary = $streamFfmpegBinary = $inkscapeBinary = $diaBinary = $scadBinary = $imageBinary = $ebookBinary = FALSE;
   $assimpBinary = $meshlabBinary = $tesseractBinary = $pdftotextBinary = FALSE;
@@ -3483,18 +2964,26 @@ function showVersionInfo() {
   $maintainHtaccess = $apacheConfigIsInstalled = $dataIsProtected = FALSE;
   $exposureStatus = $exposureDetail = $secretMode = $socketMode = '';
   // / Run every dependency check so this reports what WORKS, not what is configured.
-  $ffmpegBinary = verifyFFMPEGVersion($MinimumFFMPEGVersion);
-  $streamFfmpegBinary = verifyFFMPEGVersion($MinimumStreamFFMPEGVersion);
-  $libreOfficeIsValid = verifyLibreOfficeVersion($MinimumLibreOfficeVersion);
-  $inkscapeBinary = verifySVGVersion($MinimumInkscapeVersion);
-  $diaBinary = verifyDrawingVersion($MinimumDiaVersion);
-  $scadBinary = verifySCADVersion($MinimumSCADVersion);
-  $imageBinary = verifyImageVersion($MinimumImageVersion);
-  $ebookBinary = verifyEbookVersion($MinimumCalibreVersion);
-  list ($modelsAreValid, $assimpBinary, $meshlabBinary) = verifyModelVersions($MinimumAssimpVersion, $MinimumMeshlabVersion);
-  list ($ocrToolsAreValid, $tesseractBinary, $pdftotextBinary) = verifyOCRVersions($MinimumTesseractVersion, $MinimumPdftotextVersion);
-  list ($archiveToolsAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary) = verifyArchiveVersions($Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion);
-  $isoHybridBinary = verifyIsoHybridVersion($MinimumIsoHybridVersion);
+  $ffmpegBinary = toolPath('FFMPEG');
+  $libreOfficeIsValid = (toolPath('LibreOffice') !== FALSE);
+  $inkscapeBinary = toolPath('Inkscape');
+  $diaBinary = toolPath('Dia');
+  $scadBinary = toolPath('OpenSCAD');
+  $imageBinary = toolPath('ImageMagick');
+  $ebookBinary = toolPath('Calibre');
+  $assimpBinary = toolPath('Assimp');
+  $meshlabBinary = toolPath('MeshLab');
+  $modelsAreValid = ($assimpBinary !== FALSE && ($UsePyMeshLab or $meshlabBinary !== FALSE));
+  $tesseractBinary = toolPath('Tesseract');
+  $pdftotextBinary = toolPath('Poppler Utils');
+  $ocrToolsAreValid = ($tesseractBinary !== FALSE && $pdftotextBinary !== FALSE);
+  $sevenZipBinary = toolPath('7-Zip');
+  $rarBinary = toolPath('RAR');
+  $zipBinary = toolPath('Zip');
+  $tarBinary = toolPath('Tar');
+  $mkisofsBinary = toolPath('Genisoimage');
+  $archiveToolsAreValid = ($sevenZipBinary !== FALSE && $zipBinary !== FALSE && $tarBinary !== FALSE && $mkisofsBinary !== FALSE);
+  $isoHybridBinary = toolPath('Syslinux Utils');
   $bwrapBinary = verifyBwrap();
   // / Report what is installed & what state it is in.
   // / Every line is a fact. An explanation belongs in Documentation, not in this output.
@@ -3549,24 +3038,23 @@ function showVersionInfo() {
   if (ltrim((string)$manifestVersion, 'vV') === ltrim((string)$RequiredDependsVersion, 'vV')) print('  '.str_pad('Manifest', 28).'OK, '.ltrim((string)$manifestVersion, 'vV').$Lol);
   else { $failureCount++; print('  '.str_pad('Manifest', 28).'FAILED, reports '.($manifestVersion === '' ? 'no version' : ltrim((string)$manifestVersion, 'vV')).' & this core requires '.ltrim((string)$RequiredDependsVersion, 'vV').$Lol); }
   $dependencyChecks = array(
-    'FFMPEG, audio & video' => array($ffmpegBinary !== FALSE, $MinimumFFMPEGVersion, TRUE),
-    'FFMPEG, streams' => array($streamFfmpegBinary !== FALSE, $MinimumStreamFFMPEGVersion, TRUE),
-    'LibreOffice, documents' => array($libreOfficeIsValid, $MinimumLibreOfficeVersion, TRUE),
-    'ImageMagick, images' => array($imageBinary !== FALSE, $MinimumImageVersion, TRUE),
-    'Inkscape, SVG' => array($inkscapeBinary !== FALSE, $MinimumInkscapeVersion, TRUE),
-    'Dia, drawings' => array($diaBinary !== FALSE, $MinimumDiaVersion, TRUE),
-    'OpenSCAD, scad' => array($scadBinary !== FALSE, $MinimumSCADVersion, TRUE),
-    'Assimp, models' => array($assimpBinary !== FALSE, $MinimumAssimpVersion, TRUE),
-    'Meshlab, models' => array($meshlabBinary !== FALSE, $MinimumMeshlabVersion, FALSE),
-    'Tesseract, OCR' => array($tesseractBinary !== FALSE, $MinimumTesseractVersion, TRUE),
-    'Pdftotext, OCR' => array($pdftotextBinary !== FALSE, $MinimumPdftotextVersion, TRUE),
-    '7-Zip, all extraction' => array($sevenZipBinary !== FALSE, $Minimum7zVersion, TRUE),
-    'Zip, archives' => array($zipBinary !== FALSE, $MinimumZipVersion, TRUE),
-    'Tar, archives' => array($tarBinary !== FALSE, $MinimumTarVersion, TRUE),
-    'Mkisofs, iso' => array($mkisofsBinary !== FALSE, $MinimumMkisofsVersion, TRUE),
-    'Rar, archives' => array($rarBinary !== FALSE, $MinimumRarVersion, FALSE),
-    'Isohybrid, iso' => array($isoHybridBinary !== FALSE, $MinimumIsoHybridVersion, FALSE),
-    'Calibre, e-books' => array($ebookBinary !== FALSE, $MinimumCalibreVersion, TRUE));
+    'FFMPEG, media & streams' => array($ffmpegBinary !== FALSE, toolMinimum('FFMPEG'), TRUE),
+    'LibreOffice, documents' => array($libreOfficeIsValid, toolMinimum('LibreOffice'), TRUE),
+    'ImageMagick, images' => array($imageBinary !== FALSE, toolMinimum('ImageMagick'), TRUE),
+    'Inkscape, SVG' => array($inkscapeBinary !== FALSE, toolMinimum('Inkscape'), TRUE),
+    'Dia, drawings' => array($diaBinary !== FALSE, toolMinimum('Dia'), TRUE),
+    'OpenSCAD, scad' => array($scadBinary !== FALSE, toolMinimum('OpenSCAD'), TRUE),
+    'Assimp, models' => array($assimpBinary !== FALSE, toolMinimum('Assimp'), TRUE),
+    'Meshlab, models' => array($meshlabBinary !== FALSE, toolMinimum('MeshLab'), FALSE),
+    'Tesseract, OCR' => array($tesseractBinary !== FALSE, toolMinimum('Tesseract'), TRUE),
+    'Pdftotext, OCR' => array($pdftotextBinary !== FALSE, toolMinimum('Poppler Utils'), TRUE),
+    '7-Zip, all extraction' => array($sevenZipBinary !== FALSE, toolMinimum('7-Zip'), TRUE),
+    'Zip, archives' => array($zipBinary !== FALSE, toolMinimum('Zip'), TRUE),
+    'Tar, archives' => array($tarBinary !== FALSE, toolMinimum('Tar'), TRUE),
+    'Mkisofs, iso' => array($mkisofsBinary !== FALSE, toolMinimum('Genisoimage'), TRUE),
+    'Rar, archives' => array($rarBinary !== FALSE, toolMinimum('RAR'), FALSE),
+    'Isohybrid, iso' => array($isoHybridBinary !== FALSE, toolMinimum('Syslinux Utils'), FALSE),
+    'Calibre, e-books' => array($ebookBinary !== FALSE, toolMinimum('Calibre'), TRUE));
   foreach ($dependencyChecks as $dependencyName => $dependencyState) {
     if ($dependencyState[0]) print('  '.str_pad($dependencyName, 28).'OK'.($dependencyState[2] ? '' : ', optional').$Lol);
     else {
@@ -4717,31 +4205,12 @@ function applicationConfigModel() {
       'MaxStreamInspectionFileSize' => array('Type' => 'int', 'Depends' => 'StreamInspectionLayers', 'Description' => 'Maximum Stream Inspection Size'),
       'AllowSCADIncludeResolution' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Allow SCAD Include Resolution'),
       'SCADConversionTimeout' => array('Type' => 'int', 'Depends' => '', 'Description' => 'SCAD Conversion Timeout'),
-      'MinimumAssimpVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum Assimp Version'),
       'UsePyMeshLab' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Use PyMeshLab Python Bindings'),
-      'MinimumMeshlabVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum MeshLab Version'),
-      'MinimumImageVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum ImageMagick Version'),
-      'MinimumInkscapeVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum Inkscape Version'),
-      'MinimumSCADVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum OpenSCAD Version'),
-      'MinimumFFMPEGVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum FFMPEG Version'),
-      'MinimumStreamFFMPEGVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum Stream FFMPEG Version'),
-      'MinimumLibreOfficeVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum LibreOffice Version'),
-      'Minimum7zVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum 7-Zip Version'),
-      'MinimumRarVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum Rar Version'),
-      'MinimumZipVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum Zip Version'),
-      'MinimumTarVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum Tar Version'),
-      'MinimumMkisofsVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum Mkisofs Version'),
-      'MinimumDiaVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum Dia Version'),
-      'MinimumTesseractVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum Tesseract Version'),
-      'MinimumPdftotextVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum Pdftotext Version'),
-      'MinimumIsoHybridVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum Isohybrid Version'),
-      'MinimumCalibreVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Minimum Calibre Version'),
       'AllowUserURLDownload' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Allow User URL Download'),
       'ScanURLDownloads' => array('Type' => 'bool', 'Depends' => 'AllowUserURLDownload', 'Description' => 'Scan URL Downloads'),
       'URLDownloadMaximumBytes' => array('Type' => 'int', 'Depends' => 'AllowUserURLDownload', 'Description' => 'URL Download Maximum Bytes'),
       'URLDownloadsPerSession' => array('Type' => 'int', 'Depends' => 'AllowUserURLDownload', 'Description' => 'URL Downloads Per Session'),
       'DefaultVirusScanner' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Default Virus Scanner'),
-      'MinimumClamVersion' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Minimum Clam Version'),
       'PermittedPrivateRanges' => array('Type' => 'array', 'Depends' => '', 'Description' => 'Permitted Private Ranges'))),
     'Resource Management Information' => array('Writable' => TRUE, 'Variables' => array(
       'EnablePerConversionLimits' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Enable Per Conversion Limits'),
@@ -5850,7 +5319,7 @@ function deleteFiles($FilesToDelete) {
 // / format without being able to write it, so rar output has NO fallback.
 function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
   // / Set variables.
-  global $Verbose, $VirusScan, $Lol, $Lolol, $Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion, $EnableMemoryProtection;
+  global $Verbose, $VirusScan, $Lol, $Lolol, $EnableMemoryProtection;
   $ArchiveComplete = $ArchiveErrors = $virusFound = $skip = $variableIsSanitized = FALSE;
   $fileIsVerified = $scanComplete = $sandboxIsAvailable = $anyFileSucceeded = $loopCheck = FALSE;
   $archiveToolsAreValid = FALSE;
@@ -5862,7 +5331,12 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
   $tararr = array('7z', 'tar', 'tar.gz', 'tar.bz2');
   $isoarr = array('iso');
   // / Locate & verify every archive utility before anything is written.
-  list ($archiveToolsAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary) = verifyArchiveVersions($Minimum7zVersion, $MinimumRarVersion, $MinimumZipVersion, $MinimumTarVersion, $MinimumMkisofsVersion);
+  $sevenZipBinary = toolPath('7-Zip');
+  $rarBinary = toolPath('RAR');
+  $zipBinary = toolPath('Zip');
+  $tarBinary = toolPath('Tar');
+  $mkisofsBinary = toolPath('Genisoimage');
+  $archiveToolsAreValid = ($sevenZipBinary !== FALSE && $zipBinary !== FALSE && $tarBinary !== FALSE && $mkisofsBinary !== FALSE);
   // / Make sure the input files are formatted into an array.
   if (!is_array($FilesToArchive)) $FilesToArchive = array($FilesToArchive);
   // / Iterate through the array of input files.
@@ -6144,7 +5618,7 @@ function userVirusLogEntry($Entry, $type) {
 // / A function to scan a user supplied file on-demand with ClamAV.
 function userClamScan($FilesToScan) {
   // / Set variables.
-  global $Verbose, $ConvertDir, $MinimumClamVersion, $Lol, $Lolol, $UserClamLogFile, $EnableMemoryProtection;
+  global $Verbose, $ConvertDir, $Lol, $Lolol, $UserClamLogFile, $EnableMemoryProtection;
   $OperationSuccessful = $OperationErrors = $UserVirusFound = $userFilename = $userExtension = $clean = $copy = $userFilename = $userExtension = $variableIsSanitized = FALSE;
   $skip = TRUE;
   $returnData = $txt = $file = $clamLogFileDATA = $scanCommand = '';
@@ -6154,7 +5628,7 @@ function userClamScan($FilesToScan) {
   if ($Verbose) logEntry($txt);
   // / Locate & verify the scanner ONCE, before the loop rather than inside it.
   // / A user scanning twenty files wants one version check, not twenty.
-  $clamBinary = verifyClamVersion(isset($MinimumClamVersion) ? (string)$MinimumClamVersion : '');
+  $clamBinary = toolPath('ClamAV');
   // / A scan that cannot run reports failure, never a clean result.
   // / Without this the loop below ran a command that was not there, collected nothing, found
   // / no FOUND in nothing, & told the user every file was clean. The report went into the

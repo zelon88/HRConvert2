@@ -1,14 +1,14 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / Copyright Information ...
-// / HRConvert2, Copyright on 9/7/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 9/22/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.9.3.
+// / v3.9.5.
 // / This file scans files with ClamAV & reports what it found.
 // /
 // / IT CHANGES NOTHING. It does not delete an infected file, quarantine it, or write to any
@@ -41,7 +41,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / cannot write is one less thing to reason about.
 function scanWithClamAV($pathsToScan) {
   // / Set variables.
-  global $MinimumClamVersion, $Verbose, $EnableMemoryProtection;
+  global $Verbose, $EnableMemoryProtection;
   $ScanCompleted = FALSE;
   $ThreatWasFound = FALSE;
   $ScanFindings = array();
@@ -50,7 +50,7 @@ function scanWithClamAV($pathsToScan) {
   $commandOutput = array();
   $commandExitCode = 0;
   if (!is_array($pathsToScan)) $pathsToScan = array($pathsToScan);
-  $clamBinary = verifyClamVersion(isset($MinimumClamVersion) ? (string)$MinimumClamVersion : '');
+  $clamBinary = verifiedToolPath('ClamAV');
   if ($clamBinary === FALSE) {
     errorEntry('ClamAV is missing, too old, or unusable, so nothing was scanned!', 502, FALSE);
     $ScanFindings[] = 'ClamAV is not usable on this host. Nothing was scanned.'; }

@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / Copyright Information ...
-// / HRConvert2, Copyright on 8/17/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 9/22/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / License Information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.8.8.
+// / v3.9.5.
 // / This file is the LibreOffice shared module. It is NOT a pipeline & it converts nothing
 // / on its own. It holds the code that the Document pipeline & the OCR pipeline both need.
 // /
@@ -30,9 +30,9 @@
 // / Error block 2000 through 2004 belongs to this module. Those numbers came with the code
 // / when it moved out of convertCore.php & they did not change. 2005 stayed with the
 // / Document pipeline, because the XPS branch that raises it never moved here.
-// / verifyLibreOfficeVersion() & locateDependency() remain in convertCore.php. A dependency
-// / verifier is core owned, because showVersionInfo() reports on it whether or not any
-// / pipeline that uses it is installed.
+// / The LibreOffice version check asks the manifest through verifiedToolPath, as every tool
+// / does. The manifest is the only owner of a tool's minimum, so there is no second check here
+// / to disagree with it.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
 // / <3 Open-Source
@@ -48,7 +48,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / -----------------------------------------------------------------------------------
 // / The version of this shared module. Read WITHOUT executing this file, then matched
 // / EXACTLY against the pin in getAcceptedSharedModules().
-$SharedModuleVersion = 'v3.8.8';
+$SharedModuleVersion = 'v3.9.5';
 // / -----------------------------------------------------------------------------------
 
 
@@ -158,12 +158,12 @@ function neutralizeDocumentReferences($partContents, &$replacementCount) {
 // / The listener is only started once the installation & the version have both been cleared.
 function verifyDocumentConversionEngine() {
   // / Set variables.
-  global $Verbose, $MinimumLibreOfficeVersion, $EnableMemoryProtection;
+  global $Verbose, $EnableMemoryProtection;
   $DocEnginePID = 0;
   $DocumentEngineStarted = $libreOfficeVersionIsValid = FALSE;
   $sofficeBinary = '';
   // / LibreOffice is the engine behind every document, spreadsheet & presentation conversion.
-  $libreOfficeVersionIsValid = verifyLibreOfficeVersion($MinimumLibreOfficeVersion);
+  $libreOfficeVersionIsValid = (verifiedToolPath('LibreOffice') !== FALSE);
   if (!$libreOfficeVersionIsValid) errorEntry('The installed LibreOffice version is missing, unidentifiable, or too old!', 2001, TRUE);
   else {
     $sofficeBinary = locateDependency('soffice');

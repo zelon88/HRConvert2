@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.5.
+// / v3.9.6.
 // / This file is the converter for the Model pipeline. It is loaded by pipelineCore.php
 // / ONLY when a Model conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
@@ -20,9 +20,8 @@
 // / Those numbers came with the code when it moved out of convertCore.php.
 // / They did not change, because operators have already read them.
 // / An earlier header claimed 20000 through 20003, which this pipeline never raised.
-// / This pipeline calls verifyModelVersions() & sandboxCommand(), which remain in
-// / convertCore.php. A dependency verifier is core owned, because showVersionInfo()
-// / reports on it whether or not this pipeline is installed.
+// / This pipeline asks for Assimp & MeshLab through verifiedToolPath(), which answers from
+// / the manifest, & calls sandboxCommand(), which remains in convertCore.php.
 // / A note on PyMeshLab, which is bundled at Resources/PyMeshLab.
 // / The bundled module is a compiled extension rather than plain Python.
 // / Its object is named for the interpreter it was built against, as cpython-314.
@@ -34,8 +33,8 @@
 // / A compiled extension links against symbols & structures that change between versions.
 // / A renamed object would be found & would then crash instead of being skipped.
 // / The stable abi3 interface would avoid this & is not practical for this kind of module.
-// / Python 3.14 is therefore not a requirement of this application.
-// / It is not listed in depends.php & nobody should be asked to install it.
+// / depends.php installs PyMeshLab with pip & lists Python 3.14 among its requirements.
+// / Those wheels need glibc 2.35 or newer, so an older host cannot install PyMeshLab at all.
 // / The meshlabserver binary performs the same work & is already a dependency.
 // / A host without a matching interpreter falls back to that binary & warns once.
 // / The system python3 must never be replaced to satisfy this.
@@ -126,7 +125,6 @@ function buildAssimpCommand($assimpBinary, $inputPath, $outputPath, $targetExten
   return $AssimpCommand; }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to find the interpreter that can actually load the bundled PyMeshLab.
 // / Accepts the bundle directory. Returns an interpreter name, or an empty string.
@@ -202,7 +200,6 @@ function resolvePyMeshLabInterpreter($pyMeshLabDir) {
   return array($InterpreterName, $PyMeshLabIsInstalled); }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to build the MeshLab command for one conversion.
 // / Accepts the PyMeshLab toggle, the PyMeshLab directory, the binary, the input path &
@@ -271,7 +268,6 @@ function buildMeshLabCommand($usePyMeshLab, $pyMeshLabDir, $meshlabBinary, $inpu
   purgeSensitiveMemory($EnableMemoryProtection, $pythonPrologue, $usePyMeshLab, $pyMeshLabDir, $meshlabBinary, $inputPath, $outputPath, $interpreterName);
   return array($MeshLabCommand, $CommandEnvironment); }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to convert 3D model formats.

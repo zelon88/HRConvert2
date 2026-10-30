@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.5.
+// / v3.9.6.
 // / This file is the converter for the OCR pipeline. It is loaded by pipelineCore.php
 // / ONLY when a OCR operation is about to be dispatched to it, so a request that does
 // / something else never parses a line of it.
@@ -26,8 +26,9 @@
 // / the point in the core where an OCR request arrives, never through convert().
 // / This pipeline declares the LibreOffice shared module, which the Document pipeline also
 // / declares. Both in one request load it once between them.
-// / verifyOCRVersions(), verifyImageVersion(), sandboxCommand(), verifyFile(), virusScan()
-// / & locateDependency() all remain in convertCore.php.
+// / This pipeline asks for Tesseract, Poppler Utils & ImageMagick through verifiedToolPath(),
+// / & scans through runVirusScan(), both in the Pipeline Core. sandboxCommand(), verifyFile()
+// / & locateDependency() remain in convertCore.php.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
 // / <3 Open-Source
@@ -104,10 +105,16 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
       continue; }
     else if ($Verbose) logEntry('Verified file '.$newPathname.'.');
     $pathnameTEMP = str_replace('..', '', str_replace('.'.$oldExtension, '.txt', $pathname));
-    // / Scan with ClamAV if $VirusScan is set to TRUE in config.php.
+      // / The file is scanned before any OCR tool reads it, if $VirusScan is set in config.php.
+      // / It asks runVirusScan() in the Pipeline Core rather than the application's virusScan(),
+      // / so this pipeline no longer reaches into convertCore.php for anything.
+      // / It still refuses an infected file before processing it, which is what matters here. What
+      // / it does not do is delete the file on the spot. Deleting is the application's policy, set
+      // / by $AllowUserVirusScan, & a portable pipeline cannot read the application's settings.
+      // / Every file is also scanned when it lands, which is where the application deletes one.
     if ($VirusScan) {
       if ($Verbose) logEntry('Starting virus scan.');
-      list ($scanComplete, $virusFound) = virusScan($newPathname);
+      list ($scanComplete, $virusFound) = runVirusScan(array($newPathname), '');
       if (!$scanComplete) errorEntry('Could not perform a virus scan!', 15002, TRUE);
       if ($virusFound) errorEntry('Virus detected!', 15003, TRUE);
       if ($Verbose) logEntry('Virus scan complete.'); }

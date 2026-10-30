@@ -13,7 +13,7 @@
 // / that carries it.
 // /
 // / File Information ...
-// / v3.9.3.
+// / v3.9.6.
 // / This file is the Engine. It provides the environment an application runs in.
 // / It is pinned EXACTLY by the application via $RequiredEngineVersion.
 // / Error block 35000 through 35019 reserved. None are used yet.
@@ -48,13 +48,13 @@
 
 // / -----------------------------------------------------------------------------------
 // / A component may only be loaded by an application.
-if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-35000, The Engine cannot be loaded directly!'.PHP_EOL);
+if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The Engine cannot be loaded directly!'.PHP_EOL);
 // / -----------------------------------------------------------------------------------
 
 
 // / -----------------------------------------------------------------------------------
 // / The version of this Engine. Read by the application WITHOUT executing this file.
-$EngineVersion = 'v3.9.3';
+$EngineVersion = 'v3.9.6';
 // / -----------------------------------------------------------------------------------
 
 
@@ -339,7 +339,6 @@ function validateOperatingEnvironment() {
   return array($EnvironmentIsReady, $EnvironmentFindings); }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to report the manager subcomponents this Engine accepts.
 // / Accepts nothing. Returns an array of file name to required version.
@@ -357,10 +356,10 @@ function getAcceptedManagers() {
   global $EnableMemoryProtection;
   $AcceptedManagers = array();
   $AcceptedManagers = array(
-    'coreManager.php' => 'v3.9.3',
-    'resourceManager.php' => 'v3.9.3',
-    'workerManager.php' => 'v3.9.3',
-    'requestManager.php' => 'v3.9.3');
+    'coreManager.php' => 'v3.9.6',
+    'resourceManager.php' => 'v3.9.6',
+    'workerManager.php' => 'v3.9.6',
+    'requestManager.php' => 'v3.9.6');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $AcceptedManagers is not purged, because it is the return value.
   purgeSensitiveMemory($EnableMemoryProtection);
@@ -399,7 +398,6 @@ function loadEngineManager($managerFileName) {
   purgeSensitiveMemory($EnableMemoryProtection, $acceptedManagers, $managerPath, $requiredVersion, $managerFileName);
   return array($ManagerIsAvailable, $ManagerVersion); }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / Filesystem helpers the data location functions depend on.
@@ -876,7 +874,6 @@ function cleanDataLocation($dataLoc, $locationName, $deleteThreshold, $protected
   purgeSensitiveMemory($EnableMemoryProtection, $authorizedPaths, $defaultApps, $protectedRootDirs, $dailyDirs, $dailyDir, $dailyPath, $sessionDirs, $sessionDir, $sessionPath, $now, $dataLoc, $locationName, $deleteThreshold, $cleanAuthorized, $directoryIterator, $iterator, $fileObject, $realPath);
   return array($CleanedLocation, $LocationDeepCleaned); }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / Manager machinery.
@@ -1774,7 +1771,7 @@ function listenerUnitIsInstalled() {
   // / start reported success because systemctl was on the PATH.
   $systemctlBinary = systemdIsUsable()[0] ? locateDependency('systemctl') : '';
   if ($systemctlBinary !== '') {
-    exec(escapeshellarg($systemctlBinary).' is-enabled hrconvert2-listener 2>/dev/null', $commandOutput, $commandExitCode);
+    exec(escapeshellarg($systemctlBinary).' is-enabled '.engineApplicationSlug().'-listener 2>/dev/null', $commandOutput, $commandExitCode);
     if ($commandExitCode === 0) $UnitIsInstalled = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $systemctlBinary, $commandOutput, $commandExitCode);
@@ -1802,10 +1799,10 @@ function startCoreManagerListener() {
   if (listenerUnitIsInstalled()) {
     $unitOwnsListener = TRUE;
     print($Lol.'A service unit owns this listener, so it is started through the service manager.'.$Lol);
-    exec('systemctl start hrconvert2-listener 2>&1', $unitOutput, $unitExitCode);
-    if ($unitExitCode === 0) print('  systemctl start hrconvert2-listener'.$Lol.$Lol);
+    exec('systemctl start '.engineApplicationSlug().'-listener 2>&1', $unitOutput, $unitExitCode);
+    if ($unitExitCode === 0) print('  systemctl start '.engineApplicationSlug().'-listener'.$Lol.$Lol);
     else {
-      print('  systemctl start hrconvert2-listener FAILED'.$Lol);
+      print('  systemctl start '.engineApplicationSlug().'-listener FAILED'.$Lol);
       print('  '.implode($Lol.'  ', $unitOutput).$Lol.$Lol); } }
   else $directoryIsReady = prepareManagerSocketDir();
   // / Hand the socket directory to the web server user before anything binds inside it.
@@ -1830,7 +1827,7 @@ function startCoreManagerListener() {
     // / The key travels in the environment for the same reason it does for a subordinate.
     // / The assignment sits inside the inner command, so it survives the su that follows.
     $innerCommand = 'HRCONVERT2_STARTUP_KEY='.escapeshellarg($startupKey)
-      .' nohup php '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.'convertCore.php')
+      .' nohup php '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.engineApplicationEntryPoint())
       .' --start-core-manager'
       .' > /dev/null 2>&1 &';
     // / Drop to the web server user so every socket is owned by the account that must reach it.
@@ -2059,7 +2056,6 @@ function reportListenerStatus() {
   return array($ListenerIsRunning, $ListenerStatus); }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / Network & remote content.
 // / Everything below reaches an address somebody else controls, & every line of it exists
@@ -2157,7 +2153,6 @@ function addressMayBeReached($ipAddress) {
   purgeSensitiveMemory($EnableMemoryProtection, $neverPermitted, $refusedRange, $permittedRange, $addressIsRefusedOutright, $ipAddress);
   return array($AddressIsPermitted, $PermittedByRange); }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to decide whether an address is one this application may ever connect to.
@@ -2366,7 +2361,6 @@ function countSessionURLDownloads($sessionDirectory, $recordOne = FALSE) {
   return $DownloadCount; }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to fetch a URL an operator typed & place it in their session.
 // / Accepts the raw URL & the directory to write into. Returns whether it worked, the path
@@ -2463,7 +2457,6 @@ function fetchUserSuppliedURL($suppliedURL, $sessionDirectory) {
   purgeSensitiveMemory($EnableMemoryProtection, $fetchedExtension, $scanCompleted, $threatWasFound, $scanFindings, $scannerUsed, $scanFinding, $baseIsUsable, $inspectionFailed, $resolutionFailed, $containsLAN, $lookupFailed, $downloadFailed, $wasTruncated, $nameIsSanitized, $cleanURL, $urlHost, $urlPort, $urlScheme, $urlIP, $temporaryPath, $suggestedName, $targetPath, $urlParts, $suppliedURL, $sessionDirectory);
   return array($FetchSucceeded, $FetchedPath, $FetchReason); }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to scan a stream URL received from a stream file such as .m3u8.
@@ -2613,7 +2606,6 @@ function normalizeStreamBaseURL($suppliedBaseURL) {
   purgeSensitiveMemory($EnableMemoryProtection, $urlParts, $cleanHost, $cleanPath, $cleanPort, $hostIsSanitized, $suppliedBaseURL);
   return array($BaseIsUsable, $BaseURL, $BaseReason); }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to turn a URI found inside a stream file into a complete, absolute URL.
@@ -2886,7 +2878,6 @@ function waitForStream($StreamPID, $newPathname) {
   return array($StreamCompleted, $StreamKilled, $ElapsedSeconds); }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to run one command as another account, permanently dropping to it first.
 // / Accepts the command & the account name. Returns the output & the exit code, in order.
@@ -3049,7 +3040,6 @@ function cgroupDelegationIsAvailable() {
   purgeSensitiveMemory($EnableMemoryProtection, $controllerFile, $controllerList);
   return $DelegationIsAvailable; }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to verify how, or whether, a resource scope can be created.
@@ -3287,7 +3277,6 @@ function promptOperator($operatorQuestion) {
   return $OperatorAnswer; }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to run whatever repair the application declares.
 // / Accepts nothing. Returns whether it succeeded & how many things were corrected.
@@ -3311,7 +3300,6 @@ function runApplicationRepair() {
   purgeSensitiveMemory($EnableMemoryProtection, $repairFunction);
   return array($RepairSucceeded, $PathsCorrected); }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to fetch the configuration model the application declares.
@@ -3365,7 +3353,6 @@ function collectConfigModel() {
   return $ConfigModel; }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to collect whatever the application says about its own data exposure.
 // / Accepts nothing. Returns display rows, which may be empty.
@@ -3385,7 +3372,6 @@ function collectDataPolicyFindings() {
   purgeSensitiveMemory($EnableMemoryProtection, $policyFunction);
   return $PolicyFindings; }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / MOVED FROM THE APPLICATION AT v3.9.2. Comparing versions is not something one
@@ -3469,7 +3455,6 @@ function detectHostArchitecture() {
   purgeSensitiveMemory($EnableMemoryProtection, $commandOutput, $commandExitCode);
   return array($ArchitectureName, $MachineString); }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to confirm this server can actually isolate a dependency invocation.

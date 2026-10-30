@@ -393,3 +393,35 @@ FOUR QUESTIONS. A NO TO ANY OF THEM MEANS IT STAYS IN THE APPLICATION.
      Then either the contract grows, which is a decision, or the value becomes a parameter,
      which usually turns out to be the better answer.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--The Application's Identity--
+
+An application tells the Engine four things about itself, & the Engine asks for them rather
+than assuming them. Each has a helper in Cores/environmentCore.php.
+
+  $EngineApplicationName     engineApplicationName()        HRConvert2
+                             engineApplicationSlug()        hrconvert2, for names on disk
+  $EngineEntryPoint          engineApplicationEntryPoint()  convertCore.php
+  $EngineApplicationVersion  engineApplicationVersion()     3.9.6
+
+The first two are set in Contract/app-engine-config.php. The version is handed over by the
+application where it defines its own version, so there is never a second copy to drift, & it
+deliberately has no default in engineConfig.php, because that file loads later & would
+overwrite it.
+
+IDENTITY IS NOT BRANDING. $ApplicationName is a config setting an operator may rename, & it is
+what the interface shows. $EngineApplicationName is fixed. Everything the Engine writes to disk
+comes from the identity: unit names, configuration files, sandbox profiles, backup suffixes. An
+operator who renames an installation must not also rename its listener unit & leave the running
+one behind.
+
+The Engine contains no application's name, no entry point & no application version. An Engine
+component refusing a direct request prints Engine-35000 & names nothing else.
+
+--Settings the Engine Reads From Configuration--
+
+The Engine also reads its own settings from the application's config.php, such as
+$ManagerSocketTimeout, $MaxConcurrentWorkers, $RequireSandbox & $TotalResourceBudget. They are
+part of the contract: an application's config.php has to define them for the Engine to work.
+Some carry names from HRConvert2, such as $ConvertLoc, because renaming them would break every
+existing installation's configuration.

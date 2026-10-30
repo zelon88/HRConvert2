@@ -12,17 +12,16 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.5.
+// / v3.9.6.
 // / This file is the converter for the Audio pipeline. It is loaded by pipelineCore.php
 // / ONLY when a Audio conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
 // / Error block 1000 through 1002 belongs to this pipeline. Those numbers came with the code when it
 // / moved out of convertCore.php & they did not change, because operators have read them.
-// / This pipeline calls verifyFFMPEGVersion() & sandboxCommand(), which remain in
-// / convertCore.php. FOUR FAMILIES NAME THE FFMPEG SUBSYSTEM. Audio, Video & Subtitle are
-// / pipelines now & Stream is still built into the core, so one installation reaches the
-// / same binary from two places. That is safe because verifyFFMPEGVersion() is the single
-// / core owned gate all four pass through.
+// / This pipeline asks for FFMPEG through verifiedToolPath() & calls sandboxCommand(), which
+// / remains in convertCore.php. Four pipelines name the FFMPEG subsystem: Audio, Video,
+// / Subtitle & Stream. That is safe because all four ask the manifest, so there is one
+// / minimum & one answer to whether the installed FFMPEG is good enough.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
 // / <3 Open-Source

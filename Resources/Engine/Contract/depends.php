@@ -369,6 +369,9 @@ $DependsManifest = array(
         'Purpose' => 'Imported by PyMeshLab. On arm pip often has no wheel & compiles it, which takes a long time on a small board.')),
     'License' => 'BSD-3-Clause', 'Source' => 'https://numpy.org', 'Purpose' => 'Imported by PyMeshLab. Without it the bundle cannot load at all.'),
 
+  // / PyMeshLab publishes wheels & no source distribution. Its wheels for Python 3.14 need glibc 2.35
+  // / or newer, which means Ubuntu 22.04, Debian 12 or later. On an older host pip finds nothing it
+  // / can install & this entry fails. The Model pipeline then falls back to the MeshLab binary.
   array('Name' => 'PyMeshLab', 'Binary' => '', 'Type' => 'source', 'Package' => '',
     // / INSTALLED WITH pip AS OF v3.9.2. It was a bundled x86_64 binary & is now a wheel.
     // / PyMeshLab 2025.07 publishes native arm64 linux wheels, so the architecture limit

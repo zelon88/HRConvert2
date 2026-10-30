@@ -163,7 +163,6 @@ function removeFilesFromDirectory($permittedDirectory, $namesToRemove) {
   return array($RemovalComplete, $NamesAttempted, $NamesRemoved); }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / The entry point the Pipeline Core calls.
 // / Accepts the operation, the directory that may be touched & the names it applies to.

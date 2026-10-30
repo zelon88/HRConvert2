@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.9.4.
+v3.9.6.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -26,6 +26,52 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+
+--------------------
+COMMIT 9/22/2026
+v3.9.6 - Every pipeline is portable. The docs follow the manifest.
+
+-v3.9.6.
+-OCR scans through runVirusScan rather than the application, so all 16 pipelines are portable.
+-OCR no longer deletes an infected file on the spot. The application still does when it lands.
+-Rewrite 27 comments & docs that still described the retired version checks.
+-CREATING_CONVERSION_PIPELINES.txt teaches the manifest & verifiedToolPath, not a config minimum.
+-Delete CREATING_CONVERSION_PIPELINES_EXAMPLE.txt. It predates detachable pipelines.
+-CODING_CONVENTIONS.md no longer uses a retired function as its example.
+-Move extractCliOption, verifyApacheModule, fetchOwnResponseHeaders, describePolicyStatus & toolMinimum into the Engine.
+-reportUnrecognizedArgument stays. It calls showHelpInfo, which prints this application's own help.
+-Leave exactly one blank line between functions. Every doubled gap is gone.
+-The preamble keeps its layout, two blank lines between the header, the load guard & the first function.
+-The linter flags a doubled gap between functions & never inspects the preamble.
+-The Engine no longer writes the word HRConvert2. engineApplicationName & engineApplicationSlug supply it.
+-Names on disk come from the identity in the engine contract, never from $ApplicationName, which an operator may rename.
+-HRConvert2 gets exactly the names it always had. The listener unit is byte identical.
+-Move resolveUpdateTarget, verifyPhpConfiguration & dataProtectionContents into the Engine.
+-verifySandboxKernel stays. It calls apparmorProfileIsLoaded, which runs before the Engine loads.
+-CREATING_CONVERSION_PIPELINES.txt points at real pipelines to copy, in place of the deleted example.
+-The Engine contains no application name, entry point or application version. Two more contract variables supply them.
+-$EngineEntryPoint names the file managers & the listener are started through. $EngineApplicationVersion is handed over where the version is defined.
+-HRConvert2 gets byte identical output, including its systemd unit. Another application launches its own entry point.
+-Every Engine component refusing a direct request prints Engine-35000 & names no entry point, so a probe learns nothing.
+-Document error 35000, which was never documented. Error 2 belongs to the application alone.
+-Document the application's identity & the settings the Engine reads, in ABOUT_ENGINE_CONTRACT.txt.
+-FIX. --setup --install-depends warned "Undefined variable $entryIsBlocked" on every dependency that passed both policy gates.
+-The gate results are now set before the first branch. The install always proceeded, because an unset value reads as false.
+-The linter's undefined check now finds a variable assigned only inside a block & read outside it. It named this bug & reports nothing else.
+-Install commands print a status line every minute, with the elapsed time & the last thing they said.
+-Their output used to be held back until they finished, so a download at 75 kbit/s looked exactly like a hang.
+-Install commands & dependency probes read input from /dev/null. A command that asks a question now fails at once.
+-It used to wait for an answer that could never come, with the question hidden in captured output.
+-pip is told never to prompt, to skip its own version check, & to resume a download that drops.
+-A pip too old to resume ignores that setting. Tested against pip 24.0 & pip 26.2.1.
+-A pip install says "installing with pip" rather than "building from source", in the output & the log.
+-Note in depends.php that PyMeshLab wheels for Python 3.14 need glibc 2.35 or newer.
+-Correct the Model pipeline comment that said Python 3.14 is not listed in depends.php. It is.
+-Stamp the five managers v3.9.6, with their pins.
+-Stamp Setup Core & Dependency Core v3.9.6.
+-Stamp the Engine v3.9.6. It had changed since v3.9.3 without a version bump.
+-Stamp 11 pipelines & the Pipeline Core v3.9.6.
+-I've been dealing with a personal matter lately, keep my in your thoughts please!
 
 --------------------
 COMMIT 9/22/2026

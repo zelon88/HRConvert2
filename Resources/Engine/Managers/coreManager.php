@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.9.3.
+// / v3.9.6.
 // / This file is the Core Manager. It is a manager subcomponent of the Engine.
 // / The Core Manager the listener. It starts the other three, restarts one that dies & is the only role an operator starts directly.
 // /
@@ -32,13 +32,13 @@
 
 // / -----------------------------------------------------------------------------------
 // / A component may only be loaded by an application.
-if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-35000, A manager subcomponent cannot be loaded directly!'.PHP_EOL);
+if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A manager subcomponent cannot be loaded directly!'.PHP_EOL);
 // / -----------------------------------------------------------------------------------
 
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v3.9.3';
+$ManagerVersion = 'v3.9.6';
 // / -----------------------------------------------------------------------------------
 
 
@@ -135,7 +135,7 @@ function spawnManagerProcess($managerRole) {
     // / /proc/PID/environ is readable only by the owner. The child clears the variable as
     // / soon as it reads it, so nothing the manager launches later inherits it.
     $spawnCommand = 'HRCONVERT2_STARTUP_KEY='.escapeshellarg($startupKey)
-      .' nohup php '.escapeshellarg($InstLoc.$DirSep.'convertCore.php')
+      .' nohup php '.escapeshellarg($InstLoc.$DirSep.engineApplicationEntryPoint())
       .' --start-manager '.escapeshellarg($cleanRole)
       .' > /dev/null 2>&1 & echo $!';
     $spawnOutput = shell_exec($spawnCommand);

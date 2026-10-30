@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / Copyright information ...
-// / HRConvert2, Copyright on 8/28/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 9/22/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / License information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / Fileinformation ...
-// / v3.8.6.
+// / v3.9.6.
 // / HRConvert2 Setup Core.
 // / A detachable installation & configuration component. convertCore.php runs without it.
 // / This file defines functions only. convertCore.php dispatches into them.
@@ -35,12 +35,12 @@
 // / This halt cannot use quickDie. Reaching this line means convertCore.php was never
 // / loaded, so quickDie is not defined & calling it would replace a clear refusal with an
 // / undefined function error.
-if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: This file cannot process your request! Please submit your file to convertCore.php instead!'.PHP_EOL);
+if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A core component cannot be loaded directly!'.PHP_EOL);
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$SetupCoreVersion = 'v3.9.3';
+$SetupCoreVersion = 'v3.9.6';
 // / -----------------------------------------------------------------------------------
 
 
@@ -263,7 +263,7 @@ function writeConfigFile($configPath, $configContents) {
   $lintOutput = array();
   $lintExitCode = 1;
   $bytesWritten = 0;
-  $temporaryPath = $configPath.'.hrconvert2-pending';
+  $temporaryPath = $configPath.'.'.engineApplicationSlug().'-pending';
   $bytesWritten = @file_put_contents($temporaryPath, $configContents);
   if ($bytesWritten !== strlen($configContents)) errorEntry('A configuration could not be staged at '.$temporaryPath.'!', 32004, FALSE);
   else {
@@ -400,7 +400,6 @@ function escapeConfigString($rawValue) {
   purgeSensitiveMemory($EnableMemoryProtection, $rawValue);
   return $EscapedValue; }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to format a value for writing into a configuration file.
@@ -600,7 +599,7 @@ function applyConfigChanges($configPath, $detectedSections, $pendingChanges) {
   $backupSucceeded = FALSE;
   if (empty($pendingChanges)) print($Lol.'No changes were queued. Nothing was written.'.$Lol);
   else {
-    $backupPath = $configPath.'.hrconvert2-'.date('Y-m-d-His').'.bak';
+    $backupPath = $configPath.'.'.engineApplicationSlug().'-'.date('Y-m-d-His').'.bak';
     $backupSucceeded = backupConfigFile($configPath, $backupPath);
     if (!$backupSucceeded) print($Lol.'A backup could not be taken, so nothing was written.'.$Lol);
     else {
@@ -732,7 +731,7 @@ function enableConversionLimits() {
     // / A user manager is given the memory & pids controllers by default. The processor
     // / controller has to be delegated explicitly or CPUQuota is silently ignored.
     $dropInDirectory = '/etc/systemd/system/user@.service.d';
-    $dropInFile = $dropInDirectory.'/hrconvert2-delegate.conf';
+    $dropInFile = $dropInDirectory.'/'.engineApplicationSlug().'-delegate.conf';
     $dropInContents = '[Service]'.PHP_EOL.'Delegate=cpu cpuset io memory pids'.PHP_EOL;
     if (!is_dir($dropInDirectory)) @mkdir($dropInDirectory, 0755, TRUE);
     if (!is_dir($dropInDirectory)) print('  FAILED     Could not create '.$dropInDirectory.'.'.$Lol);
@@ -804,7 +803,6 @@ function correctManagedPaths($pathsToCorrect, $ownerAccount, $permissionMode) {
   return array($CorrectionRan, $PathsCorrected, $PathsRefused); }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to write a complete configuration file from the model.
 // / Accepts the path to write. Returns whether it was written & how many settings it holds.
@@ -867,7 +865,6 @@ function generateConfigFile($configPath) {
   return array($FileWasWritten, $SettingsWritten); }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to run the configuration utility.
 // / Accepts the supplied path, the mode, the target of that mode & a confirmation boolean.
@@ -914,18 +911,18 @@ function runConfigUtility($suppliedPath, $utilityMode, $modeTarget, $operatorCon
   else if (!$RunningAsRoot) {
     print($Lol.'The configuration utility must be run as root.'.$Lol);
     print('You are running as '.($CurrentUser === '' ? 'an unidentified user' : $CurrentUser).'.'.$Lol);
-    print($Lol.'  sudo php convertCore.php --config'.$Lol);
+    print($Lol.'  sudo php '.engineApplicationEntryPoint().' --config'.$Lol);
     print($Lol.'A backup may be taken by any account that can write the destination.'.$Lol);
-    print('  php convertCore.php --config --backup=/tmp/config.php.bak'.$Lol.$Lol); }
+    print('  php '.engineApplicationEntryPoint().' --config --backup=/tmp/config.php.bak'.$Lol.$Lol); }
   else {
     $configModel = collectConfigModel();
     list ($parseSucceeded, $detectedSections) = parseConfigFile($configTarget);
     if (!$parseSucceeded) print($Lol.'The configuration file could not be parsed. Nothing was done.'.$Lol.$Lol);
     else {
       list ($configIsAuthentic, $detectedConfigVersion) = verifyConfigAuthenticity($detectedSections);
-      if (!$configIsAuthentic) print($Lol.$configTarget.$Lol.'does not declare a $ConfigVersion & is not an HRConvert2 configuration file.'.$Lol.'Nothing was done.'.$Lol.$Lol);
+      if (!$configIsAuthentic) print($Lol.$configTarget.$Lol.'does not declare a $ConfigVersion & is not an '.engineApplicationName().' configuration file.'.$Lol.'Nothing was done.'.$Lol.$Lol);
       else {
-        print($Lol.'HRConvert2 Configuration Utility'.$Lol);
+        print($Lol.engineApplicationName().' Configuration Utility'.$Lol);
         print('File      '.$configTarget.$Lol);
         print('Reports   v'.ltrim($detectedConfigVersion, 'vV').$Lol);
         print('Core needs v'.ltrim((string)$RequiredConfigVersion, 'vV').$Lol);
@@ -1048,8 +1045,6 @@ function findConfigVariable($detectedSections, $variableName) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
 // / A function to create the data locations an installation cannot start without.
 // / Accepts no arguments & must be run as root.
 // / Returns a success boolean & the number of directories created, in that order.
@@ -1150,17 +1145,17 @@ function prepareDataLocations() {
 // / agree. Generating it here means moving --Convert Location-- moves the unit with it.
 function generateListenerService() {
   // / Set variables.
-  global $InstLoc, $PrimaryConvertLoc, $ConvertLoc, $ApacheUser, $HRConvertVersion, $DirSep, $EnableMemoryProtection;
+  global $InstLoc, $PrimaryConvertLoc, $ConvertLoc, $ApacheUser, $DirSep, $EnableMemoryProtection;
   $ServiceContents = '';
   $dataLocation = $corePath = $documentationPath = $webServerUnit = '';
   $dataLocation = (string)$PrimaryConvertLoc !== '' ? (string)$PrimaryConvertLoc : (string)$ConvertLoc;
-  $corePath = $InstLoc.$DirSep.'convertCore.php';
+  $corePath = $InstLoc.$DirSep.engineApplicationEntryPoint();
   $documentationPath = $InstLoc.$DirSep.'Documentation'.$DirSep.'ABOUT_RESOURCE_RATE_LIMITING.txt';
   // / Order after whichever web server is actually installed. Both are Wants rather than
   // / Requires, because HRConvert2 fails open & a listener is useful without a web server.
   $webServerUnit = 'apache2.service';
   if (locateDependency('apache2') === '' && locateDependency('httpd') !== '') $webServerUnit = 'httpd.service';
-  $ServiceContents = '# / Written by HRConvert2 v'.ltrim((string)$HRConvertVersion, 'vV').'. Do not edit by hand.'.PHP_EOL
+  $ServiceContents = '# / Written by '.engineApplicationName().' v'.ltrim(engineApplicationVersion(), 'vV').'. Do not edit by hand.'.PHP_EOL
     .'# / Every path here was read from this installation. Re-run the following to rewrite it'.PHP_EOL
     .'# / after changing --Convert Location-- or moving the installation.'.PHP_EOL
     .'# /   sudo php '.$corePath.' --setup --install-service'.PHP_EOL
@@ -1173,7 +1168,7 @@ function generateListenerService() {
     .'# / listener through systemctl rather than beside it, so there is only ever one.'.PHP_EOL
     .PHP_EOL
     .'[Unit]'.PHP_EOL
-    .'Description=HRConvert2 Resource Listener'.PHP_EOL
+    .'Description='.engineApplicationName().' Resource Listener'.PHP_EOL
     .'Documentation=file:'.$documentationPath.PHP_EOL
     .'# / The data location must be mounted before a socket can be bound inside it.'.PHP_EOL
     .'RequiresMountsFor='.$dataLocation.PHP_EOL
@@ -1229,13 +1224,13 @@ function generateEnvironmentTimer() {
   global $InstLoc, $DirSep, $EnableMemoryProtection;
   $ServiceContents = $TimerContents = '';
   $corePath = $documentationPath = '';
-  $corePath = $InstLoc.$DirSep.'convertCore.php';
+  $corePath = $InstLoc.$DirSep.engineApplicationEntryPoint();
   $documentationPath = $InstLoc.$DirSep.'Documentation'.$DirSep.'ABOUT_ENVIRONMENT_MANAGER.txt';
   $ServiceContents = '# / -----------------------------------------------------------------------------------'.PHP_EOL
-    .'# / HRConvert2 Environment Manager. Written by --setup --install-service.'.PHP_EOL
+    .'# / '.engineApplicationName().' Environment Manager. Written by --setup --install-service.'.PHP_EOL
     .'# / Do not edit this by hand. Re-run the command above to rewrite it.'.PHP_EOL
     .'# /'.PHP_EOL
-    .'# / This runs as root & is started ONLY by hrconvert2-environment.timer. It looks at the'.PHP_EOL
+    .'# / This runs as root & is started ONLY by '.engineApplicationSlug().'-environment.timer. It looks at the'.PHP_EOL
     .'# / host, records what it found & exits. It opens no socket & accepts nothing from'.PHP_EOL
     .'# / anywhere, so there is no way to ask it to do something.'.PHP_EOL
     .'# /'.PHP_EOL
@@ -1243,7 +1238,7 @@ function generateEnvironmentTimer() {
     .'# / config.php. Read what it reports before turning that on.'.PHP_EOL
     .PHP_EOL
     .'[Unit]'.PHP_EOL
-    .'Description=HRConvert2 Environment Manager'.PHP_EOL
+    .'Description='.engineApplicationName().' Environment Manager'.PHP_EOL
     .'Documentation=file:'.$documentationPath.PHP_EOL
     .'After=local-fs.target'.PHP_EOL
     .PHP_EOL
@@ -1270,14 +1265,14 @@ function generateEnvironmentTimer() {
     .'# / Deliberately empty of WantedBy. The TIMER is what an administrator enables.'.PHP_EOL
     .'# / Enabling this service on its own would run one pass at boot & never again.'.PHP_EOL;
   $TimerContents = '# / -----------------------------------------------------------------------------------'.PHP_EOL
-    .'# / HRConvert2 Environment Manager timer. Written by --setup --install-service.'.PHP_EOL
+    .'# / '.engineApplicationName().' Environment Manager timer. Written by --setup --install-service.'.PHP_EOL
     .'# / Do not edit this by hand. Re-run the command above to rewrite it.'.PHP_EOL
     .'# /'.PHP_EOL
-    .'# / Enable it with:  sudo systemctl enable --now hrconvert2-environment.timer'.PHP_EOL
-    .'# / See what it last found with:  sudo systemctl status hrconvert2-environment'.PHP_EOL
+    .'# / Enable it with:  sudo systemctl enable --now '.engineApplicationSlug().'-environment.timer'.PHP_EOL
+    .'# / See what it last found with:  sudo systemctl status '.engineApplicationSlug().'-environment'.PHP_EOL
     .PHP_EOL
     .'[Unit]'.PHP_EOL
-    .'Description=HRConvert2 Environment Manager schedule'.PHP_EOL
+    .'Description='.engineApplicationName().' Environment Manager schedule'.PHP_EOL
     .'Documentation=file:'.$documentationPath.PHP_EOL
     .PHP_EOL
     .'[Timer]'.PHP_EOL
@@ -1289,7 +1284,7 @@ function generateEnvironmentTimer() {
     .'Persistent=true'.PHP_EOL
     .'# / Every installation on a fleet would otherwise wake on the same second.'.PHP_EOL
     .'RandomizedDelaySec=300'.PHP_EOL
-    .'Unit=hrconvert2-environment.service'.PHP_EOL
+    .'Unit='.engineApplicationSlug().'-environment.service'.PHP_EOL
     .PHP_EOL
     .'[Install]'.PHP_EOL
     .'WantedBy=timers.target'.PHP_EOL;
@@ -1297,7 +1292,6 @@ function generateEnvironmentTimer() {
   purgeSensitiveMemory($EnableMemoryProtection, $corePath, $documentationPath);
   return array($ServiceContents, $TimerContents); }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to install the listener service unit.
@@ -1325,7 +1319,7 @@ function installListenerService($enableService, $startIfStopped = FALSE) {
   $commandOutput = array();
   $commandExitCode = 1;
   $bytesWritten = 0;
-  $unitPath = '/etc/systemd/system/hrconvert2-listener.service';
+  $unitPath = '/etc/systemd/system/'.engineApplicationSlug().'-listener.service';
   if (!$RunningAsRoot) {
     $ServiceStatus = 'failed';
     errorEntry('A service unit can only be installed while running as root!', 32012, FALSE); }
@@ -1364,26 +1358,25 @@ function installListenerService($enableService, $startIfStopped = FALSE) {
           $commandOutput = array();
           // / --now is what starts it, & it is passed only when starting was asked for.
           // / enable alone writes the boot state & leaves a stopped service stopped.
-          exec('systemctl enable '.($startIfStopped ? '--now ' : '').'hrconvert2-listener 2>&1', $commandOutput, $commandExitCode);
+          exec('systemctl enable '.($startIfStopped ? '--now ' : '').engineApplicationSlug().'-listener 2>&1', $commandOutput, $commandExitCode);
           if ($commandExitCode === 0) {
             $ServiceWasInstalled = TRUE;
             $ServiceStatus = 'installed';
-            print('  '.str_pad('Enabled', 12).'hrconvert2-listener, starting at boot & running now'.$Lol);
+            print('  '.str_pad('Enabled', 12).engineApplicationSlug().'-listener, starting at boot & running now'.$Lol);
             logEntry('The listener service unit was installed & enabled.'); }
           else {
             $ServiceStatus = 'failed';
-            print('  '.str_pad('FAILED', 12).'systemctl enable --now hrconvert2-listener'.$Lol);
+            print('  '.str_pad('FAILED', 12).'systemctl enable --now '.engineApplicationSlug().'-listener'.$Lol);
             print('  '.str_pad('', 12).implode($Lol.'  '.str_pad('', 12), $commandOutput).$Lol);
             warningEntry('The listener service unit was written but could not be enabled.'); } }
         else {
           $ServiceWasInstalled = TRUE;
           $ServiceStatus = 'installed';
-          print('  '.str_pad('Ready', 12).'systemctl enable --now hrconvert2-listener'.$Lol); } } } }
+          print('  '.str_pad('Ready', 12).'systemctl enable --now '.engineApplicationSlug().'-listener'.$Lol); } } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $startIfStopped, $unitPath, $unitContents, $existingContents, $commandOutput, $commandExitCode, $bytesWritten, $serviceSystemdUsable, $serviceSystemdReason, $enableService);
   return array($ServiceWasInstalled, $ServiceStatus); }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to install the Environment Manager timer & the service it starts.
@@ -1405,8 +1398,8 @@ function installEnvironmentTimer($enableTimer) {
   $existingService = $existingTimer = '';
   $commandOutput = array();
   $commandExitCode = 1;
-  $servicePath = '/etc/systemd/system/hrconvert2-environment.service';
-  $timerPath = '/etc/systemd/system/hrconvert2-environment.timer';
+  $servicePath = '/etc/systemd/system/'.engineApplicationSlug().'-environment.service';
+  $timerPath = '/etc/systemd/system/'.engineApplicationSlug().'-environment.timer';
   if (!$RunningAsRoot) {
     $TimerStatus = 'failed';
     errorEntry('The Environment Manager timer can only be installed while running as root!', 32017, FALSE); }
@@ -1437,18 +1430,18 @@ function installEnvironmentTimer($enableTimer) {
   // / Enabling is separate & is never implied by writing the file.
   if ($TimerWasInstalled && $enableTimer) {
     $commandOutput = array();
-    exec('systemctl enable --now hrconvert2-environment.timer 2>&1', $commandOutput, $commandExitCode);
+    exec('systemctl enable --now '.engineApplicationSlug().'-environment.timer 2>&1', $commandOutput, $commandExitCode);
     if ($commandExitCode === 0) {
       $TimerStatus = 'enabled';
-      print('  '.str_pad('Enabled', 12).'hrconvert2-environment.timer, hourly from now'.$Lol);
+      print('  '.str_pad('Enabled', 12).engineApplicationSlug().'-environment.timer, hourly from now'.$Lol);
       warningEntry('The Environment Manager timer was enabled. A root process now runs hourly.'); }
     else {
       $TimerStatus = 'failed';
       errorEntry('The Environment Manager timer was written & could not be enabled!', 32016, FALSE); } }
   else if ($TimerWasInstalled && $TimerStatus !== 'unchanged') {
     print('  '.str_pad('', 12).'The timer is NOT enabled. Read one pass before scheduling root.'.$Lol);
-    print('  '.str_pad('', 12).'  sudo php convertCore.php --run-environment-manager'.$Lol);
-    print('  '.str_pad('', 12).'  sudo systemctl enable --now hrconvert2-environment.timer'.$Lol); }
+    print('  '.str_pad('', 12).'  sudo php '.engineApplicationEntryPoint().' --run-environment-manager'.$Lol);
+    print('  '.str_pad('', 12).'  sudo systemctl enable --now '.engineApplicationSlug().'-environment.timer'.$Lol); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $timerSystemdUsable, $timerSystemdReason, $servicePath, $timerPath, $serviceContents, $timerContents, $existingService, $existingTimer, $commandOutput, $commandExitCode, $enableTimer);
   return array($TimerWasInstalled, $TimerStatus); }
@@ -1480,7 +1473,7 @@ function runCompleteInstall($authorizationToken, $operatorConfirmed) {
   $stageCount = $pathsCorrected = $locationsCreated = $optionalProblems = 0;
   $operatorChoice = $serviceStatus = '';
   $dependencyFindings = array();
-  print($Lol.'HRConvert2 Complete Installation'.$Lol);
+  print($Lol.engineApplicationName().' Complete Installation'.$Lol);
   print('Seven stages. Dependencies, locations, permissions, configuration, service,'.$Lol);
   print('permissions again, checks.'.$Lol);
   // / Stage one lives in Dependency Core. The --setup gate loads it before this is reached,
@@ -1523,7 +1516,7 @@ function runCompleteInstall($authorizationToken, $operatorConfirmed) {
             $StagesCompleted++;
             print('  Keeping the configuration this installation already declares.'.$Lol);
             print('  Run the following to change anything.'.$Lol);
-            print('    sudo php '.$InstLoc.$DirSep.'convertCore.php --config'.$Lol); }
+            print('    sudo php '.$InstLoc.$DirSep.engineApplicationEntryPoint().' --config'.$Lol); }
           else if (runConfigUtility('', 'interactive', '', FALSE)) $StagesCompleted++;
           else print('  Configuration was cancelled. The shipped defaults remain in place.'.$Lol);
           // / Stage five. The service unit, generated from the configuration above.
@@ -1563,9 +1556,9 @@ function runCompleteInstall($authorizationToken, $operatorConfirmed) {
           print($Lol.'Installation complete. '.$StagesCompleted.' of 6 stages finished.'.$Lol);
           if (!$dependenciesReady) print($Lol.'One or more REQUIRED dependencies are still missing. Conversions using them will refuse.'.$Lol);
           if ($optionalProblems > 0) print($Lol.$optionalProblems.' OPTIONAL dependenc(ies) are missing. Those subsystems will refuse until they are installed.'.$Lol);
-          print($Lol.'  php '.$InstLoc.$DirSep.'convertCore.php -v          Confirm every dependency & subsystem.'.$Lol);
-          print('  php '.$InstLoc.$DirSep.'convertCore.php --status    Confirm the listener.'.$Lol);
-          print('  sudo php '.$InstLoc.$DirSep.'convertCore.php --config    Change any setting.'.$Lol);
+          print($Lol.'  php '.$InstLoc.$DirSep.engineApplicationEntryPoint().' -v          Confirm every dependency & subsystem.'.$Lol);
+          print('  php '.$InstLoc.$DirSep.engineApplicationEntryPoint().' --status    Confirm the listener.'.$Lol);
+          print('  sudo php '.$InstLoc.$DirSep.engineApplicationEntryPoint().' --config    Change any setting.'.$Lol);
           print($Lol.'Two things this cannot decide for you.'.$Lol);
           print('  The public URL, if share links are to work. Set it with --config.'.$Lol);
           print('  A web server virtual host, if the installation is not already served.'.$Lol.$Lol); } } } }

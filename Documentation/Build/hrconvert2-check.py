@@ -422,6 +422,44 @@ def check_undefined_reads(files, report):
                 report('UNDEFINED', path + ':' + str(record['start'] + 1) + ' ' + name
                        + '() reads $' + variable + ', which is not a parameter, a declared global or assigned')
                 faults += 1
+            # / A SECOND PASS, because the one above is flow insensitive. It asks whether a name is
+            # / assigned anywhere, so a variable assigned only inside an if passes even when it is read
+            # / outside that if, & is therefore unset whenever the if does not run. That is how
+            # / $entryIsBlocked reached a release: it was set to TRUE inside two gates & read after them.
+            # / A local is reported only when every assignment sits deeper than the body & some direct
+            # / read sits shallower. unset, isset & empty never warn on an unset name, & a value handed
+            # / to purgeSensitiveMemory is passed by reference, so none of those counts as a read.
+            body_lines = [text for text in record['body'][1:] if text.strip() and not text.strip().startswith(('// /', '#'))]
+            if body_lines:
+                indent = lambda text: len(text) - len(text.lstrip())
+                base = min(indent(text) for text in body_lines)
+                places = {}
+                reads = {}
+                for text in body_lines:
+                    if text.strip().startswith(('global ', 'purgeSensitiveMemory(', 'unset(')):
+                        continue
+                    here = indent(text)
+                    for found in re.finditer(r'\$(\w+)\s*=(?!=)', text):
+                        places.setdefault(found.group(1), []).append(here)
+                    for found in re.finditer(r'list\s*\(([^)]*)\)\s*=', text):
+                        for listed in re.findall(r'\$(\w+)', found.group(1)):
+                            places.setdefault(listed, []).append(here)
+                    for found in re.finditer(r'as\s+&?\$(\w+)\s*(?:=>\s*&?\$(\w+))?', text):
+                        places.setdefault(found.group(1), []).append(here)
+                        if found.group(2):
+                            places.setdefault(found.group(2), []).append(here)
+                    quiet = re.sub(r'\b(?:isset|empty)\s*\([^)]*\)', '', text)
+                    for found in re.finditer(r'\$(\w+)', quiet):
+                        reads.setdefault(found.group(1), []).append(here)
+                for variable, depths in sorted(places.items()):
+                    if variable in parameters or variable in declared or variable in superglobals:
+                        continue
+                    if min(depths) <= base:
+                        continue
+                    if any(depth < min(depths) for depth in reads.get(variable, [])):
+                        report('UNDEFINED', path + ':' + str(record['start'] + 1) + ' ' + name + '() assigns $' + variable
+                               + ' only inside a block & reads it outside that block, so it can be read unset. Initialize it before the first branch')
+                        faults += 1
     return faults
 
 
@@ -460,7 +498,8 @@ def check_file_spacing(files, report):
     # / The shape this project writes, measured from the files that were never edited by a
     # / tool rather than decided here.
     # / A separator is 88 characters. Two in a row is one separator written twice.
-    # / A separator is followed immediately by what it introduces, never by a blank line.
+    # / A separator that opens a block is followed by what it introduces. One that closes a
+    # / block is followed by one blank line. Between functions that is one blank line exactly.
     # / At most two blank lines anywhere. Three or more is an edit that removed something &
     # / left its gap behind.
     # / None of this changes behaviour, which is exactly why it drifts. A person reading a
@@ -496,6 +535,27 @@ def check_file_spacing(files, report):
             # / correct closing separators across files nobody had touched.
             # / A check that is wrong that often teaches an operator to ignore the whole
             # / category, which costs more than the fault it was looking for.
+        # / Between functions, two separators take exactly one blank line between them.
+        # / This judges the GAP between two separators, never a lone separator, so it cannot
+        # / repeat the fault described above: a gap has one correct answer & a lone separator
+        # / does not. On a correct tree it reports nothing.
+        # / The preamble is not inspected. Two blank lines between the header, the load guard &
+        # / the first function is this project's layout, so the check starts at the separator
+        # / that opens the first function.
+        is_rule = lambda text: text.strip().startswith('// / -') and text.strip()[5:] != '' and not (set(text.strip()[5:]) - set('-'))
+        first = next((number for number, text in enumerate(original) if re.match(r'function \w+\(', text)), None)
+        if first is not None:
+            begin = first
+            while begin > 0 and original[begin - 1].strip().startswith('// /') and not is_rule(original[begin - 1]): begin -= 1
+            if begin > 0 and is_rule(original[begin - 1]): begin -= 1
+            for number in range(begin, len(original)):
+                if not is_rule(original[number]): continue
+                following = number + 1
+                while following < len(original) and original[following].strip() == '': following += 1
+                if following < len(original) and is_rule(original[following]) and following - number - 1 >= 2:
+                    report('SPACING', path + ':' + str(number + 1) + ' leave exactly one blank line between these two separators, they sit between functions')
+                    faults += 1
+
     return faults
 
 

@@ -12,15 +12,14 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.5.
+// / v3.9.6.
 // / This file is the converter for the SVG pipeline. It is loaded by pipelineCore.php
 // / ONLY when a SVG conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
 // / Error block 25000 through 25002 belongs to this pipeline. Those numbers came with the code when it
 // / moved out of convertCore.php & they did not change, because operators have read them.
-// / This pipeline calls verifySVGVersion(), sandboxCommand() & locateDependency(), which all
-// / remain in convertCore.php. A dependency verifier is still core owned.
-// / showVersionInfo() reports on it whether or not this pipeline is installed.
+// / This pipeline asks for Inkscape through verifiedToolPath(), which answers from the
+// / manifest, & calls sandboxCommand() & locateDependency(), which remain in convertCore.php.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
 // / <3 Open-Source
@@ -35,7 +34,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 
 // / -----------------------------------------------------------------------------------
 // / A function to convert SVG vector drawing formats.
-// / The binary is supplied by verifySVGVersion() rather than assumed.
+// / The binary is supplied by verifiedToolPath() rather than assumed.
 // / A width & a height may both be supplied. Inkscape honours both independently, which
 // / stretches the image, so the caller decides whether that is what the user asked for.
 function convertSVG($pathname, $newPathname, $extension, $height, $width) {

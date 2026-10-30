@@ -58,6 +58,12 @@ $EngineConfigVersion = 'v3.9.3';
 // /   Default is 'HRConvert2'.
 $EngineApplicationName = 'Application';
 
+// /  --Engine Entry Point--
+// /   The file an application is started through. The Engine runs it to start managers & the
+// /   listener, & names it in the instructions it prints. An application sets its own in
+// /   Contract/app-engine-config.php. Default 'app.php', the Engine's own example application.
+$EngineEntryPoint = 'app.php';
+
 // /  --Engine Application Slug--
 // /   A short lowercase form of the name, safe to use in a file name or a socket path.
 // /   Nothing derives this from the name above, because a name may contain anything & a

@@ -12,21 +12,19 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.5.
+// / v3.9.6.
 // / This file is the converter for the Subtitle pipeline. It is loaded by pipelineCore.php
 // / ONLY when a Subtitle conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
 // / Error block 22000 through 22002 belongs to this pipeline. Those numbers came with the code when it
 // / moved out of convertCore.php & they did not change, because operators have read them.
 // /
-// / This is one of four families sharing the FFMPEG subsystem.
-// / Audio & Stream are still built into convertCore.php & Video & Subtitle are not, so an
-// / installation now runs FFMPEG from two places at once. That is expected & is safe,
-// / because verifyFFMPEGVersion() remains core owned & is the single gate all four pass
-// / through. A pipeline that carried its own copy of that verifier would be the bug.
-// / This pipeline calls verifyFFMPEGVersion(), sandboxCommand() & locateDependency(), all
-// / of which remain in convertCore.php. A dependency verifier is still core owned.
-// / showVersionInfo() reports on it whether or not this pipeline is installed.
+// / This is one of four pipelines sharing the FFMPEG subsystem: Audio, Video, Subtitle &
+// / Stream. That is safe because all four ask the manifest for FFMPEG through
+// / verifiedToolPath(), so there is one minimum & one answer. A pipeline that carried its own
+// / version check would be the bug, because two checks eventually disagree about the minimum.
+// / This pipeline also calls sandboxCommand() & locateDependency(), which remain in
+// / convertCore.php.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
 // / <3 Open-Source

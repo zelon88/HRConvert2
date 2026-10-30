@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.5.
+// / v3.9.6.
 // / This file is the converter for the Scad pipeline. It is loaded by pipelineCore.php
 // / ONLY when a Scad conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
@@ -31,9 +31,10 @@
 // / fixManagedPermissions() & validateOperatingEnvironment() write & check that policy
 // / during installation, whether or not this pipeline is installed at all. A sandbox
 // / profile is part of the operating environment rather than part of a converter.
-// / This pipeline calls verifySCADVersion(), sandboxCommand(), limitCommand(), verifyBwrap(),
-// / verifyRequiredDirs(), cleanFiles() & is_dir_empty(), all of which remain in
-// / convertCore.php because the core uses them elsewhere.
+// / This pipeline asks for OpenSCAD through verifiedToolPath(), which answers from the
+// / manifest, & calls sandboxCommand(), limitCommand(), verifyBwrap(), verifyRequiredDirs(),
+// / cleanFiles() & is_dir_empty(), which remain in convertCore.php because the core uses
+// / them elsewhere.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
 // / <3 Open-Source

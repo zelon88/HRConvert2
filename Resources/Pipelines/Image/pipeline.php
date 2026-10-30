@@ -12,15 +12,14 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.5.
+// / v3.9.6.
 // / This file is the converter for the Image pipeline. It is loaded by pipelineCore.php
 // / ONLY when a Image conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
 // / Error block 5000 through 5006 belongs to this pipeline. Those numbers came with the code when it
 // / moved out of convertCore.php & they did not change, because operators have read them.
-// / This pipeline calls verifyImageVersion() & sandboxCommand(), which remain in
-// / convertCore.php. verifyImageVersion() is also called by showVersionInfo(), by
-// / updateApplication() & by the OCR pipeline, so it is core owned & stays that way.
+// / This pipeline asks for ImageMagick through verifiedToolPath(), which answers from the
+// / manifest, & calls sandboxCommand(), which remains in convertCore.php.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
 // / <3 Open-Source
@@ -35,7 +34,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 
 // / -----------------------------------------------------------------------------------
 // / A function to convert image formats.
-// / The binary is supplied by verifyImageVersion() rather than hardcoded, so the version
+// / The binary is supplied by verifiedToolPath() rather than hardcoded, so the version
 // / that was verified is provably the version that runs.
 // / A dimension of zero is omitted from the geometry rather than written, so the other
 // / dimension scales to it. ImageMagick treats WxH as a bounding box & preserves the

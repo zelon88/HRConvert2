@@ -40,6 +40,9 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-35000,
 // / The Engine uses the name in log entries & error numbers, & the slug wherever a name has
 // / to survive a filesystem or a socket path.
 $EngineApplicationName = 'HRConvert2';
+
+// / HRConvert2 is started through convertCore.php.
+$EngineEntryPoint = 'convertCore.php';
 $EngineApplicationSlug = 'hrconvert2';
 // / -----------------------------------------------------------------------------------
 

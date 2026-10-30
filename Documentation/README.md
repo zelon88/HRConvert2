@@ -56,7 +56,6 @@ Navigate the complete documentation library using the directory structure below.
 ### 🛠️ Developer & Pipeline Resources
 * [CODING_CONVENTIONS.md](CODING_CONVENTIONS.md) / [.txt](CODING_CONVENTIONS.txt) — Code style guidelines.
 * [CREATING_CONVERSION_PIPELINES.txt](CREATING_CONVERSION_PIPELINES.txt) — Processing engine manual.
-* [CREATING_CONVERSION_PIPELINES_EXAMPLE.txt](CREATING_CONVERSION_PIPELINES_EXAMPLE.txt) — Reference script.
 * [CREATING_GUIS.txt](CREATING_GUIS.txt) — Frontend design notes.
 * [CREATING_LANGUAGE_PACKS.txt](CREATING_LANGUAGE_PACKS.txt) — Localization frameworks.
 

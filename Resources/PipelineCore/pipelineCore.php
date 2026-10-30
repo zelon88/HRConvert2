@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.5.
+// / v3.9.6.
 // / This file is the Pipeline Core component. It owns the detachable conversion
 // / pipelines, their version pins, their capability declarations & their dispatch.
 // / It is pinned EXACTLY by convertCore.php via $RequiredPipelineCoreVersion.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by convertCore.php WITHOUT executing this file.
-$PipelineCoreVersion = 'v3.9.5';
+$PipelineCoreVersion = 'v3.9.6';
 // / -----------------------------------------------------------------------------------
 
 
@@ -53,18 +53,18 @@ function getAcceptedPipelines() {
   // / Adding a community pipeline is one line here plus a version bump on this file.
   $AcceptedPipelines = array(
     'Stream' => 'v3.9.5',
-    'Scad' => 'v3.9.5',
-    'OCR' => 'v3.9.5',
+    'Scad' => 'v3.9.6',
+    'OCR' => 'v3.9.6',
     'Document' => 'v3.8.8',
-    'Subtitle' => 'v3.9.5',
-    'SVG' => 'v3.9.5',
-    'Drawing' => 'v3.9.5',
-    'Image' => 'v3.9.5',
-    'Model' => 'v3.9.5',
-    'Video' => 'v3.9.5',
-    'Ebook' => 'v3.9.5',
-    'Audio' => 'v3.9.5',
-    'Archive' => 'v3.9.5',
+    'Subtitle' => 'v3.9.6',
+    'SVG' => 'v3.9.6',
+    'Drawing' => 'v3.9.6',
+    'Image' => 'v3.9.6',
+    'Model' => 'v3.9.6',
+    'Video' => 'v3.9.6',
+    'Ebook' => 'v3.9.6',
+    'Audio' => 'v3.9.6',
+    'Archive' => 'v3.9.6',
     // / Scanner pipelines. They declare no formats & are chosen by name.
     'ClamAV' => 'v3.9.5',
     // / The first pipeline of kind file. Operations that do not care what is in a file.
@@ -72,7 +72,6 @@ function getAcceptedPipelines() {
     'ScanCore' => 'v3.9.3');
   return $AcceptedPipelines; }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to report which shared modules this manager accepts & at what version.
@@ -92,7 +91,6 @@ function getAcceptedSharedModules() {
     'libreOffice.php' => 'v3.9.5');
   return $AcceptedSharedModules; }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to load one shared module after checking its version without executing it.
@@ -132,7 +130,6 @@ function loadSharedModule($sharedModuleName) {
   purgeSensitiveMemory($EnableMemoryProtection, $acceptedModules, $versionMatches, $modulePath, $moduleContents, $detectedVersion, $cleanDetected, $cleanRequired, $sharedModuleName);
   return $ModuleIsReady; }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to verify one pipeline folder & read its declarations without running it.
@@ -191,7 +188,6 @@ function verifyPipelineComponent($pipelineFolderName, $requiredPipelineVersion) 
   purgeSensitiveMemory($EnableMemoryProtection, $pipelineFolder, $configPath, $converterPath, $configContents, $detectedVersion, $cleanDetected, $cleanRequired, $versionMatches, $declarationsAreValid, $PipelineVersion, $PipelineFamily, $PipelineDisplayName, $PipelinePriority, $PipelineEntryPoint, $PipelineSubsystem, $PipelineRequestFields, $Capabilities, $PipelineExclude, $PipelineKind, $PipelineSharedModules, $pipelineFolderName, $requiredPipelineVersion);
   return array($PipelineIsAvailable, $PipelineRecord); }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to check that a pipeline declared everything it is required to declare.
@@ -294,7 +290,6 @@ function validatePipelineDeclarations($pipelineFolderName, $pipelineConverterPat
   return array($DeclarationsAreValid, $PipelineRecord); }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to verify & read every pipeline this manager accepts.
 // / Accepts no arguments. Returns a completion boolean, the pipeline records & the count.
@@ -331,7 +326,6 @@ function enumeratePipelines() {
   purgeSensitiveMemory($EnableMemoryProtection, $folderName, $requiredVersion, $acceptedPipelines, $claimedEntryPoints, $pipelineIsAvailable, $pipelineRecord);
   return array($EnumerationComplete, $Pipelines, $PipelineCount); }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to ask the capability cache what a subsystem can do with two extensions.
@@ -372,7 +366,6 @@ function capabilityVerdict($subsystemName, $inputExtension, $outputExtension) {
   purgeSensitiveMemory($EnableMemoryProtection, $cacheIsAvailable, $subsystemRecord, $subsystemName, $inputExtension, $outputExtension);
   return array($ReadIsKnown, $WriteIsKnown, $CanReadInput, $CanWriteOutput); }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to report whether one pipeline claims one conversion.
@@ -440,7 +433,6 @@ function pipelineClaimsConversion($pipelineRecord, $inputExtension, $outputExten
   return $PipelineClaimsIt; }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to report every family that can do something with one input extension.
 // / Accepts the input extension. Returns a completion boolean & the description records.
@@ -480,7 +472,6 @@ function describePipelineCapabilities($inputExtension) {
   return array($DescriptionComplete, $CapabilityDescriptions); }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to build the union of every format every verified pipeline can handle.
 // / Accepts no arguments. Returns a completion boolean, the input union & the output union.
@@ -503,7 +494,6 @@ function buildPipelineFormatArrays() {
   purgeSensitiveMemory($EnableMemoryProtection, $pipelineRecord);
   return array($FormatArraysAreBuilt, $PipelineInputFormats, $PipelineOutputFormats); }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to rank every implementation that can serve one conversion.
@@ -544,7 +534,6 @@ function resolvePipelineCandidates($conversionFamily, $inputExtension, $outputEx
   return array($CandidatesAreResolved, $CandidateFolders); }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to report whether any installed pipeline serves one specific conversion.
 // / Accepts the family, the input extension & the output extension, in that order.
@@ -569,7 +558,6 @@ function familyHasPipeline($conversionFamily, $inputExtension, $outputExtension)
   purgeSensitiveMemory($EnableMemoryProtection, $candidateFolders, $conversionFamily, $inputExtension, $outputExtension);
   return $FamilyIsServed; }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to load one pipeline's converter & confirm its entry point exists.
@@ -630,7 +618,6 @@ function loadPipelineCore($pipelineFolderName) {
   purgeSensitiveMemory($EnableMemoryProtection, $activeSurface, $sharedModuleName, $pipelineRecord, $pipelineFolderName);
   return array($PipelineIsReady, $PipelineEntryPointName); }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to hand a pipeline a verified tool by manifest name.
@@ -712,7 +699,6 @@ function verifiedToolPath($manifestName) {
   return $VerifiedPath; }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to run a virus scan through a scanner pipeline.
 // / Accepts the paths to scan & the scanner name, or an empty name for the configured
@@ -772,7 +758,6 @@ function runVirusScan($pathsToScan, $requestedScanner) {
   return array($ScanCompleted, $ThreatWasFound, $ScanFindings, $ScannerUsed); }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to dispatch an OCR operation to the installed OCR pipeline.
 // / Accepts the selected files, the requested filename, the requested extension & the
@@ -816,7 +801,6 @@ function runOcrOperation($selectedFiles, $userFilename, $userExtension, $ocrMeth
   purgeSensitiveMemory($EnableMemoryProtection, $folderName, $pipelineRecord, $selectedFiles, $pipelineIsReady, $entryPointName, $chosenFolder, $userFilename, $userExtension, $ocrMethod);
   return array($OperationSuccessful, $OperationErrors, $OutputFilenames); }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to dispatch one conversion to the best implementation that will take it.

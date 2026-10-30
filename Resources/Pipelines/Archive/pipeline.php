@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.5.
+// / v3.9.6.
 // / This file is the converter for the Archive pipeline. It is loaded by pipelineCore.php
 // / ONLY when a Archive conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
@@ -20,9 +20,8 @@
 // / moved out of convertCore.php & they did not change, because operators have read them.
 // / verifyIsoBootloaders() & generateBootableIsoCommand() MOVED HERE WITH THE CONVERTER,
 // / because convertCore.php had no other caller for either of them.
-// / verifyArchiveVersions() & verifyIsoHybridVersion() DID NOT MOVE. archiveFiles(),
-// / deleteFiles() & showVersionInfo() all still call them, & those run whether or not this
-// / pipeline is installed.
+// / Its tools are asked of the manifest through verifiedToolPath(), which is the same answer
+// / archiveFiles() & showVersionInfo() get, so the core & this pipeline cannot disagree.
 // / This is the only pipeline that rewrites its own output name.
 // / An extraction hands the user something named differently from what they asked for, which
 // / is what the fifth value of the six value contract exists for. Every other pipeline

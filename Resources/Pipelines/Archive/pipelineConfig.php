@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.5.
+// / v3.9.6.
 // / This file declares what the Archive conversion pipeline is & what it can do.
 // / It is read by pipelineCore.php on EVERY request & it must stay cheap.
 // / It ASSIGNS VARIABLES & DOES NOTHING ELSE. No functions, no logic, no output.
@@ -35,7 +35,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read WITHOUT executing this file, then matched
 // / EXACTLY against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v3.9.5';
+$PipelineVersion = 'v3.9.6';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -61,9 +61,9 @@ $PipelineEntryPoint = 'convertArchives';
 // / This string must match a Subsystem name in depends.php exactly.
 // / Naming the subsystem rather than the package keeps one source of truth for the version.
 // / verifyIsoBootloaders() & generateBootableIsoCommand() MOVED HERE WITH THE CONVERTER,
-// / because convertCore.php had no other caller for either. verifyArchiveVersions() &
-// / verifyIsoHybridVersion() DID NOT MOVE. archiveFiles(), deleteFiles() & showVersionInfo()
-// / all still call them, & those run whether or not this pipeline is installed.
+// / because convertCore.php had no other caller for either. Its tools are asked of the
+// / manifest through verifiedToolPath(), the same answer archiveFiles() & showVersionInfo()
+// / get, so the core & this pipeline cannot disagree.
 $PipelineSubsystem = 'Archives';
 
 // / Shared modules this pipeline needs, loaded before its converter is loaded.

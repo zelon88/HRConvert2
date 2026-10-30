@@ -12,15 +12,14 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.5.
+// / v3.9.6.
 // / This file is the converter for the Drawing pipeline. It is loaded by pipelineCore.php
 // / ONLY when a Drawing conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
 // / Error block 10000 through 10002 belongs to this pipeline. Those numbers came with the code when it
 // / moved out of convertCore.php & they did not change, because operators have read them.
-// / This pipeline calls verifyDrawingVersion(), sandboxCommand() & locateDependency(), which
-// / all remain in convertCore.php. A dependency verifier is still core owned.
-// / showVersionInfo() reports on it whether or not this pipeline is installed.
+// / This pipeline asks for Dia through verifiedToolPath(), which answers from the
+// / manifest, & calls sandboxCommand() & locateDependency(), which remain in convertCore.php.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
 // / <3 Open-Source
@@ -37,7 +36,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / A function to convert 2D vector drawing formats.
 // / Dia handles diagram formats such as dxf, fig, vdx & wpg. SVG is handled by Inkscape in
 // / convertSVG() instead, because Dia exports SVG without truly rendering it.
-// / The binary is supplied by verifyDrawingVersion() rather than assumed, so the version
+// / The binary is supplied by verifiedToolPath() rather than assumed, so the version
 // / that was verified is provably the version that runs.
 // / This function had NO version gate at all before this change. Dia was invoked blind, &
 // / a missing binary produced a timeout rather than naming the cause.

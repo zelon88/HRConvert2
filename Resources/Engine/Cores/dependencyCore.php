@@ -1,7 +1,7 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / Copyright information ...
-// / HRConvert2, Copyright on 8/28/2026 by Justin Grimes, www.github.com/zelon88
+// / HRConvert2, Copyright on 9/22/2026 by Justin Grimes, www.github.com/zelon88
 // /
 // / License information ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / Fileinformation ...
-// / v3.8.1.
+// / v3.9.6.
 // / A detachable dependency management component. convertCore.php runs without it.
 // / This file defines functions only. setupCore.php & convertCore.php dispatch into them.
 // /
@@ -43,12 +43,12 @@
 // / This halt cannot use quickDie. Reaching this line means convertCore.php was never
 // / loaded, so quickDie is not defined & calling it would replace a clear refusal with an
 // / undefined function error.
-if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: This file cannot process your request! Please submit your file to convertCore.php instead!'.PHP_EOL);
+if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A core component cannot be loaded directly!'.PHP_EOL);
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependencyCoreVersion = 'v3.9.3';
+$DependencyCoreVersion = 'v3.9.6';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -79,10 +79,10 @@ $DependencyCoreVersion = 'v3.9.3';
 // / application.
 function dependencyEnvironmentPrefix() {
   // / Set variables.
-  global $ApplicationName, $EnableMemoryProtection;
+  global $EnableMemoryProtection;
   $EnvironmentPrefix = '';
   $scratchRoot = $applicationSlug = '';
-  $applicationSlug = (isset($ApplicationName) && (string)$ApplicationName !== '') ? preg_replace('/[^A-Za-z0-9]/', '', (string)$ApplicationName) : 'HRConvert2';
+  $applicationSlug = preg_replace('/[^A-Za-z0-9]/', '', engineApplicationName());
   $scratchRoot = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$applicationSlug.'-probe';
   // / The directory is created rather than left to the tool, because a tool that cannot
   // / create it falls back to somewhere else & the point of this is to stop that happening.
@@ -250,7 +250,6 @@ function applyArchitectureRules($dependencyEntry, $architectureName) {
   return array($ResolvedEntry, $ArchitectureIsSupported, $UnsupportedReason); }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to choose which version of a dependency to install.
 // / Accepts a manifest entry. Returns the chosen version & a reason, in that order.
@@ -302,7 +301,6 @@ function resolveTargetVersion($dependencyEntry) {
   return array($ChosenVersion, $ChoiceReason); }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to judge a manifest entry before anything is probed.
 // / Accepts the entry. Returns whether it is complete, whether its license is clear & the
@@ -351,7 +349,6 @@ function judgeDependencyEntry($dependencyEntry) {
   purgeSensitiveMemory($EnableMemoryProtection, $declaredLicense, $provenanceField, $compatibleLicenses, $missingFields, $dependencyEntry);
   return array($EntryIsComplete, $EntryIsLicenseClear, $GateReason); }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to read the installed version of one dependency.
@@ -439,7 +436,7 @@ function resolveDependencyState($dependencyEntry) {
     // / A library has no binary, so its version command is both the presence test & the
     // / version read. The output is kept & reused below rather than running it a second
     // / time, which spawned two processes per library & repeated any side effect.
-    exec(dependencyEnvironmentPrefix().(string)$dependencyEntry['VersionCommand'].' 2>&1', $commandOutput, $commandExitCode);
+    exec(dependencyEnvironmentPrefix().'('.(string)$dependencyEntry['VersionCommand'].') < /dev/null 2>&1', $commandOutput, $commandExitCode);
     $commandWasExecuted = TRUE;
     if ($commandExitCode === 0) $DependencyIsPresent = TRUE;
     // / A library has no binary to look for, so a failed command is the ONLY evidence there
@@ -453,7 +450,7 @@ function resolveDependencyState($dependencyEntry) {
     else {
       if (!$commandWasExecuted) {
         $commandOutput = array();
-        exec(dependencyEnvironmentPrefix().(string)$dependencyEntry['VersionCommand'].' 2>&1', $commandOutput, $commandExitCode); }
+        exec(dependencyEnvironmentPrefix().'('.(string)$dependencyEntry['VersionCommand'].') < /dev/null 2>&1', $commandOutput, $commandExitCode); }
       $versionOutput = implode(PHP_EOL, $commandOutput);
       $RawOutput = trim((string)(isset($commandOutput[0]) ? $commandOutput[0] : ''));
       // / A dependency that declares no pattern is not asking to be version checked. Its
@@ -600,6 +597,74 @@ function showDependencyFindings($dependencyFindings) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to describe a length of time in its two largest units.
+// / Accepts a number of seconds. Returns text such as 3h 10m, 4m 30s or 45s.
+function describeElapsedTime($elapsedSeconds) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $ElapsedText = '';
+  $wholeSeconds = max(0, (int)$elapsedSeconds);
+  if ($wholeSeconds >= 3600) $ElapsedText = intdiv($wholeSeconds, 3600).'h '.intdiv($wholeSeconds % 3600, 60).'m';
+  else if ($wholeSeconds >= 60) $ElapsedText = intdiv($wholeSeconds, 60).'m '.($wholeSeconds % 60).'s';
+  else $ElapsedText = $wholeSeconds.'s';
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $elapsedSeconds, $wholeSeconds);
+  return $ElapsedText; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to run a long install command while showing the operator that it is alive.
+// / Accepts the command text & the name to show.
+// / Returns whether the command started, its output lines & its exit code.
+// / An install can run for hours on a slow connection. Its output used to be held back until
+// / it finished, so a download at 75 kbit/s looked exactly like a hang. This prints a status
+// / line every minute, with the elapsed time & the last thing the command said.
+// / Standard input comes from /dev/null, so a command that asks a question gets an immediate
+// / end of input & fails, rather than waiting invisibly for an answer that cannot come.
+// / pip is told never to ask, to skip its own version check, & to resume a download that
+// / drops. A pip too old to resume ignores that setting, as tested against pip 24.0.
+function runInstallCommand($commandText, $displayName) {
+  // / Set variables.
+  global $Lol, $EnableMemoryProtection;
+  $CommandStarted = FALSE;
+  $CommandOutput = array();
+  $CommandExitCode = -1;
+  $commandPipes = $carriageParts = array();
+  $commandProcess = $selectResult = FALSE;
+  $pendingText = $lastLine = $completeLine = '';
+  $newlineAt = 0;
+  $startedAt = $lastBeatAt = microtime(TRUE);
+  $readableStreams = $writableStreams = $exceptionalStreams = NULL;
+  $commandProcess = proc_open('export PIP_NO_INPUT=1 PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_RESUME_RETRIES=10; ('.$commandText.') 2>&1',
+    array(0 => array('file', '/dev/null', 'r'), 1 => array('pipe', 'w')), $commandPipes);
+  if (!is_resource($commandProcess)) warningEntry('Could not start the install command for '.$displayName.'.');
+  else {
+    $CommandStarted = TRUE;
+    stream_set_blocking($commandPipes[1], FALSE);
+    while (!feof($commandPipes[1])) {
+      $readableStreams = array($commandPipes[1]);
+      $writableStreams = $exceptionalStreams = NULL;
+      $selectResult = @stream_select($readableStreams, $writableStreams, $exceptionalStreams, 1);
+      if ($selectResult === FALSE) usleep(250000);
+      else if ($selectResult > 0) $pendingText .= (string)fread($commandPipes[1], 65536);
+      while (($newlineAt = strpos($pendingText, "\n")) !== FALSE) {
+        $completeLine = rtrim(substr($pendingText, 0, $newlineAt), "\r");
+        $pendingText = (string)substr($pendingText, $newlineAt + 1);
+        $CommandOutput[] = $completeLine;
+        $carriageParts = explode("\r", $completeLine);
+        if (trim((string)end($carriageParts)) !== '') $lastLine = trim((string)end($carriageParts)); }
+      if (microtime(TRUE) - $lastBeatAt >= 60) {
+        $lastBeatAt = microtime(TRUE);
+        print('  '.str_pad($displayName, 20).'still working, '.describeElapsedTime($lastBeatAt - $startedAt).'. '.(($lastLine !== '') ? substr($lastLine, 0, 64) : 'Nothing printed yet.').$Lol); } }
+    if (trim($pendingText) !== '') $CommandOutput[] = rtrim($pendingText, "\r");
+    fclose($commandPipes[1]);
+    $CommandExitCode = proc_close($commandProcess); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $commandText, $displayName, $commandPipes, $carriageParts, $commandProcess, $selectResult, $pendingText, $lastLine, $completeLine, $newlineAt, $startedAt, $lastBeatAt, $readableStreams, $writableStreams, $exceptionalStreams);
+  return array($CommandStarted, $CommandOutput, $CommandExitCode); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to install one dependency.
 // / Accepts one manifest entry & the package manager in use, in that order.
 // / Returns a success boolean & whatever the package manager printed, in that order.
@@ -614,6 +679,10 @@ function installOneDependency($dependencyEntry, $packageManager) {
   global $Lol, $EnableMemoryProtection, $HostArchitecture, $EngineAllowIncompleteDepsUpdate;
   $chosenVersion = $choiceReason = $chosenVersionPrefix = '';
   $InstallSucceeded = FALSE;
+  // / The gate results are set before any branch. $entryIsBlocked was only ever set to TRUE,
+  // / inside the two gates, so an entry that passed both reached the test below with it unset.
+  $entryIsComplete = $entryIsLicenseClear = $entryIsBlocked = $commandStarted = $buildUsesPip = FALSE;
+  $entryGateReason = '';
   $ReturnData = '';
   // / Using what an operator supplied & CHANGING it are different risks.
   // / An entry with no declared Source names nowhere to fetch from. Running an update
@@ -648,7 +717,7 @@ function installOneDependency($dependencyEntry, $packageManager) {
     // / A bundled dependency ships inside the application & is already present by
     // / definition. Nothing to install & nothing to fail.
     $InstallSucceeded = TRUE;
-    $ReturnData = 'This dependency ships with HRConvert2 & needs no installation.'; }
+    $ReturnData = 'This dependency ships with '.engineApplicationName().' & needs no installation.'; }
   else if ((string)$dependencyEntry['Type'] === 'manual') $ReturnData = 'This dependency is never installed automatically. Install it by hand from '.(string)$dependencyEntry['Source'].'.';
   // / A source built dependency runs the command its manifest entry carries.
   // / This was refused outright until v3.8.9, which meant anything not in a package
@@ -666,8 +735,9 @@ function installOneDependency($dependencyEntry, $packageManager) {
       // / is slow HERE, rather than broken, is the point.
       // / This reads the architecture rather than timing anything, because a guess made
       // / before the build starts is worth more than an accurate figure afterwards.
-      print('  '.str_pad((string)$dependencyEntry['Name'], 20).'building from source, this takes '.((in_array((string)$HostArchitecture, array('arm64', 'arm'), TRUE)) ? 'a long time on this machine. An hour or more is normal here, & it has not hung' : 'several minutes').$Lol);
-      logEntry('Building '.(string)$dependencyEntry['Name'].' from source.');
+      $buildUsesPip = (bool)preg_match('/\bpip[\d.]*\s+install\b/', (string)$dependencyEntry['BuildCommand']);
+      print('  '.str_pad((string)$dependencyEntry['Name'], 20).(($buildUsesPip) ? 'installing with pip. It downloads everything first, so a slow connection makes this slow' : 'building from source, this takes '.((in_array((string)$HostArchitecture, array('arm64', 'arm'), TRUE)) ? 'a long time on this machine. An hour or more is normal here, & it has not hung' : 'several minutes')).'. A status line appears every minute while it runs.'.$Lol);
+      logEntry((($buildUsesPip) ? 'Installing '.(string)$dependencyEntry['Name'].' with pip.' : 'Building '.(string)$dependencyEntry['Name'].' from source.'));
       $commandOutput = array();
       // / A chosen version is handed to the build command as DEPENDENCY_VERSION.
       // / An environment variable rather than a substitution, because a build command is
@@ -679,16 +749,17 @@ function installOneDependency($dependencyEntry, $packageManager) {
       if ($chosenVersion !== '') {
         logEntry((string)$dependencyEntry['Name'].': '.$choiceReason);
         $chosenVersionPrefix = 'export DEPENDENCY_VERSION='.escapeshellarg($chosenVersion).'; '; }
-      exec(dependencyEnvironmentPrefix().$chosenVersionPrefix.'('.(string)$dependencyEntry['BuildCommand'].') 2>&1', $commandOutput, $commandExitCode);
+      list ($commandStarted, $commandOutput, $commandExitCode) = runInstallCommand(dependencyEnvironmentPrefix().$chosenVersionPrefix.'('.(string)$dependencyEntry['BuildCommand'].')', (string)$dependencyEntry['Name']);
       $ReturnData = implode(PHP_EOL, array_slice($commandOutput, -12));
-      if ($commandExitCode !== 0) warningEntry('The source build for '.(string)$dependencyEntry['Name'].' exited with code '.$commandExitCode.'.');
+      if (!$commandStarted) $ReturnData = 'The build could not be started. The log says why.';
+      else if ($commandExitCode !== 0) warningEntry('The source build for '.(string)$dependencyEntry['Name'].' exited with code '.$commandExitCode.'.');
       else {
         // / A build that reported success is still only believed once the thing it built
         // / answers for itself, exactly as a package install is.
         if ((string)$dependencyEntry['VersionCommand'] === '') $InstallSucceeded = TRUE;
         else {
           $commandOutput = array();
-          exec(dependencyEnvironmentPrefix().(string)$dependencyEntry['VersionCommand'].' 2>&1', $commandOutput, $commandExitCode);
+          exec(dependencyEnvironmentPrefix().'('.(string)$dependencyEntry['VersionCommand'].') < /dev/null 2>&1', $commandOutput, $commandExitCode);
           if ($commandExitCode === 0) $InstallSucceeded = TRUE;
           else $ReturnData = 'The build completed & the result does not answer. Check the tail of the build output in the log.'; } } } }
   else if ($packageList === '') $ReturnData = 'This dependency names no package to install.';
@@ -700,7 +771,7 @@ function installOneDependency($dependencyEntry, $packageManager) {
     else if ($packageManager === '') $ReturnData = 'No package manager is available on this host.';
     else $installCommand = dependencyPackageCommand($packageManager, 'php-'.$packageList, 'install').' 2>&1';
     if ($installCommand !== '') {
-      exec($installCommand, $commandOutput, $commandExitCode);
+      list ($commandStarted, $commandOutput, $commandExitCode) = runInstallCommand($installCommand, (string)$dependencyEntry['Name']);
       $ReturnData = implode(PHP_EOL, $commandOutput);
       // / An extension is only installed once PHP can see it. A package that unpacked but
       // / was never enabled reports success from the package manager & fails every use.
@@ -708,30 +779,30 @@ function installOneDependency($dependencyEntry, $packageManager) {
       // / is the whole of the evidence. Running an empty command returned a non zero code &
       // / reported an extension PHP could not load, which was advice for a problem that did
       // / not exist.
-      if ($commandExitCode === 0) {
+      if ($commandStarted && $commandExitCode === 0) {
         if ((string)$dependencyEntry['VersionCommand'] === '') $InstallSucceeded = TRUE;
         else {
           $commandOutput = array();
-          exec(dependencyEnvironmentPrefix().(string)$dependencyEntry['VersionCommand'].' 2>&1', $commandOutput, $commandExitCode);
+          exec(dependencyEnvironmentPrefix().'('.(string)$dependencyEntry['VersionCommand'].') < /dev/null 2>&1', $commandOutput, $commandExitCode);
           if ($commandExitCode === 0) $InstallSucceeded = TRUE;
           else $ReturnData = 'The package installed but PHP still cannot load the extension. The web server may need restarting.'; } } } }
   else if ((string)$dependencyEntry['Type'] === 'pip') {
     $installCommand = 'pip3 install --break-system-packages '.escapeshellarg($packageList).' 2>&1';
-    exec($installCommand, $commandOutput, $commandExitCode);
+    list ($commandStarted, $commandOutput, $commandExitCode) = runInstallCommand($installCommand, (string)$dependencyEntry['Name']);
     $ReturnData = implode(PHP_EOL, $commandOutput);
-    if ($commandExitCode === 0) $InstallSucceeded = TRUE; }
+    if ($commandStarted && $commandExitCode === 0) $InstallSucceeded = TRUE; }
   else if ($packageManager === '') $ReturnData = 'No package manager is available on this host.';
   else {
     // / Every package name is escaped separately. A manifest is not user input, but a
     // / manifest from an update is not this release's manifest either.
     $installCommand = dependencyInstallCommand($packageManager, $packageList).' 2>&1';
-    exec($installCommand, $commandOutput, $commandExitCode);
+    list ($commandStarted, $commandOutput, $commandExitCode) = runInstallCommand($installCommand, (string)$dependencyEntry['Name']);
     $ReturnData = implode(PHP_EOL, $commandOutput);
-    if ($commandExitCode === 0) $InstallSucceeded = TRUE; }
+    if ($commandStarted && $commandExitCode === 0) $InstallSucceeded = TRUE; }
   // / Closes the blocked check above.
   }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $entryIsComplete, $entryIsLicenseClear, $entryGateReason, $entryIsBlocked, $chosenVersion, $choiceReason, $chosenVersionPrefix, $installCommand, $packageList, $commandOutput, $commandExitCode, $dependencyEntry, $packageManager);
+  purgeSensitiveMemory($EnableMemoryProtection, $commandStarted, $buildUsesPip, $entryIsComplete, $entryIsLicenseClear, $entryGateReason, $entryIsBlocked, $chosenVersion, $choiceReason, $chosenVersionPrefix, $installCommand, $packageList, $commandOutput, $commandExitCode, $dependencyEntry, $packageManager);
   return array($InstallSucceeded, $ReturnData); }
 // / -----------------------------------------------------------------------------------
 
@@ -977,7 +1048,7 @@ function uninstallDepends($authorizationToken, $subsystemFilter, $operatorConfir
     $UninstallSucceeded = FALSE;
     print($Lol.'A subsystem must be named. Removing every dependency would remove PHP,'.$Lol);
     print('Apache & the package manager, & leave a host that cannot be recovered remotely.'.$Lol);
-    print($Lol.'  sudo php convertCore.php --setup --uninstall-depends --subsystem=Ebooks'.$Lol.$Lol);
+    print($Lol.'  sudo php '.engineApplicationEntryPoint().' --setup --uninstall-depends --subsystem=Ebooks'.$Lol.$Lol);
     warningEntry('An unfiltered dependency removal was refused.'); }
   else {
     list ($manifestIsAvailable, $dependsManifest, $detectedDependsVersion) = verifyDependsManifest($RequiredDependsVersion);
@@ -1046,7 +1117,6 @@ function applyCapabilityAliases($detectedTokens, $aliasTable) {
   return $ExpandedTokens; }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to run one capability command & read what it prints.
 // / Accepts the command, the style, the pattern & the direction, in that order.
@@ -1114,7 +1184,6 @@ function runCapabilityCommand($capabilityCommand, $capabilityStyle, $capabilityP
   purgeSensitiveMemory($EnableMemoryProtection, $commandOutput, $commandExitCode, $rawOutput, $patternMatches, $patternMatch, $splitTokens, $splitToken, $capabilityCommand, $capabilityStyle, $capabilityPattern, $capabilityDirection);
   return array($CommandSucceeded, $ReadableTokens, $WritableTokens); }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to detect what one dependency can actually read & write.
@@ -1198,7 +1267,6 @@ function detectDependencyCapability($dependencyEntry) {
   return array($ReadState, $WriteState, $ReadableExtensions, $WritableExtensions); }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to build the capability cache by asking every installed dependency.
 // / Accepts nothing. Returns a success boolean & the number of dependencies detected.
@@ -1238,10 +1306,10 @@ function buildCapabilityCache() {
     // / dependency this file has never heard of, or may have corrected a pattern, & either
     // / way a cache built by the old one is not evidence about the new one.
     $cacheContents = '<?php'.PHP_EOL
-      .'// / HRConvert2 capability cache. Written by Dependency Core.'.PHP_EOL
+      .'// / '.engineApplicationName().' capability cache. Written by Dependency Core.'.PHP_EOL
       .'// / This file is generated. Every edit made here is lost the next time it is built.'.PHP_EOL
       .'// / Rebuild it with --setup --detect-capabilities.'.PHP_EOL
-      .'if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die(\'ERROR!!! HRConvert2-33003, A generated cache cannot be loaded directly!\'.PHP_EOL);'.PHP_EOL
+      .'if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die(\'ERROR!!! Engine-33003, A generated cache cannot be loaded directly!\'.PHP_EOL);'.PHP_EOL
       .'$CapabilityCacheFormat = \'v3.8.7\';'.PHP_EOL
       .'$CapabilityCacheManifest = '.var_export((string)$detectedDependsVersion, TRUE).';'.PHP_EOL
       .'$CapabilityCacheBuilt = '.var_export(time(), TRUE).';'.PHP_EOL
@@ -1262,7 +1330,6 @@ function buildCapabilityCache() {
   purgeSensitiveMemory($EnableMemoryProtection, $manifestIsAvailable, $dependsManifest, $dependencyEntry, $cacheRecords, $readableExtensions, $writableExtensions, $readState, $writeState, $detectedDependsVersion, $cachePath, $cacheContents);
   return array($CacheWasBuilt, $DetectedCount); }
 // / -----------------------------------------------------------------------------------
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to read the capability cache & judge whether it still describes this host.
@@ -1303,7 +1370,6 @@ function readCapabilityCache() {
   return array($CacheIsAvailable, $CapabilityRecords); }
 // / -----------------------------------------------------------------------------------
 
-
 // / -----------------------------------------------------------------------------------
 // / A function to write a supply chain audit template.
 // / Accepts the destination path, which may be empty for a default beside the logs.
@@ -1318,7 +1384,7 @@ function readCapabilityCache() {
 // / able to choose where on the disk it writes.
 function outputSupplyChain($outputPath) {
   // / Set variables.
-  global $RequiredDependsVersion, $LogDir, $DirSep, $HRConvertVersion, $Date, $Lol, $EnableMemoryProtection;
+  global $RequiredDependsVersion, $LogDir, $DirSep, $Date, $Lol, $EnableMemoryProtection;
   $ReportWasWritten = FALSE;
   $ReportPath = '';
   $dependsManifest = $dependencyEntry = $reportRows = array();
@@ -1334,7 +1400,7 @@ function outputSupplyChain($outputPath) {
     // / write in this component sits behind a token & a root check, so an unauthenticated
     // / caller must not be able to choose a destination. Only the file NAME is taken from
     // / the caller, & only its basename.
-    $ReportPath = rtrim((string)$LogDir, $DirSep).$DirSep.'HRConvert2-Supply-Chain-'.date('Y-m-d').'.csv';
+    $ReportPath = rtrim((string)$LogDir, $DirSep).$DirSep.engineApplicationName().'-Supply-Chain-'.date('Y-m-d').'.csv';
     if (trim((string)$outputPath) !== '') {
       $requestedName = basename(trim((string)$outputPath));
       if ($requestedName === '' or strtolower(pathinfo($requestedName, PATHINFO_EXTENSION)) !== 'csv') warningEntry('A supply chain report destination was ignored because it is not a csv file name. The default was used.');
@@ -1342,8 +1408,8 @@ function outputSupplyChain($outputPath) {
         warningEntry('A supply chain report destination named a directory. Only the file name was used & the report was written beside the logs.');
         $ReportPath = rtrim((string)$LogDir, $DirSep).$DirSep.$requestedName; }
       else $ReportPath = rtrim((string)$LogDir, $DirSep).$DirSep.$requestedName; }
-    $reportRows[] = array('HRConvert2 Supply Chain Audit');
-    $reportRows[] = array('Application version', (string)$HRConvertVersion, 'Manifest version', $detectedDependsVersion, 'Generated', (string)$Date);
+    $reportRows[] = array(engineApplicationName().' Supply Chain Audit');
+    $reportRows[] = array('Application version', engineApplicationVersion(), 'Manifest version', $detectedDependsVersion, 'Generated', (string)$Date);
     $reportRows[] = array('');
     $reportRows[] = array('Dependency', 'Package', 'Type', 'Installed Version', 'Minimum Required', 'Status', 'Required', 'Subsystem', 'Licence', 'Upstream Source', 'Purpose',
       'Reviewed By', 'Review Date', 'CVE Check Performed', 'Known Advisories', 'Licence Still Acceptable', 'Upstream Still Maintained', 'Action Required', 'Notes');

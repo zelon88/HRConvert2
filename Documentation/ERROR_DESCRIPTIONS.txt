@@ -6498,3 +6498,26 @@ ERROR NUMBER RESERVATION
   A conversion pipeline carries its own error block and keeps the numbers it had before it became a component.
   A new community pipeline must reserve a block in this file before using one.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! Engine-35000, <COMPONENT> cannot be loaded directly!
+
+FILE
+  /Resources/Engine/engine.php
+  /Resources/Engine/Cores/environmentCore.php
+  /Resources/Engine/Cores/setupCore.php
+  /Resources/Engine/Cores/dependencyCore.php
+  /Resources/Engine/Managers/*.php
+
+FATAL
+  YES
+
+LOGGED
+  NO
+
+ERROR DESCRIPTION
+  An Engine component was requested directly, rather than loaded by an application.
+  It prints Engine rather than an application name, because no application is loaded when it fires.
+  It names no entry point either, so a direct request learns nothing about the installation.
+  Nothing is wrong. Something asked for a file it should not have.
+---------------------------------------------------------------------------------------------------------

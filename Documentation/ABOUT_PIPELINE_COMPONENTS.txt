@@ -41,12 +41,12 @@ A PIPELINE FAMILY is the name a detachable pipeline converts under. Document, Im
 Ebook & so on. It is the key the interface groups conversion controls by.
 
 A SUBSYSTEM is the dependency a pipeline needs, named as depends.php names it. A family & a
-subsystem are NOT the same thing & four families currently name ffmpeg. Video & Subtitle
-reach it through their own pipelines while Audio & Stream are still built into the core, so
-one installation runs the same binary from two places. That is safe because
-verifyFFMPEGVersion() stays core owned & is the single gate all four pass through. A
-pipeline carrying its own copy of a dependency verifier would be the bug, because four
-copies eventually disagree about the minimum version.
+subsystem are NOT the same thing & four families name ffmpeg: Audio, Video, Subtitle &
+Stream, each through its own pipeline. That is safe because all four ask the manifest for
+it through verifiedToolPath(), so there is one minimum & one answer. A pipeline carrying
+its own version check would be the bug, because two checks eventually disagree about the
+minimum. That happened: config.php once held 4.0 for three of them while the manifest held
+6.1, until the manifest became the only owner.
 
 A PIPELINE IMPLEMENTATION is one folder serving one family. Two folders may serve the same
 family, which is how an alternative or a fallback implementation is supplied.
@@ -252,11 +252,13 @@ MODULES LOAD BEFORE THE CONVERTER THAT DECLARED THEM. A converter calling into a
 would otherwise be parsed & called before the functions it depends on exist.
 
 A DEPENDENCY VERIFIER DOES NOT BELONG IN A SHARED MODULE OR IN A PIPELINE.
-verifyLibreOfficeVersion(), verifyOCRVersions(), verifyImageVersion() & verifyFFMPEGVersion()
-all stay in convertCore.php, because showVersionInfo() reports on them whether or not any
-pipeline that uses them is installed. verifyDocumentConversionEngine() went into the shared
-module because it is not one of those. It starts & inspects an engine rather than reporting
-a version, & showVersionInfo() never calls it.
+Nor in convertCore.php. A tool's minimum version belongs to the manifest & nowhere else, &
+everything that needs to know asks it through verifiedToolPath(): every pipeline, the shared
+modules, showVersionInfo(), archiving & scanning. There were once twelve verify functions in
+the core, one per tool, each carrying its own copy of a minimum. They were retired when the
+manifest became the only owner. verifyDocumentConversionEngine() lives in the shared module
+because it is not a version check. It starts & inspects an engine rather than reporting a
+version, & showVersionInfo() never calls it.
 
 --The Six Contracts--
 
@@ -316,8 +318,9 @@ the ones to apply to the next.
 
 A helper moves with its pipeline when convertCore.php has no other caller for it. That is a
 mechanical test & it settled the great majority of cases without a judgement call.
-rectifySCAD() had no other caller & went with Scad. verifyArchiveVersions() is called by
-archiveFiles(), deleteFiles() & showVersionInfo(), so it stayed.
+rectifySCAD() had no other caller & went with Scad. verifyArchiveVersions() had callers
+outside its pipeline, so it stayed, until every tool's version moved to the manifest & it
+was retired along with the other eleven.
 
 showVersionInfo() runs whether or not a pipeline is installed. Anything it calls is
 therefore core owned by definition, which is why every verify*Version() function stayed

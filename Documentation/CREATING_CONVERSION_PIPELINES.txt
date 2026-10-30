@@ -193,7 +193,7 @@ Read these before writing code. They are preconditions, not steps.
   3d. Write the `ERROR_DESCRIPTIONS.txt` entries as you write the code.
   3e. An undocumented error number is worse than none. It looks documented.
 
-4. In `config.php` add the variables that govern `$MinimumDEPENDENCYVersion` & `$UserDEPENDENCYArray` where `DEPENDENCY` is what you're adding.
+4. In `config.php` add the format arrays `$UserDEPENDENCYArray`, where `DEPENDENCY` is what you're adding. Do not add a minimum version here. A tool's minimum belongs to the manifest, in step 6.
   4a. If you're adding any other variables, add them now.
   4b. A pipeline with different input & output format support needs two arrays.
   4c. Name those `$UserDEPENDENCYInputArray` & `$UserDEPENDENCYOutputArray`.
@@ -220,22 +220,32 @@ Read these before writing code. They are preconditions, not steps.
   5l. `verifyInputs()` is not involved unless you add a new POST or GET field.
   5m. That function sanitizes request input. It knows nothing about dependencies.
 
-6. Write a `verifyDEPENDENCYVersion()` accepting `$MinimumDEPENDENCYVersion`.
-  6a. THIS ONE STAYS IN `convertCore.php`, NOT IN YOUR PIPELINE FOLDER.
-  6b. `showVersionInfo()` reports on it whether or not your pipeline is installed, so a
-      dependency verifier is core owned by definition. Your pipeline calls into the core
-      for it, along with `sandboxCommand()`, `locateDependency()` & `getExtension()`.
-  6c. Obey Contract 1. Locate the binary, then return its path or FALSE.
-  6d. Anchor the version pattern on the product name.
-  6e. An unanchored pattern matches whatever number appears first in the banner.
-  6f. That first number is frequently a library version or a build date.
-  6g. Do not consult the exit code until you know the dependency uses it sensibly.
-  6h. Several dependencies print a good version banner while exiting non zero.
-  6i. Log the result under `$Verbose`. Report detected, required & the path in use.
-  6j. A pipeline needing two dependencies uses one function returning both paths.
-  6k. That function also returns an overall boolean describing the SUBSYSTEM.
+6. Add the dependency to the manifest & ask for it by name. Do not write a version check.
+  6a. The manifest is `Resources/Engine/Contract/depends.php`. It is the only owner of a
+      tool's minimum version. Nothing else holds one, so nothing can disagree with it.
+  6b. Give the entry a `MinimumVersion`, a `VersionCommand` & a `VersionPattern`. That is
+      everything a version check needs, & it is what `--setup --check-depends` already reads.
+  6c. Anchor the `VersionPattern` on the product name.
+  6d. An unanchored pattern matches whatever number appears first in the banner.
+  6e. That first number is frequently a library version or a build date.
+  6f. Set `Required` to FALSE if an installation can run without the tool. A missing optional
+      tool is logged rather than warned, so it does not fill the log on every request.
+  6g. In your pipeline, get the binary with `verifiedToolPath('Your Manifest Name')`.
+  6h. It returns a verified path, or FALSE, & FALSE means do not run. Obey Contract 1.
+  6i. It gives the same answer `--setup --check-depends` gives, including architecture
+      rules, version windows & the licence gates.
+  6j. Name every tool your pipeline needs in `$PipelineDependencies`, so
+      `--pipeline --check-depends` can report one the manifest does not have.
+  6k. A pipeline that carries its own version check, or calls one living in the application,
+      is not portable. It fails the first time it is copied into a different application.
+  6l. A pipeline needing several tools asks for each by name & decides for itself which it
+      cannot run without. The Archive pipeline is the example: RAR is optional, 7-Zip is not.
 
 7. Create `Resources/Pipelines/<Family>/` & write the two files it holds.
+  7a. Start by copying the existing pipeline closest to what you want. Ebook is small &
+      wraps one tool. Image adds a sandbox & dimensions. Archive handles several tools,
+      one of them optional. A working pipeline is a better example than any document,
+      because it has to keep running & so it cannot drift out of date.
   7a. Copy the closest existing pipeline. Ebook is the smallest & is the reference.
   7b. Copy `index.html` from any existing folder. Never write a new one.
   7c. `pipelineConfig.php` ASSIGNS VARIABLES & DOES NOTHING ELSE. No functions, no logic.
@@ -296,11 +306,15 @@ Read these before writing code. They are preconditions, not steps.
   9i. The loop skips a family when the input matches but the output does not.
   9j. That behavior lets overlapping families coexist without special cases.
 
-10. Update `showVersionInfo()` function, which fires when the `-v` or `--version` command line argument is set.
-  10a. Call your `verifyDEPENDENCYVersion()`. Add it to the globals line.
-  10b. Report OK or FAILED, alongside the minimum version required.
-  10c. Add a subsystem readiness line if your pipeline needs several tools.
-  10d. One dependency reporting OK does not mean the operations using it will run.
+10. Update `showVersionInfo()`, which runs when the `-v` or `--version` argument is set.
+  10a. Add a row to its tool table:
+       `'Tool, purpose' => array(toolPath('Name') !== FALSE, toolMinimum('Name'), TRUE)`.
+  10b. The last value is TRUE for a required tool & FALSE for an optional one.
+  10c. `toolPath()` & `toolMinimum()` both read the manifest, so `-v` reports exactly the
+       minimum your pipeline enforces. There is nothing to add to the globals line.
+  10d. Keep the row name under 28 characters, or it runs into the status column.
+  10e. Add a subsystem readiness line if your pipeline needs several tools.
+  10f. One dependency reporting OK does not mean the operations using it will run.
 
 11. Update all GUIs and language packs at the same time.
   11a. To ensure compatibility, GUIs and language packs can ONLY be updated in lock-step. All-or-nothing.

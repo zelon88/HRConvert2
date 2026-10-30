@@ -31,6 +31,6 @@
 // / -----------------------------------------------------------------------------------
 // / The version of this GUI pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, verifyGui() function.
-$GuiVersion = 'v3.9.6';
+$GuiVersion = 'v3.9.7';
 $GuiVersion = ltrim($GuiVersion, 'vV');
 // / -----------------------------------------------------------------------------------

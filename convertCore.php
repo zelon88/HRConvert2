@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.6.
+// / v3.9.7.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -781,7 +781,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
-  $HRConvertVersion = 'v3.9.6';
+  $HRConvertVersion = 'v3.9.7';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Handed to the Engine here, where it is defined, so there is only ever one copy.
   $EngineApplicationVersion = $HRConvertVersion;
@@ -795,7 +795,7 @@ function verifyInstallation() {
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / Gui version that do not exactly match the version listed below are not considered acceptable.
   // / This is because Guis are not always guaranteed to be forward or reverse compatible.
-  $RequiredGuiVersion = 'v3.9.6';
+  $RequiredGuiVersion = 'v3.9.7';
   $RequiredGuiVersion = ltrim($RequiredGuiVersion, 'vV');
   // / Define the minimum acceptable Language Pack version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
@@ -828,14 +828,14 @@ function verifyInstallation() {
   // / whose arguments have moved, or capabilities this core cannot honour.
   // / Raise this whenever a pipeline is added, removed, or its own version pin moves.
   // / The manager carries the pin list for every pipeline it accepts.
-  $RequiredPipelineCoreVersion = 'v3.9.6';
+  $RequiredPipelineCoreVersion = 'v3.9.7';
   // / The Engine version this application requires.
   // / This is an EXACT match & it is free, because the Engine is bundled with this release
   // / rather than installed beside it. The updater replaces both together, so the pin & the
   // / file it points at cannot drift apart on an installation nobody has edited by hand.
   // / An administrator who edits the Engine by hand loses the edit at the next update. That
   // / is the same bargain every bundled component makes.
-  $RequiredEngineVersion = 'v3.9.6';
+  $RequiredEngineVersion = 'v3.9.7';
   $RequiredEngineVersion = ltrim($RequiredEngineVersion, 'vV');
   $RequiredPipelineCoreVersion = ltrim($RequiredPipelineCoreVersion, 'vV');
   // / The bootstrap script version this core expects.
@@ -4739,7 +4739,7 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
 // / pack is required from inside this function. Nothing outside this call can read them.
 function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   // / Set variables.
-  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $LanguageBaselineFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $Verbose, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth, $LogoURL, $ResolvedLogoURL;
+  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $LanguageBaselineFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ImageOutputArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $Verbose, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth, $LogoURL, $ResolvedLogoURL;
   $GUIDisplayed = FALSE;
 
   $guiUIFile = $GuiUI1File;
@@ -5070,10 +5070,10 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
   global $Verbose, $VirusScan, $Lol, $Lolol, $EnableMemoryProtection;
   $ArchiveComplete = $ArchiveErrors = $virusFound = $skip = $variableIsSanitized = FALSE;
   $fileIsVerified = $scanComplete = $sandboxIsAvailable = $anyFileSucceeded = $loopCheck = FALSE;
-  $archiveToolsAreValid = FALSE;
+  $archiveToolsAreValid = $archiveWasStarted = FALSE;
   $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = FALSE;
   $clean = $copy = TRUE;
-  $returnData = $file = $pathname = $oldPathname = $oldExtension = $newPathname = $archiveCommand = '';
+  $returnData = $file = $pathname = $oldPathname = $oldExtension = $newPathname = $archiveCommand = $resolvedFilename = '';
   $rararr = array('rar');
   $ziparr = array('zip');
   $tararr = array('7z', 'tar', 'tar.gz', 'tar.bz2');
@@ -5087,6 +5087,14 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
   $archiveToolsAreValid = ($sevenZipBinary !== FALSE && $zipBinary !== FALSE && $tarBinary !== FALSE && $mkisofsBinary !== FALSE);
   // / Make sure the input files are formatted into an array.
   if (!is_array($FilesToArchive)) $FilesToArchive = array($FilesToArchive);
+  // / Every other archiver here adds a file to an archive that already exists, which is how a
+  // / selection of files becomes one archive. Mkisofs replaces the image it is given instead,
+  // / so a second file would leave an image holding only the last one. That is refused rather
+  // / than written, because an image quietly missing most of its files is worse than none.
+  if (count($FilesToArchive) > 1 && in_array($UserExtension, $isoarr)) {
+    $ArchiveErrors = TRUE;
+    $FilesToArchive = array();
+    errorEntry('An iso image holds one file at a time, so a selection of files cannot be archived into one!', 4005, FALSE); }
   // / Iterate through the array of input files.
   foreach ($FilesToArchive as $file) {
     $loopCheck = FALSE;
@@ -5098,11 +5106,18 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
       errorEntry('Could not sanitize the input file!', 4000, FALSE);
       continue; }
     // / Set the $clean & $copy arguments for the verifyFiles() function as needed.
-    if (count($FilesToArchive) > 1) $clean = FALSE;
+    // / The first file clears any archive of this name left by an earlier run. Every file
+    // / after it adds to the archive that first file created, so the clean must not run again
+    // / or each file would delete the archive holding the files before it.
+    $clean = ($archiveWasStarted === FALSE);
     $copy = TRUE;
     if ($Verbose) logEntry('User selected to Archive file '.$file.'.');
     // / Verify the file before performing any operations on it.
-    list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname, $UserFilename) = verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip);
+    // / verifyFile returns the name with the extension appended. Assigning that back to
+    // / $UserFilename handed the next file a name that already carried one, so the second file
+    // / became name.zip.zip & the third name.zip.zip.zip, each writing an archive of its own.
+    // / Only the first was ever offered for download, so nine files were delivered as one.
+    list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname, $resolvedFilename) = verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip);
     if (!$fileIsVerified) {
       $ArchiveErrors = TRUE;
       errorEntry('Could not verify the input file.', 4001, FALSE);
@@ -5157,8 +5172,9 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
       errorEntry('Could not archive file '.$pathname.' to '.$newPathname.'!', 4004, FALSE); }
     else {
       $loopCheck = TRUE;
+      $archiveWasStarted = TRUE;
       // / Output the filename of the converted file to the UI so it can be given to the user.
-      print($UserFilename.$Lol);
+      print($resolvedFilename.$Lol);
       if ($Verbose) logEntry('Archived file '.$pathname.' to '.$newPathname.'.'); }
     // / Record that at least one file in this request succeeded.
     // / $loopCheck is reset on every iteration, so without this the result would reflect
@@ -5166,7 +5182,7 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
     if ($loopCheck) $anyFileSucceeded = TRUE; }
   if ($anyFileSucceeded) $ArchiveComplete = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $file, $rararr, $ziparr, $tararr, $isoarr, $pathname, $oldPathname, $scanComplete, $virusFound, $returnData, $variableIsSanitized, $fileIsVerified, $oldExtension, $clean, $copy, $skip, $loopCheck, $anyFileSucceeded, $archiveCommand, $sandboxIsAvailable, $archiveToolsAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $FilesToArchive, $UserFilename, $UserExtension);
+  purgeSensitiveMemory($EnableMemoryProtection, $archiveWasStarted, $resolvedFilename, $file, $rararr, $ziparr, $tararr, $isoarr, $pathname, $oldPathname, $scanComplete, $virusFound, $returnData, $variableIsSanitized, $fileIsVerified, $oldExtension, $clean, $copy, $skip, $loopCheck, $anyFileSucceeded, $archiveCommand, $sandboxIsAvailable, $archiveToolsAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $FilesToArchive, $UserFilename, $UserExtension);
   return array($ArchiveComplete, $ArchiveErrors, $newPathname); }
 // / -----------------------------------------------------------------------------------
 
@@ -6291,12 +6307,12 @@ if (!$CommandLineHandled && $UserType === 'web') {
 
     // / The following code removes old files from the $ConvertTempDir.
     list ($CleanedTempLoc, $TempLocDeepCleaned) = cleanDataLocation($ConvertTempDir, 'Temporary files', $DeleteThreshold, $ProtectedRootDirs, array($ConvertTempDir));
-    if (!$CleanedTempLoc) errorEntry('Could not clean the temporary location!', 13, TRUE);
+    if (!$CleanedTempLoc) warningEntry('Could not fully clean the temporary location. Some expired sessions may remain & will be retried next request. Serving this request anyway.');
     else if ($Verbose) logEntry('Cleaned temporary location.');
 
     // / The following code removes old files from the $ConvertLoc.
     list ($CleanedConvertLoc, $ConvertLocDeepCleaned) = cleanDataLocation($ConvertLoc, 'Data location', $DeleteThreshold, $ProtectedRootDirs, array($ConvertLoc));
-    if (!$CleanedConvertLoc) errorEntry('Could not clean the convert location!', 14, TRUE);
+    if (!$CleanedConvertLoc) warningEntry('Could not fully clean the data location. Some expired sessions may remain & will be retried next request. Serving this request anyway.');
     else if ($Verbose) logEntry('Cleaned convert location.');
 
     // / The following code displays the appropriate GUI for the session.

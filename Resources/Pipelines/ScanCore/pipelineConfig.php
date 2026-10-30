@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.9.3.
+// / v3.9.7.
 // / This file declares the ScanCore scanner pipeline.
 // /
 // / ScanCore ships inside this application rather than being installed on the host, so it
@@ -32,7 +32,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / -----------------------------------------------------------------------------------
 // / The version of this pipeline folder. Read WITHOUT executing this file, then matched
 // / EXACTLY against the pin in getAcceptedPipelines().
-$PipelineVersion = 'v3.9.3';
+$PipelineVersion = 'v3.9.7';
 
 // / A scanner inspects a file & reports on it. It changes nothing.
 $PipelineKind = 'scanner';
@@ -69,6 +69,11 @@ $PipelineUsage = array('cli', 'web', 'gui');
 $PipelineRequestFields = array();
 
 $PipelineSharedModules = array();
+
+// / ScanCore is bundled rather than installed, so there is no binary to look for & nothing
+// / for verifiedToolPath to find. The dependency is declared here instead, which is how the
+// / approval record & --check-depends learn that this pipeline uses it.
+$PipelineDependencies = array('ScanCore');
 // / -----------------------------------------------------------------------------------
 
 

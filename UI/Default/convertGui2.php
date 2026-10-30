@@ -983,7 +983,9 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <p><?php echo $Gui2Text17; ?><input type="text" id='userphotofilename<?php echo $ConvertGuiCounter1; ?>' name='userphotofilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='photoextension<?php echo $ConvertGuiCounter1; ?>' name='photoextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="jpg"><?php echo $Gui2Text18; ?></option>
-            <?php foreach ($ImageArray as $gui2ImaArr) { ?>
+            <?php // / The converter accepts the output list & refuses anything else with error 5006.
+                  // / Offering the combined list here advertised eleven formats it rejects. ?>
+            <?php foreach ($ImageOutputArray as $gui2ImaArr) { ?>
             <option value="<?php echo $gui2ImaArr; ?>"><?php echo $gui2ImaArr; ?></option>
             <?php } ?>
           </select></p>

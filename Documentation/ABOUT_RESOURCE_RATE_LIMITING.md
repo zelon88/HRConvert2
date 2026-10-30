@@ -185,6 +185,11 @@ The `--Additional Data Locations` flag allows adding further pools, declared as 
 | leastactive  | If any location uses this, the entire pool selects paths based on the fewest active sessions. |
 | redundant    | Acts as a strict standby; it takes a session only when every other location is completely unusable. |
 
+⚠️ **`--Convert Location` is always a pool member, and always its primary.** Never declare it
+under `--Additional Data Locations`. It joins the distribution and is swept on the same schedule
+as every other member. A second declaration of the same path is skipped as a duplicate and the
+strategy named on it is discarded, so declare each location exactly once.
+
 ⚠️ **Sticky Sessions:** A session is assigned a location once and keeps it for its lifecycle. Load balancing occurs at the session level, not at individual conversions.
 
 ---
@@ -201,6 +206,12 @@ The listener hosts the session-to-location map so every front-end sharing the in
 ---
 
 ## 🧹 About Scheduled Storage Cleanup
+
+⚠️ **A location missing from the sweep keeps its expired sessions forever.** Nothing else deletes
+them. The clean calls in `convertCore.php` only sweep the location the running request was
+assigned, so a location receiving no sessions is never reached by those either. Run the Resource
+Manager with `--Verbose` and read the `Scheduled sweep` lines to confirm every location you
+configured is listed.
 
 The Resource Manager sweeps each configured data location every `--Storage Cleanup Interval` seconds, deleting files older than `--File Deletion Age Threshold`.
 

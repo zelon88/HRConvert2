@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.8.9.
+v3.9.7.
 This plain text file contains descriptions of all the native error messages contained in or produced by the HRConvert2 Diablo engine. 
 These descriptions should give administrators a starting point for debugging problems with HRConvert2 installations. 
 Each section in this file contains information about a different error message. The first one is an example to demonstrate the structure of this file.
@@ -996,12 +996,15 @@ ERROR DESCRIPTION
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13, <SESSION_IDENTIFIER>: Could not clean the temporary location!
+  RETIRED. This number is no longer raised. A failure to sweep expired sessions from the temporary location
+  is now a warning that serves the request rather than halting it, so one un-removable object left by another
+  session cannot take the instance offline. The number is reserved & not reused.
 
 FILE
   convertCore.php
 
 FATAL
-  YES
+  NO
 
 LOGGED
   YES
@@ -1018,12 +1021,15 @@ ERROR DESCRIPTION
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14, <SESSION_IDENTIFIER>: Could not clean the convert location!
+  RETIRED. This number is no longer raised. A failure to sweep expired sessions from the data location is now
+  a warning that serves the request rather than halting it, so one un-removable object left by another session
+  cannot take the instance offline. The number is reserved & not reused.
 
 FILE
   convertCore.php
 
 FATAL
-  YES
+  NO
 
 LOGGED
   YES
@@ -1960,6 +1966,30 @@ ERROR DESCRIPTION
   The user has requested to convert a file that was deleted for exceededing the --File Deletion Age Theshold-- specified in config.php.
   The conversion operation failed to produce an output file.
   Other errors preceding this error will help narrow down the cause of this error.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4005, <SESSION_IDENTIFIER>: An iso image holds one file at a time, so a selection of files cannot be archived into one!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A selection of more than one file was sent to be archived & the requested output was an iso
+  image. Nothing was written & no image was produced.
+  Every other archiver offered here adds a file to an archive that already exists, which is how
+  a selection of files becomes one archive. Mkisofs replaces the image it is given instead, so
+  the second file would leave an image holding only the last one.
+  Archive the selection as zip, 7z, tar or rar, or archive one file at a time as iso.
+  A single file to iso is unaffected & is not this error.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -3218,6 +3248,34 @@ ERROR DESCRIPTION
   format. RAR 7.00 defaults to a compression method that older extractors report as
   unsupported, & without -ma4 this application produced archives it could not itself
   extract on the very next request.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13014, <SESSION_IDENTIFIER>: The extracted archive could not be checked for unsafe links, so it was not re-archived!
+
+FILE
+  Resources/Pipelines/Archive/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Every archive is extracted into a staging folder & that folder is walked before it is
+  re-archived, so that a link which does not resolve to a file inside it can be removed.
+  This error means the walk could not finish, so the folder holds links this conversion
+  cannot account for & it is refused rather than packaged.
+  The archive is not produced. Nothing is sent to the user.
+  The walk fails when the staging folder cannot be resolved, or when a link that has to be
+  removed cannot be unlinked. Both point at file permissions on the data location rather
+  than at the archive that was uploaded.
+  The www-data:www-data user:group needs read & write access to the data location.
+  A link that is simply removed is not this error. That is a warning carrying a count, & the
+  conversion continues normally.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 

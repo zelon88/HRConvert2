@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.6.
+// / v3.9.7.
 // / This file is the converter for the Archive pipeline. It is loaded by pipelineCore.php
 // / ONLY when a Archive conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
@@ -215,6 +215,62 @@ function generateBootableIsoCommand($extension, $newPathname, $safedir2, $mkisof
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to remove every link in an extracted archive that does not resolve inside it.
+// / Accepts the folder to walk & the approved root that a link must resolve inside.
+// / Returns whether the walk finished & how many links it removed.
+// / An archive member may be a link, & the extractor restores it exactly as it was written.
+// / A link that resolves to a file inside the extracted folder is ordinary archive content
+// / & is kept. Every other link is removed, which settles four problems with one rule.
+// / A link reaching outside is followed by the archiver, so an archive carrying a link to
+// / /etc/passwd would otherwise copy that file into the archive the user downloads.
+// / A link that resolves nowhere is neither a file nor a directory, so it would otherwise
+// / survive cleanup & leave behind a directory that cannot be removed.
+// / A link to a directory is removed even when it resolves inside, because every archiver
+// / used here follows one. A link to its own folder or to one above it makes a cycle that the
+// / archiver walks until the path is too long, & any link to a folder repeats that folder's
+// / files under a second name. Zip abandons the whole archive in both cases, & neither adds
+// / anything the output does not already hold.
+// / The walk tests for a link before descending, so it never follows one itself. realpath
+// / resolves a whole chain, so a link to a link to an outside target resolves outside & is
+// / removed, & a chain that cannot be resolved at all returns FALSE & is removed.
+function pruneEscapingLinks($stagingPath, $approvedRoot) {
+  // / Set variables.
+  global $DirSep, $EnableMemoryProtection;
+  $WalkCompleted = TRUE;
+  $LinksRemoved = 0;
+  $defaultApps = array('.', '..');
+  $directoryContents = array();
+  $directoryEntry = $childPath = '';
+  $resolvedTarget = $resolvedRoot = FALSE;
+  $childIsContained = FALSE;
+  $childWalkCompleted = TRUE;
+  $childLinksRemoved = 0;
+  $resolvedRoot = realpath($approvedRoot);
+  // / A root that will not resolve is not a root this walk may act under.
+  if ($resolvedRoot === FALSE or !is_dir($stagingPath)) $WalkCompleted = FALSE;
+  else {
+    $directoryContents = array_diff(scandir($stagingPath), $defaultApps);
+    foreach ($directoryContents as $directoryEntry) {
+      $childPath = $stagingPath.$DirSep.$directoryEntry;
+      // / A link is judged by where it resolves & is never followed by this walk.
+      if (is_link($childPath)) {
+        $resolvedTarget = realpath($childPath);
+        $childIsContained = ($resolvedTarget !== FALSE && ($resolvedTarget === $resolvedRoot or strpos($resolvedTarget, $resolvedRoot.$DirSep) === 0) && is_file($resolvedTarget));
+        if (!$childIsContained) {
+          logEntry('Removing archive member link '.$directoryEntry.' because it does not resolve to a file inside the extracted folder.');
+          if (@unlink($childPath)) $LinksRemoved = $LinksRemoved + 1;
+          else $WalkCompleted = FALSE; } }
+      // / A real directory is descended into. A link to a directory was handled above.
+      else if (is_dir($childPath)) {
+        list ($childWalkCompleted, $childLinksRemoved) = pruneEscapingLinks($childPath, $approvedRoot);
+        if (!$childWalkCompleted) $WalkCompleted = FALSE;
+        $LinksRemoved = $LinksRemoved + $childLinksRemoved; } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $stagingPath, $approvedRoot, $defaultApps, $directoryContents, $directoryEntry, $childPath, $resolvedTarget, $resolvedRoot, $childIsContained, $childWalkCompleted, $childLinksRemoved);
+  return array($WalkCompleted, $LinksRemoved); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to convert archive & disk image formats.
 // / The source is extracted into a staging folder & the staging folder is re-archived.
 // / 7-Zip is the only extractor, so every INPUT format depends on it & nothing works
@@ -239,6 +295,8 @@ function convertArchives($pathname, $newPathname, $extension) {
   $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = $isoHybridBinary = FALSE;
   $returnData = $extractCommand = $archiveCommand = $hybridCommand = $UserFilename = '';
   $stopper = 0;
+  $linkWalkCompleted = TRUE;
+  $linksRemoved = 0;
   $sleepTime = $SleepTimer;
   $oldExtension = getExtension($pathname);
   $archiveError = 13000;
@@ -281,8 +339,21 @@ function convertArchives($pathname, $newPathname, $extension) {
       else $returnData = shell_exec($extractCommand); }
     // / Log the output of the extract operation to the logfile, if it is not blank.
     if ($Verbose && trim($returnData) !== '') logEntry('The extractor returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+    // / Links are pruned before anything else reads the staging folder, because every later
+    // / step follows them. The archiver copies the bytes of whatever a link points at, & the
+    // / cleanup that follows this conversion cannot remove a link that resolves nowhere.
+    // / This runs before the empty test below on purpose. An archive whose only member was an
+    // / unsafe link leaves an empty folder & is then refused as an extraction that produced nothing.
+    if ($extractCommand !== '' && is_dir($safedir2)) {
+      list ($linkWalkCompleted, $linksRemoved) = pruneEscapingLinks($safedir2, $safedir2);
+      if ($linksRemoved > 0) warningEntry('Removed '.$linksRemoved.' link(s) from the extracted archive because they did not resolve to a file inside it.'); }
+    // / A walk that could not finish leaves links this conversion cannot account for, so the
+    // / archive is refused rather than packaged while it may still reach outside the folder.
+    if ($extractCommand !== '' && !$linkWalkCompleted) {
+      $ConversionErrors = TRUE;
+      errorEntry('The extracted archive could not be checked for unsafe links, so it was not re-archived!', 13014, FALSE); }
     // / An extraction that produced nothing must not be re-archived.
-    if ($extractCommand !== '' && is_dir_empty($safedir2)) {
+    else if ($extractCommand !== '' && is_dir_empty($safedir2)) {
       $ConversionErrors = TRUE;
       errorEntry('The extractor produced no files from the source archive!', 13007, FALSE); }
     else {
@@ -379,7 +450,7 @@ function convertArchives($pathname, $newPathname, $extension) {
   // / The second argument is the list of roots this call may clean under & is required.
   cleanFiles($safedir2, array($safedir2));
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $filename, $safedir2, $oldExtension, $returnData, $pathname, $array7zo, $arrayzipo, $array7zo2, $array7zo3, $arraytaro, $arrayraro, $sleepTime, $stopper, $extractCommand, $archiveCommand, $hybridCommand, $archiveError, $commandMayRun, $archiveToolsAreValid, $bootloadersAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary);
+  purgeSensitiveMemory($EnableMemoryProtection, $linkWalkCompleted, $linksRemoved, $filename, $safedir2, $oldExtension, $returnData, $pathname, $array7zo, $arrayzipo, $array7zo2, $array7zo3, $arraytaro, $arrayraro, $sleepTime, $stopper, $extractCommand, $archiveCommand, $hybridCommand, $archiveError, $commandMayRun, $archiveToolsAreValid, $bootloadersAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $UserFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

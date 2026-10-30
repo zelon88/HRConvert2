@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.9.6.
+v3.9.7.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -26,6 +26,53 @@ Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+
+--------------------
+COMMIT 10/30/2026
+v3.9.7 - A link in an uploaded archive can no longer block cleanup, reach outside its folder, or halt a request.
+
+-v3.9.7.
+-Thanks to Github user @dagadjno for filing a security advisory that lead to the hardening of file cleanup & archive extraction.
+  -https://github.com/dagadjno
+  -https://github.com/zelon88/HRConvert2/security/advisories/GHSA-mqqw-cx3x-cf7w
+  -GHSA-mqqw-cx3x-cf7w
+  -dagadjno determined that a link member restored from an uploaded archive is neither a file nor a directory, so cleanup skipped it, the directory holding it could not be removed & every later request failed with error 14.
+  -Their POC & the reproduction steps they supplied are what the fixes in this release were built & tested against.
+-cleanFiles removes a symlink by the link itself, tested before is_file & is_dir so a link is never followed. A link to a directory can no longer walk the cleaner out of its approved tree, & a dangling link is no longer skipped.
+-cleanFiles removes a FIFO, socket or device node rather than skipping it, so no non-directory object can survive the sweep & leave the parent directory un-removable.
+-The cleanDataLocation sweep removes a link of any kind by its own path & skips an entry whose real path will not resolve, so a planted dangling link cannot survive it.
+-A failure to sweep OTHER expired sessions is now a warning that serves the request, not a fatal error, so one un-removable object cannot take the whole instance offline for every visitor.
+-Errors 13 & 14 are retired to warnings. The numbers are reserved & not reused.
+-The Archive pipeline prunes the staging folder after extraction & keeps only a link that resolves to a file inside it.
+-A link reaching outside is removed, so an uploaded archive carrying a link to /etc/passwd can no longer copy that file into the archive the user downloads.
+-A link that resolves nowhere is removed at extraction, so it never reaches cleanup in the first place.
+-A link to a directory is removed even when it resolves inside. Zip follows one & abandons the whole archive, either by walking a cycle until the path is too long or by repeating a name under -j.
+-A staging folder that cannot be walked refuses the conversion with new error 13014 rather than being archived unchecked.
+-Rewrite ABOUT_DEPENDENCIES.txt. It described a world before the manifest & named paths that no longer exist.
+-Every pipeline ships a DEPENDENCY_APPROVALS.txt holding the approval record & the audit questions for the dependencies it uses.
+-A pipeline is detachable, so the record of what it depends on travels with it rather than living in a central list it would be separated from.
+-Dependencies the application needs in order to run at all are recorded once in Documentation/DEPENDENCY_APPROVALS.txt.
+-Add Documentation/Build/hrconvert2-approvals.py. It writes the facts from the manifest, keeps every answer a person wrote, & reports gaps & expiries with --check.
+-The ScanCore pipeline declares $PipelineDependencies. It is bundled rather than installed, so nothing could infer it & its dependency went unrecorded.
+-No audit answer & no approval date is filled in anywhere. Nothing has been audited & the records say so.
+-Every pipeline ships a README.md saying what it is, what formats it handles & which dependencies it uses, with a pointer to its approval record.
+-The approvals tool writes those READMEs with --readme. A README holds no judgement, so it is rewritten rather than merged.
+-CREATING_CONVERSION_PIPELINES.txt lists both documents among the files a pipeline folder holds.
+-FIX. enumerateDataLocations blanked its own $primaryPath parameter before reading it, so the configured --Convert Location-- was dropped from every pool it built.
+-The slot was filled by $ConvertLoc instead, which a web request has already reassigned to whichever pool location the listener handed out.
+-On a pooled installation the configured primary was therefore never swept, never received a session, & the type declared on whichever location took its place was skipped as a duplicate.
+-Expired sessions in that location were kept forever, because nothing else sweeps a location no session is assigned to.
+-Found by field testing v3.9.7 against a four location pool. It predates this release.
+-ABOUT_RESOURCE_RATE_LIMITING.txt states that --Convert Location-- is always the primary pool member & is always swept.
+-FIX. archiveFiles assigned the name verifyFile returns back onto the name it passes in, & verifyFile appends the extension to it.
+-The second file therefore became name.zip.zip & the third name.zip.zip.zip, each writing an archive of its own holding one file.
+-Only the first archive was ever offered for download, so a selection of nine files was delivered as one with nothing logged as a failure.
+-The resolved name is now kept separately, so every file is added to one archive under the name the user asked for.
+-The first file clears an archive of that name left by an earlier run & every file after it adds to the archive the first one created.
+-A selection of more than one file requested as iso is refused with new error 4005. Mkisofs replaces an image rather than adding to it.
+-FIX. The image output menu offered the combined format list while the converter accepts the output list, so it advertised eleven formats it refuses with error 5006.
+-Both interfaces now offer $ImageOutputArray. Model & Drawing were checked & already agree.
+-Stamp both interfaces v3.9.7 & raise $RequiredGuiVersion to match, because an interface pin is exact.
 
 --------------------
 COMMIT 9/22/2026
@@ -71,7 +118,6 @@ v3.9.6 - Every pipeline is portable. The docs follow the manifest.
 -Stamp Setup Core & Dependency Core v3.9.6.
 -Stamp the Engine v3.9.6. It had changed since v3.9.3 without a version bump.
 -Stamp 11 pipelines & the Pipeline Core v3.9.6.
--I've been dealing with a personal matter lately, keep my in your thoughts please!
 
 --------------------
 COMMIT 9/22/2026

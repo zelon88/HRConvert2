@@ -1,0 +1,19 @@
+------------------------------------------------------------------------------------------------------------------
+DEPENDENCY APPROVAL RECORD
+The File Operations pipeline.
+
+Written by Documentation/Build/hrconvert2-approvals.py v3.9.7.
+Every factual field is read from the dependency manifest & is rewritten by that tool.
+Every audit answer is written by a person & is kept across a refresh.
+The procedure these questions come from is in Documentation/ABOUT_DEPENDENCIES.txt.
+
+These are the dependencies this pipeline uses. The list is worked out from the
+tools the pipeline asks for by name, from whether it isolates a command, & from the
+subsystem it declares. A pipeline is detachable, so this record travels with it.
+------------------------------------------------------------------------------------------------------------------
+
+This pipeline uses no dependency outside the application itself.
+There is nothing here to audit. The dependencies the application needs to run at
+all are recorded in Documentation/DEPENDENCY_APPROVALS.txt.
+
+------------------------------------------------------------------------------------------------------------------

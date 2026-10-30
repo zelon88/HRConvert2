@@ -13,7 +13,7 @@
 // / that carries it.
 // /
 // / File Information ...
-// / v3.9.6.
+// / v3.9.7.
 // / This file is the Engine. It provides the environment an application runs in.
 // / It is pinned EXACTLY by the application via $RequiredEngineVersion.
 // / Error block 35000 through 35019 reserved. None are used yet.
@@ -54,7 +54,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 
 // / -----------------------------------------------------------------------------------
 // / The version of this Engine. Read by the application WITHOUT executing this file.
-$EngineVersion = 'v3.9.6';
+$EngineVersion = 'v3.9.7';
 // / -----------------------------------------------------------------------------------
 
 
@@ -542,14 +542,23 @@ function cleanFiles($path, $allowedRoots) {
       $childPath = $path.$DirSep.$dirEntry;
       // / Protected file objects are never touched at any depth.
       if (in_array(basename($childPath), $defaultApps)) continue;
+      // / A link of any kind is removed without being followed, & this test comes first because
+      // / is_file() & is_dir() both follow a link. A link to a directory would otherwise be
+      // / recursed into & walk this cleaner out of the approved tree, & a dangling link is
+      // / neither a file nor a directory, so it would be skipped & then block the parent rmdir.
+      if (is_link($childPath)) @unlink($childPath);
       // / If the selected file object is a file, delete it.
-      if (is_file($childPath)) @unlink($childPath);
+      elseif (is_file($childPath)) @unlink($childPath);
       // / If the selected file object is an empty directory, remove it outright.
       elseif (is_dir($childPath) && is_dir_empty($childPath)) @rmdir($childPath);
       // / If the selected file object is a directory with contents, recurse into it.
       // / A failure anywhere below must propagate up, so $loopCheck is never reset to TRUE here.
       elseif (is_dir($childPath)) {
-        if (!cleanFiles($childPath, $allowedRoots)) $loopCheck = FALSE; } }
+        if (!cleanFiles($childPath, $allowedRoots)) $loopCheck = FALSE; }
+      // / A file object that is neither a link, a file nor a directory is a FIFO, a socket or a
+      // / device node. It is removed rather than skipped, so no such object can survive the sweep
+      // / & leave the parent directory un-removable.
+      else @unlink($childPath); }
     // / Once all file objects in the selected directory have been deleted, attempt to delete the selected directory.
     // / The containment check above already prevents reaching any approved root, but this
     // / explicit comparison is retained so the intent survives any future change to that check.
@@ -688,7 +697,14 @@ function enumerateDataLocations($primaryPath, $activePath, $additionalLocations)
   global $DirSep, $EnableMemoryProtection;
   $DataLocationPool = array();
   $additionalEntry = $seenPaths = array();
-  $entryPath = $entryType = $primaryPath = '';
+  $entryPath = $entryType = '';
+  // / $primaryPath is a PARAMETER & is deliberately not initialized here. Blanking it on
+  // / this line discarded the configured primary location before the line below could read
+  // / it, so the fallback to $activePath always fired. $activePath is $ConvertLoc, which a
+  // / web request has already reassigned to whichever pool location the listener handed out.
+  // / The configured primary was therefore absent from every pool this function built, so it
+  // / was never swept & never received a session, & the type declared on whichever location
+  // / did occupy the primary slot was dropped as a duplicate.
   // / $primaryPath holds the configured value & is set once, before $activePath is
   // / narrowed to the location this session actually uses.
   // / The caller passes the configured primary & the location this session settled on.
@@ -856,6 +872,12 @@ function cleanDataLocation($dataLoc, $locationName, $deleteThreshold, $protected
             $iterator = new RecursiveIteratorIterator($directoryIterator, RecursiveIteratorIterator::CHILD_FIRST);
             foreach ($iterator as $fileObject) {
               $realPath = $fileObject->getRealPath();
+              // / A link of any kind is removed by its own path, never its target, & this comes
+              // / first because getRealPath() returns FALSE for a dangling link & isDir() follows
+              // / a link. Without this a planted link survives the sweep & blocks the parent rmdir.
+              if ($fileObject->isLink()) { @unlink($fileObject->getPathname()); continue; }
+              // / A non-link whose real path will not resolve is nothing this sweep can act on.
+              if ($realPath === FALSE) continue;
               @chmod($realPath, 0777);
               // / Strip system restrictions (immutable/append-only flags) from every object universally.
               @shell_exec("chattr -i -a " . escapeshellarg($realPath) . " 2>&1");

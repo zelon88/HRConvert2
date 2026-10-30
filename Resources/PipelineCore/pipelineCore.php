@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.6.
+// / v3.9.7.
 // / This file is the Pipeline Core component. It owns the detachable conversion
 // / pipelines, their version pins, their capability declarations & their dispatch.
 // / It is pinned EXACTLY by convertCore.php via $RequiredPipelineCoreVersion.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by convertCore.php WITHOUT executing this file.
-$PipelineCoreVersion = 'v3.9.6';
+$PipelineCoreVersion = 'v3.9.7';
 // / -----------------------------------------------------------------------------------
 
 
@@ -64,12 +64,12 @@ function getAcceptedPipelines() {
     'Video' => 'v3.9.6',
     'Ebook' => 'v3.9.6',
     'Audio' => 'v3.9.6',
-    'Archive' => 'v3.9.6',
+    'Archive' => 'v3.9.7',
     // / Scanner pipelines. They declare no formats & are chosen by name.
     'ClamAV' => 'v3.9.5',
     // / The first pipeline of kind file. Operations that do not care what is in a file.
     'Files' => 'v3.9.3',
-    'ScanCore' => 'v3.9.3');
+    'ScanCore' => 'v3.9.7');
   return $AcceptedPipelines; }
 // / -----------------------------------------------------------------------------------
 

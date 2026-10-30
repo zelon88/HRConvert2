@@ -55,7 +55,15 @@ installed pipeline reports error 34005 rather than falling back to anything.
   `Resources/PipelineCore/pipelineCore.php`         Pipeline Core. Pins & dispatches.
   `Resources/Pipelines/<Family>/pipelineConfig.php` What a pipeline declares.
   `Resources/Pipelines/<Family>/pipeline.php`       The converter itself.
+  `Resources/Pipelines/<Family>/README.md`          What the pipeline is & what it depends on.
+  `Resources/Pipelines/<Family>/DEPENDENCY_APPROVALS.txt`  Whether those dependencies are approved.
   `Resources/Pipelines/Shared/<name>.php`           Code two pipelines both need.
+
+THE LAST TWO ARE WRITTEN BY A TOOL & ARE NOT EDITED BY HAND.
+A pipeline is detachable, so the record of what it depends on travels with it. Run
+`python3 Documentation/Build/hrconvert2-approvals.py` after adding a pipeline, then `--readme`.
+The only part a person writes is the audit answers in the approval record.
+See `ABOUT_DEPENDENCIES.txt`.
 
 This document is the PROCEDURE. `ABOUT_PIPELINE_COMPONENTS.txt` is the CONTRACT.
 Read that one first. It describes the six contracts, the version pinning, the difference

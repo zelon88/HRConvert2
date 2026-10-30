@@ -1,0 +1,101 @@
+------------------------------------------------------------------------------------------------------------------
+DEPENDENCY APPROVAL RECORD
+The OpenSCAD pipeline.
+
+Written by Documentation/Build/hrconvert2-approvals.py v3.9.7.
+Every factual field is read from the dependency manifest & is rewritten by that tool.
+Every audit answer is written by a person & is kept across a refresh.
+The procedure these questions come from is in Documentation/ABOUT_DEPENDENCIES.txt.
+
+These are the dependencies this pipeline uses. The list is worked out from the
+tools the pipeline asks for by name, from whether it isolates a command, & from the
+subsystem it declares. A pipeline is detachable, so this record travels with it.
+------------------------------------------------------------------------------------------------------------------
+
+--Bubblewrap--
+
+  Approval record
+    Status                                      NOT YET AUDITED
+    Approved on                                 NOT YET AUDITED
+    Expires on                                  NOT YET AUDITED
+    Audited by                                  NOT YET AUDITED
+    Audit outcome                               NOT YET AUDITED
+
+  Manifest facts, read from Resources/Engine/Contract/depends.php
+    Binary                                      bwrap
+    Install type                                apt
+    Package                                     bubblewrap
+    Minimum version                             0.4
+    Required                                    YES
+    Subsystem                                   Sandbox
+    License                                     LGPL-2.0
+    Depends on                                  -
+    Source                                      https://github.com/containers/bubblewrap
+    Purpose                                     Isolates every conversion from the host & the network.
+
+  Audit answers. Every one is a judgement a person records here.
+    1a Security design is amenable to ours      NOT YET ANSWERED
+    1b Recent CVEs, issues or exploits          NOT YET ANSWERED
+    1c Development activity & breakage risk     NOT YET ANSWERED
+    1d What it needs to function                NOT YET ANSWERED
+    1e Can it be sandboxed or isolated          NOT YET ANSWERED
+    1f Security options & hardened configurationNOT YET ANSWERED
+    1g Could another dependency do this better  NOT YET ANSWERED
+    1h Origin & supply chain risk               NOT YET ANSWERED
+    1i Dependency traps for existing installs   NOT YET ANSWERED
+    2a System package versus a source build     NOT YET ANSWERED
+    2b Build flags, libraries & features        NOT YET ANSWERED
+    2c Minimum version & version edge cases     NOT YET ANSWERED
+    2d Licensing implications of the build      NOT YET ANSWERED
+    3a Distribution method                      NOT YET ANSWERED
+    3b Download source used                     NOT YET ANSWERED
+    3c How an installer obtains this version    NOT YET ANSWERED
+    3d Inspection of any bundled binary or code NOT YET ANSWERED
+    3e Sanity check of the build system         NOT YET ANSWERED
+    3f Build script provided                    NOT YET ANSWERED
+
+------------------------------------------------------------------------------------------------------------------
+
+--OpenSCAD--
+
+  Approval record
+    Status                                      NOT YET AUDITED
+    Approved on                                 NOT YET AUDITED
+    Expires on                                  NOT YET AUDITED
+    Audited by                                  NOT YET AUDITED
+    Audit outcome                               NOT YET AUDITED
+
+  Manifest facts, read from Resources/Engine/Contract/depends.php
+    Binary                                      openscad
+    Install type                                apt
+    Package                                     openscad
+    Minimum version                             2021.01
+    Required                                    NO
+    Subsystem                                   SCAD
+    License                                     GPL-2.0
+    Depends on                                  Bubblewrap
+    Source                                      https://openscad.org
+    Purpose                                     Renders parametric models.
+
+  Audit answers. Every one is a judgement a person records here.
+    1a Security design is amenable to ours      NOT YET ANSWERED
+    1b Recent CVEs, issues or exploits          NOT YET ANSWERED
+    1c Development activity & breakage risk     NOT YET ANSWERED
+    1d What it needs to function                NOT YET ANSWERED
+    1e Can it be sandboxed or isolated          NOT YET ANSWERED
+    1f Security options & hardened configurationNOT YET ANSWERED
+    1g Could another dependency do this better  NOT YET ANSWERED
+    1h Origin & supply chain risk               NOT YET ANSWERED
+    1i Dependency traps for existing installs   NOT YET ANSWERED
+    2a System package versus a source build     NOT YET ANSWERED
+    2b Build flags, libraries & features        NOT YET ANSWERED
+    2c Minimum version & version edge cases     NOT YET ANSWERED
+    2d Licensing implications of the build      NOT YET ANSWERED
+    3a Distribution method                      NOT YET ANSWERED
+    3b Download source used                     NOT YET ANSWERED
+    3c How an installer obtains this version    NOT YET ANSWERED
+    3d Inspection of any bundled binary or code NOT YET ANSWERED
+    3e Sanity check of the build system         NOT YET ANSWERED
+    3f Build script provided                    NOT YET ANSWERED
+
+------------------------------------------------------------------------------------------------------------------

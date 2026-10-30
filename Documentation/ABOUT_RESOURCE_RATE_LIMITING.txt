@@ -206,6 +206,12 @@ type;
   redundant
       A standby. Takes a session only when every other location is unusable.
 
+--Convert Location-- IS ALWAYS A MEMBER OF THE POOL & IS ALWAYS ITS PRIMARY.
+It is never declared under --Additional Data Locations--. It joins the distribution & it is
+swept on the same schedule as every other member. Declaring it again as an additional location
+changes nothing & its second declaration is skipped as a duplicate, with the type on that
+second declaration discarded. Declare each location exactly once.
+
 A SESSION IS ASSIGNED A LOCATION ONCE & KEEPS IT FOR ITS WHOLE LIFE.
 Load balancing happens at the session level & never at the conversion level. A session that
 moved would leave the user files behind.
@@ -225,7 +231,14 @@ The socket directory is pinned to --Convert Location-- & never moves with a sess
 --About Scheduled Storage Cleanup--
 
 The Resource Manager sweeps every configured data location every --Storage Cleanup Interval--
-seconds, using --File Deletion Age Theshold-- to decide what has expired.
+seconds, using --File Deletion Age Theshold-- to decide what has expired. Every configured
+location means --Convert Location-- as well as every entry under --Additional Data Locations--.
+
+A LOCATION MISSING FROM THE SWEEP KEEPS ITS EXPIRED SESSIONS FOREVER.
+Nothing else deletes them. The clean calls in convertCore.php only ever sweep the location the
+running request was assigned, so a location that no session is being assigned to is not reached
+by them either. Run the Resource Manager with --Verbose-- & read the Scheduled sweep lines to
+confirm every location you configured is listed.
 
 The sweep uses the same cleaning function the ordinary clean calls use. Those calls remain in
 convertCore.php & are what a standalone installation relies on. They are redundant when a

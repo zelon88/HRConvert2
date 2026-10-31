@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.6.
+// / v3.9.8.
 // / This file is the converter for the Scad pipeline. It is loaded by pipelineCore.php
 // / ONLY when a Scad conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
@@ -107,6 +107,9 @@ function sanitizeSCAD($scadContents) {
   $keywords = array();
   $keyword = $currentChar = $nextChar = $priorChar = $lookaheadChar = $peekChar = $referenceText = '';
   $sourceLength = $charIndex = $lineNumber = $keywordLength = $lookaheadIndex = $referenceStart = 0;
+  $callEnd = $scanIndex = $parenDepth = 0;
+  $scanChar = $scanNext = '';
+  $scanInString = $scanInLineComment = $scanInBlockComment = FALSE;
   $inLineComment = $inBlockComment = $inString = $isCall = FALSE;
   // / Every keyword that causes OpenSCAD to read a file.
   // / The longest forms are listed first so a longer match is preferred over a shorter one.
@@ -213,84 +216,145 @@ function sanitizeSCAD($scadContents) {
           while ($lookaheadIndex < $sourceLength && $scadContents[$lookaheadIndex] !== '"') {
             $referenceText .= $scadContents[$lookaheadIndex];
             $lookaheadIndex++; } } }
+      // / Measure where the whole call ends, so a caller can replace exactly its characters.
+      // / A line is the wrong unit to work in. A block comment opened on an earlier line may
+      // / close part way along the line holding a call, & a comment marker written at the start
+      // / of such a line is swallowed by that comment while the call after the closing sequence
+      // / stays live. Offsets cannot be fooled that way, because the lexer only ever reports a
+      // / call it found in code state & the span it reports starts there.
+      $callEnd = $lookaheadIndex;
+      // / An angle bracket form ends at its closing bracket.
+      if ($scadContents[$referenceStart] === '<') $callEnd = $lookaheadIndex + 1;
+      // / A bracket form ends at the bracket closing the one that opened the call. Nesting,
+      // / strings & comments among the arguments are all skipped on the way there.
+      else {
+        $scanIndex = ($lookaheadIndex < $sourceLength && $scadContents[$lookaheadIndex] === '"') ? $lookaheadIndex + 1 : $lookaheadIndex;
+        $parenDepth = 1;
+        $scanInString = $scanInLineComment = $scanInBlockComment = FALSE;
+        $callEnd = $sourceLength;
+        for (; $scanIndex < $sourceLength; $scanIndex++) {
+          $scanChar = $scadContents[$scanIndex];
+          $scanNext = ($scanIndex + 1 < $sourceLength) ? $scadContents[$scanIndex + 1] : '';
+          if ($scanInLineComment) {
+            if ($scanChar === "\n") $scanInLineComment = FALSE;
+            continue; }
+          if ($scanInBlockComment) {
+            if ($scanChar === '*' && $scanNext === '/') {
+              $scanInBlockComment = FALSE;
+              $scanIndex++; }
+            continue; }
+          if ($scanInString) {
+            if ($scanChar === '\\') {
+              $scanIndex++;
+              continue; }
+            if ($scanChar === '"') $scanInString = FALSE;
+            continue; }
+          if ($scanChar === '/' && $scanNext === '/') {
+            $scanInLineComment = TRUE;
+            $scanIndex++;
+            continue; }
+          if ($scanChar === '/' && $scanNext === '*') {
+            $scanInBlockComment = TRUE;
+            $scanIndex++;
+            continue; }
+          if ($scanChar === '"') {
+            $scanInString = TRUE;
+            continue; }
+          if ($scanChar === '(') $parenDepth++;
+          if ($scanChar === ')') {
+            $parenDepth--;
+            if ($parenDepth === 0) {
+              $callEnd = $scanIndex + 1;
+              break; } } } }
       // / One record per call found. The line number is where the KEYWORD started.
       array_push($ScadCalls, array(
         'Keyword'     => $keyword,
         'Line'        => $lineNumber,
+        'Start'       => $charIndex,
+        'End'         => $callEnd,
         'Reference'   => trim($referenceText),
         'IsAngleForm' => ($scadContents[$referenceStart] === '<')));
       // / Advance past the keyword so its own text cannot match a shorter keyword inside it.
       $charIndex = $charIndex + $keywordLength - 1;
       break; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $scadContents, $keywords, $keyword, $currentChar, $nextChar, $priorChar, $lookaheadChar, $peekChar, $referenceText, $sourceLength, $charIndex, $lineNumber, $keywordLength, $lookaheadIndex, $referenceStart, $inLineComment, $inBlockComment, $inString, $isCall);
+  purgeSensitiveMemory($EnableMemoryProtection, $callEnd, $scanIndex, $parenDepth, $scanChar, $scanNext, $scanInString, $scanInLineComment, $scanInBlockComment, $scadContents, $keywords, $keyword, $currentChar, $nextChar, $priorChar, $lookaheadChar, $peekChar, $referenceText, $sourceLength, $charIndex, $lineNumber, $keywordLength, $lookaheadIndex, $referenceStart, $inLineComment, $inBlockComment, $inString, $isCall);
   return $ScadCalls; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to rewrite OpenSCAD source using what the Sanitizer found.
-// / The Sanitizer works on a stream & reports the line each call started on.
-// / This function works on lines, because the user has to read the result & understand it.
+// / The Sanitizer reports the exact characters each call occupies. This function replaces
+// / those characters & never works on whole lines.
 // /
-// / A line carrying a call is commented out whole rather than edited in place.
-// / Editing in place would require reproducing OpenSCAD's idea of where a statement ends,
-// / which is the class of problem this design exists to avoid.
-// / Commenting the whole line is coarse & occasionally removes more than strictly necessary.
-// / It is also impossible to get subtly wrong, which is worth more than being precise here.
-// / A call split across several lines has every line it touches commented out.
+// / An earlier version commented out the line a call started on. A line is the wrong unit.
+// / A block comment opened on an earlier line may close part way along the line holding the
+// / call, & a comment marker written at the start of such a line is swallowed by that
+// / comment while the call sitting after the closing sequence stays live. That was reported
+// / as a working bypass & is the reason this function now edits by position.
+// /
+// / A removed call is overwritten with whitespace of exactly the same length. Every newline
+// / inside the span is kept, so every line below a removal keeps the number it had & the
+// / renderer reports a position the user can still find in their own file.
+// / A resolved include is replaced by a reference to the staged copy, written in place.
+// / Nothing is commented out, because writing a comment is what went wrong before.
+// /
+// / Replacements are applied from the end of the source backwards, so an earlier offset is
+// / still correct after a later replacement has changed the length of the text.
+// /
+// / The result is handed back to the Sanitizer before it is returned. Anything the Sanitizer
+// / can still see is a call that survived, & the caller refuses to render rather than trust
+// / this function to have been thorough. A rewrite that cannot prove itself is a failure.
 // /
 // / An include or use may instead be rewritten to point at another source the same user
 // / uploaded, when config.php enables that. Everything else is always removed.
 // / Geometry & heightmap reads are never resolved & never rewritten.
 function rectifySCAD($scadContents, $sessionFiles, $resolveIncludes) {
   // / Set variables.
-  global $EnableMemoryProtection;
+  global $Verbose, $EnableMemoryProtection;
   $RectifiedSCAD = '';
   $ReferencesFound = $ReferencesResolved = $ReferencesRemoved = 0;
-  $scadCalls = $scadLines = $linesToComment = $callsByLine = array();
-  $scadCall = $scadLine = $resolvedPath = $marker = '';
-  $lineIndex = $lineNumber = $callLine = $callEndLine = 0;
-  // / Find every call in the source before touching a single line.
+  $RectificationVerified = FALSE;
+  $scadCalls = $plannedEdits = $plannedEdit = $survivingCalls = array();
+  $scadCall = $resolvedPath = $replacementText = $spanText = '';
+  $spanIndex = $spanLength = 0;
+  // / Find every call in the source before touching a single character.
   $scadCalls = sanitizeSCAD($scadContents);
   $ReferencesFound = count($scadCalls);
-  $scadLines = preg_split('/\R/', $scadContents);
-  // / Decide what happens to each call & record which line carries the result.
+  // / Decide what happens to each call & remember the span it occupies.
   foreach ($scadCalls as $scadCall) {
-    $callLine = (int)$scadCall['Line'];
     $resolvedPath = '';
     // / Only an angle bracket include or use is ever eligible for resolution.
     // / A geometry or heightmap read is always removed, whatever config.php says.
     if ($resolveIncludes && $scadCall['IsAngleForm'] && ($scadCall['Keyword'] === 'include' or $scadCall['Keyword'] === 'use')) $resolvedPath = resolveSCADInclude($scadCall['Reference'], $sessionFiles);
     if ($resolvedPath !== '') {
       $ReferencesResolved++;
-      $callsByLine[$callLine] = array('Action' => 'RESOLVE', 'Keyword' => $scadCall['Keyword'], 'Path' => $resolvedPath); }
+      // / The reference is written as a BARE FILENAME rather than as the absolute path that
+      // / resolveSCADInclude() returned. Every sanitized copy lives in one directory, & the
+      // / render runs with that directory as its working directory, so a bare name resolves.
+      // / An absolute path would not, because inside the sandbox that directory is mounted
+      // / somewhere else entirely & the real path does not exist at all.
+      $replacementText = $scadCall['Keyword'].' <'.basename($resolvedPath).'>'; }
     else {
       $ReferencesRemoved++;
-      $callsByLine[$callLine] = array('Action' => 'REMOVE', 'Keyword' => $scadCall['Keyword'], 'Path' => ''); } }
-  // / Rebuild the source one line at a time.
-  foreach ($scadLines as $lineIndex => $scadLine) {
-    $lineNumber = $lineIndex + 1;
-    // / A line with no call on it passes through completely untouched.
-    if (!array_key_exists($lineNumber, $callsByLine)) {
-      $RectifiedSCAD .= $scadLine.PHP_EOL;
-      continue; }
-    // / A resolved include is replaced outright with a reference to the staged copy.
-    // / The original line is preserved as a comment so the user can see what it was.
-    // / The reference is written as a BARE FILENAME rather than as the absolute path that
-    // / resolveSCADInclude() returned. Every sanitized copy lives in one directory, & the
-    // / render runs with that directory as its working directory, so a bare name resolves.
-    // / An absolute path would not, because inside the sandbox that directory is mounted
-    // / somewhere else entirely & the real path does not exist at all.
-    if ($callsByLine[$lineNumber]['Action'] === 'RESOLVE') {
-      $RectifiedSCAD .= '// HRC2-RESOLVED-FROM: '.$scadLine.PHP_EOL;
-      $RectifiedSCAD .= $callsByLine[$lineNumber]['Keyword'].' <'.basename($callsByLine[$lineNumber]['Path']).'>'.PHP_EOL;
-      continue; }
-    // / Everything else is commented out whole & labelled with what it was.
-    $marker = '// HRC2-REMOVED-'.strtoupper($callsByLine[$lineNumber]['Keyword']).': ';
-    $RectifiedSCAD .= $marker.$scadLine.PHP_EOL; }
+      // / Whitespace of the same length, keeping every line ending the span contained.
+      $replacementText = '';
+      $spanText = substr($scadContents, (int)$scadCall['Start'], (int)$scadCall['End'] - (int)$scadCall['Start']);
+      $spanLength = strlen($spanText);
+      for ($spanIndex = 0; $spanIndex < $spanLength; $spanIndex++) $replacementText .= ($spanText[$spanIndex] === "\n" or $spanText[$spanIndex] === "\r") ? $spanText[$spanIndex] : ' ';
+      if ($Verbose) logEntry('Removing the '.$scadCall['Keyword'].' reference on line '.$scadCall['Line'].' of an uploaded OpenSCAD source.'); }
+    array_push($plannedEdits, array('Start' => (int)$scadCall['Start'], 'End' => (int)$scadCall['End'], 'Text' => $replacementText)); }
+  // / Apply the edits from the end backwards so every offset ahead of one stays correct.
+  $RectifiedSCAD = $scadContents;
+  foreach (array_reverse($plannedEdits) as $plannedEdit) $RectifiedSCAD = substr_replace($RectifiedSCAD, $plannedEdit['Text'], $plannedEdit['Start'], $plannedEdit['End'] - $plannedEdit['Start']);
+  // / Prove it. Every call the Sanitizer can still find must be one this function wrote,
+  // / which is a resolved include & nothing else. Anything more means a call survived.
+  $survivingCalls = sanitizeSCAD($RectifiedSCAD);
+  $RectificationVerified = (count($survivingCalls) === $ReferencesResolved);
+  if (!$RectificationVerified) warningEntry('An OpenSCAD file reference survived sanitization. '.count($survivingCalls).' call(s) remain & '.$ReferencesResolved.' resolved include(s) were expected. The source will not be rendered.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $scadContents, $sessionFiles, $resolveIncludes, $scadCalls, $scadCall, $scadLines, $scadLine, $linesToComment, $callsByLine, $resolvedPath, $marker, $lineIndex, $lineNumber, $callLine, $callEndLine);
-  return array($RectifiedSCAD, $ReferencesFound, $ReferencesResolved, $ReferencesRemoved); }
+  purgeSensitiveMemory($EnableMemoryProtection, $scadContents, $sessionFiles, $resolveIncludes, $scadCalls, $scadCall, $plannedEdits, $plannedEdit, $survivingCalls, $resolvedPath, $replacementText, $spanText, $spanIndex, $spanLength);
+  return array($RectifiedSCAD, $ReferencesFound, $ReferencesResolved, $ReferencesRemoved, $RectificationVerified); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -309,6 +373,7 @@ function sanitizeAllSCADUploads() {
   $AllSanitized = TRUE;
   $FilesSanitized = $ReferencesFound = $ReferencesResolved = $ReferencesRemoved = 0;
   $fileFound = $fileResolved = $fileRemoved = $bytesWritten = 0;
+  $fileVerified = FALSE;
   $sessionFiles = array();
   $sessionFile = $scadContents = $sanitizedSCAD = $sanitizedPath = '';
   // / Gather every file the user uploaded to this session.
@@ -322,7 +387,14 @@ function sanitizeAllSCADUploads() {
       errorEntry('Could not read the OpenSCAD source file '.$sessionFile.'!', 27006, FALSE);
       continue; }
     // / Neutralize every file reading primitive in this source.
-    list ($sanitizedSCAD, $fileFound, $fileResolved, $fileRemoved) = rectifySCAD($scadContents, $sessionFiles, $AllowSCADIncludeResolution);
+    list ($sanitizedSCAD, $fileFound, $fileResolved, $fileRemoved, $fileVerified) = rectifySCAD($scadContents, $sessionFiles, $AllowSCADIncludeResolution);
+    // / A rewrite that cannot prove every reference is gone is not staged at all. Rendering
+    // / from it would mean trusting the rewrite rather than checking it, which is how the
+    // / block comment bypass stayed invisible. Nothing is written & the render is refused.
+    if (!$fileVerified) {
+      $AllSanitized = FALSE;
+      errorEntry('A file reference survived sanitization of the OpenSCAD source '.$sessionFile.'!', 27009, FALSE);
+      continue; }
     $ReferencesFound = $ReferencesFound + $fileFound;
     $ReferencesResolved = $ReferencesResolved + $fileResolved;
     $ReferencesRemoved = $ReferencesRemoved + $fileRemoved;
@@ -337,7 +409,7 @@ function sanitizeAllSCADUploads() {
   if ($ReferencesRemoved > 0) warningEntry('OpenSCAD Sanitization removed '.$ReferencesRemoved.' file reference(s) across '.$FilesSanitized.' uploaded source file(s) in this session. Resolved: '.$ReferencesResolved.'.');
   else if ($Verbose) logEntry('OpenSCAD Sanitization Result: Files Sanitized: '.$FilesSanitized.', References Found: '.$ReferencesFound.', Resolved: '.$ReferencesResolved.', Removed: '.$ReferencesRemoved.', Resolution Enabled: '.($AllowSCADIncludeResolution ? 'TRUE' : 'FALSE').'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $sessionFiles, $sessionFile, $scadContents, $sanitizedSCAD, $sanitizedPath, $fileFound, $fileResolved, $fileRemoved, $bytesWritten);
+  purgeSensitiveMemory($EnableMemoryProtection, $fileVerified, $sessionFiles, $sessionFile, $scadContents, $sanitizedSCAD, $sanitizedPath, $fileFound, $fileResolved, $fileRemoved, $bytesWritten);
   return array($AllSanitized, $FilesSanitized, $ReferencesFound, $ReferencesResolved, $ReferencesRemoved); }
 // / -----------------------------------------------------------------------------------
 

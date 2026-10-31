@@ -21,9 +21,8 @@
 # This application will run on just about any x86 or x64 computer.
 #
 # DEPENDENCY REQUIREMENTS ...
-# This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
-# Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape,
-# Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap Dia & xvfb-run.
+# The authoritative list of dependencies is Resources/Engine/Contract/depends.php & nothing else.
+# Run  php convertCore.php -v  to see what this installation has.
 #
 # <3 Open-Source
 # -----------------------------------------------------------------------------------

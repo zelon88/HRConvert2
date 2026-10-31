@@ -299,14 +299,16 @@ $MaxStreamInspectionFileSize = 8191;
 // /  --Allow SCAD Include Resolution--
 // /   OpenSCAD sources reference other sources with include <file> & use <file>.
 // /   A multi file assembly cannot render at all unless those references resolve to something.
-// /   If set to FALSE, every reference is commented out & multi file assemblies will not render.
+// /   If set to FALSE, every reference is removed & multi file assemblies will not render.
 // /   If set to TRUE, an include or use may resolve to another source the SAME user uploaded.
 // /   Resolution matches on filename alone & ignores whatever directory the reference carried.
-// /   A reference that matches no uploaded file is commented out regardless of this setting.
+// /   A reference that matches no uploaded file is removed regardless of this setting.
 // /   This setting does NOT control whether OpenSCAD may read arbitrary files.
 // /   HRConvert2 removes every file reading primitive from every uploaded source unconditionally.
 // /   import(), surface(), the deprecated import_stl() family & every dxf file= form are always removed.
 // /   Those removals happen whether this setting is TRUE or FALSE & cannot be turned off.
+// /   A removal overwrites the call with whitespace of the same length & never with a comment.
+// /   Writing a comment marker was the subject of GHSA-mqvr-h4q5-chg9. Do not reintroduce one.
 // /   Every uploaded source is sanitized into a temporary location before OpenSCAD runs.
 // /   A resolved reference points at a sanitized copy, never at the file the user uploaded.
 // /   Nothing outside the users own session directory can be reached at any point.

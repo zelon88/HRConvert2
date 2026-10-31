@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.7.
+// / v3.9.8.
 // / This file is the Pipeline Core component. It owns the detachable conversion
 // / pipelines, their version pins, their capability declarations & their dispatch.
 // / It is pinned EXACTLY by convertCore.php via $RequiredPipelineCoreVersion.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by convertCore.php WITHOUT executing this file.
-$PipelineCoreVersion = 'v3.9.7';
+$PipelineCoreVersion = 'v3.9.8';
 // / -----------------------------------------------------------------------------------
 
 
@@ -53,7 +53,7 @@ function getAcceptedPipelines() {
   // / Adding a community pipeline is one line here plus a version bump on this file.
   $AcceptedPipelines = array(
     'Stream' => 'v3.9.5',
-    'Scad' => 'v3.9.6',
+    'Scad' => 'v3.9.8',
     'OCR' => 'v3.9.6',
     'Document' => 'v3.8.8',
     'Subtitle' => 'v3.9.6',

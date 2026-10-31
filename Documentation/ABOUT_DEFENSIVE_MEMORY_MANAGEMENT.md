@@ -92,6 +92,69 @@ The efficacy of this defensive paradigm depends entirely on the sophistication o
 
 ---
 
+## 🌍 Real World Application
+
+The threat model above is abstract by necessity. This section records cases where a real,
+published vulnerability let us measure what this paradigm actually bought us. Each one is
+written up after the fact, with the parts it did not help stated as plainly as the parts it did.
+
+### php2shell — CVE-2026-109618 & CVE-2026-109619
+
+**What it was.** In October 2026 PHP shipped emergency patches for a set of flaws collectively
+called php2shell. An attacker sends a crafted `multipart/form-data` upload sized to exceed
+`memory_limit` while PHP is parsing it. The resulting out-of-memory fatal aborts the request
+before worker cleanup runs, leaving engine-global pointers stale. The worker is reused for the
+next request, the attacker's data reclaims the freed allocation, and follow-up requests turn
+that into memory disclosure and then code execution. No authentication is required and no
+application flaw is involved. Every PHP back to 5.4 was affected, with `mod_php` carrying the
+greatest risk. Fixed in 8.5.12, 8.4.27, 8.3.36 and 8.2.35.
+
+**Why it is a fair test of this paradigm.** One of the four underlying bugs is a *process
+memory disclosure*: a freed allocation is read back as live data and returned to the attacker
+in a response cookie. That is precisely the exposure this entire paradigm exists to reduce.
+The question is not theoretical for an application whose workers hold other people's uploaded
+file contents, filenames and paths.
+
+**What the shredding paradigm does for us here.**
+* It reduces the **yield** of the disclosure. A value that was overwritten byte by byte and
+  released at the end of the function that used it is less likely to still be readable in a
+  freed chunk when an attacker reclaims one.
+* It shortens the **window**. Convention five requires a lower case variable to be destroyed
+  immediately after the code that needed it, rather than at the end of the request. The
+  smaller that window, the smaller the chance an interesting value is resident when a leak
+  fires.
+* It limits the **surface**. Convention four keeps user data in narrow scope, so there is less
+  of it alive at any moment than in an application that keeps request state in globals.
+
+**What it does not do, and this is the important half.**
+* It does **nothing** against the execution half. The use after free and the type confusion
+  corrupt the engine's own allocator and structures. No amount of userland discipline prevents
+  an engine level use after free, and once code execution is achieved the shredding is moot
+  because the attacker is running code of their own.
+* The benefit is **probabilistic, not a guarantee**. This is the Copy-on-Write Ghosting
+  limitation named in the threat model above, met in the wild. PHP copies and interns strings,
+  so one logical value may exist in several places & `purgeSensitiveMemory()` clears only the
+  reference it was handed.
+* It does not reduce exposure of anything held for the life of a request. `$SecretKey` is the
+  one documented exception to the paradigm. It is purged where it is generated, but it is a
+  global & is read throughout a request for the startup key HMACs. Under a memory disclosure
+  bug it is the single most valuable thing in worker memory. An operator who believes an
+  instance was reachable before patching should rotate the install secret first.
+
+**The verdict for this case.** The paradigm is a layer that narrows what an attacker gets out
+of a leak. It is not a mitigation for the vulnerability & it is no substitute for patching
+the interpreter. Both statements are true at once, and writing down only the flattering one
+would make this document useless the next time somebody asks.
+
+**What HRConvert2 did about it.** Nothing in the application, because there was nothing in the
+application to fix. The official image tracks a floating `php:8.5-apache-bookworm` tag, so a
+rebuild collects the patched interpreter. The third related flaw, CVE-2026-115560, requires an
+application to switch `session.serialize_handler` back to `php` with `ini_set()` before
+`session_start()`. This application starts no PHP session anywhere & never changes that
+handler, so it does not meet the preconditions.
+
+---
+
 ## Cost-Benefit Engineering Summary
 
 ### Benefits

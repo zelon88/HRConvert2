@@ -21,9 +21,7 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ... 
-This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
-Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Calibre,
-Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia & xvfb-run.
+The authoritative list of dependencies is Resources/Engine/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
 ADDITIONAL INFORMATION
 HRConvert2 logs information about it's operational activity to the Logs subdirectory where HRConvert2 is installed by default.
 The default logging directory can be adjusted by modifying the --Log Storage Directory-- section of the config.php file. 
@@ -4617,6 +4615,34 @@ ERROR DESCRIPTION
   A file may already exist at the destination & may be locked by another process.
   The rendered model is left inside the ScadTemp directory when this happens.
   It is removed by the sanitized source cleanup that runs immediately afterwards.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27009, <SESSION_IDENTIFIER>: A file reference survived sanitization of the OpenSCAD source <FILE>!
+
+FILE
+  Resources/Pipelines/Scad/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Every uploaded OpenSCAD source is rewritten to remove the calls that read files, & the
+  rewritten source is handed back to the Sanitizer before it is staged. This error means the
+  Sanitizer could still see a call in the rewritten source, so the rewrite did not do its job.
+  Nothing was staged & nothing was rendered from that source. The conversion is refused.
+  This is a refusal rather than a warning on purpose. A source that still carries a live file
+  reference is the exact condition the Sanitizer exists to prevent, & rendering it anyway
+  would mean trusting the rewrite rather than checking it.
+  An operator seeing this should keep the source & report it, because a source that reaches
+  this point is either a new evasion shape or a defect in the rewrite.
+  Documentation/Build/hrconvert2-test-scad-cli.php exercises both halves & is the first place
+  to reproduce it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 

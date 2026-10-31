@@ -45,11 +45,11 @@ Navigate the complete documentation library using the directory structure below.
 
 ### ⚙️ Command Line & System Architecture
 * [ABOUT_COMMAND_LINE_ARGUMENTS.md](ABOUT_COMMAND_LINE_ARGUMENTS.md) / [.txt](ABOUT_COMMAND_LINE_ARGUMENTS.txt) — CLI execution parameters.
-* [ABOUT_DEFENSIVE_MEMORY_MANAGEMENT.md](ABOUT_DEFENSIVE_MEMORY_MANAGEMENT.md) — Memory leak prevention strategies.
 * [ABOUT_DEPENDENCIES.txt](ABOUT_DEPENDENCIES.txt) — External library notes.
 * [DOCKER_BUILD_INSTRUCTIONS.txt](DOCKER_BUILD_INSTRUCTIONS.txt) — Container deployment guide.
 
 ### 💾 Asset Generation
+* [CREATING_PRE-BAKED_UEFI_ASSET_IMAGES.md](CREATING_PRE-BAKED_UEFI_ASSET_IMAGES.md) / [.txt](CREATING_PRE-BAKED_UEFI_ASSET_IMAGES.txt) — Prebaked UEFI boot assets.
 * [ABOUT_CREATING_BOOTABLE_ISO_IMAGES.md](ABOUT_CREATING_BOOTABLE_ISO_IMAGES.md) / [.txt](ABOUT_CREATING_BOOTABLE_ISO_IMAGES.txt) — ISO creation protocols.
 * [BUILDING_PRE-BAKED_UEFI_ASSET_IMAGES.md](BUILDING_PRE-BAKED_UEFI_ASSET_IMAGES.md) / [.txt](BUILDING_PRE-BAKED_UEFI_ASSET_IMAGES.txt) — UEFI image guidelines.
 
@@ -58,6 +58,25 @@ Navigate the complete documentation library using the directory structure below.
 * [CREATING_CONVERSION_PIPELINES.txt](CREATING_CONVERSION_PIPELINES.txt) — Processing engine manual.
 * [CREATING_GUIS.txt](CREATING_GUIS.txt) — Frontend design notes.
 * [CREATING_LANGUAGE_PACKS.txt](CREATING_LANGUAGE_PACKS.txt) — Localization frameworks.
+
+### 🔐 Security
+* [ABOUT_SCAD_SANITIZATION.txt](ABOUT_SCAD_SANITIZATION.txt) — How an uploaded OpenSCAD source is stripped of its file references before it renders.
+* [ABOUT_NETWORK_ISOLATION.txt](ABOUT_NETWORK_ISOLATION.txt) — How a sandbox profile is arrived at & what every permission in it costs.
+* [ABOUT_DATA_DIRECTORY_PROTECTION.txt](ABOUT_DATA_DIRECTORY_PROTECTION.txt) — How the hosted DATA tree is served as inert content.
+* [ABOUT_DEFENSIVE_MEMORY_MANAGEMENT.md](ABOUT_DEFENSIVE_MEMORY_MANAGEMENT.md) — Memory leak prevention strategies.
+* [ABOUT_QUALITY_CONTROL.txt](ABOUT_QUALITY_CONTROL.txt) — The static analysis gate every change has to pass.
+
+### 🧩 The Engine & Its Components
+* [ABOUT_ENGINE_CONTRACT.txt](ABOUT_ENGINE_CONTRACT.txt) — What an application must supply for the Engine to run.
+* [ABOUT_ENGINE_ABSORPTION.txt](ABOUT_ENGINE_ABSORPTION.txt) — How core logic was moved into the Engine.
+* [ABOUT_COMPONENTS.txt](ABOUT_COMPONENTS.txt) — How a detachable component is versioned & loaded.
+* [ABOUT_PIPELINE_COMPONENTS.txt](ABOUT_PIPELINE_COMPONENTS.txt) — The contracts every conversion pipeline obeys.
+* [ABOUT_MANAGERS.txt](ABOUT_MANAGERS.txt) — The manager processes & the protocol between them.
+* [ABOUT_ENVIRONMENT_MANAGER.txt](ABOUT_ENVIRONMENT_MANAGER.txt) — The privileged repair process & what it may change.
+* [ABOUT_RESOURCE_RATE_LIMITING.md](ABOUT_RESOURCE_RATE_LIMITING.md) / [.txt](ABOUT_RESOURCE_RATE_LIMITING.txt) — Budgets, data locations & scheduled cleanup.
+* [ABOUT_CAPABILITY_DETECTION.txt](ABOUT_CAPABILITY_DETECTION.txt) — How the application decides what it can do on this host.
+* [ABOUT_COHESION_PASS.txt](ABOUT_COHESION_PASS.txt) — How a function is judged to belong where it lives.
+* [ABOUT_LOGGING.txt](ABOUT_LOGGING.txt) — The three logging tiers & which to use.
 
 ### 🌐 API, Meta, & Diagnostics
 * [ABOUT_DOCUMENTATION.md](ABOUT_DOCUMENTATION.md) / [.txt](ABOUT_DOCUMENTATION.txt) — Handbook standards.

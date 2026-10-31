@@ -19,13 +19,51 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ... 
-This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
-Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Calibre,
-Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia & xvfb-run.
+The authoritative list of dependencies is Resources/Engine/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
 
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+
+--------------------
+COMMIT 10/30/2026
+v3.9.8 - OpenSCAD sources are rewritten by position & the rewrite has to prove itself.
+
+-v3.9.8.
+-Thanks to Takaya Sato (Github user @dagadjno) for filing a second security advisory, & for the detail in it.
+  -https://github.com/dagadjno
+  -https://github.com/zelon88/HRConvert2/security/advisories/GHSA-mqvr-h4q5-chg9
+  -dagadjno determined that sanitizeSCAD found every file reading call & rectifySCAD put them back.
+  -The rewrite commented out the line a call started on. A block comment closing part way along that line swallowed the marker & the call after it stayed live.
+  -They also noted that the test tool only ever exercised the lexer, which is why nothing here caught it.
+-FIX. sanitizeSCAD records the first & last character of every call it finds, not just the line it started on.
+-rectifySCAD replaces those exact characters & never a whole line. A removed call becomes whitespace of the same length, keeping every line number intact.
+-A resolved include is written in place rather than added as a new line, because writing a comment is what went wrong.
+-Edits are applied from the end of the source backwards, so an earlier offset is still correct after a later one changes length.
+-The rewritten source is handed back to sanitizeSCAD before it is staged. Anything still visible means a call survived, & the source is refused with new error 27009.
+-hrconvert2-test-scad-cli.php tests the rewrite as well as the lexer. Eleven rewrite cases, including a block comment closing on the call's line.
+-The new cases were run against the old pipeline first & three of them reproduce the bypass, so the tool is known to catch what it missed.
+-Correct the claim in rectifySCAD that commenting a whole line is impossible to get subtly wrong. It was, & this is how.
+-Add ABOUT_SCAD_SANITIZATION.txt. The subsystem had 51 lines of comment inside one file & nothing a reader could find.
+-It records why the finder is a lexer, why the rewrite works on characters rather than lines, what the sandbox did & did not cover when the filter was bypassed, & what each advisory taught.
+-Documentation/README.md indexes every document again. Fifteen were missing from it, including all four security documents.
+-Group the security documents under one heading so somebody looking for them does not have to know their names first.
+-Fourteen documentation headers carried a hand written dependency list. They point at the manifest instead.
+-Three of those lists had already drifted apart from each other. One was missing Calibre & Assimp.
+-The same stale list is still in the language packs, the interfaces & a few Engine files. Those carry exact version pins & are left for a commit of their own.
+-Evaluate this installation against php2shell (CVE-2026-109618 & CVE-2026-109619). It is a flaw in the interpreter & there is nothing here to fix.
+-No application change is made. The Dockerfile tracks a floating base tag, so a rebuild collects the patched PHP. Administrators have to rebuild or pull.
+-CVE-2026-115560 does not apply. Nothing here starts a PHP session or switches session.serialize_handler at runtime, which that flaw requires.
+-ABOUT_DEFENSIVE_MEMORY_MANAGEMENT.md gains a Real World Application section recording what the shredding paradigm did against php2shell.
+-It narrows the yield & the window of the disclosure half & does nothing at all against the execution half. Stating that is the point of the section.
+-Correct ABOUT_SCAD_SANITIZATION.txt, which described the layering backwards. The sandbox is the boundary & the sanitizer is a convenience on top of it.
+-The document had called the sandbox a second layer & claimed its mounts were not a security boundary of their own. That contradicted --Require Sandbox-- in config.php.
+-A dependency that parses a hostile file is assumed to be exploitable & an operator cannot wait for an upstream patch. That is why the sandbox is what gets relied on.
+-Add a toggles section naming every way an operator can take the SCAD path out of service, & stating that removal of the file reading primitives is not one of them.
+-The document named no configuration setting at all, which left the granularity undiscoverable to the only reader looking for it.
+-config.php said an unresolved SCAD reference is commented out. It is overwritten with whitespace as of v3.9.8 & the prose described the mechanism that was the vulnerability.
+-Record in that block that a removal never writes a comment marker, with the advisory number, so it is not reintroduced.
+-No setting was added or changed, so $ConfigVersion stays at v3.9.6. Comment only.
 
 --------------------
 COMMIT 10/30/2026

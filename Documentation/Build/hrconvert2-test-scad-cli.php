@@ -12,8 +12,11 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.3.
-// / This file attacks sanitizeSCAD() with every evasion shape known to it.
+// / v3.9.8.
+// / This file attacks sanitizeSCAD() with every evasion shape known to it, & then attacks
+// / rectifySCAD() with the shapes that survive a rewrite rather than a scan.
+// / Testing the lexer alone was not enough. The lexer found every call in the reported
+// / block comment bypass & the rewrite put them back, which no test here could see.
 // /
 // / The sanitizer decides which OpenSCAD statements read a file. A miss hands OpenSCAD a
 // / reference the application never inspected & OpenSCAD reads whatever it points at.
@@ -86,7 +89,15 @@ if (function_exists('posix_geteuid') && posix_geteuid() === 0) {
 }
 // / -----------------------------------------------------------------------------------
 $EnableMemoryProtection=FALSE;
+$Verbose=FALSE;
+$DirSep='/';
+$ConvertDir='/tmp/';
+$ScadTemp='/tmp';
 function purgeSensitiveMemory(){return TRUE;}
+function logEntry($m){return TRUE;}
+function warningEntry($m){return TRUE;}
+function errorEntry($m,$n,$f){return TRUE;}
+function getExtension($f){return strtolower(pathinfo($f,PATHINFO_EXTENSION));}
 // / The source must be readable from where this was started, & saying so beats a
 // / cascade of warnings ending in an undefined function.
 if (!is_file('Resources/Pipelines/Scad/pipeline.php')) {
@@ -94,9 +105,14 @@ if (!is_file('Resources/Pipelines/Scad/pipeline.php')) {
   exit(2);
 }
 $src=file_get_contents('Resources/Pipelines/Scad/pipeline.php');
-$i=strpos($src,"\nfunction sanitizeSCAD("); $d=0;$o='';
-for($j=$i+1;$j<strlen($src);$j++){$o.=$src[$j]; if($src[$j]=='{')$d++; if($src[$j]=='}'){$d--; if($d==0)break;}}
-eval($o);
+// / Three functions are needed now. The rewrite is what the second half of this file tests,
+// / & it calls the resolver, so all three come across together.
+foreach (array('resolveSCADInclude','sanitizeSCAD','rectifySCAD') as $wanted) {
+  $i=strpos($src,"\nfunction ".$wanted."("); $d=0;$o='';
+  if($i===FALSE){ fwrite(STDERR,'Could not find '.$wanted.' in the pipeline.'.PHP_EOL); exit(2); }
+  for($j=$i+1;$j<strlen($src);$j++){$o.=$src[$j]; if($src[$j]=='{')$d++; if($src[$j]=='}'){$d--; if($d==0)break;}}
+  eval($o);
+}
 $cases=[
  'plain'                 =>['include <evil.scad>', 1],
  'block comment bypass'  =>["/*x*/include <evil.scad>", 1],
@@ -123,4 +139,33 @@ foreach($cases as $name=>$c){
   $n=count($r);
   if($n!==$c[1]){ printf("  MISS %-24s expected %d found %d\n",$name,$c[1],$n); $fail++; }
 }
-echo "  ".count($cases)." evasions tested, $fail wrong\n"; exit($fail > 0 ? 1 : 0);
+echo "  ".count($cases)." evasions tested, $fail wrong\n";
+
+// / The rewrite is tested separately, because a call the lexer finds is not a call the
+// / rewrite removes. Each case states how many live calls may remain once it has run.
+// / Every one of them is zero. A rewrite that leaves a call behind is the bug this half
+// / of the file exists to catch.
+$rectifyCases=[
+ 'block comment closes on the line' =>["/*\n*/ surface(file=\"b.scad\");\ncube(1);", 0],
+ 'absolute path after the close'    =>["/*\n*/ import(\"/etc/hostname\");\ncube(1);", 0],
+ 'two calls on one line'            =>['import("a.stl"); surface(file="b.scad");', 0],
+ 'call split across lines'          =>["import(\n  \"a.stl\"\n);", 0],
+ 'nested parens in arguments'       =>['surface(file="b.scad", center=(1+2));', 0],
+ 'close paren inside the string'    =>['import("a)b.stl");', 0],
+ 'comment between bracket & quote'  =>['surface(/*x*/"b.scad");', 0],
+ 'line comment inside arguments'    =>["import(\"a.stl\" // note\n );", 0],
+ 'angle form after the close'       =>["/*\n*/ include <evil.scad>", 0],
+ 'keyword inside a string'          =>['echo("import(\\"x\\")");', 0],
+ 'nothing to remove'                =>['cube(1);', 0],
+];
+$rectifyFail=0;
+foreach($rectifyCases as $name=>$c){
+  list($rewritten,$found,$resolved,$removed,$verified)=rectifySCAD($c[0],array(),FALSE);
+  $live=count(sanitizeSCAD($rewritten));
+  $lines=(count(preg_split('/\R/',$c[0]))===count(preg_split('/\R/',$rewritten)));
+  if($live!==$c[1]){ printf("  MISS %-34s expected %d live call(s) after the rewrite, found %d\n",$name,$c[1],$live); $rectifyFail++; continue; }
+  if($verified!==TRUE){ printf("  MISS %-34s the rewrite did not verify itself\n",$name); $rectifyFail++; continue; }
+  if(!$lines){ printf("  MISS %-34s the rewrite changed the line count\n",$name); $rectifyFail++; }
+}
+echo "  ".count($rectifyCases)." rewrites tested, $rectifyFail wrong\n";
+exit((($fail + $rectifyFail) > 0) ? 1 : 0);

@@ -359,6 +359,10 @@ that says stream is a name nobody writing a document fetcher will ever search fo
     sanitizeSCAD            reads the source & reports every call it finds
     resolveSCADInclude      resolves an include against what the same user uploaded
     rectifySCAD             rewrites the source using what the Sanitizer found
+                            It replaces the exact characters of each call & never a whole
+                            line, & it hands the result back to the Sanitizer before it
+                            returns. A rewrite that cannot prove every reference is gone is
+                            refused & nothing is rendered from it.
     sanitizeAllSCADUploads  applies that to every file in the session
 
   STAYED in the core, because the operating environment is not a converter

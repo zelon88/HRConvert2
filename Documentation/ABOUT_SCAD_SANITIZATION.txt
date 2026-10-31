@@ -1,0 +1,267 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 10/31/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v3.9.8.
+This plain text file describes how an uploaded OpenSCAD source is stripped of its file references before it is rendered.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+The authoritative list of dependencies is Resources/Engine/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Problem--
+
+OpenSCAD is a programming language & an uploaded .scad file is a program this server runs.
+Several of its statements read files from disk.
+
+  include <file>    Pastes another source in at that point.
+  use <file>        Loads the modules another source defines.
+  import("file")    Reads geometry. STL, OFF, DXF, SVG & more.
+  surface(file=)    Reads a heightmap. A PNG or a numeric table.
+  import_stl, import_dxf, import_off, dxf_cross, dxf_dim,
+  dxf_linear_extrude, dxf_rotate_extrude                   Older named forms of the same thing.
+
+A visitor needs no account to upload one. Left alone, any of those statements would read a
+path the visitor chose & hand the contents back as geometry they can download. The whole of
+this subsystem exists to make sure none of them run.
+
+A BOUNDARY & A CONVENIENCE, & THE DIFFERENCE IS THE WHOLE DESIGN.
+The sandbox is the boundary. OpenSCAD is a dependency that parses a file a stranger uploaded,
+every such dependency is assumed to be exploitable, & bubblewrap bounds what a successful
+exploit reaches. The sanitizer is a convenience sitting on top of it. It removes the references
+before the renderer ever sees them, which keeps the ordinary case quiet & the logs readable, &
+it is EXPECTED to be incomplete. Nothing here may be written on the assumption that it holds.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Three Functions & One Rule Each--
+
+  sanitizeSCAD            Reads a source & reports every file reading call in it.
+  resolveSCADInclude      Decides whether a reference points at something the same user uploaded.
+  rectifySCAD             Rewrites the source using what the first two said.
+  sanitizeAllSCADUploads  Applies that to every .scad file in the session.
+
+All four live in Resources/Pipelines/Scad/pipeline.php, because every one of them is knowledge
+about what OpenSCAD source MEANS. None of them belongs in the core.
+
+NOTHING FOLLOWS A REFERENCE FROM ONE FILE TO ANOTHER.
+sanitizeAllSCADUploads sanitizes every .scad file the user uploaded, as a flat set. It never
+traverses. a.scad may include b.scad while b.scad includes a.scad & both are legitimate files
+somebody uploaded, so traversal would need cycle detection & a depth budget. Sanitizing the
+whole set instead means every file the renderer can possibly reach has already been through
+the filter, & the set is closed & bounded by whatever the user was willing to upload.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Why The Finder Is A Lexer--
+
+sanitizeSCAD walks the source one character at a time & tracks what it is inside of. Line
+comment, block comment, string literal, or live code. A keyword only counts when it is found
+in live code.
+
+A PATTERN MATCH WOULD BE WRONG IN BOTH DIRECTIONS.
+It would miss  include/*x*/<evil.scad>  because a comment may sit between a keyword & its
+bracket, & OpenSCAD separates tokens with comments as happily as with spaces. It would fire on
+x="include <a.scad>" which is a string & reads nothing. One is a hole & the other refuses a
+file that was never dangerous.
+
+The rules the lexer encodes, each of which was a real evasion at some point.
+
+  A block comment does not nest. The character after the first closing sequence is live code
+  again, even on the same line.
+  A line comment ends at the newline & nothing before that newline is code.
+  A backslash inside a string escapes the next character, so an escaped quote does not end it.
+  A keyword must not be preceded by a letter, a digit or an underscore, or myinclude would
+  match as include.
+  The longest keyword is tried first, or import_stl would match as import & leave _stl looking
+  like an identifier.
+  Case does not matter. INCLUDE & InClUdE are the same statement.
+  A call may be split across any number of lines, so whitespace & newlines are skipped while
+  looking for the bracket that makes a keyword a call.
+
+sanitizeSCAD reports, for every call it finds, the keyword, the line it started on, the exact
+first & last character it occupies, the reference text & whether it used the angle form.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Why The Rewrite Works On CHARACTERS & Not LINES--
+
+THIS IS THE PART THAT WAS WRONG, & IT IS WORTH UNDERSTANDING WHY.
+
+An earlier version commented out the whole line a call started on, by writing a marker at the
+start of it. That was chosen deliberately & defended in a comment as being coarse but
+impossible to get subtly wrong. It was wrong, & here is the shape of it.
+
+  /*
+  */ surface(file="b.scad");
+
+The lexer finds the call correctly. It is live code, because the block comment closed two
+characters earlier. The rewrite then writes its marker at the START of that line, which is
+still INSIDE the block comment opened on the line above. The marker becomes comment text, the
+*/ still closes the comment, & the call after it runs exactly as the visitor intended.
+
+A line is the wrong unit because a line has no single state. The state at the start of a line
+& the state at the position of a call on that line are different things.
+
+WHAT IT DOES NOW.
+A removed call is overwritten with whitespace of exactly the same length. Every newline inside
+the span is preserved, so every line below a removal keeps the number it had & a renderer error
+still points at something the user can find in their own file. A resolved include is written
+in place, where the call was. Nothing is commented out, because writing a comment is what went
+wrong.
+
+Replacements are applied from the end of the source backwards, so an earlier offset is still
+correct after a later replacement has changed the length of the text.
+
+This cannot be fooled the same way, because the lexer only ever reports a call it found in
+live code, & the span it reports starts exactly there.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Rewrite Proves Itself--
+
+The rewritten source is handed back to sanitizeSCAD before it is staged.
+
+Every call the lexer can still see must be one the rewrite wrote itself, which is a resolved
+include & nothing else. Anything more means a call survived. The source is not staged, nothing
+is rendered from it, & the conversion is refused with error 27009.
+
+A REFUSAL, NOT A WARNING.
+A source still carrying a live file reference is the exact condition this subsystem exists to
+prevent. Rendering it anyway would mean trusting the rewrite rather than checking it, & the
+reported bypass survived precisely because nothing checked.
+
+This costs one extra pass over a file somebody uploaded. That is cheap, & it converts a whole
+class of future mistakes in rectifySCAD from a silent hole into a refused conversion.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--What May Be Kept--
+
+ONE THING, & ONLY WHEN THE OPERATOR ENABLED IT.
+
+An angle bracket include or use may be rewritten to point at another source the SAME USER
+uploaded in the SAME SESSION, when --Allow SCAD Include Resolution-- is on in config.php.
+resolveSCADInclude decides, & it matches against the session file list & nothing else.
+
+Everything else is always removed, whatever the configuration says. A geometry read & a
+heightmap read are never resolved & never rewritten, because there is no legitimate version of
+reading a path a stranger typed.
+
+The kept reference is written as a BARE FILENAME & never as the path the resolver returned.
+Every sanitized copy lives in one directory, the render runs with that directory as its working
+directory, so a bare name resolves. An absolute path would not, because inside the sandbox that
+directory is mounted somewhere else entirely & the real path does not exist at all.
+
+The originals are never modified. Sanitized copies are written to ScadTemp & the render reads
+only those.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Boundary--
+
+OpenSCAD runs inside bubblewrap. Documentation/ABOUT_NETWORK_ISOLATION.txt describes how a
+profile is arrived at, which is by removing permissions until the tool stops working & keeping
+what is left.
+
+THIS IS THE LAYER THAT IS RELIED ON, & THAT IS A DELIBERATE CHOICE.
+Every conversion dependency parses a file a stranger uploaded & most of them have a history of
+memory corruption bugs. An operator cannot wait for an otherwise reputable upstream to patch
+something that may have been reachable for a decade, & no amount of filtering inside this
+application fixes somebody else's parser. So the trust goes to the sandbox. --Require Sandbox--
+refuses every conversion that depends on one when no sandbox is available rather than running it
+unprotected, & that refusal is the architecture stating its own priority out loud.
+
+WHAT IT COVERED WHEN THE FILTER WAS BYPASSED.
+Measured rather than assumed during the second advisory. With the filter bypassed the renderer
+could still only read what the sandbox mounts. Other sessions' files, the install secret & the
+application tree were not reachable. What was reachable was read only system content & only in
+formats OpenSCAD can parse.
+
+That is the boundary doing the job it was built for, & it is why the bypass was rated where it
+was. It is still not a reason to widen the mounts. They are arrived at by removing permissions
+until the tool stops working, & anything added later widens what any future filter bypass can
+reach. The two layers are maintained independently & neither is allowed to assume the other.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Toggles--
+
+The sanitizer is a convenience, so an operator who does not want it in the path has several ways
+to say so. Each of these lives in Resources/config.php & is documented there.
+
+  --Require Sandbox--               Refuse every conversion that needs a sandbox when none is
+                                    available, rather than running it unprotected. TRUE by
+                                    default on bare metal. This is the setting that matters.
+  --Require Sandbox On Docker--     The container equivalent. A container cannot build a sandbox
+                                    at all unless it was started with the right options.
+  --Throw Sandbox Warning--         Whether each unprotected conversion writes a warning.
+  --Allowed Conversion Types--      Remove 'Scad' from the list & the format is gone, & the UI
+                                    stops offering it. This is the per format off switch.
+  --Allow SCAD Include Resolution-- Whether an include or use may resolve to another source the
+                                    same user uploaded. It does NOT gate file reads.
+
+Deleting Resources/Pipelines/Scad entirely is the other way & it is supported. A pipeline the
+PipelineCore cannot find is a pipeline that cannot run.
+
+WHAT NO TOGGLE CAN TURN OFF.
+Removal of the file reading primitives. import(), surface(), the deprecated import_stl family &
+every dxf file= form are removed from every uploaded source whatever the configuration says.
+There is no setting that lets a visitor hand this application a path & have it read.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Testing It--
+
+  php Documentation/Build/hrconvert2-test-scad-cli.php
+
+Run from the installation root. It drops privileges, needs no root & exits non zero on any
+wrong answer.
+
+IT TESTS BOTH HALVES, & IT DID NOT ALWAYS.
+The first half attacks sanitizeSCAD with every evasion shape known. The second half attacks
+rectifySCAD with the shapes that survive a REWRITE rather than a scan, including a block
+comment closing on the call's line.
+
+The second half exists because the first half passed every case while the reported bypass was
+live. The lexer found the call. The rewrite put it back. No test could see the difference,
+because no test ever ran the rewrite.
+
+A NEW CASE GOES IN BEFORE THE FIX, NOT AFTER.
+Every rewrite case was run against the unfixed pipeline first & three of them reproduced the
+bypass. A test that has never failed has never been shown to test anything.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--History--
+
+Two security advisories shaped this subsystem & each taught a different lesson.
+
+  GHSA-qcq3-837w-2c9c    Reported that a pattern match could be evaded. The answer was the
+                         stateful lexer described above. Filed by Github user @dagadjno.
+
+  GHSA-mqvr-h4q5-chg9    Reported that the lexer was never the weak half. It found every call
+                         & the line based rewrite put them back. The answer was rewriting by
+                         character offset, the verification pass, & rewrite cases in the test
+                         tool. Filed by Takaya Sato, Github user @dagadjno.
+
+THE SECOND ONE IS THE MORE USEFUL LESSON.
+The hard, interesting, carefully tested component was correct. The dull function downstream of
+it undid the work, & every test pointed at the interesting component. When a filter is
+bypassed, check what happens to the finding after it is found.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

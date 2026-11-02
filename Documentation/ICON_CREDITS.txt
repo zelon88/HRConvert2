@@ -19,7 +19,7 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ... 
-The authoritative list of dependencies is Resources/Engine/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
 <3 Open-Source
 -----------------------------------------------------------------------------------
 

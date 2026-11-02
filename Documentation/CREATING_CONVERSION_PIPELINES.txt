@@ -18,7 +18,7 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ... 
-The authoritative list of dependencies is Resources/Engine/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -50,7 +50,8 @@ Every conversion family moved out into its own folder, one at a time, & the buil
 dispatcher that carried them during that migration has been removed. A family with no
 installed pipeline reports error 34005 rather than falling back to anything.
 
-  `Resources/PipelineCore/pipelineCore.php`         Pipeline Core. Pins & dispatches.
+  `Resources/Engine/Cores/pipelineCore.php`         Pipeline Core. Verifies & dispatches.
+  `Resources/Contract/app-engine-config.php`        Which pipelines are accepted, & at what version.
   `Resources/Pipelines/<Family>/pipelineConfig.php` What a pipeline declares.
   `Resources/Pipelines/<Family>/pipeline.php`       The converter itself.
   `Resources/Pipelines/<Family>/README.md`          What the pipeline is & what it depends on.
@@ -227,7 +228,7 @@ Read these before writing code. They are preconditions, not steps.
   5m. That function sanitizes request input. It knows nothing about dependencies.
 
 6. Add the dependency to the manifest & ask for it by name. Do not write a version check.
-  6a. The manifest is `Resources/Engine/Contract/depends.php`. It is the only owner of a
+  6a. The manifest is `Resources/Contract/depends.php`. It is the only owner of a
       tool's minimum version. Nothing else holds one, so nothing can disagree with it.
   6b. Give the entry a `MinimumVersion`, a `VersionCommand` & a `VersionPattern`. That is
       everything a version check needs, & it is what `--setup --check-depends` already reads.
@@ -264,7 +265,8 @@ Read these before writing code. They are preconditions, not steps.
       the subsystem rather than the package, so one version lives in one place.
   7h. `$Capabilities` is the CEILING. Detection may narrow it & may never exceed it.
   7i. `$PipelineExclude` removes a pair from the cross product. `pdf>pdf` is the usual case.
-  7j. Add your folder to `getAcceptedPipelines()` in Pipeline Core & bump BOTH versions.
+  7j. Add your folder & its version to `$EngineAcceptedPipelines` in
+      `Resources/Contract/app-engine-config.php`. Nothing in the Engine changes for it.
       That list is an ALLOWLIST rather than a convenience. A folder that is not named there
       is never read, never required & never enumerated, so a folder somebody drops onto the
       server cannot be executed by being present.
@@ -294,7 +296,7 @@ Read these before writing code. They are preconditions, not steps.
 9. Check `convertFiles()` for globals & proper conversion type routing.
   9a. `convert()` no longer carries a branch per family. It asks Pipeline Core whether any
       pipeline serves this family & this pair of extensions, then dispatches. There is
-      nothing to add there & nothing to edit. Your `getAcceptedPipelines()` line is what
+      nothing to add there & nothing to edit. Your `$EngineAcceptedPipelines` line is what
       makes your family reachable.
   9b. There are two maps. Your pipeline needs an entry in both, under one key.
   9c. `$arrayArray` filters the input extension.

@@ -18,7 +18,7 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ...
-The authoritative list of dependencies is Resources/Engine/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -45,9 +45,11 @@ Everything in this file follows from two decisions.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --The Manifest--
 
-Resources/Engine/Contract/depends.php holds one entry per dependency. It is in Contract
+Resources/Contract/depends.php holds one entry per dependency. It is in Contract
 because it belongs to the APPLICATION & is handed to the Engine, which has no dependencies of
 its own beyond the sandbox. An application built on this Engine writes its own manifest.
+It sits outside Resources/Engine so the Engine can be replaced whole without taking the
+manifest with it. It was Resources/Engine/Contract/depends.php from v3.9.3 until v3.9.9.
 
 Each entry carries these fields.
 
@@ -80,7 +82,7 @@ A pipeline never looks for a binary itself & never writes a path.
 
   $binary = verifiedToolPath('7-Zip');
 
-verifiedToolPath() lives in Resources/PipelineCore/pipelineCore.php. It asks the Dependency
+verifiedToolPath() lives in Resources/Engine/Cores/pipelineCore.php. It asks the Dependency
 Core for the named entry, loading that core if it is not loaded yet, & it returns a usable
 path or FALSE. FALSE means missing, unidentifiable or older than the manifest allows, & the
 pipeline must then report that & refuse rather than guess.
@@ -200,7 +202,7 @@ does not disable a conversion type. It stops the application.
     3d. If a binary or code is bundled, inspect & cross-reference it as far as you are able.
     3e. If we build it ourselves, sanity check the machine we build it on first.
     3f. If installers build it themselves, provide a working build script.
-  4. Add or update the entry in Resources/Engine/Contract/depends.php.
+  4. Add or update the entry in Resources/Contract/depends.php.
   5. Run the approvals tool so the record carries the new facts.
     5a. python3 Documentation/Build/hrconvert2-approvals.py --refresh
     5b. Fill in Status, Approved on, Expires on & Audited by.
@@ -241,7 +243,7 @@ Write NOT APPLICABLE, OWNED in the Expires on field so --check does not chase it
   3. Test everything related to it. Confirm the application still works without it.
   4. Do NOT remove it from the current SUPPLY_CHAIN_AUDIT_<YEAR>.xlsx. Mark the removal date
      & the reason under Description instead. A removed dependency is still history.
-  5. Remove its entry from Resources/Engine/Contract/depends.php.
+  5. Remove its entry from Resources/Contract/depends.php.
   6. Search the codebase for every reference & remove each one, including any verifiedToolPath
      call & any $PipelineDependencies declaration.
   7. Run the approvals tool with --refresh so it drops out of every record that listed it.

@@ -20,7 +20,7 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ... 
-The authoritative list of dependencies is Resources/Engine/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
@@ -140,6 +140,10 @@ developed in the open, alongside the code they are designed to safeguard.
   because a tool that reads HOME, finds nothing, and falls back to the working directory
   writes into the installation itself. A .cache appearing beside convertCore.php is that
   happening.
+  A folder in a temporary directory every account shares is used only after checking that
+  it is not a link, that the running account owns it, and that nobody else can reach it.
+  A predictable name there can be taken first by anybody. Two such folders were found at
+  v3.9.9, one locking accounts out and one running another account's code as root.
   Do not prefix an environment onto a command that goes to bwrap. bwrap execs directly and
   reads NAME=value as the name of a program to run rather than as an assignment. Use
   --setenv there instead.

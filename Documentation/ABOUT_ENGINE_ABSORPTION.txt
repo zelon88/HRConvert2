@@ -5,7 +5,13 @@ HRConvert2 v3.9.2
 
 This is a CONTRACT rather than a plan. It says what each component must stop knowing before
 it can move, what the application must start supplying, and what would be lost by moving a
-thing that should stay. Nothing here has been done yet.
+thing that should stay.
+
+THIS DOCUMENT DOES NOT RECORD STATUS. It said "Nothing here has been done yet" until v3.9.9,
+by which point five of its six steps had landed. A status sentence inside a design document
+has nothing checking it, so it ages into a lie that reads like a fact.
+Documentation/ENGINE_MIGRATION_STATUS.txt carries the status & names a check for every line
+of it. Step one was also solved differently than proposed below & that file says how.
 
 The pattern is already established twice in this codebase & neither move invents anything.
 Sandbox profiles are DATA the application hands over in $EngineSandboxProfiles. Environment
@@ -56,6 +62,8 @@ WHAT IT MUST STOP KNOWING
 WHAT THE APPLICATION MUST SUPPLY
 
   $EngineDependencyManifest The manifest. depends.php moves to Resources/Engine/Contract/depends.php.
+                            SUPERSEDED AT v3.9.9. It is Resources/Contract/depends.php, outside
+                            the Engine tree, for the reason given under DEPENDS.PHP MOVES below.
 
                             An earlier draft of this contract proposed TWO manifests, the
                             Engine's own merged with the application's. That was wrong &
@@ -164,6 +172,13 @@ WHERE THIS ENDS
   $RequiredConfigVersion becomes a fact about the model rather than a number somebody
   remembers to bump.
 
+  WITHDRAWN AT v3.9.9 FOR verifyConfigVersion. The argument above is about what the check
+  knows & it is right about that. It missed when the check runs. verifyConfigVersion runs
+  while the configuration loads, before the Engine is verified, & decides whether the
+  application starts at all. Anything reached before the Engine loads belongs to the kernel
+  or the application, which is question three of ABOUT_ENGINE_CONTRACT.txt, & this one stays
+  in the application. The configuration utility did move, with Setup Core.
+
   The command line handler goes the same way & for the same reason. --version, --status,
   --setup, --config, the kill commands & the manager commands are Engine commands wearing
   an application's name. What is left is the commands that convert something.
@@ -176,17 +191,30 @@ WHERE THIS ENDS
 DEPENDS.PHP MOVES BESIDE ENGINECONFIG.PHP
 -----------------------------------------------------------------------------------------
 
-Resources/Engine/Contract/depends.php becomes Resources/Engine/Contract/depends.php.
+Resources/depends.php becomes Resources/Engine/Contract/depends.php. This has been done.
 
 The reason is not tidiness. depends.php is READ BY dependencyCore.php & by nothing else,
 & a file belongs next to the thing that reads it. It sits beside config.php today because
 that is where the application's other data lived, which was true when Dependency Core was
 the application's.
 
-Once there are two manifests, the Engine's lives at Resources/Engine/Contract/depends.php & the
-application's at Resources/Engine/Contract/depends.php, & the paths say which is which without a comment.
+This paragraph once described where a SECOND manifest would live. There is no second
+manifest. The reasoning above rejected the idea & the text survived the decision that killed
+it, with a path replacement later collapsing both halves onto the same file. It is left here
+named rather than deleted, because a contradiction somebody has to notice twice is worse than
+one that says what it was.
 
 Version pins move with it. $RequiredDependsVersion becomes an Engine pin.
+
+SUPERSEDED AT v3.9.9. depends.php is Resources/Contract/depends.php. The reasoning above is
+kept because it is why the file moved the first time, & both of its premises have since failed.
+Dependency Core is no longer its only reader. Environment Core, Pipeline Core, the application's
+-v report & the approvals tool read it too. And next to the thing that reads it is the wrong
+rule for a file one application owns. The Engine directory is replaced whole when an Engine is
+traded between applications, so anything an application keeps inside it either travels to an
+application it does not describe or has to be picked out by hand first. The rule that won is
+the contract's. Application data lives outside every shared tree, & the Engine finds it through
+contractPath() in the kernel.
 
 -----------------------------------------------------------------------------------------
 WHAT THIS COSTS

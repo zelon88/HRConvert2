@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.8.
+// / v3.9.9.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -26,90 +26,6 @@
 // / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap Dia & xvfb-run.
 // /
 // / <3 Open-Source
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to reset PHP's time limit for execution.
-function setTimeLimit() {
-  $TimeReset = set_time_limit(0);
-  return $TimeReset; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to set the date & time for the session.
-function verifyTime() {
-  // / Set variables.
-  global $TimeIsSet, $Date, $Time, $EpochTime, $EnableMemoryProtection;
-  $TimeIsSet = FALSE;
-  $tzAbbreviations = DateTimeZone::listAbbreviations();
-  $tzList = array();
-  // / Build a list of timezones supported by this PHP installation.
-  foreach ($tzAbbreviations as $zone) foreach ($zone as $item) if (is_string($item['timezone_id']) && $item['timezone_id'] !== '') $tzList[] = $item['timezone_id'];
-  $tzList = array_unique($tzList);
-  $zoneList = array_values($tzList);
-  // / Check that the currently set timezone is valid.
-  if (in_array(@date_default_timezone_get(), $zoneList)) $TimeIsSet = TRUE;
-  // / Try to set the time regardless of whether or not the timezone is correct.
-  $EpochTime = time();
-  $Date = date("m_d_y");
-  $Time = date("F j, Y, g:i a");
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $tzAbbreviations, $tzList, $zoneList, $zone, $item);
-  return array($TimeIsSet, $Date, $Time, $EpochTime); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to sanitize input strings with varying degrees of tolerance.
-// / Filters a given string of | \ ~ # [ ] ( ) { } ; : $ ! # ^ & % @ > * & < " / ' ` chr(9) chr(10) chr(13) chr(0)
-// / This function will replace any of the above specified charcters with NOTHING. No character at all. An empty string.
-// / This function will replace whitespace with the underscore character.
-// / This function will remove leading and traling dashes.
-// / Set $strict to TRUE to also filter out backslash characters as well. Example:  /
-function sanitizeString($Variable, $strict) {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  // / Note that this function does not use the global $DangerousFiles. 
-  // / Instead this function defines & destroys it's own array every time it is called.
-  $dangerFiles = array('.js', '.php', '.html', '.css', '.phar', '..', 'index.php', 'index.html', '--');
-  // / Check for dangerous files or escape conditions.
-  foreach ($dangerFiles as $danFile) $Variable = str_replace($danFile, '', $Variable);
-  if ($strict) $Variable = trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split(',|\\~#[](){};:$!#^&%@>*?<"\'/`'.chr(9).chr(10).chr(13).chr(0)), '', str_replace('http://', '', str_replace('https://', '', $Variable))))))), '-');
-  if (!$strict) $Variable = trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split(',|\\~#[](){};:$!#^&%@>*?<"\'`'.chr(9).chr(10).chr(13).chr(0)), '', str_replace('http://', '', str_replace('https://', '', $Variable))))))), '-');
-  // / Check for dangerous files or escape conditions one more time.
-  foreach ($dangerFiles as $danFile) $Variable = str_replace($danFile, '', $Variable);
-  // / Trim the variable one last time to avoid any crafted leading dashes or directory separators.
-  $Variable = trim(trim(trim(trim($Variable, '-'), '.'), '-'), '.');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $strict, $dangerFiles, $danFile);
-  return $Variable; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to sanitize input strings or arrays with varying degrees of tolerance.
-// / Filters a given string of | \ ~ # [ ] ( ) { } ; : $ ! # ^ & % @ > * < " / ' ` chr(9) chr(10) chr(13) chr(0)
-// / This function will replace any of the above specified charcters with NOTHING. No character at all. An empty string.
-// / This function will replace whitespace with the underscore character.
-// / Set $strict to TRUE to also filter out backslash characters as well. Example:  /
-function sanitize($Variable, $strict) {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $VariableIsSanitized = FALSE;
-  $var = '';
-  $key = 0;
-  if (!is_bool($strict)) $strict = TRUE;
-  // / Only continue if the input variable is a type that we can properly sanitize.
-  if (is_string($Variable) or is_numeric($Variable) or is_array($Variable)) {
-    // / Sanitize array inputs.
-    // / Note that when $strict is TRUE this also filters out backslashes.
-    if (is_array($Variable)) foreach ($Variable as $key => $var) $Variable[$key] = sanitizeString($Variable[$key], $strict);
-    // / Sanitize string & numeric inputs.
-    // / Note that when $strict is TRUE this also filters out backslashes.
-    if (is_string($Variable) or is_numeric($Variable)) $Variable = sanitizeString($Variable, $strict);
-    // / Only set the Sanitized flag to TRUE if we have taken action on this variable.
-    $VariableIsSanitized = TRUE; }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $strict, $key, $var);
-  return array($Variable, $VariableIsSanitized); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -231,195 +147,6 @@ function verifyConfigVersion($RequiredConfigVersion) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to give a variable a second value without leaving the first one behind.
-// / Call this as redeclare($targetVariable, $newValue) & do not assign the result back.
-// / The target is taken by reference & is modified in place.
-// / A form such as $target = redeclare($target, $new) would overwrite the target with a boolean.
-// / The target is shredded before the new value is assigned, never after & never instead.
-// / Returns TRUE when the old value was destroyed before the new one landed, per convention 8.
-// / A FALSE return means the new value is in place but the old one may not be gone.
-// / This is a deliberate exception to convention 6 & is not a licence to ignore it.
-// / Convention 6 buys the shredding & the ability to read one name as holding one value.
-// / This function preserves the first of those & gives up the second.
-// / A loop body is the honest case for it, because a distinct name per value is impossible there.
-// / Straight line code is not, because a second variable name costs nothing & documents itself.
-// / An interned string cannot be shredded, so a value that came from a literal survives regardless.
-// / A value built at runtime is not interned & shreds correctly.
-// / A copy held by another variable cannot be reached, because PHP separates the buffer on write.
-// / Each call costs one debug_backtrace() through the purge routine.
-function redeclare(&$targetVariable, $newValue) {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $VariableIsRedeclared = FALSE;
-  $oldValueWasPurged = FALSE;
-  // / Shred whatever the target holds before anything is allowed to overwrite it.
-  // / The target is a reference to the caller's register, so this writes into the real buffer.
-  // / The TARGET is shredded, never $newValue. $newValue is what the caller asked to store,
-  // / & purgeSensitiveMemory writes NULL through its reference, so purging it here assigns
-  // / nothing to the target & silently empties the variable this function was asked to set.
-  // / That happened. Every redeclare() in convertGui2.php wiped the URL it was building, &
-  // / the settings links rendered as convertCore.php with no path & no parameters.
-  $oldValueWasPurged = purgeSensitiveMemory($EnableMemoryProtection, $targetVariable);
-  // / Assign the new value only once the old one has been dealt with.
-  $targetVariable = $newValue;
-  if ($oldValueWasPurged) $VariableIsRedeclared = TRUE;
-  // / $newValue is a copy & the caller still holds the original, so shredding it achieves nothing.
-  // / $targetVariable is not purged, because it is the value this function was asked to set.
-  $oldValueWasPurged = NULL;
-  unset($oldValueWasPurged);
-  return $VariableIsRedeclared; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / THIS STAYS IN THE APPLICATION & the reason is worth reading before moving it again.
-// / purgeSensitiveMemory calls it, & purgeSensitiveMemory is called by EVERYTHING,
-// / including code that runs long before the Engine is loaded. It was moved to the
-// / Engine once & took the whole application down at line 57.
-// / The pre Engine check did not catch it because it looks for TOP LEVEL calls, & this
-// / is reached from inside a function that everything calls. A caller that ubiquitous
-// / has no single call site to find.
-// / A function to determine what function called the function that called this function.
-// / This function uses naieve memory cleanup routine deliberately out of neccesity.
-// / Only a human brain could have written that last comment. Just sit with it. I promise it makes sense.
-// / Accepts no arguments & returns the name of the first caller that is not a memory routine.
-// / Frames belonging to the memory routines are skipped deliberately.
-// / A caller that reached the purge through redeclare() still owns the data & is still the culprit.
-// / Naming the wrapper would recreate the mystery this function exists to prevent.
-// / Returns 'main' when the call came from main or from no function at all.
-function getChildFunction() {
-  // / Set variables.
-  // / A depth of eight is generous, because the memory routines never stack three frames deep.
-  $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 8);
-  $memoryFunctions = array('getChildFunction', 'purgeSensitiveMemory', 'redeclare');
-  $DirectCallingFunctionName = 'main';
-  $traceKey = 1;
-  // / Walk up the stack until a frame outside the memory routines is found.
-  while (isset($trace[$traceKey]['function'])) {
-    if (!in_array($trace[$traceKey]['function'], $memoryFunctions, TRUE)) {
-      $DirectCallingFunctionName = $trace[$traceKey]['function'];
-      break; }
-    $traceKey++; }
-  // / This cleanup is manual, because purgeSensitiveMemory() calls this function.
-  $trace = $memoryFunctions = $traceKey = NULL;
-  unset($trace, $memoryFunctions, $traceKey);
-  return $DirectCallingFunctionName; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to destroy variables from the heap to reduce the risk of memory leakage.
-// / String buffers are overwritten with null bytes before the reference is broken.
-// / Call this as purgeSensitiveMemory($FailureIsFatal, $variableOne, $variableTwo).
-// / Every target must be its own argument, because the argument list is taken by reference.
-// / Collecting targets into an array copies their values & shreds only the copies.
-// / The first argument decides the cost of a failure & nothing else decides it.
-// / TRUE prints error 40000 to the page, closes the connection & halts.
-// / FALSE records a warning & continues.
-// / Late running callers pass $EnableMemoryProtection & early running callers pass a literal.
-// / The reporting channel is decided by whether $LogFile is usable, not by the first argument.
-// / config.php loads before verifyLogs() runs, so an available config does not mean available logging.
-// / A fatal failure always reaches the page, whether or not it reached the logfile.
-// / A non-fatal failure never reaches the page, because the user is still going to be served.
-// / Returns TRUE when every target was destroyed, per convention 8.
-// / This function does not purge its own variables, because that would loop forever.
-// / This function does not free memory & a destroyed value still occupies its allocation.
-// / PHP separates a shared string on first write, so a second variable holding the same value keeps it.
-// / resolveSecretFile() relies on that behaviour to shred a key it is returning.
-// / Check the log for the named function whenever error 40000 or a purge warning appears.
-function purgeSensitiveMemory($FailureIsFatal, &...$variables) {
-  // / Set variables.
-  global $EnableMemoryProtection, $LogFile, $Verbose;
-  // / These two survive recursion so an inner call still names the function that owns the data.
-  // / Neither ever holds sensitive data & both are released when the outermost call unwinds.
-  static $callerName = '';
-  static $recursionDepth = 0;
-  $MemoryIsPurged = TRUE;
-  $variableIsDestroyed = $loggingIsReady = FALSE;
-  $mpStatus = 'Disabled';
-  $mpNote = $failureText = '';
-  $length = $i = 0;
-  // / Resolve the responsible function once, on the outermost call only.
-  if ($recursionDepth === 0) $callerName = getChildFunction();
-  $recursionDepth++;
-  // / Report the behaviour this call was given, not the global it may not agree with.
-  if ($FailureIsFatal) $mpStatus = 'Enabled';
-  // / Say so when the supplied behaviour disagrees with config.php, so the log names the decider.
-  if (isset($EnableMemoryProtection) && (bool)$EnableMemoryProtection !== (bool)$FailureIsFatal) $mpNote = ' This behaviour was supplied by the caller & does not match config.php.';
-  // / Decide which reporting channel exists yet, because installation code runs before verifyLogs().
-  if (isset($LogFile) && is_string($LogFile) && $LogFile !== '') $loggingIsReady = TRUE;
-  // / Loop through every variable that was submitted for destruction.
-  foreach ($variables as &$variable) {
-    // / Reset the flag at the start of every iteration of the loop.
-    $variableIsDestroyed = FALSE;
-    // / A variable that already holds nothing has nothing to shred & is not a failure.
-    if (is_null($variable)) $variableIsDestroyed = TRUE;
-    // / Shred multi-dimensional arrays recursively using reference keys.
-    if (is_array($variable) && !empty($variable)) {
-      // / A failure at any depth invalidates the whole operation, so the result is carried up.
-      foreach ($variable as $key => &$subValue) { if (!purgeSensitiveMemory($FailureIsFatal, $subValue)) $MemoryIsPurged = FALSE; }
-      // / Clear the loop reference safely.
-      unset($subValue);
-      $variable = NULL;
-      $variableIsDestroyed = TRUE; }
-    // / Explicitly handle empty arrays.
-    if (is_array($variable) && empty($variable)) {
-      $variable = NULL;
-      $variableIsDestroyed = TRUE; }
-    // / Standard boolean resolution tracking.
-    if (is_bool($variable)) {
-      $variable = NULL;
-      $variableIsDestroyed = TRUE; }
-    // / Convert numeric variables to character buffers.
-    if (is_numeric($variable)) $variable = (string)$variable;
-    // / Physically overwrite strings with null bytes.
-    if (is_string($variable)) {
-      $length = strlen($variable);
-      for ($i = 0; $i < $length; $i++) $variable[$i] = "\0";
-      $variable = NULL;
-      $variableIsDestroyed = TRUE; }
-    // / An object or a resource has internal buffers this function cannot write into.
-    // / Drop the reference. This is a permanent property of the type rather than an event,
-    // / so it is recorded as normal activity & not as a warning.
-    if (!$variableIsDestroyed) {
-      // / A RESOURCE is expected to be unshreddable & saying so is noise rather than news.
-      // / A socket handle holds no bytes this process can overwrite, so dropping the
-      // / reference is the only thing available & is exactly the right outcome.
-      // / Every manager pass closes several sockets & logging each one buried the entries
-      // / an operator actually needs to see.
-      // / Any OTHER type reaching here is still reported. An object that cannot be
-      // / shredded is worth knowing about, because it may hold a value in a property this
-      // / function never reached.
-      if ($loggingIsReady && $Verbose && strpos(gettype($variable), 'resource') === FALSE) logEntry('Dropped unshreddable reference type '.gettype($variable).' for the '.$callerName.' function.');
-      $variable = NULL;
-      if (is_null($variable)) $variableIsDestroyed = TRUE; }
-    // / Halt or alert only once the fallback above has also failed to release the variable.
-    // / This branch maintains the integrity of the fallback contract.
-    // / It should never be reachable, because assigning NULL cannot fail.
-    if (!$variableIsDestroyed) {
-      $MemoryIsPurged = FALSE;
-      $failureText = 'Cannot purge sensitive memory for the '.$callerName.' function! Memory protection is '.$mpStatus.'.'.$mpNote;
-      // / Record a non-fatal failure & continue without printing anything to the page.
-      // / The error log is the only channel available before verifyLogs() has run.
-      if (!$FailureIsFatal) {
-        if ($loggingIsReady) warningEntry($failureText.' Continuing...');
-        else error_log('WARNING!!! HRConvert2: '.$failureText.' Continuing...'); }
-      // / Log a fatal failure where it can be logged, then always report it to the page.
-      // / errorEntry is given a FALSE die flag so control returns here for the print & the close.
-      // / Letting errorEntry die would drop the connection & would skip the print entirely.
-      // / errorEntry records it wherever it can & hands the halt to quickDie, so this
-      // / path no longer has to know whether a logfile exists.
-      if ($FailureIsFatal) errorEntry($failureText.' Execution cannot continue!', 40000, TRUE); } }
-  // / This function does not purge its own variables, because that would loop forever.
-  // / It is deliberately careful about what memory it consumes instead.
-  unset($variable, $subValue, $key, $mpStatus, $mpNote, $failureText, $variableIsDestroyed, $loggingIsReady, $i, $length);
-  // / Release the recursion state once the outermost call has finished with it.
-  $recursionDepth--;
-  if ($recursionDepth < 1) {
-    $recursionDepth = 0;
-    $callerName = ''; }
-  return $MemoryIsPurged; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
 // / A function to obfuscate the secret file contents.
 // / Decoy secrets give a grep & regex scan seven plausible keys instead of one.
 // / This raises the cost of an attack rather than preventing one.
@@ -468,10 +195,12 @@ function addSillyString($Secret, $secretVersion) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / FOUR BOOT FUNCTIONS THAT MUST LIVE IN THE APPLICATION. Do not move them to the Engine.
+// / BOOT FUNCTIONS THAT MUST NOT LIVE IN THE ENGINE. Do not move them there.
 // / Each is reached before the Engine loads: generateInstallSecret through verifyInstallation
-// / & resolveSecretFile, closeHRC2Connection through quickDie, & the two AppArmor functions
-// / through verifySandboxPolicy, which verifyInstallation calls.
+// / & resolveSecretFile, & the two AppArmor functions through verifySandboxPolicy, which
+// / verifyInstallation calls. Those three stay in the application.
+// / The fourth, closeClientConnection, is reached through quickDie & is therefore KERNEL. It
+// / moved to Resources/Kernel/kernel.php at v3.9.9, which is beside the Engine & not in it.
 // / All four were moved to the Engine at v3.9.3 & it went unnoticed, because each is only
 // / reached on a first run, an error exit or a sandbox check. An existing install has a
 // / secret, so generateInstallSecret was never called & nothing failed. A FRESH install has
@@ -495,15 +224,6 @@ function generateInstallSecret() {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $error);
   return array($InstallSecret, $InstallSecretCheck); }
-// / -----------------------------------------------------------------------------------
-
-// / A function to close the web server connection.
-function closeHRC2Connection() {
-  ignore_user_abort(TRUE);
-  if (function_exists('fastcgi_finish_request')) fastcgi_finish_request();
-  else {
-    if (ob_get_level() > 0) ob_end_flush();
-    flush(); } }
 // / -----------------------------------------------------------------------------------
 
 // / A function to report whether an AppArmor profile is loaded into the kernel.
@@ -569,7 +289,7 @@ function reloadApparmorProfile($profilePath) {
 // / Appending to an existing file would produce a file that loads & carries a key nobody generated.
 // / A file that fails that check is deleted.
 // / The file is chmod 0600 on every path, because a secret another account can read is not a secret.
-// / This is called for the install wide secret & for a per user secret in a home directory.
+// / This is called for the install wide secret & for a per user secret in a folder of its own.
 // / The logic is identical & only the supplied path differs, so it lives here rather than twice.
 // / $SecretKey is capitalized against convention 3 because the secret file defines it under that name.
 // / It is a function local here regardless of its case & is shredded before this function returns.
@@ -642,9 +362,16 @@ function resolveSecretFile($secretFile, $requiredSecretVersion) {
         else error_log('WARNING!!! HRConvert2: '.$rotationNotice); }
       else {
         // / Commit the buffer to disk under an immediate exclusive lock.
-        $bytesWritten = file_put_contents($secretFile, $secretFileContent, LOCK_EX);
+        // / The write is suppressed & then checked, rather than left to print a raw PHP warning.
+        // / A failure here was already handled below & never reported, while PHP printed its own
+        // / message first. A standard user whose secret lives in a directory another user created
+        // / hits exactly that, because the directory is private to whoever made it first.
+        $bytesWritten = @file_put_contents($secretFile, $secretFileContent, LOCK_EX);
         // / Check that the secret, & only the secret, was written to the file.
         if ($bytesWritten !== strlen($secretFileContent)) {
+          $rotationNotice = 'The install secret could not be written to '.$secretFile.'. The directory may belong to another user, or be read only.';
+          if ($loggingIsReady) warningEntry($rotationNotice);
+          else error_log('WARNING!!! HRConvert2: '.$rotationNotice);
           if (file_exists($secretFile)) @unlink($secretFile); }
         else {
           @chmod($secretFile, 0600);
@@ -681,6 +408,49 @@ function resolveSecretFile($secretFile, $requiredSecretVersion) {
     // / A secret that loaded correctly is still correct, so readiness is not withdrawn.
     $SecretIsReady = $SecretIsReady; }
   return array($SecretIsReady, $ResolvedSecretKey); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to find a folder for the per user secret of a command line account.
+// / Accepts the application's slug & the account's slug, both already sanitized.
+// / Returns a readiness boolean & the folder, in that order. A failure returns FALSE & an
+// / empty string, which the caller must treat as no secret at all.
+// / Every account gets a folder named for itself in the temporary directory. Until v3.9.9
+// / every command line account but root shared one, /tmp/.HRConvert2, & whichever ran first
+// / created it 0700 & locked every other account out with error 5, -v included.
+// / The home directory is not used, because verifyInstallation has already set HOME from a
+// / configuration it has not read yet, which leaves it empty.
+// / The temporary directory is shared, so another account can create the name first, as a
+// / folder of its own, a folder anybody may write or a link. A folder is used only when this
+// / account can write it, it is not a link & its mode is exactly 0700, & each refusal says
+// / why, because a secret kept where another account can reach it is not a secret.
+function resolveUserSecretFolder($applicationSlug, $accountSlug) {
+  // / Set variables.
+  global $LogFile, $EnableMemoryProtection;
+  $FolderIsReady = FALSE;
+  $UserSecretFolder = '';
+  $candidateFolder = $folderNotice = '';
+  $loggingIsReady = FALSE;
+  if (isset($LogFile) && is_string($LogFile) && $LogFile !== '') $loggingIsReady = TRUE;
+  $candidateFolder = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'.'.$applicationSlug.'-'.$accountSlug;
+  if (!file_exists($candidateFolder) && !is_link($candidateFolder)) @mkdir($candidateFolder, 0700, TRUE);
+  // / A folder this account owns can only have lost bits to the umask, so it is put back to
+  // / 0700. The chmod fails silently on a folder another account owns, & the checks refuse it.
+  if (is_dir($candidateFolder) && !is_link($candidateFolder)) @chmod($candidateFolder, 0700);
+  clearstatcache(TRUE, $candidateFolder);
+  if (is_link($candidateFolder)) $folderNotice = 'The per user secret folder at '.$candidateFolder.' is a link & was not used. Delete it as root & run the command again.';
+  else if (!is_dir($candidateFolder)) $folderNotice = 'The per user secret folder at '.$candidateFolder.' could not be created.';
+  else if (!is_writable($candidateFolder)) $folderNotice = 'The per user secret folder at '.$candidateFolder.' belongs to another account & was not used. Delete it as root & run the command again.';
+  else if ((fileperms($candidateFolder) & 0777) !== 0700) $folderNotice = 'The per user secret folder at '.$candidateFolder.' can be reached by other accounts & was not used. Delete it as root & run the command again.';
+  else {
+    $FolderIsReady = TRUE;
+    $UserSecretFolder = $candidateFolder; }
+  if (!$FolderIsReady) {
+    if ($loggingIsReady) warningEntry($folderNotice);
+    else error_log('WARNING!!! HRConvert2: '.$folderNotice); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $candidateFolder, $folderNotice, $loggingIsReady, $applicationSlug, $accountSlug);
+  return array($FolderIsReady, $UserSecretFolder); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -740,7 +510,10 @@ function verifyInstallation() {
   $InstallationIsVerified = $RunningFromCLI = $RunningAsRoot = $RunningInContainer = FALSE;
   $secretAuthorized = $userSecretAuthorized = $secretIsReady = $configIsValid = $componentIsAvailable = FALSE;
   $SecretKey = $CurrentUser = $detectedConfigVersion = $configFile = $secretFolder = '';
-  $applicationSlug = $legacySecretFile = '';
+  $applicationSlug = $legacySecretFile = $accountSlug = $listenerCommand = '';
+  $secretFolderIsReady = FALSE;
+  $listenerArguments = array();
+  $listenerArgumentCount = 0;
   $SecretFile = '';
   $missingConfigVars = array();
   // / Detect if the application is being run from the command line.
@@ -766,22 +539,29 @@ function verifyInstallation() {
   // / given a secret of their own. It lets them run diagnostics without ever reading the
   // / install wide secret, & it cannot be used to derive or forge a web session.
   if ($RunningFromCLI && !$secretAuthorized) $userSecretAuthorized = TRUE;
-  // / A manager process is the web server user on the command line, which the rules above
-  // / deliberately deny the install secret. It is granted here for the two internal entry
-  // / points only, because a per user secret cannot validate a startup key the listener was
-  // / launched with, nor decrypt a socket message from a web worker.
-  // / argv is read directly because parseCommandLine() has not run yet.
-  if ($RunningFromCLI && $CurrentUser === $ApacheUser && isset($_SERVER['argv'][1]) && in_array($_SERVER['argv'][1], array('--start-core-manager', '--start-manager', '--run-core-manager'), TRUE)) {
-    // / --run-core-manager is how a service unit starts the listener. Leaving it out of
-    // / this list sent the unit down the per user secret path, so every socket key it
-    // / derived differed from the ones the web workers use & every message was discarded
-    // / as undecryptable. The listener ran perfectly & answered nobody.
-    $secretAuthorized = TRUE;
-    $userSecretAuthorized = FALSE; }
+  // / The web server user on the command line is denied the install secret by the rules
+  // / above, & is granted it here for the commands that operate the listener. Each of them
+  // / derives a startup key or a socket key from the install secret, & a per user secret
+  // / derives keys no manager accepts. Until v3.9.9 only the three manager entry points were
+  // / listed, so -l run as the web server user started a Core Manager that refused its key
+  // / with error 31006, & --status could not ask a running listener anything.
+  // / The Engine refuses the listener commands to every account but root & the web server
+  // / user before any key is derived. This list names the same commands as its dispatcher.
+  // / The web server user owns the secret file, so this grants it nothing it could not read.
+  // / --run-core-manager is how a service unit starts the listener. Leaving it out of this
+  // / list once sent the unit down the per user secret path, so every socket key it derived
+  // / differed from the ones the web workers use, & the listener ran & answered nobody.
+  // / The command is read with the kernel's parser. parseCommandLine has not run yet, & two
+  // / places deciding what the first argument means is how they come to disagree.
+  if ($RunningFromCLI && $CurrentUser === $ApacheUser) {
+    list ($listenerArguments, $listenerArgumentCount, $listenerCommand) = parseArgumentVector(isset($_SERVER['argv']) ? $_SERVER['argv'] : array());
+    if (in_array($listenerCommand, array('--start-core-manager', '--start-manager', '--run-core-manager', '-l', '--listen', '-k', '--kill', '--kill-all-workers', '--kill-every-worker', '--status'), TRUE)) {
+      $secretAuthorized = TRUE;
+      $userSecretAuthorized = FALSE; } }
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of indidual component versions. This is normal.
-  $HRConvertVersion = 'v3.9.8';
+  $HRConvertVersion = 'v3.9.9';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Handed to the Engine here, where it is defined, so there is only ever one copy.
   $EngineApplicationVersion = $HRConvertVersion;
@@ -812,11 +592,11 @@ function verifyInstallation() {
   // / Setup Core holds the configuration model, so this MUST be raised whenever
   // / $RequiredConfigVersion is raised. Forgetting does not break anything immediately.
   // / The utility reports a variable it does not know as unaccounted & carries on.
-  $RequiredSetupCoreVersion = 'v3.9.6';
+  $RequiredSetupCoreVersion = 'v3.9.9';
   $RequiredSetupCoreVersion = ltrim($RequiredSetupCoreVersion, 'vV');
   // / The Dependency Core component version this core requires.
   // / This is an EXACT match. A component built for another core may not be called safely.
-  $RequiredDependencyCoreVersion = 'v3.9.6';
+  $RequiredDependencyCoreVersion = 'v3.9.9';
   $RequiredDependencyCoreVersion = ltrim($RequiredDependencyCoreVersion, 'vV');
   // / The dependency manifest version this core requires.
   // / Raise this whenever a dependency is added, removed, or its minimum version moves.
@@ -826,16 +606,18 @@ function verifyInstallation() {
   // / The Pipeline Core component version this core requires.
   // / This is an EXACT match. A component built for another core may declare an entry point
   // / whose arguments have moved, or capabilities this core cannot honour.
-  // / Raise this whenever a pipeline is added, removed, or its own version pin moves.
-  // / The manager carries the pin list for every pipeline it accepts.
-  $RequiredPipelineCoreVersion = 'v3.9.8';
+  // / Raise this when the Pipeline Core itself changes & for nothing else. It is an Engine
+  // / core as of v3.9.9, at Resources/Engine/Cores/pipelineCore.php. The pipelines this
+  // / application accepts are listed in its contract, in app-engine-config.php, so adding a
+  // / pipeline or moving one to a new version raises nothing here.
+  $RequiredPipelineCoreVersion = 'v3.9.9';
   // / The Engine version this application requires.
   // / This is an EXACT match & it is free, because the Engine is bundled with this release
   // / rather than installed beside it. The updater replaces both together, so the pin & the
   // / file it points at cannot drift apart on an installation nobody has edited by hand.
   // / An administrator who edits the Engine by hand loses the edit at the next update. That
   // / is the same bargain every bundled component makes.
-  $RequiredEngineVersion = 'v3.9.7';
+  $RequiredEngineVersion = 'v3.9.9';
   $RequiredEngineVersion = ltrim($RequiredEngineVersion, 'vV');
   $RequiredPipelineCoreVersion = ltrim($RequiredPipelineCoreVersion, 'vV');
   // / The bootstrap script version this core expects.
@@ -898,7 +680,7 @@ function verifyInstallation() {
     $EngineConfigModelProvider = 'applicationConfigModel';
     // / The bootstrap names the template too. engineConfig.php is not loaded on this path,
     // / so nothing else would.
-    $EngineConfigTemplate = 'Engine/Contract/config-template.php';
+    $EngineConfigTemplate = 'Contract/config-template.php';
     // / Setup Core reaches the model through the Engine, so the Engine loads first.
     // / A bootstrap that loads half the components it calls into is a bootstrap that fails
     // / on the line where the missing half is first needed rather than on the line that
@@ -913,6 +695,20 @@ function verifyInstallation() {
     else print('A configuration file could not be written. Check that Resources is writable by root.'.PHP_EOL.PHP_EOL);
     exit($bootstrapWritten ? 0 : 1); }
   else require_once ($configFile);
+  // / The configured installation directory is checked against reality before anything is
+  // / derived from it, & this is why config.php may ship with an absolute path at all.
+  // / Shipping one is deliberate. An operator who copies this tree onto a LAMP stack & reads
+  // / no instructions gets a running application rather than a blank screen, which is worth
+  // / more than a tidy default. It only holds if a wrong path cannot be believed, because
+  // / every location this core uses is built from this one value & a stale path reads
+  // / somebody else's tree or nothing at all.
+  // / The directory this file is actually in is the one fact that cannot be wrong, so that is
+  // / the fallback. The warning names the setting, so an operator deploying properly is told
+  // / once where to fix it rather than left to wonder why their path is ignored.
+  if (!is_string($InstLoc) or trim($InstLoc) === '' or !is_file(rtrim(trim($InstLoc), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'convertCore.php') ) {
+    warningEntry('The configured installation directory does not contain convertCore.php, so '.dirname(__FILE__).' is being used instead. Set --Installation Directory-- in Resources/config.php to the real path.');
+    $InstLoc = dirname(__FILE__); }
+  else $InstLoc = rtrim(trim($InstLoc), DIRECTORY_SEPARATOR);
   $ConfigVersion = ltrim($ConfigVersion, 'vV');
   // / Perform a version integrity check.
   // / A core file that does not match versionInfo.php indicates a partial or interrupted update.
@@ -949,17 +745,16 @@ function verifyInstallation() {
       @unlink($legacySecretFile);
       if (isset($LogFile) && is_string($LogFile) && $LogFile !== '') warningEntry('The legacy secret file at '.$legacySecretFile.' was removed.');
       else error_log('WARNING!!! HRConvert2: The legacy secret file at '.$legacySecretFile.' was removed.'); } }
-  // / A per user secret lives in the home directory of the user running the command.
-  // / The directory is created if it does not exist, because this is the first thing that
-  // / user has ever asked HRConvert2 to do.
+  // / A per user secret lives in a folder of its own for each account, with that account's
+  // / logs beside it. The folder is created if it does not exist, because this may be the
+  // / first thing the account has ever asked this application to do. A folder that cannot
+  // / be used is refused with the reason, & the installation then fails to verify.
   else if ($userSecretAuthorized) {
-    $secretFolder = getenv('HOME');
-    if ($secretFolder === FALSE or $secretFolder === '') $secretFolder = sys_get_temp_dir();
-    $secretFolder = $secretFolder.DIRECTORY_SEPARATOR.'.HRConvert2';
-    $LogDir = $secretFolder.DIRECTORY_SEPARATOR.'Logs'.DIRECTORY_SEPARATOR;
-    if (!is_dir($secretFolder)) @mkdir($secretFolder, 0700, TRUE);
-    if (is_dir($secretFolder)) {
-      $SecretFile = $secretFolder.DIRECTORY_SEPARATOR.$applicationSlug.'-secret-'.sanitizeString($CurrentUser, TRUE).'.php';
+    $accountSlug = sanitizeString($CurrentUser, TRUE);
+    list ($secretFolderIsReady, $secretFolder) = resolveUserSecretFolder($applicationSlug, $accountSlug);
+    if ($secretFolderIsReady) {
+      $LogDir = $secretFolder.DIRECTORY_SEPARATOR.'Logs'.DIRECTORY_SEPARATOR;
+      $SecretFile = $secretFolder.DIRECTORY_SEPARATOR.$applicationSlug.'-secret-'.$accountSlug.'.php';
       list ($secretIsReady, $SecretKey) = resolveSecretFile($SecretFile, $RequiredSecretVersion); } }
   // / Validate the AppArmor profile every sandboxed conversion depends on.
   // / This is not owned by any one conversion pipeline, so it is checked here rather than
@@ -987,7 +782,7 @@ function verifyInstallation() {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $SecretKey is deliberately NOT cleared here because the rest of the core needs it.
   // / $SecretFile is deliberately NOT cleared here because it is a global the core reads later.
-  purgeSensitiveMemory($EnableMemoryProtection, $bootstrapEngine, $configRepairRequested, $bootstrapSetup, $bootstrapWritten, $bootstrapCount, $sandboxPolicyIsValid, $sandboxPolicyStatus, $secretAuthorized, $userSecretAuthorized, $secretIsReady, $configIsValid, $missingConfigVars, $detectedConfigVersion, $secretFolder, $applicationSlug, $legacySecretFile, $componentIsAvailable);
+  purgeSensitiveMemory($EnableMemoryProtection, $bootstrapEngine, $configRepairRequested, $bootstrapSetup, $bootstrapWritten, $bootstrapCount, $sandboxPolicyIsValid, $sandboxPolicyStatus, $secretAuthorized, $userSecretAuthorized, $secretIsReady, $configIsValid, $missingConfigVars, $detectedConfigVersion, $secretFolder, $applicationSlug, $legacySecretFile, $componentIsAvailable, $accountSlug, $secretFolderIsReady, $listenerArguments, $listenerArgumentCount, $listenerCommand);
   return array($InstallationIsVerified, $configFile, $Version, $CoreLoaded); }
 // / -----------------------------------------------------------------------------------
 
@@ -1152,243 +947,6 @@ function verifyLogs() {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $logWritten, $logHashAppend, $roleArgument, $workerArgument);
   return array($LogExists, $LogFile, $ClamLogFile); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to locate the absolute path of a dependency binary.
-// / Accepts the name of the binary, without a path.
-// / Returns the absolute path, or an empty string when the binary cannot be found.
-// / A binary installed from a package lands in /usr/bin & one built from source lands in
-// / /usr/local/bin, so hardcoding either one is wrong on half of all installations.
-// / The web server user's PATH is not the administrator's PATH & often excludes
-// / /usr/local/bin entirely, so a bare command name is not reliable either.
-// / The candidate directories are searched in order before command -v is consulted, so a
-// / source built binary is preferred over a packaged one when both exist & most lookups
-// / never spawn a process at all.
-// / command -v is used rather than which, because which is a separate package on a minimal
-// / installation & reports failure inconsistently between implementations.
-// / A name containing a path separator is refused, because this locates a binary by name &
-// / a caller supplying a path has already decided where it is.
-function locateDependency($binaryName) {
-  // / Set variables.
-  global $Verbose, $EnableMemoryProtection;
-  $BinaryPath = '';
-  $candidateDirs = array('/usr/local/bin', '/usr/local/sbin', '/usr/bin', '/usr/sbin', '/bin', '/sbin');
-  $candidateDir = $candidatePath = $commandOutput = '';
-  $binaryName = trim($binaryName);
-  // / A name is a name. A caller supplying a path is not asking this function anything.
-  if ($binaryName === '' or strpos($binaryName, '/') !== FALSE or strpos($binaryName, '\\') !== FALSE) $BinaryPath = '';
-  else {
-    // / Search the known locations directly before spawning anything.
-    foreach ($candidateDirs as $candidateDir) {
-      $candidatePath = $candidateDir.'/'.$binaryName;
-      if (is_file($candidatePath) && is_executable($candidatePath)) {
-        $BinaryPath = $candidatePath;
-        break; } }
-    // / Fall back to the shell only when the known locations did not have it.
-    if ($BinaryPath === '') {
-      $commandOutput = trim((string)@shell_exec('command -v '.escapeshellarg($binaryName).' 2>/dev/null'));
-      if ($commandOutput !== '' && is_file($commandOutput) && is_executable($commandOutput)) $BinaryPath = $commandOutput; }
-    if ($Verbose) logEntry('Dependency lookup: '.$binaryName.' '.($BinaryPath === '' ? 'NOT FOUND' : 'found at '.$BinaryPath).'.'); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $candidateDirs, $candidateDir, $candidatePath, $commandOutput, $binaryName);
-  return $BinaryPath; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to build one formatted log line & give it a sequence number.
-// / Accepts the tier label, the message & an error label which may be empty.
-// / Returns the finished line.
-// / The sequence number starts at zero when the process starts & counts every entry.
-// / A gap in that sequence is the only evidence that an entry was lost.
-// / Two entries stamped with the same second are otherwise impossible to order.
-// / This function does NOT call purgeSensitiveMemory, & neither may its callers.
-// / purgeSensitiveMemory calls logEntry, so a purge here would recurse forever.
-function composeLogEntry($tierLabel, $entry, $errorLabel) {
-  // / Set variables.
-  global $Time, $SesHash3, $LogSequence;
-  $ComposedEntry = $timeLabel = $sessionLabel = $sequenceLabel = '';
-  // / The timestamp is recomputed here rather than taken from $Time.
-  // / $Time is set once during boot, which is right for a request that lives half a second
-  // / & wrong for a manager process that runs for weeks.
-  $timeLabel = (isset($Time) && $Time !== '') ? date('F j, Y, g:i a') : 'Unknown Time';
-  $sessionLabel = (isset($SesHash3) && $SesHash3 !== '') ? (string)$SesHash3 : 'No Session';
-  if (!isset($LogSequence) or !is_numeric($LogSequence)) $LogSequence = 0;
-  $sequenceLabel = str_pad((string)(int)$LogSequence, 5, '0', STR_PAD_LEFT);
-  $LogSequence = (int)$LogSequence + 1;
-  // / The tier arrives carrying the separator it has always used & none is added here.
-  // / Op-Act is followed by a comma & the two loud tiers are followed by a space.
-  // / Adding one regardless produced a line beginning  Op-Act, , 00000  which is a comma
-  // / separating a label from nothing at all.
-  if ((string)$errorLabel === '') $ComposedEntry = $tierLabel.$sequenceLabel.', '.$timeLabel.', '.$sessionLabel.': '.$entry;
-  else $ComposedEntry = $tierLabel.$sequenceLabel.', '.$timeLabel.', '.$errorLabel.', '.$sessionLabel.': '.$entry;
-  // / This cleanup is manual, because purgeSensitiveMemory calls into this path.
-  $tierLabel = $entry = $errorLabel = $timeLabel = $sessionLabel = $sequenceLabel = NULL;
-  unset($tierLabel, $entry, $errorLabel, $timeLabel, $sessionLabel, $sequenceLabel);
-  return $ComposedEntry; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to record one finished line, or to hold it until a logfile exists.
-// / Accepts the finished line. Returns TRUE when it reached the logfile.
-// / An entry raised before verifyLogs has nowhere to go & used to reach the server error
-// / log, where it was separated from everything around it & usually never found.
-// / It is held in a buffer instead & written in order the moment a logfile exists.
-// / Nothing before the logfile is therefore lost, & nothing is written out of order.
-// / LOCK_EX is used because several processes append to one file.
-// / An append under the pipe buffer size is atomic without it, & a stream inspection dump
-// / or a compiler log is not. Those are exactly the entries worth not corrupting.
-// / This function does NOT call purgeSensitiveMemory, for the reason given above.
-function emitLogEntry($composedEntry) {
-  // / Set variables.
-  global $LogFile, $LogBuffer, $LogBufferOverflowed;
-  $EntryWasWritten = $logIsUsable = FALSE;
-  $bufferedEntry = '';
-  if (!isset($LogBuffer) or !is_array($LogBuffer)) $LogBuffer = array();
-  $logIsUsable = (isset($LogFile) && is_string($LogFile) && $LogFile !== '' && file_exists($LogFile));
-  if (!$logIsUsable) {
-    // / The buffer is bounded. A process that never reaches a logfile must not grow until
-    // / it is killed for memory, & the entries that explain a boot failure are the early
-    // / ones rather than the thousandth.
-    if (count($LogBuffer) < 512) array_push($LogBuffer, $composedEntry);
-    else $LogBufferOverflowed = TRUE; }
-  else {
-    // / Anything held before the logfile existed is written first & in order.
-    if (count($LogBuffer) > 0) {
-      foreach ($LogBuffer as $bufferedEntry) @file_put_contents($LogFile, $bufferedEntry.PHP_EOL, FILE_APPEND | LOCK_EX);
-      $LogBuffer = array();
-      if (isset($LogBufferOverflowed) && $LogBufferOverflowed) {
-        @file_put_contents($LogFile, 'WARNING!!! The log buffer filled before a logfile existed & older entries were discarded.'.PHP_EOL, FILE_APPEND | LOCK_EX);
-        $LogBufferOverflowed = FALSE; } }
-    $EntryWasWritten = (@file_put_contents($LogFile, $composedEntry.PHP_EOL, FILE_APPEND | LOCK_EX) !== FALSE); }
-  // / This cleanup is manual, because purgeSensitiveMemory calls into this path.
-  $composedEntry = $logIsUsable = $bufferedEntry = NULL;
-  unset($composedEntry, $logIsUsable, $bufferedEntry);
-  return $EntryWasWritten; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to write everything held in the buffer, now that a logfile exists.
-// / Accepts nothing. Returns the number of entries written.
-// / verifyLogs calls this the moment it has a usable file, so a boot that logged before
-// / the logfile existed still lands in the logfile rather than in the server error log.
-function flushLogBuffer() {
-  // / Set variables.
-  global $LogBuffer;
-  $EntriesFlushed = 0;
-  if (isset($LogBuffer) && is_array($LogBuffer)) $EntriesFlushed = count($LogBuffer);
-  if ($EntriesFlushed > 0) emitLogEntry(composeLogEntry('Op-Act, ', 'Log buffer flushed. '.$EntriesFlushed.' entry or entries were held before a logfile existed.', ''));
-  return $EntriesFlushed; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to report a fatal condition & halt, without needing a logging environment.
-// / Accepts the message & the documented error number, in that order.
-// / Never returns. Execution stops here.
-// / This is the only place the application halts on an error.
-// / Every die in the core routes through here so a halt is formatted the same way, closes
-// / the connection the same way & is recorded the same way, whichever stage of boot it
-// / happens in. Before verifyLogs() there is no logfile & before verifyGlobals() there is
-// / no $Lol, so this function assumes nothing exists & tests everything it uses.
-function quickDie($entry, $errorNumber) {
-  // / Set variables.
-  global $Time, $LogFile, $SesHash3, $ApplicationName, $RunningFromCLI, $LogBuffer;
-  // / The timestamp is recomputed HERE, at the moment the entry is written, rather than
-  // / taken from $Time. $Time is set once by verifyTime during boot, which is correct for a
-  // / web request that lives half a second & wrong for a manager process that runs for
-  // / weeks. A listener started at three in the morning stamped every entry it ever wrote
-  // / with three in the morning, which reads as a clock fault in one process & is not.
-  // / $Time itself is left alone, because a session directory is named from it & must not
-  // / change underneath a request.
-  // / An empty $Time means verifyTime has not run, so no timezone is set & no time is known.
-  $timeLabel = (isset($Time) && $Time !== '') ? date('F j, Y, g:i a') : 'Unknown Time';
-  $sessionLabel = (isset($SesHash3) && $SesHash3 !== '') ? (string)$SesHash3 : 'No Session';
-  $applicationLabel = (isset($ApplicationName) && is_string($ApplicationName) && $ApplicationName !== '') ? $ApplicationName : 'HRConvert2';
-  $bufferedEntry = '';
-  $errorLabel = is_numeric($errorNumber) ? $applicationLabel.'-'.$errorNumber : $applicationLabel.'-###';
-  // / A halt is numbered like everything else, so the sequence has no hole at the end.
-  $formattedEntry = composeLogEntry('ERROR!!! ', $entry, $errorLabel);
-  $logIsWritable = (isset($LogFile) && is_string($LogFile) && $LogFile !== '');
-  // / Record it wherever it can be recorded. A halt with no record is a support ticket
-  // / that can never be answered.
-  if (!$logIsWritable) error_log($formattedEntry);
-  // / Everything held before a logfile existed is reported here rather than discarded.
-  // / A halt during boot is exactly the case where the entries leading up to it explain the
-  // / halt, & exactly the case where there was nowhere to have written them.
-  if (isset($LogBuffer) && is_array($LogBuffer) && count($LogBuffer) > 0) {
-    foreach ($LogBuffer as $bufferedEntry) {
-      if ($logIsWritable) @file_put_contents($LogFile, $bufferedEntry.PHP_EOL, FILE_APPEND | LOCK_EX);
-      else error_log($bufferedEntry);
-      if ($RunningFromCLI) print($bufferedEntry.PHP_EOL);
-      else print($bufferedEntry.PHP_EOL.'<br />'.PHP_EOL); }
-    $LogBuffer = array(); }
-  // / A browser needs a line break to render the message. A terminal does not & would
-  // / print the tag literally.
-  if ($RunningFromCLI) print($formattedEntry.PHP_EOL);
-  else print($formattedEntry.PHP_EOL.'<br />'.PHP_EOL);
-  // / Close the connection deliberately rather than dropping it, so the message is
-  // / delivered before the process ends. There is nothing to close on the command line.
-  if (!$RunningFromCLI && function_exists('closeHRC2Connection')) closeHRC2Connection();
-  die(); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to write normal operational activity to the logfile.
-// / Accepts the message.
-// / Returns TRUE when the entry was recorded.
-// / Suppressed by the caller when $Verbose is FALSE. This function does not test $Verbose,
-// / because a caller that wants an entry recorded regardless must be able to say so.
-// / An entry raised before verifyLogs() has no logfile to reach & goes to the server error
-// / log instead. Writing to an unset path produces a raw PHP warning on the page.
-function logEntry($entry) {
-  // / Set variables.
-  // / The formatting & the writing both live elsewhere now, so this function holds nothing.
-  $LogWritten = FALSE;
-  $LogWritten = emitLogEntry(composeLogEntry('Op-Act, ', $entry, ''));
-  // / This cleanup is manual, because purgeSensitiveMemory() calls this function.
-  $entry = NULL;
-  unset($entry);
-  return $LogWritten; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to write a warning to the logfile.
-// / Accepts the message.
-// / Returns TRUE when the entry was recorded.
-// / A warning is always written & carries no error number. It can never halt execution.
-// / An entry raised before verifyLogs() goes to the server error log instead.
-function warningEntry($entry) {
-  // / Set variables.
-  // / The formatting & the writing both live elsewhere now, so this function holds nothing.
-  $LogWritten = FALSE;
-  $LogWritten = emitLogEntry(composeLogEntry('WARNING!!! ', $entry, ''));
-  // / This cleanup is manual, because purgeSensitiveMemory() may call this function.
-  $entry = NULL;
-  unset($entry);
-  return $LogWritten; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to write a numbered error to the logfile & optionally halt.
-// / Accepts the message, the documented error number & a fatality boolean, in that order.
-// / Returns TRUE when the entry was recorded. Returns nothing at all when it halts.
-// / An entry raised before verifyLogs() goes to the server error log instead.
-// / A fatal error hands off to quickDie so every halt in the core is identical.
-function errorEntry($entry, $errorNumber, $die) {
-  // / Set variables.
-  global $ApplicationName;
-  $LogWritten = FALSE;
-  $applicationLabel = $errorLabel = '';
-  $applicationLabel = (isset($ApplicationName) && is_string($ApplicationName) && $ApplicationName !== '') ? $ApplicationName : 'HRConvert2';
-  $errorLabel = is_numeric($errorNumber) ? $applicationLabel.'-'.$errorNumber : $applicationLabel.'-###';
-  $LogWritten = emitLogEntry(composeLogEntry('ERROR!!! ', $entry, $errorLabel));
-  // / A fatal error halts here & quickDie repeats none of the above.
-  // / It reports to the page, empties the log buffer & closes the connection.
-  if ($die) quickDie($entry, $errorNumber);
-  // / This cleanup is manual, because purgeSensitiveMemory() may call this function.
-  $entry = $errorNumber = $die = $applicationLabel = $errorLabel = NULL;
-  unset($entry, $errorNumber, $die, $applicationLabel, $errorLabel);
-  return $LogWritten; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1798,7 +1356,7 @@ function verifyLanguage() {
 // / Converting here as well produced a fifteen hour watch timeout & a ten million second connect timeout.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $PathExt, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $ProtectedRootDirs, $ResourcesDir, $BootloadersDir, $AllowBootableIsoImage, $UserBootableIsoArray, $BootableIsoArray, $UserEbookInputArray, $UserEbookOutputArray, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $ManagerSocketDir, $ManagerSocketTimeout, $ManagerMessageBatchSize, $ManagerMessageSkew, $StartupKeyWindow, $ResourceAwarenessActive, $CoreManagerVersion, $EnableResourceAwareness, $RequireResourceAwareness, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EffectiveConversionLimits, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $AllowUnprivilegedNamespaces, $PipelineCoreActive, $PipelinesAreEnumerated, $Pipelines, $PipelineCount, $LogSequence, $LogBuffer, $LogBufferOverflowed, $LogRole, $EngineSandboxProfiles, $ModelInputArray, $ModelOutputArray, $ImageInputArray, $ImageOutputArray, $SCADInputArray, $DrawingInputArray, $DrawingOutputArray,
+  global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $DocumentEngineSleepTimer, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $PathToUnoconv, $UsePatchedDocumentEngine, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $ProtectedRootDirs, $ResourcesDir, $BootloadersDir, $AllowBootableIsoImage, $UserBootableIsoArray, $BootableIsoArray, $UserEbookInputArray, $UserEbookOutputArray, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $ManagerSocketDir, $ManagerSocketTimeout, $ManagerMessageBatchSize, $ManagerMessageSkew, $StartupKeyWindow, $ResourceAwarenessActive, $CoreManagerVersion, $EnableResourceAwareness, $RequireResourceAwareness, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EffectiveConversionLimits, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $AllowUnprivilegedNamespaces, $PipelineCoreActive, $PipelinesAreEnumerated, $Pipelines, $PipelineCount, $LogSequence, $LogBuffer, $LogBufferOverflowed, $LogRole, $EngineSandboxProfiles, $ModelInputArray, $ModelOutputArray, $ImageInputArray, $ImageOutputArray, $SCADInputArray, $DrawingInputArray, $DrawingOutputArray,
     $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth, $DefaultVirusScanner, $HostArchitecture, $HostMachineString, $URLDownloadMaximumBytes, $URLDownloadsPerSession, $ScanURLDownloads, $LogoURL, $ResolvedLogoURL, $PermittedPrivateRanges;
   // / Application related variables.
   $GlobalsAreVerified = $sanitizeGlobalCheck = $sanitizeGlobalCheckA = $sanitizeGlobalCheckB = $sanitizeGlobalCheckC = $sanitizeGlobalCheckD = $sanitizeGlobalCheckE = FALSE;
@@ -1809,7 +1367,6 @@ function verifyGlobals() {
   $Lol = PHP_EOL;
   $Lolol = PHP_EOL.PHP_EOL;
   $Append = FILE_APPEND;
-  $PathExt = PATHINFO_EXTENSION;
   // / UI Related variables.
   $ConvertGuiCounter1 = 0;
   $File = $FCPlural = $FCPlural1 = $FCPlural2 = $FCPlural3 = $GreenButtonCode = $BlueButtonCode = $RedButtonCode = $PurpleButtonCode = $OrangeButtonCode = $DarkButtonCode = $DefaultButtonCode = '';
@@ -1881,7 +1438,14 @@ function verifyGlobals() {
   // / Ask the listener which location this session uses. Sticky for the life of the
   // / session & decided once, when the session is first seen. With no listener this
   // / returns the configured location & the core behaves exactly as it always has.
-  $ConvertLoc = requestConvertLoc($SesHash, $SesHash2);
+  // / The Engine may not be here at all & that must not be fatal. An application that cannot
+  // / bootstrap its Engine still has a configured data location, which is the answer the
+  // / Engine itself returns when no listener is running. Using it directly is the same
+  // / result by a shorter route, & it keeps a repairable installation reachable.
+  if (function_exists('requestConvertLoc')) $ConvertLoc = requestConvertLoc($SesHash, $SesHash2);
+  else {
+    warningEntry('The Engine is unavailable, so the configured data location is used without asking a listener. Pooled locations & per session placement are unavailable until it is repaired.');
+    $ConvertLoc = $PrimaryConvertLoc; }
   list ($convertDir0, $sanitizeGlobalCheckA) = sanitize($ConvertLoc.$DirSep.$SesHash, FALSE);
   list ($ConvertDir, $sanitizeGlobalCheckB) = sanitize($convertDir0.$DirSep.$SesHash2.$DirSep, FALSE);
   list ($ConvertTemp, $sanitizeGlobalCheckC) = sanitize($InstLoc.$DirSep.'DATA', FALSE);
@@ -2426,7 +1990,14 @@ function verifyDataExposure() {
       warningEntry('The DATA directory exposure check could not write its probe into '.$ConvertTemp.'.'); }
     else {
       @chmod($canaryPath, 0644);
-      list ($requestSucceeded, $responseHeaders) = fetchOwnResponseHeaders($canaryURL, 5);
+      // / The self request lives in the Engine. Without one there is nothing to test with, &
+      // / the existing unreachable wording is already the right answer: exposure is neither
+      // / confirmed nor cleared & the operator is told to check by hand. The warning names the
+      // / Engine so the log says WHY it could not be established rather than only that it was not.
+      $requestSucceeded = FALSE;
+      $responseHeaders = array();
+      if (function_exists('fetchOwnResponseHeaders')) list ($requestSucceeded, $responseHeaders) = fetchOwnResponseHeaders($canaryURL, 5);
+      else warningEntry('The DATA directory exposure check needs the Engine to request a URL from this server & the Engine is unavailable. The exposure of this installation was NOT established.');
       // / Remove the probe whatever happened. It must never outlive the check that made it.
       @unlink($canaryPath);
       if (!$requestSucceeded) {
@@ -2747,14 +2318,35 @@ function unloadApparmorProfile($profilePath, $profileName) {
 // / verifiedToolPath lives in the Pipeline Core, which may have failed to load. -v is what an
 // / operator runs to find out why, so this must not fatal: a missing Pipeline Core reads as every
 // / tool unusable, & -v's own component check reports the Pipeline Core itself.
+// / The Engine is checked as well as the Pipeline Core, & testing only the function in front of
+// / us was not enough. verifiedToolPath asks the Pipeline Core, which asks Dependency Core,
+// / which asks the Engine for the application name. Every one of those exists while the Engine
+// / is loaded, so the guard looked complete & -v died four frames deeper than it was reading.
 function toolPath($manifestName) {
   // / Set variables.
-  global $EnableMemoryProtection;
+  global $EnableMemoryProtection, $EngineActive;
   $ToolPath = FALSE;
-  if (function_exists('verifiedToolPath')) $ToolPath = verifiedToolPath($manifestName);
+  if (isset($EngineActive) && $EngineActive && function_exists('verifiedToolPath')) $ToolPath = verifiedToolPath($manifestName);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $manifestName);
   return $ToolPath; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to read the minimum version the manifest requires of a tool.
+// / Accepts the manifest name. Returns the minimum, or the word unknown when it cannot be read.
+// / This is the sibling of toolPath & exists for the same reason. toolMinimum lives in the
+// / Engine, the manifest is its only owner, & -v prints the minimum beside every dependency
+// / that failed. An operator running -v because the Engine is broken must still get the report.
+// / The word unknown is deliberate. An empty string would print as "requires  or later".
+function toolRequirement($manifestName) {
+  // / Set variables.
+  global $EnableMemoryProtection, $EngineActive;
+  $ToolRequirement = 'unknown';
+  if (isset($EngineActive) && $EngineActive && function_exists('toolMinimum')) $ToolRequirement = toolMinimum($manifestName);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $manifestName);
+  return $ToolRequirement; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -2772,7 +2364,7 @@ function toolPath($manifestName) {
 // / file, because loading twenty version files would overwrite the variable each time.
 function showVersionInfo() {
   // / Set variables.
-  global $RequiredEngineVersion, $SecretFile, $ManagerSocketDir, $InstLoc, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $PipelineCoreActive, $PipelineCount, $RequiredSecretVersion, $RequiredConfigScript, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EnableResourceAwareness, $RequireResourceAwareness, $ResourceAwarenessActive, $CoreManagerVersion, $ManagerSocketDir, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $ConvertTemp, $MaintainHTAccess, $EngineVersion, $HostArchitecture, $HostMachineString, $AllowUserURLDownload, $AllowUserVirusScan, $VirusScan, $AllowUserShare, $EnvironmentManagerMayRepair, $EnablePerConversionLimits, $Pipelines;
+  global $KernelVersion, $RequiredKernelVersion, $RequiredEngineVersion, $SecretFile, $ManagerSocketDir, $InstLoc, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $PipelineCoreActive, $PipelineCount, $RequiredSecretVersion, $RequiredConfigScript, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EnableResourceAwareness, $RequireResourceAwareness, $ResourceAwarenessActive, $CoreManagerVersion, $ManagerSocketDir, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $ConvertTemp, $MaintainHTAccess, $EngineVersion, $HostArchitecture, $HostMachineString, $AllowUserURLDownload, $AllowUserVirusScan, $VirusScan, $AllowUserShare, $EnvironmentManagerMayRepair, $EnablePerConversionLimits, $Pipelines;
   $VersionInfoDisplayed = $modelsAreValid = $ocrToolsAreValid = $archiveToolsAreValid = $libreOfficeIsValid = FALSE;
   $ffmpegBinary = $streamFfmpegBinary = $inkscapeBinary = $diaBinary = $scadBinary = $imageBinary = $ebookBinary = FALSE;
   $assimpBinary = $meshlabBinary = $tesseractBinary = $pdftotextBinary = FALSE;
@@ -2811,7 +2403,9 @@ function showVersionInfo() {
   $mkisofsBinary = toolPath('Genisoimage');
   $archiveToolsAreValid = ($sevenZipBinary !== FALSE && $zipBinary !== FALSE && $tarBinary !== FALSE && $mkisofsBinary !== FALSE);
   $isoHybridBinary = toolPath('Syslinux Utils');
-  $bwrapBinary = verifyBwrap();
+  // / The sandbox probe lives in the Engine. With no Engine there is nothing to probe with,
+  // / & not functional is the honest answer rather than a guess.
+  $bwrapBinary = (function_exists('verifyBwrap') ? verifyBwrap() : FALSE);
   // / Report what is installed & what state it is in.
   // / Every line is a fact. An explanation belongs in Documentation, not in this output.
   $failureCount = 0;
@@ -2819,6 +2413,11 @@ function showVersionInfo() {
   // / The Engine sits with the application rather than under detachable components.
   // / It is what this application RUNS ON. Listing it beside the things that can be
   // / removed suggested it was one of them.
+  // / The kernel line reports the version that is RUNNING, from the variable the kernel set
+  // / when it loaded, rather than reading a file. $InstLoc may name another installation, & the
+  // / kernel is always the one beside this file, so reading through $InstLoc could report a
+  // / kernel that is not the one in use.
+  print('  Kernel     '.ltrim((string)$KernelVersion, 'vV').', requires '.ltrim((string)$RequiredKernelVersion, 'vV').$Lol);
   print('  Engine     '.ltrim((string)readComponentVersion('Engine'.$DirSep.'engine.php', 'EngineVersion'), 'vV').', requires '.ltrim((string)$RequiredEngineVersion, 'vV').$Lol);
   print('  Config     '.$ConfigVersion.', requires '.$RequiredConfigVersion.' or later'.$Lol);
   // / The machine, because a dependency that is unsupported here is unsupported because
@@ -2830,7 +2429,7 @@ function showVersionInfo() {
   $componentChecks = array(
     'Setup Core' => array(readComponentVersion('Engine'.$DirSep.'Cores'.$DirSep.'setupCore.php', 'SetupCoreVersion'), $RequiredSetupCoreVersion),
     'Dependency Core' => array(readComponentVersion('Engine'.$DirSep.'Cores'.$DirSep.'dependencyCore.php', 'DependencyCoreVersion'), $RequiredDependencyCoreVersion),
-    'Pipeline Core' => array(readComponentVersion('PipelineCore'.$DirSep.'pipelineCore.php', 'PipelineCoreVersion'), $RequiredPipelineCoreVersion));
+    'Pipeline Core' => array(readComponentVersion('Engine'.$DirSep.'Cores'.$DirSep.'pipelineCore.php', 'PipelineCoreVersion'), $RequiredPipelineCoreVersion));
   foreach ($componentChecks as $componentName => $componentPair) {
     if (ltrim((string)$componentPair[0], 'vV') === ltrim((string)$componentPair[1], 'vV')) print('  '.str_pad($componentName, 28).'OK, '.ltrim((string)$componentPair[0], 'vV').$Lol);
     else {
@@ -2861,27 +2460,29 @@ function showVersionInfo() {
   print($Lol.'Dependencies'.$Lol);
   // / The manifest is the first thing listed because everything below it is read FROM it.
   // / A manifest that failed its version check makes every line under it unreliable.
-  $manifestVersion = readComponentVersion('Engine'.$DirSep.'Contract'.$DirSep.'depends.php', 'DependsVersion');
+  // / Read relative to Resources, as readComponentVersion requires. contractPath is the location's
+  // / one definition & this is the one place it cannot be used, because it returns an absolute path.
+  $manifestVersion = readComponentVersion('Contract'.$DirSep.'depends.php', 'DependsVersion');
   if (ltrim((string)$manifestVersion, 'vV') === ltrim((string)$RequiredDependsVersion, 'vV')) print('  '.str_pad('Manifest', 28).'OK, '.ltrim((string)$manifestVersion, 'vV').$Lol);
   else { $failureCount++; print('  '.str_pad('Manifest', 28).'FAILED, reports '.($manifestVersion === '' ? 'no version' : ltrim((string)$manifestVersion, 'vV')).' & this core requires '.ltrim((string)$RequiredDependsVersion, 'vV').$Lol); }
   $dependencyChecks = array(
-    'FFMPEG, media & streams' => array($ffmpegBinary !== FALSE, toolMinimum('FFMPEG'), TRUE),
-    'LibreOffice, documents' => array($libreOfficeIsValid, toolMinimum('LibreOffice'), TRUE),
-    'ImageMagick, images' => array($imageBinary !== FALSE, toolMinimum('ImageMagick'), TRUE),
-    'Inkscape, SVG' => array($inkscapeBinary !== FALSE, toolMinimum('Inkscape'), TRUE),
-    'Dia, drawings' => array($diaBinary !== FALSE, toolMinimum('Dia'), TRUE),
-    'OpenSCAD, scad' => array($scadBinary !== FALSE, toolMinimum('OpenSCAD'), TRUE),
-    'Assimp, models' => array($assimpBinary !== FALSE, toolMinimum('Assimp'), TRUE),
-    'Meshlab, models' => array($meshlabBinary !== FALSE, toolMinimum('MeshLab'), FALSE),
-    'Tesseract, OCR' => array($tesseractBinary !== FALSE, toolMinimum('Tesseract'), TRUE),
-    'Pdftotext, OCR' => array($pdftotextBinary !== FALSE, toolMinimum('Poppler Utils'), TRUE),
-    '7-Zip, all extraction' => array($sevenZipBinary !== FALSE, toolMinimum('7-Zip'), TRUE),
-    'Zip, archives' => array($zipBinary !== FALSE, toolMinimum('Zip'), TRUE),
-    'Tar, archives' => array($tarBinary !== FALSE, toolMinimum('Tar'), TRUE),
-    'Mkisofs, iso' => array($mkisofsBinary !== FALSE, toolMinimum('Genisoimage'), TRUE),
-    'Rar, archives' => array($rarBinary !== FALSE, toolMinimum('RAR'), FALSE),
-    'Isohybrid, iso' => array($isoHybridBinary !== FALSE, toolMinimum('Syslinux Utils'), FALSE),
-    'Calibre, e-books' => array($ebookBinary !== FALSE, toolMinimum('Calibre'), TRUE));
+    'FFMPEG, media & streams' => array($ffmpegBinary !== FALSE, toolRequirement('FFMPEG'), TRUE),
+    'LibreOffice, documents' => array($libreOfficeIsValid, toolRequirement('LibreOffice'), TRUE),
+    'ImageMagick, images' => array($imageBinary !== FALSE, toolRequirement('ImageMagick'), TRUE),
+    'Inkscape, SVG' => array($inkscapeBinary !== FALSE, toolRequirement('Inkscape'), TRUE),
+    'Dia, drawings' => array($diaBinary !== FALSE, toolRequirement('Dia'), TRUE),
+    'OpenSCAD, scad' => array($scadBinary !== FALSE, toolRequirement('OpenSCAD'), TRUE),
+    'Assimp, models' => array($assimpBinary !== FALSE, toolRequirement('Assimp'), TRUE),
+    'Meshlab, models' => array($meshlabBinary !== FALSE, toolRequirement('MeshLab'), FALSE),
+    'Tesseract, OCR' => array($tesseractBinary !== FALSE, toolRequirement('Tesseract'), TRUE),
+    'Pdftotext, OCR' => array($pdftotextBinary !== FALSE, toolRequirement('Poppler Utils'), TRUE),
+    '7-Zip, all extraction' => array($sevenZipBinary !== FALSE, toolRequirement('7-Zip'), TRUE),
+    'Zip, archives' => array($zipBinary !== FALSE, toolRequirement('Zip'), TRUE),
+    'Tar, archives' => array($tarBinary !== FALSE, toolRequirement('Tar'), TRUE),
+    'Mkisofs, iso' => array($mkisofsBinary !== FALSE, toolRequirement('Genisoimage'), TRUE),
+    'Rar, archives' => array($rarBinary !== FALSE, toolRequirement('RAR'), FALSE),
+    'Isohybrid, iso' => array($isoHybridBinary !== FALSE, toolRequirement('Syslinux Utils'), FALSE),
+    'Calibre, e-books' => array($ebookBinary !== FALSE, toolRequirement('Calibre'), TRUE));
   foreach ($dependencyChecks as $dependencyName => $dependencyState) {
     if ($dependencyState[0]) print('  '.str_pad($dependencyName, 28).'OK'.($dependencyState[2] ? '' : ', optional').$Lol);
     else {
@@ -3003,7 +2604,9 @@ function showVersionInfo() {
   if (!$EnableResourceAwareness) print('  '.str_pad('Configured', 28).'DISABLED in config.php'.$Lol);
   else if (!$ResourceAwarenessActive) print('  '.str_pad('Component', 28).'DISABLED, the Engine is unavailable'.$Lol);
   else {
-    list ($listenerIsRunning, $listenerStatus) = reportListenerStatus();
+    // / The listener lives in the Engine & reporting on it needs the Engine to ask.
+    if (function_exists('reportListenerStatus')) list ($listenerIsRunning, $listenerStatus) = reportListenerStatus();
+    else { $listenerIsRunning = FALSE; $listenerStatus = 'unknown, the Engine is unavailable'; }
     print('  '.str_pad('Component', 28).'OK, supplied by Engine '.ltrim((string)$EngineVersion, 'vV').$Lol);
     print('  '.str_pad('Enforced', 28).($RequireResourceAwareness ? 'YES' : 'NO').$Lol);
     print('  '.str_pad('Total budget', 28).((int)$TotalResourceBudget < 1 ? 'AUTO, from the processor count' : (int)$TotalResourceBudget.' cost units').$Lol);
@@ -3116,113 +2719,119 @@ function showHelpInfo() {
 
 // / -----------------------------------------------------------------------------------
 // / A function to read the command line & dispatch whatever it asks for.
-// / Accepts nothing. Returns whether the command line was handled & the user type.
-// / Every argument this application accepts is recognized here & nowhere else, so a new
-// / argument is added in one place. A handled command line ends the request. An unhandled
-// / one falls through to the web interface, which is what a request with no arguments is.
+// / Accepts nothing. Returns whether the command line was handled, the user type & the exit
+// / status the command earned, in that order.
+// / The status follows the common command line convention, so a script, cron or systemd can
+// / act on it. 0 is success. 1 is a command that failed or was refused. 2 is a command used
+// / wrongly, an argument this application does not recognize. A report such as -v exits 0
+// / when the report was produced, because validateInstallation runs -v & requires 0, & an
+// / optional missing dependency must not fail an update.
+// / Success means the requested state holds afterwards, rather than that work was done.
+// / Stopping a listener that was not running is success, as it is for systemctl stop.
+// / This application recognizes its own arguments here, which are -v, -h, -u & anything
+// / beginning --app. Every other command belongs to the Engine & is recognized by
+// / dispatchEngineCommand, which this asks before deciding an argument is a mistake. Until
+// / v3.9.9 all of them were branches here.
+// / A handled command line ends the request. An unhandled one falls through to the web
+// / interface, which is what a request with no arguments is.
 function parseCommandLine() {
   // / Set variables.
-  global $Lol, $DeleteThreshold, $ConvertLoc, $ConvertTempDir, $RunningFromCLI, $RunningAsRoot, $CurrentUser, $ApacheUser, $ResourceAwarenessActive, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $EnableMemoryProtection, $DirSep, $ProtectedRootDirs, $ManagerSocketTimeout, $InstLoc, $CoreLoaded, $ApplicationArgumentHandler, $Pipelines, $DependsManifest;
-  $CommandLineHandled = $cliTempCleaned = $cliTempDeepCleaned = $cliDataCleaned = $cliDataDeepCleaned = FALSE;
+  global $EngineActive, $Lol, $RunningFromCLI, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EngineApplicationArgumentHandler;
+  $CommandLineHandled = FALSE;
+  $CommandLineStatus = 0;
   $UserType = 'web';
-  $cliArgumentCount = $cliThreshold = $cliPathsCorrected = 0;
-  $cliArguments = $cliParts = $cliStatus = $listenerCommands = $setupCommands = array();
-  $manifestPath = '';
-  $manifestNames = $missingDependencies = $manifestEntry = array();
-  $declaredDependency = $missingDependency = '';
-  $declaringCount = 0;
-  $pipelineAction = $pipelineWanted = $pipelineName = '';
-  $pipelineRecord = $pinnedPipelines = array();
-  $pipelineFailures = 0;
-  $pinnedVersion = '';
-  $applicationHandler = '';
-  $cliCommand = $rawFirstArg = $cliTarget = $cliSecondTarget = $cliWhoami = $cliSetupVersion = '';
-  $cliConfirmed = $cliListenerAuthorized = $cliActionConfirmed = $cliPermissionsFixed = $cliListenerRunning = $cliSetupIsAvailable = FALSE;
-  $cliDependencyIsAvailable = $cliDependenciesReady = $cliSetupSucceeded = $cliMessageDelivered = FALSE;
-  $cliMessageReply = $cliPassFindings = $cliPassFinding = array();
-  $cliPassCompleted = FALSE;
-  $cliEnvironmentFile = '';
-  $cliDependencyVersion = $cliSubsystem = $cliDependencyToken = '';
-  // / Capability detection reports how many dependencies were able to answer.
-  $cliCacheWasBuilt = FALSE;
-  $cliDetectedCount = 0;
-  // / A startup key that arrived in the environment rather than on the command line.
-  $cliStartupKey = '';
-  $cliDependencyFindings = $subOptionOwners = array();
-  $cliOptionalProblems = 0;
-  $cliSetupCount = 0;
+  $cliArgumentCount = 0;
+  $cliArguments = $appArgumentParts = array();
+  $cliCommand = $cliTarget = $cliSecondTarget = $cliWhoami = $applicationHandler = $appTarget = $appSecondTarget = '';
+  $cliConfirmed = $cliVectorParsed = $engineCommandHandled = FALSE;
+  $engineCommandStatus = 0;
   // / A web request has no command line & must return immediately.
   // / This is the ONLY path that returns FALSE. Every other path handles & stops.
   if (!$RunningFromCLI) $CommandLineHandled = FALSE;
   else {
-    // / Gather the arguments. The first is always the script name & is discarded.
-    $cliArguments = isset($_SERVER['argv']) ? $_SERVER['argv'] : array();
-    array_shift($cliArguments);
-    $cliArgumentCount = count($cliArguments);
-    // / A trailing -y anywhere in the argument list pre confirms a destructive action.
-    if (in_array('-y', $cliArguments, TRUE) or in_array('--yes', $cliArguments, TRUE)) $cliConfirmed = TRUE;
-    // / Only the web server user & root may operate the listener.
-    // / A standard user holds a per user secret, which cannot derive a valid startup key.
-    if ($RunningAsRoot or $CurrentUser === $ApacheUser) $cliListenerAuthorized = TRUE;
+    // / The vector is read into its parts by parseArgumentVector, which is KERNEL rather than
+    // / Engine. It is called directly & unguarded, because the kernel is loaded by definition
+    // / whenever this file is running. An earlier version of this release put the parser in the
+    // / Engine & kept a duplicate here for when the Engine was missing. The duplicate was the
+    // / evidence that the parser had been put in the wrong place.
+    // / Everything below this point is dispatch, which is this application's own vocabulary.
+    list ($cliArguments, $cliArgumentCount, $cliCommand, $cliTarget, $cliSecondTarget, $cliConfirmed, $cliVectorParsed) = parseArgumentVector(isset($_SERVER['argv']) ? $_SERVER['argv'] : array());
+    // / Consume the check. A vector that could not be read at all is not a command line, &
+    // / the no argument help path below is what an operator sees instead.
+    if (!$cliVectorParsed) warningEntry('The command line argument vector could not be read & no command was dispatched.');
+    // / The name of whoever ran this, for the one refusal this application still words, -u.
     $cliWhoami = ($CurrentUser === '' ? 'an unidentified user' : $CurrentUser);
-    // / Every command the listener owns. Recognized for all users & refused for the wrong one.
-    $listenerCommands = array('-l', '--listen', '-k', '--kill', '--kill-all-workers', '--kill-every-worker');
-    // / Every command Setup Core owns. The component decides what each one requires.
-    $setupCommands = array('--config', '--setup', '--pipeline');
-    // / An option belongs to a command. Typed on its own it is not a command, & saying only
-    // / that it is unrecognized sends an operator hunting for a typo that is not there.
-    // / Naming the parent is the difference between a dead end & an answer.
-    $subOptionOwners = array(
-      '--check-depends' => '--setup', '--install-depends' => '--setup', '--install-deps' => '--setup',
-      '--update-depends' => '--setup', '--uninstall-depends' => '--setup', '--output-supply-chain' => '--setup',
-      '--detect-capabilities' => '--setup',
-      '--install-complete' => '--setup', '--reinstall-existing' => '--setup', '--subsystem' => '--setup',
-      '--install-service' => '--setup',
-      '--reset-all-defaults' => '--config', '--reset-default-section' => '--config',
-      '--reset-default-variable' => '--config', '--backup' => '--config', '--repair' => '--config',
-      '--view' => '--config',
-        // / --pipeline reaches into the components themselves, the way --setup reaches into
-        // / dependencies & --config reaches into settings. Same shape, same place.
-        '--list' => '--pipeline', '--describe' => '--pipeline', '--verify' => '--pipeline',
-        '--check-depends' => '--pipeline');
     // / A command line invocation with no argument is a request for help.
     if ($cliArgumentCount < 1) {
       logEntry('Command line invocation with no argument. Displaying help.');
       showHelpInfo();
       $CommandLineHandled = TRUE; }
+    // / A command line served without an Engine serves only what needs no Engine.
+    // / Every command the Engine owns, & -u, reach into the Engine for managers,
+    // / dependencies, configuration or cleaning. Calling into a component that is not loaded produces an
+    // / undefined function, which tells an operator nothing & leaves no log line behind.
+    // / Refusing here produces a sentence they can act on instead, & the refusal is logged.
+    // / -v & -h are still served, deliberately. -v is the thing that REPORTS a broken Engine
+    // / & an operator who cannot run it has no way to find out what is wrong. An argument
+    // / beginning --app is served too, because whether it needs the Engine is the
+    // / application's business rather than this core's.
+    else if (!$EngineActive and $cliCommand !== '-v' and $cliCommand !== '--version' and $cliCommand !== '-h' and $cliCommand !== '--help' and strpos($cliCommand, '--app') !== 0) {
+      warningEntry('The command '.$cliCommand.' was refused because the Engine is unavailable.');
+      $CommandLineStatus = 1;
+      print($Lol.'This command needs the Engine & the Engine could not be loaded.'.$Lol);
+      print('Run  php convertCore.php -v  to see which component failed & what version it reports.'.$Lol);
+      // / The remedy is named because there is no command that applies it. Every repair path
+      // / reaches into the Engine as well, so an operator who goes looking for one is hunting
+      // / something that does not exist. Measured rather than assumed: with a mismatched Engine,
+      // / --config --repair, --setup --install-complete & --update all fail on an Engine call of
+      // / their own. Telling them to run -v & stopping there sent them in a circle.
+      print('An Engine reporting the wrong version is a partial update. Replace'.$Lol);
+      print('Resources/Engine/engine.php with the copy from the release this core came from.'.$Lol);
+      print('No command can do this for you, because every repair path needs the Engine too.'.$Lol.$Lol);
+      $CommandLineHandled = TRUE;
+      $UserType = 'cli'; }
     else {
-      // / Extract the raw first argument to check for an inline equal sign assignment.
-      $rawFirstArg = trim($cliArguments[0]);
-      $cliParts = explode('=', $rawFirstArg, 2);
-      $cliCommand = strtolower(trim($cliParts[0]));
-      // / Resolve the target from an equal sign first & from the next argument second.
-      if (isset($cliParts[1])) $cliTarget = strtolower(trim($cliParts[1]));
-      else $cliTarget = isset($cliArguments[1]) ? trim($cliArguments[1]) : '';
-      $cliSecondTarget = isset($cliArguments[2]) ? trim($cliArguments[2]) : '';
-        // / THE APPLICATION'S NAMESPACE IS CHECKED FIRST, before any engine argument.
-        // / Everything beginning --app belongs to the application. Checking it first means
-        // / the engine never has to know what the application accepts, & an application
-        // / argument can never collide with an engine one however many are added later.
-        // / It is checked HERE rather than at the end because there are three separate
-        // / if chains below & the last one is not reached when an earlier one has already
-        // / claimed the argument. A branch added to the end of the last chain lints, runs
-        // / & never fires, which is exactly what happened the first time this was tried.
-        // / A PREFIX RATHER THAN A REGISTRY OF NAMES. A registry means asking the
-        // / application what it accepts before an unknown argument can be reported, & an
-        // / application that answers badly makes the core report nonsense.
-        if (strpos($cliCommand, '--app') === 0) {
-          $applicationHandler = (isset($ApplicationArgumentHandler) && is_string($ApplicationArgumentHandler)) ? trim($ApplicationArgumentHandler) : '';
-          if ($applicationHandler !== '' && function_exists($applicationHandler)) {
-            logEntry('The application argument '.$cliCommand.' was handed to '.$applicationHandler.'.');
-            $applicationHandler($cliCommand, $cliTarget, $cliSecondTarget); }
-          else {
-            warningEntry('The application argument '.$cliCommand.' was supplied & this application declares no handler.');
-            print($Lol.'This application accepts no '.$cliCommand.' command.'.$Lol);
-            print('Arguments beginning --app belong to the application & this one declares none.'.$Lol.$Lol); }
-          $CommandLineHandled = TRUE;
-          $UserType = 'cli'; }
+      // / The command & both targets were resolved by the parser above. Nothing is re-read
+      // / from the vector here, because two places deciding what the first argument means is
+      // / how they come to disagree.
+      // / THE APPLICATION'S NAMESPACE IS CHECKED FIRST, before any engine argument.
+      // / Everything beginning --app belongs to the application. Checking it first means
+      // / the engine never has to know what the application accepts, & an application
+      // / argument can never collide with an engine one however many are added later.
+      // / It is checked HERE, ahead of the Engine's dispatcher, so that no command the
+      // / Engine adds later can claim it. A branch for it once sat at the end of a chain
+      // / that an earlier chain had already answered, & it linted, ran & never fired.
+      // / A PREFIX RATHER THAN A REGISTRY OF NAMES. A registry means asking the
+      // / application what it accepts before an unknown argument can be reported, & an
+      // / application that answers badly makes the core report nonsense.
+      // / THE HANDLER IS NAMED BY $EngineApplicationArgumentHandler, which the Engine
+      // / configuration & the contract both set. Until v3.9.9 this read a global named
+      // / $ApplicationArgumentHandler that nothing sets, so a declared handler was never
+      // / called & every --app argument was refused.
+      // / ITS VALUES ARE HANDED OVER AS TYPED. parseArgumentVector lowercases every target,
+      // / which is safe for this application's commands & not for an application's own,
+      // / which may be paths. They are read again from the raw vector. The command stays
+      // / lowercased, because it is a name & is matched the way every command is.
+      if (strpos($cliCommand, '--app') === 0) {
+        $applicationHandler = (isset($EngineApplicationArgumentHandler) && is_string($EngineApplicationArgumentHandler)) ? trim($EngineApplicationArgumentHandler) : '';
+        if ($applicationHandler !== '' && function_exists($applicationHandler)) {
+          logEntry('The application argument '.$cliCommand.' was handed to '.$applicationHandler.'.');
+          $appArgumentParts = explode('=', trim((string)$cliArguments[0]), 2);
+          $appTarget = isset($appArgumentParts[1]) ? trim($appArgumentParts[1]) : (isset($cliArguments[1]) ? trim((string)$cliArguments[1]) : '');
+          $appSecondTarget = isset($cliArguments[2]) ? trim((string)$cliArguments[2]) : '';
+          $applicationHandler($cliCommand, $appTarget, $appSecondTarget); }
+        else {
+          warningEntry('The application argument '.$cliCommand.' was supplied & this application declares no handler.');
+          $CommandLineStatus = 2;
+          print($Lol.'This application accepts no '.$cliCommand.' command.'.$Lol);
+          print('Arguments beginning --app belong to the application & this one declares none.'.$Lol.$Lol); }
+        $CommandLineHandled = TRUE;
+        $UserType = 'cli'; }
       // / Handle the -v or --version arguments.
-      if ($cliCommand === '-v' or $cliCommand === '--version') {
+      // / THIS IS AN else if, SO AN --app ARGUMENT ENDS THE CHAIN. It was a separate if until
+      // / v3.9.9, so an --app argument reached the unrecognized argument branch at the bottom
+      // / as well, printed the whole help text under its own answer & exited 2.
+      else if ($cliCommand === '-v' or $cliCommand === '--version') {
         logEntry('Command line invocation. Displaying version information.');
         showVersionInfo();
         $CommandLineHandled = TRUE; }
@@ -3231,422 +2840,33 @@ function parseCommandLine() {
         logEntry('Command line invocation. Displaying help.');
         showHelpInfo();
         $CommandLineHandled = TRUE; }
-      // / Handle the internal Core Manager entry point.
-      // / This is never typed by an administrator. It is invoked by the -l argument with a
-      // / key derived from the install secret & is refused without one.
-      else if ($cliCommand === '--start-core-manager') {
-        if (!$ResourceAwarenessActive) errorEntry('A Core Manager start was requested but the component is unavailable!', 31009, TRUE);
-        else {
-          // / The key arrives in the environment. A key on the command line is still read,
-          // / so a listener launched by the previous release can still start its children.
-          $cliStartupKey = readTransportedStartupKey();
-          if ($cliStartupKey === '') $cliStartupKey = (string)$cliTarget;
-          dispatchManagerRole('core-manager', $cliStartupKey); }
-        $CommandLineHandled = TRUE; }
-      // / Handle the foreground listener entry point.
-      // / A service manager runs this. It does not fork & does not return, so systemd can
-      // / watch the real process, restart it when it dies & report its true state.
-      // / It derives its own key rather than being handed one, because a unit file cannot
-      // / compute a time bucketed HMAC. Authorization is unchanged. A standard user holds
-      // / a per user secret & the key they derive will not validate.
-      else if ($cliCommand === '--run-core-manager') {
-        if (!$ResourceAwarenessActive) errorEntry('The foreground listener was requested but the Core Manager component is unavailable!', 31016, TRUE);
-        else runCoreManagerForeground();
-        $CommandLineHandled = TRUE; }
-      // / Handle the internal subordinate manager entry point.
-      else if ($cliCommand === '--start-manager') {
-        if (!$ResourceAwarenessActive) errorEntry('A subordinate manager start was requested but the component is unavailable!', 31012, TRUE);
-        else {
-          // / The key arrives in the environment. A key on the command line is still
-          // / accepted, because a listener spawned by the previous release is still running
-          // / when this one is installed & its children must be able to start.
-          $cliStartupKey = readTransportedStartupKey();
-          if ($cliStartupKey === '') $cliStartupKey = (string)$cliSecondTarget;
-          dispatchManagerRole($cliTarget, $cliStartupKey); }
-        $CommandLineHandled = TRUE; }
-      // / Handle the --status argument. Available to any user, reports what is running.
-      // / The identity is reported because a standard user cannot read the socket directory
-      // / & would otherwise be told the listener is stopped whether it is or not.
-      else if ($cliCommand === '--status') {
-        print($Lol.'Running as          '.$cliWhoami.($RunningAsRoot ? ' (root)' : '').$Lol);
-        print('Listener commands   '.($cliListenerAuthorized ? 'AVAILABLE' : 'NOT AVAILABLE to this user').$Lol);
-        if (!$ResourceAwarenessActive) print('Resource awareness  UNAVAILABLE, the Core Manager component is missing or does not match this core.'.$Lol);
-        else {
-          list ($cliListenerRunning, $cliStatus) = reportListenerStatus();
-          print('Listener            '.($cliListenerRunning ? 'RUNNING as process '.$cliStatus['CoreManagerPid'] : 'STOPPED').$Lol);
-          print('Subordinates        '.count($cliStatus['Subordinates']).$Lol);
-          print('Tracked workers     '.$cliStatus['TrackedWorkers'].$Lol);
-          if (isset($cliStatus['SessionLocations'])) print('Mapped sessions     '.$cliStatus['SessionLocations'].$Lol);
-          if (isset($cliStatus['Budget']['RemainingBudget'])) print('Remaining budget    '.$cliStatus['Budget']['RemainingBudget'].' of '.$cliStatus['Budget']['TotalBudget'].$Lol);
-          if (!$cliListenerRunning && !$cliListenerAuthorized) print($Lol.'STOPPED may be wrong. This user cannot read the socket directory.'.$Lol); }
-        print($Lol);
-        $CommandLineHandled = TRUE; }
-      // / Handle every Setup Core & Dependency Core command through one gate.
-      // / Each command loads only what it actually needs.
-      // / --config needs Setup Core. --setup needs Dependency Core. An operator asking what
-      // / is installed must not be stopped because a component they are not using is absent.
-      // / Every setup & config command is root only, & is refused here rather than partway
-      // / through its own work.
-      // / --detect-capabilities used to probe every installed dependency as a standard user
-      // / & then fail on the last line when it could not write the cache. Minutes of work
-      // / for a message that arrived too late to be useful.
-      // / --config writes to config.php, which a standard user cannot write either.
-      // / Nothing below this point is readable-only, so nothing below is worth attempting
-      // / without the privilege to finish it.
-      else if (in_array($cliCommand, $setupCommands, TRUE) && !$RunningAsRoot) {
-        warningEntry('A setup command was refused for an unauthorized user.');
-        print($Lol.'The '.$cliCommand.' command is only available to root.'.$Lol);
-        print('You are running as '.$cliWhoami.'.'.$Lol);
-        print($Lol.'  sudo php convertCore.php '.$cliCommand.$Lol.$Lol);
-        $CommandLineHandled = TRUE; }
-      else if (in_array($cliCommand, $setupCommands, TRUE)) {
-        // / The configuration utility. Setup Core owns the model, so it is the only
-        // / component this path requires.
-        // / --pipeline reaches into the components the way --setup reaches into dependencies.
-        // / It reports what is INSTALLED & verified rather than what is pinned, because a
-        // / pinned pipeline that does not load is exactly the failure worth surfacing. Two
-        // / scanner pipelines were pinned, installed, valid & never enumerated for an entire
-        // / release, & nothing reported it.
-        if ($cliCommand === '--pipeline') {
-          $pipelineAction = ($cliTarget !== '') ? $cliTarget : '--list';
-          if (!is_array($Pipelines) or empty($Pipelines)) print($Lol.'No pipeline is loaded. The Pipeline Core reports why.'.$Lol.$Lol);
-          else if ($pipelineAction === '--list' or $pipelineAction === '') {
-            print($Lol.'Installed pipelines'.$Lol.$Lol);
-            printf('  %-14s %-11s %-18s %s'.$Lol, 'PIPELINE', 'KIND', 'USAGE', 'VERSION');
-            foreach ($Pipelines as $pipelineName => $pipelineRecord) printf('  %-14s %-11s %-18s %s'.$Lol, $pipelineName, $pipelineRecord['Kind'], implode(', ', $pipelineRecord['Usage']), $pipelineRecord['Version']);
-            print($Lol); }
-          else if ($pipelineAction === '--describe') {
-            $pipelineWanted = ($cliSecondTarget !== '') ? $cliSecondTarget : '';
-            if ($pipelineWanted === '') print($Lol.'Name a pipeline to describe. --pipeline --describe Image'.$Lol.$Lol);
-            else if (!isset($Pipelines[$pipelineWanted])) print($Lol.'No pipeline named '.$pipelineWanted.' is loaded.'.$Lol.$Lol);
-            else {
-              $pipelineRecord = $Pipelines[$pipelineWanted];
-              print($Lol.$pipelineWanted.$Lol.$Lol);
-              printf('  %-16s %s'.$Lol, 'Kind', $pipelineRecord['Kind']);
-              printf('  %-16s %s'.$Lol, 'Usage', implode(', ', $pipelineRecord['Usage']));
-              printf('  %-16s %s'.$Lol, 'Version', $pipelineRecord['Version']);
-              printf('  %-16s %s'.$Lol, 'Entry point', $pipelineRecord['EntryPoint']);
-              printf('  %-16s %s'.$Lol, 'Subsystem', isset($pipelineRecord['Subsystem']) ? $pipelineRecord['Subsystem'] : 'none');
-              printf('  %-16s %s'.$Lol, 'Reads', empty($pipelineRecord['Capabilities']['Input']) ? 'every file' : implode(' ', $pipelineRecord['Capabilities']['Input']));
-              printf('  %-16s %s'.$Lol, 'Writes', empty($pipelineRecord['Capabilities']['Output']) ? 'nothing' : implode(' ', $pipelineRecord['Capabilities']['Output']));
-              print($Lol); } }
-          else if ($pipelineAction === '--verify') {
-            // / PINNED AGAINST LOADED. The one comparison nothing else makes.
-            $pinnedPipelines = getAcceptedPipelines();
-            $pipelineFailures = 0;
-            print($Lol.'Pinned against loaded'.$Lol.$Lol);
-            foreach ($pinnedPipelines as $pipelineName => $pinnedVersion) {
-              if (isset($Pipelines[$pipelineName])) printf('  %-14s %s'.$Lol, $pipelineName, 'OK, '.$Pipelines[$pipelineName]['Version']);
-              else { $pipelineFailures++; printf('  %-14s %s'.$Lol, $pipelineName, 'PINNED & NOT LOADED, expected '.$pinnedVersion); } }
-            if ($pipelineFailures > 0) print($Lol.$pipelineFailures.' pinned pipeline(s) did not load. See the warnings above.'.$Lol.$Lol);
-            else print($Lol.'All '.count($pinnedPipelines).' pinned pipeline(s) loaded.'.$Lol.$Lol); }
-          else if ($pipelineAction === '--check-depends') {
-            // / What the pipelines declare, against what the manifest holds.
-            // / A pipeline names the binaries it shells out to. The manifest decides what
-            // / gets installed. Nothing compared the two, so a pipeline could depend on a
-            // / tool no installation would ever be told to install.
-            // / It REPORTS rather than writes. Adding an entry to the manifest is an edit to
-            // / a file the application owns, & doing it silently during a boot that happens
-            // / on every request is not a repair, it is a surprise.
-            $manifestNames = array();
-            // / The manifest is a global the Dependency Core has already loaded. There is no
-            // / accessor for it & inventing one here would be a second way to read the same
-            // / array, which is how two readers drift.
-            // / The manifest is loaded by the Dependency Core & the Dependency Core only loads
-            // / for --setup, so at this point the global is empty. It is required here when
-            // / it is not already present.
-            // / Checked rather than assumed: reporting every dependency as missing, including
-            // / two that were plainly in the manifest, is what surfaced this.
-            if (!isset($DependsManifest) or !is_array($DependsManifest)) {
-              $manifestPath = $InstLoc.$DirSep.'Resources'.$DirSep.'Engine'.$DirSep.'Contract'.$DirSep.'depends.php';
-              if (file_exists($manifestPath)) require_once($manifestPath); }
-            if (isset($DependsManifest) && is_array($DependsManifest)) foreach ($DependsManifest as $manifestEntry) $manifestNames[] = (string)$manifestEntry['Name'];
-            else warningEntry('The dependency manifest could not be read, so nothing could be compared against it.');
-            $missingDependencies = array();
-            foreach ($Pipelines as $pipelineName => $pipelineRecord) {
-              if (empty($pipelineRecord['Dependencies'])) continue;
-              foreach ($pipelineRecord['Dependencies'] as $declaredDependency) {
-                if (in_array($declaredDependency, $manifestNames, TRUE)) continue;
-                $missingDependencies[] = $pipelineName.' needs '.$declaredDependency; } }
-            print($Lol.'Pipeline dependencies against the manifest'.$Lol.$Lol);
-            $declaringCount = 0;
-            foreach ($Pipelines as $pipelineName => $pipelineRecord) {
-              if (empty($pipelineRecord['Dependencies'])) continue;
-              $declaringCount++;
-              printf('  %-14s %s'.$Lol, $pipelineName, implode(', ', $pipelineRecord['Dependencies'])); }
-            if ($declaringCount === 0) print('  No pipeline declares a dependency yet.'.$Lol);
-            if (empty($missingDependencies)) print($Lol.'Every declared dependency is in the manifest.'.$Lol.$Lol);
-            else {
-              print($Lol.'Not in the manifest. These would never be installed.'.$Lol);
-              foreach ($missingDependencies as $missingDependency) print('  '.$missingDependency.$Lol);
-              print($Lol.'Add them to Resources/Engine/Contract/depends.php.'.$Lol.$Lol); } }
-          else print($Lol.'Unrecognized. --pipeline accepts --list, --describe, --verify & --check-depends.'.$Lol.$Lol);
-          $CommandLineHandled = TRUE; }
-        else if ($cliCommand === '--config') {
-          list ($cliSetupIsAvailable, $cliSetupVersion) = verifyCoreComponent('Setup Core', 'Engine'.$DirSep.'Cores'.$DirSep.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
-          if (!$cliSetupIsAvailable) {
-            print($Lol.'The Setup Core component is unavailable.'.$Lol);
-            if ($cliSetupVersion === '') print('Resources/Engine/Cores/setupCore.php is missing, unreadable, or reports no version.'.$Lol.$Lol);
-            else print('It reports v'.ltrim($cliSetupVersion, 'vV').' & this core requires v'.ltrim((string)$RequiredSetupCoreVersion, 'vV').'.'.$Lol.$Lol); }
-          else {
-            logEntry('Command line invocation. Running the configuration utility.');
-            // / Every mode is resolved from the argument list, so the order they were typed
-            // / in does not matter.
-            if (in_array('--reset-all-defaults', $cliArguments, TRUE)) runConfigUtility('', 'reset-all', '', $cliConfirmed);
-            else if (extractCliOption($cliArguments, '--reset-default-section') !== '') runConfigUtility('', 'reset-section', extractCliOption($cliArguments, '--reset-default-section'), $cliConfirmed);
-            else if (extractCliOption($cliArguments, '--reset-default-variable') !== '') runConfigUtility('', 'reset-variable', extractCliOption($cliArguments, '--reset-default-variable'), $cliConfirmed);
-            else if (extractCliOption($cliArguments, '--backup') !== '') runConfigUtility('', 'backup', extractCliOption($cliArguments, '--backup'), $cliConfirmed);
-            else if (in_array('--repair', $cliArguments, TRUE)) runConfigUtility('', 'repair', '', $cliConfirmed);
-            else if (in_array('--view', $cliArguments, TRUE)) runConfigUtility('', 'view', '', $cliConfirmed);
-            else runConfigUtility('', 'interactive', '', $cliConfirmed); } }
-        // / Everything --setup owns. Dependency Core is required. Setup Core is loaded only
-        // / by the two options that also configure & repair.
-        else {
-          list ($cliDependencyIsAvailable, $cliDependencyVersion) = verifyCoreComponent('Dependency Core', 'Engine'.$DirSep.'Cores'.$DirSep.'dependencyCore.php', 'DependencyCoreVersion', $RequiredDependencyCoreVersion);
-          $cliSubsystem = extractCliOption($cliArguments, '--subsystem');
-          if (!$cliDependencyIsAvailable) {
-            print($Lol.'The Dependency Core component is unavailable.'.$Lol);
-            if ($cliDependencyVersion === '') print('Resources/Engine/Cores/dependencyCore.php is missing, unreadable, or reports no version.'.$Lol.$Lol);
-            else print('It reports v'.ltrim($cliDependencyVersion, 'vV').' & this core requires v'.ltrim((string)$RequiredDependencyCoreVersion, 'vV').'.'.$Lol.$Lol); }
-          // / Reading the machine needs no authorization at all.
-          else if (in_array('--check-depends', $cliArguments, TRUE)) {
-            logEntry('Command line invocation. Checking dependencies.');
-            // / Two of these three are not read & are still named, because list() assigns by
-            // / position & dropping one would silently shift the others.
-            // / checkDepends returns the verdict as well as the findings, & this block uses
-            // / only the findings. Do not narrow the call to suit the caller.
-            list ($cliDependenciesReady, $cliDependencyFindings, $cliOptionalProblems) = checkDepends($cliSubsystem);
-            showDependencyFindings($cliDependencyFindings);
-            // / The verdict is NOT printed here. showDependencyFindings() prints it, & this
-            // / block used to print its own immediately underneath, so --check-depends ended
-            // / with the same sentence twice in slightly different words.
-            // / The component that owns the table owns the summary of the table.
-            print($Lol); }
-          else if (in_array('--output-supply-chain', $cliArguments, TRUE) or extractCliOption($cliArguments, '--output-supply-chain') !== '') {
-            logEntry('Command line invocation. Writing a supply chain report.');
-            outputSupplyChain(extractCliOption($cliArguments, '--output-supply-chain')); }
-          // / Capability detection asks every installed tool what it can read & write, &
-          // / writes the answer to a cache. It reads the machine & changes nothing else, so
-          // / it needs no authorization token. It does spawn a process for every dependency
-          // / that can answer, which is exactly why it happens here & never in a request.
-          else if (in_array('--detect-capabilities', $cliArguments, TRUE)) {
-            logEntry('Command line invocation. Detecting dependency capabilities.');
-            if (!function_exists('buildCapabilityCache')) errorEntry('Capability detection was requested but the Dependency Core component is unavailable!', 33002, FALSE);
-            else {
-              list ($cliCacheWasBuilt, $cliDetectedCount) = buildCapabilityCache();
-              if (!$cliCacheWasBuilt) print($Lol.'The capability cache could not be written. The log says why.'.$Lol.$Lol);
-              else {
-                print($Lol.'Capability detection complete.'.$Lol);
-                print('  '.str_pad('Dependencies asked', 28).$cliDetectedCount.' answered'.$Lol);
-                print($Lol.'A dependency that cannot answer is recorded as unknown rather than as empty.'.$Lol);
-                print('Unknown means its pipeline declaration stands untouched.'.$Lol.$Lol); } } }
-          // / Everything below rewrites the machine & carries a token derived from the
-          // / install secret. The token proves the request came through this core.
-          else if (in_array('--install-depends', $cliArguments, TRUE) or in_array('--install-deps', $cliArguments, TRUE)) {
-            logEntry('Command line invocation. Installing dependencies.');
-            $cliDependencyToken = deriveStartupKey('dependency-write');
-            list ($cliSetupSucceeded, $cliSetupCount) = installDepends($cliDependencyToken, $cliSubsystem, $cliConfirmed); }
-          else if (in_array('--update-depends', $cliArguments, TRUE)) {
-            logEntry('Command line invocation. Upgrading dependencies.');
-            $cliDependencyToken = deriveStartupKey('dependency-write');
-            list ($cliSetupSucceeded, $cliSetupCount) = updateDepends($cliDependencyToken, $cliSubsystem, $cliConfirmed); }
-          else if (in_array('--uninstall-depends', $cliArguments, TRUE)) {
-            warningEntry('Command line invocation. Removing dependencies.');
-            $cliDependencyToken = deriveStartupKey('dependency-write');
-            list ($cliSetupSucceeded, $cliSetupCount) = uninstallDepends($cliDependencyToken, $cliSubsystem, $cliConfirmed); }
-          // / The listener service unit, generated from the live configuration.
-          // / Setup Core owns it. Dependency Core is already loaded by the time we get here.
-          else if (in_array('--install-service', $cliArguments, TRUE)) {
-            list ($cliSetupIsAvailable, $cliSetupVersion) = verifyCoreComponent('Setup Core', 'Engine'.$DirSep.'Cores'.$DirSep.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
-            if (!$cliSetupIsAvailable) print($Lol.'This operation needs the Setup Core component, which is unavailable.'.$Lol.$Lol);
-            else if (!$RunningAsRoot) {
-              warningEntry('A service unit installation was refused for an unauthorized user.');
-              print($Lol.'Installing a service unit is only available to root.'.$Lol);
-              print($Lol.'  sudo php convertCore.php --setup --install-service'.$Lol.$Lol); }
-            else {
-              logEntry('Command line invocation. Installing the listener service unit.');
-              print($Lol.'Installing the listener service unit.'.$Lol);
-              installListenerService(TRUE, TRUE);
-              print($Lol); } }
-          // / These two install dependencies AND configure, so both components are needed.
-          else if (in_array('--install-complete', $cliArguments, TRUE) or in_array('--reinstall-existing', $cliArguments, TRUE)) {
-            list ($cliSetupIsAvailable, $cliSetupVersion) = verifyCoreComponent('Setup Core', 'Engine'.$DirSep.'Cores'.$DirSep.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
-            if (!$cliSetupIsAvailable) {
-              print($Lol.'This operation also needs the Setup Core component, which is unavailable.'.$Lol);
-              print('Dependencies can still be managed with --setup --check-depends & --install-depends.'.$Lol.$Lol); }
-            else {
-              $cliDependencyToken = deriveStartupKey('dependency-write');
-              if (in_array('--install-complete', $cliArguments, TRUE)) {
-                logEntry('Command line invocation. Performing a complete installation.');
-                runCompleteInstall($cliDependencyToken, $cliConfirmed); }
-              else {
-                logEntry('Command line invocation. Reinstalling in place.');
-                runReinstallExisting($cliTarget, $cliConfirmed); } } }
-          // / --setup with no option is a request to see what --setup can do.
-          else {
-            print($Lol.'Setup options'.$Lol);
-            print('  --check-depends              Report the state of every dependency.'.$Lol);
-            print('  --install-depends            Install everything absent or too old.'.$Lol);
-            print('  --update-depends             Upgrade everything already installed.'.$Lol);
-            print('  --uninstall-depends          Remove a subsystem. Requires --subsystem.'.$Lol);
-            print('  --detect-capabilities       Ask every installed tool what it can read & write.'.$Lol);
-  print('  --output-supply-chain[=path] Write a supply chain audit template.'.$Lol);
-            print('  --install-service            Install the listener service unit from this configuration.'.$Lol);
-            print('  --install-complete           Install HRConvert2 & every dependency.'.$Lol);
-            print('  --reinstall-existing         Reinstall this installation in place.'.$Lol);
-            print('  --subsystem=<Name>           Restrict the operation to one subsystem.'.$Lol);
-            print('  -y, --yes                    Skip the confirmation prompt.'.$Lol);
-            print($Lol.'Every option above is used WITH --setup, never on its own.'.$Lol);
-            print('  sudo php convertCore.php --setup --check-depends'.$Lol.$Lol); } }
-        $CommandLineHandled = TRUE; }
-
-      // / Handle every listener command through one gate.
-      // / Refusing here rather than falling through means a real command is never reported
-      // / as an unrecognized one, which sent an authorized user hunting for a typo.
-      else if (in_array($cliCommand, $listenerCommands, TRUE)) {
-        if (!$cliListenerAuthorized) {
-          warningEntry('A listener command was refused for an unauthorized user.');
-          print($Lol.'The '.$cliCommand.' command is only available to root or '.$ApacheUser.'.'.$Lol);
-          print('You are running as '.$cliWhoami.'.'.$Lol);
-          print($Lol.'  sudo php convertCore.php '.$cliCommand.$Lol);
-          print('  sudo -u '.$ApacheUser.' php convertCore.php '.$cliCommand.$Lol.$Lol);
-          print('A standard user holds a per user secret, which cannot derive a valid'.$Lol);
-          print('startup key, so a listener started that way could never be reached.'.$Lol.$Lol); }
-        else if (!$ResourceAwarenessActive) print($Lol.'Resource awareness is unavailable. The Core Manager component is missing or does not match this core.'.$Lol.$Lol);
-        // / Start the listener.
-        else if ($cliCommand === '-l' or $cliCommand === '--listen') {
-          logEntry('Command line invocation. Starting the Core Manager listener.');
-          startCoreManagerListener(); }
-        // / Stop the listener with no target, or end one worker with a target.
-        else if ($cliCommand === '-k' or $cliCommand === '--kill') {
-          if ($cliTarget === '') {
-            logEntry('Command line invocation. Stopping the Core Manager listener.');
-            stopCoreManagerListener(); }
-          else {
-            logEntry('Command line invocation. Terminating worker '.$cliTarget.'.');
-            killTargetedWorker($cliTarget); } }
-        // / End every TRACKED worker.
-        else if ($cliCommand === '--kill-all-workers') {
-          $cliActionConfirmed = confirmDestructiveAction('This ends every tracked conversion in progress. Users will lose work.', $cliConfirmed);
-          if ($cliActionConfirmed) {
-            warningEntry('Command line invocation. Terminating every tracked worker.');
-            // / The Resource Manager is ASKED to do this rather than the registry being walked
-            // / from here. It owns the registry & this process does not have one.
-            // / An earlier version called killTrackedWorkers() with no argument at all. That
-            // / function takes the registry by reference & has no default, so the command was a
-            // / fatal every time somebody confirmed it, which is the worst moment to fail.
-            // / kill-tracked is a request type the Resource Manager already answers, & it is
-            // / what the Worker Manager sends for the same purpose.
-            list ($cliMessageDelivered, $cliMessageReply) = sendManagerMessage(buildManagerSocketPath('resource-manager'), array('RequestType' => 'kill-tracked'), $ManagerSocketTimeout);
-            if ($cliMessageDelivered && isset($cliMessageReply['Reason'])) print($Lol.$cliMessageReply['Reason'].$Lol);
-            else if ($cliMessageDelivered) print($Lol.'The Resource Manager accepted the request & said nothing about it.'.$Lol);
-            else {
-              warningEntry('The Resource Manager could not be reached, so no tracked worker was ended.');
-              print($Lol.'The Resource Manager is not reachable. Nothing was ended.'.$Lol);
-              print('Start the listener, or use --kill-every-worker to end every process directly.'.$Lol); } } }
-        // / End every PHP process owned by the web server user.
-        // / This reaches unrelated applications sharing the host & says so before it runs.
-        else if ($cliCommand === '--kill-every-worker') {
-          $cliActionConfirmed = confirmDestructiveAction('This ends EVERY PHP process owned by '.$ApacheUser.' on this host. Other applications sharing this server, such as WordPress or OwnCloud, will lose every session in progress.', $cliConfirmed);
-          if ($cliActionConfirmed) {
-            warningEntry('Command line invocation. Terminating every process owned by the web server user.');
-            print($Lol.'Terminated '.killEveryWorker().' process(es).'.$Lol); } }
-        $CommandLineHandled = TRUE; }
-      // / Gate root-only, filesystem breaking command line operations behind a security context awareness check.
-      else if ($RunningAsRoot) {
-        // / Handle the -fp or --fix-permissions arguments.
-        // / Root only, & it sits here rather than with the listener commands.
-        // / It was written into the listener block by mistake & was unreachable there,
-        // / because that block is only entered for a command in $listenerCommands.
-        // / It does not belong there anyway. A listener command is authorized for root OR
-        // / the web server account, & this one needs root & nothing less.
-        if ($cliCommand === '--run-environment-manager') {
-          // / This is NOT dispatched through dispatchManagerRole(). That path is for the four
-          // / roles the listener starts, each of which opens a socket & runs as the web server
-          // / account. This one is root, opens nothing & exits when it is done.
-          // / It is loaded here by name rather than through loadEngineManager() for the same
-          // / reason. Putting it in getAcceptedManagers() would make it dispatchable, & a root
-          // / role that the listener can reach is exactly what this design refuses to have.
-          $cliEnvironmentFile = $InstLoc.$DirSep.'Resources'.$DirSep.'Engine'.$DirSep.'Managers'.$DirSep.'environmentManager.php';
-          if (!file_exists($cliEnvironmentFile)) print($Lol.'The Environment Manager is not installed at '.$cliEnvironmentFile.'.'.$Lol);
-          else {
-            require_once ($cliEnvironmentFile);
-            if (!function_exists('runEnvironmentManager')) print($Lol.'The Environment Manager file is present & defines no entry point.'.$Lol);
-            else {
-              list ($cliPassCompleted, $cliPassFindings) = runEnvironmentManager();
-              if (!$cliPassCompleted) print($Lol.'The Environment Manager pass did not complete. It requires root.'.$Lol);
-              else {
-                print($Lol.'Environment Manager pass complete. '.count($cliPassFindings).' check(s) examined.'.$Lol);
-                foreach ($cliPassFindings as $cliPassFinding) {
-                  if (!isset($cliPassFinding['Status'])) continue;
-                  printf('  %-28s %-14s %s'.PHP_EOL, (isset($cliPassFinding['Check']) ? $cliPassFinding['Check'] : ''), (string)$cliPassFinding['Status'], (isset($cliPassFinding['Detail']) ? $cliPassFinding['Detail'] : '')); }
-                print($Lol); } } }
-          $CommandLineHandled = TRUE; }
-        else if ($cliCommand === '-fp' or $cliCommand === '--fix-permissions') {
-          logEntry('Command line invocation. Correcting managed permissions.');
-          print($Lol.'Correcting permissions on managed paths.'.$Lol);
-          list ($cliPermissionsFixed, $cliPathsCorrected) = fixManagedPermissions();
-          print($Lol.($cliPermissionsFixed ? 'Corrected '.$cliPathsCorrected.' path(s).' : 'Permissions could not be corrected.').$Lol.$Lol);
-          $CommandLineHandled = TRUE; }
-        // / Handle the -u or --update arguments.
+      // / Every other command is offered to the Engine first. The listener, the managers,
+      // / setup, configuration, the pipelines, repair & cleaning are the Engine's as of v3.9.9,
+      // / & every application of this shape needs them. Before that each was a branch here.
+      // / What comes back unhandled is this application's own, which is -u, or a mistake.
+      // / The gate above already refused all of this when there is no Engine to ask.
+      else {
+        list ($engineCommandHandled, $engineCommandStatus) = dispatchEngineCommand($cliArguments, $cliCommand, $cliTarget, $cliSecondTarget, $cliConfirmed);
+        if ($engineCommandHandled) $CommandLineStatus = (int)$engineCommandStatus;
+        // / Self update stays here, because updateApplication & its helpers are this
+        // / application's & moving them is a migration of its own. It is root only.
+        else if (($cliCommand === '-u' or $cliCommand === '--update') && !$RunningAsRoot) $CommandLineStatus = refuseCommandForUser($cliCommand, $cliWhoami, 'A root only command was refused for an unauthorized user.');
         else if ($cliCommand === '-u' or $cliCommand === '--update') {
           logEntry('Command line invocation. Performing an application update.');
-          updateApplication(strtolower($cliTarget));
-          $CommandLineHandled = TRUE; }
-        // / Handle the -c or --clean arguments.
-        else if ($cliCommand === '-c' or $cliCommand === '--clean') {
-          logEntry('Command line invocation. Performing a manual clean.');
-          $cliTarget = strtolower($cliTarget);
-          $cliThreshold = $DeleteThreshold;
-          // / A threshold of zero expires everything, because every session is older than nothing.
-          if ($cliTarget === 'now') $cliThreshold = 0;
-          // / ctype_digit rather than is_numeric, because is_numeric accepts a negative & a
-          // / negative threshold would expire every session while looking like a normal number.
-          else if ($cliTarget !== '' && ctype_digit($cliTarget)) $cliThreshold = (int)$cliTarget;
-          else if ($cliTarget !== '') {
-            warningEntry('An unrecognized clean threshold was supplied. Using the configured default.');
-            print($Lol.'Unrecognized threshold. Supply a whole number of minutes, or now.'.$Lol); }
-          print($Lol.'Cleaning sessions older than '.$cliThreshold.' minute(s).'.$Lol);
-          logEntry('Manual clean requested. Threshold set to '.$cliThreshold.' minute(s).');
-          list ($cliTempCleaned, $cliTempDeepCleaned) = cleanDataLocation($ConvertTempDir, 'Temporary files', $cliThreshold, $ProtectedRootDirs, array($ConvertTempDir));
-          print('  Temporary location   '.($cliTempCleaned ? 'OK' : 'FAILED').($cliTempDeepCleaned ? ', removed expired sessions' : ', nothing was expired').$Lol);
-          list ($cliDataCleaned, $cliDataDeepCleaned) = cleanDataLocation($ConvertLoc, 'Data location', $cliThreshold, $ProtectedRootDirs, array($ConvertLoc));
-          print('  Data location        '.($cliDataCleaned ? 'OK' : 'FAILED').($cliDataDeepCleaned ? ', removed expired sessions' : ', nothing was expired').$Lol);
-          if (!$cliTempCleaned or !$cliDataCleaned) print($Lol.'One or more locations could not be cleaned. See the log for the reason.'.$Lol);
-          print($Lol);
-          $CommandLineHandled = TRUE; }
-        // / An unrecognized argument from root is still a mistake & must not fall through.
+          if (!updateApplication(strtolower($cliTarget))) $CommandLineStatus = 1; }
+        // / An unrecognized argument is a mistake, not a web request.
+        // / An option belonging to one of the Engine's commands is named with its owner, from
+        // / the Engine's own map, because an option typed alone is the commonest mistake there is.
         else {
           warningEntry('Command line invocation with an unrecognized argument.');
-          reportUnrecognizedArgument($cliCommand, $subOptionOwners);
-          $CommandLineHandled = TRUE; } }
-      // / A root only command issued by a standard user is named rather than dismissed.
-      // / Every command that changes this host or ends somebody else's work is named here.
-      // / A standard user asking for one is TOLD it needs root rather than being allowed to
-      // / run it & watch it quietly achieve nothing.
-      // / --kill-every-worker was the reason this list grew. As a standard user it found
-      // / every worker, failed to signal a single one because they belong to another
-      // / account, & then logged that every process was terminated. Zero ended & the
-      // / sentence said otherwise, which is the worst combination available.
-      // / The listener commands are matched BEFORE this, so the destructive ones among them
-      // / are gated where they are handled rather than here. Naming them in this list would
-      // / read as protection & would never once be reached.
-      else if (in_array($cliCommand, array('-fp', '--fix-permissions', '-u', '--update', '-c', '--clean', '--run-environment-manager'), TRUE)) {
-        warningEntry('A root only command was refused for an unauthorized user.');
-        print($Lol.'The '.$cliCommand.' command is only available to root.'.$Lol);
-        print('You are running as '.$cliWhoami.'.'.$Lol);
-        print($Lol.'  sudo php convertCore.php '.$cliCommand.$Lol.$Lol);
-        $CommandLineHandled = TRUE; }
-      // / An unrecognized argument is a mistake, not a web request.
-      else {
-        warningEntry('Command line invocation with an unrecognized argument.');
-        reportUnrecognizedArgument($cliCommand, $subOptionOwners);
+          $CommandLineStatus = 2;
+          reportUnrecognizedArgument($cliCommand, engineSubOptionOwners()); }
         $CommandLineHandled = TRUE; } } }
   // / Determine if the user is using the application via command line (CLI) or Apache+PHP through a web browser.
   if ($CommandLineHandled === TRUE) $UserType = 'cli';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $manifestPath, $manifestNames, $missingDependencies, $manifestEntry, $declaredDependency, $missingDependency, $declaringCount, $pinnedVersion, $pipelineAction, $pipelineWanted, $pipelineName, $pipelineRecord, $pinnedPipelines, $pipelineFailures, $applicationHandler, $cliEnvironmentFile, $cliPassCompleted, $cliPassFindings, $cliPassFinding, $cliMessageDelivered, $cliMessageReply, $cliCacheWasBuilt, $cliDetectedCount, $cliStartupKey, $cliArguments, $cliCommand, $cliArgumentCount, $rawFirstArg, $cliParts, $cliTarget, $cliSecondTarget, $cliThreshold, $cliTempCleaned, $cliTempDeepCleaned, $cliDataCleaned, $cliDataDeepCleaned, $cliConfirmed, $cliListenerAuthorized, $cliActionConfirmed, $cliPermissionsFixed, $cliListenerRunning, $cliPathsCorrected, $cliStatus, $cliWhoami, $cliSetupIsAvailable, $cliSetupVersion, $listenerCommands, $setupCommands, $cliDependencyIsAvailable, $cliDependencyVersion, $cliSubsystem, $cliDependencyToken, $cliDependencyFindings, $cliDependenciesReady, $cliSetupSucceeded, $cliSetupCount, $subOptionOwners, $cliOptionalProblems);
-  return array($CommandLineHandled, $UserType); }
+  purgeSensitiveMemory($EnableMemoryProtection, $cliArgumentCount, $cliArguments, $appArgumentParts, $cliCommand, $cliTarget, $cliSecondTarget, $cliWhoami, $applicationHandler, $appTarget, $appSecondTarget, $cliConfirmed, $cliVectorParsed, $engineCommandHandled, $engineCommandStatus);
+  return array($CommandLineHandled, $UserType, $CommandLineStatus); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -3722,21 +2942,6 @@ function cleanBuildEnvironment() {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $dockerFile, $changelogFile, $readmeFile, $buildDir, $buildDirContents, $buildDirEntry);
   return array($BuildEnvCleaned, $BuildEnvDeleted, $DevDocsDeleted); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to sanitize & return the extension to a specified file.
-function getExtension($pathToFile) {
-  // / Set variables.
-  global $PathExt, $EnableMemoryProtection;
-  $Pathinfo = '';
-  $pathinfoCleaned = FALSE;
-  list ($pathinfo, $pathinfoCleaned) = sanitize(pathinfo(strtolower($pathToFile), $PathExt), TRUE);
-  if ($pathinfoCleaned) $Pathinfo = trim($pathinfo);
-  else errorEntry('Could not process extension for file '.$pathToFile.'!', 300, FALSE);
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $pathToFile, $pathinfoCleaned, $pathinfo);
-  return $Pathinfo;  }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -3877,13 +3082,30 @@ function getSandboxProfiles() {
       'ReadOnlyPaths' => array('/usr/share/openscad'),
       'Reason' => 'The standard library is read from this directory.'),
 
+    // / clamscan cannot start without its signature database, & ClamAV 1.5 & later also
+    // / refuses without the certificates it verifies that database against. Both are read
+    // / only & both are where every Debian & Ubuntu package puts them.
+    // / Neither was here until v3.9.9, & nothing noticed, because the ClamAV pipeline had
+    // / never managed to run its command in the sandbox at all.
+    'clamav' => array(
+      'OperationType' => 'Scan',
+      'ReadOnlyPaths' => array('/var/lib/clamav', '/etc/clamav'),
+      'Reason' => 'The signature database & the certificates that verify it are read from these directories.'),
+
+    // / ScanCore ships inside this application, so its directory is handed to the sandbox by
+    // / the pipeline as a read only resource rather than named here.
+    // / ScanCore is a PHP program, & PHP loads its extensions from the files under /etc/php.
+    // / Without them ctype is missing & ScanCore dies loading its classifiers.
+    'scancore' => array(
+      'OperationType' => 'Scan',
+      'ReadOnlyPaths' => array('/etc/php'),
+      'Reason' => 'PHP reads the configuration that loads its extensions from this directory.'),
+
     // / Everything below needs nothing beyond the base sandbox.
     // / A profile that declares only its operation type is not an oversight.
     'ffmpeg' => array('OperationType' => 'Video'),
     'archive' => array('OperationType' => 'Archive'),
     'poppler' => array('OperationType' => 'Document'),
-    'clamav' => array('OperationType' => 'Scan'),
-    'scancore' => array('OperationType' => 'Scan'),
     'generic' => array('OperationType' => 'Generic'));
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $SandboxProfiles is not purged, because it is the return value.
@@ -4479,7 +3701,7 @@ function updateApplication($requestedVersion) {
   // / Set variables.
   global $InstLoc, $ProprietaryLoc, $DirSep, $HRConvertVersion, $AutoUpdateTargetVersion, $EnableAutoUpdates, $BackupLoc, $RunningAsRoot, $ApacheUser, $PermissionLevels, $ConvertDir, $Lol, $EnableMemoryProtection;
   $UpdateSucceeded = $targetResolved = $packageDownloaded = $configMerged = $installationIsValid = FALSE;
-  $updatePermissionsFixed = FALSE;
+  $updatePermissionsFixed = $alreadyInstalled = FALSE;
   $updatePathsCorrected = 0;
   $swapCompleted = $rolledBack = FALSE;
   $targetVersion = $targetURL = $workDir = $downloadPath = $extractedDir = $stagedDir = $oldDir = $backupOutput = '';
@@ -4498,7 +3720,13 @@ function updateApplication($requestedVersion) {
     if ($targetResolved && $targetVersion !== 'edge' && ltrim($targetVersion, 'vV') === ltrim($HRConvertVersion, 'vV')) {
       $targetResolved = FALSE;
       print($Lol.'Version '.$targetVersion.' is already installed. Nothing to do.'.$Lol.$Lol);
-      logEntry('Update requested but '.$targetVersion.' is already installed.'); } }
+      logEntry('Update requested but '.$targetVersion.' is already installed.');
+      // / The requested version is installed when this returns, which is what success means.
+      // / It returned FALSE here until v3.9.9, which read as a failure to anything checking.
+      // / NOTHING WAS INSTALLED, SO NOTHING BELOW MAY RUN. Every step after this one is gated
+      // / on success & assumes a new release arrived, so each is gated on this as well.
+      // / Without it a no-op would repair permissions, report an update & name a backup.
+      $UpdateSucceeded = $alreadyInstalled = TRUE; } }
   // / Download & stage the release.
   if ($targetResolved) {
     $workDir = $ConvertDir.$DirSep.'temp'.$DirSep.'hrc2update-'.bin2hex(random_bytes(8));
@@ -4582,7 +3810,7 @@ function updateApplication($requestedVersion) {
   // / The backup location is inside the non hosted data location & is never served.
   // / DATA is excluded. It holds live user sessions, it has already been moved into the
   // / new installation, & a copy of it would be swept on the delete threshold anyway.
-  if ($UpdateSucceeded && is_dir($oldDir)) {
+  if ($UpdateSucceeded && !$alreadyInstalled && is_dir($oldDir)) {
     // / The backup location is emptied before a new backup is written into it.
     // / A misconfigured $BackupLoc would empty whatever it points at instead.
     if (is_dir($BackupLoc) && !pathIsSafeToModifyRecursively($BackupLoc)) errorEntry('The backup location resolved to a system directory & was NOT emptied. Check $BackupLoc in config.php. Path: '.$BackupLoc.'.', 31019, TRUE);
@@ -4599,12 +3827,12 @@ function updateApplication($requestedVersion) {
   // / whoever unpacked it, & a release that changes a policy, a service unit or a required
   // / version leaves the installed copies behind. Running the repair here is the difference
   // / between an update that works & one that needs an operator to know to run -fp next.
-  if ($UpdateSucceeded) {
+  if ($UpdateSucceeded && !$alreadyInstalled) {
     print($Lol.'Correcting permissions, policies & the service unit for the new release.'.$Lol);
     list ($updatePermissionsFixed, $updatePathsCorrected) = fixManagedPermissions();
     if (!$updatePermissionsFixed) warningEntry('The update completed but permissions & policies could not be corrected. Run the -fp argument as root.'); }
   // / Report the outcome.
-  if ($UpdateSucceeded) {
+  if ($UpdateSucceeded && !$alreadyInstalled) {
     logEntry('Application updated to '.$targetVersion.' from '.$HRConvertVersion.'.');
     print($Lol.'Updated to '.$targetVersion.'.'.$Lol);
     print('The previous installation is preserved at '.$BackupLoc.'.'.$Lol);
@@ -4618,7 +3846,7 @@ function updateApplication($requestedVersion) {
   // / Remove the temporary working directory whatever the outcome.
   if ($workDir !== '' && is_dir($workDir)) exec('rm -rf '.escapeshellarg($workDir).' 2>&1');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $backupExitCode, $backupOutput, $changedArray, $targetResolved, $packageDownloaded, $configMerged, $installationIsValid, $swapCompleted, $rolledBack, $targetVersion, $targetURL, $workDir, $downloadPath, $extractedDir, $stagedDir, $oldDir, $preservedSettings, $changedArrays, $extractOutput, $extractedRoots, $extractExitCode, $requestedVersion, $Lol, $updatePermissionsFixed, $updatePathsCorrected);
+  purgeSensitiveMemory($EnableMemoryProtection, $backupExitCode, $backupOutput, $changedArray, $targetResolved, $packageDownloaded, $configMerged, $installationIsValid, $swapCompleted, $rolledBack, $targetVersion, $targetURL, $workDir, $downloadPath, $extractedDir, $stagedDir, $oldDir, $preservedSettings, $changedArrays, $extractOutput, $extractedRoots, $extractExitCode, $requestedVersion, $Lol, $updatePermissionsFixed, $updatePathsCorrected, $alreadyInstalled);
   return $UpdateSucceeded; }
 // / -----------------------------------------------------------------------------------
 
@@ -5327,7 +4555,9 @@ function verifyUserVirusLogs($type) {
   $LogsExist = FALSE;
   $userClamLogFileName = $userScanCoreLogFileName = '';
   // / Verify the User Clam Log File if needed.
-  if ($type === 'clamav') {
+  // / A scan with every scanner needs both logs. Until v3.9.9 an all scan reset neither, so
+  // / its report carried every earlier scan's lines, verdicts included.
+  if ($type === 'clamav' or $type === 'all') {
     // / Remove the old User ClamAV Virus Log file if one already exists.
     if (file_exists($UserClamLogFile)) {
       if ($Verbose) logEntry('Deleting stale file '.$UserClamLogFile.'.');
@@ -5341,7 +4571,7 @@ function verifyUserVirusLogs($type) {
       $LogsExist = TRUE;
       if ($Verbose) logEntry('Created a file at '.$UserClamLogFile.'.'); } }
   // / Verify the User ScanCore Log File if needed.
-  if ($type === 'scancore') {
+  if ($type === 'scancore' or $type === 'all') {
     // / Remove the old User ScanCore Virus Log file if one already exists.
     if (file_exists($UserScanCoreLogFile)) {
       if ($Verbose) logEntry('Deleting stale file '.$UserScanCoreLogFile.'.');
@@ -5379,203 +4609,82 @@ function userVirusLogEntry($Entry, $type) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to scan a user supplied file on-demand with ClamAV.
-function userClamScan($FilesToScan) {
+// / A function to scan user supplied files on demand with one scanner.
+// / Accepts the files to scan, the scanner's name as runVirusScan knows it & the name a
+// / user reads. Returns whether any file was given a verdict, whether anything went wrong
+// / & whether any file was found infected, in that order.
+// / Every scan goes through runVirusScan, the dispatcher that uploads, fetched files & the
+// / OCR pipeline already use. Until v3.9.9 this application ran clamscan & ScanCore itself,
+// / in about two hundred lines beside a dispatcher that did the same job.
+// / THE USER IS TOLD A VERDICT & NOTHING ELSE. Clean, infected or not scanned, & which of
+// / their own files. What a scanner said is counted for the administrator's log & discarded.
+// / ScanCore's own report used to be written where the user downloads it, naming the
+// / installation's paths, the account it ran as & the signature that matched, while the
+// / ClamAV half threw its scanner's output away for exactly that reason. One rule now.
+// / Each file is judged on its own. Until v3.9.9 the verdict returned was the last file's
+// / alone, & a ScanCore report that already held one detection made every later file in
+// / the same scan read as infected.
+function userScanWithScanner($FilesToScan, $scannerName, $scannerLabel) {
   // / Set variables.
-  global $Verbose, $ConvertDir, $Lol, $Lolol, $UserClamLogFile, $EnableMemoryProtection;
-  $OperationSuccessful = $OperationErrors = $UserVirusFound = $userFilename = $userExtension = $clean = $copy = $userFilename = $userExtension = $variableIsSanitized = FALSE;
+  global $Verbose, $ConvertDir, $EnableMemoryProtection;
+  $OperationSuccessful = $OperationErrors = $UserVirusFound = FALSE;
+  $userFilename = $userExtension = $clean = $copy = $variableIsSanitized = $fileIsVerified = FALSE;
+  $scanCompleted = $threatWasFound = FALSE;
   $skip = TRUE;
-  $returnData = $txt = $file = $clamLogFileDATA = $scanCommand = '';
-  $clamBinary = FALSE;
-  $txt = 'Initiating User Virus Scan with ClamAV.';
-  userVirusLogEntry($txt, 'clamav');
+  $scanFindings = array();
+  $file = $txt = $scannerUsed = $pathname = $oldPathname = $oldExtension = $newPathname = $verifiedFilename = '';
+  $sanitizeError = $verifyError = 0;
+  // / Each scanner keeps the error numbers it has always had, so a log still says which one.
+  $sanitizeError = ($scannerName === 'clamav') ? 17000 : 19000;
+  $verifyError = ($scannerName === 'clamav') ? 17001 : 19001;
+  $txt = 'Initiating User Virus Scan with '.$scannerLabel.'.';
+  userVirusLogEntry($txt, $scannerName);
   if ($Verbose) logEntry($txt);
-  // / Locate & verify the scanner ONCE, before the loop rather than inside it.
-  // / A user scanning twenty files wants one version check, not twenty.
-  $clamBinary = toolPath('ClamAV');
-  // / A scan that cannot run reports failure, never a clean result.
-  // / Without this the loop below ran a command that was not there, collected nothing, found
-  // / no FOUND in nothing, & told the user every file was clean. The report went into the
-  // / user's own downloadable scan log saying so. Refusing is the only honest answer, & the
-  // / refusal is written to that same log so the user sees why rather than seeing nothing.
-  if ($clamBinary === FALSE) {
+  if (!is_array($FilesToScan)) $FilesToScan = array($FilesToScan);
+  // / Without the Pipeline Core there is no scanner to ask, & nothing is reported as clean.
+  if (!function_exists('runVirusScan')) {
     $OperationErrors = TRUE;
-    $txt = 'ClamAV is missing, too old, or unusable. NO FILE WAS SCANNED.';
-    userVirusLogEntry($txt, 'clamav');
-    errorEntry('ClamAV is missing, too old, or unusable, so the user virus scan could not run!', 17002, FALSE);
+    errorEntry('The Pipeline Core is unavailable, so the user virus scan could not run!', 506, FALSE);
+    userVirusLogEntry('No scanner could be reached. NO FILE WAS SCANNED.', $scannerName);
     $FilesToScan = array(); }
-  // / Make sure the input files are formatted into an array.
-  if (!is_array($FilesToScan)) $FilesToScan = array($FilesToScan);
-  // / Iterate through the array of input files.
   foreach ($FilesToScan as $file) {
-    $UserVirusFound = FALSE;
-    // / Make sure the file is sanitized before processing it.
     list ($file, $variableIsSanitized) = sanitize($file, TRUE);
     if (!$variableIsSanitized or !is_string($file) or $file === '' or $file === '.' or $file === '..' or $file === 'index.html') {
       $OperationErrors = TRUE;
-      errorEntry('Could not sanitize the input file!', 17000, FALSE);
+      errorEntry('Could not sanitize the input file!', $sanitizeError, FALSE);
       continue; }
-    if ($Verbose) logEntry('User selected to perform a Clam Scan on file '.$file.'.');
-    // / Verify the file before performing any operations on it.
-    list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname, $UserFilename) = verifyFile($file, $userFilename, $userExtension, $clean, $copy, $skip);
+    if ($Verbose) logEntry('User selected to perform a '.$scannerLabel.' scan on file '.$file.'.');
+    list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname, $verifiedFilename) = verifyFile($file, $userFilename, $userExtension, $clean, $copy, $skip);
     if (!$fileIsVerified) {
       $OperationErrors = TRUE;
-      errorEntry('Could not verify the input file.', 17001, FALSE);
+      errorEntry('Could not verify the input file.', $verifyError, FALSE);
       continue; }
-    $OperationSuccessful = TRUE;
     $txt = 'Scanning '.$file.'.';
     if ($Verbose) logEntry($txt);
-    userVirusLogEntry($txt, 'clamav');
-    // / Scan the selected file with ClamAV.
-    // / Every argument is escaped. $file is a user supplied name & must never be able to
-    // / end the clamscan argument & start a command of its own.
-    // / The scan runs under its resource ceiling, & the ceiling wraps clamscan rather than
-    // / the pipeline, for the reasons given in virusScan().
-    // / The verified path runs, not a bare command name, so the clamscan whose version was
-    // / checked is provably the clamscan that scans.
-    $scanCommand = limitCommand(escapeshellarg($clamBinary).' -r '.escapeshellarg($ConvertDir.$file), 'clamav');
-      // / THE SCANNER'S OUTPUT IS READ & THROWN AWAY. It never reaches the user's report.
-      // /
-      // / What this replaced piped ClamAV straight into the file a user downloads. That is
-      // / an exfiltration channel wearing a report's clothes. The output of a privileged
-      // / tool carries absolute paths, the scanner's own internals & whatever text an
-      // / attacker managed to influence, & it was handed over as though the user wrote it.
-      // /
-      // / A signature name is the clearest example. It comes from a database this
-      // / application does not control, it is chosen by whoever wrote the signature, & it
-      // / lands in a document another person may open. THE VERDICT IS THE ONLY THING A USER
-      // / NEEDS. Clean or not clean, & which of their own files.
-      // /
-      // / The output is captured IN PROCESS rather than redirected to a file, so the verdict
-      // / is decided from what the scanner actually said on this run. Reading it back out of
-      // / a file it had been appending to meant a second scan could inherit the first one's
-      // / verdict, & a file that failed to write read as clean.
-      $scanOutput = array();
-      $scanExitCode = 1;
-      exec($scanCommand.' 2>&1', $scanOutput, $scanExitCode);
-      // / The full output still goes to the ADMINISTRATOR's log, which is not user facing.
-      // / Blank output there means a scanner malfunction or tampering & is worth seeing.
-      if ($Verbose) logEntry('The virus scanner returned '.count($scanOutput).' line(s), exit code '.$scanExitCode.'.');
-      foreach ($scanOutput as $scanLine) if (trim($scanLine) !== '' && strpos($scanLine, 'FOUND') !== FALSE) $UserVirusFound = TRUE;
-      // / Exit code 1 is ClamAV for a detection. It is checked as well as the text, because
-      // / a scanner that changes its wording should not quietly start reporting clean.
-      if ($scanExitCode === 1) $UserVirusFound = TRUE;
-      if ($UserVirusFound) {
-        $txt = 'Potentially infected file detected at '.$file.'!';
-        warningEntry($txt);
-        userVirusLogEntry($txt, 'clamav'); }
-      // / Write the results of the scan to both log files.
-    else {
-      $txt = 'No infection detected in '.$file.'.';
-      if ($Verbose) logEntry($txt);
-      userVirusLogEntry($txt, 'clamav'); } }
-  // / A refusal does not get to end with the word Complete. The user reads this log.
-  $txt = ($clamBinary === FALSE) ? 'ClamAV Virus Scan DID NOT RUN.' : 'ClamAV Virus Scan Complete.';
-  if ($Verbose) logEntry($txt);
-  userVirusLogEntry($txt, 'clamav');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $scanOutput, $scanExitCode, $scanLine, $file, $fileIsVerified, $newPathname, $oldExtension, $oldPathname, $pathname, $variableIsSanitized, $clean, $copy, $skip, $returnData, $scanCommand, $clamBinary, $txt, $userFilename, $userExtension, $clamLogFileDATA);
-  return array($OperationSuccessful, $OperationErrors, $UserVirusFound); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A fuction to prepare the execution environment for ScanCore.
-function startScanCore($pathname, $UserScanCoreLogFile) {
-  // / Set variables.
-  global $InstLoc, $ConvertDir, $MaxLogSize, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $DirSep, $Date, $SesHash, $SesHash2, $EnableMemoryProtection;
-  $ReturnData = $scVerbose = $scDebug = $scanCommand = '';
-  $ScanCoreFile = $InstLoc.$DirSep.'Resources'.$DirSep.'ScanCore'.$DirSep.'ScanCore.php';
-  $scInc = 0;
-  if ($ScanCoreVerbose) $scVerbose = ' -v';
-  if ($ScanCoreDebug) $scDebug = ' -d';
-  // / Make sure that ScanCore is installed.
-  if (!file_exists($ScanCoreFile)) errorEntry('Could not verify the ScanCore Virus Scanner!', 18000, TRUE);
-  // / The filename for the ScanCore log file.
-  $scLogFile = $ConvertDir.$DirSep.'ScanCore_'.$SesHash.'_'.$SesHash2.'_'.$Date.'_'.$scInc.'_Log.txt';
-  while (file_exists($scLogFile)) $scLogFile = $ConvertDir.$DirSep.'ScanCore_'.$SesHash.'_'.$SesHash2.'_'.$Date.'_'.$scInc++.'_Log.txt';
-  // / Run ScanCore with the information supplied.
-  // / Every argument is escaped. $pathname is a user supplied path & the numeric settings
-  // / are cast, so nothing in this command line can be turned into a second command.
-  // /
-  // / The scan runs under the same resource ceiling every conversion runs under.
-  // / --Scan Core Memory Limit-- is NOT that ceiling & does not replace it. It is a PHP
-  // / memory_limit handed to the child interpreter, which is a self imposed budget the
-  // / child honours only while it is behaving. A cgroup ceiling is imposed from outside &
-  // / holds whatever the child does, including the allocations PHP never counts against
-  // / memory_limit in the first place. The two are complementary & this had only the
-  // / weaker of them.
-  $scanCommand = limitCommand('php '.escapeshellarg($ScanCoreFile)
-    .' '.escapeshellarg($pathname)
-    .' -m '.escapeshellarg((string)$ScanCoreMemoryLimit)
-    .' -c '.escapeshellarg((string)$ScanCoreChunkSize)
-    .' -lf '.escapeshellarg($scLogFile)
-    .' -rf '.escapeshellarg($UserScanCoreLogFile)
-    .' -ml '.escapeshellarg((string)$MaxLogSize)
-    .' -r'.$scVerbose.$scDebug, 'scancore');
-  $ReturnData = shell_exec($scanCommand);
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $pathname, $scVerbose, $scDebug, $scLogFile, $scInc, $scanCommand);
-  return $ReturnData; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to scan a user supplied file on-demand with ScanCore.
-function userScanCoreScan($FilesToScan) {
-  // / Set variables.
-  global $Verbose, $ConvertDir, $Lol, $Lolol, $UserScanCoreLogFile, $EnableMemoryProtection;
-  $OperationSuccessful = $OperationErrors = $UserVirusFound = $userFilename = $userExtension = $clean = $copy = $variableIsSanitized = FALSE;
-  $skip = TRUE;
-  $returnData = $txt = $file = $scanCoreLogFileDATA = '';
-  $txt = 'Initiating User Virus Scan with ScanCore.';
-  userVirusLogEntry($txt, 'scancore');
-  if ($Verbose) logEntry($txt);
-  // / Make sure the input files are formatted into an array.
-  if (!is_array($FilesToScan)) $FilesToScan = array($FilesToScan);
-  // / Iterate through the array of input files.
-  foreach ($FilesToScan as $file) {
-    $UserVirusFound = FALSE;
-    // / Make sure the file is sanitized before processing it.
-    list ($file, $variableIsSanitized) = sanitize($file, TRUE);
-    if (!$variableIsSanitized or !is_string($file) or $file === '' or $file === '.' or $file === '..' or $file === 'index.html') {
+    userVirusLogEntry($txt, $scannerName);
+    list ($scanCompleted, $threatWasFound, $scanFindings, $scannerUsed) = runVirusScan(array($ConvertDir.$file), $scannerName);
+    if ($Verbose) logEntry($scannerLabel.' reported '.count($scanFindings).' finding(s) for '.$file.'.');
+    // / A scan that did not finish is not a clean result & is never reported as one.
+    if (!$scanCompleted) {
       $OperationErrors = TRUE;
-      errorEntry('Could not sanitize the input file!', 19000, FALSE);
-      continue; }
-    if ($Verbose) logEntry('User selected to perform a ScanCore Scan on file '.$file.'.');
-    // / Verify the file before performing any operations on it.
-    list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname, $UserFilename) = verifyFile($file, $userFilename, $userExtension, $clean, $copy, $skip);
-    if (!$fileIsVerified) {
-      $OperationErrors = TRUE;
-      errorEntry('Could not verify the input file.', 19001, FALSE);
-      continue; }
-    $OperationSuccessful = TRUE;
-    $txt = 'Scanning '.$file.'.';
-    if ($Verbose) logEntry($txt);
-    userVirusLogEntry($txt, 'scancore');
-    // / Scan the selected file with ScanCore.
-    $returnData = startScanCore($ConvertDir.$file, $UserScanCoreLogFile);
-    // / Write the full ScanCore output to the normal $LogFile.
-    // / Normally we don't write dependency output if it is blank, but for virus scans we do. 
-    // / Blank virus scan output means scanner malfunction or potential tampering of the results. 
-    if ($Verbose) logEntry('ScanCore returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-    // / Load the contents of the User ScanCore Log File for processing because it has been sanitized of unnecessary data & whitespace.
-    $scanCoreLogFileDATA = @file_get_contents($UserScanCoreLogFile);
-    // Check the contents of the User ScanCore Log File for virus detections.
-    if (strpos($scanCoreLogFileDATA, 'Infected: ') !== FALSE) {
-      $UserVirusFound = TRUE;
+      warningEntry($scannerLabel.' could not scan '.$file.' for a user.');
+      userVirusLogEntry($file.' could not be scanned. No verdict was reached.', $scannerName); }
+    else if ($threatWasFound) {
+      $OperationSuccessful = $UserVirusFound = TRUE;
       $txt = 'Potentially infected file detected at '.$file.'!';
       warningEntry($txt);
-      userVirusLogEntry($txt, 'scancore'); }
-    // / Write the results of the scan to both log files.
+      userVirusLogEntry($txt, $scannerName); }
     else {
+      $OperationSuccessful = TRUE;
       $txt = 'No infection detected in '.$file.'.';
       if ($Verbose) logEntry($txt);
-      userVirusLogEntry($txt, 'scancore'); } }
-  // / Write the completion of the scan to the log files.
-  $txt = 'ScanCore Virus Scan Complete.';
+      userVirusLogEntry($txt, $scannerName); } }
+  // / A scan that gave no file a verdict does not get to end with the word Complete.
+  $txt = $OperationSuccessful ? $scannerLabel.' Virus Scan Complete.' : $scannerLabel.' Virus Scan DID NOT RUN.';
   if ($Verbose) logEntry($txt);
-  userVirusLogEntry($txt, 'scancore');
+  userVirusLogEntry($txt, $scannerName);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $file, $fileIsVerified, $newPathname, $oldExtension, $oldPathname, $pathname, $variableIsSanitized, $clean, $copy, $skip, $returnData, $txt, $userFilename, $userExtension, $scanCoreLogFileDATA);
+  purgeSensitiveMemory($EnableMemoryProtection, $userFilename, $userExtension, $clean, $copy, $variableIsSanitized, $fileIsVerified, $scanCompleted, $threatWasFound, $skip, $scanFindings, $file, $txt, $scannerUsed, $pathname, $oldPathname, $oldExtension, $newPathname, $verifiedFilename, $sanitizeError, $verifyError, $scannerName, $scannerLabel);
   return array($OperationSuccessful, $OperationErrors, $UserVirusFound); }
 // / -----------------------------------------------------------------------------------
 
@@ -5699,12 +4808,12 @@ function userVirusScan($FilesToScan, $type) {
   // / the user is given is the OR of them.
   if ($type === 'clamav' or $type === 'all') {
     // / Prepare to run a ClamAV Scan.
-    list ($scan1Complete, $scan1Errors, $clamVirusFound) = userClamScan($FilesToScan);
+    list ($scan1Complete, $scan1Errors, $clamVirusFound) = userScanWithScanner($FilesToScan, 'clamav', 'ClamAV');
     if ($clamVirusFound) $UserVirusFound = TRUE; }
   // / Perform a User Virus Scan using ScanCore if required.
   if ($type === 'scancore' or $type === 'all') {
     // / Prepare to run a ScanCore Scan.
-    list ($scan2Complete, $scan2Errors, $scanCoreVirusFound) = userScanCoreScan($FilesToScan);
+    list ($scan2Complete, $scan2Errors, $scanCoreVirusFound) = userScanWithScanner($FilesToScan, 'scancore', 'ScanCore');
     if ($scanCoreVirusFound) $UserVirusFound = TRUE; }
   // / Check the results of the virus scan for failures or errors.
   list ($ScanComplete, $ScanErrors) = checkUserVirusScanResults($type, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors);
@@ -5716,75 +4825,6 @@ function userVirusScan($FilesToScan, $type) {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $clamVirusFound, $scanCoreVirusFound, $type, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors);
   return array($ScanComplete, $ScanErrors, $UserVirusFound, $ConsolidatedLogFile, $ConsolidatedLogFileName); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to read the version a component declares, without loading it.
-// / Accepts the path relative to Resources & the name of the version variable.
-// / Returns the version, 'not installed' or 'no version', so a caller can print it.
-// / verifyCoreComponent loads a component when it matches, which is right when something
-// / is about to be called & wrong when a version report is all that was asked for.
-function readComponentVersion($componentRelativePath, $versionVariableName) {
-  // / Set variables.
-  global $InstLoc, $EnableMemoryProtection;
-  $DetectedVersion = 'not installed';
-  $componentPath = $componentContents = '';
-  $versionMatches = array();
-  $componentPath = $InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.$componentRelativePath;
-  if (file_exists($componentPath)) {
-    $componentContents = @file_get_contents($componentPath);
-    $DetectedVersion = 'no version';
-    if (is_string($componentContents) && preg_match('/\$'.preg_quote($versionVariableName, '/').'\s*=\s*\'([^\']+)\'/', $componentContents, $versionMatches)) $DetectedVersion = ltrim($versionMatches[1], 'vV'); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $componentPath, $componentContents, $versionMatches, $componentRelativePath, $versionVariableName);
-  return $DetectedVersion; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to verify & load one detachable component.
-// / Accepts the component name, its path relative to Resources, the name of the variable
-// / it declares its version in, & the version this core requires, in that order.
-// / Returns an availability boolean & the detected version, in that order.
-// / The version is read from the file WITHOUT executing it, because a mismatched component
-// / defines functions this core may not be able to call safely.
-// / This is an EXACT match, the same rule applied to a GUI or a language pack.
-// / The detected version is published as a global under the name the component uses.
-// / The -v argument can report it. A require inside a function lands its assignments in
-// / that function, not in global scope, so a component version read this way would
-// / otherwise be invisible to everything outside this call.
-// / Every core lives in a folder of its own under Resources, the same way ScanCore does.
-// / DIRECTORY_SEPARATOR is used here rather than $DirSep, & that is deliberate.
-// / verifyInstallation() calls this function before verifyGlobals() has run, so $DirSep is
-// / not set yet at that point & would concatenate as an empty string.
-// / readComponentVersion() below keeps the constant for the same reason, so that the two
-// / stay interchangeable if either one is ever called earlier than it is today.
-function verifyCoreComponent($componentName, $componentRelativePath, $versionVariableName, $requiredComponentVersion) {
-  // / Set variables.
-  global $InstLoc, $CoreLoaded, $EnableMemoryProtection;
-  $ComponentIsAvailable = FALSE;
-  $DetectedComponentVersion = '';
-  $componentPath = $componentContents = $cleanDetected = $cleanRequired = '';
-  $versionMatches = array();
-  $componentPath = $InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.$componentRelativePath;
-  if (!file_exists($componentPath)) warningEntry('The '.$componentName.' component is not installed at '.$componentPath.'.');
-  else {
-    $componentContents = @file_get_contents($componentPath);
-    if (!is_string($componentContents) or $componentContents === '') warningEntry('The '.$componentName.' component at '.$componentPath.' could not be read.');
-    else {
-      if (preg_match('/\$'.preg_quote($versionVariableName, '/').'\s*=\s*\'([^\']+)\'/', $componentContents, $versionMatches)) $DetectedComponentVersion = $versionMatches[1];
-      $cleanDetected = ltrim(trim($DetectedComponentVersion), 'vV');
-      $cleanRequired = ltrim(trim((string)$requiredComponentVersion), 'vV');
-      // / A component that reports no version is refused. An unknown build cannot be cleared.
-      if ($cleanDetected === '') warningEntry('The '.$componentName.' component reports no version & was refused.');
-      else if ($cleanDetected !== $cleanRequired) warningEntry('The '.$componentName.' component reports v'.$cleanDetected.' & this core requires v'.$cleanRequired.'. It was refused.');
-      else {
-        require_once ($componentPath);
-        // / Publish the version globally under the name the component declares it with.
-        $GLOBALS[$versionVariableName] = $DetectedComponentVersion;
-        $ComponentIsAvailable = TRUE; } } }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $componentPath, $componentContents, $cleanDetected, $cleanRequired, $versionMatches, $componentName, $componentRelativePath, $versionVariableName, $requiredComponentVersion);
-  return array($ComponentIsAvailable, $DetectedComponentVersion); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -6144,6 +5184,29 @@ function askOperator($promptText) {
 // / -----------------------------------------------------------------------------------
 // / The main logic of the program that makes use of the functions above.
 
+// / The kernel is checked, then loaded, before anything else runs.
+// / Everything below calls into it, quickDie included, so this is the one place in the
+// / application allowed to halt without quickDie, because a missing kernel takes quickDie with
+// / it. Each halt prints its message & exits with status one. A plain die with a message exits
+// / with status zero, which would report a missing kernel as a success to anything watching.
+// / It is found beside THIS file rather than through $InstLoc, which comes from a
+// / configuration that has not been read yet & may name a different installation entirely.
+// / The kernel that belongs to this entry point is the one that shipped beside it.
+// / The version is read with the same pattern readComponentVersion uses, because that
+// / function lives in the kernel & so cannot be asked before it is loaded. A mismatched
+// / kernel is never executed, the same guarantee a mismatched Engine gets.
+$RequiredKernelVersion = 'v3.9.9';
+$KernelFile = dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'Kernel'.DIRECTORY_SEPARATOR.'kernel.php';
+$KernelVersionMatch = array();
+if (!is_readable($KernelFile)) {
+  print('ERROR!!! HRConvert2-28006, The kernel is missing or unreadable at '.$KernelFile.'! Nothing can be loaded or logged without it.'.PHP_EOL);
+  exit(1); }
+if (!preg_match('/\$KernelVersion\s*=\s*\'([^\']+)\'/', (string)@file_get_contents($KernelFile), $KernelVersionMatch) or ltrim($KernelVersionMatch[1], 'vV') !== ltrim($RequiredKernelVersion, 'vV')) {
+  print('ERROR!!! HRConvert2-28007, The kernel at '.$KernelFile.' reports '.(isset($KernelVersionMatch[1]) ? $KernelVersionMatch[1] : 'no version').' & this application requires '.$RequiredKernelVersion.'!'.PHP_EOL);
+  exit(1); }
+$KernelVersionMatch = array();
+require_once ($KernelFile);
+
 // / The following code resets PHP's time limit for execution.
 $TimeReset = setTimeLimit();
 if (!$TimeReset) quickDie('Could not set the execution timer!', 3);
@@ -6251,12 +5314,15 @@ else if ($Verbose) logEntry('Verified globals.');
 // / THIS RUNS AFTER verifyLogs() DELIBERATELY, because enumeration warns about every
 // / pipeline it refuses & those warnings are worthless if there is nowhere to write them.
 // / NO PIPELINE CODE IS EXECUTED HERE. Only pipelineConfig.php declarations are read, & a
-// / pipelineCore.php is loaded later, once a conversion is actually about to be dispatched.
-// / A missing or mismatched component is a WARNING & never an error. convert() carries a
-// / built in dispatcher that configuration cannot overwrite, so an installation with no
-// / Pipeline Core at all converts exactly as it did before this component existed.
+// / pipeline's pipeline.php is loaded later, once a conversion is about to be dispatched.
+// / A missing or mismatched Pipeline Core is a warning rather than an error, because the
+// / interface, the command line & every report still work without it. Nothing converts
+// / without it. This said convert() carried a built in dispatcher behind it, which stopped
+// / being true when the last family left this file.
+// / It is an Engine core as of v3.9.9 & it is still loaded here, by the application, rather
+// / than by engine.php. A broken engine.php must not take the pipeline list away from -v.
 // / These four are stated by verifyGlobals(), which has already run.
-list ($PipelineCoreActive, $PipelineCoreVersion) = verifyCoreComponent('Pipeline Core', 'PipelineCore'.$DirSep.'pipelineCore.php', 'PipelineCoreVersion', $RequiredPipelineCoreVersion);
+list ($PipelineCoreActive, $PipelineCoreVersion) = verifyCoreComponent('Pipeline Core', 'Engine'.$DirSep.'Cores'.$DirSep.'pipelineCore.php', 'PipelineCoreVersion', $RequiredPipelineCoreVersion);
 if ($PipelineCoreActive) {
   list ($PipelinesAreEnumerated, $Pipelines, $PipelineCount) = enumeratePipelines();
   // / A manager that verified nothing is worse than no manager, because it would send every
@@ -6267,7 +5333,7 @@ else if ($Verbose) logEntry('Verified the Pipeline Core. '.$PipelineCount.' conv
 
 // / The following code decides if the security context being attempted matches a valid CLI or web request.
 // / Error 27 should not be possible & should never be able to fire. If it does something is seriously wrong.
-list($CommandLineHandled, $UserType) = parseCommandLine();
+list($CommandLineHandled, $UserType, $CommandLineStatus) = parseCommandLine();
 // / The application tells the Engine how it was reached, once it knows.
 // / A CLI invocation & an HTTP request reach the same file, so the Engine cannot work
 // / this out & is told. A pipeline declaring a surface it does not permit is refused.
@@ -6284,6 +5350,16 @@ if (!$CommandLineHandled && $UserType === 'web') {
   // / The following code ensures that the application cannot accidentally or maliciously be run as the root or standard user beyond this point.
   if ($RunningAsRoot or $CurrentUser !== $ApacheUser) errorEntry('The application is being run in an unsupported security context!', 28, TRUE);
   else logEntry('Verified security context. Currently running as the '.$CurrentUser.' user.');
+
+  // / A web request cannot be served without an Engine, & this is where that is decided.
+  // / Encryption verification, budgeting, cleaning, URL fetching & stream waiting all live in
+  // / the Engine. Eighteen call sites below reach into it with no guard, so an absent Engine
+  // / produces an undefined function on the first of them & a blank page for the visitor.
+  // / A visitor who gets a blank page cannot report anything useful & an administrator reading
+  // / the log finds a fatal rather than a reason. A documented halt gives both a sentence.
+  // / The command line is exempt & is handled in parseCommandLine, because -v & -h are how an
+  // / operator finds out what is wrong & must keep working when nothing else does.
+  if (!$EngineActive and !$RunningFromCLI) quickDie('The Engine is unavailable, so this request cannot be served. Run  php convertCore.php -v  on the server to see which component failed.', 28005);
 
   // / Only enable file operations for web users if the current user is the expected www-data user.
   if ($CurrentUser === $ApacheUser) {
@@ -6421,8 +5497,8 @@ if (!$CommandLineHandled && $UserType === 'web') {
           // / There is NO built in fallback left for OCR. Its body has moved out of this
           // / file, so a missing or mismatched OCR pipeline is reported rather than being
           // / quietly treated as an OCR run that produced nothing.
-          if ($PipelineCoreActive && function_exists('runOcrOperation')) {
-            list ($ConversionComplete, $ConversionErrors, $OcrOutputFilenames) = runOcrOperation($PDFWorkSelected, $UserFilename, $UserExtension, $Method);
+          if ($PipelineCoreActive && function_exists('runOperationPipeline')) {
+            list ($ConversionComplete, $ConversionErrors, $OcrOutputFilenames) = runOperationPipeline('OCR', $PDFWorkSelected, $UserFilename, $UserExtension, $Method);
             // / THE CORE PRINTS. THE PIPELINE RETURNED. See contract 6.
             // / The interface reads this reply one line per produced file, exactly as it
             // / reads the reply from a conversion. The OCR pipeline used to print these
@@ -6486,7 +5562,7 @@ if (!$CommandLineHandled && $UserType === 'web') {
 
       // / Close the web server connection after all required content has been served.
       if ($Verbose) logEntry('Closing connection.');
-      closeHRC2Connection();
+      closeClientConnection();
 
       // / Nothing below this point may produce any output.
       // / The user has already been served & the connection is already closed.
@@ -6510,7 +5586,10 @@ if (!$CommandLineHandled && $UserType === 'web') {
         if ($StreamKilled) logEntry('Detached worker '.$StreamPID.' was killed.');
         if ($StreamCompleted) logEntry('Detached worker '.$StreamPID.' completed after '.$ElapsedSeconds.' seconds.'); } } } }
 
-// / Stop execution of the application.
-die();
+// / Stop execution of the application, with the status a command line earned.
+// / A served web request never sees a status, so it exits 0 as it always has. A handled
+// / command line exits with the status its command set, which is 0, 1 or 2. This was a bare
+// / die until v3.9.9, so every command reported success whatever it had done.
+exit($CommandLineHandled ? (int)$CommandLineStatus : 0);
 // / -----------------------------------------------------------------------------------
 ?>

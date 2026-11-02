@@ -18,7 +18,7 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ... 
-The authoritative list of dependencies is Resources/Engine/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -60,6 +60,9 @@ An argument that accepts a value takes it in either of two forms. Both are equiv
 
   sudo php /var/www/html/HRProprietary/HRConvert2/convertCore.php -u=v3.6.7
   sudo php /var/www/html/HRProprietary/HRConvert2/convertCore.php -u v3.6.7
+
+Arguments are case insensitive as of v3.9.9. -V, --CLEAN NOW & -U=V3.6.7 are the same as
+their lower case forms. A path or a name given to an option is passed exactly as typed.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -137,6 +140,34 @@ The -v, -h, --status & --pipeline arguments work when run as any user.
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Exit Status--
+
+Every command exits with a status a script can act on. As of v3.9.9.
+
+  0   The command did what was asked, or what it asks for was already true.
+  1   The command failed, found a fault, was refused or was declined. Every fatal error.
+  2   The arguments were not understood. Nothing was attempted.
+
+What it asks for being already true counts as success. -k with no listener running exits 0,
+because no listener is running afterwards & that is what was asked.
+
+A report exits 0 whatever it reports, because the report is the thing that was asked for.
+-v exits 0 with a missing or mismatched Engine, & --status exits 0 with the listener stopped.
+-v is the command that names a broken installation, so it is the one that must never fail
+to. --status needs the Engine to build its report, so without one it is refused & exits 1.
+
+A check exits 1 when it finds a fault. --setup --check-depends exits 1 when a REQUIRED
+dependency is missing or too old. An optional one costs a feature & does not fail the check.
+--pipeline --verify exits 1 when a pinned pipeline did not load.
+
+Refusals exit 1. A command run as the wrong user, a command that needs an Engine that is
+missing or mismatched, & an answer of no at a confirmation prompt all do nothing & say so.
+
+Before v3.9.9 every command but one exited 0, whatever happened.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About   --config----
  
 Configures this installation without opening config.php in a text editor.
@@ -192,13 +223,13 @@ Requires the Dependency Core component & the dependency manifest. The two option
 configure & repair additionally require Setup Core.
  
   --setup                                  List every option --setup accepts.
-  --setup --check-depends                  Report the state of every dependency. Needs no privileges.
+  --setup --check-depends                  Report the state of every dependency. Needs root & no token.
   --setup --install-depends                Install everything absent or too old, in manifest order.
   --setup --update-depends                 Upgrade everything already installed. Installs nothing new.
   --setup --uninstall-depends              Remove a subsystem. REQUIRES --subsystem.
   --setup --output-supply-chain[=path]     Write a supply chain audit template.
   --setup --install-service                Install the listener service unit from this configuration.
-  --setup --install-complete               Install HRConvert2 & every dependency. Six stages.
+  --setup --install-complete               Install HRConvert2 & every dependency. Seven stages.
   --setup --reinstall-existing             Reinstall this installation in place.
   --setup --subsystem=<Name>               Restrict the operation to one subsystem.
   -y, --yes                                Skip the confirmation prompt.
@@ -207,8 +238,10 @@ EVERY OPTION ABOVE IS USED WITH --setup & NEVER ON ITS OWN.
 An option typed alone is not a command. The core recognizes it, names the command it belongs to
 & shows the correct invocation rather than reporting an unrecognized argument.
  
-READING NEEDS NO AUTHORIZATION. WRITING NEEDS TWO.
---check-depends & --output-supply-chain read the machine & are safe to run from anywhere.
+READING NEEDS ROOT. WRITING NEEDS ROOT & A TOKEN.
+Every --setup option is root only, & is refused before it starts rather than partway through.
+This said reading needed no privileges until v3.9.9, & the code refused it all the same.
+--check-depends & --output-supply-chain read the machine & need nothing beyond root.
 Every operation that changes the machine requires root AND a token derived from the install
 secret, which proves the request arrived through convertCore.php rather than by another route.
  
@@ -217,14 +250,15 @@ Removing every dependency in the manifest would take PHP, Apache & the package m
 & leave a host that cannot be recovered without physical access. A dependency belonging to the
 Core subsystem, or a required part of the Sandbox subsystem, is never removed at all.
  
---install-complete runs six stages, in the order an installation actually depends on.
+--install-complete runs seven stages, in the order an installation actually depends on.
  
   1  Dependencies.          Nothing below can be verified until the tools exist.
   2  Data locations.        A policy cannot be written into a directory that is not there.
   3  Permissions & policies. A converter cannot run until its policy permits it.
   4  Configuration.         Written as a file the web server user has to read.
   5  Listener service.      Generated from the configuration stage four settled.
-  6  Verification.          Reports what works rather than what was attempted.
+  6  Permissions again.     Stages four & five both write files.
+  7  Verification.          Reports what works rather than what was attempted.
  
 A stage that fails stops the ones after it. With -y nothing prompts & stage four keeps whatever
 config.php already declares, which for a fresh clone is the shipped defaults.
@@ -263,9 +297,12 @@ syntactically valid & still never load, & nothing else reports it.
  
 Arguments beginning --app belong to the application rather than to the Engine.
  
-Every other argument documented here is the Engine's. Setup, configuration, the managers, the
-listener, cleanup & self update are true of any application of this shape. An argument that
-begins --app is handed to the application untouched & the Engine takes no view on it.
+The Engine answers every other argument documented here except -v, -h & -u, which are the
+application's. Setup, configuration, the managers, the listener, the pipelines, repair &
+cleanup are true of any application of this shape. An argument that begins --app is handed to
+the application untouched & the Engine takes no view on it.
+The command is matched without regard to case like every other. Its values reach the
+application exactly as typed, because an application's values may be paths.
  
 A prefix is used rather than a list of names, so the Engine never has to ask the application
 what it accepts. Everything --app is the application's & everything else is not.
@@ -506,7 +543,10 @@ never written to the log, so a failure points at the log rather than reproducing
 The listener runs until it is stopped. It is normally started at boot from rc.local or from a
 container entrypoint rather than by hand.
 
-This argument requires root or the web server user.
+Root or the web server user can start the listener by hand, & every other account is refused.
+Both hold the install secret for this argument, which is what the startup key is derived from.
+
+This argument is refused to anyone but root or the web server user.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 

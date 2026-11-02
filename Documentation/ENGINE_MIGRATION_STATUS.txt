@@ -1,0 +1,928 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 10/31/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v3.9.9.
+This plain text file records how far the Engine migration has actually got, & how each claim in it can be checked.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--What This File Is For--
+
+THREE DOCUMENTS, & THEY ANSWER DIFFERENT QUESTIONS.
+
+  ABOUT_ENGINE_CONTRACT.txt    What the Engine IS. The kernel, the direction rule, what an
+                               application supplies, what belongs in the Engine at all.
+  ABOUT_ENGINE_ABSORPTION.txt  What was AGREED. The contract for moving Dependency Core &
+                               Setup Core, written at v3.9.2, with its order of work.
+  This file                    What has actually HAPPENED, & how to check it.
+
+EVERY LINE HERE NAMES THE CHECK THAT PROVES IT, & THAT IS THE POINT OF THE FILE.
+
+Both of the other documents were found carrying false status at v3.9.9. The absorption
+contract still said "Nothing here has been done yet" after five of its six steps had landed.
+The architecture document still said the Engine called ten application functions after the
+debt was cleared & after a linter check was written to keep it cleared.
+
+Neither was careless. A status sentence written inside a design document has nothing checking
+it & no reason to be revisited, so it ages into a lie that reads like a fact. A status line
+that names its own check either passes or is visibly wrong the next time somebody runs it.
+
+DO NOT WRITE STATUS INTO THE OTHER TWO DOCUMENTS. Write the decision there & the status here.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Absorption Contract, Step By Step--
+
+The six steps are ABOUT_ENGINE_ABSORPTION.txt, ORDER OF WORK. Status as at v3.9.9.
+
+  1. MODEL COVERS EVERY SETTING                                                      DONE
+     The contract called for 149 settings & the tree carries 131. The number changed
+     because settings were removed, not because the model is short.
+     PROVEN BY   grep -c '^\$[A-Za-z]' Resources/config.php
+                 grep -c '^\$[A-Za-z]' Resources/Contract/config-template.php
+                 All three agree. The model is applicationConfigModel() in convertCore.php.
+
+     SOLVED DIFFERENTLY THAN THE CONTRACT PROPOSED, & THE DIFFERENCE IS WORTH RECORDING.
+     The contract called for 1161 lines of config.php prose to move into the model as data.
+     That is not what happened & the result is better. config-template.php holds the prose
+     as a TEMPLATE, the model holds the name, type, dependency & one line description, & the
+     generator copies one & validates against the other. The prose stayed prose, which is
+     the form it was written in & reads best in. Nobody had to summarise 1161 careful lines
+     into array values, which the contract itself named as the step most likely to be done
+     badly.
+
+  2. A GENERATOR EXISTS                                                              DONE
+     generateConfigFile() in Resources/Engine/Cores/setupCore.php.
+     PROVEN BY   grep -n 'function generateConfigFile' Resources/Engine/Cores/setupCore.php
+
+  3. CONFIG.PHP IS GENERATED                                                      PARTIAL
+     The generator runs & writes a complete configuration on the no configuration bootstrap
+     path. The shipped Resources/config.php is not marked as generated & carries no header
+     saying so, which the contract required in plain terms.
+     STILL OWED   A first line that says the file is generated & that structure edits are
+                  lost on regeneration. Values survive, so the warning is about an edit
+                  rather than about a configuration.
+     PROVEN BY   head -1 Resources/config.php   when it is done.
+
+  4. DEPENDENCY CORE & DEPENDS.PHP MOVED                                             DONE
+     Resources/Engine/Cores/dependencyCore.php. The manifest went to Resources/Engine/Contract
+     at v3.9.3 & on to Resources/Contract/depends.php at v3.9.9, out of the Engine tree. Step
+     four of The Direction below says why.
+     PROVEN BY   ls Resources/Engine/Cores/dependencyCore.php Resources/Contract/depends.php
+
+  5. CONFIG UTILITY MOVED, MODEL LEFT BEHIND                                         DONE
+     Setup Core is at Resources/Engine/Cores/setupCore.php & the model stayed in the
+     application as applicationConfigModel(), reached through $EngineConfigModelProvider.
+     That is exactly the shape the contract asked for.
+     WHAT THIS SAID WAS STILL OWED WAS WITHDRAWN AT v3.9.9. It said verifyConfigVersion()
+     belonged in the Engine, as a check of a file against a model. It fails question three.
+     It runs while the configuration loads, before the Engine is verified, & it decides
+     whether this application starts at all. The Engine cannot provide what is needed to
+     decide whether to load the Engine. It stays in the application.
+     PROVEN BY   grep -n "verifyConfigVersion(.Required\|verifyCoreComponent('Engine'" convertCore.php
+                 The configuration check is called hundreds of lines before the Engine is.
+
+  6. SPLIT THE COMMAND LINE HANDLER                                      NOT STARTED
+     Pass a was attempted & REVERTED within the same release. The argument parser went into
+     the Engine & came back to the kernel, & the reason is the most useful thing learned
+     this release. It is written up under Decisions & Findings below.
+     THE PLAN FOR THIS STEP IS ALSO WRONG & NEEDS REDOING RATHER THAN RESUMING.
+     The sort below assumed the work was moving command machinery into the Engine. The
+     Engine commands' implementations are ALREADY in the Engine; they are Engine functions
+     today. What is actually left is routing & refusal semantics, not relocation.
+     REDERIVED as step seven of THE DIRECTION below, an Engine command dispatcher.
+     PROVEN BY   grep -n 'function parseArgumentVector' convertCore.php   finds it in the
+                 kernel, not the Engine.
+                 php Documentation/Build/hrconvert2-test-cliargs-cli.php
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Boundary, Which Is Now Enforced Rather Than Remembered--
+
+THE ENGINE CALLS NO APPLICATION FUNCTION. CHECKED ON EVERY RUN.
+
+ABOUT_ENGINE_CONTRACT.txt records a debt of ten application functions the Engine still
+called. That debt is CLEARED, & more usefully it is now impossible to reopen quietly.
+
+  PROVEN BY   python3 Documentation/Build/hrconvert2-check.py
+              Check eight, "the Engine never calls application code".
+
+The check reads the kernel set from Resources/Kernel/kernel.php & allows exactly those names.
+It said eight here until v3.9.9. Anything else the Engine calls that the Engine does not
+define is a failure, reported by name & by file.
+
+A DEBT A LINTER WATCHES IS NOT THE SAME KIND OF DEBT. The ten functions were found by a call
+order check that follows the call graph rather than by reading, because reading attributes a
+call to the line a function was DEFINED on rather than to the moment it RUNS. That is how
+locateDependency was moved into the Engine & had to be moved back out.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--What Is Deliberately Not Moving--
+
+THE KERNEL DOES NOT MOVE INTO THE ENGINE, & THAT STILL HOLDS.
+verifyCoreComponent() loads the Engine so it cannot live inside the Engine. It calls
+purgeSensitiveMemory(), so that cannot either. Logging is kernel because an application whose
+logging lived in the Engine would lose the ability to report an Engine that failed to load,
+at the one moment there was something worth reporting.
+
+BUT "NOT IN THE ENGINE" HAS BEEN READ AS "INSIDE convertCore.php", & THOSE ARE DIFFERENT CLAIMS.
+The mechanical rule is about the FILE the kernel loads. Nothing in it requires the kernel to be
+interleaved with an application. The direction below gives the kernel a file of its own.
+
+SESSIONS & THE INSTALL SECRET WAIT FOR AN AUTHENTICATION CORE.            DECIDED AT v3.9.9
+They move when authentication arrives, together, into a core that does not exist yet. An
+earlier draft of this file proposed putting them in the kernel. That was the wrong home,
+because authentication is a large subsystem & the kernel is only worth having while it stays
+small & identical in every application. ABOUT_ENGINE_CONTRACT.txt records the decision & the
+constraint that core will have to solve, which is that a session is derived before the
+Engine loads & every kernel log line carries its label. The kernel already treats the label
+as optional, so a kernel without sessions prints No Session & is correct.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Direction, Rederived For Three Applications--
+
+WHAT CHANGED IT.
+HRProtect is expected to iterate the Engine alongside HRConvert2, with improvements traded
+back & forth until the Engine stands on its own. ABOUT_ENGINE_CONTRACT.txt anticipates
+HRProtect for scanner pipelines & HRCloud3 for file operation & automation pipelines.
+Trading a component between applications only works if it is a unit that can be copied & a
+version that can be compared. The audit below asks that of every shared layer.
+
+THE AUDIT AT v3.9.9. EVERY FINDING NAMES ITS CHECK.
+
+  THE KERNEL HAD NO FILE & NO VERSION.                                   RESOLVED AT v3.9.9
+  Twenty one kernel functions sat in convertCore.php among sixty three application functions,
+  from line 33 to line 5932. They are Resources/Kernel/kernel.php now, with $KernelVersion,
+  pinned exactly by $RequiredKernelVersion. The seven session & secret functions stayed in
+  the application, deliberately, for the reason given above.
+  PROVEN BY   grep -n KernelVersion Resources/Kernel/kernel.php convertCore.php
+              php convertCore.php -v   prints a Kernel line.
+
+  THREE DEFINITIONS OF THE KERNEL, & THEY DISAGREED.                     RESOLVED AT v3.9.9
+  The contract document named 8 functions, check eight's allowlist named 14 & the code relied
+  on 21. There is one definition now & it is the file. Checks eight & nineteen read the kernel
+  from Resources/Kernel/kernel.php & the contract document points there instead of listing.
+  PROVEN BY   grep -n "kernel_path" Documentation/Build/hrconvert2-check.py
+
+  THE KERNEL CALLED AN APPLICATION BY NAME.                              RESOLVED AT v3.9.9
+  quickDie called closeHRC2Connection, which is generic & carried one application's name. It
+  is closeClientConnection, & it is in the kernel file. getExtension read $PathExt, a global
+  that only held the PHP constant PATHINFO_EXTENSION. It uses the constant & the global is gone.
+  CORRECTION. This finding also said $ApplicationName & $EngineApplicationName were two names
+  for one fact. They are not. The Engine documents the split in engineApplicationName. One is
+  the identity, fixed in the contract. The other is branding an operator may rename & is what
+  a person reads. The kernel labels warnings & errors with the branding, which is right.
+  PROVEN BY   python3 Documentation/Build/hrconvert2-check.py --only kernel
+
+  THE ENGINE TREE HOLDS ONE APPLICATION'S DATA.                          RESOLVED AT v3.9.9
+  Resources/Engine/Contract carried HRConvert2's identity, dependency manifest &
+  configuration template, 1782 lines. Copying the Engine between applications copied all
+  three. The Engine found two of them by HARDCODED path in three places, engineConfig.php,
+  dependencyCore.php & environmentCore.php, & Pipeline Core made a fourth. They are
+  Resources/Contract now & every reader asks contractPath() in the kernel.
+  PROVEN BY   grep -rn "'Contract'" Resources/Engine   finds nothing.
+              ls Resources/Engine/Contract   fails.
+
+  THE CONTRACT IS NOT SIX VALUES.
+  ABOUT_ENGINE_CONTRACT.txt says six values is the whole contract & that the Engine works out
+  anything else for itself. Engine code reads 34 more globals it does not define. Most are
+  environment facts the application computed, $DirSep, $RunningAsRoot, $CurrentUser & the
+  like. Eleven are named for conversion, $ConvertLoc, $PrimaryConvertLoc, $ConvertTemp,
+  $DefaultConversionCost, $EnablePerConversionLimits & six more.
+  The eleven are a naming cost rather than a blocker. A scanner can set $ConvertLoc & it works.
+  The 34 are the real contract, & a second application has to discover them by failing.
+
+  PIPELINE CORE IS THE MOST SHARED COMPONENT, & IT IS OUTSIDE THE ENGINE.  RESOLVED AT v3.9.9
+  It is Resources/Engine/Cores/pipelineCore.php & names no pipeline. Step five has the proof.
+  What follows is the finding as it was made.
+  It calls no application function & knows all three pipeline kinds. The contract defines the
+  three applications as differing in what a pipeline does rather than in how one is declared,
+  loaded, versioned or dispatched, which describes Pipeline Core's job exactly. The Engine
+  already depends on it, calling runVirusScan behind a guard, & check eight cannot see that
+  dependency because it knows only convertCore.php as the application.
+  It also hardcodes HRConvert2's sixteen pipelines in its pin table, which is the same disease
+  as the Contract folder.
+
+  TWO SCANNER IMPLEMENTATIONS.                                           RESOLVED AT v3.9.9
+  Step eight has the proof. What follows is the finding as it was made.
+  runVirusScan in Pipeline Core dispatches a scanner pipeline by kind & family. Upload
+  scanning, URL scanning & the OCR pipeline all use it. The user requested scan does not.
+  userVirusScan, userClamScan, userScanCoreScan & startScanCore run the scanners directly,
+  about 350 lines beside a dispatcher that already does the job. Scanning is HRProtect's whole
+  purpose, so this is the duplicate it would inherit.
+
+FOUR LAYERS, NOT THREE.
+The contract describes three tiers. The audit finds four, & the third is the one without a
+home.
+
+  THE KERNEL          Pre Engine & identical in every application. Logging, memory
+                      shredding, input sanitizing, argument parsing, dependency location,
+                      component loading, the install secret & session identity.
+                      Its own file. Its own version.
+  THE ENGINE          The runtime every application needs. Managers, budgets, sandbox, data
+                      locations, cleaning, network policy, Dependency Core, Setup Core &
+                      Pipeline Core. Its own directory, its own version, & the same bytes in
+                      every application.
+  APPLICATION DATA    What the shared layers read & each application owns. Identity, the
+                      dependency manifest, the configuration template & model, the pipeline
+                      pin table & the pipelines. Found through contractPath() in the kernel
+                      or a path the application supplies, & NEVER kept inside a shared tree.
+                      The first three & the pipeline pin table are in Resources/Contract
+                      as of v3.9.9.
+  APPLICATION LOGIC   What makes the application itself. Conversion, the interface, its own
+                      commands.
+
+THE ORDER OF WORK.
+Each step is separately testable & separately revertible. A step marked REVERSES changes a
+decision recorded in ABOUT_ENGINE_CONTRACT.txt, & that decision is made deliberately before
+the code moves, not by the code moving.
+
+  1. ONE DEFINITION OF THE KERNEL, & A VERSION FOR IT.                                DONE
+     The file is the definition & carries $KernelVersion. closeHRC2Connection is
+     closeClientConnection & $PathExt is gone.
+     PROVEN BY   php Documentation/Build/hrconvert2-test-redeclare-cli.php
+                 php Documentation/Build/hrconvert2-test-cliargs-cli.php
+
+  2. THE KERNEL BECOMES A FILE.                                              DONE, REVERSED
+     DONE. 21 functions moved with every body & every comment block byte identical, 91
+     functions conserved exactly, no seam damaged. The version is read before the file is
+     required, so a mismatched kernel is never executed, & that was proven with a side effect
+     planted in a wrong version kernel that did not fire, beside a control that did.
+     The healthy interface renders through a real web server identically to the core before
+     the move, apart from per session tokens.
+     The plan text below is kept as it was written, as the record of the reasoning.
+     The contract says the kernel lives in the application entry file. The rule behind that
+     is that verifyCoreComponent cannot live in the file it loads, & that rule is about the
+     ENGINE's file. A kernel file required directly by the entry point as its first act, with
+     a plain die when it is absent, satisfies it completely. That die is the lowest level
+     fallback there is & the only honest one, because nothing can log before the code that
+     logs exists.
+     The home is Resources/Kernel/kernel.php, beside the Engine rather than inside it, so
+     the Engine cannot provide what is needed to load the Engine stays true at directory
+     level. The unit two applications trade becomes two directories, each with an exact
+     version. A pure relocation, because a PHP function is global wherever it is defined.
+
+  3. CHECK NINETEEN, WHICH STEP TWO MAKES EASY.                                        DONE
+     It holds the kernel to calling only itself, PHP & the Engine behind a function_exists in
+     the same function. It flags a call into ANY other file in the tree, Pipeline Core
+     included, which the old rule's shape would have missed. Thirteen planted faults across
+     checks eight, eleven, twelve & nineteen behave as required in both linters.
+     It was going to be called check nine. There already is a check nine.
+     Before step two, enforcing question three needs an allowlist of call sites, which is
+     fragile & was rightly deferred. After it the rule is mechanical. Nothing in the kernel
+     file may call a function defined under Resources/Engine without a guard. One file
+     boundary, one comparison, & a negative test that plants an unguarded call.
+
+  4. APPLICATION DATA LEAVES THE ENGINE TREE.                                         DONE
+     All three files are Resources/Contract, beside the Kernel & the Engine rather than in
+     either. The Engine & Pipeline Core read none of them by a path of their own.
+     PROVEN BY   grep -rn "'Contract'" Resources/Engine   finds nothing.
+                 php convertCore.php -v   reads Manifest OK.
+                 php convertCore.php --config --view   shows every setting. Move
+                 Resources/Contract/app-engine-config.php aside & it shows five, because the
+                 Engine no longer knows whose configuration it is. That is the control.
+                 Delete Resources/config.php & run --config --repair. It writes 131 settings
+                 from Resources/Contract/config-template.php.
+     SOLVED DIFFERENTLY THAN PLANNED. The plan said paths the application supplies. That
+     cannot work for app-engine-config.php, because it is the file an application would
+     supply them IN. The location is a kernel convention instead, contractPath(), the same in
+     every application & written once. $EngineConfigTemplate still works as before.
+     NOT YET THE SAME BYTES IN EVERY APPLICATION, WHEN WRITTEN.     RESOLVED BY STEP NINE
+     Two strings in Engine code said HRCONVERT2, the variable the listener's startup key
+     travels in & the marker the Engine writes into policy files. Both are built from the
+     application's identity now, & for HRConvert2 both are exactly what they were, so no
+     marker already on disk goes unrecognised & no dual recognition was needed.
+
+  5. PIPELINE CORE JOINS THE ENGINE.                                                  DONE
+     It is Resources/Engine/Cores/pipelineCore.php. The pipelines & shared modules it accepts
+     are $EngineAcceptedPipelines & $EngineAcceptedSharedModules, which the Engine defaults to
+     nothing & the application's contract sets. The pin table moved first & was proven, then
+     the file moved & was proven again.
+     It is still loaded by the application on its own & pinned by $RequiredPipelineCoreVersion,
+     the way Setup Core & Dependency Core are, so a broken engine.php does not take the
+     pipeline list away from -v. Adding a pipeline is one line in the contract & no longer a
+     new Pipeline Core version.
+     PROVEN BY   -v, --pipeline --list, --verify, --check-depends & --describe of eight
+                 pipelines read the same, line for line, before the move, between the two
+                 halves & after it.
+                 Remove $EngineAcceptedPipelines from the contract & nothing is listed, with a
+                 warning naming the setting. That is the control.
+                 A pipeline name that is a path & a version that is not one are each refused
+                 with a warning, & every other entry is still accepted.
+                 Plant buildGUI() in pipelineCore.php & check eight fails it in both linters.
+                 Before the move check eight could not see this file at all.
+     COLLECTCONFIGMODEL IS SETTLED. IT STAYS IN engine.php.
+     Its only caller is Setup Core, which is Engine code, & the no configuration bootstrap
+     requires engine.php before setupCore.php. Nothing reaches it before the Engine is
+     verified, so it passes question three, & it sits with the other provider calls it is one
+     of. It was a candidate because --config --repair fails with a broken Engine. Moving this
+     function cannot change that, because the utility that calls it is Engine code as well.
+     NOT YET THE SAME BYTES IN EVERY APPLICATION, WHEN WRITTEN.     RESOLVED BY STEP NINE
+     runOcrOperation dispatched the OCR family by name, & the Pipeline Core read three of this
+     application's settings by their own names. The dispatcher takes the family, & the three
+     settings are read through the application's map. See step nine.
+
+  6. SESSION & SECRET WAIT FOR AN AUTHENTICATION CORE.                             DEFERRED
+     Decided at v3.9.9. They move with authentication, into a core of their own, & not into
+     the kernel. See What Is Deliberately Not Moving above.
+
+  7. AN ENGINE COMMAND DISPATCHER. STEP SIX OF THE ABSORPTION CONTRACT, REDERIVED.     DONE
+     dispatchEngineCommand in engine.php owns the listener, the manager entry points,
+     --status, --setup, --config, --pipeline, -fp, -c & --run-environment-manager. The
+     application serves -v, -h & anything beginning --app itself, offers every other command
+     to the dispatcher, & handles what comes back unhandled, which is -u or a mistake. The
+     dispatcher returns whether it handled the command & the exit status it earned, &
+     parseCommandLine passes the status on. parseCommandLine went from 667 lines to 134.
+     Each group of commands is a function of its own, & every branch body was lifted out of
+     the old chain by a script that asserted each anchor, not retyped. The only edits made to a
+     lifted body name the application through the contract rather than by hand, send -fp
+     through the repair the application declares in $EngineRepairProvider, & replace a comment
+     that described the old chain. One misindented line was squared with its neighbours.
+     It passes question three. Every command it owns needs the Engine, & the gate refuses them
+     before it is reached when there is no Engine.
+     PROVEN BY   Sixty four invocations as root & as www-data, compared for output & exit
+                 status before & after the move. They cover every command the dispatcher owns
+                 short of starting a process that keeps running, & the refusals & mistakes
+                 around them. Identical, once one fault the comparison found was fixed. That
+                 was --pipeline --check-depends warning of an undefined $InstLoc, because the
+                 new function requires depends.php, which reads it while it loads, & did not
+                 declare it yet.
+                 The control is a dispatcher that handles nothing. 47 of the 64 change, & the
+                 17 that do not are -v, -h, -u, --app, a bare invocation & the mistakes, which
+                 are the application's own.
+                 A real listener started, reported itself, ended tracked workers on request &
+                 stopped, & its managers were started through the moved entry points.
+                 Check eight passes, so nothing moved calls back into the application.
+     STILL OPEN. The Engine's section of -h was planned beside this. --help still lists every
+     command from the application's own text, so a second application would write the Engine's
+     help again. The --app handler's return value is still not read, because --app stayed with
+     the application & the dispatcher's interface never had to decide it.
+     The application pins the Engine's cores & the dispatcher reads the Setup Core & Dependency
+     Core pins as its globals, while the Engine pins its own managers. One rule for who pins an
+     Engine part would be simpler, & choosing it changes what -v reports, so it is a decision
+     rather than a move.
+     Two of the application's globals are read by the Engine for the first time,
+     $ConvertTempDir & $RequiredSetupCoreVersion.
+
+  8. ONE SCANNER PATH.                                                                DONE
+     Every scan goes through runVirusScan. userScanWithScanner gives each file the user chose
+     to each scanner they chose, & userClamScan, userScanCoreScan & startScanCore are gone,
+     about two hundred lines. This is the change that most directly becomes HRProtect's core
+     feature, because HRProtect is that dispatcher with a different application around it.
+     DONE FIRST, BECAUSE THE DISPATCHER COULD NOT YET BE TRUSTED. runVirusScan reached two
+     scanner pipelines that had never scanned anything. Both took sandboxCommand's pair as the
+     command, so ClamAV called every file clean & ScanCore called every file infected. They
+     are fixed & proven, & check twenty stops the shape coming back. See Decisions & Findings.
+     DECIDED AT v3.9.9. A USER IS TOLD A VERDICT & NOTHING ELSE, BY EITHER SCANNER.
+     The ClamAV half already read its scanner's output for a verdict & threw it away, because
+     that output is an exfiltration channel. The ScanCore half wrote ScanCore's own report
+     where the user downloads it, naming the installation's path, the account ScanCore ran as,
+     the scanned file's path on the server & the signature that matched. One path, one rule.
+     THREE FAULTS WENT WITH THE OLD CODE. Each scanner returned the last file's verdict alone,
+     so an infected file followed by a clean one was reported clean. A ScanCore report that
+     held one detection made every later file in the session read as infected. A scan with
+     every scanner reset neither log, so its report carried every earlier scan's lines.
+     WHAT CHANGES FOR AN OPERATOR. The user's scan runs in the sandbox now, like every other
+     scan, & a host that requires a sandbox & cannot build one reports files as not scanned
+     rather than scanning them unsandboxed. A scanner that cannot finish never reads as clean.
+     FOUND IN THE FIELD THE NEXT DAY. Every user scan said its file could not be scanned. The
+     scanner sandboxes had never run before this release, so neither held what its scanner
+     needs. ScanCore's own directory was not in the namespace, & PHP inside it had no
+     configuration & so no ctype. ClamAV had neither its signature database nor the
+     certificates ClamAV 1.5 verifies that database against. The ScanCore pipeline hands its
+     sandbox the ScanCore directory as a read only resource, & the clamav & scancore profiles
+     bind /var/lib/clamav, /etc/clamav & /etc/php read only. ClamAV's scanned directory is read
+     only now, as its comment always said, & neither scanner runs without a temporary location.
+     THE LESSON. The first proof below ran on a host with no bubblewrap, where a sandbox that is
+     not required is skipped, so it proved nothing about the sandbox. Every scan proof now runs
+     with bubblewrap present, & once more with it hidden.
+     FOUND IN THE FIELD AGAIN. With that fixed, ScanCore found the test file & ClamAV 1.0 with
+     its real database still DID NOT RUN. The listener scaled Scan to 18% & 740M of a configured
+     50% & 2048M, because one scan was in flight on a lightly loaded server, & the kernel killed
+     clamscan while it loaded its database. A one signature test database never came near it.
+     Scan keeps its configured memory now & only its processor share is scaled, which is what
+     config.php always said to treat that figure as. Each scanner logs its exit status when a
+     scan does not finish, so the next failure names its cause instead of being inferred.
+     PROVEN BY   The real kernel, Engine, Pipeline Core, scanner pipelines & ScanCore, with
+                 only verifyFile stubbed, scanning the EICAR test string & a clean file in that
+                 order. Every scanner & every mode reports the test file infected & the clean
+                 file clean, & the report holds no server path, signature or account name.
+                 The same run on the code before this step reports ClamAV's scan of the two
+                 files clean, puts
+                 five server paths, two signature names & two account lines in one ScanCore
+                 report, & reports a later scan of the clean file alone as infected, carrying
+                 six stale lines. With the sandbox required & unavailable, the report says the
+                 file could not be scanned & that the scan DID NOT RUN.
+                 Through a real bubblewrap sandbox, as root & as www-data, with the real
+                 clamscan given a one signature database & the real ScanCore, every scanner &
+                 every mode gives the same verdicts. With the profiles & the pipeline as they
+                 were the day before, both scanners report every file not scanned, which is
+                 the field report. Inside that sandbox, php said Could not open input file &
+                 clamscan said it could not find /var/lib/clamav.
+                 scaleConversionLimits at 28% pressure with one scan in flight gives Scan 18%
+                 & 737M before & 18% & 2048M after, & every other type the same as before. The
+                 field log said 18% & 740M. A clamscan that exits 137 is logged with its status
+                 & told where to raise the ceiling.
+
+  9. GENERIC NAMES FOR ENGINE CONCEPTS.                                            PARTIAL
+     Operator facing setting names stay exactly as they are, because renaming one breaks every
+     existing config.php. What changes is what the shared layers call things.
+     DONE AT v3.9.9.
+       The startup key's variable & the policy marker are built from the application's
+       identity by engineStartupKeyVariable & enginePolicyMarker. HRConvert2's are exactly
+       what they were. Another application's are its own, so two on one host never take each
+       other's policy files for their own.
+       The application's settings are read through a map. $EngineSettingNames in the contract
+       names, for each shared name, the setting the application keeps the value in, &
+       applicationSetting in the kernel reads it, or the default the shared layer chose. The
+       Pipeline Core reads FormatDetectionType, WarnOnCapabilityMismatch & DefaultScanner that
+       way. The accessor is in the kernel because the Pipeline Core answers -v without an
+       Engine, which is question three.
+       runOcrOperation is runOperationPipeline & takes the family as its first argument.
+     STILL TO DO. The eleven globals the Engine reads that say conversion, $ConvertLoc,
+     $PrimaryConvertLoc, $ConvertTemp, $DefaultConversionCost, $EnablePerConversionLimits &
+     the rest, move to the same map one at a time. They are read in the managers, budgeting &
+     cleaning, so each wants its own proof rather than one sweep. A cost rather than a
+     blocker, & the mechanism is now in place.
+     PROVEN BY   With the real kernel, Engine configuration, contract, Engine & Pipeline Core,
+                 HRConvert2's variable & marker read HRCONVERT2_STARTUP_KEY &
+                 HRCONVERT2-POLICY-MARKER, & the data protection file the Engine writes is
+                 byte identical to the one before this step. With the identity set to
+                 HRProtect they read HRPROTECT_STARTUP_KEY & HRPROTECT-POLICY-MARKER.
+                 The three settings read config.php's values, & a scan naming no scanner uses
+                 ScanCore. With the map removed each reads its default & that scan names no
+                 scanner, which is the control. An OCR operation with nothing selected runs &
+                 returns cleanly, & an operation no pipeline provides is refused with 34006.
+                 A real listener starts, as root & as www-data, so the key still travels &
+                 every subordinate still reads it. The snapshots differ only in the OCR
+                 pipeline's version.
+                 grep -rn HRCONVERT2 Resources/Engine   finds comments only.
+
+WHAT DROPS OUT.
+  The step six sort written earlier in this release, which assumed the work was moving
+  command machinery into the Engine. Step seven replaces it.
+
+THE QUESTION THE PLAN COULD NOT ANSWER FOR ITSELF, ANSWERED.
+  Whether HRProtect needs session identity on day one. It can wait, because sessions will
+  arrive with an authentication mechanism & both belong in a core that does not exist yet.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Found While Moving The Kernel--
+
+Each of these was found by testing the move rather than by reading it, & each is fixed.
+
+  EVERY FATAL ERROR EXITED WITH STATUS ZERO.
+  quickDie ended in a bare die, so every halt this application has ever raised reported
+  success to whatever was watching. The Core Manager unit runs with Restart=on-failure, so a
+  listener that died on a fatal was never restarted. The Dockerfile follows its setup step
+  with a fallback for a failure that could not happen. It exits with status one now. The two
+  kernel boot halts print & exit with status one too, because a die carrying a message also
+  exits with status zero. Nothing that reads the status is harmed: the container entrypoint
+  runs --status with || true & does not use set -e, & a web request never sees a status.
+  PROVEN BY   A missing kernel, a mismatched kernel, a version file mismatch & a missing
+              configuration each exit 1. -v, --help & --clean now each exit 0.
+
+  CHECK TWELVE PASSED THE KERNEL WITH ITS GUARD DELETED.
+  It looks for $CoreLoaded & a die anywhere in a file. The kernel declares one in
+  verifyCoreComponent & contains the other in quickDie, so it passed with no guard at all.
+  The kernel cannot use $CoreLoaded, which is set after it loads. It is held to its own
+  guard's exact shape, above its first function.
+
+  CHECK ELEVEN COULD NOT SEE A NUMBER INSIDE A PLAIN DIE.
+  It read source with every string removed, & a die carries its number inside a string. Two
+  numbers had never been documented, HRConvert2-35000 & Engine-33003, the second written into
+  a generated file as a string inside a string. It reads the original now, die, exit & print,
+  escaped quotes included. Both are documented.
+
+  THE DOCKERFILE'S EARLY SETUP STEP WOULD HAVE BUILT A BROKEN IMAGE GREEN.
+  It copies the core & the Engine alone, runs setup, then copies everything else. Without the
+  kernel in that first copy, setup dies at its first line & the image builds with no
+  dependencies installed. The kernel is copied with the Engine now.
+
+  A TEST TOOL EVALUATED WHATEVER IT FOUND WHEN ITS TARGET MOVED.
+  hrconvert2-test-redeclare-cli.php lifted functions out of convertCore.php & carried on
+  when one was missing, evaluating text from near the top of the file. It refuses now. Both
+  tools that lift kernel functions read the kernel file.
+
+  A CAVEAT ABOUT THIS ROUND'S OWN TESTING.
+  The isolated copies used for the runtime tests repointed $InstLoc & not $ConvertLoc, so
+  they shared one data location for logs & sessions. Every request had its own session, so
+  the results stand, but it is the extracted copy trap in miniature & worth knowing.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Found While Moving The Contract--
+
+  THE DEPENDENCY REPORT CALLED A MISSING MANIFEST HEALTHY.
+  With no manifest, --setup --check-depends printed an empty table & then "Every required
+  dependency is present & current", while exiting 1. The verdict was worked out from the
+  rows, & no rows read as no problems. An empty table now says nothing was checked & names
+  the manifest's path. Pre-existing, & fixed here because a drop-in upgrade that misses the
+  new directory is exactly how an installation ends up with no manifest.
+  PROVEN BY   Move Resources/Contract aside & run --setup --check-depends.
+
+  THE ENGINE CONFIGURATION'S GUARD NAMED THIS APPLICATION.
+  engineConfig.php refused a direct request as HRConvert2-35000, left over from when the file
+  held this application's values. Every other Engine file says Engine-35000, & the error
+  description says why. It says Engine-35000 too.
+  PROVEN BY   grep -n 35000 Resources/Engine/engineConfig.php
+
+  A DROP-IN UPGRADE CANNOT DELETE A DIRECTORY.
+  An installation upgraded by copying this release over the last one keeps
+  Resources/Engine/Contract. Nothing reads it, so it is harmless, but it is a copy of the
+  application's data that looks current & is not. Delete it by hand after upgrading.
+  PROVEN BY   grep -rn "Engine.Contract" --include=*.php .   finds nothing.
+              v3.9.8 master with this release extracted over it & nothing deleted. Each
+              file left in Resources/Engine/Contract was replaced with one that records being
+              read. -v, --config, --pipeline, --setup, --clean & a full interface through a
+              web server ran, & nothing recorded a read. -v matched v3.9.8's line for line
+              apart from the new Kernel line.
+
+  THE APPROVAL RECORDS NAMED THE OLD PATH FIFTY TIMES.
+  Every DEPENDENCY_APPROVALS.txt says where its facts came from. They were rewritten by the
+  tool that writes them, not by hand, & the only lines that changed were those fifty.
+  PROVEN BY   python3 Documentation/Build/hrconvert2-approvals.py --check
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Found While Moving The Pipeline Core--
+
+  A FETCHED FILE WAS PLACED UNSCANNED WHEN NO SCANNER COULD RUN.
+  The Engine's URL fetch tests for runVirusScan before scanning, because the Pipeline Core is
+  loaded separately & may not be there. That test sat in the same condition as the setting,
+  so with scanning switched on & no Pipeline Core the whole block was skipped & the file was
+  placed. The comment above it says that is exactly what must not happen. A scanner that
+  cannot run is now refused the way a scan that cannot complete always was.
+  Found by reading every place the Engine calls into the Pipeline Core, which the move made
+  necessary. Pre-existing in v3.9.8.
+  PROVEN BY   The fetch called with the network stubbed & no Pipeline Core loaded. Scanning
+              on, the file is refused & nothing is placed. Put the v3.9.8 condition back &
+              the same call places the file. A scanner that runs & finds nothing places it,
+              & scanning switched off places it.
+
+  THE ERROR CATALOGUE CALLED IT BY A NAME IT LOST LONG AGO.
+  The 34000 block said Pipeline Manager & pipelineManager.php, named a converter file that has
+  been pipeline.php since v3.8.8, & listed 34007 & 34008 as unused while both were documented
+  further up. The entries name the Pipeline Core, its new path & the contract now.
+  PROVEN BY   grep -n "Pipeline Manager\|pipelineManager" Documentation/ERROR_DESCRIPTIONS.txt
+              finds nothing.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Found While Moving The Command Line--
+
+Each was found by running every command before moving any of them, which the move needed
+as its baseline. All four were in v3.9.8. Each was fixed in place first, so the move itself
+could be compared against code that already worked.
+
+  A CONFIRMED --kill-every-worker WAS A FATAL ERROR, EVERY TIME.
+  It called killEveryWorker, which only the Worker Manager defines, & the command line had
+  not loaded the Worker Manager. It loads it the version checked way now.
+  PROVEN BY   A www-data PHP process started for the purpose & --kill-every-worker -y as root.
+              It reports one process terminated & the process is gone.
+
+  A CONFIRMED --kill-all-workers WAS A FATAL ERROR, EVERY TIME.
+  sendManagerMessage takes a channel purpose third & a timeout fourth, & this passed the
+  timeout third & nothing fourth. An earlier fix replaced a call that had no argument at all,
+  & its comment said so above a call that was still one argument short.
+  PROVEN BY   A real listener, & --kill-all-workers -y answers Ended 0 tracked worker(s).
+
+  --pipeline --describe SAID EVERY PIPELINE READ EVERY FILE & WROTE NOTHING.
+  It read the formats from a Capabilities key, & the pipeline record keeps them as Input &
+  Output.
+  PROVEN BY   --pipeline --describe Image lists the formats Image declares.
+
+  --pipeline WAS REFUSED TO EVERY USER BUT ROOT.
+  It was listed with --setup & --config, & so it shared their root gate. Its own
+  documentation said any user may run it, & the gate's comment said it refused only what could
+  not be finished without root. It reads & changes nothing.
+  The opposite disagreement was settled the other way. The documentation said --setup
+  --check-depends needed no privileges, & the code requires root for every --setup option.
+  The documentation now says what the code does, because that is the safer of the two.
+  PROVEN BY   --pipeline --list as www-data lists sixteen pipelines & exits 0.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Decisions & Findings--
+
+Things found while migrating that are NOT migration work & were deliberately not fixed in
+passing. A refactor that also changes behaviour produces a failure nobody can bisect.
+
+  THE FIRST TARGET WAS LOWERCASED ONE WAY & NOT THE OTHER.
+  RESOLVED AT v3.9.9, by lowercasing everything rather than nothing. The command line is now
+  case insensitive throughout, including the -y confirmation flag, which was being compared
+  exactly while the command beside it was lowercased.
+  A target is safe to lowercase because a target is never a path. Every path & every section
+  name reaches its consumer through extractCliOption, which lowercases nothing & says so.
+  What arrives as a target is a sub command, a role name, a version, a count, the word now,
+  or a startup key, & a startup key is a sha256 HMAC, which is lowercase hexadecimal already.
+  ADDING A CASE SENSITIVE TARGET MEANS READING IT WITH extractCliOption INSTEAD.
+  PROVEN BY   php Documentation/Build/hrconvert2-test-cliargs-cli.php
+              Every vector is parsed again with every element upper cased & must produce an
+              identical result. A table of answers can be made to pass by editing the table.
+              A property cannot, so that is the check that holds this decision.
+  CORRECTION. THAT LIST OF TARGETS MISSED TWO, & THE PROPERTY TEST COULD NOT HAVE SEEN EITHER.
+  It proves the parser is consistent, & says nothing about what a consumer does with what it
+  is handed. Both were found by running the documented commands.
+    --pipeline --describe Image    The name is a target & pipelines are keyed by declared
+                                   name, so the documented example refused every pipeline.
+                                   Pipeline names are matched without regard to case now.
+    --app arguments                Values belong to another application & may be paths. The
+                                   caller reads them from the raw vector, which the parser
+                                   returns unchanged. The command stays lowercased.
+  THE RULE, RESTATED. A consumer of a name compares without regard to case. A consumer of
+  something that may be a path reads the raw vector.
+  PROVEN BY   --pipeline --describe Image, IMAGE & image each describe Image & exit 0.
+  ALSO FOUND, NOT FIXED. With the equals form the next argument is never read as the second
+  target. Two commands read one. --pipeline takes a pipeline name after its action & is
+  documented without an equals sign, & --start-manager takes a key that only a listener from
+  an older release still passes on the command line, in the space form. --app values follow
+  the same rule, so a handler sees what the parser would have given it. Changing it is a
+  kernel change with nothing asking for it yet.
+
+  THE --app MECHANISM HAD NEVER WORKED. FOUND BECAUSE OF THE ABOVE, FIXED AT v3.9.9.
+  The dispatcher read $ApplicationArgumentHandler, which nothing sets. The Engine
+  configuration & the contract both set $EngineApplicationArgumentHandler, so a declared
+  handler was never called & every --app argument was refused. Behind that, the branch was
+  a separate if ahead of the main chain, so even a refusal fell through to the unrecognized
+  argument branch, printed the whole help text under its own answer & exited 2.
+  Each fault hid the next. HRConvert2 declares no handler, so nothing visible changes here
+  except that the refusal now stands alone. HRProtect & conversion from the command line are
+  the two things that will declare one.
+  PROVEN BY   A test handler declared in a disposable copy receives --appScan /Some/Path as
+              --appscan & /Some/Path & exits 0. Put back the old global name & it is never
+              called. Put back the lowercased call & it receives /some/path. As shipped,
+              --appfoo prints the two line refusal, no help, & exits 2.
+  STILL OPEN AFTER STEP SEVEN. The handler's return value is not read, so a handled --app
+  argument always exits 0. This was to be decided with the dispatcher's interface, & --app
+  stayed with the application, so the first application to declare a handler decides it.
+
+  AN ENGINE THAT IS MISSING WAS FATAL, THOUGH THE CODE SAID IT WAS A WARNING.
+  RESOLVED AT v3.9.9. The fallback paradigm is kept & the machinery changed to honour it.
+  Four layers, because the failure arrives in four different places.
+
+    verifyGlobals        requestConvertLoc falls back to the CONFIGURED data location, which
+                         is the same answer the Engine itself returns with no listener
+                         running. The same result by a shorter route.
+    parseCommandLine     A command needing the Engine is refused with a sentence naming -v,
+                         rather than reaching one of thirty unguarded Engine calls. -v, -h &
+                         anything beginning --app are still served.
+    showVersionInfo      toolRequirement joins toolPath as an Engine safe accessor, & the
+                         sandbox probe, the listener report & the exposure probe each read
+                         unknown instead of calling into nothing. -v is the one report that
+                         must survive a broken Engine, because it is what names the breakage.
+    The web path         A documented halt, error 28005, instead of eighteen unguarded calls
+                         & a blank page. A visitor who gets a blank page cannot report
+                         anything & an administrator finds a fatal rather than a reason.
+
+  PROVEN BY   Move Resources/Engine/engine.php aside & run -v, -h, --clean, --setup, --config
+              & --status. Every one answers. Nothing fatals.
+  WHAT WAS LEARNED   toolPath already carried the right guard & the right comment, & it still
+  died four frames deeper than it was reading. Testing the function in front of you is not
+  enough when that function asks a component which asks another. The call graph is what
+  matters & hrconvert2-check.py is the thing that follows it.
+
+  RESOURCES/CONFIG.PHP IN THE REPOSITORY CARRIES AN ABSOLUTE INSTALL PATH.
+  DECIDED AT v3.9.9. IT STAYS, & THE PATH IS NOW CHECKED INSTEAD OF BELIEVED.
+  Shipping a working configuration is deliberate. Somebody who skims the source, copies the
+  tree onto a LAMP stack & reads no instructions gets a running application & a
+  troubleshooting path rather than a blank screen & a reason to abandon the project. It costs
+  an operator deploying properly nothing, because they set the value anyway.
+  That only holds if a wrong path cannot be believed. Every location this core uses is
+  derived from $InstLoc, so a stale one reads another tree or nothing.
+  So the configured directory is checked for convertCore.php before anything is derived from
+  it, & the directory this file is actually in is the fallback, because that is the one fact
+  that cannot be wrong. The warning names the setting, so a proper deployment is told once
+  where to fix it rather than left wondering why its path was ignored.
+  PROVEN BY   Point $InstLoc at a path that does not exist & run -v. The report is correct &
+              the installation runs.
+
+  EVERY COMMAND EXITED ZERO, WHETHER IT WORKED OR NOT.
+  The file ended in a bare die, so only the no configuration bootstrap ever set a status.
+  DECIDED AT v3.9.9. THE CONVENTION EVERY UNIX TOOL USES, DOCUMENTED IN
+  ABOUT_COMMAND_LINE_ARGUMENTS.txt UNDER EXIT STATUS.
+    0   It did what was asked, or what it asks for was already true.
+    1   It failed, found a fault, was refused or was declined. Every fatal error.
+    2   The arguments were not understood & nothing was attempted.
+  ALREADY TRUE IS SUCCESS. Stopping a listener that is not running exits 0, because no
+  listener is running afterwards, which is what was asked. A script that stops a listener &
+  then starts one must not fail at the first step for the listener having already died.
+  WIDENING SUCCESS WIDENS EVERYTHING GATED ON IT. The first version of this made an update to
+  the release already installed return TRUE, & every step after that point in
+  updateApplication is gated on that value. A no-op ran the permission repair, then printed
+  "Updated to", named a backup it never took & told the operator to confirm the new
+  installation. It never shipped. A stub & a control found it, & the steps are gated on
+  whether anything was installed as well. Read every consumer of a flag before changing
+  what the flag means, including the ones further down the same function.
+  A REPORT EXITS 0 WHATEVER IT SAYS, because the report is what was asked for & it was
+  produced. -v exits 0 with a broken Engine & --status with a stopped listener. --status
+  cannot be produced without an Engine, so without one it is refused & exits 1. A CHECK
+  exits 1 when it finds a fault, because a check exists to be acted on. --setup
+  --check-depends & --pipeline --verify.
+  A SUB OPTION NAMING SOMETHING NOTHING MATCHES IS A USAGE ERROR. A --subsystem that no entry
+  in the manifest belongs to exits 2 & lists the subsystems the manifest declares, for every
+  --setup option that takes one. It exited 0 having checked, installed or removed nothing.
+  A manifest that cannot be read is not judged here, & the command reports it as before.
+  This matters to step seven. The dispatcher returns a status, so it was settled first.
+  WHAT READS IT. The container entrypoint has always tested -fp & -l, & says the repair
+  reported problems or the listener did not start. Neither message could ever appear. Both
+  can now, & both continue, which is what they were written to do. hrconvert2-setup.sh execs
+  the core, so its status is the core's. validateInstallation already required 0 from -v &
+  still gets it, & a release whose kernel is missing now fails it on the status as well as
+  on the missing marker.
+  PROVEN BY   A matrix of twenty one invocations as root, www-data & nobody, with a matching
+              & a mismatched Engine & no kernel, each against the status it should earn.
+              -v, -h, --clean now, --setup, --pipeline --list & --config --view exit 0.
+              An unknown argument, a sub option alone, an unknown --pipeline action & an
+              undeclared --app argument exit 2. Everything refused or declined exits 1.
+              -u at the release already installed, with fixManagedPermissions stubbed, exits
+              0 & prints only that there is nothing to do. With the new gate removed it calls
+              the stub & prints Updated to. That is the control.
+
+  EVERY COMMAND LINE ACCOUNT BUT ROOT SHARED ONE SECRET FOLDER, & THE FIRST TO RUN OWNED IT.
+  RESOLVED AT v3.9.9. EVERY ACCOUNT HAS A FOLDER OF ITS OWN.
+  Found while moving the command line, as the reason a test passed. Pre-existing in v3.9.8.
+  The per user secret was meant to live in the home directory of the account running the
+  command. verifyInstallation sets HOME from $HomeLoc as its first act, which is before
+  config.php is loaded, so HOME is set to nothing for the whole process & the secret fell
+  back to /tmp/.HRConvert2. Whichever account ran first created that 0700, & every other
+  account but root was refused with error 5 from then on, -v included. www-data was one of
+  them, so on a server where an administrator's own account ran first, every
+  sudo -u www-data command failed the same way.
+  On the test machine www-data ran first, so a check meant to show a standard user the refusal
+  for a listener command passed on error 5 instead, which is how this was found.
+  resolveUserSecretFolder gives every account a folder named for itself in the temporary
+  directory. That directory is shared, so another account can take the name first. A folder
+  that is a link, belongs to another account or can be reached by one is refused with a
+  warning that names it & the remedy, rather than adopted.
+  NOT FIXED, & RECORDED. HOME is still emptied before config.php is read, so $HomeLoc has
+  never reached anything this application starts. Correcting the order changes HOME for
+  everything started outside the sandbox, which sets its own, & that wants field testing.
+  PROVEN BY   mkdir -m 1777 /tmp/x, then as root
+              TMPDIR=/tmp/x runuser -u nobody -- php convertCore.php -v
+              TMPDIR=/tmp/x runuser -u www-data -- php convertCore.php -v
+              Both exit 0, & each account's folder is 0700 & its own. With the v3.9.8 code
+              the second exits 1, which is the control. A folder planted under the account's
+              name by another account, one left open to every account & a link are each
+              refused with a warning, & nothing is written through the link.
+
+  WWW-DATA COULD NOT START THE LISTENER FROM THE COMMAND LINE, & WAS TOLD TO.
+  RESOLVED AT v3.9.9. ROOT OR THE WEB SERVER USER STARTS A LISTENER BY HAND, & NOBODY ELSE.
+  Pre-existing in v3.9.8. A startup key is an HMAC of the install secret, & on the command line
+  www-data was given a per user secret except for the three manager entry points. So -l as
+  www-data started a Core Manager that refused its key with error 31006, & --status could not
+  ask a running listener anything.
+  verifyInstallation gives the web server user the install secret for every command that
+  operates the listener & for --status, beside the manager entry points. The command is read
+  with the kernel's parser, so -L counts as -l. Every other account is still refused those
+  commands by the Engine. www-data owns the secret file, so this grants that account nothing
+  it could not already read.
+  PROVEN BY   As www-data, -L starts the listener, --status reports it RUNNING,
+              --kill-all-workers -y ends 0 tracked workers, -k stops it & no manager process
+              is left. nobody is refused -l. With the v3.9.8 rule, -L as www-data exits 1 &
+              the log holds 31006.
+
+  AN UNPRIVILEGED ACCOUNT COULD RUN CODE AS ROOT THROUGH THE DEPENDENCY SCRATCH FOLDER.
+  RESOLVED AT v3.9.9. FOUND BY LOOKING FOR THE SAME SHAPE AS THE SECRET FOLDER.
+  Pre-existing since v3.9.3. Every dependency command runs with HOME, its working directory &
+  every XDG location pointed at a scratch folder, & that folder was <temp>/HRConvert2-probe for
+  every account, used whoever had made it. python imports a usercustomize module from HOME, &
+  pip & git read their configuration there. An account that made the folder first & put one in
+  it ran its code as root the next time root ran --setup --check-depends, & the source builds
+  that --setup --install-depends runs as root read pip's configuration from the same place.
+  It also failed every other account's probes, which could not enter the folder.
+  resolveProbeScratchFolder names the folder for the account & uses it only when
+  folderIsPrivateToAccount agrees it is not a link, the account owns it & its mode is 0700.
+  Ownership is compared outright, because root may write to & chmod any folder. A name taken
+  by another account is warned about, & a folder with an unpredictable name is made instead.
+  PROVEN BY   An unprivileged account plants a usercustomize module in the folder, then root
+              runs --setup --check-depends. With the v3.9.8 code the module runs as uid 0.
+              With this code it does not, whether the old name or the account's own name is
+              planted, as a folder or as a link, & the planted folder is warned about.
+              With nothing planted, --setup --check-depends prints the same 58 lines as
+              before, & python runs with the account's own folder as HOME.
+
+  EVERY SCANNER PIPELINE RAN A PROGRAM CALLED ARRAY.
+  RESOLVED AT v3.9.9. FOUND WHILE CHECKING THE DISPATCHER STEP EIGHT WOULD MOVE ONTO.
+  Pre-existing in v3.9.8. sandboxCommand returns whether a command may run & the command.
+  The ClamAV & ScanCore pipelines, the Stream pipeline & the Engine's stream fetch each
+  assigned that pair to one variable & ran it, & PHP turned the array into the word Array.
+  ClamAV's shell exited 127, which was not 1 & not 2, so every file was reported clean, the
+  infected ones included. ScanCore's shell said Array: not found, & a rule reading any line
+  containing found as a detection reported every file infected, the clean ones included. No
+  stream was ever fetched or converted. By default uploads are not scanned, fetching a URL is
+  off, a fetched URL is scanned when fetching is on, & ScanCore is the scanner.
+  Each takes the pair with list () now & runs nothing when the sandbox refuses. A scanner
+  that could not run reports an incomplete scan rather than a verdict, & ScanCore's verdict
+  is read as ScanCore words it, Infected for a threat & Suspicious for a heuristic.
+  Check twenty, pairs, reports a pair assigned whole to one variable. On v3.9.8 it finds
+  exactly these four lines, & on this release nothing.
+  PROVEN BY   The real kernel, Engine & Pipeline Core & the real ScanCore, with a clean file
+              & the EICAR test string. ScanCore reports the clean file clean & the test file
+              infected. With the v3.9.8 pipeline both are infected, by Array: not found.
+              ClamAV, with a stand in clamscan, reports the test file infected, & with the
+              v3.9.8 pipeline reports it clean. With the sandbox required & unavailable, &
+              with a scanner that exits 127, neither completes a scan.
+
+  NEITHER SCANNER COULD SCAN A LARGE FILE, & CLAMAV CALLED THE ONES IT SKIPPED CLEAN.
+  RESOLVED AT v3.9.9. FOUND WHILE CHECKING THAT EACH SCANNER FITS THE CEILING IT RUNS UNDER.
+  Pre-existing in v3.9.8. ClamAV ran on its own defaults, 100M for one file, 400M for what it
+  unpacks & 120 seconds, & a file past any of them printed OK & exited 0 like a clean one.
+  What it unpacked went to the sandbox's /tmp, which is memory inside the Scan ceiling.
+  ScanCore holds about three chunks at once & shipped with a 128M chunk inside a 256M limit,
+  so every file over 128M ended in a PHP fatal error & was reported as not scanned.
+  ClamAV's limits follow the file & its processor share, it unpacks to a private folder in
+  the conversion location, & a limit it reaches is reported as no verdict. ScanCore's limit
+  fits inside the Scan ceiling & its chunk is held to a quarter of that limit.
+  PROVEN BY   The real Pipeline Core & both scanners in a real bubblewrap sandbox, as root & as
+              www-data. EICAR alone, inside a zip & in a file named Heuristics.Limits.Exceeded.txt
+              is infected. A zip nested twenty deep is not scanned, a 2.2G sparse file is refused
+              before clamscan runs, & no folder is left behind. A 70M file scans with a 64M
+              limit & a 32M configured chunk, which the previous pipeline ends in exit 255, & the
+              shipped pair fails a 140M file run directly.
+
+  AN UNSANDBOXED DOCUMENT CONVERSION USES A LIBREOFFICE PROFILE ANY ACCOUNT CAN MAKE FIRST.
+  RECORDED, NOT FIXED. IT NEEDS THE SANDBOX SWITCHED OFF, & THE FIX CHANGES A SHARED MODULE.
+  libreOffice.php points LibreOffice's profile at /tmp/hrc2-libreoffice. Inside the sandbox
+  that is a tmpfs of the conversion's own. With --Require Sandbox-- FALSE & no sandbox built,
+  the same path is the host's, shared by every conversion & by any account that makes it
+  first, & a LibreOffice profile can carry macros. The fix is a fresh folder for each
+  unsandboxed conversion, removed after it, & it changes libreOffice.php, which the contract
+  pins at v3.9.5.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Question Three Is The One That Gets Missed--
+
+ABOUT_ENGINE_CONTRACT.txt asks four questions before anything joins the Engine. Question
+three is the one that has now been failed five times.
+
+  3  IS IT REACHABLE BEFORE THE ENGINE IS LOADED?
+     Anything the boot path touches belongs in the kernel or in the application.
+     The Engine cannot provide what is needed to load the Engine.
+
+FIVE ROUND TRIPS, & THEY ALL LOOKED CORRECT GOING IN.
+This said three until the kernel was moved & the record in environmentCore.php was read.
+
+  locateDependency      Out at v3.9.0 era, back later. Finding an executable is a primitive
+                        boot code needs. Found by a call order check, not by reading.
+  reloadApparmorProfile Out at v3.9.3, back at v3.9.5. Reached through verifySandboxPolicy
+                        on the boot path, before any component is verified.
+  closeHRC2Connection   Out at v3.9.3, back at v3.9.5, & it is in the kernel now under the
+                        name closeClientConnection. quickDie calls it.
+  extractCliOption      Out at v3.9.6, back at v3.9.9. Reads one option out of an argument
+                        list, which is as generic as code gets. Every recovery command reads
+                        its own sub option as its FIRST act, so an installation with a broken
+                        Engine could not run --config or --setup at all.
+  parseArgumentVector   Out & back within v3.9.9. Moved in the morning, reverted the same
+                        day, having never been committed.
+
+EACH ONE PASSED QUESTIONS ONE, TWO & FOUR CLEANLY. Generic, calls no application code, reads
+no global outside the contract. Genericity is what makes a thing LOOK like Engine work & it
+is not the test.
+
+THE TELL, FOR NEXT TIME. parseArgumentVector was moved with a local fallback in the caller,
+so the command line still parsed when the Engine was missing. That fallback was written
+carefully, justified at length, & tested. It was also the evidence that the function was in
+the wrong place. A move that needs the caller to keep a copy is not a move.
+
+  IF IT NEEDS A FALLBACK IN THE CALLER, IT FAILED QUESTION THREE. PUT IT BACK.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Keeping This File Honest--
+
+RUN THE CHECKS BEFORE EDITING THE STATUS. Every PROVEN BY line above is a command. A status
+changed without running the command it names is the exact failure this file was written to
+replace.
+
+  python3 Documentation/Build/hrconvert2-check.py     Both gates must pass.
+  bash Documentation/Build/hrconvert2-check.sh        The second opinion.
+  php Documentation/Build/hrconvert2-test-cliargs-cli.php   The argument parser.
+  python3 Documentation/Build/hrconvert2-check.py --only kernel   The kernel's independence.
+
+A STEP IS DONE WHEN ITS CHECK SAYS SO, NOT WHEN THE WORK FEELS FINISHED. PARTIAL is an
+honest state & is more useful than DONE with a footnote, because a reader scanning for what
+is left reads the status column & not the prose under it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

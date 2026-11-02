@@ -21,7 +21,7 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ... 
-The authoritative list of dependencies is Resources/Engine/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
 ADDITIONAL INFORMATION
 HRConvert2 logs information about it's operational activity to the Logs subdirectory where HRConvert2 is installed by default.
 The default logging directory can be adjusted by modifying the --Log Storage Directory-- section of the config.php file. 
@@ -54,7 +54,7 @@ Every FILE section below was derived by scanning the code for the call that rais
 A number raised from more than one file names every file that raises it.
 The 2000 block is raised by /Resources/Pipelines/Shared/libreOffice.php, which serves the Document pipeline and the OCR pipeline alike.
 An operator seeing one of those numbers may have been running either one. The log line above it names which.
-The Pipeline Manager component reserves 34000 through 34019.
+The Pipeline Core reserves 34000 through 34019. It became an Engine core at v3.9.9 & none of its numbers changed.
 The 32000 and 33000 blocks were already taken by Setup Core and Dependency Core.
 
 <3 Open-Source
@@ -139,7 +139,7 @@ DESCRIPTION
   tool they already installed sends them the wrong way entirely.
   A Binary containing a path separator is treated as a file the operator chose & is
   verified where they put it. A Binary with no separator is a name & is looked up.
-  FIX. Correct the path in Resources/Engine/Contract/depends.php, or make the file
+  FIX. Correct the path in Resources/Contract/depends.php, or make the file
   executable if it is there & is not.
 ---------------------------------------------------------------------------------------------------------
 
@@ -158,7 +158,7 @@ DESCRIPTION
   on the compatible list. GPL-2.0 only is deliberately absent from that list, because it is
   not compatible with GPLv3.
   --Engine Allow Incomplete Deps-- refuses an entry missing License, Source or Purpose.
-  FIX. Complete the entry in Resources/Engine/Contract/depends.php, or turn the setting off
+  FIX. Complete the entry in Resources/Contract/depends.php, or turn the setting off
   in engineConfig.php if the policy is not one this installation wants.
 ---------------------------------------------------------------------------------------------------------
 
@@ -235,7 +235,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34007, <SESSION_IDENTIFIER>: A virus scan was requested & no scanner was named or configured!
 
 FILE
-  Resources/PipelineCore/pipelineCore.php
+  Resources/Engine/Cores/pipelineCore.php
 
 FATAL
   NO
@@ -258,7 +258,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34008, <SESSION_IDENTIFIER>: The <SCANNER> scanner was requested & no pipeline provides it!
 
 FILE
-  Resources/PipelineCore/pipelineCore.php
+  Resources/Engine/Cores/pipelineCore.php
 
 FATAL
   NO
@@ -611,6 +611,9 @@ ERROR DESCRIPTION
   One of the checks verifyInstallation performs did not pass & the reason was reported by
   whichever check failed rather than by this line.
   Read the entry immediately above this one, which names the actual cause.
+  On the command line, an account other than root whose per user secret folder was refused.
+  The warning above names the folder, which another account created first or made a link.
+  Delete it as root & run the command again.
   Run -v, which performs the same checks & reports every one of them rather than stopping
   at the first failure.
 ---------------------------------------------------------------------------------------------------------
@@ -666,6 +669,80 @@ ERROR DESCRIPTION
   exactly the file somebody has opened it to fix.
 ---------------------------------------------------------------------------------------------------------
 
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <APPLICATION_NAME>-28006, The kernel is missing or unreadable at <PATH>! Nothing can be loaded
+  or logged without it.
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  NO
+
+ERROR DESCRIPTION
+  Resources/Kernel/kernel.php is absent, or the web server cannot read it.
+  The kernel holds logging, the halt function & the code that loads every other component, the Engine
+  included, so this is the one failure that cannot be logged & cannot fall back to anything. It is a plain
+  die for that reason, & it is printed rather than written to a log that does not exist yet.
+  The kernel is found beside convertCore.php rather than through the configured installation directory,
+  because the configuration has not been read when it is needed.
+  Restore Resources/Kernel/kernel.php from the release this core came from.
+---------------------------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <APPLICATION_NAME>-28007, The kernel at <PATH> reports <VERSION> & this application requires
+  <VERSION>!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  NO
+
+ERROR DESCRIPTION
+  Resources/Kernel/kernel.php is present but is not the version this core was built against.
+  The version is read from the file WITHOUT executing it, so a mismatched kernel never runs. The same
+  guarantee a mismatched Engine gets.
+  The common cause is a partial update, or a kernel copied in from a different application or release.
+  Install the kernel from the release this core came from. Do not edit either version stamp to make them
+  agree, because the stamps are the only thing that says the code underneath them matches.
+---------------------------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-28005, <SESSION_IDENTIFIER>: The Engine is unavailable, so this
+  request cannot be served. Run  php convertCore.php -v  on the server to see which component failed.
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A web request arrived & Resources/Engine/engine.php is missing, unreadable, or reports a version this
+  core does not require.
+  Conversion, resource budgeting, data location cleaning, URL fetching & stream handling all live in the
+  Engine, so there is nothing a visitor could successfully do on this installation.
+  This halt exists so the failure is a sentence rather than a blank page. Before it was added, the first
+  unguarded Engine call produced an undefined function & the visitor saw nothing at all.
+  The command line is deliberately NOT halted here. Run  php convertCore.php -v  to see which component
+  failed & what version it reports, & -h still lists every command.
+  An Engine refused on version grounds is the common cause & the fix is to install the matching Engine
+  rather than to edit either version stamp.
+---------------------------------------------------------------------------------------------------------
 
 ---------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
@@ -1278,6 +1355,9 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
+  A scan with every scanner reached no verdict for any file with one of them, for example because
+  ClamAV is not installed or no sandbox could be built. A scanner that runs & cannot finish is never
+  counted as a clean result. Run -v, which reports each scanner pipeline & the sandbox.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The www-data:www-data user:group needs to have read & write access to the Installation directories.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
@@ -1399,6 +1479,7 @@ ERROR DESCRIPTION
 ---------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-506, <SESSION_IDENTIFIER>: The Pipeline Core is unavailable, so <FILE_PATH> was not scanned!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-506, <SESSION_IDENTIFIER>: The Pipeline Core is unavailable, so the user virus scan could not run!
 
 FILE
   /convertCore.php
@@ -1411,6 +1492,7 @@ LOGGED
 
 ERROR DESCRIPTION
   Virus scanning dispatches through the Pipeline Core & it did not load. Nothing was scanned.
+  The second wording is a user requested scan. The report the user downloads says NO FILE WAS SCANNED.
   Check -v, which reports the Pipeline Core & every scanner pipeline.
 ---------------------------------------------------------------------------------------------------------
 ------------------------------------------------------
@@ -3949,6 +4031,9 @@ ERROR DESCRIPTION
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-17002, <SESSION_IDENTIFIER>: ClamAV is missing, too old, or unusable, so the user virus scan could not run!
+  RETIRED AT v3.9.9. This number is no longer raised. A user requested scan goes through runVirusScan
+  & the ClamAV pipeline, which reports an unusable ClamAV as error 502. The report the user downloads
+  still says the file could not be scanned & that the scan DID NOT RUN. The number is reserved & not reused.
 
 FILE
   /convertCore.php
@@ -3973,13 +4058,16 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-18000, <SESSION_IDENTIFIER>: Could not verify the ScanCore Virus Scanner!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-18000, <SESSION_IDENTIFIER>: ScanCore is not installed at <FILE_PATH>, so nothing was scanned!
+  Until v3.9.9 the user requested scan raised this as Could not verify the ScanCore Virus Scanner! &
+  halted the request. Every scan reaches ScanCore through its pipeline now, & a scan that cannot run is
+  reported as not scanned rather than halting anything.
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/ScanCore/pipeline.php
 
 FATAL
-  YES
+  NO
 
 LOGGED
   YES
@@ -5551,7 +5639,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31009, <SESSION_IDENTIFIER>: A Core Manager start was requested but the component is unavailable!
 
 FILE
-  /convertCore.php
+  /Resources/Engine/engine.php
 
 FATAL
   YES
@@ -5624,7 +5712,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31012, <SESSION_IDENTIFIER>: A subordinate manager start was requested but the component is unavailable!
 
 FILE
-  /convertCore.php
+  /Resources/Engine/engine.php
 
 FATAL
   YES
@@ -5914,7 +6002,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31016, <SESSION_IDENTIFIER>: The foreground listener was requested but the Core Manager component is unavailable!
 
 FILE
-  /convertCore.php
+  /Resources/Engine/engine.php
 
 FATAL
   YES
@@ -6371,10 +6459,10 @@ ERROR DESCRIPTION
 
 ---------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-33002, <SESSION_IDENTIFIER>: Capability detection was requested & the Dependency Core component is unavailable!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-33002, <SESSION_IDENTIFIER>: Capability detection was requested but the Dependency Core component is unavailable!
 
 FILE
-  convertCore.php
+  Resources/Engine/engine.php
 
 FATAL
   NO
@@ -6395,15 +6483,13 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! HRConvert2-34000, The Pipeline Manager component cannot be loaded directly!
   ERROR!!! HRConvert2-34000, A pipeline configuration cannot be loaded directly!
   ERROR!!! HRConvert2-34000, A pipeline converter cannot be loaded directly!
   ERROR!!! HRConvert2-34000, A pipeline component cannot be loaded directly!
 
 FILE
-  /Resources/PipelineCore/pipelineCore.php
   /Resources/Pipelines/<PIPELINE_NAME>/pipelineConfig.php
-  /Resources/Pipelines/<PIPELINE_NAME>/pipelineCore.php
+  /Resources/Pipelines/<PIPELINE_NAME>/pipeline.php
   /Resources/Pipelines/Shared/<MODULE_NAME>.php
 
 FATAL
@@ -6422,6 +6508,8 @@ ERROR DESCRIPTION
   Confirm that every folder beneath /Resources/Pipelines/ contains the stock index.html file.
   A folder without one is a readable directory listing on a path a user can reach, which is the usual reason this is ever seen.
   Do not write a new index.html file. Copy an existing one from elsewhere in the installation.
+  Until v3.9.9 the Pipeline Core raised this too, as The Pipeline Core component cannot be loaded directly.
+  It is an Engine core now & raises Engine-35000 like the others.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -6430,7 +6518,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34001, <SESSION_IDENTIFIER>: The Pipeline Core could not verify a single conversion pipeline!
 
 FILE
-  Resources/PipelineCore/pipelineCore.php
+  Resources/Engine/Cores/pipelineCore.php
 
 FATAL
   NO
@@ -6439,8 +6527,9 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  The Pipeline Manager component loaded and passed its own version check, but not one of the pipelines it accepts could be verified.
-  A dispatcher with nothing behind it is worse than no dispatcher at all, so the Pipeline Manager stands itself down when this happens.
+  The Pipeline Core loaded and passed its own version check, but not one of the pipelines it accepts could be verified.
+  A dispatcher with nothing behind it is worse than no dispatcher at all, so the Pipeline Core stands itself down when this happens.
+  An application that accepts no pipeline at all causes this too. A warning naming $EngineAcceptedPipelines is written first in that case.
   No conversion of any kind will succeed for the remainder of the request.
   Uploading, downloading, deleting, archiving and virus scanning all continue to work normally.
   This error is not fatal because a user who cannot read the page cannot report the problem.
@@ -6456,7 +6545,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34002, <SESSION_IDENTIFIER>: The <PIPELINE_NAME> pipeline declared the entry point <FUNCTION_NAME>, which does not exist!
 
 FILE
-  Resources/PipelineCore/pipelineCore.php
+  Resources/Engine/Cores/pipelineCore.php
 
 FATAL
   NO
@@ -6481,7 +6570,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34003, <SESSION_IDENTIFIER>: All <ADDITIONAL_DATA> installed <FILE_TYPE> pipelines failed to convert <FILE_TYPE> to <FILE_TYPE> & none reported a reason!
 
 FILE
-  Resources/PipelineCore/pipelineCore.php
+  Resources/Engine/Cores/pipelineCore.php
 
 FATAL
   NO
@@ -6507,7 +6596,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34004, <SESSION_IDENTIFIER>: The <PIPELINE_NAME> pipeline declared the entry point <FUNCTION_NAME>, which the <PIPELINE_NAME> pipeline already claimed. It was refused.
 
 FILE
-  Resources/PipelineCore/pipelineCore.php
+  Resources/Engine/Cores/pipelineCore.php
 
 FATAL
   NO
@@ -6517,10 +6606,10 @@ LOGGED
 
 ERROR DESCRIPTION
   Two installed pipelines declared the same entry point function name. The first pipeline to claim the name keeps it and the second is refused.
-  This is the single most likely mistake made when writing a pipeline by copying an existing one, because the entry point must be renamed in both pipelineConfig.php and pipelineCore.php.
+  This is the single most likely mistake made when writing a pipeline by copying an existing one, because the entry point must be renamed in both pipelineConfig.php and pipeline.php.
   The refusal is deliberate and is preferable to the alternative.
   Two pipelines sharing a function name would fatally redeclare that function the moment both were loaded in one request, which happens whenever a single upload batch spans two conversion families, and again whenever a fallback candidate loads after a primary implementation failed.
-  Give the new pipeline a unique entry point name in both of its files, then raise the version of both the pipeline and the Pipeline Manager that pins it.
+  Give the new pipeline a unique entry point name in both of its files, then raise the pipeline's version & its pin in $EngineAcceptedPipelines, which Resources/Contract/app-engine-config.php sets.
   The message names both folders, so the one to correct is the one reported as refused.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -6540,24 +6629,26 @@ LOGGED
 
 ERROR DESCRIPTION
   A conversion was requested for a family that no installed pipeline serves.
-  The family's pipeline folder is missing, unreadable, or reports a version the Pipeline Manager does not accept, or the family is not named in getAcceptedPipelines() inside pipelineManager.php.
+  The family's pipeline folder is missing, unreadable, or reports a version the Pipeline Core does not accept, or the family is not named in $EngineAcceptedPipelines in Resources/Contract/app-engine-config.php.
   Run the application with the -v argument and read the warnings above this line. They name the folder and the reason it was refused.
   RESTORING A CONVERTER TO convertCore.php IS NOT THE FIX FOR THIS ERROR.
   convertCore.php carried a built in dispatcher throughout the migration to pipeline components, and each conversion family left that dispatcher individually as its code moved out into its own folder.
   It became empty once the last family migrated and it has been removed.
-  Pasting a converter back into the core would produce a second implementation that the Pipeline Manager knows nothing about, cannot version check, and cannot rank against the real one.
+  Pasting a converter back into the core would produce a second implementation that the Pipeline Core knows nothing about, cannot version check, and cannot rank against the real one.
   Repair the pipeline folder instead.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: OCR was requested but no OCR pipeline is installed!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: An OCR operation was requested but no pipeline provides it!
+  Until v3.9.9 the Pipeline Core worded this OCR was requested but no OCR pipeline is installed!, because it
+  could only dispatch OCR. It names whatever operation family was requested now.
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: OCR was requested but no OCR pipeline is installed & this core has no built in OCR!
 
 FILE
   /convertCore.php
-  /Resources/PipelineCore/pipelineCore.php
+  /Resources/Engine/Cores/pipelineCore.php
 
 FATAL
   NO
@@ -6567,8 +6658,8 @@ LOGGED
 
 ERROR DESCRIPTION
   An Optical Character Recognition operation was requested and the OCR pipeline could not be reached.
-  The /Resources/Pipelines/OCR/ folder is missing, unreadable, or reports a version the Pipeline Manager does not accept, or 'OCR' is not named in getAcceptedPipelines() inside pipelineManager.php.
-  It is also raised when the Pipeline Manager component itself failed to verify, because there is no built in OCR left in convertCore.php to fall back to.
+  The /Resources/Pipelines/OCR/ folder is missing, unreadable, or reports a version the Pipeline Core does not accept, or 'OCR' is not named in $EngineAcceptedPipelines in Resources/Contract/app-engine-config.php.
+  It is also raised when the Pipeline Core itself failed to verify, because there is no built in OCR left in convertCore.php to fall back to.
   Run the application with the -v argument and read the warnings above this line.
   This error is not itself fatal, but error 22 fires immediately after it and that error is fatal.
   Without this error, an OCR request on an installation with no OCR pipeline would produce an empty result and raise only error 22, which reports that the OCR operation failed and does not report that no OCR was ever attempted.
@@ -6578,19 +6669,82 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR NUMBER RESERVATION
-  34007 through 34019 are reserved for the Pipeline Manager component and are currently unused.
+  34009 through 34019 are reserved for the Pipeline Core and are currently unused.
+  34007 & 34008 are its scanner errors & are documented with the other scanning errors.
   A conversion pipeline carries its own error block and keeps the numbers it had before it became a component.
   A new community pipeline must reserve a block in this file before using one.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! Kernel-35000, The kernel cannot be loaded directly!
+
+FILE
+  /Resources/Kernel/kernel.php
+
+FATAL
+  YES
+
+LOGGED
+  NO
+
+ERROR DESCRIPTION
+  Resources/Kernel/kernel.php was requested directly, rather than loaded by an application's entry point.
+  The kernel cannot test $CoreLoaded like every other component, because it loads before anything sets it.
+  It counts the files PHP has included instead. A direct request is the only way it can be the first one.
+  Nothing is wrong. Something asked for a file it should not have.
+---------------------------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! HRConvert2-35000, An engine configuration cannot be loaded directly!
+
+FILE
+  /Resources/Contract/app-engine-config.php
+
+FATAL
+  YES
+
+LOGGED
+  NO
+
+ERROR DESCRIPTION
+  The application's Engine configuration was requested directly, rather than read by the Engine.
+  It names the application rather than the Engine, because the file is the application's own data.
+  Nothing is wrong. Something asked for a file it should not have.
+  Undocumented until v3.9.9, when the error number check learned to read a plain die.
+---------------------------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! Engine-33003, A generated cache cannot be loaded directly!
+
+FILE
+  The capability cache that Resources/Engine/Cores/dependencyCore.php writes.
+
+FATAL
+  YES
+
+LOGGED
+  NO
+
+ERROR DESCRIPTION
+  A capability cache was requested directly, rather than read by Dependency Core.
+  The guard is written INTO the generated file, so it appears in source as a string inside a string.
+  Nothing is wrong. Something asked for a file it should not have.
+  Undocumented until v3.9.9, when the error number check learned to read a guard written into generated code.
+---------------------------------------------------------------------------------------------------------
+
 ---------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
   ERROR!!! Engine-35000, <COMPONENT> cannot be loaded directly!
 
 FILE
   /Resources/Engine/engine.php
+  /Resources/Engine/engineConfig.php
   /Resources/Engine/Cores/environmentCore.php
   /Resources/Engine/Cores/setupCore.php
   /Resources/Engine/Cores/dependencyCore.php
+  /Resources/Engine/Cores/pipelineCore.php
   /Resources/Engine/Managers/*.php
 
 FATAL

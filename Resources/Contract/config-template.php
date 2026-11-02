@@ -115,8 +115,11 @@ $ScanCoreMemoryLimit = 268435456;
 // /  --User Virus Scanning ScanCore Chunk Size--
 // /   In order to scan files that are larger than the memory limit, large files will be broken into chunks.
 // /   The number of bytes to break large files into in order to fit them into memory.
-// /   Default is 134217928.
-$ScanCoreChunkSize = 134217928;
+// /   Keep this at a quarter of the memory limit or less. ScanCore holds about three chunks
+// /   in memory at once, so a larger chunk exhausts the memory limit on any file bigger than
+// /   one chunk. A larger value is reduced to a quarter at scan time & a warning is logged.
+// /   Default is 67108864.
+$ScanCoreChunkSize = 67108864;
 // /  --User Virus Scanning ScanCore Debug Mode--
 // /   Enable an absolutely insane amount of verbosity from ScanCore during file scan operations.
 // /   If set to TRUE these events will be included in the report that is submitted to the user.
@@ -952,6 +955,7 @@ $EnablePerConversionLimits = TRUE;
 // /   These are MAXIMA. With a listener running they are scaled down against current load
 // /   & against how many conversions are already in flight, & never below
 // /   --Minimum Per Conversion Resources--. With no listener they are used unchanged.
+// /   Scan's memory is the one figure that is never scaled. Only its processor share is.
 // /   A type that is not listed falls back to --Default Per Conversion Resources--.
 // /   An entry that cannot be read is reported & falls back to the default.
 // /   Valid keys are Document, Spreadsheet, Presentation, Image, Video, Audio, Archive,

@@ -115,9 +115,10 @@ instant. A key is therefore useless a few seconds after it is created.
 THE STARTUP KEY IS NEVER PRINTED & IS NEVER WRITTEN TO THE LOG.
 Anything that captured console output or a logfile would otherwise be handed a working key.
 
-A standard command line user holds a per user secret in their home directory rather than the
-install wide secret. A per user secret cannot derive a valid startup key, so a standard user
-cannot start a listener that any worker would ever talk to.
+A standard command line user holds a per user secret rather than the install wide secret, in a
+folder of its own in the temporary directory. A per user secret cannot derive a valid startup
+key, so a standard user cannot start a listener that any worker would ever talk to. The web
+server user holds the install secret for the listener's commands, so it can.
 
 The --start-core-manager & --start-manager arguments are internal. They are invoked by the -l
 argument with a key & are refused without one. They are deliberately absent from -h.
@@ -306,6 +307,33 @@ then the core's built-in for that type, then --Default Per Conversion Resources-
 These are MAXIMA. With a listener running they are scaled down against current load & against how
 many conversions are already in flight, & never below --Minimum Per Conversion Resources--. With
 no listener they are used unchanged.
+
+SCAN'S MEMORY IS NEVER SCALED. Only its processor share is. A scanner needs the memory its loaded
+signature database takes, & neither the file nor the load changes that, so a smaller ceiling does
+not slow a scan, it has the kernel kill it. Until v3.9.9 it was scaled with the rest, & a quiet
+server with one scan in flight gave ClamAV 740M of 2048M. Whether a scan may start at all is the
+budget's decision. A scanner that is killed is logged with its exit status, 137 for a kill.
+
+A LARGE FILE DOES NOT RAISE WHAT A SCAN NEEDS. Each scanner is sized to its ceiling when it is
+dispatched, & a file it cannot finish is reported as not scanned, never as clean.
+
+  ClamAV      The ceiling must hold its signature database, & no argument shrinks that. A large
+              file adds little. ClamAV reads it through a mapping the kernel can reclaim, & what
+              it unpacks goes to a private folder in the conversion location rather than to the
+              sandbox's /tmp, which is always memory & is counted against the ceiling. A
+              conversion location on a RAM disk counts against it the same way.
+              Its limits follow the file. The size limit is four times the file, never below
+              ClamAV's own 400M default & never above the 2047M it can scan. The file count &
+              the time limit grow by the same factor, & the time limit also stretches for a
+              processor share under one whole processor. A file of 100M or less keeps ClamAV's
+              400M & 10000 file defaults. A limit ClamAV reaches is logged by name. A file over
+              2047M is refused before the signature database is loaded.
+  ScanCore    Reads a file larger than one chunk a chunk at a time, inside the memory limit it
+              is given. That limit is --User Virus Scanning ScanCore Memory Limit-- or the
+              ceiling less 64M, whichever is smaller. ScanCore holds about three chunks at once,
+              so the chunk is held to a quarter of the limit, & a larger configured chunk is
+              reduced with a warning. Until v3.9.9 the shipped 128M chunk inside a 256M limit
+              ended every scan of a file over 128M in a PHP fatal error.
 
 The scope wraps the SANDBOX rather than the tool inside it, so the ceiling covers bubblewrap &
 every process it goes on to create.

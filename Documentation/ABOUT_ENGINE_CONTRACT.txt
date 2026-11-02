@@ -54,7 +54,7 @@ declare an input & an output format was written when every pipeline converted so
 & it silently refused both scanner pipelines for two releases. That is the shape of mistake
 to watch for.
 
-THE SESSION MECHANISM IS ALSO ENGINE WORK IN WAITING.
+THE SESSION MECHANISM WAITS FOR AN AUTHENTICATION CORE.
 
 HRConvert2 derives a session identity from an install secret & a supplied token, with a
 daily parent directory for domain separation, & uses NO COOKIE ANYWHERE. A token cannot be
@@ -67,19 +67,33 @@ The application keeps what a session MEANS, which is whose files these are & wha
 done with them. The Engine would keep how an identity is derived, bound & expired. The
 split is the same one every other seam here uses & the mechanism is already written.
 
+DECIDED AT v3.9.9. Sessions move when authentication arrives, together, into a core of their
+own that does not exist yet. Not into the kernel, which was proposed & is the wrong home,
+because authentication is a large subsystem & the kernel is only worth having while it stays
+small & identical everywhere. Not ahead of authentication either, because the two will be
+designed against each other.
+
+THE CONSTRAINT THAT CORE HAS TO SOLVE. Today a session is derived BEFORE the Engine is
+verified, & every kernel log line carries the session label. A core loaded by the Engine
+cannot provide something needed before the Engine loads, which is question three below. So
+either session derivation moves later in the boot, or the label becomes something the
+kernel can do without. The kernel already reads it optionally & prints No Session when it is
+absent, so the second is cheap.
+
 -----------------------------------------------------------------------------------------
 THE ENGINE IS A DROP IN REPLACEMENT FOR ITSELF
 -----------------------------------------------------------------------------------------
 
 The seam is VISIBLE IN THE TREE rather than described in a document.
 
-  Resources/Engine/Contract/     Belongs to the APPLICATION. The Engine reads it & never
-                                 writes it.
+  Resources/Contract/            Belongs to the APPLICATION. The Engine reads it & never
+                                 writes it, & finds it through contractPath() in the kernel.
     depends.php                  What this installation needs & how to get it.
     config-template.php          A real config.php at defaults. What this application's
                                  configuration looks like.
 
-    app-engine-config.php        Which providers this application supplies, & anything it
+    app-engine-config.php        Which providers this application supplies, which pipelines
+                                 & shared modules it accepts at which versions, & anything it
                                  needs to differ from an Engine default.
 
   Resources/Engine/engineConfig.php
@@ -97,8 +111,34 @@ The seam is VISIBLE IN THE TREE rather than described in a document.
   Resources/Engine/Managers/     The Engine. Replaceable.
   Resources/Engine/engine.php    The Engine. Replaceable.
 
-Everything else there is the Engine. engine.php, the Managers, the Cores. Replacing all of
-it with a newer Engine is a copy, & keeping those three is the whole of the migration.
+Resources/Engine is the Engine & nothing else. engine.php, engineConfig.php, the Managers &
+the Cores. Replacing it with a newer Engine is a directory copy, & nothing in it is the
+application's to keep.
+
+THE CONTRACT LEFT THE ENGINE TREE AT v3.9.9. It was Resources/Engine/Contract/ from v3.9.3.
+Inside the Engine directory, an upgrade meant copying everything except three files, & an
+Engine traded to a second application carried the first one's identity & manifest with it.
+Outside it, the seam is a directory boundary rather than a list of exceptions to remember.
+THE PIPELINE CORE JOINED THE ENGINE IN THE SAME RELEASE. It is Resources/Engine/Cores/
+pipelineCore.php, & the list of pipelines it accepts left it for app-engine-config.php, as
+$EngineAcceptedPipelines & $EngineAcceptedSharedModules. It is the Engine's mechanism & the
+application's choice, so the file names no pipeline & the contract names them all.
+THE APPLICATION'S SETTINGS ARE READ THROUGH A MAP, FROM v3.9.9. $EngineSettingNames in the
+contract names, for each name a shared layer uses, the setting the application keeps the value
+in. applicationSetting in the kernel reads it, or the shared layer's own default when the
+application maps nothing. An operator's setting keeps its name, & no shared layer names one
+application's settings. The names read today are FormatDetectionType, WarnOnCapabilityMismatch
+& DefaultScanner. The startup key's variable & the policy marker are built from the identity.
+
+THE COMMAND LINE IS SPLIT AT ONE CALL, ALSO AT v3.9.9. An application reads the command line
+with the kernel's parseArgumentVector & serves -v, -h & everything beginning --app itself.
+With no Engine it refuses everything else. Otherwise it offers every other command to
+dispatchEngineCommand & handles only what comes back unhandled. The Engine owns the listener,
+the managers, --status, --setup, --config, --pipeline, -fp, -c & --run-environment-manager,
+& answers whether it handled the command & the exit status it earned. An application keeps
+-v, -h, its updater & everything beginning --app, & names an option typed alone from
+engineSubOptionOwners(). A second application gets every operator command by making that
+one call.
 
 That is deliberate & it is why the Engine ships INSIDE an application rather than beside
 it. An application carries the Engine it was tested against. A newer Engine arrives when
@@ -159,9 +199,10 @@ exactly one application, which is the situation this exists to leave behind.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About The Three Tiers--
 
-  THE KERNEL   Lives in the application entry file. Copied between applications verbatim.
-               quickDie, purgeSensitiveMemory, redeclare, readComponentVersion,
-               verifyCoreComponent, & the whole of logging.
+  THE KERNEL   Resources/Kernel/kernel.php, beside the Engine & never inside it. Required
+               by the entry point before anything else runs & pinned exactly by
+               $RequiredKernelVersion. Logging, halting, memory shredding, sanitizing,
+               the command line, dependency location & component loading.
 
   THE ENGINE   Resources/Engine/engine.php. The environment every application needs.
 
@@ -193,19 +234,26 @@ purgeSensitiveMemory & redeclare freely.
 An Engine function may not call convertFiles, buildGUI or anything else that only
 HRConvert2 has.
 
-THE KERNEL SERVICES, WHICH EVERY APPLICATION SUPPLIES & THE ENGINE MAY USE.
-  quickDie              Halts, reports & empties the log buffer to whatever channel exists.
-  logEntry              Records normal activity. Suppressed by the caller when not verbose.
-  warningEntry          Records something an operator should know. Never halts.
-  errorEntry            Records a numbered failure. Halts when it is told to.
-  purgeSensitiveMemory  Shreds the variables a function is finished with.
-  redeclare             Resets a loop variable without leaving the old value behind.
-  readComponentVersion  Reads a version out of a file without executing the file.
-  verifyCoreComponent   Judges a component & loads it, or reports why it did not.
+THE KERNEL SERVICES ARE WHATEVER Resources/Kernel/kernel.php DEFINES.
+This document listed eight. The linter listed fourteen. The code relied on twenty one. Three
+definitions of one thing drift apart & these had, so the list lives in one place now & that
+place is the file. Checks eight & nineteen of Documentation/Build/hrconvert2-check.py read
+their kernel from it rather than from a list of their own.
 
-That is not duplicated logic. It is the thing that makes an application an application. It
-carries its own version stamp so that drift between two applications is visible rather than
-discovered.
+The kernel carries its own version stamp, $KernelVersion, so that drift between two
+applications is visible rather than discovered. This document claimed that before v3.9.9 &
+it was not true. Nothing versioned the kernel until it became a file.
+
+THE KERNEL BECAME A FILE AT v3.9.9, REVERSING WHAT THIS DOCUMENT SAID.
+It used to say the kernel lives in the application entry file. The reason given was that
+verifyCoreComponent cannot live inside the file it loads, which is true & is about the
+ENGINE's file. Nothing in it requires the kernel to be interleaved with an application, &
+interleaved is what it was, twenty one functions among sixty three application ones from
+the top of convertCore.php to the bottom. A second application could only have obtained it
+by copying functions out by hand, which is the drift this project builds tooling to prevent.
+The entry point now requires the kernel as its first act. It reads the version with a pattern
+before requiring the file, so a mismatched kernel is never executed, & it finds the kernel
+beside itself rather than through $InstLoc, which comes from a configuration not yet read.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -224,6 +272,9 @@ SIX VALUES. THE CONTRACT IS DELIBERATELY SMALL.
   $EnableMemoryProtection Whether sensitive memory is shredded at every return.
 
 THAT IS THE WHOLE CONTRACT. Anything else the Engine needs, it works out for itself.
+It is the contract the Engine is held to & not yet the contract it keeps. Engine code reads
+globals beyond these six, & the gap is tracked in Documentation/ENGINE_MIGRATION_STATUS.txt
+rather than here, because a count written into a design document stops being true quietly.
 
 THE ENGINE DERIVES THESE RATHER THAN ASKING FOR THEM.
 $DirSep, $Lol, $CurrentUser, $RunningAsRoot, $RunningFromCLI & $RunningInContainer are all
@@ -329,8 +380,10 @@ path runs before any component has been verified.
 It was found by a call order check that follows the call graph rather than by reading, &
 Documentation/Build/hrconvert2-check.py is that check.
 
-THE ENGINE STILL CALLS TEN APPLICATION FUNCTIONS & THAT IS A DEBT RATHER THAN A DESIGN.
-Documentation/Build/hrconvert2-check.py reports every one of them on every run.
+THE ENGINE CALLED TEN APPLICATION FUNCTIONS & THAT WAS A DEBT RATHER THAN A DESIGN.
+CLEARED. Check eight of Documentation/Build/hrconvert2-check.py now fails the build if the
+Engine calls anything outside the kernel, so the debt cannot reopen without saying so.
+The three groups below are kept because the REASONING is what stops them coming back.
 None of them are deliberate. Each is a function that moved without a helper it quietly
 depended on, which is invisible while both files load in the same request & fatal the
 moment somebody bundles this Engine on its own.
@@ -361,8 +414,10 @@ They fall into three groups & each group has a different answer.
   rather than a call made out.
   cleanFiles reads the application's own paths & belongs to the application.
 
-The Engine is USABLE in this state, because HRConvert2 loads both files. It is not yet
-PORTABLE, & the difference is exactly this list.
+That list is empty as at v3.9.9, so the Engine no longer depends on an application defining
+anything but the kernel. Status for every migration step lives in
+Documentation/ENGINE_MIGRATION_STATUS.txt rather than here, for the reason that sentence
+above was wrong for several releases.
 
 MANAGER SUBCOMPONENTS ARE POPULATED & Resources/Engine/Managers/coreManager.php IS GONE.
 getAcceptedManagers names four files under Resources/Engine/Managers & loadEngineManager

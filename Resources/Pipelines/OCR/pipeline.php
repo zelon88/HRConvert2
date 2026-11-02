@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.6.
+// / v3.9.9.
 // / This file is the converter for the OCR pipeline. It is loaded by pipelineCore.php
 // / ONLY when a OCR operation is about to be dispatched to it, so a request that does
 // / something else never parses a line of it.
@@ -22,7 +22,7 @@
 // / It takes a SELECTION of files, decides a route per file, & returns three values rather
 // / than the six a conversion pipeline returns. The third is the list of filenames it
 // / produced, which the CORE prints once this function has returned. A pipeline never
-// / prints. See contract 6. It is dispatched by runOcrOperation() from
+// / prints. See contract 6. It is dispatched by runOperationPipeline('OCR') from
 // / the point in the core where an OCR request arrives, never through convert().
 // / This pipeline declares the LibreOffice shared module, which the Document pipeline also
 // / declares. Both in one request load it once between them.

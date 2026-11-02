@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.9.3.
+// / v3.9.9.
 // / THIS APPLICATION'S ENGINE SETTINGS. It is loaded AFTER engineConfig.php & anything it
 // / sets wins.
 // /
@@ -71,7 +71,7 @@ $EngineConfigModelProvider = 'applicationConfigModel';
 $EngineRepairProvider = 'fixManagedPermissions';
 
 // /   A real config.php at defaults. What this application's configuration looks like.
-$EngineConfigTemplate = 'Engine/Contract/config-template.php';
+$EngineConfigTemplate = 'Contract/config-template.php';
 
 // /   Handles arguments beginning --app. This application has none yet, & the first
 // /   will be conversion from the command line.
@@ -80,7 +80,47 @@ $EngineApplicationArgumentHandler = '';
 
 
 // / -----------------------------------------------------------------------------------
-// / Anything else this application needs to differ from the Engine default goes below.
-// / Nothing does today, which is why there is nothing here.
+// / The pipelines this application accepts & the exact version each must report.
+// / This is an allowlist. A folder under Resources/Pipelines that is not named here is never
+// / read, never required & never enumerated, however it got there.
+// / Every family this application converts is listed, & convertCore.php converts nothing on
+// / its own. A family removed from this list becomes unavailable rather than falling back.
+// / Comment one out only to test that.
+// / Accepting a pipeline, or moving one to a new version, is one line here. The Engine is not
+// / touched, so no Engine version moves for it. Until v3.9.9 this list was written into the
+// / Pipeline Core, which belongs to the Engine, & each change to it was a new Pipeline Core.
+// / The order is the order pipelines are enumerated & listed in.
+$EngineAcceptedPipelines = array(
+  'Stream' => 'v3.9.9',
+  'Scad' => 'v3.9.8',
+  'OCR' => 'v3.9.9',
+  'Document' => 'v3.8.8',
+  'Subtitle' => 'v3.9.6',
+  'SVG' => 'v3.9.6',
+  'Drawing' => 'v3.9.6',
+  'Image' => 'v3.9.6',
+  'Model' => 'v3.9.6',
+  'Video' => 'v3.9.6',
+  'Ebook' => 'v3.9.6',
+  'Audio' => 'v3.9.6',
+  'Archive' => 'v3.9.7',
+  // / Scanner pipelines. They declare no formats & are chosen by name.
+  'ClamAV' => 'v3.9.9',
+  // / The first pipeline of kind file. Operations that do not care what is in a file.
+  'Files' => 'v3.9.3',
+  'ScanCore' => 'v3.9.9');
+
+// / The shared modules a pipeline may load & the exact version each must report.
+// / libreOffice.php serves the Document & OCR pipelines alike, so neither of them owns it.
+$EngineAcceptedSharedModules = array(
+  'libreOffice.php' => 'v3.9.5');
+
+// / The settings in config.php that each shared name reads. Operators keep the names they
+// / have always used, & the shared layers ask for a value by a name that says nothing about
+// / this application.
+$EngineSettingNames = array(
+  'FormatDetectionType' => 'SupportedFormatDetectionType',
+  'WarnOnCapabilityMismatch' => 'WarnOnCapabilityMismatch',
+  'DefaultScanner' => 'DefaultVirusScanner');
 // / -----------------------------------------------------------------------------------
 ?>

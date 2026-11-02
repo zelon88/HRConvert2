@@ -244,6 +244,20 @@ check_errno() {
         fi
       done
   done < <(php_files) | sort -u | while IFS='|' read -r kind message; do report "$kind" "$message"; done
+  # / A halt before logging exists is a plain die with its number inside the message, & the
+  # / blanked copy has every message removed, so the ORIGINAL file is read for those. The
+  # / quote may be escaped, because a guard written into a generated file is a string inside
+  # / a string. A component prefix is documented literally & the application's own prefix as
+  # / <APPLICATION_NAME>, so the number alone is accepted for it.
+  while IFS= read -r file; do
+    grep -oE "(die|exit|print)[[:space:]]*\([[:space:]]*[\\]?['\"]ERROR!!! [A-Za-z0-9]+-[0-9]{1,5}" "$file" \
+    | grep -oE '[A-Za-z0-9]+-[0-9]{1,5}$' | sort -u | while read -r label; do
+        number="${label##*-}"
+        if grep -qx "$number" "$WORKDIR/documented"; then continue; fi
+        if grep -qE "${label}([^0-9]|$)" "$catalog"; then continue; fi
+        printf 'ERRNO|%s halts with %s, which ERROR_DESCRIPTIONS.txt does not document. Add an entry for it there.\n' "$file" "$label"
+      done
+  done < <(php_files) | sort -u | while IFS='|' read -r kind message; do report "$kind" "$message"; done
 }
 
 # / -----------------------------------------------------------------------------------
@@ -257,6 +271,18 @@ check_guard() {
   fi
   while IFS= read -r file; do
     blanked=$(blanked_of "$file")
+    # / The kernel loads before $CoreLoaded is set & defines quickDie itself, so both halves
+    # / tested below appear in it with or without a guard. It passed with its guard deleted,
+    # / which is how this was found. Its own guard is held to its exact shape, above the first
+    # / function.
+    if [ "$file" = "./Resources/Kernel/kernel.php" ]; then
+      first=$(grep -n '^function ' "$blanked" | head -1 | cut -d: -f1)
+      if [ -z "$first" ]; then first=999999; fi
+      if ! head -n "$((first - 1))" "$blanked" | grep -qE 'count[[:space:]]*\([[:space:]]*get_included_files[[:space:]]*\([[:space:]]*\)[[:space:]]*\)[[:space:]]*<[[:space:]]*2[[:space:]]*\)[[:space:]]*(die|exit)[[:space:]]*\('; then
+        report 'GUARD' "$file has no guard before its first function. Add  if (count(get_included_files()) < 2) die(...);  above the first function."
+      fi
+      continue
+    fi
     if ! grep -q 'CoreLoaded' "$blanked" || ! grep -qE '\b(die|exit)[[:space:]]*\(' "$blanked"; then
       report 'GUARD' "$file has no \$CoreLoaded guard & would run if reached directly"
     fi
@@ -321,7 +347,7 @@ check_exit() {
     awk -v name="$file" '
       { lines[NR] = $0 }
       END {
-        exempt["quickDie"] = 1; exempt["closeHRC2Connection"] = 1; exempt["mergeConfigFile"] = 1
+        exempt["quickDie"] = 1; exempt["closeClientConnection"] = 1; exempt["mergeConfigFile"] = 1
         for (i = 1; i <= NR; i++) {
           if (substr(lines[i], 1, 9) != "function ") continue
           split(lines[i], parts, "(")
@@ -343,6 +369,33 @@ check_exit() {
 }
 
 # / -----------------------------------------------------------------------------------
+# / CHECK. The kernel calls only itself, PHP & the Engine behind a guard.
+# / Question three of ABOUT_ENGINE_CONTRACT.txt, enforced rather than remembered.
+# / The python tool holds a guard to the same FUNCTION as the call it protects. This holds it
+# / to the same FILE, which is coarser, & still catches a kernel that calls into the Engine
+# / with no guard anywhere or calls anything else this tree defines at all.
+check_kernel() {
+  if [ ! -f Resources/Kernel/kernel.php ]; then
+    report 'KERNEL' 'Resources/Kernel/kernel.php is missing. Every application loads it first, so restore it from the release.'
+    return
+  fi
+  grep -oE '^function [A-Za-z_][A-Za-z0-9_]*' Resources/Kernel/kernel.php | sed 's/^function //' | sort -u > "$WORKDIR/kfns"
+  find ./Resources/Engine -name '*.php' -exec grep -hoE '^function [A-Za-z_][A-Za-z0-9_]*' {} \; | sed 's/^function //' | sort -u > "$WORKDIR/efns"
+  php_files | grep -vx './Resources/Kernel/kernel.php' | xargs grep -hoE '^function [A-Za-z_][A-Za-z0-9_]*' | sed 's/^function //' | sort -u > "$WORKDIR/allfns"
+  grep -v '^function ' "$(blanked_of ./Resources/Kernel/kernel.php)" | grep -oE '\b[a-z][A-Za-z0-9_]*[[:space:]]*\(' \
+  | sed 's/[[:space:]]*($//' | sort -u | while read -r called; do
+      if grep -qx "$called" "$WORKDIR/kfns"; then continue; fi
+      if ! grep -qx "$called" "$WORKDIR/allfns"; then continue; fi
+      if grep -qx "$called" "$WORKDIR/efns"; then
+        if grep -qE "function_exists[[:space:]]*\([[:space:]]*'$called'[[:space:]]*\)" Resources/Kernel/kernel.php; then continue; fi
+        printf 'KERNEL|kernel.php calls %s(), which the Engine defines, without a guard. Wrap it in a function_exists test so the kernel still runs when the Engine cannot load.\n' "$called"
+      else
+        printf 'KERNEL|kernel.php calls %s(), which another file in this tree defines. The kernel may call only itself, PHP & a guarded Engine. Move it into the kernel if every application needs it, or pass in the value it produces.\n' "$called"
+      fi
+    done | sort -u | while IFS='|' read -r kind message; do report "$kind" "$message"; done
+}
+
+# / -----------------------------------------------------------------------------------
 # / CHECK. The Engine never calls application code.
 # / The Engine may call the kernel, because the kernel is identical in every application.
 # / It may not call anything only this application has.
@@ -353,11 +406,16 @@ check_contract() {
   grep -oE '^function [A-Za-z_][A-Za-z0-9_]*' convertCore.php | sed 's/^function //' | sort -u > "$WORKDIR/appfns"
   find ./Resources/Engine -name '*.php' -exec grep -hoE '^function [A-Za-z_][A-Za-z0-9_]*' {} \; \
     | sed 's/^function //' | sort -u > "$WORKDIR/enginefns"
-  # / The kernel, which the Engine is permitted to call. This list is the contract & is
-  # / written down in Documentation/ABOUT_ENGINE_CONTRACT.txt.
-  printf '%s\n' quickDie logEntry warningEntry errorEntry purgeSensitiveMemory redeclare \
-    readComponentVersion verifyCoreComponent composeLogEntry emitLogEntry flushLogBuffer \
-    locateDependency sanitize getExtension | sort -u > "$WORKDIR/kernel"
+  # / The kernel is whatever Resources/Kernel/kernel.php defines, read from that file rather
+  # / than written down here. A list kept here was a second definition of the kernel & by
+  # / v3.9.9 it had drifted from the contract document & from the code. A missing kernel
+  # / file is a finding, because a check that passes when it could not look is worse than one
+  # / that says so.
+  if [ ! -f Resources/Kernel/kernel.php ]; then
+    report 'CONTRACT' 'Resources/Kernel/kernel.php is missing, so the Engine cannot be judged against the kernel. Restore the kernel file from the release.'
+    return
+  fi
+  grep -oE '^function [A-Za-z_][A-Za-z0-9_]*' Resources/Kernel/kernel.php | sed 's/^function //' | sort -u > "$WORKDIR/kernel"
   while IFS= read -r file; do
     awk -v name="$(basename "$file")" '
       { while (match($0, /[a-z][A-Za-z0-9_]*[[:space:]]*\(/)) {
@@ -472,7 +530,7 @@ check_config() {
 # / first one seven times.
 
 # / Every check, in the order they run, keyed by the name --only accepts.
-CHECK_NAMES='syntax balance order duplicate pins errno guard contract config caps purge exit stray'
+CHECK_NAMES='syntax balance order duplicate pins errno guard contract kernel config caps purge exit stray'
 
 describe() {
   case "$1" in
@@ -484,6 +542,7 @@ describe() {
     errno)     printf 'every error number raised is documented' ;;
     guard)     printf 'every component refuses to load directly' ;;
     contract)  printf 'the Engine never calls application code' ;;
+    kernel)    printf 'the kernel calls only itself, PHP & a guarded Engine' ;;
     config)    printf 'every required setting is declared where config.php loads' ;;
     caps)      printf 'no comment line is entirely capitals' ;;
     stray)     printf 'nothing ships that is not part of the application' ;;

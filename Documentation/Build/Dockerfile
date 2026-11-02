@@ -37,7 +37,7 @@
 # An alternative to the capability is  --security-opt seccomp=unconfined  on some hosts.
 #
 # DEPENDENCY REQUIREMENTS ...
-# Nothing is listed here on purpose. Resources/Engine/Contract/depends.php is the manifest & this file
+# Nothing is listed here on purpose. Resources/Contract/depends.php is the manifest & this file
 # installs from it, so a dependency added there arrives here without editing this file.
 #
 # <3 Open-Source
@@ -63,15 +63,25 @@ WORKDIR /var/www/html/HRProprietary/HRConvert2
 # / their own & the install is cached against them. It re-runs when depends.php changes,
 # / which is exactly when it should.
 # / THE ENGINE MOVED AT v3.9.3 & these paths moved with it.
-# / depends.php is Resources/Engine/Contract/depends.php. Setup Core & Dependency Core are
+# / depends.php was Resources/Engine/Contract/depends.php. Setup Core & Dependency Core are
 # / Resources/Engine/Cores. The Engine directory is copied whole rather than file by file,
 # / because the Cores now reach into engine.php & a partial copy fails at load rather than
 # / at the missing file, which is a much harder error to read.
 # / It is 680K against a 6.3M tree. UI & Documentation are 4.5M of that & arrive later, so
 # / the cache still does its job.
+# / THE KERNEL BECAME A FILE OF ITS OWN AT v3.9.9 & it is copied here for the same reason.
+# / convertCore.php requires Resources/Kernel/kernel.php before it does anything at all, so the
+# / RUN below would die at the first line without it. That failure would be swallowed by the
+# / echo after the RUN, & the image would build green with no dependencies installed.
+# / THE CONTRACT LEFT THE ENGINE AT v3.9.9 & it is copied here for the same reason again.
+# / depends.php is Resources/Contract/depends.php now, beside the application's other two
+# / contract files, so the Engine directory holds nothing but the Engine. Without this copy
+# / the RUN below finds no manifest, installs nothing & the image builds green.
 COPY convertCore.php ./convertCore.php
 COPY Resources/versionInfo.php ./Resources/versionInfo.php
 COPY Resources/config.php ./Resources/config.php
+COPY Resources/Kernel ./Resources/Kernel
+COPY Resources/Contract ./Resources/Contract
 COPY Resources/Engine ./Resources/Engine
 
 RUN php ./convertCore.php --setup --install-depends -y \

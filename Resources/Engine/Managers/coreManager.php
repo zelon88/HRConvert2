@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.9.6.
+// / v3.9.9.
 // / This file is the Core Manager. It is a manager subcomponent of the Engine.
 // / The Core Manager the listener. It starts the other three, restarts one that dies & is the only role an operator starts directly.
 // /
@@ -38,7 +38,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A m
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v3.9.6';
+$ManagerVersion = 'v3.9.9';
 // / -----------------------------------------------------------------------------------
 
 
@@ -134,7 +134,7 @@ function spawnManagerProcess($managerRole) {
     // / every local account for the whole life of the process, & a manager runs for days.
     // / /proc/PID/environ is readable only by the owner. The child clears the variable as
     // / soon as it reads it, so nothing the manager launches later inherits it.
-    $spawnCommand = 'HRCONVERT2_STARTUP_KEY='.escapeshellarg($startupKey)
+    $spawnCommand = engineStartupKeyVariable().'='.escapeshellarg($startupKey)
       .' nohup php '.escapeshellarg($InstLoc.$DirSep.engineApplicationEntryPoint())
       .' --start-manager '.escapeshellarg($cleanRole)
       .' > /dev/null 2>&1 & echo $!';

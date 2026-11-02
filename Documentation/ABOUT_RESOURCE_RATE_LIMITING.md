@@ -112,7 +112,7 @@ CRITICAL SECURITY POLICY:
 - THE STARTUP KEY IS NEVER PRINTED AND NEVER WRITTEN TO LOGS.
 - This prevents log scrapers or console captures from stealing active keys.
 
-- **User Privilege Isolation:** Standard CLI users hold a per-user secret in their home directory. They cannot derive a valid core startup key and therefore cannot start or fake listeners.
+- **User Privilege Isolation:** Standard CLI users hold a per-user secret in a folder of their own in the temporary directory. They cannot derive a valid core startup key and therefore cannot start or fake listeners. The web server user holds the install secret for the listener's commands, so it can.
 - **Hidden Flags:** `--start-core-manager` and `--start-manager` are internal. They are triggered by `-l` alongside a valid key and are rejected otherwise.
 
 ---
@@ -235,5 +235,10 @@ Every expensive operation runs inside a ceiling, not only format conversion. Any
 | OpenSCAD   | `nice -n 19` but no memory ceiling. | Wrapped, type `Scad`. |
 
 A PHP `memory_limit` is not a system ceiling — it is an internal limit and does not prevent the kernel from being affected. The ceiling wraps the scanner itself (not the shell pipeline) so the actual resource consumer is measured.
+
+A large file does not raise what a scan needs. Each scanner is sized to its ceiling when it is dispatched, and a file it cannot finish is reported as not scanned, never as clean.
+
+- **ClamAV:** the ceiling must hold its signature database, which no argument shrinks. What ClamAV unpacks goes to a private folder in the conversion location, not to the sandbox's `/tmp`, which is always memory. Its size limit is four times the file, between ClamAV's 400M default and the 2047M it can scan, and its file-count and time limits grow by the same factor. The time limit also stretches for a processor share under one processor. A file over 2047M is refused before the database loads.
+- **ScanCore:** its memory limit is the configured one or the ceiling less 64M, whichever is smaller. It holds about three chunks at once, so the chunk is held to a quarter of that limit, and a larger configured chunk is reduced with a warning.
 
 Replacing OpenSCAD's `nice -n 19` with an actual ceiling is not

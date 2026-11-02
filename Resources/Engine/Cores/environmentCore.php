@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.9.6.
+// / v3.9.9.
 // / The environment the Engine provides to every application built on it.
 // /
 // / THE ENGINE OWNS THESE. An application uses them & does not define them. That is the
@@ -271,6 +271,7 @@ function confirmDestructiveAction($promptText, $confirmationSupplied) {
 // / Moved from the application at v3.9.3.
 // / validateInstallation checks an installation is intact, & does not ask what it is for.
 // / reloadApparmorProfile & closeHRC2Connection were moved here too & went back at v3.9.5.
+// / closeHRC2Connection is closeClientConnection as of v3.9.9 & now lives in the kernel file.
 // / Both are reached before the Engine loads, so the application has to own them.
 // / -----------------------------------------------------------------------------------
 
@@ -297,32 +298,31 @@ function validateInstallation($installPath) {
   purgeSensitiveMemory($EnableMemoryProtection, $validateCommand, $validateOutput, $validateExitCode, $installPath);
   return $InstallationIsValid; }
 // / -----------------------------------------------------------------------------------
-// / Five more, moved from the application at v3.9.6.
-// / extractCliOption reads one option out of an argument list. verifyApacheModule asks
-// / whether a module is loaded & can enable it. fetchOwnResponseHeaders reads the headers
-// / this server actually sends. describePolicyStatus turns a policy state into words.
+// / Five were moved from the application at v3.9.6 & FOUR of them remain.
+// / verifyApacheModule asks whether a module is loaded & can enable it.
+// / fetchOwnResponseHeaders reads the headers this server actually sends.
+// / describePolicyStatus turns a policy state into words.
 // / toolMinimum reads a tool's minimum version from the manifest, its only owner.
 // / None of them knows what this application is for, & none calls back into it.
+// /
+// / extractCliOption WENT BACK TO THE KERNEL AT v3.9.9 & the reason is worth keeping.
+// / It reads one option out of an argument list, which is generic, so it passed questions one,
+// / two & four of ABOUT_ENGINE_CONTRACT.txt. It failed question three & nobody checked.
+// / Every recovery command reads its own sub option as its first act, so an installation with a
+// / missing or version mismatched Engine could not run --config --repair or
+// / --setup --install-complete. The tool diagnosed the fault correctly & then refused every
+// / command that would have fixed it.
+// / This is the second round trip of its kind. locateDependency went out & came back for the
+// / same reason. GENERIC IS NOT THE TEST. Needed before the Engine exists is the test, & it is
+// / the only test that matters, & since v3.9.9 it is enforced rather than remembered. Check
+// / nineteen of Documentation/Build/hrconvert2-check.py fails the build if the kernel file
+// / calls anything outside itself & PHP, or calls the Engine without asking first.
 // / reportUnrecognizedArgument was considered & stays, because it calls showHelpInfo(),
 // / which prints this application's own help.
 // / -----------------------------------------------------------------------------------
 
-// / A function to read the value of a --option=value argument.
-// / Accepts the argument list & the option name, in that order.
-// / Returns the value, or an empty string when the option was not supplied.
-// / The value is returned exactly as typed. A path is case sensitive & a section name may
-// / carry spaces, so nothing is lowercased or stripped here.
-function extractCliOption($cliArguments, $optionName) {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $OptionValue = '';
-  $argumentText = '';
-  $optionPrefix = trim((string)$optionName).'=';
-  foreach ($cliArguments as $argumentText) {
-    if (strpos((string)$argumentText, $optionPrefix) === 0) $OptionValue = substr((string)$argumentText, strlen($optionPrefix)); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $argumentText, $optionPrefix, $cliArguments, $optionName);
-  return $OptionValue; }
+// / -----------------------------------------------------------------------------------
+
 // / -----------------------------------------------------------------------------------
 
 // / A function to confirm an Apache module is loaded, & to enable it when it is not.
@@ -484,7 +484,7 @@ function toolMinimum($manifestName) {
   // / $CoreLoaded is in scope because the manifest is required inside this function, & every
   // / component checks it at file scope.
   if (!isset($DependsManifest) or !is_array($DependsManifest)) {
-    $manifestPath = $InstLoc.$DirSep.'Resources'.$DirSep.'Engine'.$DirSep.'Contract'.$DirSep.'depends.php';
+    $manifestPath = contractPath('depends.php');
     if (file_exists($manifestPath)) require_once ($manifestPath); }
   if (isset($DependsManifest) && is_array($DependsManifest)) foreach ($DependsManifest as $manifestEntry) {
     if (!isset($manifestEntry['Name']) or (string)$manifestEntry['Name'] !== (string)$manifestName) continue;
@@ -522,6 +522,32 @@ function engineApplicationSlug() {
   $ApplicationSlug = strtolower(preg_replace('/[^A-Za-z0-9]/', '', engineApplicationName()));
   if ($ApplicationSlug === '') $ApplicationSlug = 'application';
   return $ApplicationSlug; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to name the environment variable a startup key travels in.
+// / Accepts nothing. Returns the application's slug upper cased, followed by _STARTUP_KEY.
+// / For HRConvert2 it is HRCONVERT2_STARTUP_KEY, exactly the name it always had, so a
+// / listener started by the previous release still hands its children a key they can read.
+// / Until v3.9.9 the Engine wrote that name by hand, so every application used it.
+function engineStartupKeyVariable() {
+  // / Set variables.
+  $StartupKeyVariable = strtoupper(engineApplicationSlug()).'_STARTUP_KEY';
+  return $StartupKeyVariable; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to name the marker the Engine writes into every policy file it maintains.
+// / Accepts nothing. Returns the application's slug upper cased, followed by -POLICY-MARKER.
+// / For HRConvert2 it is HRCONVERT2-POLICY-MARKER, exactly what every installation already
+// / carries, so no file written before v3.9.9 goes unrecognised. It is built from the
+// / identity rather than the branding, so an operator renaming an installation moves
+// / nothing. Two applications on one host each mark their own files & neither mistakes the
+// / other's for its own, which a marker written by hand could not promise.
+function enginePolicyMarker() {
+  // / Set variables.
+  $PolicyMarker = strtoupper(engineApplicationSlug()).'-POLICY-MARKER';
+  return $PolicyMarker; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -639,7 +665,7 @@ function verifyPhpConfiguration($mayRepair) {
   $executionTime = (int)$StreamWatchTimeout + 120;
   if ($executionTime < 1200) $executionTime = 1200;
   $dropInContents = '; / Written by '.engineApplicationName().'. Do not edit by hand.'.PHP_EOL
-    .'; / HRCONVERT2-POLICY-MARKER'.PHP_EOL
+    .'; / '.enginePolicyMarker().PHP_EOL
     .'; / Re-run  sudo php '.engineApplicationEntryPoint().' -fp  to rewrite this file.'.PHP_EOL
     .'; / php.ini itself is never touched, so a PHP upgrade cannot revert these.'.PHP_EOL
     .PHP_EOL
@@ -718,7 +744,7 @@ function dataProtectionContents() {
   // / Set variables.
   global $EnableMemoryProtection;
   $ProtectionContents = '';
-  $ProtectionContents = '# HRCONVERT2-POLICY-MARKER'."\n"
+  $ProtectionContents = '# '.enginePolicyMarker()."\n"
     .'# This file is written & maintained by '.engineApplicationName().'. Do not edit it by hand.'."\n"
     .'# Run the -fp argument as root to reinstall or repair it.'."\n"
     .'#'."\n"

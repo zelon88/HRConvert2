@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.5.
+// / v3.9.9.
 // / This file is the converter for the Stream pipeline. It is loaded by pipelineCore.php
 // / ONLY when a Stream conversion is about to be dispatched to it.
 // / Error block 14000 through 14001 & 26000 through 26007 belong to this pipeline. Those
@@ -394,6 +394,7 @@ function convertStreams($pathname, $newPathname) {
   $ffmpegVersionIsValid = $inspectionFailed = $streamBudgetExhausted = FALSE;
   $allStreamURIs = $seenURLs = array();
   $haltReason = $httpString = $returnData = $ffmpegCommand = $pinnedHosts = $pinnedHostsFile = '';
+  $commandMayRun = FALSE;
   $streamRecord = array();
   // / The six value pipeline contract. A stream is the reference case for a pipeline whose
   // / dependency outlives the request, so it is the one that returns a non zero worker PID.
@@ -462,11 +463,16 @@ function convertStreams($pathname, $newPathname) {
       @file_put_contents($pinnedHostsFile, $pinnedHosts);
       // / The playlist is the input & is bound read only. The segments it names are fetched
       // / over the network the sandbox was granted, by the addresses pinned above.
-      $ffmpegCommand = sandboxCommand($ffmpegCommand, $pathname, $newPathname, TRUE, 'ffmpeg', '', array(), $pinnedHostsFile);
+      // / sandboxCommand returns whether the command may run & the command, in that order.
+      // / Until v3.9.9 the pair was taken as the command, so the shell was asked to run a
+      // / program called Array & no stream was ever converted.
+      list ($commandMayRun, $ffmpegCommand) = sandboxCommand($ffmpegCommand, $pathname, $newPathname, TRUE, 'ffmpeg', '', array(), $pinnedHostsFile);
       // / The command is backgrounded OUTSIDE the sandbox, so the identifier captured is the
       // / one the shell started, which is bwrap.
       $ffmpegCommand = $ffmpegCommand.' > /dev/null 2>&1 & echo $!';
-      $returnData = shell_exec($ffmpegCommand);
+      // / A command that may not run is not run, & the launch check below reports it.
+      if ($commandMayRun) $returnData = shell_exec($ffmpegCommand);
+      else warningEntry('The stream converter was not launched, because no sandbox could be built.');
       // / bwrap has bound the file by the time the shell returns, so it may go. A bind holds
       // / the file open inside the namespace whether or not it still exists outside it.
       if (file_exists($pinnedHostsFile)) @unlink($pinnedHostsFile);
@@ -481,7 +487,7 @@ function convertStreams($pathname, $newPathname) {
         errorEntry('The stream converter failed to launch!', 21000, FALSE); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $newPathname is no longer purged here, because it is now a return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $pinnedHosts, $pinnedHostsFile, $streamRecord, $returnData, $ffmpegCommand, $httpString, $allStreamURIs, $seenURLs, $haltReason, $streamBudgetExhausted, $inspectionFailed, $ffmpegVersionIsValid, $pathname);
+  purgeSensitiveMemory($EnableMemoryProtection, $pinnedHosts, $pinnedHostsFile, $streamRecord, $returnData, $ffmpegCommand, $commandMayRun, $httpString, $allStreamURIs, $seenURLs, $haltReason, $streamBudgetExhausted, $inspectionFailed, $ffmpegVersionIsValid, $pathname);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $Extension, $OutputFilename, $StreamPID); }
 // / -----------------------------------------------------------------------------------
 

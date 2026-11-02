@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.9.3.
+// / v3.9.9.
 // / This file configures the Engine for the application that bundles it.
 // /
 // / This file is NOT the administrator's configuration & is not edited by a user.
@@ -35,7 +35,9 @@
 
 // / -----------------------------------------------------------------------------------
 // / A component may only be loaded by an application.
-if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-35000, The Engine configuration cannot be loaded directly!'.PHP_EOL);
+// / This file is the Engine's, so its guard names the Engine. It named HRConvert2 until v3.9.9,
+// / which was left over from when this file held one application's values.
+if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The Engine configuration cannot be loaded directly!'.PHP_EOL);
 // / -----------------------------------------------------------------------------------
 
 
@@ -43,7 +45,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-35000,
 // / The version of this configuration. Matched as a MINIMUM by the Engine, the same way
 // / an application matches its own configuration. A newer file carrying every required
 // / setting is fine, because a setting this Engine does not know is simply not read.
-$EngineConfigVersion = 'v3.9.3';
+$EngineConfigVersion = 'v3.9.9';
 // / -----------------------------------------------------------------------------------
 
 
@@ -55,7 +57,7 @@ $EngineConfigVersion = 'v3.9.3';
 // /   It appears in a log line the Engine writes on its own behalf, so that an operator
 // /   reading a log can tell which application produced it on a host running several.
 // /   Valid options are any short text string.
-// /   Default is 'HRConvert2'.
+// /   Default is 'Application'. An application sets its own in Contract/app-engine-config.php.
 $EngineApplicationName = 'Application';
 
 // /  --Engine Entry Point--
@@ -283,6 +285,9 @@ $EngineConfigTemplate = '';
 // /   It is checked BEFORE any engine argument, so an application argument can never
 // /   collide with an engine one however many are added later.
 // /   The handler receives the command, its =target & a second positional argument.
+// /   The command arrives lowercased, like every command. The two values arrive exactly as
+// /   typed, because an application's values may be paths. Its return value is not read
+// /   yet, so a handled argument exits 0.
 // /   An application that names none is told plainly that it accepts no --app command.
 $EngineApplicationArgumentHandler = '';
 
@@ -348,6 +353,33 @@ $EngineActiveSurface = '';
 // /   one place an application declares how it fixes itself rather than two.
 $EngineRepairProvider = '';
 
+// /  --Engine Accepted Pipelines--
+// /   Which pipeline folders under Resources/Pipelines this application accepts, each
+// /   pinned to the exact version its pipelineConfig.php must report.
+// /   THIS IS AN ALLOWLIST & NOT A CONVENIENCE. A folder that is not named here is never
+// /   read, never required & never enumerated. A directory scan would hand code execution
+// /   to anybody able to write a folder, & this list is what keeps an unexpected one inert.
+// /   It is the application's data, so the Engine's default accepts nothing. Until v3.9.9
+// /   the list was written into the Pipeline Core, so the Engine carried one application's
+// /   pipelines & accepting a new one meant a new Pipeline Core version.
+// /   A key must be a plain folder name & a value a version such as v3.9.6. An entry that
+// /   is neither is refused with a warning & the others are still accepted.
+$EngineAcceptedPipelines = array();
+
+// /  --Engine Accepted Shared Modules--
+// /   Which files under Resources/Pipelines/Shared a pipeline may load, each pinned to the
+// /   exact version the module must report. An allowlist for the same reason as above.
+// /   A key must be a plain file name ending .php & a value a version.
+$EngineAcceptedSharedModules = array();
+
+// /  --Engine Setting Names--
+// /   Which of the application's own settings each shared name reads, so the Engine & the
+// /   Pipeline Core never name one application's settings. A shared name the application
+// /   does not map reads the default the shared layer chose for it.
+// /   FormatDetectionType, WarnOnCapabilityMismatch & DefaultScanner are read today.
+// /   Until v3.9.9 the Pipeline Core read HRConvert2's three settings by their own names.
+$EngineSettingNames = array();
+
 
 // / -----------------------------------------------------------------------------------
 // / --Engine Operating Shape--
@@ -407,7 +439,10 @@ $EngineStrictContract = FALSE;
 // /
 // / An application with no override runs on these defaults, names no providers, & does
 // / less. That is the correct degradation rather than a failure.
-$engineApplicationOverride = dirname(__FILE__).DIRECTORY_SEPARATOR.'Contract'.DIRECTORY_SEPARATOR.'app-engine-config.php';
+// / The override is found in the application's contract at Resources/Contract, beside this
+// / directory & not inside it. It was inside it until v3.9.9, so every copy of the Engine carried
+// / one application's identity.
+$engineApplicationOverride = contractPath('app-engine-config.php');
 if (file_exists($engineApplicationOverride)) require_once($engineApplicationOverride);
 // / -----------------------------------------------------------------------------------
 ?>

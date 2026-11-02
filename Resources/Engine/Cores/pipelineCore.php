@@ -12,11 +12,20 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.8.
-// / This file is the Pipeline Core component. It owns the detachable conversion
-// / pipelines, their version pins, their capability declarations & their dispatch.
-// / It is pinned EXACTLY by convertCore.php via $RequiredPipelineCoreVersion.
-// / Error block 34000 through 34019 reserved. 34000 through 34006 are used.
+// / v3.9.9.
+// / This file is the Pipeline Core, one of the Engine's cores. It verifies, describes &
+// / dispatches the detachable pipelines under Resources/Pipelines, & checks each against
+// / the exact version the application pins it to.
+// / Which pipelines are accepted is the application's decision & is read from its contract.
+// / This file names none of them, so it is the same in every application.
+// / It moved here from Resources/PipelineCore at v3.9.9. It calls no application code, &
+// / every application of this shape declares, loads, versions & dispatches a pipeline the
+// / same way. The Engine already relied on it to scan a fetched file.
+// / It is pinned EXACTLY by the application via $RequiredPipelineCoreVersion, & it is
+// / loaded by the application on its own rather than by engine.php, so a missing or
+// / mismatched engine.php does not take the pipeline list down with it.
+// / Error block 34000 through 34019 reserved. 34001 through 34008 are used here. 34000 is
+// / the direct load guard of every pipeline file, which stay outside the Engine.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file enforces.
 // /
 // / <3 Open-Source
@@ -24,57 +33,66 @@
 
 
 // / -----------------------------------------------------------------------------------
-// / A component may only be loaded by the core.
+// / A component may only be loaded by an application.
 // / quickDie is not available here, because a component loaded directly has no core to
 // / provide it. This is the one documented exception to quickDie being the only halt.
-if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000, The Pipeline Core component cannot be loaded directly!'.PHP_EOL);
+// / It printed HRConvert2-34000 until v3.9.9. It is an Engine core now & says so the way
+// / every other Engine core does.
+if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A core component cannot be loaded directly!'.PHP_EOL);
 // / -----------------------------------------------------------------------------------
 
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by convertCore.php WITHOUT executing this file.
-$PipelineCoreVersion = 'v3.9.8';
+$PipelineCoreVersion = 'v3.9.9';
 // / -----------------------------------------------------------------------------------
 
 
 // / -----------------------------------------------------------------------------------
-// / A function to report which pipeline folders this manager accepts & at what version.
+// / A function to keep the well formed entries of one of the application's allowlists.
+// / Accepts the list, the pattern a name must match & what the list is called, in order.
+// / Returns the accepted entries, keyed by name & valued by exact version.
+// / The lists were code inside this file until v3.9.9 & needed no checking. They are the
+// / application's data now, & a name becomes a path, so a name that is not plain is
+// / refused before it can reach one. A bad entry costs that entry & nothing else.
+function filterAllowlist($allowlistEntries, $namePattern, $allowlistName) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $AcceptedEntries = array();
+  $entryName = $entryVersion = '';
+  if (!is_array($allowlistEntries)) warningEntry('The application\'s '.$allowlistName.' is not a list, so nothing in it was accepted.');
+  else foreach ($allowlistEntries as $entryName => $entryVersion) {
+    if (!is_string($entryName) or !preg_match($namePattern, $entryName)) warningEntry('The application\'s '.$allowlistName.' names '.(string)$entryName.', which is not a plain name. It was refused.');
+    else if (!is_string($entryVersion) or !preg_match('/^v?[0-9]+(\.[0-9]+)*$/', trim($entryVersion))) warningEntry('The application\'s '.$allowlistName.' pins '.$entryName.' to something that is not a version. It was refused.');
+    else $AcceptedEntries[$entryName] = trim($entryVersion); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $entryName, $entryVersion, $allowlistEntries, $namePattern, $allowlistName);
+  return $AcceptedEntries; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to report which pipeline folders this application accepts & at what version.
 // / Accepts no arguments. Returns an array keyed by folder name, valued by exact version.
 // / This list is an allowlist & not a convenience.
 // / A folder present under Resources/Pipelines that is not named here is never read, never
 // / required & never enumerated. A directory scan would hand code execution to anybody able
 // / to write a folder, so the pin list is what keeps an unexpected folder inert.
-// / Accepting a community pipeline is one line here & one version bump on this file.
+// / The list is the application's & is read from $EngineAcceptedPipelines, which its
+// / contract sets. Accepting a community pipeline is one line there & nothing here.
 function getAcceptedPipelines() {
   // / Set variables.
-  // / EVERY FAMILY IS LISTED HERE & convertCore.php CONVERTS NOTHING ON ITS OWN.
-  // / A family removed from this list becomes unavailable rather than falling back.
-  // / There is no built in dispatcher left behind it. Comment one out only to test that.
-  // / Adding a community pipeline is one line here plus a version bump on this file.
-  $AcceptedPipelines = array(
-    'Stream' => 'v3.9.5',
-    'Scad' => 'v3.9.8',
-    'OCR' => 'v3.9.6',
-    'Document' => 'v3.8.8',
-    'Subtitle' => 'v3.9.6',
-    'SVG' => 'v3.9.6',
-    'Drawing' => 'v3.9.6',
-    'Image' => 'v3.9.6',
-    'Model' => 'v3.9.6',
-    'Video' => 'v3.9.6',
-    'Ebook' => 'v3.9.6',
-    'Audio' => 'v3.9.6',
-    'Archive' => 'v3.9.7',
-    // / Scanner pipelines. They declare no formats & are chosen by name.
-    'ClamAV' => 'v3.9.5',
-    // / The first pipeline of kind file. Operations that do not care what is in a file.
-    'Files' => 'v3.9.3',
-    'ScanCore' => 'v3.9.7');
+  global $EngineAcceptedPipelines;
+  $AcceptedPipelines = array();
+  $AcceptedPipelines = filterAllowlist(isset($EngineAcceptedPipelines) ? $EngineAcceptedPipelines : array(), '/^[A-Za-z0-9][A-Za-z0-9_-]*$/', 'list of accepted pipelines');
+  // / An empty list is reported by what it is missing rather than by what failed after it.
+  // / Without this the first sign is error 34001, which says no pipeline verified & sends an
+  // / operator into the pipeline folders, where nothing is wrong.
+  if (empty($AcceptedPipelines)) warningEntry('This application accepts no pipeline. They are named in $EngineAcceptedPipelines, which '.contractPath('app-engine-config.php').' sets.');
   return $AcceptedPipelines; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to report which shared modules this manager accepts & at what version.
+// / A function to report which shared modules this application accepts & at what version.
 // / Accepts no arguments. Returns an array keyed by file name, valued by exact version.
 // / A SHARED MODULE IS NOT A PIPELINE. It converts nothing & is never dispatched to.
 // / It exists for code that two or more pipelines both need & that neither can own.
@@ -84,11 +102,13 @@ function getAcceptedPipelines() {
 // / in the Document pipeline would have made OCR depend on another pipeline being
 // / installed, verified & loaded first.
 // / This is an allowlist for the same reason getAcceptedPipelines() is one. A file that is
-// / not named here is never read & never required.
+// / not named here is never read & never required. It is read from
+// / $EngineAcceptedSharedModules, which the application's contract sets.
 function getAcceptedSharedModules() {
   // / Set variables.
-  $AcceptedSharedModules = array(
-    'libreOffice.php' => 'v3.9.5');
+  global $EngineAcceptedSharedModules;
+  $AcceptedSharedModules = array();
+  $AcceptedSharedModules = filterAllowlist(isset($EngineAcceptedSharedModules) ? $EngineAcceptedSharedModules : array(), '/^[A-Za-z0-9][A-Za-z0-9_-]*\.php$/', 'list of accepted shared modules');
   return $AcceptedSharedModules; }
 // / -----------------------------------------------------------------------------------
 
@@ -376,9 +396,10 @@ function capabilityVerdict($subsystemName, $inputExtension, $outputExtension) {
 // / unreadable & the exclusion list keeps the nonsense pairs honest at a fraction of the cost.
 function pipelineClaimsConversion($pipelineRecord, $inputExtension, $outputExtension) {
   // / Set variables.
-  global $SupportedFormatDetectionType, $WarnOnCapabilityMismatch, $EnableMemoryProtection;
+  global $EnableMemoryProtection;
   $PipelineClaimsIt = FALSE;
-  $cleanInput = $cleanOutput = $excludedPair = $detectionType = '';
+  $cleanInput = $cleanOutput = $excludedPair = $detectionType = $configuredDetection = '';
+  $warnOnMismatch = FALSE;
   $readIsKnown = $writeIsKnown = $toolReadsInput = $toolWritesOutput = $declarationAllows = $detectionAllows = FALSE;
   $cleanInput = strtolower(trim((string)$inputExtension));
   $cleanOutput = strtolower(trim((string)$outputExtension));
@@ -387,7 +408,12 @@ function pipelineClaimsConversion($pipelineRecord, $inputExtension, $outputExten
   // / has not got this setting at all, or who typed something this manager does not know,
   // / gets the behaviour the application has always had rather than a refused conversion.
   $detectionType = 'hardcoded-only';
-  if (isset($SupportedFormatDetectionType) && in_array((string)$SupportedFormatDetectionType, array('hardcoded-only', 'detected-advisory', 'detected-restrictive', 'detected-additive'), TRUE)) $detectionType = (string)$SupportedFormatDetectionType;
+  // / Both settings are the application's, read by the names the Pipeline Core knows them by.
+  // / Until v3.9.9 this read HRConvert2's own setting names, which a second application would
+  // / have had to copy.
+  $configuredDetection = (string)applicationSetting('FormatDetectionType', '');
+  $warnOnMismatch = (bool)applicationSetting('WarnOnCapabilityMismatch', FALSE);
+  if (in_array($configuredDetection, array('hardcoded-only', 'detected-advisory', 'detected-restrictive', 'detected-additive'), TRUE)) $detectionType = $configuredDetection;
   // / Under hardcoded-only, config.php is authoritative & a pipeline may not narrow it.
   // / convertFiles() has already tested this pair against the administrator's format arrays
   // / before anything reached the manager, so the pair is approved by the time it arrives.
@@ -419,7 +445,7 @@ function pipelineClaimsConversion($pipelineRecord, $inputExtension, $outputExten
       // / have done. That is the whole of its behaviour & the reason it is the default.
       if ($detectionType === 'detected-advisory') {
         $PipelineClaimsIt = TRUE;
-        if (!$detectionAllows && $WarnOnCapabilityMismatch) warningEntry('Capability mismatch. The '.$pipelineRecord['Family'].' pipeline claims '.$cleanInput.' to '.$cleanOutput.' & '.$pipelineRecord['Subsystem'].' reports it cannot. A narrowing mode would refuse this conversion. Check the alias table in depends.php before enabling one.'); }
+        if (!$detectionAllows && $warnOnMismatch) warningEntry('Capability mismatch. The '.$pipelineRecord['Family'].' pipeline claims '.$cleanInput.' to '.$cleanOutput.' & '.$pipelineRecord['Subsystem'].' reports it cannot. A narrowing mode would refuse this conversion. Check the alias table in depends.php before enabling one.'); }
       // / Restrictive keeps a pair only when the declaration allows it & detection has not
       // / contradicted it. Unknown never contradicts anything.
       else if ($detectionType === 'detected-restrictive') $PipelineClaimsIt = ($declarationAllows && $detectionAllows);
@@ -429,7 +455,7 @@ function pipelineClaimsConversion($pipelineRecord, $inputExtension, $outputExten
       else $PipelineClaimsIt = ($declarationAllows && $detectionAllows); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $cleanInput, $cleanOutput, $excludedPair, $detectionType, $readIsKnown, $writeIsKnown, $toolReadsInput, $toolWritesOutput, $declarationAllows, $detectionAllows, $pipelineRecord, $inputExtension, $outputExtension);
+  purgeSensitiveMemory($EnableMemoryProtection, $cleanInput, $cleanOutput, $excludedPair, $detectionType, $configuredDetection, $warnOnMismatch, $readIsKnown, $writeIsKnown, $toolReadsInput, $toolWritesOutput, $declarationAllows, $detectionAllows, $pipelineRecord, $inputExtension, $outputExtension);
   return $PipelineClaimsIt; }
 // / -----------------------------------------------------------------------------------
 
@@ -656,7 +682,7 @@ function verifiedToolPath($manifestName) {
   // / The manifest is loaded by the Dependency Core & the Dependency Core only loads for
   // / --setup, so on a conversion request the global is empty & is required here.
   if (!isset($DependsManifest) or !is_array($DependsManifest)) {
-    $manifestPath = $InstLoc.$DirSep.'Resources'.$DirSep.'Engine'.$DirSep.'Contract'.$DirSep.'depends.php';
+    $manifestPath = contractPath('depends.php');
     if (file_exists($manifestPath)) require_once($manifestPath); }
   // / THE DEPENDENCY CORE IS LOADED HERE because nothing else loads it on a conversion.
   // / It loads for --setup & for nothing else, so a real conversion request does not have
@@ -722,7 +748,7 @@ function verifiedToolPath($manifestName) {
 // / scanner has to know how this application presents anything.
 function runVirusScan($pathsToScan, $requestedScanner) {
   // / Set variables.
-  global $Pipelines, $DefaultVirusScanner, $Verbose, $EnableMemoryProtection;
+  global $Pipelines, $Verbose, $EnableMemoryProtection;
   $ScanCompleted = FALSE;
   $ThreatWasFound = FALSE;
   $ScanFindings = array();
@@ -731,7 +757,9 @@ function runVirusScan($pathsToScan, $requestedScanner) {
   $folderName = '';
   $pipelineRecord = array();
   $pipelineIsReady = FALSE;
-  $chosenScanner = (is_string($requestedScanner) && trim($requestedScanner) !== '') ? strtolower(trim($requestedScanner)) : strtolower(trim((string)$DefaultVirusScanner));
+  // / With no scanner named, the application's default is read by the name the Pipeline Core
+  // / knows it by, rather than by HRConvert2's own setting name as it was until v3.9.9.
+  $chosenScanner = (is_string($requestedScanner) && trim($requestedScanner) !== '') ? strtolower(trim($requestedScanner)) : strtolower(trim((string)applicationSetting('DefaultScanner', '')));
   if ($chosenScanner === '') {
     errorEntry('A virus scan was requested & no scanner was named or configured!', 34007, FALSE);
     $ScanFindings[] = 'No scanner was named & no default is configured.'; }
@@ -759,9 +787,9 @@ function runVirusScan($pathsToScan, $requestedScanner) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to dispatch an OCR operation to the installed OCR pipeline.
-// / Accepts the selected files, the requested filename, the requested extension & the
-// / method, in that order. Returns an operation boolean, an errors boolean & the list of
+// / A function to dispatch an operation to the installed pipeline of the family named.
+// / Accepts the family, the selected files, the requested filename, the requested extension
+// / & the method, in that order. Returns an operation boolean, an errors boolean & the list of
 // / filenames the operation produced, in that order.
 // / THE FILENAME LIST IS RETURNED RATHER THAN PRINTED. A pipeline never prints & neither
 // / does this manager. The core prints the list once it has it. See contract 6.
@@ -773,7 +801,9 @@ function runVirusScan($pathsToScan, $requestedScanner) {
 // / OCR batch has already written output files & already consumed budget, so re-running it
 // / against a second implementation would duplicate work the user can see. The first
 // / installed OCR pipeline is the one that runs.
-function runOcrOperation($selectedFiles, $userFilename, $userExtension, $ocrMethod) {
+// / Until v3.9.9 this was runOcrOperation & found the OCR family by name, so the Pipeline
+// / Core knew one application's one operation. The family is the caller's to name now.
+function runOperationPipeline($operationFamily, $selectedFiles, $userFilename, $userExtension, $operationMethod) {
   // / Set variables.
   global $Pipelines, $Verbose, $EnableMemoryProtection;
   $OperationSuccessful = $OperationErrors = FALSE;
@@ -782,23 +812,23 @@ function runOcrOperation($selectedFiles, $userFilename, $userExtension, $ocrMeth
   $entryPointName = $chosenFolder = '';
   if (is_array($Pipelines)) {
     foreach ($Pipelines as $folderName => $pipelineRecord) {
-      if ($pipelineRecord['Family'] !== 'OCR') continue;
+      if ((string)$pipelineRecord['Family'] !== (string)$operationFamily) continue;
       if ($pipelineRecord['Kind'] !== 'operation') continue;
       $chosenFolder = $folderName;
       break; } }
   if ($chosenFolder === '') {
     $OperationErrors = TRUE;
-    errorEntry('OCR was requested but no OCR pipeline is installed!', 34006, FALSE); }
+    errorEntry('An '.$operationFamily.' operation was requested but no pipeline provides it!', 34006, FALSE); }
   else {
     list ($pipelineIsReady, $entryPointName) = loadPipelineCore($chosenFolder);
     if (!$pipelineIsReady) $OperationErrors = TRUE;
     else {
-      if ($Verbose) logEntry('Dispatching an OCR operation to the '.$chosenFolder.' pipeline.');
-      list ($OperationSuccessful, $OperationErrors, $OutputFilenames) = $entryPointName($selectedFiles, $userFilename, $userExtension, $ocrMethod); } }
+      if ($Verbose) logEntry('Dispatching an '.$operationFamily.' operation to the '.$chosenFolder.' pipeline.');
+      list ($OperationSuccessful, $OperationErrors, $OutputFilenames) = $entryPointName($selectedFiles, $userFilename, $userExtension, $operationMethod); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $selectedFiles is not purged, because the caller still holds the selection.
   // / $OutputFilenames is not purged, because it is a return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $folderName, $pipelineRecord, $selectedFiles, $pipelineIsReady, $entryPointName, $chosenFolder, $userFilename, $userExtension, $ocrMethod);
+  purgeSensitiveMemory($EnableMemoryProtection, $operationFamily, $folderName, $pipelineRecord, $selectedFiles, $pipelineIsReady, $entryPointName, $chosenFolder, $userFilename, $userExtension, $operationMethod);
   return array($OperationSuccessful, $OperationErrors, $OutputFilenames); }
 // / -----------------------------------------------------------------------------------
 

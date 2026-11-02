@@ -89,12 +89,17 @@ if (function_exists('posix_geteuid') && posix_geteuid() === 0) {
 $EnableMemoryProtection=FALSE;
 // / The source must be readable from where this was started, & saying so beats a
 // / cascade of warnings ending in an undefined function.
-if (!is_file('convertCore.php')) {
-  fwrite(STDERR, 'Run this from the installation root, beside convertCore.php. Could not read convertCore.php.'.PHP_EOL);
+// / These are kernel functions & live in Resources/Kernel/kernel.php as of v3.9.9.
+if (!is_file('Resources/Kernel/kernel.php')) {
+  fwrite(STDERR, 'Run this from the installation root, beside convertCore.php. Could not read Resources/Kernel/kernel.php.'.PHP_EOL);
   exit(2);
 }
-$src=file_get_contents('convertCore.php');
+$src=file_get_contents('Resources/Kernel/kernel.php');
+// / A function that cannot be found is a refusal, never a guess. An earlier version carried on
+// / when strpos returned FALSE, scanned from near the top of the file & evaluated whatever it
+// / collected, so moving these functions produced a parse error pointing nowhere useful.
 function grab($n,$s){ $i=strpos($s,"\nfunction $n("); $d=0; $o='';
+  if ($i===FALSE) { fwrite(STDERR, 'Could not find '.$n.' in Resources/Kernel/kernel.php.'.PHP_EOL); exit(2); }
   for($j=$i+1;$j<strlen($s);$j++){ $o.=$s[$j]; if($s[$j]=='{')$d++; if($s[$j]=='}'){$d--; if($d==0) return $o;} } return ''; }
 foreach(['getChildFunction','purgeSensitiveMemory','redeclare'] as $f){ $c=grab($f,$src); if($c) eval($c); }
 $fail=0;

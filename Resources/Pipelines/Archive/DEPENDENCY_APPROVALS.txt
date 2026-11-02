@@ -21,7 +21,7 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Audited by                                  NOT YET AUDITED
     Audit outcome                               NOT YET AUDITED
 
-  Manifest facts, read from Resources/Engine/Contract/depends.php
+  Manifest facts, read from Resources/Contract/depends.php
     Binary                                      7z
     Install type                                apt
     Package                                     p7zip-full p7zip-rar
@@ -65,7 +65,7 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Audited by                                  NOT YET AUDITED
     Audit outcome                               NOT YET AUDITED
 
-  Manifest facts, read from Resources/Engine/Contract/depends.php
+  Manifest facts, read from Resources/Contract/depends.php
     Binary                                      bwrap
     Install type                                apt
     Package                                     bubblewrap
@@ -109,7 +109,7 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Audited by                                  NOT YET AUDITED
     Audit outcome                               NOT YET AUDITED
 
-  Manifest facts, read from Resources/Engine/Contract/depends.php
+  Manifest facts, read from Resources/Contract/depends.php
     Binary                                      mkisofs
     Install type                                apt
     Package                                     genisoimage
@@ -153,7 +153,7 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Audited by                                  NOT YET AUDITED
     Audit outcome                               NOT YET AUDITED
 
-  Manifest facts, read from Resources/Engine/Contract/depends.php
+  Manifest facts, read from Resources/Contract/depends.php
     Binary                                      rar
     Install type                                manual
     Package                                     rar
@@ -197,7 +197,7 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Audited by                                  NOT YET AUDITED
     Audit outcome                               NOT YET AUDITED
 
-  Manifest facts, read from Resources/Engine/Contract/depends.php
+  Manifest facts, read from Resources/Contract/depends.php
     Binary                                      isohybrid
     Install type                                apt
     Package                                     syslinux-utils
@@ -241,7 +241,7 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Audited by                                  NOT YET AUDITED
     Audit outcome                               NOT YET AUDITED
 
-  Manifest facts, read from Resources/Engine/Contract/depends.php
+  Manifest facts, read from Resources/Contract/depends.php
     Binary                                      tar
     Install type                                apt
     Package                                     tar
@@ -285,7 +285,7 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Audited by                                  NOT YET AUDITED
     Audit outcome                               NOT YET AUDITED
 
-  Manifest facts, read from Resources/Engine/Contract/depends.php
+  Manifest facts, read from Resources/Contract/depends.php
     Binary                                      zip
     Install type                                apt
     Package                                     zip unzip

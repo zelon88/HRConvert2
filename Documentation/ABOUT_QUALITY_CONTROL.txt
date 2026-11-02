@@ -68,7 +68,7 @@ documented ones, believe the Python until proven otherwise.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
---About The Seventeen Checks--
+--About The Checks--
 
   syntax      The php binary parses every file.
   balance     Every brace, parenthesis & bracket closes.
@@ -79,6 +79,7 @@ documented ones, believe the Python until proven otherwise.
   errno       Every error number raised is documented in ERROR_DESCRIPTIONS.txt.
   guard       Every component under Resources refuses to be loaded directly.
   contract    The Engine never calls application code.
+  kernel      The kernel calls only itself, PHP & a guarded Engine. Coarser in Bash.
   caps        No comment line is entirely capitals.
   purge       Every cleanup at a return carries the comment that belongs with it.
   exit        Every function has one exit.
@@ -87,6 +88,13 @@ documented ones, believe the Python until proven otherwise.
   sentence    Every comment block ends a sentence. PYTHON ONLY.
   name        No function parameter has a generic name. PYTHON ONLY.
   return      No function destroys a value it is about to return. PYTHON ONLY.
+  args        Every call supplies the arguments its function requires. PYTHON ONLY.
+  pairs       A function that returns a pair is never assigned whole to one variable. PYTHON ONLY.
+  spacing     Separators & blank lines follow the house shape. PYTHON ONLY.
+  stray       Nothing ships that is not part of the application.
+
+This heading carried a count until v3.9.9 & the count was wrong by three. A number in a
+heading is a status sentence with nothing checking it, so there is no number.
 
 Each one is described at length above the function that performs it, & each description
 says what it CANNOT see as well as what it can. Read those before chasing a finding.
@@ -104,10 +112,21 @@ None of them are hypothetical & none of them were caught by reading the code.
               never created, which produced a warning on every virus scan & shredded
               nothing while appearing to.
   errno       Seven quickDie calls raising numbers ERROR_DESCRIPTIONS.txt did not document.
+              At v3.9.9 it was found to be blind to a number inside a plain die, because it
+              read the source with every string removed. Two had never been documented,
+              one of them written into a generated file as a string inside a string.
   contract    The Engine calling eighteen application functions, none deliberately. Each
               was a function moved without a helper it quietly depended on.
   guard       Written after noticing an earlier version of this check tested the raw text,
               so a file whose only mention of the guard was in a comment passed.
+              At v3.9.9 the kernel passed with its guard deleted. It defines quickDie &
+              declares $CoreLoaded, so both halves this check looked for were present
+              without any guard at all. The kernel is now held to its own guard's exact
+              shape, above its first function.
+  kernel      Five functions went into the Engine & came back, locateDependency,
+              reloadApparmorProfile, closeHRC2Connection, extractCliOption &
+              parseArgumentVector. Every one passed questions one, two & four of
+              ABOUT_ENGINE_CONTRACT.txt & failed three, & every one was caught by hand.
   pins        Verified by hand every release until it was not.
   config      A fatal on --check-depends after eight settings were added to config.php, to
               the required list & to the file, & not to the global declaration where the file
@@ -205,7 +224,11 @@ somebody learns to ignore.
 
 A DEPENDENCY PROBE RUNS IN A DISPOSABLE ENVIRONMENT & IN A DISPOSABLE DIRECTORY.
 dependencyEnvironmentPrefix() in Dependency Core points HOME & every XDG location at
-/tmp/<application>-probe & moves the working directory there before the command runs.
+/tmp/<application>-probe-<account> & moves the working directory there before the command
+runs. The folder is used only when it is not a link, the running account owns it & its mode is
+0700. Tools read code & configuration from HOME, so a folder another account could write would
+run that account's code as whoever probes, & --setup probes as root. A name another account
+has taken is warned about & a folder with an unpredictable name is made instead.
 Both halves are needed. A tool that reads HOME writes to the first; a tool that ignores it
 & writes to a relative path writes to the second, & for a probe that would be the
 installation root. That is where the .cache & .config directories came from.

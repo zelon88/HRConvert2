@@ -75,8 +75,10 @@ exactly as a pipeline is & is loaded once per request for whichever pipelines de
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Folder Layout--
 
-  Resources/PipelineCore/pipelineCore.php         The component. Pinned EXACTLY by the core.
-  Resources/PipelineCore/index.html               Document root protection. Not optional.
+  Resources/Engine/Cores/pipelineCore.php         The component. An Engine core since v3.9.9.
+                                                  Pinned EXACTLY by the application.
+  Resources/Contract/app-engine-config.php        Names every pipeline & shared module the
+                                                  application accepts, & the version of each.
   Resources/Pipelines/index.html                  Document root protection. Not optional.
   Resources/Pipelines/<Family>/pipelineConfig.php Declarations only. Pinned EXACTLY by Pipeline Core.
   Resources/Pipelines/<Family>/pipeline.php       The converter. Loaded only when it runs.
@@ -92,25 +94,31 @@ Every folder carries the stock index.html. Copy an existing one. Never write a n
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --The Manager Pins Its Pipelines. It Does Not Scan For Them.--
 
-getAcceptedPipelines() inside pipelineCore.php returns the folder names this manager
-accepts & the version it accepts each of them at. A folder that is not named there is never
-read, never required & never enumerated.
+getAcceptedPipelines() in the Pipeline Core returns the folder names this application
+accepts & the version it accepts each of them at. It reads them from $EngineAcceptedPipelines,
+which the application's contract sets in Resources/Contract/app-engine-config.php. A folder
+that is not named there is never read, never required & never enumerated.
+A name must be a plain folder name & a version must be a version. An entry that is neither is
+refused with a warning naming it, & the rest of the list is still accepted.
 
 THIS IS DELIBERATE & IS NOT AN OVERSIGHT.
 A directory scan would mean that anybody able to write a folder under Resources/Pipelines
 could get code executed by a require. The pin list is the allowlist, & the allowlist is
 what makes a dropped-in folder inert until a human decides otherwise.
 
-Accepting a community pipeline is therefore one line added to getAcceptedPipelines() &
-one version bump on pipelineCore.php. That is the intended amount of friction.
+Accepting a community pipeline is therefore one line added to $EngineAcceptedPipelines. That is
+the intended amount of friction, because the friction that matters is that a person writes the
+line. Until v3.9.9 the list was code inside the Pipeline Core, so each new line was also a new
+Pipeline Core version. The Pipeline Core belongs to the Engine now & names no pipeline, so the
+same Engine serves an application whatever pipelines it accepts.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Version Pinning--
 
-  convertCore.php   pins pipelineCore.php     EXACT, via $RequiredPipelineManagerVersion.
-  Pipeline Core     pins each pipelineConfig.php EXACT, via getAcceptedPipelines().
+  convertCore.php   pins pipelineCore.php     EXACT, via $RequiredPipelineCoreVersion.
+  Pipeline Core     pins each pipelineConfig.php EXACT, against $EngineAcceptedPipelines.
 
 Both are EXACT matches, the same rule applied to a GUI, a language pack or any other
 component. A pipeline built against another manager may declare capabilities this manager
@@ -238,9 +246,9 @@ work exists to get it out of. Putting it in the Document pipeline would have mad
 depend on another pipeline being installed, verified & loaded first, which is a coupling no
 pipeline author should have to reason about.
 
-A module carries $SharedModuleVersion & is pinned EXACTLY by getAcceptedSharedModules() in
-pipelineCore.php. It is read without executing & judged before it is loaded, exactly as a
-pipeline is. A module that is not on the pin list is never read.
+A module carries $SharedModuleVersion & is pinned EXACTLY by getAcceptedSharedModules(),
+which reads $EngineAcceptedSharedModules from the application's contract. It is read without
+executing & judged before it is loaded, exactly as a pipeline is. A module that is not on the pin list is never read.
 
 A MODULE IS LOADED WITH require_once & A PIPELINE CONFIGURATION IS LOADED WITH require.
 The reason is opposite in each case. A module defines functions & is declared by more than

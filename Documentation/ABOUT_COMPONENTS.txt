@@ -38,7 +38,7 @@ lost is the capability that component provides, & the loss is reported rather th
   Resources/Engine/Managers/coreManager.php                     Resource awareness & the listener.
   Resources/Engine/Cores/setupCore.php             Installation & configuration.
   Resources/Engine/Cores/dependencyCore.php   Dependency management & the supply chain audit.
-  Resources/PipelineCore/pipelineCore.php       Conversion pipeline dispatch.
+  Resources/Engine/Cores/pipelineCore.php     Pipeline verification & dispatch.
 
 Each core lives in a folder of its own, the same way ScanCore does. Configuration files do
 not. config.php, depends.php & versionInfo.php stay in Resources beside each other, because
@@ -203,12 +203,14 @@ TEN PINS. EVERY ONE OF THEM IS AN EXACT MATCH EXCEPT WHERE NOTED.
   $RequiredLanguageVersion         every language pack           EXACT.
   $RequiredConfigScript            the bootstrap script          EXACT.
 
-Pipeline Core carries pins of its own for every pipeline & every shared module it accepts.
-Those are listed in ABOUT_PIPELINE_COMPONENTS.txt rather than here, because the core knows
-nothing about them & a pipeline is verified one level down.
+Pipeline Core checks a pin for every pipeline & every shared module the application accepts.
+The pins are the application's & are set in Resources/Contract/app-engine-config.php, as
+$EngineAcceptedPipelines & $EngineAcceptedSharedModules. ABOUT_PIPELINE_COMPONENTS.txt says how
+they are judged.
 
-RAISE $RequiredPipelineCoreVersion WHENEVER A PIPELINE IS ADDED, REMOVED OR RAISED.
-Pipeline Core holds the pin list, so a pipeline moving means that list moved.
+RAISE $RequiredPipelineCoreVersion WHEN THE PIPELINE CORE ITSELF CHANGES, & FOR NOTHING ELSE.
+A pipeline added, removed or raised is a line in the contract. Until v3.9.9 the pin list was
+inside the Pipeline Core, so a pipeline moving meant a new Pipeline Core & a new pin here.
 
 RAISE $RequiredSetupCoreVersion WHENEVER $RequiredConfigVersion IS RAISED.
 Setup Core holds the model of every setting config.php declares. Forgetting does not break

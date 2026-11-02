@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.6.
+// / v3.9.9.
 // / This file declares what the OCR pipeline is & what it can do.
 // / It is read by pipelineCore.php on EVERY request & it must stay cheap.
 // / It ASSIGNS VARIABLES & DOES NOTHING ELSE. No functions, no logic, no output.
@@ -35,13 +35,13 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read WITHOUT executing this file, then matched
 // / EXACTLY against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v3.9.6';
+$PipelineVersion = 'v3.9.9';
 
 // / This is an operation pipeline & it is the first one.
 // / A conversion pipeline takes one file, returns the six value contract, & is dispatched
 // / by convert(). This one takes a SELECTION of files, chooses a different route per file
 // / depending on whether it is a PDF, a document or an image, & reports one verdict for
-// / the whole batch as two values. It is dispatched by runOcrOperation() from the point in
+// / the whole batch as two values. It is dispatched by runOperationPipeline('OCR') from the point in
 // / convertCore.php where an OCR request arrives, & convert() can never reach it.
 // / Forcing OCR into the conversion contract would have meant describing a batch as a
 // / single file & discarding most of what it reports.

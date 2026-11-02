@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / Fileinformation ...
-// / v3.9.6.
+// / v3.9.9.
 // / A detachable dependency management component. convertCore.php runs without it.
 // / This file defines functions only. setupCore.php & convertCore.php dispatch into them.
 // /
@@ -48,7 +48,80 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependencyCoreVersion = 'v3.9.6';
+$DependencyCoreVersion = 'v3.9.9';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether a folder belongs to one account & nobody else.
+// / Accepts the folder & the numeric user id of the account. Returns TRUE when the folder is
+// / not a link, is a directory, is owned by that id & has a mode of exactly 0700.
+// / A folder the account owns may have lost bits to the umask, so it is put back to 0700.
+// / Ownership is compared outright, because root may write to & chmod any folder, so being
+// / able to do either proves nothing about whose folder it is.
+function folderIsPrivateToAccount($folderPath, $accountId) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $FolderIsPrivate = FALSE;
+  clearstatcache(TRUE, $folderPath);
+  if (!is_link($folderPath) && is_dir($folderPath) && fileowner($folderPath) === (int)$accountId) {
+    @chmod($folderPath, 0700);
+    clearstatcache(TRUE, $folderPath);
+    if ((fileperms($folderPath) & 0777) === 0700) $FolderIsPrivate = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $folderPath, $accountId);
+  return $FolderIsPrivate; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to find a scratch folder for dependency commands that only this account controls.
+// / Accepts nothing. Returns a readiness boolean & the folder, in that order. A failure
+// / returns FALSE & an empty string, & the caller must then run nothing at all.
+// / A dependency command runs with HOME, its working directory & every XDG location pointed
+// / at this folder, & tools read configuration & code from all of them. python imports a
+// / usercustomize module from HOME, & pip & git read their configuration from it. So a folder
+// / another account can write is a way to run code as whoever runs the command, & --setup
+// / runs them as root.
+// / Until v3.9.9 the folder was <temp>/<Application>-probe for every account, & it was used
+// / whoever had made it. An unprivileged account that made it first ran code as root the
+// / next time root ran --setup --check-depends.
+// / The folder is named for the account & is used only when folderIsPrivateToAccount agrees.
+// / A name another account has taken is warned about, & a folder with a name nobody can
+// / predict is made instead. mkdir fails rather than follow anything placed there first.
+function resolveProbeScratchFolder() {
+  // / Set variables.
+  global $CurrentUser, $EnableMemoryProtection;
+  // / The fallback folder is kept for the life of the process, so a taken name costs one
+  // / folder & one warning rather than one of each for every dependency command.
+  // / It holds a path & nothing secret.
+  static $fallbackFolder = '';
+  $FolderIsReady = FALSE;
+  $ScratchFolder = '';
+  $applicationSlug = $accountSlug = $candidateFolder = '';
+  $accountId = -1;
+  $applicationSlug = preg_replace('/[^A-Za-z0-9]/', '', engineApplicationName());
+  $accountSlug = preg_replace('/[^A-Za-z0-9_-]/', '', (string)$CurrentUser);
+  if ($accountSlug === '') $accountSlug = 'unknown';
+  // / Some systems do not have posix extensions, so id is asked instead.
+  $accountId = function_exists('posix_geteuid') ? (int)posix_geteuid() : (int)trim((string)shell_exec('id -u'));
+  $candidateFolder = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$applicationSlug.'-probe-'.$accountSlug;
+  if (!file_exists($candidateFolder) && !is_link($candidateFolder)) @mkdir($candidateFolder, 0700);
+  if (folderIsPrivateToAccount($candidateFolder, $accountId)) {
+    $FolderIsReady = TRUE;
+    $ScratchFolder = $candidateFolder; }
+  else {
+    // / The fallback is checked again on every call, because a temporary directory cleaner
+    // / may have removed it from underneath a process that runs for days.
+    if ($fallbackFolder === '' or !folderIsPrivateToAccount($fallbackFolder, $accountId)) {
+      if ($fallbackFolder === '') warningEntry('The dependency scratch folder at '.$candidateFolder.' is a link, belongs to another account or can be reached by one, & was not used. A folder with an unpredictable name is used instead. Delete it as root.');
+      $fallbackFolder = $candidateFolder.'-'.bin2hex(random_bytes(8));
+      if (!@mkdir($fallbackFolder, 0700) or !folderIsPrivateToAccount($fallbackFolder, $accountId)) $fallbackFolder = ''; }
+    if ($fallbackFolder !== '') {
+      $FolderIsReady = TRUE;
+      $ScratchFolder = $fallbackFolder; }
+    else warningEntry('No private scratch folder could be made for a dependency command, so it was not run.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $applicationSlug, $accountSlug, $candidateFolder, $accountId);
+  return array($FolderIsReady, $ScratchFolder); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -66,9 +139,11 @@ $DependencyCoreVersion = 'v3.9.6';
 // / writes into the installation itself. A .cache directory appearing beside convertCore.php
 // / is fontconfig, or a shader cache, or a LibreOffice profile, doing exactly that.
 // /
-// / Every variable below is one a tool actually reaches for. They are pointed at a
-// / directory under the system temporary location, which is disposable by definition & is
-// / writable by whichever account is running.
+// / Every variable below is one a tool actually reaches for. They are pointed at a folder
+// / under the system temporary location that belongs to the running account & nobody else,
+// / which resolveProbeScratchFolder finds or makes. With none, the prefix ends the shell
+// / before the command can run, because a command run without it writes into the
+// / installation, & one run with a folder somebody else controls runs their code.
 // /
 // / A prefix is correct here & would NOT be correct inside the sandbox. exec() runs the
 // / command through a shell, which reads NAME=value as an assignment. bwrap execs directly
@@ -81,12 +156,11 @@ function dependencyEnvironmentPrefix() {
   // / Set variables.
   global $EnableMemoryProtection;
   $EnvironmentPrefix = '';
-  $scratchRoot = $applicationSlug = '';
-  $applicationSlug = preg_replace('/[^A-Za-z0-9]/', '', engineApplicationName());
-  $scratchRoot = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$applicationSlug.'-probe';
-  // / The directory is created rather than left to the tool, because a tool that cannot
-  // / create it falls back to somewhere else & the point of this is to stop that happening.
-  if (!is_dir($scratchRoot)) @mkdir($scratchRoot, 0700, TRUE);
+  $scratchRoot = '';
+  $scratchIsReady = FALSE;
+  // / The folder is made rather than left to the tool, because a tool that cannot create it
+  // / falls back to somewhere else & the point of this is to stop that happening.
+  list ($scratchIsReady, $scratchRoot) = resolveProbeScratchFolder();
   // / These are exports followed by a semicolon rather than NAME=value prefixes.
   // / A prefix applies only to a simple command. A source build is wrapped in a subshell
   // / so its exit code can be read, & HOME=x ( ... ) is a syntax error in sh, which is what
@@ -99,14 +173,15 @@ function dependencyEnvironmentPrefix() {
   // / somewhere disposable instead, so both kinds of tool land in the same scratch space.
   // / cd is first, so a failure to enter the directory stops the command rather than
   // / running it in the installation root anyway.
-  $EnvironmentPrefix = 'cd '.escapeshellarg($scratchRoot).' || exit 1; export HOME='.escapeshellarg($scratchRoot)
+  if (!$scratchIsReady) $EnvironmentPrefix = 'exit 1; ';
+  else $EnvironmentPrefix = 'cd '.escapeshellarg($scratchRoot).' || exit 1; export HOME='.escapeshellarg($scratchRoot)
     .'; export XDG_CACHE_HOME='.escapeshellarg($scratchRoot.DIRECTORY_SEPARATOR.'.cache')
     .'; export XDG_CONFIG_HOME='.escapeshellarg($scratchRoot.DIRECTORY_SEPARATOR.'.config')
     .'; export XDG_DATA_HOME='.escapeshellarg($scratchRoot.DIRECTORY_SEPARATOR.'.local')
     .'; export XDG_RUNTIME_DIR='.escapeshellarg($scratchRoot)
     .'; ';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $scratchRoot, $applicationSlug);
+  purgeSensitiveMemory($EnableMemoryProtection, $scratchRoot, $scratchIsReady);
   return $EnvironmentPrefix; }
 // / -----------------------------------------------------------------------------------
 
@@ -130,7 +205,7 @@ function verifyDependsManifest($requiredDependsVersion) {
   $DetectedDependsVersion = '';
   $manifestPath = $manifestContents = $cleanDetected = $cleanRequired = '';
   $versionMatches = array();
-  $manifestPath = $InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'Engine'.DIRECTORY_SEPARATOR.'Contract'.DIRECTORY_SEPARATOR.'depends.php';
+  $manifestPath = contractPath('depends.php');
   if (!file_exists($manifestPath)) warningEntry('The dependency manifest is not installed. Dependency management is unavailable.');
   else {
     $manifestContents = @file_get_contents($manifestPath);
@@ -588,7 +663,12 @@ function showDependencyFindings($dependencyFindings) {
     $LinesPrinted++; }
   // / Report both counts. Saying only that every REQUIRED dependency is fine, while the
   // / table above shows two optional ones broken, reads as a contradiction.
-  print($Lol.($requiredProblems === 0 ? 'Every required dependency is present & current.' : $requiredProblems.' REQUIRED dependenc(ies) are missing or too old. The subsystems that need them will refuse.').$Lol);
+  // / AN EMPTY TABLE IS NOT A CLEAN BILL OF HEALTH. It means nothing was checked. Until v3.9.9
+  // / a missing manifest printed an empty table & then said every required dependency was
+  // / present, while the check itself had failed. The manifest moved at v3.9.9, which made
+  // / an installation without one more likely, so the sentence that covered for it went.
+  if ($LinesPrinted === 0) print($Lol.'No dependency was checked. Either no entry matches the subsystem named, or the manifest at '.contractPath('depends.php').' could not be loaded. Run -v to see which.'.$Lol);
+  else print($Lol.($requiredProblems === 0 ? 'Every required dependency is present & current.' : $requiredProblems.' REQUIRED dependenc(ies) are missing or too old. The subsystems that need them will refuse.').$Lol);
   if ($optionalProblems > 0) print($optionalProblems.' optional dependenc(ies) are missing or unverified. Those subsystems are unavailable & everything else works.'.$Lol);
   print($Lol);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.

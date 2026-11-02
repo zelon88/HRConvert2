@@ -21,7 +21,7 @@ it removes a capability every pipeline relies on, such as the sandbox.
     Audited by                                  NOT YET AUDITED
     Audit outcome                               NOT YET AUDITED
 
-  Manifest facts, read from Resources/Engine/Contract/depends.php
+  Manifest facts, read from Resources/Contract/depends.php
     Binary                                      apache2
     Install type                                apt
     Package                                     apache2 libapache2-mod-php
@@ -65,7 +65,7 @@ it removes a capability every pipeline relies on, such as the sandbox.
     Audited by                                  NOT YET AUDITED
     Audit outcome                               NOT YET AUDITED
 
-  Manifest facts, read from Resources/Engine/Contract/depends.php
+  Manifest facts, read from Resources/Contract/depends.php
     Binary                                      apparmor_parser
     Install type                                apt
     Package                                     apparmor-utils
@@ -109,7 +109,7 @@ it removes a capability every pipeline relies on, such as the sandbox.
     Audited by                                  NOT YET AUDITED
     Audit outcome                               NOT YET AUDITED
 
-  Manifest facts, read from Resources/Engine/Contract/depends.php
+  Manifest facts, read from Resources/Contract/depends.php
     Binary                                      bwrap
     Install type                                apt
     Package                                     bubblewrap
@@ -153,7 +153,7 @@ it removes a capability every pipeline relies on, such as the sandbox.
     Audited by                                  NOT YET AUDITED
     Audit outcome                               NOT YET AUDITED
 
-  Manifest facts, read from Resources/Engine/Contract/depends.php
+  Manifest facts, read from Resources/Contract/depends.php
     Binary                                      curl
     Install type                                apt
     Package                                     curl
@@ -197,7 +197,7 @@ it removes a capability every pipeline relies on, such as the sandbox.
     Audited by                                  NOT YET AUDITED
     Audit outcome                               NOT YET AUDITED
 
-  Manifest facts, read from Resources/Engine/Contract/depends.php
+  Manifest facts, read from Resources/Contract/depends.php
     Binary                                      git
     Install type                                apt
     Package                                     git
@@ -241,7 +241,7 @@ it removes a capability every pipeline relies on, such as the sandbox.
     Audited by                                  NOT YET AUDITED
     Audit outcome                               NOT YET AUDITED
 
-  Manifest facts, read from Resources/Engine/Contract/depends.php
+  Manifest facts, read from Resources/Contract/depends.php
     Binary                                      php
     Install type                                apt
     Package                                     php-cli php-zip php-mbstring
@@ -285,7 +285,7 @@ it removes a capability every pipeline relies on, such as the sandbox.
     Audited by                                  NOT YET AUDITED
     Audit outcome                               NOT YET AUDITED
 
-  Manifest facts, read from Resources/Engine/Contract/depends.php
+  Manifest facts, read from Resources/Contract/depends.php
     Binary                                      -
     Install type                                php-extension
     Package                                     openssl

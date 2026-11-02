@@ -13,10 +13,11 @@
 // / that carries it.
 // /
 // / File Information ...
-// / v3.9.7.
+// / v3.9.9.
 // / This file is the Engine. It provides the environment an application runs in.
 // / It is pinned EXACTLY by the application via $RequiredEngineVersion.
-// / Error block 35000 through 35019 reserved. None are used yet.
+// / Error block 35000 through 35019 reserved. 35000 is the direct load guard every component
+// / shares, the kernel's included.
 // / See Documentation/ABOUT_ENGINE_CONTRACT.txt for what an application must supply.
 // /
 // / What the Engine is for.
@@ -35,10 +36,12 @@
 // / an Engine that only works for one application.
 // /
 // / Three tiers exist & the boundaries are not arbitrary.
-// /   The kernel   Lives in the application entry file & loads this one. quickDie,
-// /                purgeSensitiveMemory, redeclare, readComponentVersion &
-// /                verifyCoreComponent. It cannot live here, because it is what loads
-// /                this file & because it must be able to report that loading failed.
+// /   The kernel   Resources/Kernel/kernel.php, beside this directory & never inside it.
+// /                Logging, halting, memory shredding, sanitizing, the command line,
+// /                dependency location & component loading. It cannot live here, because
+// /                it is what loads this file & it must be able to report that loading
+// /                failed. Until v3.9.9 it lived inside the application entry file, so a
+// /                second application could only copy it out by hand.
 // /   The Engine   This file. The environment every application needs.
 // /   The app      Everything that makes one application different from another.
 // /
@@ -54,7 +57,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 
 // / -----------------------------------------------------------------------------------
 // / The version of this Engine. Read by the application WITHOUT executing this file.
-$EngineVersion = 'v3.9.7';
+$EngineVersion = 'v3.9.9';
 // / -----------------------------------------------------------------------------------
 
 
@@ -169,14 +172,15 @@ function readTransportedStartupKey() {
   // / Set variables.
   global $EnableMemoryProtection;
   $TransportedKey = '';
-  $rawKey = '';
-  $rawKey = (string)getenv('HRCONVERT2_STARTUP_KEY');
+  $rawKey = $keyVariable = '';
+  $keyVariable = engineStartupKeyVariable();
+  $rawKey = (string)getenv($keyVariable);
   if ($rawKey !== '') {
     $TransportedKey = preg_replace('/[^a-f0-9]/', '', strtolower($rawKey));
-    putenv('HRCONVERT2_STARTUP_KEY');
-    unset($_ENV['HRCONVERT2_STARTUP_KEY'], $_SERVER['HRCONVERT2_STARTUP_KEY']); }
+    putenv($keyVariable);
+    unset($_ENV[$keyVariable], $_SERVER[$keyVariable]); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $rawKey);
+  purgeSensitiveMemory($EnableMemoryProtection, $rawKey, $keyVariable);
   return $TransportedKey; }
 // / -----------------------------------------------------------------------------------
 
@@ -356,8 +360,8 @@ function getAcceptedManagers() {
   global $EnableMemoryProtection;
   $AcceptedManagers = array();
   $AcceptedManagers = array(
-    'coreManager.php' => 'v3.9.6',
-    'resourceManager.php' => 'v3.9.6',
+    'coreManager.php' => 'v3.9.9',
+    'resourceManager.php' => 'v3.9.9',
     'workerManager.php' => 'v3.9.6',
     'requestManager.php' => 'v3.9.6');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
@@ -1848,7 +1852,7 @@ function startCoreManagerListener() {
     $startupKey = deriveStartupKey('start-core-manager');
     // / The key travels in the environment for the same reason it does for a subordinate.
     // / The assignment sits inside the inner command, so it survives the su that follows.
-    $innerCommand = 'HRCONVERT2_STARTUP_KEY='.escapeshellarg($startupKey)
+    $innerCommand = engineStartupKeyVariable().'='.escapeshellarg($startupKey)
       .' nohup php '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.engineApplicationEntryPoint())
       .' --start-core-manager'
       .' > /dev/null 2>&1 &';
@@ -1917,7 +1921,11 @@ function stopCoreManagerListener() {
   list ($stateWasRead, $managerState) = readManagerState('managers');
   if (!$stateWasRead or !isset($managerState['CoreManagerPid'])) {
     print($Lol.'No listener is recorded as running.'.$Lol.$Lol);
-    $ListenerWasStopped = FALSE; }
+    // / A listener nobody started is stopped, which is what was asked for, so this is success.
+    // / It returned FALSE here until v3.9.9 & that only mattered once a command line exit status
+    // / did. systemctl stop on an inactive unit succeeds for the same reason. Processes that
+    // / survive termination, further down, are still a failure & still return FALSE.
+    $ListenerWasStopped = TRUE; }
   else {
     // / Collect every recorded process. The Core Manager is stopped last so it does not
     // / restart a subordinate that has already been ended.
@@ -2436,8 +2444,13 @@ function fetchUserSuppliedURL($suppliedURL, $sessionDirectory) {
         // / A scanner that could not RUN is not the same as a file that failed. The first is
         // / reported & the fetch is refused, because placing an unscanned file when scanning
         // / was asked for is the thing this setting exists to prevent.
-        if (isset($ScanURLDownloads) && $ScanURLDownloads === TRUE && function_exists('runVirusScan')) {
-          list ($scanCompleted, $threatWasFound, $scanFindings, $scannerUsed) = runVirusScan(array($temporaryPath), '');
+        // / A Pipeline Core that did not load is a scanner that could not run, & it is refused
+        // / the same way. Until v3.9.9 the test for runVirusScan sat in the condition below, so
+        // / a missing Pipeline Core skipped the scan & placed the file unscanned. That is the one
+        // / outcome the paragraph above exists to forbid.
+        if (isset($ScanURLDownloads) && $ScanURLDownloads === TRUE) {
+          if (!function_exists('runVirusScan')) $scanFindings = array('No scanner could run, because the Pipeline Core is not loaded.');
+          else list ($scanCompleted, $threatWasFound, $scanFindings, $scannerUsed) = runVirusScan(array($temporaryPath), '');
           if (!$scanCompleted or $threatWasFound) {
             @unlink($temporaryPath);
             foreach ($scanFindings as $scanFinding) warningEntry('A fetched file was refused. '.$scanFinding);
@@ -2803,6 +2816,7 @@ function downloadRemoteFileForInspection($StreamURL, $URLHost, $URLPort, $URLIP,
   $curlOutput = array();
   $curlCommand = '';
   $curlExitCode = 1;
+  $commandMayRun = FALSE;
   $downloadedBytes = 0;
   // / Sequential name for every file saved to StreamTemp.
   // / This number never resets during a walk.
@@ -2839,8 +2853,13 @@ function downloadRemoteFileForInspection($StreamURL, $URLHost, $URLPort, $URLIP,
     // / The generic profile is used, because curl needs nothing beyond the base sandbox.
     // / The output path is also given as the input path. There is no input file & the
     // / sandbox requires a directory to bind; the one it binds is the one being written.
-    $curlCommand = sandboxCommand($curlCommand, $LocalStreamPath, $LocalStreamPath, TRUE, 'generic');
-    exec($curlCommand, $curlOutput, $curlExitCode);
+    // / sandboxCommand returns whether the command may run & the command, in that order.
+    // / Until v3.9.9 the pair was taken as the command, so the shell was asked to run a
+    // / program called Array & every stream download failed.
+    list ($commandMayRun, $curlCommand) = sandboxCommand($curlCommand, $LocalStreamPath, $LocalStreamPath, TRUE, 'generic');
+    // / A command that may not run is not run, & the download counts as failed.
+    if ($commandMayRun) exec($curlCommand, $curlOutput, $curlExitCode);
+    else warningEntry('A stream download was not attempted, because no sandbox could be built.');
     // / A successful download requires exit code 0 AND a file that exists with content.
     // / Either one alone is not proof of success.
     if ($curlExitCode === 0 && file_exists($LocalStreamPath)) {
@@ -2856,7 +2875,7 @@ function downloadRemoteFileForInspection($StreamURL, $URLHost, $URLPort, $URLIP,
   // / The caller reads this file immediately after this function returns.
   if ($DownloadFailed) $LocalStreamPath = '';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $ByteCeiling, $networkPolicy, $engineAllowPlainHTTP, $engineMaxInspectionBytes, $engineConnectionTimeout, $engineWatchTimeout, $engineFetchTemp, $curlCommand, $curlOutput, $protoString, $curlExitCode, $downloadedBytes, $pinIsComplete);
+  purgeSensitiveMemory($EnableMemoryProtection, $ByteCeiling, $networkPolicy, $engineAllowPlainHTTP, $engineMaxInspectionBytes, $engineConnectionTimeout, $engineWatchTimeout, $engineFetchTemp, $curlCommand, $curlOutput, $protoString, $curlExitCode, $downloadedBytes, $pinIsComplete, $commandMayRun);
   return array($DownloadFailed, $LocalStreamPath, $StreamFileTruncated); }
 // / -----------------------------------------------------------------------------------
 
@@ -3726,4 +3745,662 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandb
   return array($CommandMayRun, $SandboxedCommand); }
 // / -----------------------------------------------------------------------------------
 
+// / -----------------------------------------------------------------------------------
+// / The Engine's own commands, moved here from the application at v3.9.9.
+// / Every application of this shape needs the listener, the managers, setup, configuration,
+// / the pipelines, repair & cleaning, & an operator needs all of them to run one at all. Until v3.9.9 each was a branch in
+// / HRConvert2's parseCommandLine, so a second application would have rewritten every one.
+// / An application serves -v, -h & anything beginning --app itself, offers every other
+// / command to dispatchEngineCommand, & handles only what comes back unhandled, which is its
+// / own commands or a mistake.
+// / Every branch was lifted unchanged except where it named HRConvert2 or its entry point
+// / by hand, which it now reads from the contract, & -fp, which reaches the application's
+// / repair through the provider the contract declares.
+// / It passes question three of ABOUT_ENGINE_CONTRACT.txt. Every command here needs the
+// / Engine, & the application refuses all of them before calling here when there is none.
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to report which command each of the Engine's options belongs to.
+// / Accepts nothing. Returns an array keyed by option & valued by the command that owns it.
+// / An option typed on its own is the most common command line mistake there is. The
+// / application reports it, & it names the owning command from this map, because the
+// / Engine is what knows which options its own commands take.
+function engineSubOptionOwners() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $SubOptionOwners = array();
+  $SubOptionOwners = array(
+    '--check-depends' => '--setup', '--install-depends' => '--setup', '--install-deps' => '--setup',
+    '--update-depends' => '--setup', '--uninstall-depends' => '--setup', '--output-supply-chain' => '--setup',
+    '--detect-capabilities' => '--setup',
+    '--install-complete' => '--setup', '--reinstall-existing' => '--setup', '--subsystem' => '--setup',
+    '--install-service' => '--setup',
+    '--reset-all-defaults' => '--config', '--reset-default-section' => '--config',
+    '--reset-default-variable' => '--config', '--backup' => '--config', '--repair' => '--config',
+    '--view' => '--config',
+    // / --pipeline reaches into the components themselves, the way --setup reaches into
+    // / dependencies & --config reaches into settings. Same shape, same place.
+    '--list' => '--pipeline', '--describe' => '--pipeline', '--verify' => '--pipeline',
+    '--check-depends' => '--pipeline');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection);
+  return $SubOptionOwners; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to refuse a command to a user who may not run it, & say how to run it.
+// / Accepts the command, the user it was refused to & the warning to log, in that order.
+// / Returns the exit status a refusal earns, which is 1.
+// / Three places refused this way with the same three lines, two in the Engine & -u in the
+// / application, so the wording lives here once.
+function refuseCommandForUser($cliCommand, $cliWhoami, $refusalWarning) {
+  // / Set variables.
+  global $Lol, $EnableMemoryProtection;
+  $RefusalStatus = 1;
+  warningEntry((string)$refusalWarning);
+  print($Lol.'The '.$cliCommand.' command is only available to root.'.$Lol);
+  print('You are running as '.$cliWhoami.'.'.$Lol);
+  print($Lol.'  sudo php '.engineApplicationEntryPoint().' '.$cliCommand.$Lol.$Lol);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $cliCommand, $cliWhoami, $refusalWarning);
+  return $RefusalStatus; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to start one of the manager processes the listener runs.
+// / Accepts the command, its target & a second target, in that order.
+// / Returns the exit status, which is 0 unless the process halted. A manager that starts
+// / does not return until it stops.
+function runEngineManagerEntry($cliCommand, $cliTarget, $cliSecondTarget) {
+  // / Set variables.
+  global $ResourceAwarenessActive, $EnableMemoryProtection;
+  $CommandStatus = 0;
+  $cliStartupKey = '';
+  // / Handle the internal Core Manager entry point.
+  // / This is never typed by an administrator. It is invoked by the -l argument with a
+  // / key derived from the install secret & is refused without one.
+  if ($cliCommand === '--start-core-manager') {
+    if (!$ResourceAwarenessActive) errorEntry('A Core Manager start was requested but the component is unavailable!', 31009, TRUE);
+    else {
+      // / The key arrives in the environment. A key on the command line is still read,
+      // / so a listener launched by the previous release can still start its children.
+      $cliStartupKey = readTransportedStartupKey();
+      if ($cliStartupKey === '') $cliStartupKey = (string)$cliTarget;
+      dispatchManagerRole('core-manager', $cliStartupKey); } }
+  // / Handle the foreground listener entry point.
+  // / A service manager runs this. It does not fork & does not return, so systemd can
+  // / watch the real process, restart it when it dies & report its true state.
+  // / It derives its own key rather than being handed one, because a unit file cannot
+  // / compute a time bucketed HMAC. Authorization is unchanged. A standard user holds
+  // / a per user secret & the key they derive will not validate.
+  else if ($cliCommand === '--run-core-manager') {
+    if (!$ResourceAwarenessActive) errorEntry('The foreground listener was requested but the Core Manager component is unavailable!', 31016, TRUE);
+    else runCoreManagerForeground(); }
+  // / Handle the internal subordinate manager entry point.
+  else if ($cliCommand === '--start-manager') {
+    if (!$ResourceAwarenessActive) errorEntry('A subordinate manager start was requested but the component is unavailable!', 31012, TRUE);
+    else {
+      // / The key arrives in the environment. A key on the command line is still
+      // / accepted, because a listener spawned by the previous release is still running
+      // / when this one is installed & its children must be able to start.
+      $cliStartupKey = readTransportedStartupKey();
+      if ($cliStartupKey === '') $cliStartupKey = (string)$cliSecondTarget;
+      dispatchManagerRole($cliTarget, $cliStartupKey); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $cliStartupKey, $cliCommand, $cliTarget, $cliSecondTarget);
+  return $CommandStatus; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to report what is running, for the --status command.
+  // / Handle the --status argument. Available to any user, reports what is running.
+  // / The identity is reported because a standard user cannot read the socket directory
+  // / & would otherwise be told the listener is stopped whether it is or not.
+// / Accepts the user it is reported to & whether that user may run the listener.
+// / Returns the exit status. A report is produced or the request was refused before it got here.
+function showEngineStatus($cliWhoami, $cliListenerAuthorized) {
+  // / Set variables.
+  global $Lol, $RunningAsRoot, $ResourceAwarenessActive, $EnableMemoryProtection;
+  $CommandStatus = 0;
+  $cliListenerRunning = FALSE;
+  $cliStatus = array();
+  print($Lol.'Running as          '.$cliWhoami.($RunningAsRoot ? ' (root)' : '').$Lol);
+  print('Listener commands   '.($cliListenerAuthorized ? 'AVAILABLE' : 'NOT AVAILABLE to this user').$Lol);
+  if (!$ResourceAwarenessActive) print('Resource awareness  UNAVAILABLE, the Core Manager component is missing or does not match this core.'.$Lol);
+  else {
+    list ($cliListenerRunning, $cliStatus) = reportListenerStatus();
+    print('Listener            '.($cliListenerRunning ? 'RUNNING as process '.$cliStatus['CoreManagerPid'] : 'STOPPED').$Lol);
+    print('Subordinates        '.count($cliStatus['Subordinates']).$Lol);
+    print('Tracked workers     '.$cliStatus['TrackedWorkers'].$Lol);
+    if (isset($cliStatus['SessionLocations'])) print('Mapped sessions     '.$cliStatus['SessionLocations'].$Lol);
+    if (isset($cliStatus['Budget']['RemainingBudget'])) print('Remaining budget    '.$cliStatus['Budget']['RemainingBudget'].' of '.$cliStatus['Budget']['TotalBudget'].$Lol);
+    if (!$cliListenerRunning && !$cliListenerAuthorized) print($Lol.'STOPPED may be wrong. This user cannot read the socket directory.'.$Lol); }
+  print($Lol);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $cliListenerRunning, $cliStatus, $cliWhoami, $cliListenerAuthorized);
+  return $CommandStatus; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to report on the installed pipelines, for the --pipeline command.
+  // / --pipeline reaches into the components the way --setup reaches into dependencies.
+  // / It reports what is INSTALLED & verified rather than what is pinned, because a
+  // / pinned pipeline that does not load is exactly the failure worth surfacing. Two
+  // / scanner pipelines were pinned, installed, valid & never enumerated for an entire
+  // / release, & nothing reported it.
+// / Accepts the action & the pipeline it names, in that order. Returns the exit status.
+function runEnginePipelineCommand($cliTarget, $cliSecondTarget) {
+  // / Set variables.
+  // / $InstLoc & $CoreLoaded are declared because --check-depends requires depends.php inside
+  // / this function, & that file reads both at file scope. Without them every entry it builds
+  // / warns of an undefined variable. The move into this function lost them once already.
+  global $Lol, $Pipelines, $DependsManifest, $CoreLoaded, $InstLoc, $EnableMemoryProtection;
+  $CommandStatus = 0;
+  $pipelineAction = $pipelineWanted = $pipelineName = $pinnedVersion = $manifestPath = '';
+  $declaredDependency = $missingDependency = '';
+  $pipelineRecord = $pinnedPipelines = $manifestNames = $missingDependencies = $manifestEntry = array();
+  $pipelineFailures = $declaringCount = 0;
+  $pipelineAction = ($cliTarget !== '') ? $cliTarget : '--list';
+  if (!is_array($Pipelines) or empty($Pipelines)) $CommandStatus = 1;
+  if (!is_array($Pipelines) or empty($Pipelines)) print($Lol.'No pipeline is loaded. The Pipeline Core reports why.'.$Lol.$Lol);
+  else if ($pipelineAction === '--list' or $pipelineAction === '') {
+    print($Lol.'Installed pipelines'.$Lol.$Lol);
+    printf('  %-14s %-11s %-18s %s'.$Lol, 'PIPELINE', 'KIND', 'USAGE', 'VERSION');
+    foreach ($Pipelines as $pipelineName => $pipelineRecord) printf('  %-14s %-11s %-18s %s'.$Lol, $pipelineName, $pipelineRecord['Kind'], implode(', ', $pipelineRecord['Usage']), $pipelineRecord['Version']);
+    print($Lol); }
+  else if ($pipelineAction === '--describe') {
+    $pipelineWanted = ($cliSecondTarget !== '') ? $cliSecondTarget : '';
+    // / A pipeline is named without regard to case. Every target has been lowercased
+    // / since early v3.9.9 & a pipeline is keyed by its declared name, so an exact
+    // / lookup refused Image, IMAGE & image alike. The declared name is printed.
+    foreach (array_keys($Pipelines) as $pipelineName) {
+      if (strcasecmp((string)$pipelineName, $pipelineWanted) === 0) $pipelineWanted = (string)$pipelineName; }
+    if ($pipelineWanted === '') print($Lol.'Name a pipeline to describe. --pipeline --describe Image'.$Lol.$Lol);
+    else if (!isset($Pipelines[$pipelineWanted])) {
+      $CommandStatus = 1;
+      print($Lol.'No pipeline named '.$pipelineWanted.' is loaded.'.$Lol.$Lol); }
+    else {
+      $pipelineRecord = $Pipelines[$pipelineWanted];
+      print($Lol.$pipelineWanted.$Lol.$Lol);
+      printf('  %-16s %s'.$Lol, 'Kind', $pipelineRecord['Kind']);
+      printf('  %-16s %s'.$Lol, 'Usage', implode(', ', $pipelineRecord['Usage']));
+      printf('  %-16s %s'.$Lol, 'Version', $pipelineRecord['Version']);
+      printf('  %-16s %s'.$Lol, 'Entry point', $pipelineRecord['EntryPoint']);
+      printf('  %-16s %s'.$Lol, 'Subsystem', isset($pipelineRecord['Subsystem']) ? $pipelineRecord['Subsystem'] : 'none');
+      // / The record keeps the declared formats as Input & Output. This read
+      // / Capabilities, which the record does not carry, so every pipeline was described
+      // / as reading every file & writing nothing until v3.9.9.
+      printf('  %-16s %s'.$Lol, 'Reads', empty($pipelineRecord['Input']) ? 'every file' : implode(' ', $pipelineRecord['Input']));
+      printf('  %-16s %s'.$Lol, 'Writes', empty($pipelineRecord['Output']) ? 'nothing' : implode(' ', $pipelineRecord['Output']));
+      print($Lol); } }
+  else if ($pipelineAction === '--verify') {
+    // / PINNED AGAINST LOADED. The one comparison nothing else makes.
+    $pinnedPipelines = getAcceptedPipelines();
+    $pipelineFailures = 0;
+    print($Lol.'Pinned against loaded'.$Lol.$Lol);
+    foreach ($pinnedPipelines as $pipelineName => $pinnedVersion) {
+      if (isset($Pipelines[$pipelineName])) printf('  %-14s %s'.$Lol, $pipelineName, 'OK, '.$Pipelines[$pipelineName]['Version']);
+      else { $pipelineFailures++; printf('  %-14s %s'.$Lol, $pipelineName, 'PINNED & NOT LOADED, expected '.$pinnedVersion); } }
+    if ($pipelineFailures > 0) $CommandStatus = 1;
+    if ($pipelineFailures > 0) print($Lol.$pipelineFailures.' pinned pipeline(s) did not load. See the warnings above.'.$Lol.$Lol);
+    else print($Lol.'All '.count($pinnedPipelines).' pinned pipeline(s) loaded.'.$Lol.$Lol); }
+  else if ($pipelineAction === '--check-depends') {
+    // / What the pipelines declare, against what the manifest holds.
+    // / A pipeline names the binaries it shells out to. The manifest decides what
+    // / gets installed. Nothing compared the two, so a pipeline could depend on a
+    // / tool no installation would ever be told to install.
+    // / It REPORTS rather than writes. Adding an entry to the manifest is an edit to
+    // / a file the application owns, & doing it silently during a boot that happens
+    // / on every request is not a repair, it is a surprise.
+    $manifestNames = array();
+    // / The manifest is a global the Dependency Core has already loaded. There is no
+    // / accessor for it & inventing one here would be a second way to read the same
+    // / array, which is how two readers drift.
+    // / The manifest is loaded by the Dependency Core & the Dependency Core only loads
+    // / for --setup, so at this point the global is empty. It is required here when
+    // / it is not already present.
+    // / Checked rather than assumed: reporting every dependency as missing, including
+    // / two that were plainly in the manifest, is what surfaced this.
+    if (!isset($DependsManifest) or !is_array($DependsManifest)) {
+      $manifestPath = contractPath('depends.php');
+      if (file_exists($manifestPath)) require_once($manifestPath); }
+    if (isset($DependsManifest) && is_array($DependsManifest)) foreach ($DependsManifest as $manifestEntry) $manifestNames[] = (string)$manifestEntry['Name'];
+    else {
+      $CommandStatus = 1;
+      warningEntry('The dependency manifest could not be read, so nothing could be compared against it.'); }
+    $missingDependencies = array();
+    foreach ($Pipelines as $pipelineName => $pipelineRecord) {
+      if (empty($pipelineRecord['Dependencies'])) continue;
+      foreach ($pipelineRecord['Dependencies'] as $declaredDependency) {
+        if (in_array($declaredDependency, $manifestNames, TRUE)) continue;
+        $missingDependencies[] = $pipelineName.' needs '.$declaredDependency; } }
+    print($Lol.'Pipeline dependencies against the manifest'.$Lol.$Lol);
+    $declaringCount = 0;
+    foreach ($Pipelines as $pipelineName => $pipelineRecord) {
+      if (empty($pipelineRecord['Dependencies'])) continue;
+      $declaringCount++;
+      printf('  %-14s %s'.$Lol, $pipelineName, implode(', ', $pipelineRecord['Dependencies'])); }
+    if ($declaringCount === 0) print('  No pipeline declares a dependency yet.'.$Lol);
+    if (!empty($missingDependencies)) $CommandStatus = 1;
+    if (empty($missingDependencies)) print($Lol.'Every declared dependency is in the manifest.'.$Lol.$Lol);
+    else {
+      print($Lol.'Not in the manifest. These would never be installed.'.$Lol);
+      foreach ($missingDependencies as $missingDependency) print('  '.$missingDependency.$Lol);
+      print($Lol.'Add them to Resources/Contract/depends.php.'.$Lol.$Lol); } }
+  else {
+    $CommandStatus = 2;
+    print($Lol.'Unrecognized. --pipeline accepts --list, --describe, --verify & --check-depends.'.$Lol.$Lol); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $pipelineAction, $pipelineWanted, $pipelineName, $pinnedVersion, $manifestPath, $declaredDependency, $missingDependency, $pipelineRecord, $pinnedPipelines, $manifestNames, $missingDependencies, $manifestEntry, $pipelineFailures, $declaringCount, $cliTarget, $cliSecondTarget);
+  return $CommandStatus; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to run the configuration utility, for the --config command.
+  // / The configuration utility. Setup Core owns the model, so it is the only
+  // / component this path requires.
+// / Accepts the argument list & whether the operator confirmed in advance, in that order.
+// / Returns the exit status.
+function runEngineConfigCommand($cliArguments, $cliConfirmed) {
+  // / Set variables.
+  global $Lol, $DirSep, $RequiredSetupCoreVersion, $EnableMemoryProtection;
+  $CommandStatus = 0;
+  $cliSetupIsAvailable = $cliCommandSucceeded = FALSE;
+  $cliSetupVersion = '';
+  list ($cliSetupIsAvailable, $cliSetupVersion) = verifyCoreComponent('Setup Core', 'Engine'.$DirSep.'Cores'.$DirSep.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
+  if (!$cliSetupIsAvailable) {
+    print($Lol.'The Setup Core component is unavailable.'.$Lol);
+    $CommandStatus = 1;
+    if ($cliSetupVersion === '') print('Resources/Engine/Cores/setupCore.php is missing, unreadable, or reports no version.'.$Lol.$Lol);
+    else print('It reports v'.ltrim($cliSetupVersion, 'vV').' & this core requires v'.ltrim((string)$RequiredSetupCoreVersion, 'vV').'.'.$Lol.$Lol); }
+  else {
+    logEntry('Command line invocation. Running the configuration utility.');
+    // / Every mode is resolved from the argument list, so the order they were typed
+    // / in does not matter.
+    if (in_array('--reset-all-defaults', $cliArguments, TRUE)) $cliCommandSucceeded = runConfigUtility('', 'reset-all', '', $cliConfirmed);
+    else if (extractCliOption($cliArguments, '--reset-default-section') !== '') $cliCommandSucceeded = runConfigUtility('', 'reset-section', extractCliOption($cliArguments, '--reset-default-section'), $cliConfirmed);
+    else if (extractCliOption($cliArguments, '--reset-default-variable') !== '') $cliCommandSucceeded = runConfigUtility('', 'reset-variable', extractCliOption($cliArguments, '--reset-default-variable'), $cliConfirmed);
+    else if (extractCliOption($cliArguments, '--backup') !== '') $cliCommandSucceeded = runConfigUtility('', 'backup', extractCliOption($cliArguments, '--backup'), $cliConfirmed);
+    else if (in_array('--repair', $cliArguments, TRUE)) $cliCommandSucceeded = runConfigUtility('', 'repair', '', $cliConfirmed);
+    else if (in_array('--view', $cliArguments, TRUE)) $cliCommandSucceeded = runConfigUtility('', 'view', '', $cliConfirmed);
+    else $cliCommandSucceeded = runConfigUtility('', 'interactive', '', $cliConfirmed);
+    if (!$cliCommandSucceeded) $CommandStatus = 1; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $cliSetupIsAvailable, $cliCommandSucceeded, $cliSetupVersion, $cliArguments, $cliConfirmed);
+  return $CommandStatus; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to manage dependencies & installation, for the --setup command.
+  // / Everything --setup owns. Dependency Core is required. Setup Core is loaded only
+  // / by the two options that also configure & repair.
+// / Accepts the argument list, the target & whether the operator confirmed in advance, in
+// / that order. Returns the exit status.
+// / The application's pins for Setup Core & Dependency Core are read as globals, as they
+// / were here before the move. Who pins an Engine core is recorded as an open question.
+function runEngineSetupCommand($cliArguments, $cliTarget, $cliConfirmed) {
+  // / Set variables.
+  global $Lol, $DirSep, $RunningAsRoot, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $EnableMemoryProtection;
+  $CommandStatus = 0;
+  $cliDependencyIsAvailable = $cliManifestIsAvailable = $cliDependenciesReady = $cliCommandSucceeded = FALSE;
+  $cliCacheWasBuilt = $cliSetupSucceeded = $cliSetupIsAvailable = FALSE;
+  $cliSubsystemIsKnown = TRUE;
+  $cliDependencyVersion = $cliSubsystem = $cliManifestVersion = $cliSubsystemName = $cliCommandDetail = '';
+  $cliDependencyToken = $cliSetupVersion = '';
+  $cliManifestEntries = $cliManifestEntry = $cliSubsystemNames = $cliDependencyFindings = array();
+  $cliOptionalProblems = $cliDetectedCount = $cliSetupCount = 0;
+  list ($cliDependencyIsAvailable, $cliDependencyVersion) = verifyCoreComponent('Dependency Core', 'Engine'.$DirSep.'Cores'.$DirSep.'dependencyCore.php', 'DependencyCoreVersion', $RequiredDependencyCoreVersion);
+  $cliSubsystem = extractCliOption($cliArguments, '--subsystem');
+  // / A subsystem is checked against the manifest before anything acts on it.
+  // / Every --setup option that takes one matches it loosely & acts on whatever matched.
+  // / A name that matched nothing used to check, install, update or remove nothing &
+  // / exit 0, so a mistyped subsystem looked exactly like a clean one.
+  // / It is only judged when the manifest loads. A manifest that does not is reported by
+  // / the command itself, which already says why.
+  if ($cliDependencyIsAvailable && $cliSubsystem !== '' && file_exists(contractPath('depends.php')) && function_exists('verifyDependsManifest')) {
+    list ($cliManifestIsAvailable, $cliManifestEntries, $cliManifestVersion) = verifyDependsManifest($RequiredDependsVersion);
+    if ($cliManifestIsAvailable && is_array($cliManifestEntries)) {
+      $cliSubsystemIsKnown = FALSE;
+      foreach ($cliManifestEntries as $cliManifestEntry) {
+        if (!isset($cliManifestEntry['Subsystem'])) continue;
+        $cliSubsystemNames[] = (string)$cliManifestEntry['Subsystem'];
+        if (stripos((string)$cliManifestEntry['Subsystem'], $cliSubsystem) !== FALSE) $cliSubsystemIsKnown = TRUE; } } }
+  if (!$cliDependencyIsAvailable) {
+    print($Lol.'The Dependency Core component is unavailable.'.$Lol);
+    $CommandStatus = 1;
+    if ($cliDependencyVersion === '') print('Resources/Engine/Cores/dependencyCore.php is missing, unreadable, or reports no version.'.$Lol.$Lol);
+    else print('It reports v'.ltrim($cliDependencyVersion, 'vV').' & this core requires v'.ltrim((string)$RequiredDependencyCoreVersion, 'vV').'.'.$Lol.$Lol); }
+  // / A subsystem nothing belongs to is an argument that was not understood.
+  else if (!$cliSubsystemIsKnown) {
+    warningEntry('A --setup command named a subsystem the dependency manifest does not declare.');
+    $CommandStatus = 2;
+    print($Lol.'No dependency belongs to a subsystem named '.$cliSubsystem.'. Nothing was done.'.$Lol);
+    // / One per line, because a subsystem name can itself contain a comma.
+    print('Subsystems the manifest declares.'.$Lol);
+    foreach (array_values(array_unique($cliSubsystemNames)) as $cliSubsystemName) print('  '.$cliSubsystemName.$Lol);
+    print($Lol); }
+  // / Reading the machine needs no authorization at all.
+  else if (in_array('--check-depends', $cliArguments, TRUE)) {
+    logEntry('Command line invocation. Checking dependencies.');
+    // / Two of these three are not read & are still named, because list() assigns by
+    // / position & dropping one would silently shift the others.
+    // / checkDepends returns the verdict as well as the findings, & this block uses
+    // / only the findings. Do not narrow the call to suit the caller.
+    list ($cliDependenciesReady, $cliDependencyFindings, $cliOptionalProblems) = checkDepends($cliSubsystem);
+    // / A check fails when what it checks is not ready, the way a configuration test does.
+    // / An optional dependency that is missing costs a feature & does not fail the check.
+    if (!$cliDependenciesReady) $CommandStatus = 1;
+    showDependencyFindings($cliDependencyFindings);
+    // / The verdict is NOT printed here. showDependencyFindings() prints it, & this
+    // / block used to print its own immediately underneath, so --check-depends ended
+    // / with the same sentence twice in slightly different words.
+    // / The component that owns the table owns the summary of the table.
+    print($Lol); }
+  else if (in_array('--output-supply-chain', $cliArguments, TRUE) or extractCliOption($cliArguments, '--output-supply-chain') !== '') {
+    logEntry('Command line invocation. Writing a supply chain report.');
+    list ($cliCommandSucceeded, $cliCommandDetail) = outputSupplyChain(extractCliOption($cliArguments, '--output-supply-chain'));
+    if (!$cliCommandSucceeded) $CommandStatus = 1; }
+  // / Capability detection asks every installed tool what it can read & write, &
+  // / writes the answer to a cache. It reads the machine & changes nothing else, so
+  // / it needs no authorization token. It does spawn a process for every dependency
+  // / that can answer, which is exactly why it happens here & never in a request.
+  else if (in_array('--detect-capabilities', $cliArguments, TRUE)) {
+    logEntry('Command line invocation. Detecting dependency capabilities.');
+    if (!function_exists('buildCapabilityCache')) $CommandStatus = 1;
+    if (!function_exists('buildCapabilityCache')) errorEntry('Capability detection was requested but the Dependency Core component is unavailable!', 33002, FALSE);
+    else {
+      list ($cliCacheWasBuilt, $cliDetectedCount) = buildCapabilityCache();
+      if (!$cliCacheWasBuilt) $CommandStatus = 1;
+      if (!$cliCacheWasBuilt) print($Lol.'The capability cache could not be written. The log says why.'.$Lol.$Lol);
+      else {
+        print($Lol.'Capability detection complete.'.$Lol);
+        print('  '.str_pad('Dependencies asked', 28).$cliDetectedCount.' answered'.$Lol);
+        print($Lol.'A dependency that cannot answer is recorded as unknown rather than as empty.'.$Lol);
+        print('Unknown means its pipeline declaration stands untouched.'.$Lol.$Lol); } } }
+  // / Everything below rewrites the machine & carries a token derived from the
+  // / install secret. The token proves the request came through this core.
+  else if (in_array('--install-depends', $cliArguments, TRUE) or in_array('--install-deps', $cliArguments, TRUE)) {
+    logEntry('Command line invocation. Installing dependencies.');
+    $cliDependencyToken = deriveStartupKey('dependency-write');
+    list ($cliSetupSucceeded, $cliSetupCount) = installDepends($cliDependencyToken, $cliSubsystem, $cliConfirmed);
+    if (!$cliSetupSucceeded) $CommandStatus = 1; }
+  else if (in_array('--update-depends', $cliArguments, TRUE)) {
+    logEntry('Command line invocation. Upgrading dependencies.');
+    $cliDependencyToken = deriveStartupKey('dependency-write');
+    list ($cliSetupSucceeded, $cliSetupCount) = updateDepends($cliDependencyToken, $cliSubsystem, $cliConfirmed);
+    if (!$cliSetupSucceeded) $CommandStatus = 1; }
+  else if (in_array('--uninstall-depends', $cliArguments, TRUE)) {
+    warningEntry('Command line invocation. Removing dependencies.');
+    $cliDependencyToken = deriveStartupKey('dependency-write');
+    list ($cliSetupSucceeded, $cliSetupCount) = uninstallDepends($cliDependencyToken, $cliSubsystem, $cliConfirmed);
+    if (!$cliSetupSucceeded) $CommandStatus = 1; }
+  // / The listener service unit, generated from the live configuration.
+  // / Setup Core owns it. Dependency Core is already loaded by the time we get here.
+  else if (in_array('--install-service', $cliArguments, TRUE)) {
+    list ($cliSetupIsAvailable, $cliSetupVersion) = verifyCoreComponent('Setup Core', 'Engine'.$DirSep.'Cores'.$DirSep.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
+    if (!$cliSetupIsAvailable) {
+      $CommandStatus = 1;
+      print($Lol.'This operation needs the Setup Core component, which is unavailable.'.$Lol.$Lol); }
+    else if (!$RunningAsRoot) {
+      warningEntry('A service unit installation was refused for an unauthorized user.');
+      $CommandStatus = 1;
+      print($Lol.'Installing a service unit is only available to root.'.$Lol);
+      print($Lol.'  sudo php '.engineApplicationEntryPoint().' --setup --install-service'.$Lol.$Lol); }
+    else {
+      logEntry('Command line invocation. Installing the listener service unit.');
+      print($Lol.'Installing the listener service unit.'.$Lol);
+      list ($cliCommandSucceeded, $cliCommandDetail) = installListenerService(TRUE, TRUE);
+      if (!$cliCommandSucceeded) $CommandStatus = 1;
+      print($Lol); } }
+  // / These two install dependencies AND configure, so both components are needed.
+  else if (in_array('--install-complete', $cliArguments, TRUE) or in_array('--reinstall-existing', $cliArguments, TRUE)) {
+    list ($cliSetupIsAvailable, $cliSetupVersion) = verifyCoreComponent('Setup Core', 'Engine'.$DirSep.'Cores'.$DirSep.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
+    if (!$cliSetupIsAvailable) {
+      print($Lol.'This operation also needs the Setup Core component, which is unavailable.'.$Lol);
+      $CommandStatus = 1;
+      print('Dependencies can still be managed with --setup --check-depends & --install-depends.'.$Lol.$Lol); }
+    else {
+      $cliDependencyToken = deriveStartupKey('dependency-write');
+      if (in_array('--install-complete', $cliArguments, TRUE)) {
+        logEntry('Command line invocation. Performing a complete installation.');
+        list ($cliCommandSucceeded, $cliCommandDetail) = runCompleteInstall($cliDependencyToken, $cliConfirmed);
+        if (!$cliCommandSucceeded) $CommandStatus = 1; }
+      else {
+        logEntry('Command line invocation. Reinstalling in place.');
+        $cliCommandSucceeded = runReinstallExisting($cliTarget, $cliConfirmed);
+        if (!$cliCommandSucceeded) $CommandStatus = 1; } } }
+  // / --setup with no option is a request to see what --setup can do.
+  else {
+    print($Lol.'Setup options'.$Lol);
+    print('  --check-depends              Report the state of every dependency.'.$Lol);
+    print('  --install-depends            Install everything absent or too old.'.$Lol);
+    print('  --update-depends             Upgrade everything already installed.'.$Lol);
+    print('  --uninstall-depends          Remove a subsystem. Requires --subsystem.'.$Lol);
+    print('  --detect-capabilities       Ask every installed tool what it can read & write.'.$Lol);
+    print('  --output-supply-chain[=path] Write a supply chain audit template.'.$Lol);
+    print('  --install-service            Install the listener service unit from this configuration.'.$Lol);
+    print('  --install-complete           Install '.engineApplicationName().' & every dependency.'.$Lol);
+    print('  --reinstall-existing         Reinstall this installation in place.'.$Lol);
+    print('  --subsystem=<Name>           Restrict the operation to one subsystem.'.$Lol);
+    print('  -y, --yes                    Skip the confirmation prompt.'.$Lol);
+    print($Lol.'Every option above is used WITH --setup, never on its own.'.$Lol);
+    print('  sudo php '.engineApplicationEntryPoint().' --setup --check-depends'.$Lol.$Lol); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $cliDependencyIsAvailable, $cliManifestIsAvailable, $cliDependenciesReady, $cliCommandSucceeded, $cliCacheWasBuilt, $cliSetupSucceeded, $cliSetupIsAvailable, $cliSubsystemIsKnown, $cliDependencyVersion, $cliSubsystem, $cliManifestVersion, $cliSubsystemName, $cliCommandDetail, $cliDependencyToken, $cliSetupVersion, $cliManifestEntries, $cliManifestEntry, $cliSubsystemNames, $cliDependencyFindings, $cliOptionalProblems, $cliDetectedCount, $cliSetupCount, $cliArguments, $cliTarget, $cliConfirmed);
+  return $CommandStatus; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to operate the listener & the workers it tracks.
+  // / Handle every listener command through one gate.
+  // / Refusing here rather than falling through means a real command is never reported
+  // / as an unrecognized one, which sent an authorized user hunting for a typo.
+// / Accepts the command, its target, whether the operator confirmed in advance, the user
+// / & whether that user may run the listener, in that order. Returns the exit status.
+function runEngineListenerCommand($cliCommand, $cliTarget, $cliConfirmed, $cliWhoami, $cliListenerAuthorized) {
+  // / Set variables.
+  global $Lol, $ApacheUser, $ResourceAwarenessActive, $ManagerSocketTimeout, $EnableMemoryProtection;
+  $CommandStatus = 0;
+  $cliActionConfirmed = $cliMessageDelivered = $cliWorkerManagerLoaded = FALSE;
+  $cliMessageReply = array();
+  $cliWorkerManagerVersion = '';
+  if (!$cliListenerAuthorized) {
+    warningEntry('A listener command was refused for an unauthorized user.');
+    $CommandStatus = 1;
+    print($Lol.'The '.$cliCommand.' command is only available to root or '.$ApacheUser.'.'.$Lol);
+    print('You are running as '.$cliWhoami.'.'.$Lol);
+    print($Lol.'  sudo php '.engineApplicationEntryPoint().' '.$cliCommand.$Lol);
+    print('  sudo -u '.$ApacheUser.' php '.engineApplicationEntryPoint().' '.$cliCommand.$Lol.$Lol);
+    print('A standard user holds a per user secret, which cannot derive a valid'.$Lol);
+    print('startup key, so a listener started that way could never be reached.'.$Lol.$Lol); }
+  else if (!$ResourceAwarenessActive) {
+    $CommandStatus = 1;
+    print($Lol.'Resource awareness is unavailable. The Core Manager component is missing or does not match this core.'.$Lol.$Lol); }
+  // / Start the listener.
+  else if ($cliCommand === '-l' or $cliCommand === '--listen') {
+    logEntry('Command line invocation. Starting the Core Manager listener.');
+    if (!startCoreManagerListener()) $CommandStatus = 1; }
+  // / Stop the listener with no target, or end one worker with a target.
+  else if ($cliCommand === '-k' or $cliCommand === '--kill') {
+    if ($cliTarget === '') {
+      logEntry('Command line invocation. Stopping the Core Manager listener.');
+      if (!stopCoreManagerListener()) $CommandStatus = 1; }
+    else {
+      logEntry('Command line invocation. Terminating worker '.$cliTarget.'.');
+      if (!killTargetedWorker($cliTarget)) $CommandStatus = 1; } }
+  // / End every TRACKED worker.
+  else if ($cliCommand === '--kill-all-workers') {
+    $cliActionConfirmed = confirmDestructiveAction('This ends every tracked conversion in progress. Users will lose work.', $cliConfirmed);
+    // / Declining a destructive action aborts it, & an abort exits 1, as it does for apt.
+    if (!$cliActionConfirmed) $CommandStatus = 1;
+    if ($cliActionConfirmed) {
+      warningEntry('Command line invocation. Terminating every tracked worker.');
+      // / The Resource Manager is ASKED to do this rather than the registry being walked
+      // / from here. It owns the registry & this process does not have one.
+      // / An earlier version called killTrackedWorkers() with no argument at all. That
+      // / function takes the registry by reference & has no default, so the command was a
+      // / fatal every time somebody confirmed it, which is the worst moment to fail.
+      // / kill-tracked is a request type the Resource Manager already answers, & it is
+      // / what the Worker Manager sends for the same purpose.
+      // / The channel purpose is the third argument & was missing, so the timeout arrived
+      // / where the purpose belongs & the call was one argument short. A confirmed
+      // / --kill-all-workers was an ArgumentCountError every time until v3.9.9. The Resource
+      // / Manager listens on the internal channel, which is what the Worker Manager uses.
+      list ($cliMessageDelivered, $cliMessageReply) = sendManagerMessage(buildManagerSocketPath('resource-manager'), array('RequestType' => 'kill-tracked'), 'internal', (int)$ManagerSocketTimeout);
+      if ($cliMessageDelivered && isset($cliMessageReply['Reason'])) print($Lol.$cliMessageReply['Reason'].$Lol);
+      else if ($cliMessageDelivered) print($Lol.'The Resource Manager accepted the request & said nothing about it.'.$Lol);
+      else {
+        warningEntry('The Resource Manager could not be reached, so no tracked worker was ended.');
+        $CommandStatus = 1;
+        print($Lol.'The Resource Manager is not reachable. Nothing was ended.'.$Lol);
+        print('Start the listener, or use --kill-every-worker to end every process directly.'.$Lol); } } }
+  // / End every PHP process owned by the web server user.
+  // / This reaches unrelated applications sharing the host & says so before it runs.
+  else if ($cliCommand === '--kill-every-worker') {
+    $cliActionConfirmed = confirmDestructiveAction('This ends EVERY PHP process owned by '.$ApacheUser.' on this host. Other applications sharing this server, such as WordPress or OwnCloud, will lose every session in progress.', $cliConfirmed);
+    if (!$cliActionConfirmed) $CommandStatus = 1;
+    if ($cliActionConfirmed) {
+      warningEntry('Command line invocation. Terminating every process owned by the web server user.');
+      // / killEveryWorker lives in the Worker Manager, which only a manager process loads.
+      // / This called it without loading it, so a confirmed --kill-every-worker was a fatal
+      // / undefined function every time, the worst moment to fail. It is loaded here the
+      // / version checked way every manager is, & a refusal is said rather than thrown.
+      if (!function_exists('killEveryWorker') && function_exists('loadEngineManager')) list ($cliWorkerManagerLoaded, $cliWorkerManagerVersion) = loadEngineManager('workerManager.php');
+      if (!function_exists('killEveryWorker')) {
+        $CommandStatus = 1;
+        print($Lol.'The Worker Manager could not be loaded, so nothing was ended. The log says why.'.$Lol.$Lol); }
+      else print($Lol.'Terminated '.killEveryWorker().' process(es).'.$Lol); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $cliActionConfirmed, $cliMessageDelivered, $cliWorkerManagerLoaded, $cliMessageReply, $cliWorkerManagerVersion, $cliCommand, $cliTarget, $cliConfirmed, $cliWhoami, $cliListenerAuthorized);
+  return $CommandStatus; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to run one of the Engine's root only commands.
+// / Accepts the command & its target, in that order. Returns the exit status.
+// / The caller has already refused these to anybody but root.
+// / -u is root only too & stays with the application, because updateApplication & its
+// / helpers are the application's & moving them is a migration of its own.
+function runEngineRootCommand($cliCommand, $cliTarget) {
+  // / Set variables.
+  global $Lol, $InstLoc, $DirSep, $DeleteThreshold, $ConvertTempDir, $ConvertLoc, $ProtectedRootDirs, $EnableMemoryProtection;
+  $CommandStatus = 0;
+  $cliEnvironmentFile = '';
+  $cliPassCompleted = $cliPermissionsFixed = $cliTempCleaned = $cliTempDeepCleaned = $cliDataCleaned = $cliDataDeepCleaned = FALSE;
+  $cliPassFindings = $cliPassFinding = array();
+  $cliPathsCorrected = $cliThreshold = 0;
+  if ($cliCommand === '--run-environment-manager') {
+    // / This is NOT dispatched through dispatchManagerRole(). That path is for the four
+    // / roles the listener starts, each of which opens a socket & runs as the web server
+    // / account. This one is root, opens nothing & exits when it is done.
+    // / It is loaded here by name rather than through loadEngineManager() for the same
+    // / reason. Putting it in getAcceptedManagers() would make it dispatchable, & a root
+    // / role that the listener can reach is exactly what this design refuses to have.
+    $cliEnvironmentFile = $InstLoc.$DirSep.'Resources'.$DirSep.'Engine'.$DirSep.'Managers'.$DirSep.'environmentManager.php';
+    if (!file_exists($cliEnvironmentFile)) $CommandStatus = 1;
+    if (!file_exists($cliEnvironmentFile)) print($Lol.'The Environment Manager is not installed at '.$cliEnvironmentFile.'.'.$Lol);
+    else {
+      require_once ($cliEnvironmentFile);
+      if (!function_exists('runEnvironmentManager')) $CommandStatus = 1;
+      if (!function_exists('runEnvironmentManager')) print($Lol.'The Environment Manager file is present & defines no entry point.'.$Lol);
+      else {
+        list ($cliPassCompleted, $cliPassFindings) = runEnvironmentManager();
+        if (!$cliPassCompleted) $CommandStatus = 1;
+        if (!$cliPassCompleted) print($Lol.'The Environment Manager pass did not complete. It requires root.'.$Lol);
+        else {
+          print($Lol.'Environment Manager pass complete. '.count($cliPassFindings).' check(s) examined.'.$Lol);
+          foreach ($cliPassFindings as $cliPassFinding) {
+            if (!isset($cliPassFinding['Status'])) continue;
+            printf('  %-28s %-14s %s'.PHP_EOL, (isset($cliPassFinding['Check']) ? $cliPassFinding['Check'] : ''), (string)$cliPassFinding['Status'], (isset($cliPassFinding['Detail']) ? $cliPassFinding['Detail'] : '')); }
+          print($Lol); } } } }
+  // / Handle the -fp or --fix-permissions arguments.
+  // / The repair is the application's & is reached through the provider it declares,
+  // / $EngineRepairProvider. HRConvert2 declares fixManagedPermissions, which this called
+  // / by name until v3.9.9.
+  else if ($cliCommand === '-fp' or $cliCommand === '--fix-permissions') {
+    logEntry('Command line invocation. Correcting managed permissions.');
+    print($Lol.'Correcting permissions on managed paths.'.$Lol);
+    list ($cliPermissionsFixed, $cliPathsCorrected) = runApplicationRepair();
+    if (!$cliPermissionsFixed) $CommandStatus = 1;
+    print($Lol.($cliPermissionsFixed ? 'Corrected '.$cliPathsCorrected.' path(s).' : 'Permissions could not be corrected.').$Lol.$Lol); }
+  // / Handle the -c or --clean arguments.
+  else if ($cliCommand === '-c' or $cliCommand === '--clean') {
+    logEntry('Command line invocation. Performing a manual clean.');
+    $cliTarget = strtolower($cliTarget);
+    $cliThreshold = $DeleteThreshold;
+    // / A threshold of zero expires everything, because every session is older than nothing.
+    if ($cliTarget === 'now') $cliThreshold = 0;
+    // / ctype_digit rather than is_numeric, because is_numeric accepts a negative & a
+    // / negative threshold would expire every session while looking like a normal number.
+    else if ($cliTarget !== '' && ctype_digit($cliTarget)) $cliThreshold = (int)$cliTarget;
+    else if ($cliTarget !== '') {
+      warningEntry('An unrecognized clean threshold was supplied. Using the configured default.');
+      print($Lol.'Unrecognized threshold. Supply a whole number of minutes, or now.'.$Lol); }
+    print($Lol.'Cleaning sessions older than '.$cliThreshold.' minute(s).'.$Lol);
+    logEntry('Manual clean requested. Threshold set to '.$cliThreshold.' minute(s).');
+    list ($cliTempCleaned, $cliTempDeepCleaned) = cleanDataLocation($ConvertTempDir, 'Temporary files', $cliThreshold, $ProtectedRootDirs, array($ConvertTempDir));
+    print('  Temporary location   '.($cliTempCleaned ? 'OK' : 'FAILED').($cliTempDeepCleaned ? ', removed expired sessions' : ', nothing was expired').$Lol);
+    list ($cliDataCleaned, $cliDataDeepCleaned) = cleanDataLocation($ConvertLoc, 'Data location', $cliThreshold, $ProtectedRootDirs, array($ConvertLoc));
+    print('  Data location        '.($cliDataCleaned ? 'OK' : 'FAILED').($cliDataDeepCleaned ? ', removed expired sessions' : ', nothing was expired').$Lol);
+    if (!$cliTempCleaned or !$cliDataCleaned) print($Lol.'One or more locations could not be cleaned. See the log for the reason.'.$Lol);
+    if (!$cliTempCleaned or !$cliDataCleaned) $CommandStatus = 1;
+    print($Lol); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $cliEnvironmentFile, $cliPassCompleted, $cliPermissionsFixed, $cliTempCleaned, $cliTempDeepCleaned, $cliDataCleaned, $cliDataDeepCleaned, $cliPassFindings, $cliPassFinding, $cliPathsCorrected, $cliThreshold, $cliCommand, $cliTarget);
+  return $CommandStatus; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to run one of the Engine's commands, or say that the command is not one.
+// / Accepts the argument list, the command, its target, a second target & whether the
+// / operator confirmed in advance, in that order.
+// / Returns whether the command was the Engine's & the exit status it earned, in that order.
+// / A command that is not the Engine's returns FALSE & 0 & has done nothing, so the
+// / application carries on with its own. The order of the tests is the order the
+// / application's own chain used, so every command meets the same refusal it always did.
+function dispatchEngineCommand($cliArguments, $cliCommand, $cliTarget, $cliSecondTarget, $cliConfirmed) {
+  // / Set variables.
+  global $RunningAsRoot, $CurrentUser, $ApacheUser, $EnableMemoryProtection;
+  $CommandWasHandled = TRUE;
+  $CommandStatus = 0;
+  $cliListenerAuthorized = FALSE;
+  $cliWhoami = '';
+  // / Every command the listener owns. Recognized for all users & refused for the wrong one.
+  $listenerCommands = array('-l', '--listen', '-k', '--kill', '--kill-all-workers', '--kill-every-worker');
+  // / Every command Setup Core, Dependency Core & Pipeline Core answer.
+  $setupCommands = array('--config', '--setup', '--pipeline');
+  // / Every Engine command that needs root & nothing less.
+  $rootCommands = array('-fp', '--fix-permissions', '-c', '--clean', '--run-environment-manager');
+  // / The entry points the listener starts its managers through. Never typed by a person.
+  $managerCommands = array('--start-core-manager', '--run-core-manager', '--start-manager');
+  // / Only the web server user & root may operate the listener.
+  // / A standard user holds a per user secret, which cannot derive a valid startup key.
+  // / The web server user must hold the install secret for every listener command, every
+  // / manager entry point & --status, or the keys they derive are refused. Which secret an
+  // / account holds is the application's to decide, before this Engine is loaded.
+  if ($RunningAsRoot or $CurrentUser === $ApacheUser) $cliListenerAuthorized = TRUE;
+  $cliWhoami = ($CurrentUser === '' ? 'an unidentified user' : $CurrentUser);
+  if (in_array($cliCommand, $managerCommands, TRUE)) $CommandStatus = runEngineManagerEntry($cliCommand, $cliTarget, $cliSecondTarget);
+  else if ($cliCommand === '--status') $CommandStatus = showEngineStatus($cliWhoami, $cliListenerAuthorized);
+  // / Every setup & config command is root only, & is refused here rather than partway
+  // / through its own work. --detect-capabilities used to probe every installed dependency
+  // / as a standard user & then fail on the last line when it could not write the cache.
+  // / --config writes to config.php, which a standard user cannot write either.
+  // / --pipeline is exempt. It only reads, & ABOUT_COMMAND_LINE_ARGUMENTS.txt has always said
+  // / any user may run it. It was refused with the rest until v3.9.9.
+  else if (in_array($cliCommand, $setupCommands, TRUE) && $cliCommand !== '--pipeline' && !$RunningAsRoot) $CommandStatus = refuseCommandForUser($cliCommand, $cliWhoami, 'A setup command was refused for an unauthorized user.');
+  else if ($cliCommand === '--pipeline') $CommandStatus = runEnginePipelineCommand($cliTarget, $cliSecondTarget);
+  else if ($cliCommand === '--config') $CommandStatus = runEngineConfigCommand($cliArguments, $cliConfirmed);
+  else if ($cliCommand === '--setup') $CommandStatus = runEngineSetupCommand($cliArguments, $cliTarget, $cliConfirmed);
+  else if (in_array($cliCommand, $listenerCommands, TRUE)) $CommandStatus = runEngineListenerCommand($cliCommand, $cliTarget, $cliConfirmed, $cliWhoami, $cliListenerAuthorized);
+  // / A root only command issued by a standard user is named rather than dismissed, & told
+  // / it needs root rather than being allowed to run & quietly achieve nothing.
+  else if (in_array($cliCommand, $rootCommands, TRUE) && !$RunningAsRoot) $CommandStatus = refuseCommandForUser($cliCommand, $cliWhoami, 'A root only command was refused for an unauthorized user.');
+  else if (in_array($cliCommand, $rootCommands, TRUE)) $CommandStatus = runEngineRootCommand($cliCommand, $cliTarget);
+  else $CommandWasHandled = FALSE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $cliListenerAuthorized, $cliWhoami, $listenerCommands, $setupCommands, $rootCommands, $managerCommands, $cliArguments, $cliCommand, $cliTarget, $cliSecondTarget, $cliConfirmed);
+  return array($CommandWasHandled, $CommandStatus); }
+// / -----------------------------------------------------------------------------------
 ?>

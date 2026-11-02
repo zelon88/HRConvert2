@@ -21,7 +21,7 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Audited by                                  NOT YET AUDITED
     Audit outcome                               NOT YET AUDITED
 
-  Manifest facts, read from Resources/Engine/Contract/depends.php
+  Manifest facts, read from Resources/Contract/depends.php
     Binary                                      assimp
     Install type                                apt
     Package                                     assimp-utils
@@ -65,7 +65,7 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Audited by                                  NOT YET AUDITED
     Audit outcome                               NOT YET AUDITED
 
-  Manifest facts, read from Resources/Engine/Contract/depends.php
+  Manifest facts, read from Resources/Contract/depends.php
     Binary                                      bwrap
     Install type                                apt
     Package                                     bubblewrap
@@ -109,7 +109,7 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Audited by                                  NOT YET AUDITED
     Audit outcome                               NOT YET AUDITED
 
-  Manifest facts, read from Resources/Engine/Contract/depends.php
+  Manifest facts, read from Resources/Contract/depends.php
     Binary                                      meshlabserver
     Install type                                apt
     Package                                     meshlab
@@ -153,7 +153,7 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Audited by                                  NOT YET AUDITED
     Audit outcome                               NOT YET AUDITED
 
-  Manifest facts, read from Resources/Engine/Contract/depends.php
+  Manifest facts, read from Resources/Contract/depends.php
     Binary                                      -
     Install type                                source
     Package                                     -
@@ -197,7 +197,7 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Audited by                                  NOT YET AUDITED
     Audit outcome                               NOT YET AUDITED
 
-  Manifest facts, read from Resources/Engine/Contract/depends.php
+  Manifest facts, read from Resources/Contract/depends.php
     Binary                                      -
     Install type                                source
     Package                                     -
@@ -241,7 +241,7 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Audited by                                  NOT YET AUDITED
     Audit outcome                               NOT YET AUDITED
 
-  Manifest facts, read from Resources/Engine/Contract/depends.php
+  Manifest facts, read from Resources/Contract/depends.php
     Binary                                      python3.14
     Install type                                source
     Package                                     -
@@ -285,7 +285,7 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Audited by                                  NOT YET AUDITED
     Audit outcome                               NOT YET AUDITED
 
-  Manifest facts, read from Resources/Engine/Contract/depends.php
+  Manifest facts, read from Resources/Contract/depends.php
     Binary                                      -
     Install type                                source
     Package                                     -

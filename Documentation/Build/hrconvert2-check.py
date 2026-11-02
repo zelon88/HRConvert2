@@ -622,7 +622,7 @@ def check_purge_comment(files, report):
 # / made moving thirteen conversion families out of the core a mechanical operation.
 # / Three functions are exempt & each is exempt for a stated reason.
 def check_single_exit(files, report):
-    exempt = {'quickDie', 'closeHRC2Connection', 'mergeConfigFile'}
+    exempt = {'quickDie', 'closeClientConnection', 'mergeConfigFile'}
     faults = 0
     for path in files:
         original, blanked = read_source(path)
@@ -641,7 +641,8 @@ def check_single_exit(files, report):
 # / -----------------------------------------------------------------------------------
 # / CHECK EIGHT. The Engine never calls application code.
 # / The Engine may call the kernel, because the kernel is byte identical in every
-# / application & calling it couples the Engine to none of them. It may not call anything
+# / application & calling it couples the Engine to none of them. The kernel is
+# / Resources/Kernel/kernel.php & its function list is read from there. It may not call anything
 # / only this application has, because an Engine that does is an Engine that works for
 # / exactly one application & the whole point of extracting it is gone.
 # /
@@ -660,11 +661,18 @@ def check_engine_independence(root, report):
         return 0
     # / Every function only the application defines.
     application = set(re.findall(r'^function (\w+)\(', open(core_path, encoding='utf-8').read(), re.M))
-    # / The kernel lives in the application file & the Engine is allowed to call it.
-    # / This list is the contract & is written down in ABOUT_ENGINE_CONTRACT.txt.
-    kernel = {'quickDie', 'logEntry', 'warningEntry', 'errorEntry', 'purgeSensitiveMemory',
-              'redeclare', 'readComponentVersion', 'verifyCoreComponent', 'composeLogEntry',
-              'emitLogEntry', 'flushLogBuffer', 'locateDependency', 'sanitize', 'getExtension'}
+    # / The kernel is whatever Resources/Kernel/kernel.php defines, read from that file
+    # / rather than written down here. A list kept here was a second definition of the
+    # / kernel & by v3.9.9 it disagreed with the contract document & with the code, naming 14
+    # / functions against 8 & 21. The file cannot disagree with itself.
+    # / A missing kernel file is a fault rather than a skip. Without it nothing the Engine
+    # / calls can be judged, & a check that passes because it could not look is worse than
+    # / one that says so.
+    kernel_path = os.path.join(root, 'Resources', 'Kernel', 'kernel.php')
+    if not os.path.exists(kernel_path):
+        report('CONTRACT', 'Resources/Kernel/kernel.php is missing, so the Engine cannot be judged against the kernel. Restore the kernel file from the release.')
+        return 1
+    kernel = set(re.findall(r'^function (\w+)\(', open(kernel_path, encoding='utf-8').read(), re.M))
     engine = {}
     for base, dirs, files in os.walk(engine_dir):
         for name in files:
@@ -689,6 +697,69 @@ def check_engine_independence(root, report):
                                + '(), which only the application defines')
                         faults += 1
     return faults
+
+# / -----------------------------------------------------------------------------------
+# / CHECK NINETEEN. The kernel calls only itself, PHP & the Engine behind a guard.
+# / Question three of ABOUT_ENGINE_CONTRACT.txt, enforced rather than remembered. Five
+# / functions went into the Engine & came back before this check existed, & every one of them
+# / passed the other three questions cleanly.
+# / The kernel is identical in every application, so calling anything another file in this
+# / tree defines is a fault, whichever file that is. A call into the application ties the
+# / kernel to one application. A call into Pipeline Core ties it to a component that loads
+# / after it. The old rule only looked at the application file & would have missed the second.
+# / The kernel runs before the Engine loads & must keep running when the Engine cannot, so a
+# / call into the Engine is allowed only where the same function asks function_exists first.
+def check_kernel_independence(root, files, report):
+    kernel_path = os.path.join(root, 'Resources', 'Kernel', 'kernel.php')
+    if not os.path.exists(kernel_path):
+        report('KERNEL', 'Resources/Kernel/kernel.php is missing. Every application loads it first, so restore it from the release.')
+        return 1
+    engine_dir = os.path.abspath(os.path.join(root, 'Resources', 'Engine')) + os.sep
+    # / Every function defined anywhere else in the tree, & the file that defines it.
+    owner = {}
+    for path in files:
+        if os.path.abspath(path) == os.path.abspath(kernel_path):
+            continue
+        for match in re.finditer(r'^function (\w+)\(', open(path, encoding='utf-8').read(), re.M):
+            owner.setdefault(match.group(1), path)
+    original, blanked = read_source(kernel_path)
+    kernel_functions = read_functions(original, blanked)
+    # / Code outside every function runs the moment the file loads, so it is checked too, as
+    # / one more body with nothing guarding it.
+    inside = set()
+    for record in kernel_functions.values():
+        inside.update(range(record['start'], record['end'] + 1))
+    scopes = dict(kernel_functions)
+    scopes['file scope'] = {
+        'start': 0,
+        'body': [line if index not in inside else '' for index, line in enumerate(blanked)],
+        'original': [line if index not in inside else '' for index, line in enumerate(original)]}
+    faults = 0
+    for name, record in scopes.items():
+        source = '\n'.join(record['original'])
+        seen = set()
+        for offset, line in enumerate(record['body']):
+            if line.startswith('function '):
+                continue
+            for called in re.findall(r'\b([a-z][A-Za-z0-9_]*)\s*\(', line):
+                if called in kernel_functions or called not in owner or called in seen:
+                    continue
+                seen.add(called)
+                where = owner[called]
+                line_number = record['start'] + offset + 1
+                if os.path.abspath(where).startswith(engine_dir):
+                    if re.search(r"function_exists\s*\(\s*'" + re.escape(called) + r"'\s*\)", source):
+                        continue
+                    report('KERNEL', 'kernel.php:' + str(line_number) + ' ' + name + ' calls ' + called
+                           + '(), which the Engine defines, without a guard. Wrap it in  if (function_exists(\'' + called
+                           + '\'))  so the kernel still runs when the Engine cannot load.')
+                else:
+                    report('KERNEL', 'kernel.php:' + str(line_number) + ' ' + name + ' calls ' + called + '(), which '
+                           + os.path.relpath(where, root) + ' defines. The kernel may call only itself, PHP & a guarded Engine. Move '
+                           + called + ' into the kernel if every application needs it, or pass in the value it produces.')
+                faults += 1
+    return faults
+
 
 # / -----------------------------------------------------------------------------------
 # / CHECK NINE. No function is defined twice.
@@ -811,6 +882,31 @@ def check_error_numbers(root, files, report):
             report('ERRNO', os.path.basename(path) + ':' + str(line_number)
                    + ' raises error ' + number + ', which ERROR_DESCRIPTIONS.txt does not document')
             faults += 1
+        # / A halt that happens before logging exists is a plain die with its number inside
+        # / the message, & the blanked source has every message taken out, so those were
+        # / invisible here until v3.9.9. The ORIGINAL is searched for them instead.
+        # / Two such numbers had never been documented when this was added.
+        # / A component prefix such as Engine or Kernel is documented literally. The
+        # / application's own prefix is documented as <APPLICATION_NAME>, so the number alone
+        # / is accepted for it. Numbers are never reassigned, so that cannot hide a clash.
+        source = '\n'.join(original)
+        # / The quote may be escaped, because a guard written into a GENERATED file is a string
+        # / inside a string. Dependency Core writes one into its capability cache, & an earlier
+        # / version of this pattern did not see it.
+        # / A halt that must report failure prints its message & then exits with a status,
+        # / because a die carrying a message exits with status zero. So print is searched too,
+        # / or moving a halt to the correct exit status would hide its number from this check.
+        for match in re.finditer(r'\b(?:die|exit|print)\s*\(\s*\\?[\'"]ERROR!!! ([A-Za-z0-9]+)-(\d{1,5})\b', source):
+            label = match.group(1) + '-' + match.group(2)
+            if label in reported:
+                continue
+            if match.group(2) in documented or re.search(re.escape(label) + r'\b', catalog):
+                continue
+            reported.add(label)
+            line_number = source.count('\n', 0, match.start()) + 1
+            report('ERRNO', os.path.basename(path) + ':' + str(line_number) + ' halts with ' + label
+                   + ', which ERROR_DESCRIPTIONS.txt does not document. Add an entry for it there.')
+            faults += 1
     return faults
 
 
@@ -837,6 +933,20 @@ def check_component_guard(root, report):
             # / The name is matched whole. A substring test passed a file whose guard read
             # / $CoreLoadedX, which is a different variable that is never set & therefore
             # / a guard that can never fire.
+            # / The kernel is the one component that cannot use $CoreLoaded, because it loads
+            # / before anything sets it. It also defines quickDie & verifyCoreComponent, so both
+            # / halves this check looks for appear in it whether it has a guard or not. It
+            # / passed with its guard deleted, which is how this exception was found.
+            # / Its guard counts the included files & must run before the first function is
+            # / defined, so that exact shape is what it is held to.
+            if os.path.relpath(path, root) == os.path.join('Resources', 'Kernel', 'kernel.php'):
+                first_function = next((index for index, line in enumerate(blanked) if line.startswith('function ')), len(blanked))
+                kernel_guard = r'count\s*\(\s*get_included_files\s*\(\s*\)\s*\)\s*<\s*2\s*\)\s*(?:die|exit)\s*\('
+                if not any(re.search(kernel_guard, line) for line in blanked[:first_function]):
+                    report('GUARD', os.path.relpath(path, root)
+                           + ' has no guard before its first function. Add  if (count(get_included_files()) < 2) die(...);  above the first function.')
+                    faults += 1
+                continue
             if not re.search(r'\$CoreLoaded\b', body) or not re.search(r'\b(die|exit)\s*\(', body):
                 report('GUARD', os.path.relpath(path, root)
                        + ' has no $CoreLoaded guard & would run if reached directly')
@@ -1177,6 +1287,92 @@ def check_argument_counts(files, report):
     return faults
 
 # / -----------------------------------------------------------------------------------
+# / Check twenty. A function that returns a pair is never assigned whole to one variable.
+# / sandboxCommand returns whether a command may run & the command, & four callers took the
+# / pair as the command for several releases. The shell was asked to run a program called
+# / Array. ClamAV reported every file clean, ScanCore reported every file infected & no
+# / stream was ever fetched. PHP converts an array to a string with a warning & carries on,
+# / so nothing stopped it.
+# / A pair is a function whose every return is array( with more than one element. A call
+# / that is indexed where it is made, such as name()[0], takes one element on purpose & is
+# / not reported.
+# / ScanCore is a program of its own & defines its own sanitize(), which returns one value.
+# / Functions are therefore matched within one program, ScanCore or everything else.
+def program_of(path):
+    return 'scancore' if os.sep + 'ScanCore' + os.sep in path else 'application'
+
+def returns_pair(body):
+    returned = re.findall(r'\breturn\s+(.*?);', body)
+    if not returned:
+        return False
+    for value in returned:
+        if not value.startswith('array('):
+            return False
+        depth = 0
+        commas = 0
+        for character in value[len('array('):]:
+            if character in '([':
+                depth += 1
+            elif character in ')]':
+                if depth == 0:
+                    break
+                depth -= 1
+            elif character == ',' and depth == 0:
+                commas += 1
+        if commas < 1:
+            return False
+    return True
+
+def check_pairs_destructured(files, report):
+    pairs = {}
+    for path in files:
+        original, blanked = read_source(path)
+        text = '\n'.join(blanked)
+        for found in re.finditer(r'^function (\w+)\(', text, re.M):
+            opening = text.find('{', found.end())
+            if opening < 0:
+                continue
+            depth = 0
+            closing = opening
+            while closing < len(text):
+                if text[closing] == '{':
+                    depth += 1
+                elif text[closing] == '}':
+                    depth -= 1
+                    if depth == 0:
+                        break
+                closing += 1
+            if returns_pair(text[opening:closing]):
+                pairs[(program_of(path), found.group(1))] = os.path.basename(path)
+    faults = 0
+    for path in files:
+        original, blanked = read_source(path)
+        text = '\n'.join(blanked)
+        for found in re.finditer(r'(?<![\w>:])\$\w+\s*=\s*([a-zA-Z_]\w*)\s*\(', text):
+            name = found.group(1)
+            if (program_of(path), name) not in pairs:
+                continue
+            # / Walk to the call's closing parenthesis & see whether it is indexed there.
+            depth = 0
+            position = found.end() - 1
+            while position < len(text):
+                if text[position] == '(':
+                    depth += 1
+                elif text[position] == ')':
+                    depth -= 1
+                    if depth == 0:
+                        break
+                position += 1
+            if text[position + 1:position + 2] == '[':
+                continue
+            line = text.count('\n', 0, found.start()) + 1
+            report('PAIRS', os.path.basename(path) + ':' + str(line) + ' assigns the pair ' + name
+                   + '() returns to one variable. Take it with list (), as its other callers do. '
+                   + 'It is defined in ' + pairs[(program_of(path), name)])
+            faults += 1
+    return faults
+
+# / -----------------------------------------------------------------------------------
 # / The main logic. Every check runs & the total decides the exit code.
 # / Nothing stops early, because an operator wants every fault in one pass rather than the
 # / first one seven times.
@@ -1217,6 +1413,7 @@ def main():
         ('errno', 'every error number raised is documented', lambda: check_error_numbers(root, files, report)),
         ('guard', 'every component refuses to load directly', lambda: check_component_guard(root, report)),
         ('contract', 'the Engine never calls application code', lambda: check_engine_independence(root, report)),
+        ('kernel', 'the kernel calls only itself, PHP & a guarded Engine', lambda: check_kernel_independence(root, files, report)),
         ('config', 'every required setting is declared where config.php loads', lambda: check_config_globals(root, report)),
         ('stray', 'nothing ships that is not part of the application', lambda: check_stray_files(root, report)),
         ('spacing', 'separators & blank lines follow the house shape', lambda: check_file_spacing(files, report)),
@@ -1227,6 +1424,7 @@ def main():
         ('name', 'no parameter has a generic name', lambda: check_generic_names(files, report)),
         ('return', 'no function destroys what it returns', lambda: check_return_not_purged(files, report)),
         ('args', 'every call supplies the arguments its function requires', lambda: check_argument_counts(files, report)),
+        ('pairs', 'a returned pair is never taken whole as one value', lambda: check_pairs_destructured(files, report)),
         ('exit', 'every function has one exit', lambda: check_single_exit(files, report)))
     if '--list' in sys.argv:
         print('Checks, in the order they run.')

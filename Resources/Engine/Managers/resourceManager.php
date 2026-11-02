@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.9.6.
+// / v3.9.9.
 // / This file is the Resource Manager. It is a manager subcomponent of the Engine.
 // / The Resource Manager polls the host, calculates the budget every operation is granted from & sweeps anything that has outlived its welcome.
 // /
@@ -38,7 +38,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A m
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v3.9.6';
+$ManagerVersion = 'v3.9.9';
 // / -----------------------------------------------------------------------------------
 
 
@@ -219,6 +219,14 @@ function scaleConversionLimits($systemResources, $trackedWorkers) {
     else {
       $scaledCpu = (int)floor($cpuPercentage * $pressureFactor);
       $scaledMemory = (int)floor($memoryMegabytes * $pressureFactor);
+      // / A scanner needs the memory its loaded signature database takes, & neither the file
+      // / nor the load changes that, so Scan keeps its configured memory & only its processor
+      // / share is scaled. config.php has always said to treat that figure as a floor. Until
+      // / v3.9.9 it was scaled with the rest, & a quiet server with one scan in flight handed
+      // / ClamAV 740M of a configured 2048M, so the kernel killed it while it loaded. Whether
+      // / a scan may start at all is the budget's decision, & a ceiling it cannot run inside
+      // / does not protect the host, it only turns the scan into a failure.
+      if ($conversionType === 'Scan') $scaledMemory = $memoryMegabytes;
       // / The floor is what stops a loaded server handing out a ceiling nothing can run in.
       if ($scaledCpu < $minimumCpu) $scaledCpu = $minimumCpu;
       if ($scaledMemory < $minimumMemory) $scaledMemory = $minimumMemory;

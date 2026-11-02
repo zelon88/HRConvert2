@@ -18,7 +18,7 @@
 # / belong to the application rather than to any one pipeline get the record in Documentation.
 # /
 # / THE MANIFEST IS THE ONLY SOURCE OF FACTS.
-# / Every factual field in a record is read from Resources/Engine/Contract/depends.php, so a
+# / Every factual field in a record is read from Resources/Contract/depends.php, so a
 # / record cannot drift from the manifest. Re-run this after changing the manifest.
 # /
 # / THIS TOOL NEVER ANSWERS AN AUDIT QUESTION.
@@ -96,7 +96,7 @@ SANDBOX_DEPENDENCY = 'Bubblewrap'
 # / manifest nobody should execute to find out.
 # / -----------------------------------------------------------------------------------
 def read_manifest(root):
-    path = os.path.join(root, 'Resources', 'Engine', 'Contract', 'depends.php')
+    path = os.path.join(root, 'Resources', 'Contract', 'depends.php')
     text = open(path, encoding='utf-8', errors='replace').read()
     starts = [match.start() for match in re.finditer(r"array\('Name'\s*=>", text)]
     entries = {}
@@ -289,7 +289,7 @@ def render_dependency(record, answers):
     for label, default in RECORD_FIELDS:
         lines.append('    ' + label.ljust(44) + answers.get(label, default))
     lines.append('')
-    lines.append('  Manifest facts, read from Resources/Engine/Contract/depends.php')
+    lines.append('  Manifest facts, read from Resources/Contract/depends.php')
     for label, key in (('Binary', 'Binary'), ('Install type', 'Type'), ('Package', 'Package'),
                        ('Minimum version', 'MinimumVersion'), ('Required', 'Required'),
                        ('Subsystem', 'Subsystem'), ('License', 'License'),

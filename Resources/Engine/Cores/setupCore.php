@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / Fileinformation ...
-// / v3.9.6.
+// / v3.9.9.
 // / HRConvert2 Setup Core.
 // / A detachable installation & configuration component. convertCore.php runs without it.
 // / This file defines functions only. convertCore.php dispatches into them.
@@ -40,7 +40,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$SetupCoreVersion = 'v3.9.6';
+$SetupCoreVersion = 'v3.9.9';
 // / -----------------------------------------------------------------------------------
 
 
@@ -1449,13 +1449,17 @@ function installEnvironmentTimer($enableTimer) {
 // / A function to perform a complete installation.
 // / Accepts the dependency authorization token & a confirmation boolean, in that order.
 // / Returns a completion boolean & the number of stages that succeeded, in that order.
-// / Six stages, in the order an installation actually depends on.
+// / Seven stages, in the order an installation actually depends on.
 // /   1  Dependencies. Nothing below can be verified until the tools exist.
 // /   2  Data locations. A policy cannot be written into a directory that is not there.
 // /   3  Permissions & policies. A converter cannot run until its policy permits it.
 // /   4  Configuration. Written as a file the web server user has to read.
 // /   5  Service unit. Generated from the configuration stage four just settled.
-// /   6  Verification. Report what actually works rather than what was attempted.
+// /   6  Permissions again. Stages four & five both write files.
+// /   7  Verification. Report what actually works rather than what was attempted.
+// / The total is one local, $stageTotal, & every line that states it reads that local.
+// / The second permissions pass was added without its summary line, which went on saying
+// / six while every stage heading said seven.
 // / A stage that fails stops the ones after it. Continuing past a failed dependency install
 // / produces an installation that looks finished & is not.
 // / WITH -y NOTHING PROMPTS. Stage four keeps whatever config.php already declares, which
@@ -1471,10 +1475,11 @@ function runCompleteInstall($authorizationToken, $operatorConfirmed) {
   // / Every other function in this component has one exit & this one now does too.
   $componentIsAvailable = TRUE;
   $stageCount = $pathsCorrected = $locationsCreated = $optionalProblems = 0;
+  $stageTotal = 7;
   $operatorChoice = $serviceStatus = '';
   $dependencyFindings = array();
   print($Lol.engineApplicationName().' Complete Installation'.$Lol);
-  print('Seven stages. Dependencies, locations, permissions, configuration, service,'.$Lol);
+  print($stageTotal.' stages. Dependencies, locations, permissions, configuration, service,'.$Lol);
   print('permissions again, checks.'.$Lol);
   // / Stage one lives in Dependency Core. The --setup gate loads it before this is reached,
   // / so this is insurance rather than a check that is expected to fire. A missing function
@@ -1492,26 +1497,26 @@ function runCompleteInstall($authorizationToken, $operatorConfirmed) {
     if ($operatorChoice !== 'YES') print($Lol.'Cancelled. Nothing was done.'.$Lol.$Lol); }
   if ($componentIsAvailable && ($operatorConfirmed or $operatorChoice === 'YES')) {
     // / Stage one. Dependencies, in manifest order.
-    print($Lol.'Stage 1 of 7. Dependencies.'.$Lol);
+    print($Lol.'Stage 1 of '.$stageTotal.'. Dependencies.'.$Lol);
     list ($stageSucceeded, $stageCount) = installDepends($authorizationToken, '', TRUE);
     if (!$stageSucceeded) print($Lol.'Dependency installation did not complete. Stopping here.'.$Lol.'Run --setup --check-depends to see what is missing.'.$Lol.$Lol);
     else {
       $StagesCompleted++;
       // / Stage two. The data locations everything below writes into.
-      print($Lol.'Stage 2 of 7. Data locations.'.$Lol);
+      print($Lol.'Stage 2 of '.$stageTotal.'. Data locations.'.$Lol);
       list ($locationsAreReady, $locationsCreated) = prepareDataLocations();
       if (!$locationsAreReady) print($Lol.'One or more data locations could not be created. Stopping here.'.$Lol.$Lol);
       else {
         $StagesCompleted++;
         // / Stage three. Ownership, permissions & the policy files those packages need.
-        print($Lol.'Stage 3 of 7. Permissions & policies.'.$Lol);
+        print($Lol.'Stage 3 of '.$stageTotal.'. Permissions & policies.'.$Lol);
         list ($permissionsWereFixed, $pathsCorrected) = runApplicationRepair();
         if (!$permissionsWereFixed) print($Lol.'Permissions could not be corrected. Stopping here.'.$Lol.$Lol);
         else {
           $StagesCompleted++;
           // / Stage four. Configuration. Interactive unless the operator pre confirmed,
           // / because an unattended install must not stop for a question.
-          print($Lol.'Stage 4 of 7. Configuration.'.$Lol);
+          print($Lol.'Stage 4 of '.$stageTotal.'. Configuration.'.$Lol);
           if ($operatorConfirmed) {
             $StagesCompleted++;
             print('  Keeping the configuration this installation already declares.'.$Lol);
@@ -1520,7 +1525,7 @@ function runCompleteInstall($authorizationToken, $operatorConfirmed) {
           else if (runConfigUtility('', 'interactive', '', FALSE)) $StagesCompleted++;
           else print('  Configuration was cancelled. The shipped defaults remain in place.'.$Lol);
           // / Stage five. The service unit, generated from the configuration above.
-          print($Lol.'Stage 5 of 7. Listener service.'.$Lol);
+          print($Lol.'Stage 5 of '.$stageTotal.'. Listener service.'.$Lol);
           // / TRUE, TRUE. An installation with no listener running is not installed yet.
           list ($serviceWasInstalled, $serviceStatus) = installListenerService(TRUE, TRUE);
           if ($serviceWasInstalled or $serviceStatus === 'skipped') $StagesCompleted++;
@@ -1530,8 +1535,6 @@ function runCompleteInstall($authorizationToken, $operatorConfirmed) {
           // / what one pass reports rather than something a setup wizard does on their behalf.
           print($Lol.'Environment Manager schedule.'.$Lol);
           installEnvironmentTimer(FALSE);
-          // / Stage six. Report what actually works. An installation that says it finished
-          // / & then refuses every conversion has helped nobody.
           // / Stage six. Permissions again, because stages four & five both wrote files.
           // / Stage three cannot be the last word on ownership when work happens after it.
           // / writeConfigFile() chowns & chmods the file it renames into place, so config.php
@@ -1543,17 +1546,19 @@ function runCompleteInstall($authorizationToken, $operatorConfirmed) {
           // / It also re-tightens the two paths the whole manager security model rests on.
           // / The install secret is returned to 0600 & the socket directory to 0700, after
           // / the recursive sweep above them has finished.
-          print($Lol.'Stage 6 of 7. Permissions, second pass.'.$Lol);
+          print($Lol.'Stage 6 of '.$stageTotal.'. Permissions, second pass.'.$Lol);
           list ($permissionsWereFixed, $pathsCorrected) = runApplicationRepair();
           if ($permissionsWereFixed) $StagesCompleted++;
           else warningEntry('The second permissions pass did not complete. Files written by the configuration & service stages may be owned by root.');
-          print($Lol.'Stage 7 of 7. Verification.'.$Lol);
+          // / Stage seven. Report what actually works. An installation that says it finished
+          // / & then refuses every conversion has helped nobody.
+          print($Lol.'Stage 7 of '.$stageTotal.'. Verification.'.$Lol);
           list ($dependenciesReady, $dependencyFindings, $optionalProblems) = checkDepends('');
           showDependencyFindings($dependencyFindings);
           $StagesCompleted++;
           $InstallCompleted = TRUE;
-          logEntry('A complete installation finished '.$StagesCompleted.' of 6 stages.');
-          print($Lol.'Installation complete. '.$StagesCompleted.' of 6 stages finished.'.$Lol);
+          logEntry('A complete installation finished '.$StagesCompleted.' of '.$stageTotal.' stages.');
+          print($Lol.'Installation complete. '.$StagesCompleted.' of '.$stageTotal.' stages finished.'.$Lol);
           if (!$dependenciesReady) print($Lol.'One or more REQUIRED dependencies are still missing. Conversions using them will refuse.'.$Lol);
           if ($optionalProblems > 0) print($Lol.$optionalProblems.' OPTIONAL dependenc(ies) are missing. Those subsystems will refuse until they are installed.'.$Lol);
           print($Lol.'  php '.$InstLoc.$DirSep.engineApplicationEntryPoint().' -v          Confirm every dependency & subsystem.'.$Lol);
@@ -1563,7 +1568,7 @@ function runCompleteInstall($authorizationToken, $operatorConfirmed) {
           print('  The public URL, if share links are to work. Set it with --config.'.$Lol);
           print('  A web server virtual host, if the installation is not already served.'.$Lol.$Lol); } } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $componentIsAvailable, $stageSucceeded, $permissionsWereFixed, $locationsAreReady, $serviceWasInstalled, $dependenciesReady, $stageCount, $pathsCorrected, $locationsCreated, $optionalProblems, $operatorChoice, $serviceStatus, $dependencyFindings, $authorizationToken, $operatorConfirmed);
+  purgeSensitiveMemory($EnableMemoryProtection, $componentIsAvailable, $stageSucceeded, $permissionsWereFixed, $locationsAreReady, $serviceWasInstalled, $dependenciesReady, $stageCount, $pathsCorrected, $locationsCreated, $optionalProblems, $operatorChoice, $serviceStatus, $dependencyFindings, $authorizationToken, $operatorConfirmed, $stageTotal);
   return array($InstallCompleted, $StagesCompleted); }
 // / -----------------------------------------------------------------------------------
 

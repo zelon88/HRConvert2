@@ -276,21 +276,3 @@ That command is the whole status report. It names every dependency with no decla
 every approval that has expired, & exits 1 if it found anything. A finding is work to do
 rather than a broken tree.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
---Where This Stands Today--
-
-NOT ONE DEPENDENCY HAS BEEN AUDITED YET & EVERY RECORD SAYS SO.
-
-The records were scaffolded from the manifest. Every factual field is filled in & every audit
-answer reads NOT YET ANSWERED, because nobody has answered one. That is an honest starting
-position & it is more useful than a blank page, because the questions are now attached to the
-pipelines they belong to & --check can count what is outstanding.
-
-This project is maintained by one person & has collected more than thirty dependencies over
-ten years. These procedures are newer than most of those dependencies. The first full cycle
-will not be finished quickly, & having the procedure & an honest record of what is outstanding
-is worth more than a cycle finished on paper.
-
-If you want to help, take a dependency, answer the questions in its record & send it back.
-----------------------------------------------------------------------------------------------------------------------------------------------------------------

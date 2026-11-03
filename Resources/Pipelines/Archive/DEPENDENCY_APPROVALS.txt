@@ -15,7 +15,7 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
 --7-Zip--
 
   Approval record
-    Status                                      APPROVED
+    Status                                      ADOPTED
     Approved on                                 11/02/2026
     Expires on                                  11/02/2027
     Audited by                                  Justin Grimes (@zelon88)

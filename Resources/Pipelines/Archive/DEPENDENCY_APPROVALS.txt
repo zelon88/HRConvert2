@@ -15,11 +15,12 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
 --7-Zip--
 
   Approval record
-    Status                                      NOT YET AUDITED
-    Approved on                                 NOT YET AUDITED
-    Expires on                                  NOT YET AUDITED
-    Audited by                                  NOT YET AUDITED
-    Audit outcome                               NOT YET AUDITED
+    Status                                      APPROVED
+    Approved on                                 11/02/2026
+    Expires on                                  11/02/2027
+    Audited by                                  Justin Grimes (@zelon88)
+    Audit outcome                               PASSED
+    Notes or Conditions                         Do not approve the 'p7z-full' binaries again. Use '7zz' or build from source.
 
   Manifest facts, read from Resources/Contract/depends.php
     Binary                                      7z
@@ -34,25 +35,58 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Purpose                                     Extracts every archive format offered.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      NOT YET ANSWERED
-    1b Recent CVEs, issues or exploits          NOT YET ANSWERED
-    1c Development activity & breakage risk     NOT YET ANSWERED
-    1d What it needs to function                NOT YET ANSWERED
-    1e Can it be sandboxed or isolated          NOT YET ANSWERED
-    1f Security options & hardened configurationNOT YET ANSWERED
-    1g Could another dependency do this better  NOT YET ANSWERED
-    1h Origin & supply chain risk               NOT YET ANSWERED
-    1i Dependency traps for existing installs   NOT YET ANSWERED
-    2a System package versus a source build     NOT YET ANSWERED
-    2b Build flags, libraries & features        NOT YET ANSWERED
-    2c Minimum version & version edge cases     NOT YET ANSWERED
-    2d Licensing implications of the build      NOT YET ANSWERED
-    3a Distribution method                      NOT YET ANSWERED
-    3b Download source used                     NOT YET ANSWERED
-    3c How an installer obtains this version    NOT YET ANSWERED
-    3d Inspection of any bundled binary or code NOT YET ANSWERED
-    3e Sanity check of the build system         NOT YET ANSWERED
-    3f Build script provided                    NOT YET ANSWERED
+    1a Security design is amenable to ours      No. The quality of the codebase means it can never be used outside of a highly restricted sandbox.
+                                                While security advisories do get patched, the quality of documentation is non-existent.
+                                                No published security policies. Does not accept advisories. Does not participate in disclosures.
+    1b Recent CVEs, issues or exploits          CVE-2025-0411 (Mark-of-the-Web Bypass) - Disclosed by ZDI, this vulnerability allowed extracted files 
+                                                to bypass Windows web-mark protections.
+                                                CVE-2025-11001 & CVE-2025-11002 (Symbolic Link Traversal): Critical directory traversal bugs allowed 
+                                                remote code execution via malicious ZIP files. The vendor patched the logic ("IsSafePath" validation) 
+                                                within a standard release cycle.
+                                                CVE-2026-48095 (NTFS Heap Overflow): Disclosed by GitHub Security Lab, this flaw led to potential 
+                                                arbitrary code execution via malformed archive files. The fix was rolled into version 26.01 silently 
+                                                on the same day the coordinated advisory went public, showing strong reactive coding but zero 
+                                                vendor-side marketing or disclosure
+    1c Development activity & breakage risk     Stable. Igor Pavlov actively maintains the project with multiple updates per year via SourceForge. 
+                                                Breakage risk is low because command-line syntax changes are exceptionally rare. 
+                                                However, the legacy Linux port (p7zip) is not as good as 7zz; we must move to the official 7zz binary, 
+                                                which tracks the upstream source, or build from source.
+    1d What it needs to function                Self-Contained. The standalone binary is statically linked against most helper components, 
+                                                requiring only standard POSIX libraries (glibc, libstdc++, libgcc). It requires standard file system 
+                                                read/write access to the specific target directory and temporary directories (/tmp) to store unpackaged 
+                                                chunks during multi-part stream extractions.
+    1e Can it be sandboxed or isolated          Highly Amenable. Because it is naturally stateless and requires zero network access, it sandboxes well.
+                                                Since HRConvert2 spawns conversions dynamically, the binary can be wrapped easily within existing 
+                                                restricted namespace using standard Linux execution boundaries.
+    1f Security options & hardened configurationNone. The binary itself does not have security configuration toggles. Hardening must be environmental
+    1g Could another dependency do this better  Yes, conditionally. For standard formats like .zip and .tar.gz, native tools are far safer because they 
+                                                don't include 7-Zip’s massive parser framework. 
+                                                For proprietary .rar or native .7z formats, 7zz remains functionally unrivaled despite its memory risks.
+    1h Origin & supply chain risk               Medium-High Risk. Source code hosting relies entirely on SourceForge and a single developer infrastructure. 
+                                                There is no modern corporate signing key infrastructure, no distributed consensus among multiple maintainers, 
+                                                and no reproducible build validation tooling provided by the upstream project.
+                                                The codebase is maintained by Igor Pavlov, a private freelance developer believed to reside in Russia.
+    1i Dependency traps for existing installs   Legacy Forks in apt repositories. We currently use p7z, but we should switch to 7zz or source build ASAP.
+    2a System package versus a source build     Source Build Preferred, package version acceptable when 23.01+ is used. 
+                                                Distro-packaged binaries are built for broad compatibility rather than maximum defense. 
+                                                Custom source builds allow HRConvert2 to strip unwanted parsers out of the source tree and apply strict 
+                                                compiler-level hardening optimizations.
+    2b Build flags, libraries & features        Mandatory Fortification Flags. If building from source, you must discard the default makefiles and compile with 
+                                                maximum fortification flags to turn potential code execution exploits into safe application crashes:
+                                                  -D_FORTIFY_SOURCE=3 -fstack-protector-strong -fPIE -pie -Wl,-z,relro,-z,now
+    2c Minimum version & version edge cases     Strictly 23.01+. Do not permit any deployment older than version 23.01, as earlier versions contain unpatched 
+                                                vulnerabilities.
+    2d Licensing implications of the build      Complex Blended License. 7-Zip uses a mixed LGPL + unRAR restriction model. 
+                                                The core code is LGPL, but specific decompression submodules (primarily the RAR decoding engine) contain explicit 
+                                                licensing language forbidding the reverse engineering or reuse of the code to create a RAR compressor. 
+                                                This is fine for an internal HRConvert2 tool, but carries compliance weight if redistributed commercially.
+    3a Distribution method                      Tarball Binaries / Source Archives. Distributed via the official 7-zip.org portal as compressed source tarballs or 
+                                                pre-compiled standalone console binaries for Linux architectures (x86_64, ARM, etc.).
+    3b Download source used                     Official URL (https://7-zip.org), or SourceForce (downloads.sourceforge.net/sevenzip) as Mirror.
+    3c How an installer obtains this version    Package Manager Install.
+    3d Inspection of any bundled binary or code Inspection Impractical. High Obfuscation Risk remains present in Assembly files.
+    3e Sanity check of the build system         Required, Included.
+    3f Build script provided                    No.
 
 ------------------------------------------------------------------------------------------------------------------
 

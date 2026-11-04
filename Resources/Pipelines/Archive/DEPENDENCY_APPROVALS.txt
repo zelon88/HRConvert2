@@ -93,11 +93,12 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
 --Bubblewrap--
 
   Approval record
-    Status                                      NOT YET AUDITED
-    Approved on                                 NOT YET AUDITED
-    Expires on                                  NOT YET AUDITED
-    Audited by                                  NOT YET AUDITED
-    Audit outcome                               NOT YET AUDITED
+    Status                                      ADOPTED
+    Approved on                                 11/04/2026
+    Expires on                                  11/04/2027
+    Audited by                                  Justin Grimes (@zelon88)
+    Audit outcome                               PASSED
+    Notes or Conditions                         Mandatory foundational dependency. Use to isolate every other archive/image parser.
 
   Manifest facts, read from Resources/Contract/depends.php
     Binary                                      bwrap
@@ -108,40 +109,54 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Subsystem                                   Sandbox
     License                                     LGPL-2.0
     Depends on                                  -
-    Source                                      https://github.com/containers/bubblewrap
+    Source                                      https://github.com
     Purpose                                     Isolates every conversion from the host & the network.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      NOT YET ANSWERED
-    1b Recent CVEs, issues or exploits          NOT YET ANSWERED
-    1c Development activity & breakage risk     NOT YET ANSWERED
-    1d What it needs to function                NOT YET ANSWERED
-    1e Can it be sandboxed or isolated          NOT YET ANSWERED
-    1f Security options & hardened configurationNOT YET ANSWERED
-    1g Could another dependency do this better  NOT YET ANSWERED
-    1h Origin & supply chain risk               NOT YET ANSWERED
-    1i Dependency traps for existing installs   NOT YET ANSWERED
-    2a System package versus a source build     NOT YET ANSWERED
-    2b Build flags, libraries & features        NOT YET ANSWERED
-    2c Minimum version & version edge cases     NOT YET ANSWERED
-    2d Licensing implications of the build      NOT YET ANSWERED
-    3a Distribution method                      NOT YET ANSWERED
-    3b Download source used                     NOT YET ANSWERED
-    3c How an installer obtains this version    NOT YET ANSWERED
-    3d Inspection of any bundled binary or code NOT YET ANSWERED
-    3e Sanity check of the build system         NOT YET ANSWERED
-    3f Build script provided                    NOT YET ANSWERED
+    1a Security design is amenable to ours      Yes. Designed specifically as a minimal, unprivileged attack surface reduction boundary.
+                                                Maintained by Red Hat/GNOME developers with structured disclosure and explicit security modeling.
+                                                Codebase is exceptionally tight, readable, and avoids macro or parsing complexity.
+    1b Recent CVEs, issues or exploits          Extremely clean track record. No high-severity RCE or jailbreak flaws in years.
+                                                CVE-2019-12439 was a minor local info leak due to a temporary file descriptor layout bug.
+                                                Most environment breakout vulnerabilities stem from the underlying Linux kernel namespaces rather than bwrap.
+    1c Development activity & breakage risk     Highly Active / Low Breakage. Maintained continuously under the containers organization on GitHub.
+                                                CLI arguments and core runtime flags are frozen and stable; update regressions are virtually non-existent.
+    1d What it needs to function                Kernel Namespace Support. Relies directly on user, mount, IPC, PID, and net namespace system calls.
+                                                Requires unprivileged user namespaces enabled on the host (user.max_user_namespaces > 0).
+                                                Dynamically links against standard glibc; needs no background daemons or permanent disk writes.
+    1e Can it be sandboxed or isolated          N/A. This is the sandbox controller itself. It is transient and destroys its environment upon exit.
+    1f Security options & hardened configurationMaximal isolation flags must be applied when executing sub-commands: --unshare-all, --uid, --gid,
+                                                --ro-bind for system runtime folders, and explicit --seccomp filters to drop dangerous syscall architectures.
+    1g Could another dependency do this better  No. It is the gold standard for rapid, unprivileged, daemonless command sandboxing on Linux.
+                                                Alternative tools like Minijail lack the widespread distro adoption, while Podman/Docker bring major daemon overhead.
+    1h Origin & supply chain risk               Very Low Risk. Maintained by primary enterprise Linux contributors (Fedora, Red Hat, SUSE).
+                                                Distributed with cryptographic tag signatures and heavily scrutinized open-source review pipelines.
+    1i Dependency traps for existing installs   The Setuid Trap. If the target host kernel disables unprivileged user namespaces by default, 
+                                                bwrap requires a root-owned setuid bit to function, expanding the local attack surface if misconfigured.
+    2a System package versus a source build     System Package Preferred. The distribution-provided package is kept patched, stable, 
+                                                and correctly mapped to the underlying platform's specific namespace permissions.
+    2b Build flags, libraries & features        Standard hardened compile blocks. Ensure libseccomp filtering is explicitly compiled in (--enable-seccomp).
+    2c Minimum version & version edge cases     Strictly 0.4.0+ as defined by the manifest, though 0.8.0+ is strongly recommended to support modernized flags.
+    2d Licensing implications of the build      LGPL-2.0 is highly amenable. Safe for commercial and internal utility wrapping without copyleft traps.
+    3a Distribution method                      Native package repositories (apt) and official GitHub source releases.
+    3b Download source used                     Upstream GitHub assets or native distribution mirrors.
+    3c How an installer obtains this version    Standard automated package management fetch (apt-get install -y bubblewrap).
+    3d Inspection of any bundled binary or code Inspection Practical. Clean, straightforward, minimal C files without obfuscation or macro masking.
+    3e Sanity check of the build system         Fully automated via native continuous integration testing suites embedded in the upstream source.
+    3f Build script provided                    No. Managed safely via the native OS package controller.
 
 ------------------------------------------------------------------------------------------------------------------
 
 --Genisoimage--
 
   Approval record
-    Status                                      NOT YET AUDITED
-    Approved on                                 NOT YET AUDITED
-    Expires on                                  NOT YET AUDITED
-    Audited by                                  NOT YET AUDITED
-    Audit outcome                               NOT YET AUDITED
+    Status                                      ADOPTED
+    Approved on                                 11/04/2026
+    Expires on                                  11/04/2027
+    Audited by                                  Justin Grimes (@zelon88)
+    Audit outcome                               PASSED WITH CONDITIONS
+    Notes or Conditions                         Must always run wrapped inside a Bubblewrap container. Block access to host filesystems.
+                                                Do not approve genisoimage again. Switch to xorriso instead.
 
   Manifest facts, read from Resources/Contract/depends.php
     Binary                                      mkisofs
@@ -152,40 +167,55 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Subsystem                                   Disc Images
     License                                     GPL-2.0
     Depends on                                  Bubblewrap
-    Source                                      https://wiki.debian.org/genisoimage
+    Source                                      https://debian.org
     Purpose                                     Builds ISO images from an archive.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      NOT YET ANSWERED
-    1b Recent CVEs, issues or exploits          NOT YET ANSWERED
-    1c Development activity & breakage risk     NOT YET ANSWERED
-    1d What it needs to function                NOT YET ANSWERED
-    1e Can it be sandboxed or isolated          NOT YET ANSWERED
-    1f Security options & hardened configurationNOT YET ANSWERED
-    1g Could another dependency do this better  NOT YET ANSWERED
-    1h Origin & supply chain risk               NOT YET ANSWERED
-    1i Dependency traps for existing installs   NOT YET ANSWERED
-    2a System package versus a source build     NOT YET ANSWERED
-    2b Build flags, libraries & features        NOT YET ANSWERED
-    2c Minimum version & version edge cases     NOT YET ANSWERED
-    2d Licensing implications of the build      NOT YET ANSWERED
-    3a Distribution method                      NOT YET ANSWERED
-    3b Download source used                     NOT YET ANSWERED
-    3c How an installer obtains this version    NOT YET ANSWERED
-    3d Inspection of any bundled binary or code NOT YET ANSWERED
-    3e Sanity check of the build system         NOT YET ANSWERED
-    3f Build script provided                    NOT YET ANSWERED
+    1a Security design is amenable to ours      No. Legacy codebase that is essentially unmaintained upstream. 
+                                                It is a dead fork of the original cdrtools project, kept alive solely by Debian/Ubuntu for backwards compatibility.
+                                                Contains complex legacy filesystem parsers that cannot be trusted with adversarial binary user uploads.
+    1b Recent CVEs, issues or exploits          Low frequency of new CVE tracking primarily because the code is dormant and rarely audited by mainstream teams.
+                                                However, historical vulnerabilities highlight classic memory management flaws, buffer handling anomalies,
+                                                and integer bounds overflows when crafting deeply nested filesystem structures.
+    1c Development activity & breakage risk     Dormant/Dead. Development stopped over a decade ago. Only critical stability or compilation patches 
+                                                are applied by Debian downstream package maintainers. Breakage risk is zero due to complete feature freeze.
+    1d What it needs to function                Standard file read/write access to input directories and output target paths.
+                                                Requires runtime linking against standard glibc targets. Operates entirely as a stateless CLI utility.
+    1e Can it be sandboxed or isolated          Highly Amenable. Because it only translates a local directory layout into an ISO stream without network requirements,
+                                                it can be completely locked down within a strict Bubblewrap namespace.
+    1f Security options & hardened configurationNone native to the binary. Hardening must be enforced externally by binding only the explicit source 
+                                                and destination conversion paths via Bubblewrap, dropping all user capabilities entirely.
+    1g Could another dependency do this better  Yes. xorriso is actively maintained, modern, and serves as a drop-in replacement for the mkisofs syntax.
+                                                If the HRConvert2 manifest permits shifting package targets, xorriso is structurally superior.
+    1h Origin & supply chain risk               Medium Risk. Upstream is abandoned; we are completely reliant on the distribution's package maintainers (Debian)
+                                                to backport security patches into the source tree mirror.
+    1i Dependency traps for existing installs   The Clashing Fork Trap. Systems may inadvertently conflict with cdrtools packages or alternative mkisofs providers.
+                                                Ensure symlinks match the expected system binary location (/usr/bin/mkisofs).
+    2a System package versus a source build     System Package Acceptable ONLY because downstream distro maintainers apply critical baseline architecture fixes
+                                                that keep the legacy codebase compiling safely on modern kernels.
+    2b Build flags, libraries & features        Default package compilation flags applied by apt are sufficient when fully encapsulated by Bubblewrap.
+    2c Minimum version & version edge cases     1.1+ as defined by the manifest facts. Ensure it maps properly to the local file layout constraints.
+    2d Licensing implications of the build      GPL-2.0. Internal use within HRConvert2 carries no compliance risk, but redistributing modifications calls for copyleft reviews.
+    3a Distribution method                      Standard distribution apt package manager channels.
+    3b Download source used                     Official Debian/Ubuntu package mirror archives.
+    3c How an installer obtains this version    Automated package fetch via apt (apt-get install -y genisoimage).
+    3d Inspection of any bundled binary or code Inspection difficult due to high density of legacy C formatting styles, archaic logic flows, and sparse modern commenting.
+    3e Sanity check of the build system         Relies entirely on the distribution package builder's native architecture integration tests.
+    3f Build script provided                    No.
 
 ------------------------------------------------------------------------------------------------------------------
 
 --RAR--
 
   Approval record
-    Status                                      NOT YET AUDITED
-    Approved on                                 NOT YET AUDITED
-    Expires on                                  NOT YET AUDITED
-    Audited by                                  NOT YET AUDITED
-    Audit outcome                               NOT YET AUDITED
+    Status                                      ADOPTED
+    Approved on                                 11/04/2026
+    Expires on                                  11/04/2027
+    Audited by                                  Justin Grimes (@zelon88)
+    Audit outcome                               PASSED WITH CONDITIONS
+    Notes or Conditions                         Proprietary binary. Never allow execution without maximum Bubblewrap isolation.
+                                                Literally the only software on Earth legally allowed to create rar files.
+                                                On arm64 fetch the arm64 build, not the package.
 
   Manifest facts, read from Resources/Contract/depends.php
     Binary                                      rar
@@ -196,40 +226,63 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Subsystem                                   Archives
     License                                     Proprietary
     Depends on                                  -
-    Source                                      https://www.rarlab.com/rar/rarlinux-arm64-7.01.tar.gz
+    Source                                      https://rarlab.com
     Purpose                                     Creates RAR archives. Licence forbids redistribution. On arm64 fetch the arm64 build, not the package.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      NOT YET ANSWERED
-    1b Recent CVEs, issues or exploits          NOT YET ANSWERED
-    1c Development activity & breakage risk     NOT YET ANSWERED
-    1d What it needs to function                NOT YET ANSWERED
-    1e Can it be sandboxed or isolated          NOT YET ANSWERED
-    1f Security options & hardened configurationNOT YET ANSWERED
-    1g Could another dependency do this better  NOT YET ANSWERED
-    1h Origin & supply chain risk               NOT YET ANSWERED
-    1i Dependency traps for existing installs   NOT YET ANSWERED
-    2a System package versus a source build     NOT YET ANSWERED
-    2b Build flags, libraries & features        NOT YET ANSWERED
-    2c Minimum version & version edge cases     NOT YET ANSWERED
-    2d Licensing implications of the build      NOT YET ANSWERED
-    3a Distribution method                      NOT YET ANSWERED
-    3b Download source used                     NOT YET ANSWERED
-    3c How an installer obtains this version    NOT YET ANSWERED
-    3d Inspection of any bundled binary or code NOT YET ANSWERED
-    3e Sanity check of the build system         NOT YET ANSWERED
-    3f Build script provided                    NOT YET ANSWERED
+    1a Security design is amenable to ours      No. Closed-source proprietary binary with no public visibility into code quality, memory safety, or protective gates. 
+                                                No formal enterprise security policies or vulnerability disclosure programs exist. 
+                                                The binary acts as a total black box that handles unsafe user-controlled inputs, presenting a massive implicit risk.
+    1b Recent CVEs, issues or exploits          High Risk. Historically targeted due to its presence on millions of endpoints. 
+                                                Vulnerabilities like CVE-2023-40477 allowed remote code execution via recovery volume processing bugs. 
+                                                Memory corruption and bounds validation errors are common because the underlying parsing logic is written in legacy C/C++.
+    1c Development activity & breakage risk     Active / Low Breakage Risk. Maintained exclusively by Alexander Roshal (RARLAB). 
+                                                Updates are regular and command-line arguments remain highly backward-compatible. 
+                                                Breakage risk to HRConvert2 core features is very low during version increments.
+    1d What it needs to function                Self-Contained. Operates as a stateless command-line utility. 
+                                                Requires standard file system read/write access to input and output directories. 
+                                                Links against standard glibc paths and does not require network access or root permissions.
+    1e Can it be sandboxed or isolated          Highly Amenable. Because it performs pure algorithmic data transformations without network tracking or IPC requirements, 
+                                                it can be completely locked inside a zero-network, read-only system file layout via Bubblewrap.
+    1f Security options & hardened configurationNone native to the binary. Hardening must be applied completely from the outside by dropping all Linux capabilities 
+                                                via Bubblewrap and binding only the exact files targeted for compression.
+    1g Could another dependency do this better  No. RAR is a proprietary, closed format. While 7-Zip can *extract* RAR files, 
+                                                the official RARLAB binary is the only tool that can reliably *create* RAR archives. 
+                                                If archive creation is required by HRConvert2, this dependency is mathematically mandatory.
+    1h Origin & supply chain risk               High Risk. Closed-source utility distributed directly via RARLAB (hosted primarily out of Germany/EU, but authored by 
+                                                Russian developer Alexander Roshal). No open-source peer review, reproducible builds, or cryptographic consensus. 
+                                                We are entirely vulnerable to upstream distribution compromise.
+    1i Dependency traps for existing installs   The Architecture and Redistribution Trap. Default package managers frequently drop RAR or replace it with unrar (extract-only). 
+                                                Manual installation must explicitly distinguish architecture targets (x86_64 vs arm64) to prevent execution crashes. 
+                                                The license strictly prohibits commercial redistribution inside pre-baked container images.
+    2a System package versus a source build     Manual Binary Deployment Mandatory. Source code is completely unavailable for public compilation. 
+                                                We must pull the compiled static binaries directly from the vendor site.
+    2b Build flags, libraries & features        N/A. Code cannot be compiled from source. Compiler fortification flags cannot be injected.
+    2c Minimum version & version edge cases     Strictly 5.0+ as defined by the manifest. Version 7.00+ is strongly recommended to ensure historical memory flaws 
+                                                in the recovery engine are patched.
+    2d Licensing implications of the build      Strictly Proprietary. The trial/shareware license permits use but forbids the redistribution of the binaries 
+                                                or reverse engineering of the compression algorithms. Safe for internal HRConvert2 tool deployments, 
+                                                but a major compliance blocker if you package and sell the environment.
+    3a Distribution method                      Compressed tarballs containing pre-compiled binaries distributed directly through rarlab.com.
+    3b Download source used                     Official URL portal (https://rarlab.com).
+    3c How an installer obtains this version    Manual download via curl/wget, unpacking of the archive, and manual placement into the system path (/usr/local/bin).
+    3d Inspection of any bundled binary or code Inspection Impossible. Closed-source compiled machine code. 
+                                                Can only be audited via intensive binary disassembly or active runtime fuzzing.
+    3e Sanity check of the build system         None available. We rely entirely on the vendor's internal quality assurance pipelines.
+    3f Build script provided                    No. Must be fetched and placed manually.
 
 ------------------------------------------------------------------------------------------------------------------
 
 --Syslinux Utils--
 
   Approval record
-    Status                                      NOT YET AUDITED
-    Approved on                                 NOT YET AUDITED
-    Expires on                                  NOT YET AUDITED
-    Audited by                                  NOT YET AUDITED
-    Audit outcome                               NOT YET AUDITED
+    Status                                      ADOPTED
+    Approved on                                 11/04/2026
+    Expires on                                  11/04/2027
+    Audited by                                  Justin Grimes (@zelon88)
+    Audit outcome                               PASSED WITH CONDITIONS
+    Notes or Conditions                         Legacy utility. Must run completely encapsulated inside Bubblewrap. Block all network and host filesystem access.
+                                                Do not approve this again. Switch to xorriso instead.
 
   Manifest facts, read from Resources/Contract/depends.php
     Binary                                      isohybrid
@@ -240,40 +293,55 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Subsystem                                   Disc Images
     License                                     GPL-2.0
     Depends on                                  Genisoimage
-    Source                                      https://wiki.syslinux.org
+    Source                                      https://syslinux.org
     Purpose                                     Makes an ISO image bootable.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      NOT YET ANSWERED
-    1b Recent CVEs, issues or exploits          NOT YET ANSWERED
-    1c Development activity & breakage risk     NOT YET ANSWERED
-    1d What it needs to function                NOT YET ANSWERED
-    1e Can it be sandboxed or isolated          NOT YET ANSWERED
-    1f Security options & hardened configurationNOT YET ANSWERED
-    1g Could another dependency do this better  NOT YET ANSWERED
-    1h Origin & supply chain risk               NOT YET ANSWERED
-    1i Dependency traps for existing installs   NOT YET ANSWERED
-    2a System package versus a source build     NOT YET ANSWERED
-    2b Build flags, libraries & features        NOT YET ANSWERED
-    2c Minimum version & version edge cases     NOT YET ANSWERED
-    2d Licensing implications of the build      NOT YET ANSWERED
-    3a Distribution method                      NOT YET ANSWERED
-    3b Download source used                     NOT YET ANSWERED
-    3c How an installer obtains this version    NOT YET ANSWERED
-    3d Inspection of any bundled binary or code NOT YET ANSWERED
-    3e Sanity check of the build system         NOT YET ANSWERED
-    3f Build script provided                    NOT YET ANSWERED
+    1a Security design is amenable to ours      No. Syslinux is a legacy utility framework that has been functionally unmaintained upstream for years.
+                                                The codebase targets low-level boot sector manipulation and lacks modern secure coding principles, 
+                                                structured security policies, or coordinated disclosure workflows.
+    1b Recent CVEs, issues or exploits          Low active exploitation history for the command-line utility, primarily because the code is dormant.
+                                                However, historical bugs across the wider Syslinux ecosystem involve standard memory corruption, 
+                                                integer truncation risks, and unsafe buffer management when parsing malformed disk architectures.
+    1c Development activity & breakage risk     Dormant. The project is effectively dead upstream, receiving only occasional downstream packaging 
+                                                maintenance from Linux distribution maintainers (like Debian/Ubuntu). Breakage risk is near zero due to a complete feature freeze.
+    1d What it needs to function                Low-level file modification rights. Requires direct read/write access to the generated ISO image file 
+                                                to modify its master boot record (MBR) and partition table layouts. Operates as a stateless CLI tool linked to glibc.
+    1e Can it be sandboxed or isolated          Highly Amenable. Because the tool only manipulates a local target ISO binary file and requires zero network 
+                                                or inter-process communication (IPC), it isolates perfectly within a strict Bubblewrap wrapper.
+    1f Security options & hardened configurationNone native to the binary. Hardening must be applied externally by passing the utility to Bubblewrap, 
+                                                binding only the isolated target ISO image directory, and explicitly dropping all Linux kernel capabilities.
+    1g Could another dependency do this better  Yes. Modern alternative tools like xorriso natively handle hybrid boot generation flags (such as `isohybrid` logic) 
+                                                directly during the initial ISO creation stage, rendering separate post-processing utilities obsolete.
+    1h Origin & supply chain risk               Medium Risk. Upstream development is abandoned; the supply chain safety relies completely on downstream 
+                                                Linux distribution security teams backporting patches to the static repository code mirrors.
+    1i Dependency traps for existing installs   The Package Divergence Trap. Different Linux distributions break up Syslinux utilities into separate packages 
+                                                (e.g., syslinux, syslinux-utils, or isolinux). Ensure the apt pipeline precisely requests `syslinux-utils`.
+    2a System package versus a source build     System Package Acceptable ONLY because downstream OS package maintainers enforce baseline compilation architecture 
+                                                fixes that keep the legacy source trees compiling cleanly on modern compiler versions.
+    2b Build flags, libraries & features        Default package compilation flags applied by apt are sufficient when fully encapsulated by Bubblewrap.
+    2c Minimum version & version edge cases     0.12+ as defined by the manifest facts. Ensure it maps properly to the local file layout constraints.
+    2d Licensing implications of the build      GPL-2.0. Clean for internal infrastructure execution within HRConvert2, but requires open-source license compliance 
+                                                reviews if the final stack or container is distributed commercially.
+    3a Distribution method                      Standard distribution native package manager channels (apt).
+    3b Download source used                     Official Debian/Ubuntu package mirror archives.
+    3c How an installer obtains this version    Automated package fetch via apt (apt-get install -y syslinux-utils).
+    3d Inspection of any bundled binary or code Inspection difficult due to high density of legacy low-level C code layouts, raw byte-shifting syntax, 
+                                                and sparse modern documentation.
+    3e Sanity check of the build system         Relies entirely on the distribution package builder's native architecture integration tests.
+    3f Build script provided                    No.
 
 ------------------------------------------------------------------------------------------------------------------
 
 --Tar--
 
   Approval record
-    Status                                      NOT YET AUDITED
-    Approved on                                 NOT YET AUDITED
-    Expires on                                  NOT YET AUDITED
-    Audited by                                  NOT YET AUDITED
-    Audit outcome                               NOT YET AUDITED
+    Status                                      ADOPTED
+    Approved on                                 11/04/2026
+    Expires on                                  11/04/2027
+    Audited by                                  Justin Grimes (@zelon88)
+    Audit outcome                               PASSED
+    Notes or Conditions                         Core system component. Ensure it runs inside Bubblewrap to prevent path traversal vectors on unsafe extractions.
 
   Manifest facts, read from Resources/Contract/depends.php
     Binary                                      tar
@@ -284,40 +352,61 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Subsystem                                   Archives
     License                                     GPL-3.0
     Depends on                                  -
-    Source                                      https://www.gnu.org/software/tar
+    Source                                      https://gnu.org
     Purpose                                     Creates & extracts tar archives.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      NOT YET ANSWERED
-    1b Recent CVEs, issues or exploits          NOT YET ANSWERED
-    1c Development activity & breakage risk     NOT YET ANSWERED
-    1d What it needs to function                NOT YET ANSWERED
-    1e Can it be sandboxed or isolated          NOT YET ANSWERED
-    1f Security options & hardened configurationNOT YET ANSWERED
-    1g Could another dependency do this better  NOT YET ANSWERED
-    1h Origin & supply chain risk               NOT YET ANSWERED
-    1i Dependency traps for existing installs   NOT YET ANSWERED
-    2a System package versus a source build     NOT YET ANSWERED
-    2b Build flags, libraries & features        NOT YET ANSWERED
-    2c Minimum version & version edge cases     NOT YET ANSWERED
-    2d Licensing implications of the build      NOT YET ANSWERED
-    3a Distribution method                      NOT YET ANSWERED
-    3b Download source used                     NOT YET ANSWERED
-    3c How an installer obtains this version    NOT YET ANSWERED
-    3d Inspection of any bundled binary or code NOT YET ANSWERED
-    3e Sanity check of the build system         NOT YET ANSWERED
-    3f Build script provided                    NOT YET ANSWERED
+    1a Security design is amenable to ours      Yes. GNU Tar is an foundational, enterprise-grade utility developed and maintained by the Free Software Foundation. 
+                                                It follows a mature security model with rigorous peer review, structured disclosure procedures, 
+                                                and timely tracking of vulnerabilities.
+    1b Recent CVEs, issues or exploits          Low Risk / Well Monitored. Historical vulnerabilities (such as CVE-2021-20193) typically involve subtle directory traversal 
+                                                or symlink validation bypasses when handling malformed archives. The utility is heavily fuzzed globally, 
+                                                meaning bugs are discovered and remediated rapidly downstream.
+    1c Development activity & breakage risk     Highly Active / Extremely Low Breakage. Maintained continuously by the GNU project. 
+                                                As a baseline UNIX utility, its command-line syntax and behavior flags are rigidly standardized; 
+                                                breakage risk during routine updates is virtually non-existent.
+    1d What it needs to function                Standard System POSIX access. Requires direct read/write file system access to the targeted archive streams 
+                                                and extraction destinations. Relies on standard system glibc calls and runs entirely as a stateless console application.
+    1e Can it be sandboxed or isolated          Highly Amenable. Requires zero network operations or cross-process IPC systems. 
+                                                It functions perfectly when completely isolated within a restricted Bubblewrap container mapping only 
+                                                the explicit extraction directories.
+    1f Security options & hardened configurationNative defensive flags should be strictly enforced via the tool invocation logic inside HRConvert2, 
+                                                specifically ensuring `--overwrite` rules are locked down and relying on `--restricted` or structural boundaries 
+                                                to prevent archive files from writing into unintended absolute paths.
+    1g Could another dependency do this better  No. GNU Tar is the absolute standard for archive streaming on Linux systems. 
+                                                While alternative implementations exist (like bsdtar/libarchive), GNU Tar provides identical or superior safety profiles 
+                                                when encapsulated by an external sandbox wrapper.
+    1h Origin & supply chain risk               Very Low Risk. Maintained by the Free Software Foundation (FSF). Source mirrors are cryptographically signed, 
+                                                distributed across global redundant networks, and subject to intense scrutiny by every major Linux distribution.
+    1i Dependency traps for existing installs   The Absolute Path Trap. Maliciously crafted archives containing absolute paths (e.g., `/etc/...`) or nested 
+                                                symlinks can overwrite critical system structures if older versions are run without native safety flags or sandbox encapsulation.
+    2a System package versus a source build     System Package Preferred. The distribution-provided package is heavily validated, structurally integrated, 
+                                                and automatically updated against emerging security bugs by the underlying platform repository maintainers.
+    2b Build flags, libraries & features        Default distribution compilation profiles are optimized and fortified. Custom flags are not strictly required 
+                                                if system-provided package tracking is maintained.
+    2c Minimum version & version edge cases     Strictly 1.30+ as defined by the manifest facts to ensure native directory tracking defenses and modern symlink parsing validations 
+                                                are present.
+    2d Licensing implications of the build      GPL-3.0. Perfectly acceptable for internal server use and standard utility invocation within HRConvert2. 
+                                                However, the copyleft nature requires thorough architectural separation if the application stack is bundled into proprietary commercial distributions.
+    3a Distribution method                      Native OS package manager repositories (apt) or GNU Project source distribution mirrors.
+    3b Download source used                     Official GNU software portal (https://gnu.org) or local distribution mirrors.
+    3c How an installer obtains this version    Automated package fetch and management via the system package utility (apt-get install -y tar).
+    3d Inspection of any bundled binary or code Inspection Practical. Transparent, mature, and well-commented C codebase, though large and historically complex due to decades 
+                                                of legacy media compatibility logic.
+    3e Sanity check of the build system         Fully validated via comprehensive automated regression and architectural test suites included within the official upstream source.
+    3f Build script provided                    No.
 
 ------------------------------------------------------------------------------------------------------------------
 
 --Zip--
 
   Approval record
-    Status                                      NOT YET AUDITED
-    Approved on                                 NOT YET AUDITED
-    Expires on                                  NOT YET AUDITED
-    Audited by                                  NOT YET AUDITED
-    Audit outcome                               NOT YET AUDITED
+    Status                                      ADOPTED
+    Approved on                                 11/04/2026
+    Expires on                                  11/04/2027
+    Audited by                                  Justin Grimes (@zelon88)
+    Audit outcome                               PASSED
+    Notes or Conditions                         Legacy format tools. Ensure both 'zip' and 'unzip' are installed and always run encapsulated inside Bubblewrap.
 
   Manifest facts, read from Resources/Contract/depends.php
     Binary                                      zip
@@ -328,28 +417,47 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Subsystem                                   Archives
     License                                     Info-ZIP
     Depends on                                  -
-    Source                                      http://infozip.sourceforge.net
+    Source                                      http://sourceforge.net
     Purpose                                     Creates zip archives.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      NOT YET ANSWERED
-    1b Recent CVEs, issues or exploits          NOT YET ANSWERED
-    1c Development activity & breakage risk     NOT YET ANSWERED
-    1d What it needs to function                NOT YET ANSWERED
-    1e Can it be sandboxed or isolated          NOT YET ANSWERED
-    1f Security options & hardened configurationNOT YET ANSWERED
-    1g Could another dependency do this better  NOT YET ANSWERED
-    1h Origin & supply chain risk               NOT YET ANSWERED
-    1i Dependency traps for existing installs   NOT YET ANSWERED
-    2a System package versus a source build     NOT YET ANSWERED
-    2b Build flags, libraries & features        NOT YET ANSWERED
-    2c Minimum version & version edge cases     NOT YET ANSWERED
-    2d Licensing implications of the build      NOT YET ANSWERED
-    3a Distribution method                      NOT YET ANSWERED
-    3b Download source used                     NOT YET ANSWERED
-    3c How an installer obtains this version    NOT YET ANSWERED
-    3d Inspection of any bundled binary or code NOT YET ANSWERED
-    3e Sanity check of the build system         NOT YET ANSWERED
-    3f Build script provided                    NOT YET ANSWERED
+    1a Security design is amenable to ours      Yes. Info-ZIP tools follow a stable, mature, and well-understood design. 
+                                                While the code is written in legacy C and lacks modern memory-safe guardrails, 
+                                                the tools have been thoroughly fuzzed and hardened by the open-source community over decades.
+    1b Recent CVEs, issues or exploits          Low Risk / Heavily Patched. Historical issues like CVE-2022-0529 and CVE-2022-0530 involved integer 
+                                                overflows and heap-based buffer overflows when handling invalid multi-byte characters or malformed entries. 
+                                                Modern distro packages include robust patches for these edge cases.
+    1c Development activity & breakage risk     Dormant / Very Low Breakage Risk. The upstream Info-ZIP project has been stable and largely quiet for years, 
+                                                with active maintainership handled downstream by Linux distributions backporting stability fixes. 
+                                                Syntax and behavior are set in stone, meaning update breakage is non-existent.
+    1d What it needs to function                Standard System POSIX access. Requires direct read/write file system rights to targeted input paths 
+                                                and output archives. Relies on standard glibc calls and runs completely as a stateless console application.
+    1e Can it be sandboxed or isolated          Highly Amenable. Requires zero network operations or inter-process communication (IPC) frameworks. 
+                                                It operates perfectly when completely isolated within a restricted Bubblewrap container mapping only 
+                                                the explicit extraction directories.
+    1f Security options & hardened configurationNative defensive flags should be strictly enforced via the tool invocation logic inside HRConvert2, 
+                                                specifically ensuring that when unzipping, standard input validation matches extraction constraints 
+                                                and no absolute paths or parent directories are targets.
+    1g Could another dependency do this better  No. Info-ZIP's `zip` and `unzip` are the ubiquitous open-source standard implementations for the ZIP format on Linux. 
+                                                While 7-Zip can handle ZIP archives, maintaining native Info-ZIP binaries provides a lighter, 
+                                                highly standardized parsing alternative when wrapped by Bubblewrap.
+    1h Origin & supply chain risk               Very Low Risk. Shipped natively by all major Linux distributions (Debian, Red Hat, Ubuntu). 
+                                                Source tarballs are maintained inside distro mirrors, cryptographically signed, 
+                                                and heavily protected against malicious upstream tampering.
+    1i Dependency traps for existing installs   The Symlink Overwrite Trap. Unzipping untrusted archives carries risk if the utility processes malicious 
+                                                nested symlinks that attempt to traverse outside the target folder. External isolation via Bubblewrap is mandatory.
+    2a System package versus a source build     System Package Preferred. The distribution-provided package is heavily validated, structurally integrated, 
+                                                and automatically updated against emerging security bugs by the underlying platform repository maintainers.
+    2b Build flags, libraries & features        Default distribution compilation profiles are optimized and fortified. Custom flags are not required 
+                                                if system-provided package tracking is maintained.
+    2c Minimum version & version edge cases     Strictly 3.0+ as defined by the manifest facts to ensure standard archive boundaries and proper large-file parsing features.
+    2d Licensing implications of the build      Info-ZIP License (BSD-style permissive copyright). Highly business-friendly, contains no copyleft restrictions, 
+                                                and carries zero compliance risks for bundling or commercial use.
+    3a Distribution method                      Native OS package manager repositories (apt) or SourceForge project hosting directories.
+    3b Download source used                     Official distribution mirror networks.
+    3c How an installer obtains this version    Automated package fetch and management via the system package utility (apt-get install -y zip unzip).
+    3d Inspection of any bundled binary or code Inspection Practical. Transparent, mature, and readable C codebase, heavily documented due to decades of historical standards compliance.
+    3e Sanity check of the build system         Fully validated via comprehensive automated packaging validation checks built into distribution build pipelines.
+    3f Build script provided                    No.
 
 ------------------------------------------------------------------------------------------------------------------

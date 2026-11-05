@@ -15,11 +15,12 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
 --Bubblewrap--
 
   Approval record
-    Status                                      NOT YET AUDITED
-    Approved on                                 NOT YET AUDITED
-    Expires on                                  NOT YET AUDITED
-    Audited by                                  NOT YET AUDITED
-    Audit outcome                               NOT YET AUDITED
+    Status                                      ADOPTED
+    Approved on                                 11/04/2026
+    Expires on                                  11/04/2027
+    Audited by                                  Justin Grimes (@zelon88)
+    Audit outcome                               PASSED
+    Notes or Conditions                         Mandatory foundational dependency. Use to isolate every other archive/image parser.
 
   Manifest facts, read from Resources/Contract/depends.php
     Binary                                      bwrap
@@ -30,40 +31,53 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Subsystem                                   Sandbox
     License                                     LGPL-2.0
     Depends on                                  -
-    Source                                      https://github.com/containers/bubblewrap
+    Source                                      https://github.com
     Purpose                                     Isolates every conversion from the host & the network.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      NOT YET ANSWERED
-    1b Recent CVEs, issues or exploits          NOT YET ANSWERED
-    1c Development activity & breakage risk     NOT YET ANSWERED
-    1d What it needs to function                NOT YET ANSWERED
-    1e Can it be sandboxed or isolated          NOT YET ANSWERED
-    1f Security options & hardened configurationNOT YET ANSWERED
-    1g Could another dependency do this better  NOT YET ANSWERED
-    1h Origin & supply chain risk               NOT YET ANSWERED
-    1i Dependency traps for existing installs   NOT YET ANSWERED
-    2a System package versus a source build     NOT YET ANSWERED
-    2b Build flags, libraries & features        NOT YET ANSWERED
-    2c Minimum version & version edge cases     NOT YET ANSWERED
-    2d Licensing implications of the build      NOT YET ANSWERED
-    3a Distribution method                      NOT YET ANSWERED
-    3b Download source used                     NOT YET ANSWERED
-    3c How an installer obtains this version    NOT YET ANSWERED
-    3d Inspection of any bundled binary or code NOT YET ANSWERED
-    3e Sanity check of the build system         NOT YET ANSWERED
-    3f Build script provided                    NOT YET ANSWERED
+    1a Security design is amenable to ours      Yes. Designed specifically as a minimal, unprivileged attack surface reduction boundary.
+                                                Maintained by Red Hat/GNOME developers with structured disclosure and explicit security modeling.
+                                                Codebase is exceptionally tight, readable, and avoids macro or parsing complexity.
+    1b Recent CVEs, issues or exploits          Extremely clean track record. No high-severity RCE or jailbreak flaws in years.
+                                                CVE-2019-12439 was a minor local info leak due to a temporary file descriptor layout bug.
+                                                Most environment breakout vulnerabilities stem from the underlying Linux kernel namespaces rather than bwrap.
+    1c Development activity & breakage risk     Highly Active / Low Breakage. Maintained continuously under the containers organization on GitHub.
+                                                CLI arguments and core runtime flags are frozen and stable; update regressions are virtually non-existent.
+    1d What it needs to function                Kernel Namespace Support. Relies directly on user, mount, IPC, PID, and net namespace system calls.
+                                                Requires unprivileged user namespaces enabled on the host (user.max_user_namespaces > 0).
+                                                Dynamically links against standard glibc; needs no background daemons or permanent disk writes.
+    1e Can it be sandboxed or isolated          N/A. This is the sandbox controller itself. It is transient and destroys its environment upon exit.
+    1f Security options & hardened configurationMaximal isolation flags must be applied when executing sub-commands: --unshare-all, --uid, --gid,
+                                                --ro-bind for system runtime folders, and explicit --seccomp filters to drop dangerous syscall architectures.
+    1g Could another dependency do this better  No. It is the gold standard for rapid, unprivileged, daemonless command sandboxing on Linux.
+                                                Alternative tools like Minijail lack the widespread distro adoption, while Podman/Docker bring major daemon overhead.
+    1h Origin & supply chain risk               Very Low Risk. Maintained by primary enterprise Linux contributors (Fedora, Red Hat, SUSE).
+                                                Distributed with cryptographic tag signatures and heavily scrutinized open-source review pipelines.
+    1i Dependency traps for existing installs   The Setuid Trap. If the target host kernel disables unprivileged user namespaces by default, 
+                                                bwrap requires a root-owned setuid bit to function, expanding the local attack surface if misconfigured.
+    2a System package versus a source build     System Package Preferred. The distribution-provided package is kept patched, stable, 
+                                                and correctly mapped to the underlying platform's specific namespace permissions.
+    2b Build flags, libraries & features        Standard hardened compile blocks. Ensure libseccomp filtering is explicitly compiled in (--enable-seccomp).
+    2c Minimum version & version edge cases     Strictly 0.4.0+ as defined by the manifest, though 0.8.0+ is strongly recommended to support modernized flags.
+    2d Licensing implications of the build      LGPL-2.0 is highly amenable. Safe for commercial and internal utility wrapping without copyleft traps.
+    3a Distribution method                      Native package repositories (apt) and official GitHub source releases.
+    3b Download source used                     Upstream GitHub assets or native distribution mirrors.
+    3c How an installer obtains this version    Standard automated package management fetch (apt-get install -y bubblewrap).
+    3d Inspection of any bundled binary or code Inspection Practical. Clean, straightforward, minimal C files without obfuscation or macro masking.
+    3e Sanity check of the build system         Fully automated via native continuous integration testing suites embedded in the upstream source.
+    3f Build script provided                    No. Managed safely via the native OS package controller.
 
 ------------------------------------------------------------------------------------------------------------------
 
 --Inkscape--
 
   Approval record
-    Status                                      NOT YET AUDITED
-    Approved on                                 NOT YET AUDITED
-    Expires on                                  NOT YET AUDITED
-    Audited by                                  NOT YET AUDITED
-    Audit outcome                               NOT YET AUDITED
+    Status                                      ADOPTED
+    Approved on                                 11/05/2026
+    Expires on                                  11/05/2027
+    Audited by                                  Justin Grimes (@zelon88)
+    Audit outcome                               PASSED WITH CONDITIONS
+    Notes or Conditions                         Primary vector conversion framework. Replaces legacy Dia rules. Must always run encapsulated inside Bubblewrap.
 
   Manifest facts, read from Resources/Contract/depends.php
     Binary                                      inkscape
@@ -78,24 +92,53 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Purpose                                     Converts vector graphics.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      NOT YET ANSWERED
-    1b Recent CVEs, issues or exploits          NOT YET ANSWERED
-    1c Development activity & breakage risk     NOT YET ANSWERED
-    1d What it needs to function                NOT YET ANSWERED
-    1e Can it be sandboxed or isolated          NOT YET ANSWERED
-    1f Security options & hardened configurationNOT YET ANSWERED
-    1g Could another dependency do this better  NOT YET ANSWERED
-    1h Origin & supply chain risk               NOT YET ANSWERED
-    1i Dependency traps for existing installs   NOT YET ANSWERED
-    2a System package versus a source build     NOT YET ANSWERED
-    2b Build flags, libraries & features        NOT YET ANSWERED
-    2c Minimum version & version edge cases     NOT YET ANSWERED
-    2d Licensing implications of the build      NOT YET ANSWERED
-    3a Distribution method                      NOT YET ANSWERED
-    3b Download source used                     NOT YET ANSWERED
-    3c How an installer obtains this version    NOT YET ANSWERED
-    3d Inspection of any bundled binary or code NOT YET ANSWERED
-    3e Sanity check of the build system         NOT YET ANSWERED
-    3f Build script provided                    NOT YET ANSWERED
+    1a Security design is amenable to ours      Yes, procedurally. Inkscape features a highly mature, structured development pipeline under the Software Freedom 
+                                                Conservancy. Upstream maintains a clear secure development framework, leverages GitLab for open issue triage, 
+                                                and utilizes coordinated community channels to handle vulnerability disclosures. However, because it parses highly 
+                                                complex, untrusted XML-based vector markup paths (SVG) and exotic drawing shapes, it features an extensive 
+                                                architectural processing attack surface.
+    1b Recent CVEs, issues or exploits          Moderate Risk. Given its status as a heavily scrutinized design tool, it faces active community security fuzzing. 
+                                                Recent development sprints (such as the late 2026 Bug Accelerator Program) actively target performance optimizations 
+                                                and crasher elimination. Historical vulnerabilities typically involve heap-based buffer overflows, null-pointer errors, 
+                                                and XML External Entity (XXE) data leaks inside its third-party file layout import filters (like DXF, WMF, or EMF loaders).
+    1c Development activity & breakage risk     Highly Active / Low Breakage Risk. Strongly maintained with regular minor version releases (v1.4.x / 1.4.4+ active). 
+                                                The core headless command-line transformation switches (`--export-type`, `--export-filename`) are frozen 
+                                                and stable across modern release cycles. Upgrading the package version via standard channels presents minimal risk 
+                                                of breaking internal HRConvert2 execution script configurations.
+    1d What it needs to function                Resource Intensive / Shared GUI Components. Requires substantial CPU processing and memory structures when rasterizing, 
+                                                rendering, or optimizing ultra-dense vector node trees. Operates as a stateless command execution shell 
+                                                requiring direct file read/write rights to map output destinations. Links to extensive font management subsystems, 
+                                                glibc, and graphics layout packages (GTK, Pango, Cairo).
+    1e Can it be sandboxed or isolated          Highly Amenable. Vector image transformation is a purely self-contained, mathematical shape-parsing routine. 
+                                                It requires zero host network operations, no root structural administration paths, and zero local inter-process 
+                                                communication (IPC). It isolates flawlessly within an unprivileged, zero-network Bubblewrap sandbox jail environment.
+    1f Security options & hardened configurationNative hardening must be applied via command-line runtime flags. When executing conversions inside HRConvert2, 
+                                                ensure execution arguments strictly omit any GUI interactions or user-supplied scripting extensions. The definitive 
+                                                boundary control must be applied by stripping all Linux kernel capabilities and trapping the application context 
+                                                via your wrapping Bubblewrap namespace layout.
+    1g Could another dependency do this better  No. For converting, rasterizing, and optimizing multi-layer vector layout structures programmatically on Linux, 
+                                                Inkscape is the unrivaled open-source gold standard. It is vastly safer, better fuzzed, and more reliable than 
+                                                legacy layout utilities like Dia. The structural parser risks are optimally minimized by enforcing Bubblewrap boundaries.
+    1h Origin & supply chain risk               Very Low Risk. Governed by a prominent, transparent open-source global community of vector graphics engineers. 
+                                                Source tracking pipelines and version controls are completely transparent on GitLab. Because this is an `apt` installation, 
+                                                the primary supply chain signature validation and patch backport tracking burden is safely handled by your OS distribution's team.
+    1i Dependency traps for existing installs   The Headless Display Engine / Font Trap. While Inkscape handles headless rendering natively via standard CLI parameters, 
+                                                older container installations or unhardened environments can throw unexpected crashes if specific fallback font packages 
+                                                are completely missing from the target Linux container footprint, distorting the output canvas matrix.
+    2a System package versus a source build     System Package Preferred. Compiling a massive, sprawling vector environment like Inkscape and its broad array 
+                                                of graphics layout dependencies from source is exceptionally time-consuming. The system package via `apt` provides 
+                                                a fortified, hardened binary tree with continuous security tracking automatically.
+    2b Build flags, libraries & features        Default package compilation flags applied by apt are sufficient when fully encapsulated by Bubblewrap.
+    2c Minimum version & version edge cases     Strictly 1.2+ as defined by the manifest facts to ensure proper headless export parsing arguments, updated XML validation 
+                                                safety gates, and modern baseline performance enhancements are universally present.
+    2d Licensing implications of the build      GNU General Public License (GPL-3.0). Standard copyleft framework. Completely clean for internal conversion loop execution 
+                                                within HRConvert2, but mandates careful structural monitoring if the collective environment stack is distributed commercially.
+    3a Distribution method                      Standard distribution native package manager repositories (apt).
+    3b Download source used                     Official distribution mirror networks.
+    3c How an installer obtains this version    Automated package fetch via the platform package tool (apt-get install -y inkscape).
+    3d Inspection of any bundled binary or code Inspection Practical but Difficult. Extensive, multi-million line C++ graphics framework combining vector math, 
+                                                rendering loops, and extensive third-party extension tracking scripts that require specialized layout library knowledge to review.
+    3e Sanity check of the build system         Relies entirely on the distribution package builder's native target architecture integration checks.
+    3f Build script provided                    No.
 
 ------------------------------------------------------------------------------------------------------------------

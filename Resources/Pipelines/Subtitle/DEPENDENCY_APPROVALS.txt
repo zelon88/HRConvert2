@@ -15,11 +15,12 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
 --Bubblewrap--
 
   Approval record
-    Status                                      NOT YET AUDITED
-    Approved on                                 NOT YET AUDITED
-    Expires on                                  NOT YET AUDITED
-    Audited by                                  NOT YET AUDITED
-    Audit outcome                               NOT YET AUDITED
+    Status                                      ADOPTED
+    Approved on                                 11/04/2026
+    Expires on                                  11/04/2027
+    Audited by                                  Justin Grimes (@zelon88)
+    Audit outcome                               PASSED
+    Notes or Conditions                         Mandatory foundational dependency. Use to isolate every other archive/image parser.
 
   Manifest facts, read from Resources/Contract/depends.php
     Binary                                      bwrap
@@ -30,29 +31,41 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Subsystem                                   Sandbox
     License                                     LGPL-2.0
     Depends on                                  -
-    Source                                      https://github.com/containers/bubblewrap
+    Source                                      https://github.com
     Purpose                                     Isolates every conversion from the host & the network.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      NOT YET ANSWERED
-    1b Recent CVEs, issues or exploits          NOT YET ANSWERED
-    1c Development activity & breakage risk     NOT YET ANSWERED
-    1d What it needs to function                NOT YET ANSWERED
-    1e Can it be sandboxed or isolated          NOT YET ANSWERED
-    1f Security options & hardened configurationNOT YET ANSWERED
-    1g Could another dependency do this better  NOT YET ANSWERED
-    1h Origin & supply chain risk               NOT YET ANSWERED
-    1i Dependency traps for existing installs   NOT YET ANSWERED
-    2a System package versus a source build     NOT YET ANSWERED
-    2b Build flags, libraries & features        NOT YET ANSWERED
-    2c Minimum version & version edge cases     NOT YET ANSWERED
-    2d Licensing implications of the build      NOT YET ANSWERED
-    3a Distribution method                      NOT YET ANSWERED
-    3b Download source used                     NOT YET ANSWERED
-    3c How an installer obtains this version    NOT YET ANSWERED
-    3d Inspection of any bundled binary or code NOT YET ANSWERED
-    3e Sanity check of the build system         NOT YET ANSWERED
-    3f Build script provided                    NOT YET ANSWERED
+    1a Security design is amenable to ours      Yes. Designed specifically as a minimal, unprivileged attack surface reduction boundary.
+                                                Maintained by Red Hat/GNOME developers with structured disclosure and explicit security modeling.
+                                                Codebase is exceptionally tight, readable, and avoids macro or parsing complexity.
+    1b Recent CVEs, issues or exploits          Extremely clean track record. No high-severity RCE or jailbreak flaws in years.
+                                                CVE-2019-12439 was a minor local info leak due to a temporary file descriptor layout bug.
+                                                Most environment breakout vulnerabilities stem from the underlying Linux kernel namespaces rather than bwrap.
+    1c Development activity & breakage risk     Highly Active / Low Breakage. Maintained continuously under the containers organization on GitHub.
+                                                CLI arguments and core runtime flags are frozen and stable; update regressions are virtually non-existent.
+    1d What it needs to function                Kernel Namespace Support. Relies directly on user, mount, IPC, PID, and net namespace system calls.
+                                                Requires unprivileged user namespaces enabled on the host (user.max_user_namespaces > 0).
+                                                Dynamically links against standard glibc; needs no background daemons or permanent disk writes.
+    1e Can it be sandboxed or isolated          N/A. This is the sandbox controller itself. It is transient and destroys its environment upon exit.
+    1f Security options & hardened configurationMaximal isolation flags must be applied when executing sub-commands: --unshare-all, --uid, --gid,
+                                                --ro-bind for system runtime folders, and explicit --seccomp filters to drop dangerous syscall architectures.
+    1g Could another dependency do this better  No. It is the gold standard for rapid, unprivileged, daemonless command sandboxing on Linux.
+                                                Alternative tools like Minijail lack the widespread distro adoption, while Podman/Docker bring major daemon overhead.
+    1h Origin & supply chain risk               Very Low Risk. Maintained by primary enterprise Linux contributors (Fedora, Red Hat, SUSE).
+                                                Distributed with cryptographic tag signatures and heavily scrutinized open-source review pipelines.
+    1i Dependency traps for existing installs   The Setuid Trap. If the target host kernel disables unprivileged user namespaces by default, 
+                                                bwrap requires a root-owned setuid bit to function, expanding the local attack surface if misconfigured.
+    2a System package versus a source build     System Package Preferred. The distribution-provided package is kept patched, stable, 
+                                                and correctly mapped to the underlying platform's specific namespace permissions.
+    2b Build flags, libraries & features        Standard hardened compile blocks. Ensure libseccomp filtering is explicitly compiled in (--enable-seccomp).
+    2c Minimum version & version edge cases     Strictly 0.4.0+ as defined by the manifest, though 0.8.0+ is strongly recommended to support modernized flags.
+    2d Licensing implications of the build      LGPL-2.0 is highly amenable. Safe for commercial and internal utility wrapping without copyleft traps.
+    3a Distribution method                      Native package repositories (apt) and official GitHub source releases.
+    3b Download source used                     Upstream GitHub assets or native distribution mirrors.
+    3c How an installer obtains this version    Standard automated package management fetch (apt-get install -y bubblewrap).
+    3d Inspection of any bundled binary or code Inspection Practical. Clean, straightforward, minimal C files without obfuscation or macro masking.
+    3e Sanity check of the build system         Fully automated via native continuous integration testing suites embedded in the upstream source.
+    3f Build script provided                    No. Managed safely via the native OS package controller.
 
 ------------------------------------------------------------------------------------------------------------------
 

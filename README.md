@@ -83,6 +83,10 @@ sudo php convertCore.php -v
 
 This validates every installed component, every dependency, every feature. Everything. An extremely powerful diagnostic tool.
 
+## ☁️ One-Click Deploy
+
+[![Deploy on RepoCloud](https://d16t0pc4846x52.cloudfront.net/deploylobe.svg)](https://repocloud.io/details/HRConvert2/)
+
 ---
 
 ## 📦 Supported Formats: 488 Total

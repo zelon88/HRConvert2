@@ -48,7 +48,7 @@ and read what ImageMagick offers as readable formats.
   FILE     Uniform Resource Locator (file://)
 
 MSL is a scripting language ImageMagick executes. The three URL handlers fetch a remote
-address without passing through NetworkCore, dnsLookup, isPubliclyRoutableIP, or any other
+address without passing through addressMayBeReached, dnsLookup, isPubliclyRoutableIP, or any other
 guard this application owns. A design that let detection add formats would have made all
 four uploadable, because $Allowed is built from the accepted format arrays and verifyFile()
 gates on $Allowed. A tool's own opinion of itself is a filter. It is never a source.
@@ -237,7 +237,7 @@ DETECTION SPAWNS A PROCESS FOR EVERY DEPENDENCY THAT CAN ANSWER. IT NEVER RUNS I
 That reads the machine & changes nothing else, so it needs no authorization token. It does
 write a file, so it is worth knowing when it runs.
 
-The cache lives beside the data location as capability-cache.php & is a PHP file on
+The cache lives in the data location as capability-cache.php & is a PHP file on
 purpose. It cannot render anything if it is ever served, it refuses to execute without the
 core, and require_once is the only parser it needs. A JSON or an ini file would need a
 parser of its own and would be readable as plain text.

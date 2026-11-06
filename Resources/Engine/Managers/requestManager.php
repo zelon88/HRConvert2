@@ -8,9 +8,11 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.9.6.
+// / v4.0.0.
 // / This file is the Request Manager. It is a manager subcomponent of the Engine.
-// / The Request Manager answers a request for budget, grants a token & takes it back when the work is finished or abandoned.
+// / The Request Manager owns the only socket a worker may address. It refuses a request a
+// / worker may not issue & forwards the rest, so a budget request reaches the Resource
+// / Manager, which grants & reclaims every token, without a worker ever addressing it.
 // /
 // / A manager is a role a long lived process runs under rather than a file the application
 // / loads on demand. It has a lifetime measured in days, a socket & a place in a budget.
@@ -38,7 +40,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A m
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v3.9.6';
+$ManagerVersion = 'v4.0.0';
 // / -----------------------------------------------------------------------------------
 
 

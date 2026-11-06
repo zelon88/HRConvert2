@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.9.3.
+// / v4.0.0.
 // / The Files pipeline. Operations on a file that do not care what is inside it.
 // /
 // / EVERY PATH ARRIVES AS AN ARGUMENT. Nothing here reads a session global, which is what
@@ -109,7 +109,7 @@ function placeFileInDirectory($permittedDirectory, $sourcePath, $destinationName
   return array($FileWasPlaced, $PlacedName); }
 // / -----------------------------------------------------------------------------------
 
-
+// / -----------------------------------------------------------------------------------
 // / A function to remove files from one directory.
 // / Accepts the directory that may be touched & the names to remove. Returns whether every
 // / removal succeeded, how many were attempted & how many went.

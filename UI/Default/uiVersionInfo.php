@@ -9,10 +9,10 @@
 // /
 // / APPLICATION INFORMATION ...
 // / This application is designed to provide a web-interface for converting file formats
-// / on a server for users of any web browser without authentication.l
+// / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v3.9.6.
+// / v4.0.0.
 // / This file contains the current HRConvert2 version for update verification purposes.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -20,9 +20,8 @@
 // / This application will run on just about any x86 or x64 computer.
 // /
 // / DEPENDENCY REQUIREMENTS ...
-// / This application requires Debian Linux (w/3rd Party audio license), Apache 2.4,
-// / PHP 8+, LibreOffice, Unoconv, ClamAV, Tesseract,  Unzip, FFMPEG, Mkisofs, 7zip,
-// / Rar, Unrar, libgxps-utils, PopplerUtils, MeshLab, PDFTOTEXT, Dia, ImageMagick.
+// / The authoritative list of dependencies is Resources/Contract/depends.php & nothing else.
+// / Run  php convertCore.php -v  to see what this installation has.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -31,6 +30,6 @@
 // / -----------------------------------------------------------------------------------
 // / The version of this GUI pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, verifyGui() function.
-$GuiVersion = 'v3.9.7';
+$GuiVersion = 'v4.0.0';
 $GuiVersion = ltrim($GuiVersion, 'vV');
 // / -----------------------------------------------------------------------------------

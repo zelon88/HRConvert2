@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.9.9.
+// / v4.0.0.
 // / This file is the Resource Manager. It is a manager subcomponent of the Engine.
 // / The Resource Manager polls the host, calculates the budget every operation is granted from & sweeps anything that has outlived its welcome.
 // /
@@ -38,7 +38,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A m
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v3.9.9';
+$ManagerVersion = 'v4.0.0';
 // / -----------------------------------------------------------------------------------
 
 
@@ -362,6 +362,7 @@ function evictExpiredSessionLocations(&$sessionLocations, $maximumAgeSeconds) {
   return $EntriesDropped; }
 // / -----------------------------------------------------------------------------------
 
+// / -----------------------------------------------------------------------------------
 // / A function to decide which data location a session uses & remember the answer.
 // / Accepts the session map BY REFERENCE, the daily hash & the session hash.
 // / Returns the absolute path as a string.

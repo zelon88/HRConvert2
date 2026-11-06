@@ -1,19 +1,34 @@
-------------------------------------------------------------------------------------------------------------------
-DEPENDENCY APPROVAL RECORD
-The File Operations pipeline.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 10/30/2026 by Justin Grimes, www.github.com/zelon88
 
-Written by Documentation/Build/hrconvert2-approvals.py v3.9.7.
-Every factual field is read from the dependency manifest & is rewritten by that tool.
-Every audit answer is written by a person & is kept across a refresh.
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v3.9.7.
+This plain text file is the dependency approval record for the File Operations pipeline.
+It is written by Documentation/Build/hrconvert2-approvals.py. Every factual field is read from the dependency manifest & is rewritten by that tool. Every audit answer & every note is written by a person & is kept across a refresh.
 The procedure these questions come from is in Documentation/ABOUT_DEPENDENCIES.txt.
 
-These are the dependencies this pipeline uses. The list is worked out from the
-tools the pipeline asks for by name, from whether it isolates a command, & from the
-subsystem it declares. A pipeline is detachable, so this record travels with it.
-------------------------------------------------------------------------------------------------------------------
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About This Record--
 
 This pipeline uses no dependency outside the application itself.
 There is nothing here to audit. The dependencies the application needs to run at
 all are recorded in Documentation/DEPENDENCY_APPROVALS.txt.
-
-------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

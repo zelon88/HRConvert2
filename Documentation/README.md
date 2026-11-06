@@ -7,8 +7,8 @@ Welcome to the official `Documentation/` folder! This document outlines the cont
 ## 🛠️ Core Infrastructure Specifications
 
 ### Legal & Distribution
-* **Intellectual Property:** HRConvert2 is Copyright © 2026 by Justin Grimes ([GitHub](https://github.com)).
-* **Licensing Model:** Protected under the strict terms of the **GNU GPLv3 Open-Source License**. Refer to the [Official License Portal](https://gnu.org) for distribution requirements.
+* **Intellectual Property:** HRConvert2 is Copyright © 2026 by Justin Grimes ([GitHub](https://www.github.com/zelon88)).
+* **Licensing Model:** Protected under the strict terms of the **GNU GPLv3 Open-Source License**. Refer to the [Official License Portal](https://www.gnu.org/licenses/gpl-3.0.html) for distribution requirements.
 
 ### System Intent
 This application provides a highly accessible, unauthenticated web interface enabling file conversions directly on a server infrastructure using any modern web browser.
@@ -18,7 +18,7 @@ This application provides a highly accessible, unauthenticated web interface ena
 | **Hardware** | Raspberry Pi Model B+ (or any standard x86 / x64 architecture computing platform) |
 | **Environment** | Debian Linux + Apache Web Server v2.4 + PHP v8.0 or greater |
 
-> ⚙️ **Core Dependencies:** FFMPEG, Dia, LibreOffice, Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia, and xvfb-run.
+> ⚙️ **Core Dependencies:** The authoritative list of dependencies is `Resources/Contract/depends.php` and nothing else. Run `php convertCore.php -v` to see what this installation has.
 
 ---
 
@@ -31,8 +31,8 @@ Every significant subject inside this folder comes packaged in **two distinct fl
 
 ```text
 📁 /Documentation
-   ├── 📄 About Documentation.txt   <-- The Authoritative Source of Truth
-   └── 🎨 About Documentation.md   <-- The Vibrant User Manual
+   ├── 📄 ABOUT_DOCUMENTATION.txt   <-- The Authoritative Source of Truth
+   └── 🎨 ABOUT_DOCUMENTATION.md    <-- The Vibrant User Manual
 ```
 
 This structural separation guarantees an absolute boundary between raw, unyielding engineering blueprints and polished, accessible user instructions.
@@ -41,17 +41,18 @@ This structural separation guarantees an absolute boundary between raw, unyieldi
 
 ## 📑 Table of Contents
 
-Navigate the complete documentation library using the directory structure below. 
+Navigate the complete documentation library using the directory structure below.
 
 ### ⚙️ Command Line & System Architecture
 * [ABOUT_COMMAND_LINE_ARGUMENTS.md](ABOUT_COMMAND_LINE_ARGUMENTS.md) / [.txt](ABOUT_COMMAND_LINE_ARGUMENTS.txt) — CLI execution parameters.
-* [ABOUT_DEPENDENCIES.txt](ABOUT_DEPENDENCIES.txt) — External library notes.
+* [ABOUT_DEPENDENCIES.txt](ABOUT_DEPENDENCIES.txt) — How a dependency is declared, found, approved & audited.
+* [DEPENDENCY_APPROVALS.txt](DEPENDENCY_APPROVALS.txt) — The approval record for the application's own dependencies. Each pipeline carries its own.
+* [2026_SUPPLY_CHAIN_AUDIT.xlsx](2026_SUPPLY_CHAIN_AUDIT.xlsx) — The 2026 supply chain audit the approval records were written from.
 * [DOCKER_BUILD_INSTRUCTIONS.txt](DOCKER_BUILD_INSTRUCTIONS.txt) — Container deployment guide.
 
 ### 💾 Asset Generation
 * [CREATING_PRE-BAKED_UEFI_ASSET_IMAGES.md](CREATING_PRE-BAKED_UEFI_ASSET_IMAGES.md) / [.txt](CREATING_PRE-BAKED_UEFI_ASSET_IMAGES.txt) — Prebaked UEFI boot assets.
 * [ABOUT_CREATING_BOOTABLE_ISO_IMAGES.md](ABOUT_CREATING_BOOTABLE_ISO_IMAGES.md) / [.txt](ABOUT_CREATING_BOOTABLE_ISO_IMAGES.txt) — ISO creation protocols.
-* [BUILDING_PRE-BAKED_UEFI_ASSET_IMAGES.md](BUILDING_PRE-BAKED_UEFI_ASSET_IMAGES.md) / [.txt](BUILDING_PRE-BAKED_UEFI_ASSET_IMAGES.txt) — UEFI image guidelines.
 
 ### 🛠️ Developer & Pipeline Resources
 * [CODING_CONVENTIONS.md](CODING_CONVENTIONS.md) / [.txt](CODING_CONVENTIONS.txt) — Code style guidelines.
@@ -60,6 +61,7 @@ Navigate the complete documentation library using the directory structure below.
 * [CREATING_LANGUAGE_PACKS.txt](CREATING_LANGUAGE_PACKS.txt) — Localization frameworks.
 
 ### 🔐 Security
+* [SECURITY.md](SECURITY.md) / [.txt](SECURITY.txt) — The security policy. Supported versions, how to report a vulnerability privately & how reporters are credited.
 * [ABOUT_SCAD_SANITIZATION.txt](ABOUT_SCAD_SANITIZATION.txt) — How an uploaded OpenSCAD source is stripped of its file references before it renders.
 * [ABOUT_NETWORK_ISOLATION.txt](ABOUT_NETWORK_ISOLATION.txt) — How a sandbox profile is arrived at & what every permission in it costs.
 * [ABOUT_DATA_DIRECTORY_PROTECTION.txt](ABOUT_DATA_DIRECTORY_PROTECTION.txt) — How the hosted DATA tree is served as inert content.
@@ -86,7 +88,7 @@ Navigate the complete documentation library using the directory structure below.
 * [ERROR_DESCRIPTIONS.txt](ERROR_DESCRIPTIONS.txt) — Debugging status codes.
 
 ### 📋 Project Information
-* [index.html](index.html) — Document root protection mechanism. Part of a valid installation (this is a working codebase afterall).
+* [index.html](index.html) — Document root protection mechanism. Part of a valid installation (this is a working codebase after all).
 * [INSTALLATION_INSTRUCTIONS.txt](INSTALLATION_INSTRUCTIONS.txt) — Server provisioning steps.
 * [LICENSE](LICENSE) — GNU GPLv3.
 * [README.md](README.md) — Main user guide (This document).

@@ -49,7 +49,7 @@ it is EXPECTED to be incomplete. Nothing here may be written on the assumption t
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
---Three Functions & One Rule Each--
+--Four Functions & One Rule--
 
   sanitizeSCAD            Reads a source & reports every file reading call in it.
   resolveSCADInclude      Decides whether a reference points at something the same user uploaded.
@@ -217,7 +217,7 @@ to say so. Each of these lives in Resources/config.php & is documented there.
                                     same user uploaded. It does NOT gate file reads.
 
 Deleting Resources/Pipelines/Scad entirely is the other way & it is supported. A pipeline the
-PipelineCore cannot find is a pipeline that cannot run.
+Pipeline Core cannot find is a pipeline that cannot run.
 
 WHAT NO TOGGLE CAN TURN OFF.
 Removal of the file reading primitives. import(), surface(), the deprecated import_stl family &
@@ -250,15 +250,21 @@ bypass. A test that has never failed has never been shown to test anything.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --History--
 
-Two security advisories shaped this subsystem & each taught a different lesson.
+Security reports shaped this subsystem, six of them, & each advisory taught a different lesson.
 
-  GHSA-qcq3-837w-2c9c    Reported that a pattern match could be evaded. The answer was the
-                         stateful lexer described above. Filed by Github user @dagadjno.
+  GHSA-qcq3-837w-2c9c    Reported that a pattern match could be evaded. It was one of four
+                         reports against the OpenSCAD path, & a fifth bypass against the new
+                         scanner followed before it was released. Those five reports are where
+                         the stateful lexer & the operating system sandbox described above came
+                         from, at v3.5.6. Filed by Github user @Saudadeeee.
 
   GHSA-mqvr-h4q5-chg9    Reported that the lexer was never the weak half. It found every call
                          & the line based rewrite put them back. The answer was rewriting by
                          character offset, the verification pass, & rewrite cases in the test
-                         tool. Filed by Takaya Sato, Github user @dagadjno.
+                         tool. Filed by Takaya Sato, Github user @dagadjno, whose first advisory,
+                         GHSA-mqqw-cx3x-cf7w, hardened file cleanup & archive extraction instead.
+
+The changelog records each one in the release it shaped, v3.5.6 & v3.9.8.
 
 THE SECOND ONE IS THE MORE USEFUL LESSON.
 The hard, interesting, carefully tested component was correct. The dull function downstream of

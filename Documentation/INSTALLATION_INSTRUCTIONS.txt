@@ -22,6 +22,7 @@ DEPENDENCY REQUIREMENTS ...
 Nothing is listed here on purpose. Resources/Contract/depends.php is the manifest & the installer
 reads it, so a dependency added there is installed without anybody editing this guide.
 Run  php convertCore.php --setup --check-depends  to see the current list & its state.
+
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
@@ -118,7 +119,7 @@ The installer does not choose this for you, because only you know how this host 
 2. Run  'sudo cp -a HRConvert2 /var/www/html/HRProprietary/'
 
 That path is the default every setting in config.php expects. Installing elsewhere is
-supported, but --Installation Location-- must be corrected afterwards with --config.
+supported, but --Installation Directory-- must be corrected afterwards with --config.
 
 Do not place the data location inside the web root. The installer creates it at
 /DATA/HRConvert2 by default, which is outside anything Apache serves.

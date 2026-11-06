@@ -1,7 +1,30 @@
------------------------------------------------------------------------------------------
-ABOUT MOVING DEPENDENCY CORE & SETUP CORE INTO THE ENGINE
-HRConvert2 v3.9.2
------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 9/8/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v3.9.2.
+This plain text file is the contract for moving Dependency Core & Setup Core into the Engine, written at v3.9.2. It records the reasoning & does not record status.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About This Contract--
 
 This is a CONTRACT rather than a plan. It says what each component must stop knowing before
 it can move, what the application must start supplying, and what would be lost by moving a
@@ -12,16 +35,17 @@ by which point five of its six steps had landed. A status sentence inside a desi
 has nothing checking it, so it ages into a lie that reads like a fact.
 Documentation/ENGINE_MIGRATION_STATUS.txt carries the status & names a check for every line
 of it. Step one was also solved differently than proposed below & that file says how.
+The model this contract calls setupConfigModel() is applicationConfigModel() in convertCore.php.
 
 The pattern is already established twice in this codebase & neither move invents anything.
 Sandbox profiles are DATA the application hands over in $EngineSandboxProfiles. Environment
 findings come from a function the application NAMES in $EngineEnvironmentProvider. The
 Engine holds no knowledge of either & reads what it is given. Both moves below are the same
 shape applied to two more components.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
------------------------------------------------------------------------------------------
-THE ASYMMETRY, WHICH IS THE WHOLE POINT
------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Asymmetry, Which Is The Whole Point--
 
 These two files look alike from outside. They are not alike inside.
 
@@ -39,10 +63,10 @@ be used by HRConvert2. It is HRConvert2, written as data.
 So one file moves nearly whole & the other splits. Treating them the same would either
 drag an application's configuration schema into a shared Engine, or leave a generic
 dependency installer in an application that does not own it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
------------------------------------------------------------------------------------------
-DEPENDENCY CORE. MOVES TO Resources/Engine/Cores/dependencyCore.php
------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Dependency Core Moves To Resources/Engine/Cores/dependencyCore.php--
 
 WHAT IT MUST STOP KNOWING
 
@@ -63,7 +87,7 @@ WHAT THE APPLICATION MUST SUPPLY
 
   $EngineDependencyManifest The manifest. depends.php moves to Resources/Engine/Contract/depends.php.
                             SUPERSEDED AT v3.9.9. It is Resources/Contract/depends.php, outside
-                            the Engine tree, for the reason given under DEPENDS.PHP MOVES below.
+                            the Engine tree, for the reason given under --depends.php Moves Beside engineConfig.php-- below.
 
                             An earlier draft of this contract proposed TWO manifests, the
                             Engine's own merged with the application's. That was wrong &
@@ -84,10 +108,10 @@ WHAT MOVES UNCHANGED
 WHAT MUST NOT MOVE
 
   Nothing. This file is Engine work that happens to live in the application.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
------------------------------------------------------------------------------------------
-SETUP CORE. SPLITS
------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Setup Core Splits--
 
 WHAT MOVES TO Resources/Engine/Cores/setupCore.php
 
@@ -109,10 +133,10 @@ WHAT STAYS IN THE APPLICATION
 
   setupConfigModel() does not become a provider the application supplies. It becomes the
   SOURCE & config.php becomes its OUTPUT.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
------------------------------------------------------------------------------------------
-THE MODEL IS THE CONFIGURATION. config.php IS BUILT FROM IT.
------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Model Is The Configuration & config.php Is Built From It--
 
 Today there are two hand written descriptions of the same thing. config.php declares 149
 settings. setupConfigModel() describes 105 of them. Nobody decided the other 44 should be
@@ -186,10 +210,10 @@ WHERE THIS ENDS
   The end state is an application that is wiring, session handling & conversion logic, &
   an Engine that is everything an application of this shape needs regardless of what it
   converts. This document is the first step of that, not the whole of it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
------------------------------------------------------------------------------------------
-DEPENDS.PHP MOVES BESIDE ENGINECONFIG.PHP
------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--depends.php Moves Beside engineConfig.php--
 
 Resources/depends.php becomes Resources/Engine/Contract/depends.php. This has been done.
 
@@ -215,9 +239,10 @@ traded between applications, so anything an application keeps inside it either t
 application it does not describe or has to be picked out by hand first. The rule that won is
 the contract's. Application data lives outside every shared tree, & the Engine finds it through
 contractPath() in the kernel.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
------------------------------------------------------------------------------------------
-WHAT THIS COSTS
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--What This Costs--
 
 Stated plainly, because a contract that only lists benefits is a sales document.
 
@@ -243,10 +268,10 @@ Stated plainly, because a contract that only lists benefits is a sales document.
   already cost this release several rounds, & it makes the second application possible.
   There is no second application yet, so the bug removal is the whole of the near term
   benefit & it should be judged on that alone.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
------------------------------------------------------------------------------------------
-ORDER OF WORK
------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Order Of Work--
 
   1. Move the prose from config.php into setupConfigModel() & extend the model to cover
      all 149 settings rather than 105. Change nothing else. The model is now complete &
@@ -261,5 +286,4 @@ ORDER OF WORK
 
   Each step is separately testable & separately revertible. Doing them together produces a
   failure nobody can bisect.
-
------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

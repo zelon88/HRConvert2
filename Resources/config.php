@@ -1,4 +1,6 @@
 <?php
+// / This file is generated from Resources/Contract/config-template.php. Edit the values below, never the structure.
+// / A repair adds whatever the template holds & keeps every value set here. A structural edit is lost when the file is generated again.
 // / -----------------------------------------------------------------------------------
 // / Copyright information ...
 // / HRConvert2, Copyright on 9/22/2026 by Justin Grimes, www.github.com/zelon88
@@ -23,9 +25,8 @@
 // / This application will run on just about any x86 or x64 computer.
 // /
 // / Dependency requirements ...
-// / This application requires Debian Linux, Apache 2.4, PHP 8+, FFMPEG, Dia, LibreOffice, 
-// / Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Calibre,
-// / Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, bwrap Dia & xvfb-run.
+// / The authoritative list of dependencies is Resources/Contract/depends.php & nothing else.
+// / Run  php convertCore.php -v  to see what this installation has.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -101,8 +102,11 @@ $ScanCoreMemoryLimit = 268435456;
 // /  --User Virus Scanning ScanCore Chunk Size--
 // /   In order to scan files that are larger than the memory limit, large files will be broken into chunks.
 // /   The number of bytes to break large files into in order to fit them into memory.
-// /   Default is 134217928.
-$ScanCoreChunkSize = 134217928;
+// /   Keep this at a quarter of the memory limit or less. ScanCore holds about three chunks
+// /   in memory at once, so a larger chunk exhausts the memory limit on any file bigger than
+// /   one chunk. A larger value is reduced to a quarter at scan time & a warning is logged.
+// /   Default is 67108864.
+$ScanCoreChunkSize = 67108864;
 // /  --User Virus Scanning ScanCore Debug Mode--
 // /   Enable an absolutely insane amount of verbosity from ScanCore during file scan operations.
 // /   If set to TRUE these events will be included in the report that is submitted to the user.
@@ -126,9 +130,13 @@ $ScanCoreVerbose = TRUE;
 // /  --Delete Build Environment--
 // /   Automatically remove the build environment when it is no longer needed.
 // /   Production servers should not keep the 'Build' folder in the --Installation Directory-- as a security precaution.
-// /   If set to TRUE, the 'Build' folder in the root of the --Installation Directory-- will be recursively deleted.
-// /   If set to FALSE, the 'Build' folder in the root of the --Installation Directory-- will NOT be deleted.
-// /   This 'Build' folder could be used by an adversary to obtain configuration information about the application or server.
+// /   If set to TRUE, the Dockerfile in Documentation/Build & any 'Build' folder in the root of the
+// /   --Installation Directory-- are deleted. Only the files directly inside that 'Build' folder are
+// /   removed. A folder inside it is left where it is & the failure is logged as error 26000.
+// /   Documentation/Build itself is NOT removed. The Resource Manager & the source builds read scripts
+// /   from it while the application runs.
+// /   If set to FALSE, nothing is deleted.
+// /   A build environment could be used by an adversary to obtain configuration information about the application or server.
 // /   This will NOT remove any documentation, logs, or required configuration files.
 // /   If you want to keep the 'Build' folder, consider moving it out of the hosted '/var/www/html' directory.
 // /   It is recommended to eventually set this to TRUE.
@@ -239,7 +247,7 @@ $StreamWatchTimeout = 15;
 // /   This option MUST be set higher than 2.
 // /   Default is 10.
 $StreamConnectionTimeout = 10;
-// /  --Allow Streams Over HTTP---
+// /  --Allow Streams Over HTTP--
 // /   During stream conversions, HRConvert2 will attempt to connect to the stream provider specified in the stream file provided by the user.
 // /   If set to TRUE, HRConvert2 will attempt to connect to non-encrypted, plain-text providers over HTTP when specified by the stream file.
 // /   If set to FALSE, HRConvert2 will not utilize HTTP.
@@ -249,7 +257,7 @@ $StreamConnectionTimeout = 10;
 // /   Valid options are TRUE or FALSE.
 // /   Default is FALSE.
 $AllowStreamOverHTTP = FALSE;
-// /  --Stream Inspection Layers---
+// /  --Stream Inspection Layers--
 // /   Stream operations are especially sensitive as they require allowing dependencies to connect to remote hosts from user-supplied URLs.
 // /   HRConvert2 inspects stream files uploaded by the user to prevent malicious abuse of the FFMPEG dependency.
 // /   During inspection, HRConvert2 may discover that a stream file will request FFMPEG to download additional stream files from remote hosts.
@@ -263,7 +271,7 @@ $AllowStreamOverHTTP = FALSE;
 // /   Default is 3.
 // /   Maximum reccomended value is 10.
 $StreamInspectionLayers = 3;
-// /  --Stream Inspection Files Per Layer---
+// /  --Stream Inspection Files Per Layer--
 // /   Stream operations are especially sensitive as they require allowing dependencies to connect to remote hosts from user-supplied URLs.
 // /   HRConvert2 inspects stream files uploaded by the user to prevent malicious abuse of the FFMPEG dependency.
 // /   During inspection, HRConvert2 may discover that a stream file will request FFMPEG to download additional stream files from remote hosts.
@@ -277,7 +285,7 @@ $StreamInspectionLayers = 3;
 // /   Default is 7.
 // /   Maximum reccomended value is 15.
 $StreamInspectionFilesPerLayer = 7;
-// /  --Default Stream Inspection Forfeit Action---
+// /  --Default Stream Inspection Forfeit Action--
 // /   Stream operations are especially sensitive as they require allowing dependencies to connect to remote hosts from user-supplied URLs.
 // /   HRConvert2 inspects stream files uploaded by the user to prevent malicious abuse of the FFMPEG dependency.
 // /   During inspection, HRConvert2 may discover that a stream file will request FFMPEG to download additional stream files from remote hosts.
@@ -392,7 +400,6 @@ $AllowUnprivilegedNamespaces = TRUE;
 // /   only in this file.
 // /   Default is an empty array.
 $PermittedPrivateRanges = array();
-
 // /  --URL Download Maximum Bytes--
 // /   The largest file this server will fetch on a user's behalf, in bytes.
 // /   A fetch is a stranger spending YOUR bandwidth & YOUR disk, so it needs a ceiling that
@@ -402,7 +409,6 @@ $PermittedPrivateRanges = array();
 // /   0 means no ceiling. Do not use 0 on anything a stranger can reach.
 // /   Default is 2147483648, which is two gigabytes.
 $URLDownloadMaximumBytes = 2147483648;
-
 // /  --URL Downloads Per Session--
 // /   How many files one visitor may fetch before this server stops accepting more.
 // /   Without this, one visitor can queue as many fetches as they can type, & each one
@@ -411,7 +417,6 @@ $URLDownloadMaximumBytes = 2147483648;
 // /   0 means no limit. Do not use 0 on anything a stranger can reach.
 // /   Default is 10.
 $URLDownloadsPerSession = 10;
-
 // /  --Scan URL Downloads--
 // /   Whether a fetched file is scanned before it is placed in the session.
 // /   An upload is scanned. A fetch was not, which meant the easiest way to get an
@@ -421,7 +426,6 @@ $URLDownloadsPerSession = 10;
 // /   removed, so nothing infected reaches a place a user can convert or download it from.
 // /   Default is TRUE.
 $ScanURLDownloads = TRUE;
-
 // /  --Allow User URL Download--
 // /   Whether a user may type a URL & have this server fetch it into their session.
 // /   THIS SERVER HAS NO AUTHENTICATION. Anyone who can reach the page can use this, & a
@@ -437,7 +441,6 @@ $ScanURLDownloads = TRUE;
 // /   reach by link. Leave it off everywhere else.
 // /   Default is FALSE.
 $AllowUserURLDownload = FALSE;
-
 // /  --Default Virus Scanner--
 // /   Which scanner runs when this application scans a file on its own.
 // /   The name matches a scanner pipeline's family, case insensitively. Two ship with this
@@ -451,7 +454,6 @@ $AllowUserURLDownload = FALSE;
 // /   the one an administrator configured is worse than a scan that refused.
 // /   Default is 'scancore'.
 $DefaultVirusScanner = 'scancore';
-
 // /  --Environment Manager May Repair--
 // /   Whether the Environment Manager may change this host, or only report on it.
 // /   It runs as root on a timer, opens no socket & reads no input from anywhere but this
@@ -465,7 +467,6 @@ $DefaultVirusScanner = 'scancore';
 // /   installation repairing the same thing every hour is not healthy.
 // /   Default is FALSE.
 $EnvironmentManagerMayRepair = FALSE;
-
 // /  --Environment Manager May Rewrite Configs--
 // /   Whether a permitted repair may rewrite the configuration files this application owns.
 // /   Only ever applies when --Environment Manager May Repair-- is TRUE.
@@ -642,7 +643,7 @@ $MaxUpdatePackageSize = 524288000;
 // /   This bounds the whole transfer, not just the time taken to connect.
 // /   Default is 1000.
 $UpdateConnectionTimeout = 1000;
-// /  --Supported Guis--
+// /  --Supported GUIs--
 // /   The list of GUIs that are supported by this application.
 // /   Before adding a supported GUI be sure to add the matching folder full of GUI files to /UI.
 // /   Errors will occur if you add an element to this array without also adding a matching GUI folder.
@@ -715,7 +716,7 @@ $AllowUserSelectableLanguage = TRUE;
 // /   If set to TRUE the user will be provided with buttons to create URLs to files that can be copied & pasted elsewhere.
 // /   If set to FALSE the user will not be provided with the buttons to create URLs to files.
 // /   Files with active links will be removed after the --File Deletion Age Threshold-- is met.
-// /   Active file links will break after the --File Deletion Age Theshold-- is met.
+// /   Active file links will break after the --File Deletion Age Threshold-- is met.
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
 $AllowUserShare = TRUE;
@@ -736,7 +737,7 @@ $SupportedConversionTypes = array('Document', 'Image', 'Model', 'Scad', 'Drawing
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
 $AllowBootableIsoImage = TRUE;
-// /  --File Deletion Age Theshold--
+// /  --File Deletion Age Threshold--
 // /   Age in minutes of files to be deleted.
 // /   Set to 0 to keep files forever.
 // /   Valid options are integers 0 or larger.
@@ -813,7 +814,6 @@ $TOSURL = 'https://www.honestrepair.net/index.php/terms-of-service/';
 // /   Set the URL to use for the Privacy Policy link at te bottom of the GUI.
 // /   Only takes effect if --Show Fine Print-- is set to TRUE.
 $PPURL = 'https://www.honestrepair.net/index.php/privacy-policy/';
-
 // /  --Logo URL--
 // /   Where the logo at the top of the page sends somebody who clicks it.
 // /   'preserve-session' is the default & is not an address. It means come back HERE,
@@ -852,7 +852,6 @@ $RetryCount = 5;
 // /   outside that range is a typo rather than a preference.
 // /   Default is 1400.
 $GuiMaxWidth = 1400;
-
 // /  --Supported Format Detection Type--
 // /   Decides what decides which conversions this installation offers.
 // /   Three things have an opinion & this setting says how they are combined.
@@ -903,11 +902,6 @@ $SupportedFormatDetectionType = 'detected-advisory';
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
 $WarnOnCapabilityMismatch = TRUE;
-
-// /   Added automatically on September 8, 2026 because this release requires it.
-// /   The value below is the shipped default. Read the documentation for this setting
-// /   before relying on it.
-$UsePatchedDocumentEngine = TRUE;
 // / ------------------------------
 
 // / ------------------------------
@@ -934,6 +928,7 @@ $EnablePerConversionLimits = TRUE;
 // /   These are MAXIMA. With a listener running they are scaled down against current load
 // /   & against how many conversions are already in flight, & never below
 // /   --Minimum Per Conversion Resources--. With no listener they are used unchanged.
+// /   Scan's memory is the one figure that is never scaled. Only its processor share is.
 // /   A type that is not listed falls back to --Default Per Conversion Resources--.
 // /   An entry that cannot be read is reported & falls back to the default.
 // /   Valid keys are Document, Spreadsheet, Presentation, Image, Video, Audio, Archive,
@@ -1075,17 +1070,14 @@ $UserPresentationOutputArray = array('pptx', 'ppt', 'potx', 'potm', 'pot', 'ppa'
 $UserImageArray = array('jpeg', 'jpg', 'jpe', 'png', 'bmp', 'gif', 'webp', 'cin', 'dds', 'dib', 'flif', 'avif', 'gplt', 'sct', 'xcf', 'heic', 'ico', 'tiff', 'tif', 'heif', 'jp2', 'j2k', 'jxl');
 // /   Ten formats were offered as uploads the pipeline never claimed & eleven as outputs it
 // /   cannot write. Each one was accepted by the interface & refused by the converter.
-
 // /  --Supported Image Input Formats--
 // /   What a user may upload. Every entry is a format the Image pipeline declares
 // /   as an input, so nothing here is offered & then refused.
 $UserImageInputArray = array('jpeg', 'jpg', 'png', 'bmp', 'gif', 'webp', 'dds', 'avif', 'heic', 'ico', 'tiff', 'tif', 'jp2');
-
 // /  --Supported Image Output Formats--
 // /   What a user may ask for. Every entry is a format the pipeline declares as an
 // /   output.
 $UserImageOutputArray = array('jpeg', 'jpg', 'png', 'bmp', 'gif', 'webp', 'dds', 'avif', 'ico', 'tiff', 'tif', 'jp2');
-
 // /  --Supported Audio Input Formats--.
 $UserMediaInputArray = array('sox', 'spdif', 'spx', 'tta', 'u16be', 'u16le', 'u24be', 'u24le', 'u32be', 'u32le', 'u8', 'voc', 'wav', 'wv', 'wsaud', 'mulaw', 'mxf', 'mxf_d10', 'mxf_opatom', 'oga', 'ogg', 'opus', 'oss', 'psp', 'rawvideo', 's16be', 's16le', 's24be', 's24le', 's32be', 's32le', 's8', 'sbc', 'ilbc', 'ircam', 'latm', 'lrc', 'mp2', 'mp3', 'mlp', 'flac', 'g722', 'g723_1', 'g726', 'g726le', 'gsm', 'caf', 'daud', 'dts', 'eac3', 'f32be', 'f32le', 'f64be', 'f64le', 'ac3', 'ac4', 'adts', 'aiff', 'alaw', 'amr', 'aptx', 'aptx_hd', 'argo_asf', 'argo_cvg', 'ast', 'au', 'a64', 'aa', 'aac', 'aax', 'acm', 'act', 'adp', 'adx', 'aea', 'afc', 'aix', 'alp', 'amrnb', 'amrwb', 'apac', 'apc', 'ape', 'apm', 'argo_asf', 'binka', 'bit', 'boa', 'bonk', 'brstm', 'dfpwm', 'dsf', 'dss', 'epaf', 'fsb', 'fwse', 'g729', 'hca', 'idf', 'kux', 'kvag', 'laf', 'lavfi', 'loas', 'luodat', 'lvf', 'lxf', 'mca', 'mcc', 'megsts', 'mlv', 'mmf', 'mods', 'moflex', 'mpc8', 'msf', 'msnwctcp', 'mtaf', 'musx', 'nc', 'nistsphere', 'nsp', 'paf', 'pam_pipe', 'pbm_pipe', 'pfm_pipe', 'pp_bnk', 'psxstr', 'pva', 'pvf', 'qcp', 'rka', 'rl2', 'rpl', 'rso', 's337m', 'sap', 'sbg', 'scd', 'sdns', 'sdp', 'sds', 'sdx', 'siff', 'simbiosis_imx', 'sln', 'smk', 'smush', 'sol', 'svag', 'svs', 'tak', 'thp', 'tierexseq', 'tty', 'ty', 'usm', 'vag', 'vidc', 'vpk', 'vqf', 'w64', 'wady', 'wavarc', 'wsd', 'wsvqa', 'wve', 'xa', 'xbin', 'xbm_pipe', 'xmd', 'xpm_pipe', 'xwma', 'yop', 'wma', 'm4a');
 // /  --Supported Audio Output Formats--.
@@ -1098,24 +1090,19 @@ $UserVideoOutputArray = array('3gp', 'mkv', 'avi', 'mp4', 'mpeg', 'wmv', 'mov', 
 $UserStreamArray = array('m3u8', 'ts');
 // /   The old array offered ts as an upload & m3u8 as an output, which is each direction
 // /   backwards. A stream is fetched as a playlist & written as a media file.
-
-
 // /  --Supported Drawing Formats--.
 $UserDrawingArray = array('dxf', 'vdx', 'fig', 'dia', 'wpg');
 // /   Every format offered is both read & written, so the two lists are identical today.
 // /   They are separate because the pipeline writes eighteen formats & only five are
 // /   offered, & adding an output no longer means offering it as an upload.
-
 // /  --Supported Drawing Input Formats--
 // /   What a user may upload. Every entry is a format the Drawing pipeline declares
 // /   as an input, so nothing here is offered & then refused.
 $UserDrawingInputArray = array('dxf', 'vdx', 'fig', 'dia', 'wpg');
-
 // /  --Supported Drawing Output Formats--
 // /   What a user may ask for. Every entry is a format the pipeline declares as an
 // /   output.
 $UserDrawingOutputArray = array('dxf', 'vdx', 'fig', 'dia', 'wpg');
-
 // /  --Supported SVG Input Formats--.
 $UserSVGInputArray = array('svg', 'plain-svg');
 // /  --Supported SVG Output Formats--.
@@ -1127,13 +1114,11 @@ $UserSVGOutputArray = array('png', 'pdf', 'ps', 'eps', 'emf', 'wmf');
 // /   command adds a missing setting, so take the shipped file or add them by hand.
 // /   This one remains because other code reads the combined list.
 $UserModelArray = array('stl', 'ply', 'off', '3ds', 'fbx', 'dae', 'gltf', 'glb', 'obj', '3mf', 'x3d', 'dxf', 'x', 'ctm');
-
 // /  --Supported Model Input Formats--
 // /   What a user may upload for a model conversion.
 // /   Every entry must be a format the Model pipeline declares as an input, or the upload is
 // /   offered & then refused by a pipeline that never claimed it.
 $UserModelInputArray = array('stl', 'ply', 'off', '3ds', 'fbx', 'dae', 'gltf', 'glb', 'obj', '3mf', 'x3d', 'dxf', 'x', 'ctm');
-
 // /  --Supported Model Output Formats--
 // /   What a user may ask for. This list is longer than the input list & that is the whole
 // /   reason the two are separate.
@@ -1142,7 +1127,6 @@ $UserModelInputArray = array('stl', 'ply', 'off', '3ds', 'fbx', 'dae', 'gltf', '
 // /   bundle does not carry, & a format that works most of the time is worse than one that
 // /   was never offered.
 $UserModelOutputArray = array('stl', 'ply', 'off', '3ds', 'fbx', 'dae', 'gltf', 'glb', 'obj', '3mf', 'x3d', 'dxf', 'x', 'ctm', 'wrl', 'assbin', 'json');
-
 // /  --Supported OpenSCAD Formats--
 // /   The first entry must be scad, which is the only input format this converter accepts.
 // /   Every remaining entry is an export format OpenSCAD can produce from 3D geometry.
@@ -1155,24 +1139,21 @@ $UserSCADArray = array('scad', 'stl', 'off', 'amf', '3mf', 'csg');
 // /   The old array carried scad first & relied on that position to mean input. Everything
 // /   after it was an output. A positional convention is not a declaration & nothing
 // /   enforced it.
-
 // /  --Supported SCAD Input Formats--
 // /   What a user may upload. Every entry is a format the Scad pipeline declares
 // /   as an input, so nothing here is offered & then refused.
 $UserSCADInputArray = array('scad');
-
 // /  --Supported SCAD Output Formats--
 // /   What a user may ask for. Every entry is a format the pipeline declares as an
 // /   output.
 $UserSCADOutputArray = array('stl', 'off', 'amf', '3mf', 'csg');
-
 // /  --Supported Subtitle Input Formats--.
 $UserSubtitleInputArray = array('sub', 'sbv', 'srt', 'stream_segment', 'ssegment', 'streamhash', 'sup', 'subtitles', 'ttml', 'uncodedframecrc', 'webvtt', 'wtv', 'oma', 'rso', 'rtp', 'rtsp', 'scc', 'sdl', 'sdl2', 'segment', 'sap', 'jacosub', 'kvag', 'microdvd', 'ffmetadata', 'fifo', 'fifo_test', 'fits', 'framecrc', 'framehash', 'framemd5', 'dash', 'crc', 'dvbsub', 'dvbtxt', 'gsm', 'ass', 'vobsub', 'mpl2', 'mpsub', 'pjs', 'realtext', 'sami', 'stl', 'subviewer', 'subviewer1', 'tedcaptions', 'txd', 'vtt', 'ssa', 'dvb', 'vplayer');
 // /  --Supported Subtitle Output Formats--.
 $UserSubtitleOutputArray = array('vtt', 'ssa', 'ass', 'srt');
 // /  --Supported OCR Formats--.
 $UserPDFWorkArr = array('pdf', 'jpg', 'jpeg', 'png', 'bmp', 'webp', 'gif');
-// /  --User Ebook Input Array--
+// /  --Supported Ebook Input Formats--
 // /   The e-book formats a user may convert FROM.
 // /   Several of these overlap with the document & archive formats on purpose. The routing
 // /   loop tries the document & archive families FIRST, so an ordinary docx to pdf stays
@@ -1182,7 +1163,7 @@ $UserPDFWorkArr = array('pdf', 'jpg', 'jpeg', 'png', 'bmp', 'webp', 'gif');
 // /   reflowable structure to recover, so the result is frequently poor. It is offered
 // /   because it is occasionally the only option, not because it works well.
 $UserEbookInputArray = array('epub', 'mobi', 'azw', 'azw3', 'azw4', 'fb2', 'fbz', 'lit', 'lrf', 'pdb', 'pml', 'rb', 'snb', 'tcr', 'txt', 'txtz', 'rtf', 'odt', 'docx', 'pdf', 'chm', 'cbz', 'cbr', 'cbc', 'prc', 'opf', 'recipe');
-// /  --User Ebook Output Array--
+// /  --Supported Ebook Output Formats--
 // /   The e-book formats a user may convert TO.
 // /   PDF IS DELIBERATELY EXCLUDED. Calibre renders PDF output through Qt WebEngine, which
 // /   wants a browser engine & a display & is the one output path that commonly fails on a

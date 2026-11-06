@@ -34,36 +34,41 @@ work & it returns. Setup Core owns installation. Dependency Core owns dependenci
 Pipeline Core owns pipeline dispatch. A Core extends what the application can DO.
 See ABOUT_COMPONENTS.txt for how a Core is verified & loaded.
 
-A MANAGER IS A ROLE A PROCESS RUNS UNDER. IT IS NOT A FILE.
-It has a lifetime measured in days, a socket, a supervisor & a place in a budget. Nothing
-about a manager is loaded, version pinned or dispatched to. A manager extends WHEN & UNDER
-WHAT CONSTRAINTS work happens.
+A MANAGER IS A ROLE A PROCESS RUNS UNDER.
+It has a lifetime measured in days, a socket, a supervisor & a place in a budget. A manager
+extends WHEN & UNDER WHAT CONSTRAINTS work happens.
+Each role has a file of its own under Resources/Engine/Managers. The Engine pins all four in
+getAcceptedManagers & loadEngineManager loads one only in a process dispatched to that role,
+so a process running as one role never parses the other three.
 
-coreManager.php is the component that starts & supervises the managers. It is a Core by
-every behavioural test & keeps the name for historical reasons. The managers themselves are
-core-manager, resource-manager, worker-manager & request-manager, & none of those is a file.
+coreManager.php is the core-manager role, the listener, which starts & supervises the other
+three. It keeps the name for historical reasons. The roles are core-manager,
+resource-manager, worker-manager & request-manager.
 
-THIS DISTINCTION IS LOAD BEARING FOR WHAT COMES NEXT.
+THIS DISTINCTION WAS LOAD BEARING WHEN THIS MACHINERY BECAME A SHARED ENGINE.
 The managers are the part of this application that has nothing to do with converting files.
-A virus scanner dispatching workers wants sockets, budgets, worker tracking & supervision.
-It does not want dependency management or pipeline dispatch. When this machinery becomes a
-shared engine, the managers go & the Cores stay.
+A virus scanner dispatching workers wants sockets, budgets, worker tracking & supervision,
+& gets all four from the Engine unchanged. See ABOUT_ENGINE_CONTRACT.txt for what moved.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About The Four Roles--
 
   core-manager      The listener. Started by -l or by a service unit. It owns the other
-                    three, restarts one that dies, & is the only one an operator starts.
+                    three, restarts one that dies, routes every request to the role that
+                    answers it, & is the only one an operator starts.
 
   resource-manager  Polls the host. Load average, memory & processor count. Calculates the
-                    budget every conversion is granted from.
+                    budget every operation is granted from, grants & reclaims it, keeps the
+                    worker registry & the session map, & finds a worker that has outlived
+                    its expected runtime.
 
-  worker-manager    Tracks live workers. Registers one against a budget token, finds one
-                    that has outlived its expected runtime, & terminates it.
+  worker-manager    Ends the worker it is told to end. It keeps no registry of its own & is
+                    the only role that acts on a process without negotiation.
 
-  request-manager   Answers budget requests from a conversion, grants a token, & takes the
-                    token back when the work is finished or abandoned.
+  request-manager   Owns the only socket a worker may address. It validates a worker's
+                    request & forwards it, so a budget request reaches the resource-manager
+                    without a worker ever addressing it.
 
 A manager that is not running is not an error. Conversions run without resource awareness &
 every budget request is approved. --Require Resource Awareness-- inverts that for an
@@ -147,8 +152,9 @@ so a caller holding only a number still behaves the way it always did.
 A BUDGET IS A NUMBER OF COST UNITS, NOT A NUMBER OF WORKERS.
 
 resource-manager calculates it from the processor count, reduces it by a configured reserve
-share, & reduces it again by the pressure the host is under. request-manager grants a token
-against what is left. worker-manager takes it back.
+share, & reduces it again by the pressure the host is under. It grants a token against what
+is left & takes it back when the work is finished or abandoned. request-manager only carries
+the request to it.
 
 A CONVERSION THAT IS REFUSED IS NOT A FAILURE. IT IS A DEFERRAL.
 The refusal says the machine is busy rather than that the file cannot be converted.
@@ -195,7 +201,7 @@ See ABOUT_PIPELINE_COMPONENTS.txt, contract 5, before writing a pipeline that us
 
   php convertCore.php -l          Start the listener. It forks & returns.
   php convertCore.php --status    Report what is running, & the budget.
-  php convertCore.php -k          Stop the listener & every worker it tracks.
+  php convertCore.php -k          Stop the listener & every manager it started.
 
 A container has no systemd, so the entrypoint starts the listener directly when the
 configuration asks for one. A bare metal installation uses a service unit, which Setup Core

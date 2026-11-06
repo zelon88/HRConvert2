@@ -25,6 +25,12 @@
 # / It writes the questions & leaves them unanswered. An answer is a judgement a person makes
 # / & records here. A refresh keeps every answer that is already written.
 # /
+# / A record is a document like every other one in this project, so it opens with the same
+# / file header & is laid out in the same sections, one per dependency.
+# / An approval may carry notes or conditions, such as the configuration it was approved
+# / under. That field may run over several lines. A line indented to the value column with no
+# / label of its own continues the field above it, & a refresh keeps every line of it.
+# /
 # / Usage.
 # /   python3 hrconvert2-approvals.py              Write any record that does not exist yet.
 # /   python3 hrconvert2-approvals.py --refresh    Rewrite the facts & keep the answers.
@@ -41,9 +47,20 @@ import sys
 import datetime
 
 TOOL_VERSION = 'v3.9.7'
-RULE = '-' * 114
+# / The rule every document in Documentation is drawn with.
+RULE = '-' * 160
 UNANSWERED = 'NOT YET ANSWERED'
 UNAUDITED = 'NOT YET AUDITED'
+# / The date the approval records first shipped. It is fixed rather than today's date, so a
+# / refresh that changes no fact changes no line of a record either.
+COPYRIGHT_DATE = '10/30/2026'
+# / Every label is padded to this width, so every value starts in the same column.
+# / The longest label is question 1f, at forty four characters. The value column sat at
+# / forty four until v4.0.0, so that one label ran straight into its value, & an answer
+# / written beside it had no gap a refresh could read & was lost on the next refresh.
+LABEL_WIDTH = 46
+# / A continuation line of a field is indented to the value column.
+VALUE_INDENT = ' ' * (4 + LABEL_WIDTH)
 
 # / -----------------------------------------------------------------------------------
 # / The audit questions, copied from ABOUT_DEPENDENCIES.txt so the record asks exactly what
@@ -76,7 +93,23 @@ RECORD_FIELDS = (
     ('Approved on', UNAUDITED),
     ('Expires on', UNAUDITED),
     ('Audited by', UNAUDITED),
-    ('Audit outcome', UNAUDITED))
+    ('Audit outcome', UNAUDITED),
+    ('Notes or Conditions', UNAUDITED))
+
+# / The labels a person writes answers against. Anything else in a record is a manifest fact
+# / & is rewritten from the manifest, so it is never read back as an answer.
+ANSWER_LABELS = set([label for label, default in RECORD_FIELDS] + [code + ' ' + question for code, question in QUESTIONS])
+# / Longest first, so a label is never mistaken for a shorter one it begins with.
+LABELS_LONGEST_FIRST = sorted(ANSWER_LABELS, key=len, reverse=True)
+# / The formats a date may be written in. M/D/YYYY is how the changelog writes a date, so a
+# / record may use it too. A date written with slashes is always read month first.
+DATE_FORMATS = ('%Y-%m-%d', '%m/%d/%Y')
+# / The fields an audited dependency must fill in, & the fields that hold a single line.
+# / Audit outcome & Notes or Conditions may be left empty or run across several lines.
+REQUIRED_FIELDS = ('Approved on', 'Expires on', 'Audited by')
+SINGLE_LINE_FIELDS = ('Status', 'Approved on', 'Expires on', 'Audited by')
+# / An expiry that begins with this is exempt from the calendar. An owned dependency uses it.
+NO_EXPIRY = 'NOT APPLICABLE'
 
 # / A subsystem that belongs to the application rather than to any single pipeline. These are
 # / recorded once in Documentation rather than repeated in every pipeline folder.
@@ -248,93 +281,144 @@ def render_readme(folder, facts, names, manifest):
 # / Accepts a path. Returns a dictionary of dependency name to field label to answer.
 # / Only an answer that has been written is returned. A placeholder is not an answer & is
 # / left out, so a refresh that finds nothing answered writes a fresh scaffold.
+# / A manifest fact is not an answer either & is never returned. Until v4.0.0 every fact
+# / line was read back as one, which did no harm only because nothing asked for it.
+# / A line indented to the value column with no label continues the answer above it, so a
+# / note written over several lines survives a refresh whole.
 # / -----------------------------------------------------------------------------------
 def read_existing_answers(path):
     answers = {}
     if not os.path.exists(path):
         return answers
     current = None
+    continuing = None
     for line in open(path, encoding='utf-8', errors='replace').read().split('\n'):
         stripped = line.strip()
         # / A rule line is made only of dashes. It looks exactly like a heading & is not one.
         # / Reading it as a heading filed every answer under it & lost them on the next refresh.
         if stripped and set(stripped) == set('-'):
+            continuing = None
             continue
         heading = re.match(r'^--(.+)--$', stripped)
         if heading:
             current = heading.group(1).strip()
+            continuing = None
             continue
         if current is None:
             continue
-        written = re.match(r'^\s{2,}(?:(\d[a-f])\s+)?(\S.*?)\s{2,}(\S.*)$', line)
-        if not written:
+        # / A continuation is told apart by its indentation alone, because the text of a
+        # / note may contain anything, two spaces in a row included. It is indented deeper
+        # / than any label, which is written four spaces in. A record written before v4.0.0
+        # / put its values two columns further left, so the depth is not one exact column.
+        indent = len(line) - len(line.lstrip(' '))
+        if continuing is not None and stripped and indent >= 20:
+            answers[current][continuing] += '\n' + stripped
             continue
-        label = (written.group(1) + ' ' + written.group(2)).strip() if written.group(1) else written.group(2).strip()
-        value = written.group(3).strip()
-        if value in (UNANSWERED, UNAUDITED):
+        continuing = None
+        if indent < 2 or not stripped:
+            continue
+        # / A label is found by its name rather than by the gap after it. A label that
+        # / filled its column ran straight into its value, & an answer written there had no
+        # / gap to read & was lost on every refresh. The case of a label is not judged.
+        label = next((known for known in LABELS_LONGEST_FIRST if stripped.lower().startswith(known.lower())), None)
+        if label is None:
+            continue
+        value = stripped[len(label):].strip()
+        if value in ('', UNANSWERED, UNAUDITED):
             continue
         answers.setdefault(current, {})[label] = value
+        continuing = label
     return answers
 
 
 # / -----------------------------------------------------------------------------------
-# / A function to render one dependency as a block of the record.
+# / A function to render one labelled field, over as many lines as its value holds.
+# / Accepts the label & the value. Returns the lines.
+# / -----------------------------------------------------------------------------------
+def render_field(label, value):
+    parts = str(value).split('\n')
+    lines = ['    ' + label.ljust(LABEL_WIDTH) + parts[0]]
+    for part in parts[1:]:
+        lines.append(VALUE_INDENT + part)
+    return lines
+
+
+# / -----------------------------------------------------------------------------------
+# / A function to render one dependency as a section of the record.
 # / Accepts the manifest record & any answers already written. Returns the lines.
 # / -----------------------------------------------------------------------------------
 def render_dependency(record, answers):
-    lines = []
-    lines.append('--' + record['Name'] + '--')
-    lines.append('')
-    lines.append('  Approval record')
+    lines = ['', RULE, '--' + record['Name'] + '--', '', '  Approval record']
     for label, default in RECORD_FIELDS:
-        lines.append('    ' + label.ljust(44) + answers.get(label, default))
+        lines.extend(render_field(label, answers.get(label, default)))
     lines.append('')
     lines.append('  Manifest facts, read from Resources/Contract/depends.php')
     for label, key in (('Binary', 'Binary'), ('Install type', 'Type'), ('Package', 'Package'),
                        ('Minimum version', 'MinimumVersion'), ('Required', 'Required'),
                        ('Subsystem', 'Subsystem'), ('License', 'License'),
-                       ('Depends on', 'Requires'), ('Source', 'Source')):
-        lines.append('    ' + label.ljust(44) + (record.get(key) or '-'))
-    lines.append('    ' + 'Purpose'.ljust(44) + (record.get('Purpose') or '-'))
+                       ('Depends on', 'Requires'), ('Source', 'Source'), ('Purpose', 'Purpose')):
+        lines.extend(render_field(label, record.get(key) or '-'))
     lines.append('')
     lines.append('  Audit answers. Every one is a judgement a person records here.')
     for code, question in QUESTIONS:
-        lines.append('    ' + code + ' ' + question.ljust(41) + answers.get(code + ' ' + question, UNANSWERED))
-    lines.append('')
+        lines.extend(render_field(code + ' ' + question, answers.get(code + ' ' + question, UNANSWERED)))
     lines.append(RULE)
-    lines.append('')
     return lines
 
 
 # / -----------------------------------------------------------------------------------
-# / A function to render a whole record file.
-# / Accepts the title, the explanation, the dependency names, the manifest & the answers.
-# / Returns the file as text.
+# / A function to render the file header every document in this project carries.
+# / Accepts what the record is for, such as the Archive pipeline. Returns the lines.
 # / -----------------------------------------------------------------------------------
-def render_file(title, explanation, names, manifest, answers):
-    lines = [RULE,
-             'DEPENDENCY APPROVAL RECORD',
-             title,
-             '',
-             'Written by Documentation/Build/hrconvert2-approvals.py ' + TOOL_VERSION + '.',
-             'Every factual field is read from the dependency manifest & is rewritten by that tool.',
-             'Every audit answer is written by a person & is kept across a refresh.',
-             'The procedure these questions come from is in Documentation/ABOUT_DEPENDENCIES.txt.',
-             '',
-             explanation,
-             RULE,
-             '']
-    if not names:
+def render_header(subject):
+    return [RULE,
+            'COPYRIGHT INFORMATION ...',
+            'HRConvert2, Copyright on ' + COPYRIGHT_DATE + ' by Justin Grimes, www.github.com/zelon88',
+            '',
+            'LICENSE INFORMATION ...',
+            'This project is protected by the GNU GPLv3 Open-Source license.',
+            'https://www.gnu.org/licenses/gpl-3.0.html',
+            '',
+            'APPLICATION INFORMATION ...',
+            'This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.',
+            '',
+            'FILE INFORMATION ...',
+            TOOL_VERSION + '.',
+            'This plain text file is the dependency approval record for ' + subject + '.',
+            'It is written by Documentation/Build/hrconvert2-approvals.py. Every factual field is read from the dependency manifest & is rewritten by that tool. Every audit answer & every note is written by a person & is kept across a refresh.',
+            'The procedure these questions come from is in Documentation/ABOUT_DEPENDENCIES.txt.',
+            '',
+            'HARDWARE REQUIREMENTS ...',
+            'This application requires at least a Raspberry Pi Model B+ or greater.',
+            'This application will run on just about any x86 or x64 computer.',
+            '',
+            'DEPENDENCY REQUIREMENTS ...',
+            'The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.',
+            '',
+            '<3 Open-Source',
+            RULE]
+
+
+# / -----------------------------------------------------------------------------------
+# / A function to render a whole record file.
+# / Accepts the subject, the explanation, the dependency names, the manifest & the answers.
+# / Returns the file as text.
+# / The record opens with the standard header & a section saying what it covers, then holds
+# / one section per dependency.
+# / -----------------------------------------------------------------------------------
+def render_file(subject, explanation, names, manifest, answers):
+    lines = render_header(subject) + ['', RULE, '--About This Record--', '']
+    # / A record with nothing in it says so instead of introducing a list that is empty.
+    if names:
+        lines.extend(explanation.split('\n'))
+    else:
         lines.append('This pipeline uses no dependency outside the application itself.')
         lines.append('There is nothing here to audit. The dependencies the application needs to run at')
         lines.append('all are recorded in Documentation/DEPENDENCY_APPROVALS.txt.')
-        lines.append('')
-        lines.append(RULE)
-        lines.append('')
-        return '\n'.join(lines)
+    lines.append(RULE)
     for name in names:
         lines.extend(render_dependency(manifest[name], answers.get(name, {})))
-    return '\n'.join(lines)
+    return '\n'.join(lines) + '\n'
 
 
 # / -----------------------------------------------------------------------------------
@@ -347,7 +431,7 @@ def plan_records(root):
     application = sorted(name for name, record in manifest.items()
                          if record['Subsystem'] in APPLICATION_SUBSYSTEMS)
     planned.append((os.path.join(root, 'Documentation', 'DEPENDENCY_APPROVALS.txt'),
-                    'The application itself.',
+                    'the application itself',
                     'These dependencies belong to HRConvert2 rather than to any one pipeline. Removing\n'
                     'one does not disable a conversion type. It stops the application running at all, or\n'
                     'it removes a capability every pipeline relies on, such as the sandbox.',
@@ -365,7 +449,7 @@ def plan_records(root):
         declared = re.findall(r"'([^']+)'", declaration.group(1)) if declaration else []
         names = dependencies_for_pipeline(full, manifest, subsystem.group(1) if subsystem else '', declared)
         planned.append((os.path.join(full, 'DEPENDENCY_APPROVALS.txt'),
-                        'The ' + (display.group(1) if display else folder) + ' pipeline.',
+                        'the ' + (display.group(1) if display else folder) + ' pipeline',
                         'These are the dependencies this pipeline uses. The list is worked out from the\n'
                         'tools the pipeline asks for by name, from whether it isolates a command, & from the\n'
                         'subsystem it declares. A pipeline is detachable, so this record travels with it.',
@@ -374,10 +458,61 @@ def plan_records(root):
 
 
 # / -----------------------------------------------------------------------------------
+# / A function to read a date written in any accepted format.
+# / Accepts the date as written. Returns the date, or None when no accepted format reads it.
+# / -----------------------------------------------------------------------------------
+def read_date(written):
+    for form in DATE_FORMATS:
+        try:
+            return datetime.datetime.strptime(written, form).date()
+        except ValueError:
+            continue
+    return None
+
+
+# / -----------------------------------------------------------------------------------
+# / A function to check the approval fields of one audited dependency.
+# / Accepts the record as shown, the dependency name, its answers & today's date.
+# / Returns the number of findings. A single line field that runs onto a second line usually
+# / means the label below it was deleted, so that value was read as a continuation.
+# / -----------------------------------------------------------------------------------
+def check_approval(shown, name, written, today):
+    findings = 0
+    for field in SINGLE_LINE_FIELDS:
+        if '\n' in written.get(field, ''):
+            print('  MALFORMED ' + shown + ' :: ' + name + ' writes ' + field + ' on more than one line. Check for a deleted label.')
+            findings += 1
+    for field in REQUIRED_FIELDS:
+        if field not in written:
+            print('  INCOMPLETE ' + shown + ' :: ' + name + ' has a status but no ' + field)
+            findings += 1
+    for field in ('Approved on', 'Expires on'):
+        value = written.get(field, '')
+        if not value or (field == 'Expires on' and value.upper().startswith(NO_EXPIRY)):
+            continue
+        when = read_date(value)
+        if when is None:
+            print('  UNREADABLE ' + shown + ' :: ' + name + ' ' + field.lower() + ' "' + value + '", which is neither YYYY-MM-DD nor M/D/YYYY')
+            findings += 1
+        elif field == 'Expires on' and when < today:
+            print('  EXPIRED   ' + shown + ' :: ' + name + ' expired on ' + value)
+            findings += 1
+    # / An approval expires on 1 January of the year after it was given, so every dependency
+    # / comes up for audit together. An expiry on any other day is outside that policy.
+    approved = read_date(written.get('Approved on', ''))
+    expires = read_date(written.get('Expires on', ''))
+    if approved is not None and expires is not None and expires != datetime.date(approved.year + 1, 1, 1):
+        print('  OFFPOLICY ' + shown + ' :: ' + name + ' expires on ' + written['Expires on'] + '. An approval given in '
+              + str(approved.year) + ' expires on 01/01/' + str(approved.year + 1) + '.')
+        findings += 1
+    return findings
+
+
+# / -----------------------------------------------------------------------------------
 # / A function to report what is missing or out of date without writing anything.
 # / Accepts the planned records. Returns the number of findings.
-# / An expiry that has passed is a finding. So is an approval date that cannot be read, since
-# / a date nobody can parse cannot be checked against the calendar.
+# / An expiry that has passed is a finding. So is a date that cannot be read, since a date
+# / nobody can parse cannot be checked against the calendar, & so is a required field left empty.
 # / -----------------------------------------------------------------------------------
 def check_records(planned):
     findings = 0
@@ -394,18 +529,8 @@ def check_records(planned):
             if 'Status' not in written:
                 print('  UNAUDITED ' + shown + ' :: ' + name + ' has no declared status')
                 findings += 1
-            expires = written.get('Expires on')
-            if not expires:
                 continue
-            try:
-                when = datetime.datetime.strptime(expires, '%Y-%m-%d').date()
-            except ValueError:
-                print('  UNREADABLE ' + shown + ' :: ' + name + ' expires on "' + expires + '", which is not YYYY-MM-DD')
-                findings += 1
-                continue
-            if when < today:
-                print('  EXPIRED   ' + shown + ' :: ' + name + ' expired on ' + expires)
-                findings += 1
+            findings += check_approval(shown, name, written, today)
     return findings
 
 

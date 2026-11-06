@@ -7,17 +7,17 @@ This project is protected by the GNU GPLv3 Open-Source license.
 https://www.gnu.org/licenses/gpl-3.0.html
 
 APPLICATION INFORMATION ...
-This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
 
 FILE INFORMATION ...
 v3.8.8.
-This file contains instructions for developers who want to add conversion pipelines. 
+This file contains instructions for developers who want to add conversion pipelines.
 
-HARDWARE REQUIREMENTS ... 
-This application requires at least a Raspberry Pi Model B+ or greater. 
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
-DEPENDENCY REQUIREMENTS ... 
+DEPENDENCY REQUIREMENTS ...
 The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
 
 <3 Open-Source
@@ -26,22 +26,22 @@ The authoritative list of dependencies is Resources/Contract/depends.php & nothi
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About This Document--
 
-This document focuses on the CONVERSION PIPELINE specifically. 
-  1. This document contains the proper procedure for adding new conversion pipelines to the core. 
+This document focuses on the CONVERSION PIPELINE specifically.
+  1. This document contains the proper procedure for adding new conversion pipelines to the core.
   2. This document ensures that pipelines added to the core conform to documented standards for quality & security.
   3. This document assumes the reader is an HRConvert2 developer, using terms like 'we' & 'us' to imply mutual goals.
-  4. For general information regarding overall quality & security standards; see `CODING_CONVENTIONS.TXT`.
+  4. For general information regarding overall quality & security standards, see `CODING_CONVENTIONS.txt`.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About Pipelines--
 
-Pipelines in HRConvert2 are the backbone of how file operations work. 
-  1. A `pipeline` is the complete path a file takes on it's journey through the core during a single request.
-  2. Each major conversion type has proven unique enough to warrant it's own dedicated pipeline.
+Pipelines in HRConvert2 are the backbone of how file operations work.
+  1. A `pipeline` is the complete path a file takes on its journey through the core during a single request.
+  2. Each major conversion type has proven unique enough to warrant its own dedicated pipeline.
   3. Conversion pipelines are DETACHABLE COMPONENTS living in their own folders beneath `Resources/Pipelines/`.
   4. Upload, delete & download are pipelines too, & those are built into the core & are not detachable.
+     The Files pipeline does the work on disk underneath an upload, a delete & a file listing.
   5. All pipelines are server-side only. There are no client-side pipelines which operate on files.
 
 AS OF v3.8.5 NO CONVERSION PIPELINE LIVES IN `convertCore.php`. NOT ONE.
@@ -70,7 +70,6 @@ between enumeration & dispatch, & how a detached worker is supervised.
 `ABOUT_CAPABILITY_DETECTION.txt` describes how a dependency is asked what it can do.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Example User Workflow, Showing 3 Pipelines In Action--
 
@@ -83,9 +82,9 @@ Here is a look at how one user session can rely on combining 3 different pipelin
       1. Core Magic, Stage 1 (Upload Pipeline):
         1a. Establish & validate a functional, secure environment.
         1b. Sanitize & validate all components of the request.
-        1c. Generate & provide session tokens to the user. Tokens are captured by the users GUI.
+        1c. Generate & provide session tokens to the user. Tokens are captured by the user's GUI.
         1d. Filter request components to UPLOAD pipeline.
-        1e. Validate selected file, copy a symlink to the NON-HOSTED data location.
+        1e. Validate the selected file & place it in the NON-HOSTED data location.
         1f. Provide the user with path (relative to their session dir) to the file they uploaded.
         1g. The operation is considered complete.
   ----------------------------
@@ -96,29 +95,29 @@ Here is a look at how one user session can rely on combining 3 different pipelin
       2. Core Magic, Stage 2 (Conversion Pipeline):
         2a. Establish & validate a functional, secure environment.
         2b. Sanitize & validate all components of the request.
-        2c. Filter file and request components to SPECIFIC CONVERSION pipeline based on detected operation type.    
-        2d. Select a dependency. Validate it's status, version & capabilities.
-        2e. Deploy "convinience layer". Including intermediate file work, binary work, or environmental preparations.
+        2c. Filter file and request components to SPECIFIC CONVERSION pipeline based on detected operation type.
+        2d. Select a dependency. Validate its status, version & capabilities.
+        2e. Deploy "convenience layer". Including intermediate file work, binary work, or environmental preparations.
         2f. Deploy appropriate "security boundaries". Includes RCE defenses, sandboxing, isolation & SSRF inspection.
         2g. Perform the conversion using validated request components & selected dependency inside the security boundary.
-        2h. Detect & log findings or anomolies.
+        2h. Detect & log findings or anomalies.
         2i. Provide the user with path (relative to their session dir) to the output file they requested.
-        2j. Break down the convinience layer & security boundaries.
+        2j. Break down the convenience layer & security boundaries.
         2k. Log total outcome.
         2l. The operation is considered complete.
-        2m. If the conversion is a .m3u8 stream; Stay alive until the stream is over to monitor worker processes.
+        2m. If the conversion is a .m3u8 stream, stay alive until the stream is over to supervise the worker.
   ----------------------------
 
   ----------------------------
   -DOWNLOAD PIPELINE-
-    * Users GUI Automatically Submits Download Request On Successful Conversion:
-      4. Core Magic, Stage 3 (Download Pipeline):
-        4a. Establish & validate a functional, secure environment.
-        4b. Sanitize & validate all components of the request.
-        4c. Filter request components to DOWNLOAD pipeline.
-        4d. Validate selected file, copy a symlink to the HOSTED data location.
-        4e. Provide the user with path (relative to their session dir) to the output file they requested.
-        4f. The operation is considered complete.
+    * User's GUI Automatically Submits Download Request On Successful Conversion:
+      3. Core Magic, Stage 3 (Download Pipeline):
+        3a. Establish & validate a functional, secure environment.
+        3b. Sanitize & validate all components of the request.
+        3c. Filter request components to DOWNLOAD pipeline.
+        3d. Validate the selected file & copy it into the HOSTED data location.
+        3e. Provide the user with path (relative to their session dir) to the output file they requested.
+        3f. The operation is considered complete.
   ----------------------------
 -WORKFLOW END-
 
@@ -126,28 +125,29 @@ Notes About This Workflow:
   1. To upload, convert, and download a file requires a minimum of 3 user-generated requests.
   2. The first request is uploading the file.
   3. The second request is submitting conversion parameters, like new filename & file extension.
-  4. The third request is downloading the output file. This request is made automatically by the users GUI.
+  4. The third request is downloading the output file. This request is made automatically by the user's GUI.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Three Contracts Every Pipeline Obeys--
 
 Read these before writing code. They are preconditions, not steps.
-  1. A `verify*Version()` function returns a binary path or FALSE. Never a boolean.
-    1a. Locate the binary with `locateDependency()`. Never assume a hardcoded path.
+  1. `verifiedToolPath()` returns a binary path or FALSE. Never a boolean.
+    1a. It asks Dependency Core, which locates the binary with `locateDependency()`. Never assume a
+        hardcoded path, & never write a version check of your own.
     1b. Packaged binaries land in `/usr/bin`. Source builds in `/usr/local/bin`.
     1c. Hardcoding either one is wrong on half of all installations.
-    1d. The web server users PATH is not the administrators PATH.
+    1d. The web server user's PATH is not the administrator's PATH.
     1e. A bare command name is therefore not reliable either.
     1f. Return a path only when the binary was actually located.
-    1g. Return a path only when that binarys version satisfied the minimum.
+    1g. Return a path only when that binary's version satisfied the minimum.
     1h. A caller holding a path may then use it without checking anything else.
     1i. The binary whose version was read must be the binary that runs.
     1j. Returning the path instead of TRUE is what guarantees that.
 
-  2. Every converter returns four values, in the same order, every time.
-    2a. Success, then errors, then `$newPathname`, then `$extension`.
+  2. Every converter returns six values, in the same order, every time.
+    2a. Success, then errors, then `$newPathname`, then `$extension`, then the output filename & the
+        worker PID. Contract 4 in `ABOUT_PIPELINE_COMPONENTS.txt` describes the last two.
     2b. `$extension` must be a parameter even when the function never changes it.
     2c. Returning an undefined variable is a PHP warning.
     2d. A warning printed into an AJAX response is read by the GUI as a filename.
@@ -175,7 +175,6 @@ Read these before writing code. They are preconditions, not steps.
     3o. `convertSCAD()` is the only current example. It builds its own invocation.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Step-By-Step Developer Guide To Adding Conversion Pipelines--
 
@@ -188,8 +187,8 @@ Read these before writing code. They are preconditions, not steps.
   1f. Two dependencies competing for one extension has no clean answer.
 
 2. Ensure the supply chain audit for any desired dependency is complete according to the procedures outlined in `ABOUT_DEPENDENCIES.txt`.
-  2a. Search for the dependency in the `Documentation/SUPPLY_CHAIN_AUDIT_[YEAR].xlsx` file. Complete any missing cells.
-  2b. Ensure that dependency is `Considered Adopted` or `Considered Owned`.
+  2a. Search for the dependency in the `SUPPLY_CHAIN_AUDIT_<YEAR>.xlsx` file. Complete any missing cells.
+  2b. Ensure that dependency is 'Adopted' or 'Owned', as `ABOUT_DEPENDENCIES.txt` defines them.
   2c. Do not continue with an unauthorized dependency. The dependency must be authorized BEFORE it can be used.
   2d. If the dependency is deemed unauthorized, find a new one.
 
@@ -200,17 +199,20 @@ Read these before writing code. They are preconditions, not steps.
   3d. Write the `ERROR_DESCRIPTIONS.txt` entries as you write the code.
   3e. An undocumented error number is worse than none. It looks documented.
 
-4. In `config.php` add the format arrays `$UserDEPENDENCYArray`, where `DEPENDENCY` is what you're adding. Do not add a minimum version here. A tool's minimum belongs to the manifest, in step 6.
+4. In `Resources/Contract/config-template.php`, which a new `config.php` is written from, add the format arrays `$UserDEPENDENCYArray`, where `DEPENDENCY` is what you're adding. Do not add a minimum version here. A tool's minimum belongs to the manifest, in step 6.
   4a. If you're adding any other variables, add them now.
   4b. A pipeline with different input & output format support needs two arrays.
   4c. Name those `$UserDEPENDENCYInputArray` & `$UserDEPENDENCYOutputArray`.
   4d. Comment every setting with what it does & what format it takes.
   4e. Comment every setting with how an administrator finds the right value.
   4f. Comment every setting with what the default is.
-  4g. Bump the `config.php` file version contained in `config.php`. Do it right now. Not later.
+  4g. Bump `$ConfigVersion` in the template. Do it right now. Not later.
   4h. Bump `$RequiredConfigVersion` in `convertCore.php`. Do it right now. Not later.
   4i. `config.php` remains authoritative over what may be uploaded. A pipeline declaration
       never widens it. See `ABOUT_CAPABILITY_DETECTION.txt` for how the layers compose.
+  4j. Add each new setting to `applicationConfigModel()` in `convertCore.php`, with the label the
+      template gives it as its Description. A setting the model does not know cannot be reset
+      by `--config` & is reported as unaccounted.
 
 5. In `convertCore.php` register the config so a missing setting is detected.
   5a. `verifyConfigVersion()` - add each setting name to `$requiredConfigVars`.
@@ -253,8 +255,7 @@ Read these before writing code. They are preconditions, not steps.
       wraps one tool. Image adds a sandbox & dimensions. Archive handles several tools,
       one of them optional. A working pipeline is a better example than any document,
       because it has to keep running & so it cannot drift out of date.
-  7a. Copy the closest existing pipeline. Ebook is the smallest & is the reference.
-  7b. Copy `index.html` from any existing folder. Never write a new one.
+  7b. Copy `index.html` from `Resources/Pipelines/`. Never write a new one.
   7c. `pipelineConfig.php` ASSIGNS VARIABLES & DOES NOTHING ELSE. No functions, no logic.
   7d. It is read on EVERY request, for every installed pipeline, so it must stay cheap.
   7e. `$PipelineEntryPoint` MUST BE UNIQUE ACROSS EVERY INSTALLED PIPELINE. Two pipelines
@@ -285,13 +286,13 @@ Read these before writing code. They are preconditions, not steps.
       is not required returns TRUE with the command unwrapped & warns from inside itself.
   8f. ROUTE ON WHAT A TOOL CAN WRITE, NOT ON WHAT IT CAN READ. Assimp reads OFF & has no OFF
       exporter, & an input based route retried an impossible command until it timed out.
-  7b. Gate on the version check first. Error out with your reserved number.
-  7c. Build the command once, before the retry loop. It never changes.
-  7d. Sandbox the command, then test the permission boolean.
-  7e. Refuse with your reserved sandbox number when that boolean is FALSE.
-  7f. Retry up to `$StopCounter` times. Exit the loop as soon as the output exists.
-  7g. Log dependency output under `$Verbose`, but only when it is not blank.
-  7h. Clean up every local in the cleanup line. Never null anything you return.
+  8g. Gate on `verifiedToolPath()` first. Error out with your reserved number.
+  8h. Build the command once, before the retry loop. It never changes.
+  8i. Sandbox the command, then test the permission boolean.
+  8j. Refuse with your reserved sandbox number when that boolean is FALSE.
+  8k. Retry up to `$StopCounter` times. Exit the loop as soon as the output exists.
+  8l. Log dependency output under `$Verbose`, but only when it is not blank.
+  8m. Clean up every local in the cleanup line. Never null anything you return.
 
 9. Check `convertFiles()` for globals & proper conversion type routing.
   9a. `convert()` no longer carries a branch per family. It asks Pipeline Core whether any
@@ -303,22 +304,22 @@ Read these before writing code. They are preconditions, not steps.
   9d. `$arrayArrayOut` filters the output extension.
   9e. A pipeline missing from either map will never be reached by the routing loop.
   9f. Order is significant. The first family to match both extensions wins.
-  9g. ORDER IS NO LONGER SET BY THE POSITION OF AN ENTRY IN THESE MAPS.
-      `$PipelinePriority` in your `pipelineConfig.php` decides it. Lower runs first, & ties
-      break on folder name so the result never depends on what order a filesystem returned.
-      `Stream` sits at 900 because its outputs are ordinary audio & video formats, so a
-      local file must reach the converter that reads files rather than the one that fetches
-      a URL. That was once a comment saying the array must keep Stream last. It is a number
-      now, & it is enforced.
+  9g. ORDER BETWEEN FAMILIES IS STILL THE POSITION OF AN ENTRY IN THESE MAPS.
+      `$PipelinePriority` orders the implementations WITHIN one family. Lower runs first, &
+      ties break on folder name. `resolvePipelineCandidates()` filters on the family before it
+      looks at priority, so a priority never moves one family ahead of another.
+      `Stream` stays LAST in both maps, because its outputs are ordinary audio & video formats
+      & a local file must reach the converter that reads files rather than the one that
+      fetches a URL. Its priority of 900 does not enforce that. The map order does.
   9h. Decide deliberately where your family sits when its formats overlap another.
   9i. The loop skips a family when the input matches but the output does not.
   9j. That behavior lets overlapping families coexist without special cases.
 
 10. Update `showVersionInfo()`, which runs when the `-v` or `--version` argument is set.
-  10a. Add a row to its tool table:
-       `'Tool, purpose' => array(toolPath('Name') !== FALSE, toolMinimum('Name'), TRUE)`.
+  10a. Ask for the binary at the top with `$yourBinary = toolPath('Name');`, then add a row to
+       its tool table: `'Tool, purpose' => array($yourBinary !== FALSE, toolRequirement('Name'), TRUE)`.
   10b. The last value is TRUE for a required tool & FALSE for an optional one.
-  10c. `toolPath()` & `toolMinimum()` both read the manifest, so `-v` reports exactly the
+  10c. `toolPath()` & `toolRequirement()` both read the manifest, so `-v` reports exactly the
        minimum your pipeline enforces. There is nothing to add to the globals line.
   10d. Keep the row name under 28 characters, or it runs into the status column.
   10e. Add a subsystem readiness line if your pipeline needs several tools.
@@ -349,13 +350,14 @@ Read these before writing code. They are preconditions, not steps.
   14b. A pipeline that fails usefully is worth more than one that only works.
   14c. Test with bubblewrap disabled in the kernel. The refusal path must fire.
   14d. Test the same extension in & out, such as epub to epub.
-  14e. `verifyFile()` unlinks a stale output that IS the original when they match.
-  14f. That is a known open bug. Confirm whether your formats can reach it.
+  14e. Keep the name as well. `verifyFile()` refuses an output that IS the original, error 14005.
+  14f. Confirm the request reports that file as unverified & converts the rest.
   14g. Test a multi file request. Some bugs only appear on the second file.
   14h. Run `php convertCore.php -v`. Confirm your dependency is reported.
 
 15. Update all applicable documentation. Including `CHANGELOG.txt` & `ERROR_DESCRIPTIONS.txt`.
-  15a. Add any new dependency to the `DEPENDENCY REQUIREMENTS` headers.
+  15a. The `DEPENDENCY REQUIREMENTS` headers name `depends.php` rather than listing tools, so
+       a new dependency goes in the manifest & nowhere else.
   15b. Add any new dependency to `INSTALLATION_INSTRUCTIONS.txt`.
   15c. Name the package explicitly when it differs from the name of the binary.
 

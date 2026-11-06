@@ -12,11 +12,12 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.6.
+// / v4.0.0.
 // / This file is the converter for the Image pipeline. It is loaded by pipelineCore.php
-// / ONLY when a Image conversion is about to be dispatched to it, so a request that
+// / ONLY when an Image conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
-// / Error block 5000 through 5006 belongs to this pipeline. Those numbers came with the code when it
+// / Error block 8000 through 8002 belongs to this pipeline, & the OCR pipeline raises 8001 for
+// / the same ImageMagick. Those numbers came with the code when it
 // / moved out of convertCore.php & they did not change, because operators have read them.
 // / This pipeline asks for ImageMagick through verifiedToolPath(), which answers from the
 // / manifest, & calls sandboxCommand(), which remains in convertCore.php.

@@ -1,6 +1,6 @@
 # 📚 HRConvert2: The Dual-Flavor Documentation Paradigm
 
-Welcome to the official repository documentation layout guide. This guide excplains how our documentation paradigm, and why there are `.md` & `.txt` versions of each major file contained in this folder.
+Welcome to the official repository documentation layout guide. This guide explains our documentation paradigm, and why there are `.md` & `.txt` versions of each major file contained in this folder.
 
 This document outlines how we present authoritative software specs alongside high-quality, readable instructional guides to give administrators and developers the best possible reference experience.
 
@@ -20,7 +20,7 @@ This application provides a highly accessible, unauthenticated web interface ena
 | **Hardware** | Raspberry Pi Model B+ (or any standard x86 / x64 architecture computing platform) |
 | **Environment** | Debian Linux + Apache Web Server v2.4 + PHP v8.0 or greater |
 
-> ⚙️ **Core Dependencies:** FFMPEG, Dia, LibreOffice, Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia, and xvfb-run.
+> ⚙️ **Core Dependencies:** The authoritative list of dependencies is `Resources/Contract/depends.php` and nothing else. Run `php convertCore.php -v` to see what this installation has.
 
 ---
 
@@ -30,8 +30,8 @@ Every significant subject inside this folder comes packaged in **two distinct fl
 
 ```text
 📁 /Documentation
-   ├── 📄 About Documentation.txt   <-- The Authoritative Source of Truth
-   └── 🎨 About Documentation.md   <-- The Vibrant User Manual (You are here!)
+   ├── 📄 ABOUT_DOCUMENTATION.txt   <-- The Authoritative Source of Truth
+   └── 🎨 ABOUT_DOCUMENTATION.md    <-- The Vibrant User Manual (You are here!)
 ```
 
 This structural separation guarantees an absolute boundary between raw, unyielding engineering blueprints and polished, accessible user instructions.
@@ -55,7 +55,7 @@ We believe documentation should never feel like a chore. By pairing these two di
 ## 🎨 Flavor Deep Dives
 
 ### 📐 1. The Engineering Specification (`.txt`)
-The `.txt` version serves as the unyielding code blueprint. It is designed to be highly concise and perfectly readable inside raw terminal windows or minimal text-viewing software without any graphical overhead. 
+The `.txt` version serves as the unyielding code blueprint. It is designed to be highly concise and perfectly readable inside raw terminal windows or minimal text-viewing software without any graphical overhead.
 * **Strict Fact Density:** Contains nothing but explicit technical specifications, noted exceptions, and execution syntax.
 * **Prose Restriction:** Zero emotional filler, no conversational tone, and absolutely no narrative fluff.
 
@@ -66,20 +66,23 @@ The `.md` file is the user manual you actually *want* to read. It takes the exac
 
 ---
 
+### 📏 The Plain Text Layout
+Every `.txt` file opens with the same header between two rules of 160 dashes: `COPYRIGHT INFORMATION ...`, `LICENSE INFORMATION ...`, `APPLICATION INFORMATION ...`, `FILE INFORMATION ...`, `HARDWARE REQUIREMENTS ...`, `DEPENDENCY REQUIREMENTS ...` and `<3 Open-Source`. Every section after it is a rule, a `--Title--`, a blank line, the body and a closing rule, with one blank line between sections. A subheading inside a body is written the same way in sentence case. `ABOUT_DOCUMENTATION.txt` has the full layout, and `python3 Documentation/Build/hrconvert2-doccheck.py`, run from the installation root, checks every `.txt` file against it.
+
 ### 💡 Pro-Tip for Contributors
 When extending the HRConvert2 documentation library, always write your raw technical data into the `.txt` template first to lock down your authoritative facts. Once the engineering specs are concrete, let your creativity flow into the matching `.md` layout to bring it to life!
 
-### 💡 Tips for Turning Dry Technical Docs into "Fun" Markdown**
+### 💡 Tips for Turning Dry Technical Docs into "Fun" Markdown
 
 If you want to convert boring text files into documentation people love reading, use these visual layout strategies:
 
 > 1. **Leverage Semantic Syntax Highlighting (diff, json, yaml, bash)**  
 >    Don't just use standard generic code blocks. Use diff with \+, \-, and \! to make alert boxes, warnings, and error conditional rules pop visually. Use json or yaml to cleanly box out process definitions or system properties.  
 > 2. **Convert Text Paragraphs into Micro-Tables**  
->    When a document starts listing configurations or options (like the *roundrobin*, *leastactive*, and *redundant* flags), rip them out of long text blobs and drop them into a crisp markdown table. It instantly makes the options skannable.  
+>    When a document starts listing configurations or options (like the *roundrobin*, *leastactive*, and *redundant* flags), rip them out of long text blobs and drop them into a crisp markdown table. It instantly makes the options scannable.  
 > 3. **Design Text-Based Infrastructure Diagrams**  
 >    Instead of explaining a layout architecture or data pipeline purely with sentences, use simple text-based flow maps (like Workers ──► Sockets). It gives readers an instant mental picture of how data travels.  
 > 4. **Use Visual Anchors (Functional Emojis)**  
 >    Drop a single relevant emoji into headers (🛠️, 🔐, 📊, 🧹). They act as visual signposts when scrolling rapidly through a giant file, helping the reader locate content areas instantly.  
 > 5. **Bold Key Architectural Terms**  
->    When a long paragraph details an interaction, **bold** the critical subject or action words. This lets an administrator scan the paragraph in 2 seconds and extract the core operational parameters without reading every filler word. \[17, 18, 19, 20, 21\]
+>    When a long paragraph details an interaction, **bold** the critical subject or action words. This lets an administrator scan the paragraph in 2 seconds and extract the core operational parameters without reading every filler word.

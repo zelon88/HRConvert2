@@ -229,7 +229,7 @@ Contributions are welcome:
 - **Language translations** — Just add a folder
 - **Interface themes** — Fork a UI folder and get creative
 - **Bug reports** — Include reproduction steps
-- **Security reports** — Open an issue (we take them seriously)
+- **Security reports** — Report them privately from the **Security** tab, never in an issue. Every report is accepted, and every reporter is credited once the fix ships. See the [Security Policy](https://github.com/zelon88/HRConvert2/blob/master/Documentation/SECURITY.md).
 
 The architecture is deliberately modular: a language is a folder, an interface is a folder. Neither requires touching the core.
 

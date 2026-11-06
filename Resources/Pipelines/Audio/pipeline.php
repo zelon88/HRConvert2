@@ -12,11 +12,11 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.6.
+// / v4.0.0.
 // / This file is the converter for the Audio pipeline. It is loaded by pipelineCore.php
-// / ONLY when a Audio conversion is about to be dispatched to it, so a request that
+// / ONLY when an Audio conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
-// / Error block 1000 through 1002 belongs to this pipeline. Those numbers came with the code when it
+// / Error block 12000 through 12002 belongs to this pipeline. Those numbers came with the code when it
 // / moved out of convertCore.php & they did not change, because operators have read them.
 // / This pipeline asks for FFMPEG through verifiedToolPath() & calls sandboxCommand(), which
 // / remains in convertCore.php. Four pipelines name the FFMPEG subsystem: Audio, Video,

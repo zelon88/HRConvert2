@@ -18,8 +18,8 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ...
-The Python tool requires Python 3. The Bash tool requires bash, awk, grep and sed.
-Both use the php binary for the syntax check and skip it with a notice when php is absent.
+The Python tools require Python 3. The Bash tool requires bash, awk, grep and sed.
+The two code checkers use the php binary for the syntax check and skip it with a notice when php is absent.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -30,13 +30,16 @@ Both use the php binary for the syntax check and skip it with a notice when php 
   cd /var/www/html/HRProprietary/HRConvert2
   python3 Documentation/Build/hrconvert2-check.py
   bash Documentation/Build/hrconvert2-check.sh
+  python3 Documentation/Build/hrconvert2-doccheck.py
 
-Both are run from the installation root, beside convertCore.php. Running one from anywhere
-else exits two & says so, rather than reporting that a tree it cannot see is clean.
+The first two check the code & the third checks the documentation.
+All three are run from the installation root, beside convertCore.php. Running one from
+anywhere else exits two & says so, rather than reporting that a tree it cannot see is clean.
 
   --list           Name every check & say in one line what it looks for.
   --only <name>    Run one check. This is what to use while fixing something.
   --quiet          Print nothing & report the answer in the exit code.
+  --fix            The documentation checker only. Repair what cannot change a meaning.
 
 EXIT CODES.
   0   Every check passed.
@@ -59,12 +62,13 @@ The Python parses. The Bash uses awk, grep & the shell. When they agree the answ
 probably right, & when they disagree exactly one of them is right.
 
 A DISAGREEMENT IS DATA RATHER THAN NOISE.
-Two differences are expected & are stated in the header of the Bash tool. Anything else is
-a bug in one of them & is worth ten minutes.
+The checks marked PYTHON ONLY below do not run in the Bash, & the Bash reads the call order
+& the kernel more coarsely than the Python does. Its header & --About What They Do Not Do--
+say why. Any other difference is a bug in one of them & is worth ten minutes.
 
 hrconvert2-check.py IS AUTHORITATIVE.
-The Bash tool is a second opinion. Where they differ & the difference is not one of the two
-documented ones, believe the Python until proven otherwise.
+The Bash tool is a second opinion. Where they differ & the difference is not a documented
+one, believe the Python until proven otherwise.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -91,6 +95,9 @@ documented ones, believe the Python until proven otherwise.
   args        Every call supplies the arguments its function requires. PYTHON ONLY.
   pairs       A function that returns a pair is never assigned whole to one variable. PYTHON ONLY.
   spacing     Separators & blank lines follow the house shape. PYTHON ONLY.
+  frame       Every function opens & closes with a separator. PYTHON ONLY.
+  globals     No function destroys a global it declares. PYTHON ONLY.
+  configs     No setting is set by the administrator & by the Engine. PYTHON ONLY.
   stray       Nothing ships that is not part of the application.
 
 This heading carried a count until v3.9.9 & the count was wrong by three. A number in a
@@ -99,8 +106,10 @@ heading is a status sentence with nothing checking it, so there is no number.
 Each one is described at length above the function that performs it, & each description
 says what it CANNOT see as well as what it can. Read those before chasing a finding.
 
-EVERY CHECK WAS WRITTEN AFTER A FAULT REACHED A RUNNING INSTALLATION.
-None of them are hypothetical & none of them were caught by reading the code.
+EVERY CHECK BUT ONE WAS WRITTEN AFTER A FAULT REACHED A RUNNING INSTALLATION.
+None of them are hypothetical. Until v4.0.0 none of them were caught by reading the code.
+The last two were, by a manual pass that read every line, & they exist so that the next
+fault of either kind does not wait for another one.
 
   order       A fatal on the first web request after the data location functions moved into
               the Engine. verifyGlobals called requestConvertLoc which called
@@ -124,8 +133,8 @@ None of them are hypothetical & none of them were caught by reading the code.
               without any guard at all. The kernel is now held to its own guard's exact
               shape, above its first function.
   kernel      Five functions went into the Engine & came back, locateDependency,
-              reloadApparmorProfile, closeHRC2Connection, extractCliOption &
-              parseArgumentVector. Every one passed questions one, two & four of
+              reloadApparmorProfile, closeHRC2Connection (now closeClientConnection),
+              extractCliOption & parseArgumentVector. Every one passed questions one, two & four of
               ABOUT_ENGINE_CONTRACT.txt & failed three, & every one was caught by hand.
   pins        Verified by hand every release until it was not.
   config      A fatal on --check-depends after eight settings were added to config.php, to
@@ -141,6 +150,15 @@ None of them are hypothetical & none of them were caught by reading the code.
               including every conversion pipeline. The first symptom was a fatal three calls
               away from any of them. A check that produces instructions must know what its
               instructions can break, & this one now does.
+  frame       Five functions in convertCore.php had lost a separator & were found by reading
+              it line by line. A first draft of this check found nine more in three other
+              files, which nobody had read that closely.
+  globals     updateApplication purged $Lol, a global it declares. With memory protection
+              on, every line ending printed after an update was gone. The same fault was in
+              waitForStream in the Engine, & both read as correct code.
+  configs     The one written first. The documents promised that an administrator's setting
+              beat the Engine's, & the code reads the Engine's second, so it never could. No
+              name was shared yet. This keeps the promise true rather than lucky.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -194,6 +212,35 @@ is exactly what blanking removes.
 
 Heredoc & nowdoc are not handled & this project does not use them. A file that starts using
 one will produce noise rather than silence, which is the safer failure.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Documentation Checker--
+
+hrconvert2-doccheck.py READS THE DOCUMENTS THE WAY THE OTHER TWO READ THE CODE.
+It judges every plain text & markdown file in Documentation & every pipeline's
+DEPENDENCY_APPROVALS.txt. It has no twin.
+
+  header      Every plain text file opens with the standard header & nothing else.
+  sections    Every section is a rule, a title, a blank line, a body & a rule.
+  whitespace  No line ends in whitespace & no three blank lines sit together.
+  entries     ERROR_DESCRIPTIONS.txt holds one entry per number, in order, & its FILE &
+              FATAL fields agree with the code wherever the code says so plainly.
+  names       Every function & setting a document names still exists.
+
+The layout it holds files to is the one ABOUT_DOCUMENTATION.txt describes. The changelog
+is the project's record, so only its header is judged. Its entries are never changed, not
+even for whitespace, & a COMMIT header that is factually wrong is the one exception.
+
+--fix repairs trailing whitespace & the blank lines between sections, which cannot change
+what a document says, & nothing else. It never writes to the changelog. Every other finding
+is a sentence somebody has to rewrite, so it is reported & left alone.
+
+It was written after the manual pass at v4.0.0 found what it looks for by reading every
+document. Its first run then found five entries whose FATAL field said the opposite of what
+the code does, which nobody reading the documents alone could have seen.
+What each check cannot see is written above it, as it is in the other two. None of them can
+tell whether a sentence is still true.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -297,32 +344,39 @@ it will not run over HTTP is a thing nobody should have to do twice.
 
 Documentation/Build is inside the web root & is served like anything else there.
 A python file has no handler configured, so a web server hands back its source rather than
-running it. Nothing in either tool is secret & this project is open source, so that is
-untidy rather than dangerous. Both directories should still carry the index.html every
+running it. Nothing in any of these tools is secret & this project is open source, so that
+is untidy rather than dangerous. Both directories should still carry the index.html every
 other directory in this project carries.
 
-The whole of Documentation/Build is removed by --Delete Build Environment-- in config.php,
-which is the correct answer for an installation nobody develops on. Neither tool is needed
-at runtime & neither is loaded by anything.
+--Delete Build Environment-- in config.php removes the Dockerfile & a Build folder in the
+installation root. It does not remove Documentation/Build, & it should not while the Resource
+Manager & three source builds read scripts from that folder. None of the checking tools is
+needed at runtime & none of them is loaded by anything.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About The Standing Findings--
 
 A clean run is the goal & is not always the state.
-As of v3.9.0 both tools report seven findings & every one is the same known debt.
+As of v4.0.0 all three checkers report nothing outside Resources/ScanCore.
 
-  CONTRACT   The Engine calls seven application functions.
-             Six are the policy group reached from validateOperatingEnvironment. They write
-             to /etc & /usr & need root, so they belong with the privileged side rather
-             than with the Engine as it stands.
-             verifyDataExposure asks whether a web server is serving a directory it should
-             not be, which only an application with a web server can answer. It should
-             become a value passed in rather than a call made out.
+SCANCORE IS CHECKED HERE UNTIL IT HAS TOOLING OF ITS OWN.
+ScanCore is HRProprietary software, so it is held to the same standard as this application,
+& both linters check it by default. --no-scancore leaves Resources/ScanCore out of every check.
+The summary counts ScanCore's findings apart from the application's, so a new finding in the
+application is never lost among the ones ScanCore is carrying.
+Two things are judged differently there, because ScanCore is a program of its own.
+  1. A function name is matched within one program. ScanCore runs as a separate, sandboxed
+     process, so a name it shares with this application never meets it in one request.
+     The ScanCore pipeline is application code & is matched with the application.
+  2. ScanCore never sets $CoreLoaded. Its guard is a refusal to run anywhere except a command
+     line, & that is what the guard check holds it to.
+Everything else ScanCore reports is real work for a ScanCore release.
 
-The Engine is USABLE in this state, because HRConvert2 loads both files. It is not yet
-PORTABLE, & that list is exactly the difference.
-See Documentation/ABOUT_ENGINE_CONTRACT.txt for the full account.
+The contract debt this section listed at v3.9.0 is cleared. The Engine called seven
+application functions then, & it calls none now, so it is PORTABLE as well as usable.
+Check eight fails the build if it reopens. See Documentation/ABOUT_ENGINE_CONTRACT.txt for
+how each group was answered.
 
 EVERY FINDING IS AN INSTRUCTION RATHER THAN A DIAGNOSIS.
 A message says what to do, because the reader may not carry the whole convention set.

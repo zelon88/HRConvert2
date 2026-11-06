@@ -13,7 +13,7 @@
 // / that carries it.
 // /
 // / File Information ...
-// / v3.9.9.
+// / v4.0.0.
 // / This file is the Engine. It provides the environment an application runs in.
 // / It is pinned EXACTLY by the application via $RequiredEngineVersion.
 // / Error block 35000 through 35019 reserved. 35000 is the direct load guard every component
@@ -57,7 +57,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 
 // / -----------------------------------------------------------------------------------
 // / The version of this Engine. Read by the application WITHOUT executing this file.
-$EngineVersion = 'v3.9.9';
+$EngineVersion = 'v4.0.0';
 // / -----------------------------------------------------------------------------------
 
 
@@ -360,10 +360,10 @@ function getAcceptedManagers() {
   global $EnableMemoryProtection;
   $AcceptedManagers = array();
   $AcceptedManagers = array(
-    'coreManager.php' => 'v3.9.9',
-    'resourceManager.php' => 'v3.9.9',
-    'workerManager.php' => 'v3.9.6',
-    'requestManager.php' => 'v3.9.6');
+    'coreManager.php' => 'v4.0.0',
+    'resourceManager.php' => 'v4.0.0',
+    'workerManager.php' => 'v4.0.0',
+    'requestManager.php' => 'v4.0.0');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $AcceptedManagers is not purged, because it is the return value.
   purgeSensitiveMemory($EnableMemoryProtection);
@@ -2885,7 +2885,9 @@ function downloadRemoteFileForInspection($StreamURL, $URLHost, $URLPort, $URLIP,
 // / This is the only thing preventing an abandoned stream from running until PHP or the OS intervenes.
 function waitForStream($StreamPID, $newPathname) {
   // / Set variables.
-  global $Verbose, $engineWatchTimeout, $EnableMemoryProtection;
+  // / The timeout is a local read from the network policy. It was also declared global, so
+  // / the cleanup below destroyed a global of that name on every stream it supervised.
+  global $Verbose, $EnableMemoryProtection;
   // / The network policy is resolved once & every setting below comes from it.
   $networkPolicy = networkPolicy();
   $engineWatchTimeout = $networkPolicy['WatchTimeout'];

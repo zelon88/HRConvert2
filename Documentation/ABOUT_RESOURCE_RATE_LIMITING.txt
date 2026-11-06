@@ -45,17 +45,18 @@ conversions it approved & reclaims the budget when they finish.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About The Listener--
 
-The listener is contained in Resources/Engine/Managers/coreManager.php.
+The listener is the four manager roles under Resources/Engine/Managers. coreManager.php is the
+one an operator starts, & it starts the other three.
 
-coreManager.php is a detachable component. It is validated the same way a GUI or a language pack
-is validated, it is loaded only after an install secret exists, & convertCore.php runs perfectly
-well without it.
+Each role file is a manager subcomponent of the Engine. The Engine pins it in
+getAcceptedManagers & loads it only in a process dispatched to that role, & convertCore.php runs
+perfectly well without any of them.
 
-The component version must match the version this core requires EXACTLY. A component built for
-another release may define functions this core cannot call safely, so a mismatch is refused &
-resource awareness becomes unavailable.
+A role's version must match the version the Engine accepts EXACTLY. A role built for another
+release may call Engine functions that have since changed, so a mismatch is refused & resource
+awareness becomes unavailable.
 
-The listener is four separate PHP processes, all started by one command;
+The listener is four separate PHP processes, all started by one command:
 
   Core Manager
       Supervises the other three & restarts any that die.
@@ -91,13 +92,13 @@ the command line or from userspace. This is deliberate & is not a limitation to 
 
 Every message is encrypted with AES-256-GCM using a key derived from the install secret & the
 channel it travels on. Every message carries a timestamp & a nonce, & a message older than
---Manager Message Skew-- is discarded as a replay.
+thirty seconds, $ManagerMessageSkew, is discarded as a replay.
 
 A reply travels back on the connection the sender opened. Nothing needs to be addressable to
 receive an answer.
 
-Messages are accepted in batches of up to --Manager Message Batch Size-- per loop, so a busy
-listener is not paying for one accept cycle per request.
+Messages are accepted in batches of up to thirty two, $ManagerMessageBatchSize, per loop, so a
+busy listener is not paying for one accept cycle per request.
 
 Unix domain sockets do not cross hosts. A front end & a listener on separate servers is not
 supported by the current transport, though shared storage between servers is.
@@ -108,9 +109,10 @@ supported by the current transport, though shared storage between servers is.
 
 Every core to core startup call is cryptographically keyed against the install secret.
 
-The key is an HMAC over the purpose being authorized & a time bucket of --Startup Key Window--
-seconds. The current & the previous bucket are both accepted, because launching a process is not
-instant. A key is therefore useless a few seconds after it is created.
+The key is an HMAC over the purpose being authorized & a time bucket of ten seconds, set by
+$StartupKeyWindow in verifyGlobals(). The current & the previous bucket are both accepted,
+because launching a process is not instant. A key is therefore useless a few seconds after
+it is created.
 
 THE STARTUP KEY IS NEVER PRINTED & IS NEVER WRITTEN TO THE LOG.
 Anything that captured console output or a logfile would otherwise be handed a working key.
@@ -128,7 +130,7 @@ argument with a key & are refused without one. They are deliberately absent from
 --About The Resource Budget--
 
 The budget is measured in arbitrary cost units. It is recalculated every --Resource Poll
-Interval-- seconds from three figures;
+Interval-- seconds from three figures:
 
   A base budget.
       --Total Resource Budget-- when it is set.
@@ -194,7 +196,7 @@ $ConvertLoc is always a string & always resolves to something usable. It represe
 location THIS WORKER will use for THIS CONVERSION, which holds true with or without a listener.
 
 --Additional Data Locations-- adds further locations, each declared as an array of a path & a
-type;
+type:
 
   roundrobin
       Joins the distribution. New sessions are spread across the pool by session identifier,
@@ -207,7 +209,7 @@ type;
   redundant
       A standby. Takes a session only when every other location is unusable.
 
---Convert Location-- IS ALWAYS A MEMBER OF THE POOL & IS ALWAYS ITS PRIMARY.
+--Data Storage Directory-- IS ALWAYS A MEMBER OF THE POOL & IS ALWAYS ITS PRIMARY.
 It is never declared under --Additional Data Locations--. It joins the distribution & it is
 swept on the same schedule as every other member. Declaring it again as an additional location
 changes nothing & its second declaration is skipped as a duplicate, with the type on that
@@ -222,9 +224,9 @@ gets the same answer for the same session. The map is a cache & not the record. 
 entry, an existing session directory is discovered on disk before anything is distributed, so a
 listener that restarted in the middle of a session still returns the location holding the files.
 
-With no listener running, --Convert Location-- is used. This is the standalone behaviour.
+With no listener running, --Data Storage Directory-- is used. This is the standalone behaviour.
 
-The socket directory is pinned to --Convert Location-- & never moves with a session, or a worker
+The socket directory is pinned to --Data Storage Directory-- & never moves with a session, or a worker
 & a manager would look for each other in different places.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -232,13 +234,13 @@ The socket directory is pinned to --Convert Location-- & never moves with a sess
 --About Scheduled Storage Cleanup--
 
 The Resource Manager sweeps every configured data location every --Storage Cleanup Interval--
-seconds, using --File Deletion Age Theshold-- to decide what has expired. Every configured
-location means --Convert Location-- as well as every entry under --Additional Data Locations--.
+seconds, using --File Deletion Age Threshold-- to decide what has expired. Every configured
+location means --Data Storage Directory-- as well as every entry under --Additional Data Locations--.
 
 A LOCATION MISSING FROM THE SWEEP KEEPS ITS EXPIRED SESSIONS FOREVER.
 Nothing else deletes them. The clean calls in convertCore.php only ever sweep the location the
 running request was assigned, so a location that no session is being assigned to is not reached
-by them either. Run the Resource Manager with --Verbose-- & read the Scheduled sweep lines to
+by them either. Run the Resource Manager with --Enhanced Logging Verbosity-- on & read the Scheduled sweep lines to
 confirm every location you configured is listed.
 
 The sweep uses the same cleaning function the ordinary clean calls use. Those calls remain in
@@ -261,7 +263,7 @@ EVERY EXPENSIVE OPERATION RUNS INSIDE A CEILING, NOT ONLY FORMAT CONVERSION.
 Anything that goes through sandboxCommand() has always been wrapped, which covers document,
 image, video, audio, archive, model, drawing, SVG, subtitle, stream, OCR & ebook work. Three
 pipelines built their own command & walked around the wrapper along with it, & each of them is
-among the most expensive things the application does;
+among the most expensive things the application does:
 
   ClamAV        Ran raw. A signature database is well over a gigabyte once it is loaded.
   ScanCore      Ran raw. It carried a PHP memory_limit & nothing else.
@@ -351,7 +353,7 @@ into privilege. Running the -fp argument as root enables lingering for the web s
 writes the delegation drop-in that a processor quota requires. Without that drop-in a processor
 quota is silently ignored.
 
-The mechanism actually in use is reported by -v & is written to the log for each conversion;
+The mechanism actually in use is reported by -v & is written to the log for each conversion:
 
   user        A user scope. This is the correct configuration.
   system      A system scope. An operator configured this deliberately. Remove it.
@@ -389,7 +391,7 @@ security control. Nothing in this subsystem is load bearing for safety.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About Command Line Operation--
 
-Listener commands require root or the web server user;
+Listener commands require root or the web server user:
 
   -l, --listen                Start the resource listener.
   -k, --kill                  Stop the resource listener & every manager it started.
@@ -408,8 +410,8 @@ process is excluded so the listener survives its own instruction.
 standard user cannot read it & will be told the listener is stopped whether it is or not, which
 is why the report says so plainly rather than collapsing the two cases into one word.
 
-The listener runs until it is stopped. It is started at boot from rc.local or from the container
-entrypoint.
+The listener runs until it is stopped. It is started at boot by the service unit that
+--setup --install-service writes, or from the container entrypoint.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -427,7 +429,7 @@ A Resource Manager that restarts loses its map. This is recoverable & not a faul
 location map is rebuilt by discovery, the registry is rebuilt as conversions complete or are
 reaped, & the budget is recalculated on the next poll.
 
-The session map is bounded. An entry older than --File Deletion Age Theshold-- plus an hour is
+The session map is bounded. An entry older than --File Deletion Age Threshold-- plus an hour is
 dropped, so a listener that runs for months does not grow one entry per session it has ever seen.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 

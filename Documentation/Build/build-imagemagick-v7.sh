@@ -1,4 +1,34 @@
 #!/usr/bin/env bash
+# / -----------------------------------------------------------------------------------
+# / Copyright Information ...
+# / HRConvert2, Copyright on 8/12/2026 by Justin Grimes, www.github.com/zelon88
+# /
+# / License Information ...
+# / This project is protected by the GNU GPLv3 Open-Source license.
+# / https://www.gnu.org/licenses/gpl-3.0.html
+# /
+# / Application Information ...
+# / This application is designed to provide a web-interface for converting file formats
+# / on a server for users of any web browser without authentication.
+# /
+# / File Information ...
+# / v4.0.0.
+# / This file is the ImageMagick 7 source build for HRConvert2.
+# / It removes the packaged ImageMagick & any earlier source build, then builds & installs
+# / version 7 under /usr/local with HEIC, AVIF & JPEG XL support, which the packaged build
+# / lacks. Run as root. Resources/Contract/depends.php names this script as the ImageMagick
+# / BuildCommand, so --setup --install-depends is what normally runs it.
+# /
+# / Hardware Requirements ...
+# / This application requires at least a Raspberry Pi Model B+ or greater.
+# / This application will run on just about any x86 or x64 computer.
+# /
+# / Dependency Requirements ...
+# / This file requires bash, apt-get, wget, tar & make, & is run as root.
+# / It downloads the ImageMagick source over the network.
+# /
+# / <3 Open-Source
+# / -----------------------------------------------------------------------------------
 
 # Exit immediately if a command exits with a non-zero status
 set -e

@@ -8,9 +8,10 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.9.9.
+// / v4.0.0.
 // / This file is the Core Manager. It is a manager subcomponent of the Engine.
-// / The Core Manager the listener. It starts the other three, restarts one that dies & is the only role an operator starts directly.
+// / The Core Manager is the listener. It starts the other three, restarts one that dies & is
+// / the only role an operator starts directly.
 // /
 // / A manager is a role a long lived process runs under rather than a file the application
 // / loads on demand. It has a lifetime measured in days, a socket & a place in a budget.
@@ -38,7 +39,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A m
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v3.9.9';
+$ManagerVersion = 'v4.0.0';
 // / -----------------------------------------------------------------------------------
 
 

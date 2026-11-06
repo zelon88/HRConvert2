@@ -1,142 +1,163 @@
-------------------------------------------------------------------------------------------------------------------
-DEPENDENCY APPROVAL RECORD
-The ClamAV pipeline.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 10/30/2026 by Justin Grimes, www.github.com/zelon88
 
-Written by Documentation/Build/hrconvert2-approvals.py v3.9.7.
-Every factual field is read from the dependency manifest & is rewritten by that tool.
-Every audit answer is written by a person & is kept across a refresh.
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v3.9.7.
+This plain text file is the dependency approval record for the ClamAV pipeline.
+It is written by Documentation/Build/hrconvert2-approvals.py. Every factual field is read from the dependency manifest & is rewritten by that tool. Every audit answer & every note is written by a person & is kept across a refresh.
 The procedure these questions come from is in Documentation/ABOUT_DEPENDENCIES.txt.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About This Record--
 
 These are the dependencies this pipeline uses. The list is worked out from the
 tools the pipeline asks for by name, from whether it isolates a command, & from the
 subsystem it declares. A pipeline is detachable, so this record travels with it.
-------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Bubblewrap--
 
   Approval record
-    Status                                      ADOPTED
-    Approved on                                 11/04/2026
-    Expires on                                  11/04/2027
-    Audited by                                  Justin Grimes (@zelon88)
-    Audit outcome                               PASSED
-    Notes or Conditions                         Mandatory foundational dependency. Use to isolate every other archive/image parser.
+    Status                                        ADOPTED
+    Approved on                                   11/04/2026
+    Expires on                                    01/01/2027
+    Audited by                                    Justin Grimes (@zelon88)
+    Audit outcome                                 PASSED
+    Notes or Conditions                           Mandatory foundational dependency. Use to isolate every other archive/image parser.
 
   Manifest facts, read from Resources/Contract/depends.php
-    Binary                                      bwrap
-    Install type                                apt
-    Package                                     bubblewrap
-    Minimum version                             0.4
-    Required                                    YES
-    Subsystem                                   Sandbox
-    License                                     LGPL-2.0
-    Depends on                                  -
-    Source                                      https://github.com
-    Purpose                                     Isolates every conversion from the host & the network.
+    Binary                                        bwrap
+    Install type                                  apt
+    Package                                       bubblewrap
+    Minimum version                               0.4
+    Required                                      YES
+    Subsystem                                     Sandbox
+    License                                       LGPL-2.0
+    Depends on                                    -
+    Source                                        https://github.com/containers/bubblewrap
+    Purpose                                       Isolates every conversion from the host & the network.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      Yes. Designed specifically as a minimal, unprivileged attack surface reduction boundary.
-                                                Maintained by Red Hat/GNOME developers with structured disclosure and explicit security modeling.
-                                                Codebase is exceptionally tight, readable, and avoids macro or parsing complexity.
-    1b Recent CVEs, issues or exploits          Extremely clean track record. No high-severity RCE or jailbreak flaws in years.
-                                                CVE-2019-12439 was a minor local info leak due to a temporary file descriptor layout bug.
-                                                Most environment breakout vulnerabilities stem from the underlying Linux kernel namespaces rather than bwrap.
-    1c Development activity & breakage risk     Highly Active / Low Breakage. Maintained continuously under the containers organization on GitHub.
-                                                CLI arguments and core runtime flags are frozen and stable; update regressions are virtually non-existent.
-    1d What it needs to function                Kernel Namespace Support. Relies directly on user, mount, IPC, PID, and net namespace system calls.
-                                                Requires unprivileged user namespaces enabled on the host (user.max_user_namespaces > 0).
-                                                Dynamically links against standard glibc; needs no background daemons or permanent disk writes.
-    1e Can it be sandboxed or isolated          N/A. This is the sandbox controller itself. It is transient and destroys its environment upon exit.
-    1f Security options & hardened configurationMaximal isolation flags must be applied when executing sub-commands: --unshare-all, --uid, --gid,
-                                                --ro-bind for system runtime folders, and explicit --seccomp filters to drop dangerous syscall architectures.
-    1g Could another dependency do this better  No. It is the gold standard for rapid, unprivileged, daemonless command sandboxing on Linux.
-                                                Alternative tools like Minijail lack the widespread distro adoption, while Podman/Docker bring major daemon overhead.
-    1h Origin & supply chain risk               Very Low Risk. Maintained by primary enterprise Linux contributors (Fedora, Red Hat, SUSE).
-                                                Distributed with cryptographic tag signatures and heavily scrutinized open-source review pipelines.
-    1i Dependency traps for existing installs   The Setuid Trap. If the target host kernel disables unprivileged user namespaces by default, 
-                                                bwrap requires a root-owned setuid bit to function, expanding the local attack surface if misconfigured.
-    2a System package versus a source build     System Package Preferred. The distribution-provided package is kept patched, stable, 
-                                                and correctly mapped to the underlying platform's specific namespace permissions.
-    2b Build flags, libraries & features        Standard hardened compile blocks. Ensure libseccomp filtering is explicitly compiled in (--enable-seccomp).
-    2c Minimum version & version edge cases     Strictly 0.4.0+ as defined by the manifest, though 0.8.0+ is strongly recommended to support modernized flags.
-    2d Licensing implications of the build      LGPL-2.0 is highly amenable. Safe for commercial and internal utility wrapping without copyleft traps.
-    3a Distribution method                      Native package repositories (apt) and official GitHub source releases.
-    3b Download source used                     Upstream GitHub assets or native distribution mirrors.
-    3c How an installer obtains this version    Standard automated package management fetch (apt-get install -y bubblewrap).
-    3d Inspection of any bundled binary or code Inspection Practical. Clean, straightforward, minimal C files without obfuscation or macro masking.
-    3e Sanity check of the build system         Fully automated via native continuous integration testing suites embedded in the upstream source.
-    3f Build script provided                    No. Managed safely via the native OS package controller.
+    1a Security design is amenable to ours        Yes. Designed specifically as a minimal, unprivileged attack surface reduction boundary.
+                                                  Maintained by Red Hat/GNOME developers with structured disclosure and explicit security modeling.
+                                                  Codebase is exceptionally tight, readable, and avoids macro or parsing complexity.
+    1b Recent CVEs, issues or exploits            Extremely clean track record. No high-severity RCE or jailbreak flaws in years.
+                                                  CVE-2019-12439 was a minor local info leak due to a temporary file descriptor layout bug.
+                                                  Most environment breakout vulnerabilities stem from the underlying Linux kernel namespaces rather than bwrap.
+    1c Development activity & breakage risk       Highly Active / Low Breakage. Maintained continuously under the containers organization on GitHub.
+                                                  CLI arguments and core runtime flags are frozen and stable; update regressions are virtually non-existent.
+    1d What it needs to function                  Kernel Namespace Support. Relies directly on user, mount, IPC, PID, and net namespace system calls.
+                                                  Requires unprivileged user namespaces enabled on the host (user.max_user_namespaces > 0).
+                                                  Dynamically links against standard glibc; needs no background daemons or permanent disk writes.
+    1e Can it be sandboxed or isolated            N/A. This is the sandbox controller itself. It is transient and destroys its environment upon exit.
+    1f Security options & hardened configuration  Maximal isolation flags must be applied when executing sub-commands: --unshare-all, --uid, --gid,
+                                                  --ro-bind for system runtime folders, and explicit --seccomp filters to drop dangerous syscall architectures.
+    1g Could another dependency do this better    No. It is the gold standard for rapid, unprivileged, daemonless command sandboxing on Linux.
+                                                  Alternative tools like Minijail lack the widespread distro adoption, while Podman/Docker bring major daemon overhead.
+    1h Origin & supply chain risk                 Very Low Risk. Maintained by primary enterprise Linux contributors (Fedora, Red Hat, SUSE).
+                                                  Distributed with cryptographic tag signatures and heavily scrutinized open-source review pipelines.
+    1i Dependency traps for existing installs     The Setuid Trap. If the target host kernel disables unprivileged user namespaces by default,
+                                                  bwrap requires a root-owned setuid bit to function, expanding the local attack surface if misconfigured.
+    2a System package versus a source build       System Package Preferred. The distribution-provided package is kept patched, stable,
+                                                  and correctly mapped to the underlying platform's specific namespace permissions.
+    2b Build flags, libraries & features          Standard hardened compile blocks. Ensure libseccomp filtering is explicitly compiled in (--enable-seccomp).
+    2c Minimum version & version edge cases       Strictly 0.4.0+ as defined by the manifest, though 0.8.0+ is strongly recommended to support modernized flags.
+    2d Licensing implications of the build        LGPL-2.0 is highly amenable. Safe for commercial and internal utility wrapping without copyleft traps.
+    3a Distribution method                        Native package repositories (apt) and official GitHub source releases.
+    3b Download source used                       Upstream GitHub assets or native distribution mirrors.
+    3c How an installer obtains this version      Standard automated package management fetch (apt-get install -y bubblewrap).
+    3d Inspection of any bundled binary or code   Inspection Practical. Clean, straightforward, minimal C files without obfuscation or macro masking.
+    3e Sanity check of the build system           Fully automated via native continuous integration testing suites embedded in the upstream source.
+    3f Build script provided                      No. Managed safely via the native OS package controller.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-------------------------------------------------------------------------------------------------------------------
-
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --ClamAV--
 
   Approval record
-    Status                                      ADOPTED
-    Approved on                                 11/04/2026
-    Expires on                                  11/04/2027
-    Audited by                                  Justin Grimes (@zelon88)
-    Audit outcome                               PASSED WITH CONDITIONS
-    Notes or Conditions                         Core defensive boundary. Must run in an isolated namespace with network permissions limited strictly to signature updates.
+    Status                                        ADOPTED
+    Approved on                                   11/04/2026
+    Expires on                                    01/01/2027
+    Audited by                                    Justin Grimes (@zelon88)
+    Audit outcome                                 PASSED WITH CONDITIONS
+    Notes or Conditions                           Core defensive boundary. Must run in an isolated namespace with network permissions limited strictly to signature updates.
 
   Manifest facts, read from Resources/Contract/depends.php
-    Binary                                      clamscan
-    Install type                                apt
-    Package                                     clamav clamav-daemon
-    Minimum version                             0.103
-    Required                                    NO
-    Subsystem                                   Virus Scanning
-    License                                     GPL-2.0
-    Depends on                                  -
-    Source                                      https://www.clamav.net
-    Purpose                                     Scans uploads. Only used when virus scanning is enabled.
+    Binary                                        clamscan
+    Install type                                  apt
+    Package                                       clamav clamav-daemon
+    Minimum version                               0.103
+    Required                                      NO
+    Subsystem                                     Virus Scanning
+    License                                       GPL-2.0
+    Depends on                                    -
+    Source                                        https://www.clamav.net
+    Purpose                                       Scans uploads. Only used when virus scanning is enabled.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      Yes. ClamAV is built specifically as a security tool and defensive boundary. 
-                                                Maintained by Cisco Talos, it features a mature secure development lifecycle, a formal security policy, 
-                                                structured vulnerability disclosure processes, and a dedicated response team. 
-                                                However, because it parses untrusted binary files, it possesses an intrinsic attack surface.
-    1b Recent CVEs, issues or exploits          Moderate Risk. Because anti-virus tools must unpack complex file formats, they are popular fuzzing targets. 
-                                                Vulnerabilities such as CVE-2023-20032 (a heap-based buffer overflow in the HFS+ partition file parser) 
-                                                and CVE-2023-20057 (an XML External Entity injection flaw in the DMG parser) allowed remote code execution 
-                                                or information disclosure when scanning malicious payloads. Modern version updates downstream mitigate these bugs.
-    1c Development activity & breakage risk     Highly Active / Low Breakage Risk. Maintained continuously with regular engine upgrades and daily signature updates. 
-                                                The command-line syntax for `clamscan` and `clamdscan` is rock-solid and highly stable. 
-                                                Breakage risk to the core HRConvert2 application logic during system patches is minimal.
-    1d What it needs to function                Memory Intensive / Restricted Network. Requires a substantial memory footprint (~1GB+ RAM) to hold 
-                                                the signature database in memory when running the `clamav-daemon` background service. 
-                                                Requires outbound HTTP/HTTPS network access *only* for the `freshclam` sub-utility to fetch signature updates.
-    1e Can it be sandboxed or isolated          Highly Amenable. The file scanning process itself is completely stateless and mathematical. 
-                                                The file scanning engine (`clamscan`) can be entirely restricted via namespaces or Bubblewrap, 
-                                                denying it network and root capabilities while granting read-only access exclusively to the target upload directory.
-    1f Security options & hardened configurationNative hardening is excellent. The configuration file (`clamd.conf`) must be hardened to enforce strict execution limits, 
-                                                such as `MaxScanSize`, `MaxFileSize`, and `MaxRecursion` limits to prevent zip-bombs or denial-of-service loops. 
-                                                Ensure database directory permissions are restricted to the dedicated `clamav` system user.
-    1g Could another dependency do this better  No. ClamAV is the open-source industry standard for automated local file and stream malware scanning on Linux. 
-                                                Proprietary alternatives bring licensing complications, API lock-ins, and high computational overhead 
-                                                unsuited for rapid, daemonized file conversion loops.
-    1h Origin & supply chain risk               Very Low Risk. Maintained by Cisco Systems (Talos Intelligence Group). 
-                                                The source code distribution infrastructure, code repositories, and compiled packages are cryptographically signed, 
-                                                widely audited, and universally distributed via major global Linux mirrors.
-    1i Dependency traps for existing installs   The Signature Stale Trap. If outbound network rules completely block the `freshclam` service, 
-                                                the signature database will stagnate, rendering the scanner blind to modern payloads. 
-                                                The update network path must be strictly isolated to official ClamAV database endpoints (`database.clamav.net`).
-    2a System package versus a source build     System Package Preferred. The distribution-provided package is carefully split into engine components (`clamav`), 
-                                                daemon workflows (`clamav-daemon`), and automated update management (`clamav-freshclam`), 
-                                                allowing easy orchestration and patch updates through standard OS package managers.
-    2b Build flags, libraries & features        Default package compilation flags applied by apt are sufficient, as major distributions build ClamAV 
-                                                with active compiler protections, position-independent executable bindings, and stack guards.
-    2c Minimum version & version edge cases     0.103+ as defined by the manifest facts. Note that version 0.103 is an older baseline; while still functional 
-                                                via backported distro security fixes, upgrading to the modern 1.x LTS stream is recommended for better resource utilization.
-    2d Licensing implications of the build      GPL-2.0. Clean for internal operational integration within the HRConvert2 execution framework. 
-                                                Because it is executed entirely as an independent external process binary rather than a linked library, 
-                                                there is zero threat of copyleft infection into the custom proprietary codebase.
-    3a Distribution method                      Native OS package manager repositories (apt) and official signed upstream packages.
-    3b Download source used                     Official distribution mirror networks and Cisco update delivery grids.
-    3c How an installer obtains this version    Automated package fetch via the platform manager utility (apt-get install -y clamav clamav-daemon).
-    3d Inspection of any bundled binary or code Inspection Practical. Well-structured, transparent, and well-documented open-source C/C++ architecture.
-    3e Sanity check of the build system         Fully validated via robust built-in functional test suites and continuous automated unit checks inside 
-                                                the upstream distribution framework.
-    3f Build script provided                    No.
-
-------------------------------------------------------------------------------------------------------------------
+    1a Security design is amenable to ours        Yes. ClamAV is built specifically as a security tool and defensive boundary.
+                                                  Maintained by Cisco Talos, it features a mature secure development lifecycle, a formal security policy,
+                                                  structured vulnerability disclosure processes, and a dedicated response team.
+                                                  However, because it parses untrusted binary files, it possesses an intrinsic attack surface.
+    1b Recent CVEs, issues or exploits            Moderate Risk. Because anti-virus tools must unpack complex file formats, they are popular fuzzing targets.
+                                                  Vulnerabilities such as CVE-2023-20032 (a heap-based buffer overflow in the HFS+ partition file parser)
+                                                  and CVE-2023-20057 (an XML External Entity injection flaw in the DMG parser) allowed remote code execution
+                                                  or information disclosure when scanning malicious payloads. Modern version updates downstream mitigate these bugs.
+    1c Development activity & breakage risk       Highly Active / Low Breakage Risk. Maintained continuously with regular engine upgrades and daily signature updates.
+                                                  The command-line syntax for `clamscan` and `clamdscan` is rock-solid and highly stable.
+                                                  Breakage risk to the core HRConvert2 application logic during system patches is minimal.
+    1d What it needs to function                  Memory Intensive / Restricted Network. Requires a substantial memory footprint (~1GB+ RAM) to hold
+                                                  the signature database in memory when running the `clamav-daemon` background service.
+                                                  Requires outbound HTTP/HTTPS network access *only* for the `freshclam` sub-utility to fetch signature updates.
+    1e Can it be sandboxed or isolated            Highly Amenable. The file scanning process itself is completely stateless and mathematical.
+                                                  The file scanning engine (`clamscan`) can be entirely restricted via namespaces or Bubblewrap,
+                                                  denying it network and root capabilities while granting read-only access exclusively to the target upload directory.
+    1f Security options & hardened configuration  Native hardening is excellent. The configuration file (`clamd.conf`) must be hardened to enforce strict execution limits,
+                                                  such as `MaxScanSize`, `MaxFileSize`, and `MaxRecursion` limits to prevent zip-bombs or denial-of-service loops.
+                                                  Ensure database directory permissions are restricted to the dedicated `clamav` system user.
+    1g Could another dependency do this better    No. ClamAV is the open-source industry standard for automated local file and stream malware scanning on Linux.
+                                                  Proprietary alternatives bring licensing complications, API lock-ins, and high computational overhead
+                                                  unsuited for rapid, daemonized file conversion loops.
+    1h Origin & supply chain risk                 Very Low Risk. Maintained by Cisco Systems (Talos Intelligence Group).
+                                                  The source code distribution infrastructure, code repositories, and compiled packages are cryptographically signed,
+                                                  widely audited, and universally distributed via major global Linux mirrors.
+    1i Dependency traps for existing installs     The Signature Stale Trap. If outbound network rules completely block the `freshclam` service,
+                                                  the signature database will stagnate, rendering the scanner blind to modern payloads.
+                                                  The update network path must be strictly isolated to official ClamAV database endpoints (`database.clamav.net`).
+    2a System package versus a source build       System Package Preferred. The distribution-provided package is carefully split into engine components (`clamav`),
+                                                  daemon workflows (`clamav-daemon`), and automated update management (`clamav-freshclam`),
+                                                  allowing easy orchestration and patch updates through standard OS package managers.
+    2b Build flags, libraries & features          Default package compilation flags applied by apt are sufficient, as major distributions build ClamAV
+                                                  with active compiler protections, position-independent executable bindings, and stack guards.
+    2c Minimum version & version edge cases       0.103+ as defined by the manifest facts. Note that version 0.103 is an older baseline; while still functional
+                                                  via backported distro security fixes, upgrading to the modern 1.x LTS stream is recommended for better resource utilization.
+    2d Licensing implications of the build        GPL-2.0. Clean for internal operational integration within the HRConvert2 execution framework.
+                                                  Because it is executed entirely as an independent external process binary rather than a linked library,
+                                                  there is zero threat of copyleft infection into the custom proprietary codebase.
+    3a Distribution method                        Native OS package manager repositories (apt) and official signed upstream packages.
+    3b Download source used                       Official distribution mirror networks and Cisco update delivery grids.
+    3c How an installer obtains this version      Automated package fetch via the platform manager utility (apt-get install -y clamav clamav-daemon).
+    3d Inspection of any bundled binary or code   Inspection Practical. Well-structured, transparent, and well-documented open-source C/C++ architecture.
+    3e Sanity check of the build system           Fully validated via robust built-in functional test suites and continuous automated unit checks inside
+                                                  the upstream distribution framework.
+    3f Build script provided                      No.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

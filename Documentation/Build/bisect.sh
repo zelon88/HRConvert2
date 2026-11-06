@@ -1,16 +1,36 @@
 #!/bin/bash
 # / -----------------------------------------------------------------------------------
-# / Bubblewrap bisect harness for LibreOffice.
-# / This file can be adapted for other dependencies as well.
-# / It is used to test the minimum workable bubblewrap settings that a dependency will allow.
-# / This test comes in handy when developing new Conversion Pipelines.
-# / This test helps you establish the least permissive Bubblewrap configuration that will work. 
-# / Usage.  sudo bash bisectSandbox2.sh /path/to/any.docx
-# / Setup this script to call the dependency in the same manner as your Conversion Pipeline.
-# / Give the script an input file to operate on, and an output file in a format it can write.
-# / When run, this script tests the specific conversion against a variety of Bubblewrap environments.
-# / The report at the end can be used to determine exactly which Bubblewrap settings will break your dependency.
-# / To put that another way, this script tells you what your dependency requires from bubblewrap in order to function.
+# / Copyright Information ...
+# / HRConvert2, Copyright on 8/21/2026 by Justin Grimes, www.github.com/zelon88
+# /
+# / License Information ...
+# / This project is protected by the GNU GPLv3 Open-Source license.
+# / https://www.gnu.org/licenses/gpl-3.0.html
+# /
+# / Application Information ...
+# / This application is designed to provide a web-interface for converting file formats
+# / on a server for users of any web browser without authentication.
+# /
+# / File Information ...
+# / v4.0.0.
+# / This file is a bubblewrap bisect harness for LibreOffice, & can be adapted for other
+# / dependencies. It finds the least permissive bubblewrap configuration a dependency will
+# / still work in, which comes in handy when developing a new Conversion Pipeline.
+# / Usage.  sudo bash bisect.sh /path/to/any.docx
+# / Set the script up to call the dependency the way your Conversion Pipeline does. Give
+# / it an input file to operate on, & an output file in a format the dependency can write.
+# / When run, it tests that conversion against a series of bubblewrap environments, & the
+# / report at the end says exactly which settings break the dependency. To put that
+# / another way, it tells you what your dependency requires from bubblewrap to function.
+# /
+# / Hardware Requirements ...
+# / This application requires at least a Raspberry Pi Model B+ or greater.
+# / This application will run on just about any x86 or x64 computer.
+# /
+# / Dependency Requirements ...
+# / This file requires bash, bubblewrap & LibreOffice, & is run as root.
+# /
+# / <3 Open-Source
 # / -----------------------------------------------------------------------------------
 
 set -u

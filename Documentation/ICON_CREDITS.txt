@@ -8,18 +8,19 @@ https://www.gnu.org/licenses/gpl-3.0.html
 
 APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats
-on a server for users of any web browser without authentication. 
+on a server for users of any web browser without authentication.
 
 FILE INFORMATION ...
 v3.7.0.
 This file contains graphic design credits to those who supplied artwork to the project.
 
-HARDWARE REQUIREMENTS ... 
+HARDWARE REQUIREMENTS ...
 This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
-DEPENDENCY REQUIREMENTS ... 
+DEPENDENCY REQUIREMENTS ...
 The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
@@ -50,7 +51,7 @@ and.....
 Oxygen Icons
 http://www.oxygen-icons.org/
 
-and..... 
+and.....
 
 paomedia
 http://paomedia.com
@@ -126,7 +127,6 @@ http://p.yusukekamiyamane.com/
 https://iconarchive.com/show/fugue-icons-by-yusuke-kamiyamane.html
 https://iconarchive.com/artist/yusuke-kamiyamane.html
 
-
 and.....
 
 Pexwlpy
@@ -136,5 +136,8 @@ https://freeicons.io/big-data-hosting-icon-set-33519
 and.....
 
 Lipis
+flag-icons, the flag set every stock language pack uses
+MIT   https://opensource.org/licenses/MIT
 https://github.com/lipis
+https://github.com/lipis/flag-icons
 https://github.com/lipis/flag-icons/blob/main/flags/4x3/

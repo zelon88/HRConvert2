@@ -1,18 +1,45 @@
------------------------------------------------------------------------------------------
-ABOUT THE COHESION PASS
-What moves into the Engine, what stays in the application, & what is genuinely fallback
-HRConvert2 v3.9.2
------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 9/8/2026 by Justin Grimes, www.github.com/zelon88
 
-This is analysis rather than a plan. Nothing here has been done.
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v3.9.2.
+This plain text file is the analysis of what moves into the Engine, what stays in the application & what is genuinely fallback, written at v3.9.2. It does not record status.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About This Analysis--
+
+This is analysis rather than a plan, & it was written at v3.9.2.
+
+THIS DOCUMENT DOES NOT RECORD STATUS. It said "Nothing here has been done" & that stopped being
+true long before anybody changed it. A status sentence inside a design document has nothing
+checking it. Documentation/ENGINE_MIGRATION_STATUS.txt carries the status & names a check for
+every line of it, & where the two disagree, that file is right.
 
 THE TEST used throughout, & it is the only one that matters:
 would an anti virus with no conversion pipelines need this? If yes it is Engine. If the
 answer depends on knowing what a file IS, it stays in the application.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
------------------------------------------------------------------------------------------
-WHAT THE ENGINE STILL CALLS INTO THE APPLICATION FOR
------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--What The Engine Still Calls Into The Application For--
 
 Eleven functions. They are not one category & should not move as one.
 
@@ -73,10 +100,10 @@ Eleven functions. They are not one category & should not move as one.
                              which is a question about supported formats.
 
     fixManagedPermissions     1 call.   Already behind $EngineRepairProvider. Nothing to do.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
------------------------------------------------------------------------------------------
-WHAT THE ENGINE OWNS, STATED PLAINLY
------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--What The Engine Owns, Stated Plainly--
 
 The environment, & everything that is true of an application of this shape regardless of
 what it does with a file.
@@ -90,10 +117,10 @@ what it does with a file.
 
 The application owns what it means to act on a file. Capabilities, pipelines, sessions in
 the sense of what a user's work IS, & its own arguments.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
------------------------------------------------------------------------------------------
-COMMAND LINE OWNERSHIP
------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Command Line Ownership--
 
 The Engine should own the arguments that are true of every application of this shape.
 
@@ -117,10 +144,10 @@ application what it accepts before it can report an unknown argument, & an appli
 answers badly makes the Engine report nonsense. A prefix needs no negotiation. Everything
 --app is yours, everything else is mine, & an unknown argument in either namespace is
 refused by whoever owns it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
------------------------------------------------------------------------------------------
-WHAT IS GENUINELY FALLBACK & MUST NOT BE REMOVED
------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--What Is Genuinely Fallback & Must Not Be Removed--
 
 Some of what looks like duplication in convertCore.php is a deliberate floor.
 
@@ -138,10 +165,10 @@ Some of what looks like duplication in convertCore.php is a deliberate floor.
 
   compareVersionMinimum was moved to the Engine & the application copy deleted. That was
   correct. It is listed here only so nobody restores it as a fallback.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
------------------------------------------------------------------------------------------
-ORDER, & WHY THIS ONE
------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Order, & Why This One--
 
   1. DONE IN PART. Resources/Engine/Cores/environmentCore.php now DEFINES sanitize,
      locateDependency & getExtension, plus a new describeEnvironment. Every definition is
@@ -155,6 +182,10 @@ ORDER, & WHY THIS ONE
      readComponentVersion CANNOT MOVE & this is settled rather than pending. It is what
      VERIFIES the Engine, so it has to exist before the Engine does. It stays in the
      application permanently & that is correct rather than a compromise.
+     SUPERSEDED AT v3.9.9. sanitize, locateDependency, getExtension & readComponentVersion
+     live in Resources/Kernel/kernel.php, which is beside the Engine & not in it, & which
+     loads before anything else. The reasoning above held. A kernel was the place it allowed.
+     environmentCore.php still carries guarded copies for an application with no kernel.
   2. The scan provider. virusScan stops being called by name & the Engine stops knowing
      pipelines exist.
   3. The command line split, with the --app namespace.
@@ -164,5 +195,4 @@ Four is last deliberately. Reversing the direction of 350 call sites is the larg
 available here, & the second application is what will show whether the logging contract is
 right. Doing it now means designing it for one consumer & discovering the shape is wrong
 when the second arrives.
-
------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

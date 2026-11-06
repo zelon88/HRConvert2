@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.9.9.
+// / v4.0.0.
 // / THIS APPLICATION'S ENGINE SETTINGS. It is loaded AFTER engineConfig.php & anything it
 // / sets wins.
 // /
@@ -91,29 +91,29 @@ $EngineApplicationArgumentHandler = '';
 // / Pipeline Core, which belongs to the Engine, & each change to it was a new Pipeline Core.
 // / The order is the order pipelines are enumerated & listed in.
 $EngineAcceptedPipelines = array(
-  'Stream' => 'v3.9.9',
-  'Scad' => 'v3.9.8',
-  'OCR' => 'v3.9.9',
+  'Stream' => 'v4.0.0',
+  'Scad' => 'v4.0.0',
+  'OCR' => 'v4.0.0',
   'Document' => 'v3.8.8',
   'Subtitle' => 'v3.9.6',
   'SVG' => 'v3.9.6',
   'Drawing' => 'v3.9.6',
-  'Image' => 'v3.9.6',
+  'Image' => 'v4.0.0',
   'Model' => 'v3.9.6',
   'Video' => 'v3.9.6',
-  'Ebook' => 'v3.9.6',
-  'Audio' => 'v3.9.6',
-  'Archive' => 'v3.9.7',
+  'Ebook' => 'v4.0.0',
+  'Audio' => 'v4.0.0',
+  'Archive' => 'v4.0.0',
   // / Scanner pipelines. They declare no formats & are chosen by name.
   'ClamAV' => 'v3.9.9',
   // / The first pipeline of kind file. Operations that do not care what is in a file.
-  'Files' => 'v3.9.3',
+  'Files' => 'v4.0.0',
   'ScanCore' => 'v3.9.9');
 
 // / The shared modules a pipeline may load & the exact version each must report.
 // / libreOffice.php serves the Document & OCR pipelines alike, so neither of them owns it.
 $EngineAcceptedSharedModules = array(
-  'libreOffice.php' => 'v3.9.5');
+  'libreOffice.php' => 'v4.0.0');
 
 // / The settings in config.php that each shared name reads. Operators keep the names they
 // / have always used, & the shared layers ask for a value by a name that says nothing about

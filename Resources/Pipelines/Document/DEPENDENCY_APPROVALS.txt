@@ -1,220 +1,241 @@
-------------------------------------------------------------------------------------------------------------------
-DEPENDENCY APPROVAL RECORD
-The Document pipeline.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 10/30/2026 by Justin Grimes, www.github.com/zelon88
 
-Written by Documentation/Build/hrconvert2-approvals.py v3.9.7.
-Every factual field is read from the dependency manifest & is rewritten by that tool.
-Every audit answer is written by a person & is kept across a refresh.
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v3.9.7.
+This plain text file is the dependency approval record for the Document pipeline.
+It is written by Documentation/Build/hrconvert2-approvals.py. Every factual field is read from the dependency manifest & is rewritten by that tool. Every audit answer & every note is written by a person & is kept across a refresh.
 The procedure these questions come from is in Documentation/ABOUT_DEPENDENCIES.txt.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About This Record--
 
 These are the dependencies this pipeline uses. The list is worked out from the
 tools the pipeline asks for by name, from whether it isolates a command, & from the
 subsystem it declares. A pipeline is detachable, so this record travels with it.
-------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Bubblewrap--
 
   Approval record
-    Status                                      ADOPTED
-    Approved on                                 11/04/2026
-    Expires on                                  11/04/2027
-    Audited by                                  Justin Grimes (@zelon88)
-    Audit outcome                               PASSED
-    Notes or Conditions                         Mandatory foundational dependency. Use to isolate every other archive/image parser.
+    Status                                        ADOPTED
+    Approved on                                   11/04/2026
+    Expires on                                    01/01/2027
+    Audited by                                    Justin Grimes (@zelon88)
+    Audit outcome                                 PASSED
+    Notes or Conditions                           Mandatory foundational dependency. Use to isolate every other archive/image parser.
 
   Manifest facts, read from Resources/Contract/depends.php
-    Binary                                      bwrap
-    Install type                                apt
-    Package                                     bubblewrap
-    Minimum version                             0.4
-    Required                                    YES
-    Subsystem                                   Sandbox
-    License                                     LGPL-2.0
-    Depends on                                  -
-    Source                                      https://github.com
-    Purpose                                     Isolates every conversion from the host & the network.
+    Binary                                        bwrap
+    Install type                                  apt
+    Package                                       bubblewrap
+    Minimum version                               0.4
+    Required                                      YES
+    Subsystem                                     Sandbox
+    License                                       LGPL-2.0
+    Depends on                                    -
+    Source                                        https://github.com/containers/bubblewrap
+    Purpose                                       Isolates every conversion from the host & the network.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      Yes. Designed specifically as a minimal, unprivileged attack surface reduction boundary.
-                                                Maintained by Red Hat/GNOME developers with structured disclosure and explicit security modeling.
-                                                Codebase is exceptionally tight, readable, and avoids macro or parsing complexity.
-    1b Recent CVEs, issues or exploits          Extremely clean track record. No high-severity RCE or jailbreak flaws in years.
-                                                CVE-2019-12439 was a minor local info leak due to a temporary file descriptor layout bug.
-                                                Most environment breakout vulnerabilities stem from the underlying Linux kernel namespaces rather than bwrap.
-    1c Development activity & breakage risk     Highly Active / Low Breakage. Maintained continuously under the containers organization on GitHub.
-                                                CLI arguments and core runtime flags are frozen and stable; update regressions are virtually non-existent.
-    1d What it needs to function                Kernel Namespace Support. Relies directly on user, mount, IPC, PID, and net namespace system calls.
-                                                Requires unprivileged user namespaces enabled on the host (user.max_user_namespaces > 0).
-                                                Dynamically links against standard glibc; needs no background daemons or permanent disk writes.
-    1e Can it be sandboxed or isolated          N/A. This is the sandbox controller itself. It is transient and destroys its environment upon exit.
-    1f Security options & hardened configurationMaximal isolation flags must be applied when executing sub-commands: --unshare-all, --uid, --gid,
-                                                --ro-bind for system runtime folders, and explicit --seccomp filters to drop dangerous syscall architectures.
-    1g Could another dependency do this better  No. It is the gold standard for rapid, unprivileged, daemonless command sandboxing on Linux.
-                                                Alternative tools like Minijail lack the widespread distro adoption, while Podman/Docker bring major daemon overhead.
-    1h Origin & supply chain risk               Very Low Risk. Maintained by primary enterprise Linux contributors (Fedora, Red Hat, SUSE).
-                                                Distributed with cryptographic tag signatures and heavily scrutinized open-source review pipelines.
-    1i Dependency traps for existing installs   The Setuid Trap. If the target host kernel disables unprivileged user namespaces by default, 
-                                                bwrap requires a root-owned setuid bit to function, expanding the local attack surface if misconfigured.
-    2a System package versus a source build     System Package Preferred. The distribution-provided package is kept patched, stable, 
-                                                and correctly mapped to the underlying platform's specific namespace permissions.
-    2b Build flags, libraries & features        Standard hardened compile blocks. Ensure libseccomp filtering is explicitly compiled in (--enable-seccomp).
-    2c Minimum version & version edge cases     Strictly 0.4.0+ as defined by the manifest, though 0.8.0+ is strongly recommended to support modernized flags.
-    2d Licensing implications of the build      LGPL-2.0 is highly amenable. Safe for commercial and internal utility wrapping without copyleft traps.
-    3a Distribution method                      Native package repositories (apt) and official GitHub source releases.
-    3b Download source used                     Upstream GitHub assets or native distribution mirrors.
-    3c How an installer obtains this version    Standard automated package management fetch (apt-get install -y bubblewrap).
-    3d Inspection of any bundled binary or code Inspection Practical. Clean, straightforward, minimal C files without obfuscation or macro masking.
-    3e Sanity check of the build system         Fully automated via native continuous integration testing suites embedded in the upstream source.
-    3f Build script provided                    No. Managed safely via the native OS package controller.
+    1a Security design is amenable to ours        Yes. Designed specifically as a minimal, unprivileged attack surface reduction boundary.
+                                                  Maintained by Red Hat/GNOME developers with structured disclosure and explicit security modeling.
+                                                  Codebase is exceptionally tight, readable, and avoids macro or parsing complexity.
+    1b Recent CVEs, issues or exploits            Extremely clean track record. No high-severity RCE or jailbreak flaws in years.
+                                                  CVE-2019-12439 was a minor local info leak due to a temporary file descriptor layout bug.
+                                                  Most environment breakout vulnerabilities stem from the underlying Linux kernel namespaces rather than bwrap.
+    1c Development activity & breakage risk       Highly Active / Low Breakage. Maintained continuously under the containers organization on GitHub.
+                                                  CLI arguments and core runtime flags are frozen and stable; update regressions are virtually non-existent.
+    1d What it needs to function                  Kernel Namespace Support. Relies directly on user, mount, IPC, PID, and net namespace system calls.
+                                                  Requires unprivileged user namespaces enabled on the host (user.max_user_namespaces > 0).
+                                                  Dynamically links against standard glibc; needs no background daemons or permanent disk writes.
+    1e Can it be sandboxed or isolated            N/A. This is the sandbox controller itself. It is transient and destroys its environment upon exit.
+    1f Security options & hardened configuration  Maximal isolation flags must be applied when executing sub-commands: --unshare-all, --uid, --gid,
+                                                  --ro-bind for system runtime folders, and explicit --seccomp filters to drop dangerous syscall architectures.
+    1g Could another dependency do this better    No. It is the gold standard for rapid, unprivileged, daemonless command sandboxing on Linux.
+                                                  Alternative tools like Minijail lack the widespread distro adoption, while Podman/Docker bring major daemon overhead.
+    1h Origin & supply chain risk                 Very Low Risk. Maintained by primary enterprise Linux contributors (Fedora, Red Hat, SUSE).
+                                                  Distributed with cryptographic tag signatures and heavily scrutinized open-source review pipelines.
+    1i Dependency traps for existing installs     The Setuid Trap. If the target host kernel disables unprivileged user namespaces by default,
+                                                  bwrap requires a root-owned setuid bit to function, expanding the local attack surface if misconfigured.
+    2a System package versus a source build       System Package Preferred. The distribution-provided package is kept patched, stable,
+                                                  and correctly mapped to the underlying platform's specific namespace permissions.
+    2b Build flags, libraries & features          Standard hardened compile blocks. Ensure libseccomp filtering is explicitly compiled in (--enable-seccomp).
+    2c Minimum version & version edge cases       Strictly 0.4.0+ as defined by the manifest, though 0.8.0+ is strongly recommended to support modernized flags.
+    2d Licensing implications of the build        LGPL-2.0 is highly amenable. Safe for commercial and internal utility wrapping without copyleft traps.
+    3a Distribution method                        Native package repositories (apt) and official GitHub source releases.
+    3b Download source used                       Upstream GitHub assets or native distribution mirrors.
+    3c How an installer obtains this version      Standard automated package management fetch (apt-get install -y bubblewrap).
+    3d Inspection of any bundled binary or code   Inspection Practical. Clean, straightforward, minimal C files without obfuscation or macro masking.
+    3e Sanity check of the build system           Fully automated via native continuous integration testing suites embedded in the upstream source.
+    3f Build script provided                      No. Managed safely via the native OS package controller.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-------------------------------------------------------------------------------------------------------------------
-
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --LibreOffice--
 
   Approval record
-    Status                                      ADOPTED
-    Approved on                                 11/04/2026
-    Expires on                                  11/04/2027
-    Audited by                                  Justin Grimes (@zelon88)
-    Audit outcome                               PASSED WITH CONDITIONS
-    Notes or Conditions                         Massive parsing footprint with explicit Java support. Must strictly use headless execution flags and always run encapsulated inside Bubblewrap.
+    Status                                        ADOPTED
+    Approved on                                   11/04/2026
+    Expires on                                    01/01/2027
+    Audited by                                    Justin Grimes (@zelon88)
+    Audit outcome                                 PASSED WITH CONDITIONS
+    Notes or Conditions                           Massive parsing footprint with explicit Java support. Must strictly use headless execution flags and always run encapsulated inside Bubblewrap.
 
   Manifest facts, read from Resources/Contract/depends.php
-    Binary                                      soffice
-    Install type                                apt
-    Package                                     libreoffice libreoffice-java-common
-    Minimum version                             7.0
-    Required                                    NO
-    Subsystem                                   Documents
-    License                                     MPL-2.0
-    Depends on                                  Bubblewrap
-    Source                                      https://www.libreoffice.org
-    Purpose                                     Converts documents, spreadsheets & presentations.
+    Binary                                        soffice
+    Install type                                  apt
+    Package                                       libreoffice libreoffice-java-common
+    Minimum version                               7.0
+    Required                                      NO
+    Subsystem                                     Documents
+    License                                       MPL-2.0
+    Depends on                                    Bubblewrap
+    Source                                        https://www.libreoffice.org
+    Purpose                                       Converts documents, spreadsheets & presentations.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      Yes, procedurally. LibreOffice is maintained by The Document Foundation and features a highly mature, 
-                                                structured security pipeline. It has a dedicated security incident response team, accepts encrypted 
-                                                reports via a private security mailing list, and tracks and discloses security advisories systematically. 
-                                                However, the codebase itself is a massive multi-million line C++ legacy monolith handling unsafe 
-                                                file structure definitions, introducing a significant architectural parsing attack surface.
-    1b Recent CVEs, issues or exploits          High Risk / Heavily Fuzzed. Recent critical disclosures emphasize bugs triggered upon document opening. 
-                                                CVE-2026-63277 and CVE-2026-63266 allowed remote code execution or arbitrary file writes via external data links 
-                                                and embedded database connection ranges (like Firebird backups or JDBC loading) without prompting macro warnings. 
-                                                CVE-2026-8357 and CVE-2026-4430 involve heap and stack buffer overflows inside Calc formula engines and OOXML/PPT 
-                                                decoders. Maliciously crafted office templates can readily induce memory corruption.
-    1c Development activity & breakage risk     Highly Active / Moderate Breakage Risk. The codebase is heavily developed with regular releases. 
-                                                While the CLI conversion flags (`--headless --convert-to`) are stable, document parsing layouts or formatting 
-                                                filters can shift slightly between major version milestones, requiring minor visual validation checks of generated PDF outputs.
-    1d What it needs to function                Resource Heavy / Java Environment. Requires significant CPU burst power and memory mapping to instantiate the virtual office headless runtime environment. 
-                                                Requires file system read/write rights to process input tracks and write target PDFs. 
-                                                Links to extensive system shared objects, standard glibc streams, font engines, and explicitly requires a Java Runtime Environment (JRE) via libreoffice-java-common.
-    1e Can it be sandboxed or isolated          Highly Amenable. Document parsing is a self-contained, deterministic transformation cycle. 
-                                                Because it depends on Bubblewrap, it can be completely severed from host networking, user IPC, 
-                                                and access to any underlying host directory structures outside the absolute boundaries of the conversion target folder.
-    1f Security options & hardened configurationNative application-level hardening is mandatory. The CLI execution string must append the `--headless`, 
-                                                `--invisible`, and `--norestore` arguments. To mitigate macro or link-injection vectors enhanced by the presence of Java, 
-                                                Java execution should be fully disabled at launch by passing specific bootstrap directives or disabling Java options inside the sandbox configuration.
-    1g Could another dependency do this better  No. For converting complex, high-fidelity Microsoft Office formats (DOCX, XLSX) and OpenDocument formats (ODT) 
-                                                to PDF on a headless Linux instance, LibreOffice is functionally unrivaled. Specialized micro-libraries fail to render 
-                                                fonts, tables, and layouts accurately. The risk must be accepted and controlled externally via a Bubblewrap jail.
-    1h Origin & supply chain risk               Very Low Risk. Maintained by The Document Foundation, with contributions from global enterprise software entities 
-                                                (Red Hat, Collabora). Source assets and compiled binaries are cryptographically signed, mirrored widely, 
-                                                and subject to immense open-source scrutiny and distribution-level verification checks.
-    1i Dependency traps for existing installs   The Font and Java Bloat Trap. Pulling the standard `libreoffice` package can accidentally bring in massive desktop 
-                                                X11 dependencies and GUI layout tooling. Headless pipelines must ensure execution maps strictly via the `--headless` flag. 
-                                                Additionally, including `libreoffice-java-common` broadens the attack surface by introducing a Java dependency; 
-                                                if appropriate Microsoft Core Fonts are missing from the container, document formatting will distort.
-    2a System package versus a source build     System Package Preferred. Compiling LibreOffice from source is notoriously slow, complex, and resource-heavy. 
-                                                The distribution-provided headless packages (`apt`) are well-maintained, compiled with comprehensive toolchain hardening 
-                                                (ASLR, stack guards), and frequently updated with backported CVE patches.
-    2b Build flags, libraries & features        Default package compilation flags applied by apt are sufficient when fully encapsulated by Bubblewrap.
-    2c Minimum version & version edge cases     7.0+ as defined by the manifest facts. However, to guarantee built-in protection against the recent 
-                                                2025/2026 macro bypasses, external data write vectors, and formula array corruption flaws, 
-                                                deploying versions 26.2.5+ or 26.8.0+ downstream is highly recommended.
-    2d Licensing implications of the build      Mozilla Public License (MPL-2.0). A permissive copyleft framework that is completely clean for internal enterprise execution 
-                                                within HRConvert2. It does not mandate copyleft infection or source sharing of our primary application logic.
-    3a Distribution method                      Native package repositories (apt) and official Document Foundation software portals.
-    3b Download source used                     Official distribution mirror networks.
-    3c How an installer obtains this version    Automated package fetch via the platform package tool (apt-get install -y libreoffice libreoffice-java-common).
-    3d Inspection of any bundled binary or code Inspection Impractical. Sprawling multi-gigabyte code tree integrating multiple parsing sub-components, 
-                                                complex rendering layouts, and thousands of format mapping files.
-    3e Sanity check of the build system         Fully validated via extensive native unit tests and rendering sanity assertions managed natively inside the upstream builder.
-    3f Build script provided                    No.
+    1a Security design is amenable to ours        Yes, procedurally. LibreOffice is maintained by The Document Foundation and features a highly mature,
+                                                  structured security pipeline. It has a dedicated security incident response team, accepts encrypted
+                                                  reports via a private security mailing list, and tracks and discloses security advisories systematically.
+                                                  However, the codebase itself is a massive multi-million line C++ legacy monolith handling unsafe
+                                                  file structure definitions, introducing a significant architectural parsing attack surface.
+    1b Recent CVEs, issues or exploits            High Risk / Heavily Fuzzed. Recent critical disclosures emphasize bugs triggered upon document opening.
+                                                  CVE-2026-63277 and CVE-2026-63266 allowed remote code execution or arbitrary file writes via external data links
+                                                  and embedded database connection ranges (like Firebird backups or JDBC loading) without prompting macro warnings.
+                                                  CVE-2026-8357 and CVE-2026-4430 involve heap and stack buffer overflows inside Calc formula engines and OOXML/PPT
+                                                  decoders. Maliciously crafted office templates can readily induce memory corruption.
+    1c Development activity & breakage risk       Highly Active / Moderate Breakage Risk. The codebase is heavily developed with regular releases.
+                                                  While the CLI conversion flags (`--headless --convert-to`) are stable, document parsing layouts or formatting
+                                                  filters can shift slightly between major version milestones, requiring minor visual validation checks of generated PDF outputs.
+    1d What it needs to function                  Resource Heavy / Java Environment. Requires significant CPU burst power and memory mapping to instantiate the virtual office headless runtime environment.
+                                                  Requires file system read/write rights to process input tracks and write target PDFs.
+                                                  Links to extensive system shared objects, standard glibc streams, font engines, and explicitly requires a Java Runtime Environment (JRE) via libreoffice-java-common.
+    1e Can it be sandboxed or isolated            Highly Amenable. Document parsing is a self-contained, deterministic transformation cycle.
+                                                  Because it depends on Bubblewrap, it can be completely severed from host networking, user IPC,
+                                                  and access to any underlying host directory structures outside the absolute boundaries of the conversion target folder.
+    1f Security options & hardened configuration  Native application-level hardening is mandatory. The CLI execution string must append the `--headless`,
+                                                  `--invisible`, and `--norestore` arguments. To mitigate macro or link-injection vectors enhanced by the presence of Java,
+                                                  Java execution should be fully disabled at launch by passing specific bootstrap directives or disabling Java options inside the sandbox configuration.
+    1g Could another dependency do this better    No. For converting complex, high-fidelity Microsoft Office formats (DOCX, XLSX) and OpenDocument formats (ODT)
+                                                  to PDF on a headless Linux instance, LibreOffice is functionally unrivaled. Specialized micro-libraries fail to render
+                                                  fonts, tables, and layouts accurately. The risk must be accepted and controlled externally via a Bubblewrap jail.
+    1h Origin & supply chain risk                 Very Low Risk. Maintained by The Document Foundation, with contributions from global enterprise software entities
+                                                  (Red Hat, Collabora). Source assets and compiled binaries are cryptographically signed, mirrored widely,
+                                                  and subject to immense open-source scrutiny and distribution-level verification checks.
+    1i Dependency traps for existing installs     The Font and Java Bloat Trap. Pulling the standard `libreoffice` package can accidentally bring in massive desktop
+                                                  X11 dependencies and GUI layout tooling. Headless pipelines must ensure execution maps strictly via the `--headless` flag.
+                                                  Additionally, including `libreoffice-java-common` broadens the attack surface by introducing a Java dependency;
+                                                  if appropriate Microsoft Core Fonts are missing from the container, document formatting will distort.
+    2a System package versus a source build       System Package Preferred. Compiling LibreOffice from source is notoriously slow, complex, and resource-heavy.
+                                                  The distribution-provided headless packages (`apt`) are well-maintained, compiled with comprehensive toolchain hardening
+                                                  (ASLR, stack guards), and frequently updated with backported CVE patches.
+    2b Build flags, libraries & features          Default package compilation flags applied by apt are sufficient when fully encapsulated by Bubblewrap.
+    2c Minimum version & version edge cases       7.0+ as defined by the manifest facts. However, to guarantee built-in protection against the recent
+                                                  2025/2026 macro bypasses, external data write vectors, and formula array corruption flaws,
+                                                  deploying versions 26.2.5+ or 26.8.0+ downstream is highly recommended.
+    2d Licensing implications of the build        Mozilla Public License (MPL-2.0). A permissive copyleft framework that is completely clean for internal enterprise execution
+                                                  within HRConvert2. It does not mandate copyleft infection or source sharing of our primary application logic.
+    3a Distribution method                        Native package repositories (apt) and official Document Foundation software portals.
+    3b Download source used                       Official distribution mirror networks.
+    3c How an installer obtains this version      Automated package fetch via the platform package tool (apt-get install -y libreoffice libreoffice-java-common).
+    3d Inspection of any bundled binary or code   Inspection Impractical. Sprawling multi-gigabyte code tree integrating multiple parsing sub-components,
+                                                  complex rendering layouts, and thousands of format mapping files.
+    3e Sanity check of the build system           Fully validated via extensive native unit tests and rendering sanity assertions managed natively inside the upstream builder.
+    3f Build script provided                      No.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-------------------------------------------------------------------------------------------------------------------
-
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --PHP Zip--
 
   Approval record
-    Status                                      ADOPTED
-    Approved on                                 11/04/2026
-    Expires on                                  11/04/2027
-    Audited by                                  Justin Grimes (@zelon88)
-    Audit outcome                               PASSED WITH CONDITIONS
-    Notes or Conditions                         In-process PHP C extension. Runs directly inside the primary HRConvert2 web engine.
-                                                Mitigate risks via system-level libzip updates.
+    Status                                        ADOPTED
+    Approved on                                   11/04/2026
+    Expires on                                    01/01/2027
+    Audited by                                    Justin Grimes (@zelon88)
+    Audit outcome                                 PASSED WITH CONDITIONS
+    Notes or Conditions                           In-process PHP C extension. Runs directly inside the primary HRConvert2 web engine.
+                                                  Mitigate risks via system-level libzip updates.
 
   Manifest facts, read from Resources/Contract/depends.php
-    Binary                                      -
-    Install type                                php-extension
-    Package                                     zip
-    Minimum version                             -
-    Required                                    YES
-    Subsystem                                   Documents
-    License                                     PHP-3.01
-    Depends on                                  PHP
-    Source                                      https://www.php.net/manual/en/book.zip.php
-    Purpose                                     Opens OOXML documents so external references can be stripped before LibreOffice sees them. Without it the sandbox is the only protection.
+    Binary                                        -
+    Install type                                  php-extension
+    Package                                       zip
+    Minimum version                               -
+    Required                                      YES
+    Subsystem                                     Documents
+    License                                       PHP-3.01
+    Depends on                                    PHP
+    Source                                        https://www.php.net/manual/en/book.zip.php
+    Purpose                                       Opens OOXML documents so external references can be stripped before LibreOffice sees them. Without it the sandbox is the only protection.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      Yes, procedurally. The extension is maintained directly by the core PHP Development Team 
-                                                and the PHP Foundation. It benefits from a mature, centralized enterprise vulnerability response lifecycle, 
-                                                structured security tracking, and prompt coordinated disclosures. However, because it compiles down to native C 
-                                                and exposes a massive, unmanaged parsing interface directly to the underlying web process, 
-                                                it acts as a critical attack surface vector for user-supplied archive streams.
-    1b Recent CVEs, issues or exploits          Moderate Risk. Because the extension serves as a high-level wrapper around the underlying system `libzip` 
-                                                compilation, flaws typically originate at the library tier rather than inside the PHP binding wrappers. 
-                                                Vulnerabilities such as CVE-2023-45853 and CVE-2019-17595 involve heap-based buffer overflows and out-of-bounds 
-                                                reads inside libzip's extraction structures. Maliciously crafted ZIP headers can trigger memory corruption, 
-                                                crashes, or arbitrary code execution right inside the primary PHP worker thread.
-    1c Development activity & breakage risk     Highly Active / Very Low Breakage Risk. Developed and shipped natively alongside regular PHP releases. 
-                                                The core object-oriented classes (`ZipArchive`) and historical functional methods are highly stable 
-                                                and heavily backwards-compatible. Breakage risk during standardized PHP language version upgrades is negligible.
-    1d What it needs to function                In-Process Memory Bindings. Operates strictly within the resource footprint limits allocated to the parent 
-                                                PHP runtime environment. Dynamically links to the host machine's system `libzip` and standard shared `libc` structures. 
-                                                Requires read/write file handle capabilities inside the designated temporary tracking workspace to compress or unpack file arrays.
-    1e Can it be sandboxed or isolated          Indirectly. Because it runs *in-process* as an embedded PHP engine module rather than an isolated external 
-                                                command line call, it cannot be wrapped independently by Bubblewrap at runtime. Instead, isolation must be applied 
-                                                globally to the parent PHP-FPM pool or the core HRConvert2 execution framework using system namespaces or Docker constraints.
-    1f Security options & hardened configurationNative application protections are manageable via file system controls. When implementing standard code workflows, 
-                                                ensure extraction destination paths strictly resolve paths using definitive validation rules (`realpath`) 
-                                                to prevent archive directories from breaking out into absolute host directories via traversal tricks. 
-                                                Enforce strict global memory limits (`memory_limit`) inside `php.ini` to protect against archive zip-bombs.
-    1g Could another dependency do this better  No. For internal, native, object-oriented manipulation of archive structures within an active PHP execution chain, 
-                                                this extension is the undisputed language standard. Relying on continuous external execution chains (`exec()`) 
-                                                for minor archive verification checks brings significantly worse platform command-injection risks.
-    1h Origin & supply chain risk               Very Low Risk. Maintained directly by the global PHP Documentation and Development Group. 
-                                                Source distributions are cryptographically signed, managed via authoritative open-source version repositories, 
-                                                and structurally scrutinized by every major enterprise Linux OS vendor.
-    1i Dependency traps for existing installs   The System libzip Version Trap. Because this module maps execution blocks directly onto the local operating system's 
-                                                native C code libraries, updating the `php-zip` package alone will not patch low-level memory CVEs if the underlying 
-                                                host `libzip` tracking package is allowed to stagnate on outdated or legacy versions.
-    2a System package versus a source build     System Package Preferred. The package tracking provided by standard OS repositories (`apt install php-zip`) 
-                                                is thoroughly integrated, built with hardened toolchain compilation flags, and safely synchronized with the active 
-                                                PHP engine version deployed on the platform.
-    2b Build flags, libraries & features        Default package compilation flags applied by apt are sufficient, as the parent distribution wraps PHP modules 
-                                                using mature, fortified memory boundaries, including position-independent extensions and stack checks.
-    2c Minimum version & version edge cases     No specific minimum version defined by the manifest, but it must strictly track the language baseline 
-                                                of the active parent PHP deployment (e.g., matching PHP 8.x environments) to prevent runtime API type mismatches.
-    2d Licensing implications of the build      PHP License v3.01. A highly permissive, open-source compliant framework specifically authorized for enterprise 
-                                                architectures. It presents zero restrictive copyleft traits, distribution traps, or proprietary usage limitations.
-    3a Distribution method                      Standard distribution native package manager modules (apt) linked to the primary PHP release tree.
-    3b Download source used                     Official distribution mirror networks and authoritative PHP extension delivery archives.
-    3c How an installer obtains this version    Automated package fetch via the standard platform installation utility (apt-get install -y php-zip).
-    3d Inspection of any bundled binary or code Inspection Practical. Highly transparent, cleanly structured, and thoroughly documented C bindings, 
-                                                readily accessible via the official PHP source repositories on GitHub.
-    3e Sanity check of the build system         Fully validated via built-in automated extension verification frameworks and core language integration tests 
-                                                managed by the distribution builder.
-    3f Build script provided                    No.
-
-------------------------------------------------------------------------------------------------------------------
+    1a Security design is amenable to ours        Yes, procedurally. The extension is maintained directly by the core PHP Development Team
+                                                  and the PHP Foundation. It benefits from a mature, centralized enterprise vulnerability response lifecycle,
+                                                  structured security tracking, and prompt coordinated disclosures. However, because it compiles down to native C
+                                                  and exposes a massive, unmanaged parsing interface directly to the underlying web process,
+                                                  it acts as a critical attack surface vector for user-supplied archive streams.
+    1b Recent CVEs, issues or exploits            Moderate Risk. Because the extension serves as a high-level wrapper around the underlying system `libzip`
+                                                  compilation, flaws typically originate at the library tier rather than inside the PHP binding wrappers.
+                                                  Vulnerabilities such as CVE-2023-45853 and CVE-2019-17595 involve heap-based buffer overflows and out-of-bounds
+                                                  reads inside libzip's extraction structures. Maliciously crafted ZIP headers can trigger memory corruption,
+                                                  crashes, or arbitrary code execution right inside the primary PHP worker thread.
+    1c Development activity & breakage risk       Highly Active / Very Low Breakage Risk. Developed and shipped natively alongside regular PHP releases.
+                                                  The core object-oriented classes (`ZipArchive`) and historical functional methods are highly stable
+                                                  and heavily backwards-compatible. Breakage risk during standardized PHP language version upgrades is negligible.
+    1d What it needs to function                  In-Process Memory Bindings. Operates strictly within the resource footprint limits allocated to the parent
+                                                  PHP runtime environment. Dynamically links to the host machine's system `libzip` and standard shared `libc` structures.
+                                                  Requires read/write file handle capabilities inside the designated temporary tracking workspace to compress or unpack file arrays.
+    1e Can it be sandboxed or isolated            Indirectly. Because it runs *in-process* as an embedded PHP engine module rather than an isolated external
+                                                  command line call, it cannot be wrapped independently by Bubblewrap at runtime. Instead, isolation must be applied
+                                                  globally to the parent PHP-FPM pool or the core HRConvert2 execution framework using system namespaces or Docker constraints.
+    1f Security options & hardened configuration  Native application protections are manageable via file system controls. When implementing standard code workflows,
+                                                  ensure extraction destination paths strictly resolve paths using definitive validation rules (`realpath`)
+                                                  to prevent archive directories from breaking out into absolute host directories via traversal tricks.
+                                                  Enforce strict global memory limits (`memory_limit`) inside `php.ini` to protect against archive zip-bombs.
+    1g Could another dependency do this better    No. For internal, native, object-oriented manipulation of archive structures within an active PHP execution chain,
+                                                  this extension is the undisputed language standard. Relying on continuous external execution chains (`exec()`)
+                                                  for minor archive verification checks brings significantly worse platform command-injection risks.
+    1h Origin & supply chain risk                 Very Low Risk. Maintained directly by the global PHP Documentation and Development Group.
+                                                  Source distributions are cryptographically signed, managed via authoritative open-source version repositories,
+                                                  and structurally scrutinized by every major enterprise Linux OS vendor.
+    1i Dependency traps for existing installs     The System libzip Version Trap. Because this module maps execution blocks directly onto the local operating system's
+                                                  native C code libraries, updating the `php-zip` package alone will not patch low-level memory CVEs if the underlying
+                                                  host `libzip` tracking package is allowed to stagnate on outdated or legacy versions.
+    2a System package versus a source build       System Package Preferred. The package tracking provided by standard OS repositories (`apt install php-zip`)
+                                                  is thoroughly integrated, built with hardened toolchain compilation flags, and safely synchronized with the active
+                                                  PHP engine version deployed on the platform.
+    2b Build flags, libraries & features          Default package compilation flags applied by apt are sufficient, as the parent distribution wraps PHP modules
+                                                  using mature, fortified memory boundaries, including position-independent extensions and stack checks.
+    2c Minimum version & version edge cases       No specific minimum version defined by the manifest, but it must strictly track the language baseline
+                                                  of the active parent PHP deployment (e.g., matching PHP 8.x environments) to prevent runtime API type mismatches.
+    2d Licensing implications of the build        PHP License v3.01. A highly permissive, open-source compliant framework specifically authorized for enterprise
+                                                  architectures. It presents zero restrictive copyleft traits, distribution traps, or proprietary usage limitations.
+    3a Distribution method                        Standard distribution native package manager modules (apt) linked to the primary PHP release tree.
+    3b Download source used                       Official distribution mirror networks and authoritative PHP extension delivery archives.
+    3c How an installer obtains this version      Automated package fetch via the standard platform installation utility (apt-get install -y php-zip).
+    3d Inspection of any bundled binary or code   Inspection Practical. Highly transparent, cleanly structured, and thoroughly documented C bindings,
+                                                  readily accessible via the official PHP source repositories on GitHub.
+    3e Sanity check of the build system           Fully validated via built-in automated extension verification frameworks and core language integration tests
+                                                  managed by the distribution builder.
+    3f Build script provided                      No.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

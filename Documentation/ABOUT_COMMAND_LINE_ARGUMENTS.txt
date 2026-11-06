@@ -7,23 +7,21 @@ This project is protected by the GNU GPLv3 Open-Source license.
 https://www.gnu.org/licenses/gpl-3.0.html
 
 APPLICATION INFORMATION ...
-This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
 
 FILE INFORMATION ...
 v3.7.8.
 This plain text file describes the command line arguments HRConvert2 accepts & how to use them.
 
-HARDWARE REQUIREMENTS ... 
-This application requires at least a Raspberry Pi Model B+ or greater. 
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
-DEPENDENCY REQUIREMENTS ... 
+DEPENDENCY REQUIREMENTS ...
 The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About Command Line Arguments--
@@ -42,8 +40,6 @@ Nothing falls through. An unrecognized argument displays help rather than servin
 No session is created by a command line invocation & no user data is touched, except by the
 clean argument, which exists to touch exactly that.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --How To Use HRConvert2 From The Command Line--
@@ -64,8 +60,6 @@ An argument that accepts a value takes it in either of two forms. Both are equiv
 Arguments are case insensitive as of v3.9.9. -V, --CLEAN NOW & -U=V3.6.7 are the same as
 their lower case forms. A path or a name given to an option is passed exactly as typed.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --CLI User Account Considerations--
@@ -103,10 +97,8 @@ To correct permissions that have been compromised, run the following in a termin
 
 Do not run the above against the data location without restoring the secret file afterwards.
 
-  sudo chmod 0600 "/DATA/HRConvert2/secret.php"
+  sudo chmod 0600 "/DATA/HRConvert2/HRConvert2-secret.php"
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Supported Command Line Arguments--
@@ -138,7 +130,6 @@ The -l, -k, --kill-all-workers & --kill-every-worker arguments require root or t
 The -v, -h, --status & --pipeline arguments work when run as any user.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Exit Status--
 
@@ -166,15 +157,14 @@ missing or mismatched, & an answer of no at a confirmation prompt all do nothing
 Before v3.9.9 every command but one exited 0, whatever happened.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About   --config----
- 
+
 Configures this installation without opening config.php in a text editor.
- 
+
 Requires the Setup Core component, which holds a model of every setting config.php declares.
 Requires root, except for a backup, which any account that can write the destination may take.
- 
+
   --config                                 Walk every section & queue changes. Nothing is written until the end.
   --config --view                          Display every setting, its value, its default & what it depends on.
   --config --repair                        Restore only the settings that are absent or unreadable.
@@ -183,9 +173,9 @@ Requires root, except for a backup, which any account that can write the destina
   --config --reset-default-variable=<Var>  Restore one setting.
   --config --backup=<path>                 Copy config.php somewhere before changing anything.
   -y, --yes                                Skip the confirmation prompt.
- 
+
 Inside a section, the following commands are available.
- 
+
   show info                    Display the comment block for every variable in the section.
   show comment block <Var>     Display the comment block for one variable, with its type & default.
   show <Var>                   The same thing, typed shorter.
@@ -193,35 +183,35 @@ Inside a section, the following commands are available.
   reset <Var>                  Queue a reset of one variable.
   set <Var>                    Enter a new value for one variable.
   done                         Keep everything as it is & move on. Pressing Enter does the same.
- 
+
 NOTHING IS WRITTEN UNTIL EVERY SECTION HAS BEEN WALKED.
 Changes are collected & applied in a single write at the end, so an operator who changes their
 mind halfway has changed nothing. A timestamped backup is taken first, whether or not one was
 asked for. The new file is staged beside the original, checked with php -l, & only then moved
 into place, so a configuration that would not parse never reaches the installation.
- 
+
 A SETTING THIS UTILITY DOES NOT KNOW IS STILL EDITABLE.
 It is reported as unaccounted, can be set by hand, & cannot be reset, because nothing in the
 model knows what it should be. This is how the utility survives a release that adds a setting
 before anybody updates Setup Core.
- 
+
 NOTHING IS WRITTEN IF ANY SECTION FAILS VALIDATION.
 A section holding fewer than half, or more than one and a half times, the settings the model
 expects is treated as a parse failure rather than as a configuration problem. A file that cannot
 be read correctly cannot be edited safely, & a partial edit is worse than no edit.
- 
+
 A section header in config.php is three dashes either side of the name. A variable label is two
 dashes indented by two spaces. Those two forms are what the parser relies on.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
- 
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About   --setup----
- 
+
 Installs, checks & audits everything this installation depends on.
- 
+
 Requires the Dependency Core component & the dependency manifest. The two options that also
 configure & repair additionally require Setup Core.
- 
+
   --setup                                  List every option --setup accepts.
   --setup --check-depends                  Report the state of every dependency. Needs root & no token.
   --setup --install-depends                Install everything absent or too old, in manifest order.
@@ -233,25 +223,25 @@ configure & repair additionally require Setup Core.
   --setup --reinstall-existing             Reinstall this installation in place.
   --setup --subsystem=<Name>               Restrict the operation to one subsystem.
   -y, --yes                                Skip the confirmation prompt.
- 
+
 EVERY OPTION ABOVE IS USED WITH --setup & NEVER ON ITS OWN.
 An option typed alone is not a command. The core recognizes it, names the command it belongs to
 & shows the correct invocation rather than reporting an unrecognized argument.
- 
+
 READING NEEDS ROOT. WRITING NEEDS ROOT & A TOKEN.
 Every --setup option is root only, & is refused before it starts rather than partway through.
 This said reading needed no privileges until v3.9.9, & the code refused it all the same.
 --check-depends & --output-supply-chain read the machine & need nothing beyond root.
 Every operation that changes the machine requires root AND a token derived from the install
 secret, which proves the request arrived through convertCore.php rather than by another route.
- 
+
 --uninstall-depends REFUSES TO RUN WITHOUT A SUBSYSTEM.
 Removing every dependency in the manifest would take PHP, Apache & the package manager with it,
 & leave a host that cannot be recovered without physical access. A dependency belonging to the
 Core subsystem, or a required part of the Sandbox subsystem, is never removed at all.
- 
+
 --install-complete runs seven stages, in the order an installation actually depends on.
- 
+
   1  Dependencies.          Nothing below can be verified until the tools exist.
   2  Data locations.        A policy cannot be written into a directory that is not there.
   3  Permissions & policies. A converter cannot run until its policy permits it.
@@ -259,59 +249,50 @@ Core subsystem, or a required part of the Sandbox subsystem, is never removed at
   5  Listener service.      Generated from the configuration stage four settled.
   6  Permissions again.     Stages four & five both write files.
   7  Verification.          Reports what works rather than what was attempted.
- 
+
 A stage that fails stops the ones after it. With -y nothing prompts & stage four keeps whatever
 config.php already declares, which for a fresh clone is the shipped defaults.
- 
+
 The supply chain report is comma separated & opens in any spreadsheet. It carries one dependency
 per row with its licence, upstream source, purpose & detected version filled in, & eight columns
 left deliberately blank. Those columns are the audit.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
- 
-
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About   --pipeline----
- 
+
 Reports on the installed pipelines & checks that they are wired correctly.
- 
+
 Requires the Pipeline Core component. Needs no privileges. It reads & reports & changes nothing.
- 
+
   --pipeline --list                        Every loaded pipeline with its kind, usage & version.
   --pipeline --describe <Name>             One pipeline in full: kind, usage, entry point, what
                                            it reads & what it writes.
   --pipeline --verify                      Compare the pinned pipelines against those that loaded.
   --pipeline --check-depends               Compare what each pipeline says it needs against the
                                            dependency manifest.
- 
+
 --verify is the one worth running after any change. A pipeline can be pinned, installed &
 syntactically valid & still never load, & nothing else reports it.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
- 
-
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About   --app----
- 
+
 Arguments beginning --app belong to the application rather than to the Engine.
- 
+
 The Engine answers every other argument documented here except -v, -h & -u, which are the
 application's. Setup, configuration, the managers, the listener, the pipelines, repair &
 cleanup are true of any application of this shape. An argument that begins --app is handed to
 the application untouched & the Engine takes no view on it.
 The command is matched without regard to case like every other. Its values reach the
 application exactly as typed, because an application's values may be paths.
- 
+
 A prefix is used rather than a list of names, so the Engine never has to ask the application
 what it accepts. Everything --app is the application's & everything else is not.
- 
+
 HRConvert2 declares no --app argument yet. Any one given is refused with a message saying so.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
- 
-
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About  -v  and  --version--
@@ -325,7 +306,7 @@ It reports the following.
 
   The core version, the configuration version & the version of each the core requires.
   Every version pinned dependency & whether the installed one satisfies the minimum.
-  Whether the bubblewrap sandbox is functional, which OpenSCAD conversions depend on.
+  Whether the bubblewrap sandbox is functional, which every dependency command runs inside.
   Every installed interface & whether its version matches what the core requires.
   How many language packs in each interface match, & which ones do not.
   Which conversion types are enabled in the configuration.
@@ -337,8 +318,6 @@ conversion type that depends on it will refuse to run rather than fail in a conf
 
 This argument works when run as any user.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About  -h  and  --help--
@@ -354,8 +333,6 @@ An unrecognized argument displays help as well, & writes a warning to the log.
 This argument works when run as any user.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
-
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About  -c  and  --clean--
 
@@ -365,7 +342,7 @@ This sweep normally happens on every web request. This argument exists for the c
 web request is coming. A server taken out of service still holds user data until something
 sweeps it, & an administrator reclaiming disk should not have to wait for a visitor.
 
-Supplied with no value, the threshold in --Delete Threshold-- from config.php is used.
+Supplied with no value, the threshold in --File Deletion Age Threshold-- from config.php is used.
 Supplied with a whole number, that many minutes is used instead for this run only.
 Supplied with the word now, every session is swept regardless of age.
 
@@ -378,12 +355,10 @@ produce a sweep the administrator did not intend.
 
 Nothing outside a session directory is ever swept. The log directory, the LibreOffice
 profile & the update backup all live alongside the session directories & are protected by
-name. A location that does not match the name it was requested under is refused outright.
+name. A location that is not one of the configured data locations is refused outright.
 
 This argument requires write access to the data locations.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About  -u  and  --update--
@@ -466,7 +441,6 @@ DOCKER USERS SHOULD NOT USE THIS.
   An in place update would be discarded by the next pull anyway.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About  --status--
 
@@ -488,8 +462,6 @@ collapsing the two into one word. Run it as root for the true picture.
 
 This argument works when run as any user.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About  -fp  and  --fix-permissions--
@@ -519,8 +491,6 @@ installation that worked yesterday & does not today.
 This argument requires root.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
-
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About  -l  and  --listen--
 
@@ -540,16 +510,14 @@ The listener records its own process identifier once it is up. This argument wai
 for that record & reports failure if it does not appear. The startup key is never printed & is
 never written to the log, so a failure points at the log rather than reproducing the command.
 
-The listener runs until it is stopped. It is normally started at boot from rc.local or from a
-container entrypoint rather than by hand.
+The listener runs until it is stopped. It is normally started at boot by the service unit that
+--setup --install-service writes, or from a container entrypoint, rather than by hand.
 
 Root or the web server user can start the listener by hand, & every other account is refused.
 Both hold the install secret for this argument, which is what the startup key is derived from.
 
 This argument is refused to anyone but root or the web server user.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About  -k  and  --kill--
@@ -570,8 +538,6 @@ A worker that is ended loses whatever it was converting. The user sees a failed 
 
 This argument requires root or the web server user.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About  --kill-all-workers  and  --kill-every-worker--
@@ -598,8 +564,6 @@ runtime automatically & without ending anything else.
 These arguments require root or the web server user.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
-
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About Automation--
 
@@ -617,8 +581,6 @@ web request uses. Op-Act reports normal activity, WARNING reports something an a
 should know about, & ERROR reports a numbered failure documented in ERROR_DESCRIPTIONS.txt.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
-
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About Open Source--
 
@@ -626,6 +588,6 @@ This application is open-source under the terms of the GPLv3 license, meaning an
 If you modify this application and use it to make money or offer it to your users as a product, you MUST make the source code with your changes available.
 The ideal way to do this would be to fork the official zelon88/HRConvert2 repository on Github and make changes there.
 Alternatively you can submit a pull request and have your changes added to the official repository (with credit due to you, of course).
-By reciprocating changes & improvements with one another we can all enjoy the best, most capable and bug free version HRConvert2.
-If you modify this codebase please consider making your changes public so everyone can benefit from them. 
+By reciprocating changes & improvements with one another we can all enjoy the best, most capable and bug free version of HRConvert2.
+If you modify this codebase please consider making your changes public so everyone can benefit from them.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

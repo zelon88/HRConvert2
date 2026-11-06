@@ -1,513 +1,533 @@
-------------------------------------------------------------------------------------------------------------------
-DEPENDENCY APPROVAL RECORD
-The 3D Model pipeline.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 10/30/2026 by Justin Grimes, www.github.com/zelon88
 
-Written by Documentation/Build/hrconvert2-approvals.py v3.9.7.
-Every factual field is read from the dependency manifest & is rewritten by that tool.
-Every audit answer is written by a person & is kept across a refresh.
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v3.9.7.
+This plain text file is the dependency approval record for the 3D Model pipeline.
+It is written by Documentation/Build/hrconvert2-approvals.py. Every factual field is read from the dependency manifest & is rewritten by that tool. Every audit answer & every note is written by a person & is kept across a refresh.
 The procedure these questions come from is in Documentation/ABOUT_DEPENDENCIES.txt.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About This Record--
 
 These are the dependencies this pipeline uses. The list is worked out from the
 tools the pipeline asks for by name, from whether it isolates a command, & from the
 subsystem it declares. A pipeline is detachable, so this record travels with it.
-------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Assimp--
 
   Approval record
-    Status                                      ADOPTED
-    Approved on                                 11/05/2026
-    Expires on                                  11/05/2027
-    Audited by                                  Justin Grimes (@zelon88)
-    Audit outcome                               PASSED WITH CONDITIONS
-    Notes or Conditions                         Massive C++ format parsing footprint. Prone to memory corruption exploits. Must always run encapsulated inside Bubblewrap.
+    Status                                        ADOPTED
+    Approved on                                   11/05/2026
+    Expires on                                    01/01/2027
+    Audited by                                    Justin Grimes (@zelon88)
+    Audit outcome                                 PASSED WITH CONDITIONS
+    Notes or Conditions                           Massive C++ format parsing footprint. Prone to memory corruption exploits. Must always run encapsulated inside Bubblewrap.
 
   Manifest facts, read from Resources/Contract/depends.php
-    Binary                                      assimp
-    Install type                                apt
-    Package                                     assimp-utils
-    Minimum version                             5.0
-    Required                                    NO
-    Subsystem                                   3D Models
-    License                                     BSD-3-Clause
-    Depends on                                  Bubblewrap
-    Source                                      https://github.com/assimp/assimp
-    Purpose                                     Converts between 3D model formats.
+    Binary                                        assimp
+    Install type                                  apt
+    Package                                       assimp-utils
+    Minimum version                               5.0
+    Required                                      NO
+    Subsystem                                     3D Models
+    License                                       BSD-3-Clause
+    Depends on                                    Bubblewrap
+    Source                                        https://github.com/assimp/assimp
+    Purpose                                       Converts between 3D model formats.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      Yes, procedurally. The Open Asset Import Library features an active public repository on GitHub, 
-                                                maintains a formal `SECURITY.md` tracking policy, and incorporates Google Fuzzer code blocks (`fuzz/`) 
-                                                directly inside its source tree to proactively map stability bugs. However, the core library architecture 
-                                                is written in low-level C/C++ handling complex, highly volatile, and untrusted binary mesh geometries, 
-                                                presenting a high structural parsing attack surface.
-    1b Recent CVEs, issues or exploits          High Risk / Frequently Targeted. Because it parses 40+ distinct 3D file structures, it is a premier fuzzing target. 
-                                                Recent vulnerabilities (such as CVE-2024-41180, CVE-2023-45842, and CVE-2023-45843) expose recurrent heap-based 
-                                                buffer overflows, out-of-bounds array reads, and null-pointer dereferences inside its asset-loader modules 
-                                                (specifically tracking FBX, Blend, and OBJ parsers). Malformed file uploads can trigger instant thread crashes 
-                                                or arbitrary code execution.
-    1c Development activity & breakage risk     Highly Active / Low-Moderate Breakage Risk. Upstream maintainers actively roll patches and optimizations 
-                                                (version 5.x tiers are highly stable). The command-line parsing operations provided by `assimp-utils` 
-                                                (like the `assimp` CLI structure) remain stable, meaning the risk of breaking internal HRConvert2 
-                                                execution syntax during point-version patches is very low.
-    1d What it needs to function                Resource Intensive / Stateless Matrix. Requires significant memory blocks to load large coordinate vectors, 
-                                                polygon faces, and material attributes into an in-memory data tree. Operates completely as a stateless console 
-                                                utility requiring local file system read/write rights to map target files. Links directly against system C++ 
-                                                libraries and standard glibc streams.
-    1e Can it be sandboxed or isolated          Highly Amenable. 3D geometry format translation is a completely self-contained, mathematical array transformation loop. 
-                                                It requires no host networking channels, administrative root execution privileges, or external inter-process 
-                                                communication (IPC). It isolates perfectly inside a strict, networkless Bubblewrap sandbox jail mapping exclusively 
-                                                the designated file workspace.
-    1f Security options & hardened configurationNone native to the binary utility. Hardening must be applied entirely from the outside via the environment orchestration. 
-                                                The utility must be wrapper-invoked inside a strict Bubblewrap namespace configuration that drops all Linux kernel 
-                                                capabilities, mounts an isolated tmpfs path, and limits max file payload metrics before execution.
-    1g Could another dependency do this better  No. For converting across dozens of obscure, proprietary, and open 3D assets (FBX, Collada, STL, GLTF) inside a single, unified 
-                                                tool repository, Assimp is functionally irreplaceable for HRConvert2's 3D Models subsystem. The parser risks 
-                                                must be explicitly managed via strict Bubblewrap encapsulation.
-    1h Origin & supply chain risk               Low-Medium Risk. Maintained by a prominent global community of graphics and game development engineers. 
-                                                Source code pipelines and issue logs are completely open on GitHub. Because this is an `apt` installation type, 
-                                                the primary supply chain validation and patch-management burden is safely handled by your Linux distribution's security team.
-    1i Dependency traps for existing installs   The Format-Specific Overflow Trap. Attackers targeting file conversion servers frequently look for applications using Assimp 
-                                                because they can mask an exploit inside an obscure 3D file extension format that the application maintainer did not realize 
-                                                the underlying Assimp binary was compiled to automatically parse. External sandbox encapsulation is mandatory to neutralize this vector.
-    2a System package versus a source build     System Package Preferred. Installing via `apt` ensures that the platform handles complex multi-architecture C++ compilation loops 
-                                                automatically, matches library configurations safely against the host OS ecosystem, and delivers rapid security patches 
-                                                downstream via standard automated server package updates.
-    2b Build flags, libraries & features        Default package compilation flags applied by apt are sufficient when fully encapsulated by Bubblewrap.
-    2c Minimum version & version edge cases     Strictly 5.0+ as defined by the manifest facts to ensure robust modern asset parsing pipelines and built-in protection mechanisms 
-                                                against legacy 4.x branch structural geometry vulnerabilities are present.
-    2d Licensing implications of the build      Modified BSD-3-Clause (Highly Permissive). A business-friendly open-source copyright framework. It allows static linking, 
-                                                imposes zero copyleft contamination threats, and carries no redistribution traps for internal or commercial enterprise utilization.
-    3a Distribution method                      Standard distribution native package manager repositories (apt).
-    3b Download source used                     Official distribution mirror networks.
-    3c How an installer obtains this version    Automated package fetch via the platform manager utility (apt-get install -y assimp-utils).
-    3d Inspection of any bundled binary or code Inspection Practical but Complex. Large, sprawling C++ codebase optimized for geometric data parsing matrices, 
-                                                requiring domain-specific graphics pipeline knowledge to audit low-level parser loops effectively.
-    3e Sanity check of the build system         Relies entirely on the distribution package builder's native architecture integration tests.
-    3f Build script provided                    No.
+    1a Security design is amenable to ours        Yes, procedurally. The Open Asset Import Library features an active public repository on GitHub,
+                                                  maintains a formal `SECURITY.md` tracking policy, and incorporates Google Fuzzer code blocks (`fuzz/`)
+                                                  directly inside its source tree to proactively map stability bugs. However, the core library architecture
+                                                  is written in low-level C/C++ handling complex, highly volatile, and untrusted binary mesh geometries,
+                                                  presenting a high structural parsing attack surface.
+    1b Recent CVEs, issues or exploits            High Risk / Frequently Targeted. Because it parses 40+ distinct 3D file structures, it is a premier fuzzing target.
+                                                  Recent vulnerabilities (such as CVE-2024-41180, CVE-2023-45842, and CVE-2023-45843) expose recurrent heap-based
+                                                  buffer overflows, out-of-bounds array reads, and null-pointer dereferences inside its asset-loader modules
+                                                  (specifically tracking FBX, Blend, and OBJ parsers). Malformed file uploads can trigger instant thread crashes
+                                                  or arbitrary code execution.
+    1c Development activity & breakage risk       Highly Active / Low-Moderate Breakage Risk. Upstream maintainers actively roll patches and optimizations
+                                                  (version 5.x tiers are highly stable). The command-line parsing operations provided by `assimp-utils`
+                                                  (like the `assimp` CLI structure) remain stable, meaning the risk of breaking internal HRConvert2
+                                                  execution syntax during point-version patches is very low.
+    1d What it needs to function                  Resource Intensive / Stateless Matrix. Requires significant memory blocks to load large coordinate vectors,
+                                                  polygon faces, and material attributes into an in-memory data tree. Operates completely as a stateless console
+                                                  utility requiring local file system read/write rights to map target files. Links directly against system C++
+                                                  libraries and standard glibc streams.
+    1e Can it be sandboxed or isolated            Highly Amenable. 3D geometry format translation is a completely self-contained, mathematical array transformation loop.
+                                                  It requires no host networking channels, administrative root execution privileges, or external inter-process
+                                                  communication (IPC). It isolates perfectly inside a strict, networkless Bubblewrap sandbox jail mapping exclusively
+                                                  the designated file workspace.
+    1f Security options & hardened configuration  None native to the binary utility. Hardening must be applied entirely from the outside via the environment orchestration.
+                                                  The utility must be wrapper-invoked inside a strict Bubblewrap namespace configuration that drops all Linux kernel
+                                                  capabilities, mounts an isolated tmpfs path, and limits max file payload metrics before execution.
+    1g Could another dependency do this better    No. For converting across dozens of obscure, proprietary, and open 3D assets (FBX, Collada, STL, GLTF) inside a single, unified
+                                                  tool repository, Assimp is functionally irreplaceable for HRConvert2's 3D Models subsystem. The parser risks
+                                                  must be explicitly managed via strict Bubblewrap encapsulation.
+    1h Origin & supply chain risk                 Low-Medium Risk. Maintained by a prominent global community of graphics and game development engineers.
+                                                  Source code pipelines and issue logs are completely open on GitHub. Because this is an `apt` installation type,
+                                                  the primary supply chain validation and patch-management burden is safely handled by your Linux distribution's security team.
+    1i Dependency traps for existing installs     The Format-Specific Overflow Trap. Attackers targeting file conversion servers frequently look for applications using Assimp
+                                                  because they can mask an exploit inside an obscure 3D file extension format that the application maintainer did not realize
+                                                  the underlying Assimp binary was compiled to automatically parse. External sandbox encapsulation is mandatory to neutralize this vector.
+    2a System package versus a source build       System Package Preferred. Installing via `apt` ensures that the platform handles complex multi-architecture C++ compilation loops
+                                                  automatically, matches library configurations safely against the host OS ecosystem, and delivers rapid security patches
+                                                  downstream via standard automated server package updates.
+    2b Build flags, libraries & features          Default package compilation flags applied by apt are sufficient when fully encapsulated by Bubblewrap.
+    2c Minimum version & version edge cases       Strictly 5.0+ as defined by the manifest facts to ensure robust modern asset parsing pipelines and built-in protection mechanisms
+                                                  against legacy 4.x branch structural geometry vulnerabilities are present.
+    2d Licensing implications of the build        Modified BSD-3-Clause (Highly Permissive). A business-friendly open-source copyright framework. It allows static linking,
+                                                  imposes zero copyleft contamination threats, and carries no redistribution traps for internal or commercial enterprise utilization.
+    3a Distribution method                        Standard distribution native package manager repositories (apt).
+    3b Download source used                       Official distribution mirror networks.
+    3c How an installer obtains this version      Automated package fetch via the platform manager utility (apt-get install -y assimp-utils).
+    3d Inspection of any bundled binary or code   Inspection Practical but Complex. Large, sprawling C++ codebase optimized for geometric data parsing matrices,
+                                                  requiring domain-specific graphics pipeline knowledge to audit low-level parser loops effectively.
+    3e Sanity check of the build system           Relies entirely on the distribution package builder's native architecture integration tests.
+    3f Build script provided                      No.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-------------------------------------------------------------------------------------------------------------------
-
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Bubblewrap--
 
   Approval record
-    Status                                      ADOPTED
-    Approved on                                 11/04/2026
-    Expires on                                  11/04/2027
-    Audited by                                  Justin Grimes (@zelon88)
-    Audit outcome                               PASSED
-    Notes or Conditions                         Mandatory foundational dependency. Use to isolate every other archive/image parser.
+    Status                                        ADOPTED
+    Approved on                                   11/04/2026
+    Expires on                                    01/01/2027
+    Audited by                                    Justin Grimes (@zelon88)
+    Audit outcome                                 PASSED
+    Notes or Conditions                           Mandatory foundational dependency. Use to isolate every other archive/image parser.
 
   Manifest facts, read from Resources/Contract/depends.php
-    Binary                                      bwrap
-    Install type                                apt
-    Package                                     bubblewrap
-    Minimum version                             0.4
-    Required                                    YES
-    Subsystem                                   Sandbox
-    License                                     LGPL-2.0
-    Depends on                                  -
-    Source                                      https://github.com
-    Purpose                                     Isolates every conversion from the host & the network.
+    Binary                                        bwrap
+    Install type                                  apt
+    Package                                       bubblewrap
+    Minimum version                               0.4
+    Required                                      YES
+    Subsystem                                     Sandbox
+    License                                       LGPL-2.0
+    Depends on                                    -
+    Source                                        https://github.com/containers/bubblewrap
+    Purpose                                       Isolates every conversion from the host & the network.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      Yes. Designed specifically as a minimal, unprivileged attack surface reduction boundary.
-                                                Maintained by Red Hat/GNOME developers with structured disclosure and explicit security modeling.
-                                                Codebase is exceptionally tight, readable, and avoids macro or parsing complexity.
-    1b Recent CVEs, issues or exploits          Extremely clean track record. No high-severity RCE or jailbreak flaws in years.
-                                                CVE-2019-12439 was a minor local info leak due to a temporary file descriptor layout bug.
-                                                Most environment breakout vulnerabilities stem from the underlying Linux kernel namespaces rather than bwrap.
-    1c Development activity & breakage risk     Highly Active / Low Breakage. Maintained continuously under the containers organization on GitHub.
-                                                CLI arguments and core runtime flags are frozen and stable; update regressions are virtually non-existent.
-    1d What it needs to function                Kernel Namespace Support. Relies directly on user, mount, IPC, PID, and net namespace system calls.
-                                                Requires unprivileged user namespaces enabled on the host (user.max_user_namespaces > 0).
-                                                Dynamically links against standard glibc; needs no background daemons or permanent disk writes.
-    1e Can it be sandboxed or isolated          N/A. This is the sandbox controller itself. It is transient and destroys its environment upon exit.
-    1f Security options & hardened configurationMaximal isolation flags must be applied when executing sub-commands: --unshare-all, --uid, --gid,
-                                                --ro-bind for system runtime folders, and explicit --seccomp filters to drop dangerous syscall architectures.
-    1g Could another dependency do this better  No. It is the gold standard for rapid, unprivileged, daemonless command sandboxing on Linux.
-                                                Alternative tools like Minijail lack the widespread distro adoption, while Podman/Docker bring major daemon overhead.
-    1h Origin & supply chain risk               Very Low Risk. Maintained by primary enterprise Linux contributors (Fedora, Red Hat, SUSE).
-                                                Distributed with cryptographic tag signatures and heavily scrutinized open-source review pipelines.
-    1i Dependency traps for existing installs   The Setuid Trap. If the target host kernel disables unprivileged user namespaces by default, 
-                                                bwrap requires a root-owned setuid bit to function, expanding the local attack surface if misconfigured.
-    2a System package versus a source build     System Package Preferred. The distribution-provided package is kept patched, stable, 
-                                                and correctly mapped to the underlying platform's specific namespace permissions.
-    2b Build flags, libraries & features        Standard hardened compile blocks. Ensure libseccomp filtering is explicitly compiled in (--enable-seccomp).
-    2c Minimum version & version edge cases     Strictly 0.4.0+ as defined by the manifest, though 0.8.0+ is strongly recommended to support modernized flags.
-    2d Licensing implications of the build      LGPL-2.0 is highly amenable. Safe for commercial and internal utility wrapping without copyleft traps.
-    3a Distribution method                      Native package repositories (apt) and official GitHub source releases.
-    3b Download source used                     Upstream GitHub assets or native distribution mirrors.
-    3c How an installer obtains this version    Standard automated package management fetch (apt-get install -y bubblewrap).
-    3d Inspection of any bundled binary or code Inspection Practical. Clean, straightforward, minimal C files without obfuscation or macro masking.
-    3e Sanity check of the build system         Fully automated via native continuous integration testing suites embedded in the upstream source.
-    3f Build script provided                    No. Managed safely via the native OS package controller.
+    1a Security design is amenable to ours        Yes. Designed specifically as a minimal, unprivileged attack surface reduction boundary.
+                                                  Maintained by Red Hat/GNOME developers with structured disclosure and explicit security modeling.
+                                                  Codebase is exceptionally tight, readable, and avoids macro or parsing complexity.
+    1b Recent CVEs, issues or exploits            Extremely clean track record. No high-severity RCE or jailbreak flaws in years.
+                                                  CVE-2019-12439 was a minor local info leak due to a temporary file descriptor layout bug.
+                                                  Most environment breakout vulnerabilities stem from the underlying Linux kernel namespaces rather than bwrap.
+    1c Development activity & breakage risk       Highly Active / Low Breakage. Maintained continuously under the containers organization on GitHub.
+                                                  CLI arguments and core runtime flags are frozen and stable; update regressions are virtually non-existent.
+    1d What it needs to function                  Kernel Namespace Support. Relies directly on user, mount, IPC, PID, and net namespace system calls.
+                                                  Requires unprivileged user namespaces enabled on the host (user.max_user_namespaces > 0).
+                                                  Dynamically links against standard glibc; needs no background daemons or permanent disk writes.
+    1e Can it be sandboxed or isolated            N/A. This is the sandbox controller itself. It is transient and destroys its environment upon exit.
+    1f Security options & hardened configuration  Maximal isolation flags must be applied when executing sub-commands: --unshare-all, --uid, --gid,
+                                                  --ro-bind for system runtime folders, and explicit --seccomp filters to drop dangerous syscall architectures.
+    1g Could another dependency do this better    No. It is the gold standard for rapid, unprivileged, daemonless command sandboxing on Linux.
+                                                  Alternative tools like Minijail lack the widespread distro adoption, while Podman/Docker bring major daemon overhead.
+    1h Origin & supply chain risk                 Very Low Risk. Maintained by primary enterprise Linux contributors (Fedora, Red Hat, SUSE).
+                                                  Distributed with cryptographic tag signatures and heavily scrutinized open-source review pipelines.
+    1i Dependency traps for existing installs     The Setuid Trap. If the target host kernel disables unprivileged user namespaces by default,
+                                                  bwrap requires a root-owned setuid bit to function, expanding the local attack surface if misconfigured.
+    2a System package versus a source build       System Package Preferred. The distribution-provided package is kept patched, stable,
+                                                  and correctly mapped to the underlying platform's specific namespace permissions.
+    2b Build flags, libraries & features          Standard hardened compile blocks. Ensure libseccomp filtering is explicitly compiled in (--enable-seccomp).
+    2c Minimum version & version edge cases       Strictly 0.4.0+ as defined by the manifest, though 0.8.0+ is strongly recommended to support modernized flags.
+    2d Licensing implications of the build        LGPL-2.0 is highly amenable. Safe for commercial and internal utility wrapping without copyleft traps.
+    3a Distribution method                        Native package repositories (apt) and official GitHub source releases.
+    3b Download source used                       Upstream GitHub assets or native distribution mirrors.
+    3c How an installer obtains this version      Standard automated package management fetch (apt-get install -y bubblewrap).
+    3d Inspection of any bundled binary or code   Inspection Practical. Clean, straightforward, minimal C files without obfuscation or macro masking.
+    3e Sanity check of the build system           Fully automated via native continuous integration testing suites embedded in the upstream source.
+    3f Build script provided                      No. Managed safely via the native OS package controller.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-------------------------------------------------------------------------------------------------------------------
-
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --MeshLab--
 
   Approval record
-    Status                                      ADOPTED
-    Approved on                                 11/04/2026
-    Expires on                                  11/04/2027
-    Audited by                                  Justin Grimes (@zelon88)
-    Audit outcome                               PASSED WITH CONDITIONS
-    Notes or Conditions                         Legacy CLI component. Prone to parsing failures with complex geometry data. Must always run encapsulated inside Bubblewrap.
+    Status                                        ADOPTED
+    Approved on                                   11/04/2026
+    Expires on                                    01/01/2027
+    Audited by                                    Justin Grimes (@zelon88)
+    Audit outcome                                 PASSED WITH CONDITIONS
+    Notes or Conditions                           Legacy CLI component. Prone to parsing failures with complex geometry data. Must always run encapsulated inside Bubblewrap.
 
   Manifest facts, read from Resources/Contract/depends.php
-    Binary                                      meshlabserver
-    Install type                                apt
-    Package                                     meshlab
-    Minimum version                             2020.09
-    Required                                    NO
-    Subsystem                                   3D Models
-    License                                     GPL-3.0
-    Depends on                                  Assimp
-    Source                                      https://meshlab.net
-    Purpose                                     Mesh processing. Only needed when PyMeshLab is disabled.
+    Binary                                        meshlabserver
+    Install type                                  apt
+    Package                                       meshlab
+    Minimum version                               2020.09
+    Required                                      NO
+    Subsystem                                     3D Models
+    License                                       GPL-3.0
+    Depends on                                    Assimp
+    Source                                        https://www.meshlab.net
+    Purpose                                       Mesh processing. Only needed when PyMeshLab is disabled.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      No. MeshLab is primarily developed as an interactive, graphic-heavy desktop application rather than 
-                                                a hardened, server-side background processor. It lacks corporate security service level agreements (SLAs), 
-                                                has no explicit, centralized vendor vulnerability disclosure framework, and relies entirely on standard GitHub issues 
-                                                for security flaw reports. The underlying parsing logic processes highly untrusted, arbitrary 3D coordinate structures.
-    1b Recent CVEs, issues or exploits          High Risk. Multi-format 3D geometry parsers are historically prone to memory validation bugs. 
-                                                Vulnerabilities like CVE-2023-41221, CVE-2023-41222, and CVE-2023-38933 involve heap-based buffer overflows, 
-                                                out-of-bounds reads, and integer anomalies inside its asset-import wrappers (specifically handling U3D, OBJ, and PLY files). 
-                                                A malformed 3D model containing impossible polygon coordinates can crash the thread or yield arbitrary code execution.
-    1c Development activity & breakage risk     Active Desktop Development / Severe CLI Breakage Risk. While the core MeshLab project is actively maintained 
-                                                for desktop environments, the standalone `meshlabserver` CLI binary was officially deprecated and dropped by upstream 
-                                                in late 2020 (v2020.06+) in favor of PyMeshLab. Relying on `meshlabserver` introduces high breakage risk on newer host 
-                                                operating systems if the distribution drops the legacy package, or if internal automation commands expect deprecated switches.
-    1d What it needs to function                Resource Intensive / Virtual Render Tree. Requires extensive CPU threading and memory allocations to process, 
-                                                clean, and repair multi-million polygon triangular meshes. Operates as a stateless execution loop requiring local 
-                                                file system read/write capabilities to map input assets. Links heavily against the Assimp asset library and system C++ libraries.
-    1e Can it be sandboxed or isolated          Highly Amenable. Mesh manipulation is a self-contained, purely mathematical geometry translation matrix. 
-                                                It requires zero network access, zero root administrative capabilities, and zero system IPC bindings. 
-                                                It functions seamlessly when completely isolated inside an ephemeral, zero-network Bubblewrap sandbox jail.
-    1f Security options & hardened configurationNone native to the utility. Hardening must be applied completely from the outside. The utility must be wrapped 
-                                                inside a strict Bubblewrap namespace configuration that drops all Linux capabilities, forces an empty tmpfs layout, 
-                                                and mounts only the direct, read-only conversion target directories.
-    1g Could another dependency do this better  Yes. Upstream explicitly recommends **PyMeshLab** (the Python-bound filter engine) as a direct replacement 
-                                                for the deprecated `meshlabserver` binary. If the platform configuration allows Python bindings, migrating 
-                                                to PyMeshLab is highly recommended to align with upstream maintenance tracks.
-    1h Origin & supply chain risk               Low-Medium Risk. Maintained transparently by the Visual Computing Lab of ISTI-CNR. 
-                                                Source tracking and issue workflows are managed publicly on GitHub. Because this is an `apt` installation type, 
-                                                the primary supply chain vetting burden is delegated to your Linux distribution's package security team.
-    1i Dependency traps for existing installs   The Headless Display Initialization Trap. Because MeshLab is fundamentally built on top of the Qt desktop GUI 
-                                                framework, executing `meshlabserver` inside a minimalist, headless server or minimal container can trigger immediate 
-                                                initialization failures if the tool tries to hook into an absent X11 server windowing system, occasionally requiring 
-                                                a virtual frame buffer (`xvfb-run`) to pass stability verification checks.
-    2a System package versus a source build     System Package Acceptable ONLY to avoid the extreme complexity of compiling legacy desktop Qt frameworks 
-                                                and 3D rendering wrappers from scratch inside a thin server container. The system package handles 
-                                                underlying geometry library linkage configurations automatically.
-    2b Build flags, libraries & features        Default package compilation flags applied by apt are sufficient when fully encapsulated by Bubblewrap.
-    2c Minimum version & version edge cases     2020.09+ as defined by the manifest facts. Note that versions around this specific boundary sit directly 
-                                                on the deprecation edge of `meshlabserver`, making close verification of your distribution's explicit binary placement necessary.
-    2d Licensing implications of the build      GNU General Public License (GPL-3.0). Standard copyleft framework. Safe for internal conversion loops, 
-                                                but requires careful architectural separation if you bundle or redistribute the custom application stack commercially.
-    3a Distribution method                      Standard distribution native package manager repositories (apt).
-    3b Download source used                     Official distribution mirror networks.
-    3c How an installer obtains this version    Automated package fetch via the platform package tool (apt-get install -y meshlab).
-    3d Inspection of any bundled binary or code Inspection Practical but Difficult. Extensive open-source C++ framework with massive mathematical abstractions 
-                                                and formatting filters that require specific 3D graphics rendering pipeline expertise to audit effectively.
-    3e Sanity check of the build system         Relies entirely on the distribution package builder's native architecture integration tests.
-    3f Build script provided                    No.
+    1a Security design is amenable to ours        No. MeshLab is primarily developed as an interactive, graphic-heavy desktop application rather than
+                                                  a hardened, server-side background processor. It lacks corporate security service level agreements (SLAs),
+                                                  has no explicit, centralized vendor vulnerability disclosure framework, and relies entirely on standard GitHub issues
+                                                  for security flaw reports. The underlying parsing logic processes highly untrusted, arbitrary 3D coordinate structures.
+    1b Recent CVEs, issues or exploits            High Risk. Multi-format 3D geometry parsers are historically prone to memory validation bugs.
+                                                  Vulnerabilities like CVE-2023-41221, CVE-2023-41222, and CVE-2023-38933 involve heap-based buffer overflows,
+                                                  out-of-bounds reads, and integer anomalies inside its asset-import wrappers (specifically handling U3D, OBJ, and PLY files).
+                                                  A malformed 3D model containing impossible polygon coordinates can crash the thread or yield arbitrary code execution.
+    1c Development activity & breakage risk       Active Desktop Development / Severe CLI Breakage Risk. While the core MeshLab project is actively maintained
+                                                  for desktop environments, the standalone `meshlabserver` CLI binary was officially deprecated and dropped by upstream
+                                                  in late 2020 (v2020.06+) in favor of PyMeshLab. Relying on `meshlabserver` introduces high breakage risk on newer host
+                                                  operating systems if the distribution drops the legacy package, or if internal automation commands expect deprecated switches.
+    1d What it needs to function                  Resource Intensive / Virtual Render Tree. Requires extensive CPU threading and memory allocations to process,
+                                                  clean, and repair multi-million polygon triangular meshes. Operates as a stateless execution loop requiring local
+                                                  file system read/write capabilities to map input assets. Links heavily against the Assimp asset library and system C++ libraries.
+    1e Can it be sandboxed or isolated            Highly Amenable. Mesh manipulation is a self-contained, purely mathematical geometry translation matrix.
+                                                  It requires zero network access, zero root administrative capabilities, and zero system IPC bindings.
+                                                  It functions seamlessly when completely isolated inside an ephemeral, zero-network Bubblewrap sandbox jail.
+    1f Security options & hardened configuration  None native to the utility. Hardening must be applied completely from the outside. The utility must be wrapped
+                                                  inside a strict Bubblewrap namespace configuration that drops all Linux capabilities, forces an empty tmpfs layout,
+                                                  and mounts only the direct, read-only conversion target directories.
+    1g Could another dependency do this better    Yes. Upstream explicitly recommends **PyMeshLab** (the Python-bound filter engine) as a direct replacement
+                                                  for the deprecated `meshlabserver` binary. If the platform configuration allows Python bindings, migrating
+                                                  to PyMeshLab is highly recommended to align with upstream maintenance tracks.
+    1h Origin & supply chain risk                 Low-Medium Risk. Maintained transparently by the Visual Computing Lab of ISTI-CNR.
+                                                  Source tracking and issue workflows are managed publicly on GitHub. Because this is an `apt` installation type,
+                                                  the primary supply chain vetting burden is delegated to your Linux distribution's package security team.
+    1i Dependency traps for existing installs     The Headless Display Initialization Trap. Because MeshLab is fundamentally built on top of the Qt desktop GUI
+                                                  framework, executing `meshlabserver` inside a minimalist, headless server or minimal container can trigger immediate
+                                                  initialization failures if the tool tries to hook into an absent X11 server windowing system, occasionally requiring
+                                                  a virtual frame buffer (`xvfb-run`) to pass stability verification checks.
+    2a System package versus a source build       System Package Acceptable ONLY to avoid the extreme complexity of compiling legacy desktop Qt frameworks
+                                                  and 3D rendering wrappers from scratch inside a thin server container. The system package handles
+                                                  underlying geometry library linkage configurations automatically.
+    2b Build flags, libraries & features          Default package compilation flags applied by apt are sufficient when fully encapsulated by Bubblewrap.
+    2c Minimum version & version edge cases       2020.09+ as defined by the manifest facts. Note that versions around this specific boundary sit directly
+                                                  on the deprecation edge of `meshlabserver`, making close verification of your distribution's explicit binary placement necessary.
+    2d Licensing implications of the build        GNU General Public License (GPL-3.0). Standard copyleft framework. Safe for internal conversion loops,
+                                                  but requires careful architectural separation if you bundle or redistribute the custom application stack commercially.
+    3a Distribution method                        Standard distribution native package manager repositories (apt).
+    3b Download source used                       Official distribution mirror networks.
+    3c How an installer obtains this version      Automated package fetch via the platform package tool (apt-get install -y meshlab).
+    3d Inspection of any bundled binary or code   Inspection Practical but Difficult. Extensive open-source C++ framework with massive mathematical abstractions
+                                                  and formatting filters that require specific 3D graphics rendering pipeline expertise to audit effectively.
+    3e Sanity check of the build system           Relies entirely on the distribution package builder's native architecture integration tests.
+    3f Build script provided                      No.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-------------------------------------------------------------------------------------------------------------------
-
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --NumPy 3.14--
 
   Approval record
-    Status                                      ADOPTED
-    Approved on                                 11/04/2026
-    Expires on                                  11/04/2027
-    Audited by                                  Justin Grimes (@zelon88)
-    Audit outcome                               PASSED
-    Notes or Conditions                         Core mathematical dependency. Compiles from source on ARM architectures. Keep version matched to Python 3.14.
+    Status                                        ADOPTED
+    Approved on                                   11/04/2026
+    Expires on                                    01/01/2027
+    Audited by                                    Justin Grimes (@zelon88)
+    Audit outcome                                 PASSED
+    Notes or Conditions                           Core mathematical dependency. Compiles from source on ARM architectures. Keep version matched to Python 3.14.
 
   Manifest facts, read from Resources/Contract/depends.php
-    Binary                                      -
-    Install type                                source
-    Package                                     -
-    Minimum version                             -
-    Required                                    NO
-    Subsystem                                   3D Models
-    License                                     BSD-3-Clause
-    Depends on                                  Python 3.14, pip 3.14
-    Source                                      https://numpy.org
-    Purpose                                     Imported by PyMeshLab. On arm pip often has no wheel & compiles it, which takes a long time on a small board.
+    Binary                                        -
+    Install type                                  source
+    Package                                       -
+    Minimum version                               -
+    Required                                      NO
+    Subsystem                                     3D Models
+    License                                       BSD-3-Clause
+    Depends on                                    Python 3.14, pip 3.14
+    Source                                        https://numpy.org
+    Purpose                                       Imported by PyMeshLab. On arm pip often has no wheel & compiles it, which takes a long time on a small board.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      Yes. NumPy is a premier open-source scientific computing framework developed publicly on GitHub by a highly mature, 
-                                                responsive, and diverse community. It features structured release processes, well-maintained documentation, 
-                                                and coordinates vulnerability handling transparently. It serves as a foundational component across global 
-                                                data science and machine learning infrastructure.
-    1b Recent CVEs, issues or exploits          Low Risk. Because NumPy handles multi-dimensional array memory allocation via optimized C code, it occasionally faces 
-                                                low-frequency memory safety patches. Historical bugs generally involve minor buffer overreads or integer overflow limits 
-                                                when dealing with maliciously crafted, overly massive input structures. Security advisories are rare and handled 
-                                                with extreme engineering diligence upstream.
-    1c Development activity & breakage risk     Highly Active / Moderate Breakage Risk. Upstream development is fast and continuous. Because this manifest targets 
-                                                the bleeding-edge Python 3.14 runtime tier, tracking alpha/beta versions or new major releases introduces 
-                                                potential breakage risks if C-API deprecations or array broadcasting semantics conflict with PyMeshLab's underlying bindings.
-    1d What it needs to function                Compute Intensive Compilations / In-Process Vectors. At runtime, it operates entirely in-process inside Python, 
-                                                requiring memory limits allocated to the parent script. During installation on ARM boards, it requires a fully equipped 
-                                                native toolchain (gcc/g++, python-dev, gfortran, or openblas) to build its underlying accelerated C/Fortran libraries.
-    1e Can it be sandboxed or isolated          Indirectly. As an in-process Python library rather than a standalone binary, it cannot be wrapped directly 
-                                                via Bubblewrap at launch. Isolation must be inherited from the parent Python runtime or the core HRConvert2 process 
-                                                container wrapping the entire PyMeshLab workflow.
-    1f Security options & hardened configurationNative controls are managed via implementation limits. Ensure Python scripts importing NumPy handle array sizes 
-                                                safely to prevent resource-exhaustion denial-of-service attempts. Pass strict compiler fortification flags to the underlying 
-                                                pip build system environment when initiating a source compile.
-    1g Could another dependency do this better  No. NumPy is the absolute de-facto standard for vector, array, and matrix computing inside Python. 
-                                                It forms the foundational computational bedrock for PyMeshLab and the broader scientific ecosystem; 
-                                                no viable alternative exists that provides this binding layer.
-    1h Origin & supply chain risk               Low-Medium Risk. Maintained by the trusted upstream NumPy Team. Source assets are cryptographically signed 
-                                                and distributed securely via PyPI or official git hubs. Because it compiles from source, the primary risk 
-                                                lies in build-time pipeline transit or slow compilation loops stalling automated deployment environments.
-    1i Dependency traps for existing installs   The ARM Compilation Time Trap. As noted in the purpose manifest, pip frequently lacks pre-built wheels for 
-                                                niche architectures (like ARMv7 or ARM64 boards) on brand-new Python runtime versions. The installation script will fallback 
-                                                to downloading the full C source code and compiling it locally on the board, which can take a substantial amount of time 
-                                                and trigger out-of-memory compilation errors on low-spec hardware.
-    2a System package versus a source build     Source Build Acceptable (Via Pip) to ensure strict alignment with the cutting-edge Python 3.14 installation. 
-                                                Relying on system package manager apt packages would pull down older, incompatible Python 3.10/3.12 library mappings.
-    2b Build flags, libraries & features        Standard pip optimization. Inject compiler hardening flags into the installation environment to ensure the compiled 
-                                                native C components are fortified against memory corruption:
+    1a Security design is amenable to ours        Yes. NumPy is a premier open-source scientific computing framework developed publicly on GitHub by a highly mature,
+                                                  responsive, and diverse community. It features structured release processes, well-maintained documentation,
+                                                  and coordinates vulnerability handling transparently. It serves as a foundational component across global
+                                                  data science and machine learning infrastructure.
+    1b Recent CVEs, issues or exploits            Low Risk. Because NumPy handles multi-dimensional array memory allocation via optimized C code, it occasionally faces
+                                                  low-frequency memory safety patches. Historical bugs generally involve minor buffer overreads or integer overflow limits
+                                                  when dealing with maliciously crafted, overly massive input structures. Security advisories are rare and handled
+                                                  with extreme engineering diligence upstream.
+    1c Development activity & breakage risk       Highly Active / Moderate Breakage Risk. Upstream development is fast and continuous. Because this manifest targets
+                                                  the bleeding-edge Python 3.14 runtime tier, tracking alpha/beta versions or new major releases introduces
+                                                  potential breakage risks if C-API deprecations or array broadcasting semantics conflict with PyMeshLab's underlying bindings.
+    1d What it needs to function                  Compute Intensive Compilations / In-Process Vectors. At runtime, it operates entirely in-process inside Python,
+                                                  requiring memory limits allocated to the parent script. During installation on ARM boards, it requires a fully equipped
+                                                  native toolchain (gcc/g++, python-dev, gfortran, or openblas) to build its underlying accelerated C/Fortran libraries.
+    1e Can it be sandboxed or isolated            Indirectly. As an in-process Python library rather than a standalone binary, it cannot be wrapped directly
+                                                  via Bubblewrap at launch. Isolation must be inherited from the parent Python runtime or the core HRConvert2 process
+                                                  container wrapping the entire PyMeshLab workflow.
+    1f Security options & hardened configuration  Native controls are managed via implementation limits. Ensure Python scripts importing NumPy handle array sizes
+                                                  safely to prevent resource-exhaustion denial-of-service attempts. Pass strict compiler fortification flags to the underlying
+                                                  pip build system environment when initiating a source compile.
+    1g Could another dependency do this better    No. NumPy is the absolute de-facto standard for vector, array, and matrix computing inside Python.
+                                                  It forms the foundational computational bedrock for PyMeshLab and the broader scientific ecosystem;
+                                                  no viable alternative exists that provides this binding layer.
+    1h Origin & supply chain risk                 Low-Medium Risk. Maintained by the trusted upstream NumPy Team. Source assets are cryptographically signed
+                                                  and distributed securely via PyPI or official git hubs. Because it compiles from source, the primary risk
+                                                  lies in build-time pipeline transit or slow compilation loops stalling automated deployment environments.
+    1i Dependency traps for existing installs     The ARM Compilation Time Trap. As noted in the purpose manifest, pip frequently lacks pre-built wheels for
+                                                  niche architectures (like ARMv7 or ARM64 boards) on brand-new Python runtime versions. The installation script will fallback
+                                                  to downloading the full C source code and compiling it locally on the board, which can take a substantial amount of time
+                                                  and trigger out-of-memory compilation errors on low-spec hardware.
+    2a System package versus a source build       Source Build Acceptable (Via Pip) to ensure strict alignment with the cutting-edge Python 3.14 installation.
+                                                  Relying on system package manager apt packages would pull down older, incompatible Python 3.10/3.12 library mappings.
+    2b Build flags, libraries & features          Standard pip optimization. Inject compiler hardening flags into the installation environment to ensure the compiled
+                                                  native C components are fortified against memory corruption:
                                                   export CFLAGS="-D_FORTIFY_SOURCE=3 -fstack-protector-strong"
-    2c Minimum version & version edge cases     No specific minimum defined, but it will automatically default to the latest stable release (NumPy 2.x/2.5+) 
-                                                compatible with the Python 3.14 ecosystem.
-    2d Licensing implications of the build      BSD-3-Clause (Liberal Open-Source License). Completely clean, permissive, and risk-free for commercial use, 
-                                                bundling, or proprietary enterprise integration. It imposes no copyleft infection threats on HRConvert2.
-    3a Distribution method                      Source distributions and wheel tarballs delivered via the official Python Package Index (PyPI).
-    3b Download source used                     Authoritative PyPI registry servers (https://pypi.org).
-    3c How an installer obtains this version    Automated package fetch and compilation triggered directly by the pip utility inside the build wrapper (`pip install numpy`).
-    3d Inspection of any bundled binary or code Inspection Practical. Transparent, elegant combination of high-level Python file tracks and highly optimized, 
-                                                well-documented underlying C source blocks accessible on their GitHub repository.
-    3e Sanity check of the build system         Fully validated via extensive, built-in automated test suites (`numpy.test()`) that can be executed directly 
-                                                post-compilation to confirm array mapping integrity.
-    3f Build script provided                    No. Managed by python-pip pipelines.
+    2c Minimum version & version edge cases       No specific minimum defined, but it will automatically default to the latest stable release (NumPy 2.x/2.5+)
+                                                  compatible with the Python 3.14 ecosystem.
+    2d Licensing implications of the build        BSD-3-Clause (Liberal Open-Source License). Completely clean, permissive, and risk-free for commercial use,
+                                                  bundling, or proprietary enterprise integration. It imposes no copyleft infection threats on HRConvert2.
+    3a Distribution method                        Source distributions and wheel tarballs delivered via the official Python Package Index (PyPI).
+    3b Download source used                       Authoritative PyPI registry servers (https://pypi.org).
+    3c How an installer obtains this version      Automated package fetch and compilation triggered directly by the pip utility inside the build wrapper (`pip install numpy`).
+    3d Inspection of any bundled binary or code   Inspection Practical. Transparent, elegant combination of high-level Python file tracks and highly optimized,
+                                                  well-documented underlying C source blocks accessible on their GitHub repository.
+    3e Sanity check of the build system           Fully validated via extensive, built-in automated test suites (`numpy.test()`) that can be executed directly
+                                                  post-compilation to confirm array mapping integrity.
+    3f Build script provided                      No. Managed by python-pip pipelines.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-------------------------------------------------------------------------------------------------------------------
-
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --PyMeshLab--
 
   Approval record
-    Status                                      ADOPTED
-                                                11/05/2026
-    Expires on                                  11/05/2027
-    Audited by                                  Justin Grimes (@zelon88)
-    Audit outcome                               PASSED WITH CONDITIONS
-    Notes or Conditions                         Primary 3D mesh engine. Must run encapsulated within the overall Python/Bubblewrap runtime execution boundary.
+    Status                                        ADOPTED
+    Approved on                                   11/05/2026
+    Expires on                                    01/01/2027
+    Audited by                                    Justin Grimes (@zelon88)
+    Audit outcome                                 PASSED WITH CONDITIONS
+    Notes or Conditions                           Primary 3D mesh engine. Must run encapsulated within the overall Python/Bubblewrap runtime execution boundary.
 
   Manifest facts, read from Resources/Contract/depends.php
-    Binary                                      -
-    Install type                                source
-    Package                                     -
-    Minimum version                             -
-    Required                                    NO
-    Subsystem                                   3D Models
-    License                                     GPL-3.0
-    Depends on                                  Assimp, Python 3.14, pip 3.14, NumPy 3.14
-    Source                                      Bundled at Resources/PyMeshLab
-    Purpose                                     Repairs & simplifies meshes. Replaces MeshLab. Ships with HRConvert2.
+    Binary                                        -
+    Install type                                  source
+    Package                                       -
+    Minimum version                               -
+    Required                                      NO
+    Subsystem                                     3D Models
+    License                                       GPL-3.0
+    Depends on                                    Assimp, Python 3.14, pip 3.14, NumPy 3.14
+    Source                                        Bundled at Resources/PyMeshLab
+    Purpose                                       Repairs & simplifies meshes. Replaces MeshLab. Ships with HRConvert2.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      Yes, procedurally. PyMeshLab is the officially recommended, modern Python binding interface for the core 
-                                                MeshLab C++ filter framework. It features an active open-source tracking repository on GitHub and moves 
-                                                mesh processing away from deprecated desktop command-line servers. However, because it binds directly to the large, 
-                                                sprawling C++ MeshLab and Assimp multi-format asset parsers, it inherits a significant memory parsing attack surface.
-    1b Recent CVEs, issues or exploits          High Risk. As a direct programmatic interface to complex C++ geometry filters, flaws scale with the underlying 
-                                                code base parsers. Vulnerabilities within associated parsing layers (like Assimp or MeshLab core mesh filters) 
-                                                regularly see buffer overflows, out-of-bounds reads, or array indexing crashes when handling malformed 3D files 
-                                                (OBJ, PLY, STL). An unvalidated file upload can easily compromise the local execution thread.
-    1c Development activity & breakage risk     Highly Active / Moderate Breakage Risk. Upstream is actively developed to provide pythonic scripting filters. 
-                                                However, because this runtime environment targets the cutting-edge Python 3.14 tier, minor version upgrades 
-                                                or changes in C-API binding mechanics (like pybind11 layers) present a real breakage risk if internal structural type 
-                                                mappings clash with new Python internal changes.
-    1d What it needs to function                Compute Intensive / Dynamic Library Linkages. Requires heavy CPU burst capacity and raw memory allocations 
-                                                to manipulate complex triangular polygon counts in memory. Operates in-process within the Python environment. 
-                                                Requires access to underlying dynamic dependencies (like NumPy arrays and Assimp layout mappings) to ingest models.
-    1e Can it be sandboxed or isolated          Highly Amenable. Mesh manipulation is a self-contained, mathematical array transformation routine. 
-                                                It requires no native host networking, IPC infrastructure, or external configuration routes. 
-                                                Because it is driven via Python, the entire execution environment can be wrapped inside a strict Bubblewrap jail layout.
-    1f Security options & hardened configurationNative controls are managed via input filters. The Python implementation layer must strictly enforce file validation boundaries, 
-                                                limiting maximum file upload sizes before passing assets to PyMeshLab. Ensure target script environments run 
-                                                under standard unprivileged profiles inside a completely locked-down Bubblewrap namespace shell.
-    1g Could another dependency do this better  No. For programmatic, headless, high-fidelity mesh cleaning, simplifying, and vertex operations inside a Python framework, 
-                                                PyMeshLab is the definitive solution, explicitly succeeding the deprecated legacy `meshlabserver` binary. 
-                                                Core structural parsing risks must be accepted and managed strictly via external sandboxing boundaries.
-    1h Origin & supply chain risk               Low-Medium Risk. Maintained transparently on GitHub as part of the broader MeshLab computing ecosystem. 
-                                                Because it is explicitly bundled locally at `Resources/PyMeshLab` inside HRConvert2, the external runtime transit risk is zero, 
-                                                shifting the burden onto our team to verify repository bundle integrity before shipping deployment images.
-    1i Dependency traps for existing installs   The Native Compilation Interdependency Trap. PyMeshLab relies extensively on pre-compiled C++ bindings mapping 
-                                                to native libraries like Assimp and NumPy. If these underlying structures are compiled unevenly or versions mismatch 
-                                                during automated installation steps on specific CPU architectures (like ARM boards), Python will throw immediate runtime layout segmentation faults.
-    2a System package versus a source build     Source Build Preferred (Pip/Local Wheel Installation). Shipped directly inside the HRConvert2 source resources 
-                                                to guarantee exact compatibility with custom local scripts and targeted high-performance compiler builds.
-    2b Build flags, libraries & features        Standard pip optimization parameters. Ensure that when building the underlying C++ extension modules, 
-                                                robust fortification definitions are passed down to the CXX compiler to shield against buffer exploitation attempts:
+    1a Security design is amenable to ours        Yes, procedurally. PyMeshLab is the officially recommended, modern Python binding interface for the core
+                                                  MeshLab C++ filter framework. It features an active open-source tracking repository on GitHub and moves
+                                                  mesh processing away from deprecated desktop command-line servers. However, because it binds directly to the large,
+                                                  sprawling C++ MeshLab and Assimp multi-format asset parsers, it inherits a significant memory parsing attack surface.
+    1b Recent CVEs, issues or exploits            High Risk. As a direct programmatic interface to complex C++ geometry filters, flaws scale with the underlying
+                                                  code base parsers. Vulnerabilities within associated parsing layers (like Assimp or MeshLab core mesh filters)
+                                                  regularly see buffer overflows, out-of-bounds reads, or array indexing crashes when handling malformed 3D files
+                                                  (OBJ, PLY, STL). An unvalidated file upload can easily compromise the local execution thread.
+    1c Development activity & breakage risk       Highly Active / Moderate Breakage Risk. Upstream is actively developed to provide pythonic scripting filters.
+                                                  However, because this runtime environment targets the cutting-edge Python 3.14 tier, minor version upgrades
+                                                  or changes in C-API binding mechanics (like pybind11 layers) present a real breakage risk if internal structural type
+                                                  mappings clash with new Python internal changes.
+    1d What it needs to function                  Compute Intensive / Dynamic Library Linkages. Requires heavy CPU burst capacity and raw memory allocations
+                                                  to manipulate complex triangular polygon counts in memory. Operates in-process within the Python environment.
+                                                  Requires access to underlying dynamic dependencies (like NumPy arrays and Assimp layout mappings) to ingest models.
+    1e Can it be sandboxed or isolated            Highly Amenable. Mesh manipulation is a self-contained, mathematical array transformation routine.
+                                                  It requires no native host networking, IPC infrastructure, or external configuration routes.
+                                                  Because it is driven via Python, the entire execution environment can be wrapped inside a strict Bubblewrap jail layout.
+    1f Security options & hardened configuration  Native controls are managed via input filters. The Python implementation layer must strictly enforce file validation boundaries,
+                                                  limiting maximum file upload sizes before passing assets to PyMeshLab. Ensure target script environments run
+                                                  under standard unprivileged profiles inside a completely locked-down Bubblewrap namespace shell.
+    1g Could another dependency do this better    No. For programmatic, headless, high-fidelity mesh cleaning, simplifying, and vertex operations inside a Python framework,
+                                                  PyMeshLab is the definitive solution, explicitly succeeding the deprecated legacy `meshlabserver` binary.
+                                                  Core structural parsing risks must be accepted and managed strictly via external sandboxing boundaries.
+    1h Origin & supply chain risk                 Low-Medium Risk. Maintained transparently on GitHub as part of the broader MeshLab computing ecosystem.
+                                                  Because it is explicitly bundled locally at `Resources/PyMeshLab` inside HRConvert2, the external runtime transit risk is zero,
+                                                  shifting the burden onto our team to verify repository bundle integrity before shipping deployment images.
+    1i Dependency traps for existing installs     The Native Compilation Interdependency Trap. PyMeshLab relies extensively on pre-compiled C++ bindings mapping
+                                                  to native libraries like Assimp and NumPy. If these underlying structures are compiled unevenly or versions mismatch
+                                                  during automated installation steps on specific CPU architectures (like ARM boards), Python will throw immediate runtime layout segmentation faults.
+    2a System package versus a source build       Source Build Preferred (Pip/Local Wheel Installation). Shipped directly inside the HRConvert2 source resources
+                                                  to guarantee exact compatibility with custom local scripts and targeted high-performance compiler builds.
+    2b Build flags, libraries & features          Standard pip optimization parameters. Ensure that when building the underlying C++ extension modules,
+                                                  robust fortification definitions are passed down to the CXX compiler to shield against buffer exploitation attempts:
                                                   export CXXFLAGS="-D_FORTIFY_SOURCE=3 -fstack-protector-strong -fPIE"
-    2c Minimum version & version edge cases     No specific version pinned by the manifest facts, but it will structurally adapt to track the bundled asset version 
-                                                validated for synchronization with the Python 3.14 baseline.
-    2d Licensing implications of the build      GNU General Public License (GPL-3.0). Standard copyleft framework. Completely clean for internal network operations 
-                                                within HRConvert2, but introduces copyleft compliance burdens if the collective platform environment is modified and sold commercially.
-    3a Distribution method                      Bundled directly as a local asset resource folder (`Resources/PyMeshLab`) inside the HRConvert2 application footprint.
-    3b Download source used                     Authoritative local project directory staging target.
-    3c How an installer obtains this version    The installer pipeline reads the package components directly from the local bundle path and triggers a targeted local pip environment configuration pass.
-    3d Inspection of any bundled binary or code Inspection Practical but Complex. Mixes high-level Python filter wrappers with massive, dense, underlying C++ geometry libraries 
-                                                and structural binding definitions that require domain-specific auditing.
-    3e Sanity check of the build system         Required, Included. The bundle environment contains internal functional verification scripts to validate filter execution sanity.
-    3f Build script provided                    Yes.
+    2c Minimum version & version edge cases       No specific version pinned by the manifest facts, but it will structurally adapt to track the bundled asset version
+                                                  validated for synchronization with the Python 3.14 baseline.
+    2d Licensing implications of the build        GNU General Public License (GPL-3.0). Standard copyleft framework. Completely clean for internal network operations
+                                                  within HRConvert2, but introduces copyleft compliance burdens if the collective platform environment is modified and sold commercially.
+    3a Distribution method                        Bundled directly as a local asset resource folder (`Resources/PyMeshLab`) inside the HRConvert2 application footprint.
+    3b Download source used                       Authoritative local project directory staging target.
+    3c How an installer obtains this version      The installer pipeline reads the package components directly from the local bundle path and triggers a targeted local pip environment configuration pass.
+    3d Inspection of any bundled binary or code   Inspection Practical but Complex. Mixes high-level Python filter wrappers with massive, dense, underlying C++ geometry libraries
+                                                  and structural binding definitions that require domain-specific auditing.
+    3e Sanity check of the build system           Required, Included. The bundle environment contains internal functional verification scripts to validate filter execution sanity.
+    3f Build script provided                      Yes.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-------------------------------------------------------------------------------------------------------------------
-
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Python 3.14--
 
   Approval record
-    Status                                      ADOPTED
-    Approved on                                 11/05/2026
-    Expires on                                  11/05/2027
-    Audited by                                  Justin Grimes (@zelon88)
-    Audit outcome                               PASSED WITH CONDITIONS
-    Notes or Conditions                         Core language environment. Must be compiled from source with structural optimization. Restrict downstream scripts via Bubblewrap.
+    Status                                        ADOPTED
+    Approved on                                   11/05/2026
+    Expires on                                    01/01/2027
+    Audited by                                    Justin Grimes (@zelon88)
+    Audit outcome                                 PASSED WITH CONDITIONS
+    Notes or Conditions                           Core language environment. Must be compiled from source with structural optimization. Restrict downstream scripts via Bubblewrap.
 
   Manifest facts, read from Resources/Contract/depends.php
-    Binary                                      python3.14
-    Install type                                source
-    Package                                     -
-    Minimum version                             3.14
-    Required                                    NO
-    Subsystem                                   3D Models
-    License                                     PSF-2.0
-    Depends on                                  -
-    Source                                      https://www.python.org
-    Purpose                                     Loads the bundled PyMeshLab, which is the only mesh route MeshLab has not removed.
+    Binary                                        python3.14
+    Install type                                  source
+    Package                                       -
+    Minimum version                               3.14
+    Required                                      NO
+    Subsystem                                     3D Models
+    License                                       PSF-2.0
+    Depends on                                    -
+    Source                                        https://www.python.org
+    Purpose                                       Loads the bundled PyMeshLab, which is the only mesh route MeshLab has not removed.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      Yes. Python is maintained by the Python Software Foundation (PSF) and possesses an exceptionally mature, 
-                                                enterprise-grade secure development lifecycle. It maintains a dedicated security developer body, 
-                                                a formalized vulnerability reporting policy, and coordinates CVE tracking and disclosures with extreme transparency. 
-                                                The core runtime language layout features solid safety gates, built-in memory allocation controls, 
-                                                and clear execution sandboxing parameters.
-    1b Recent CVEs, issues or exploits          Low-Medium Risk / Managed Promptly. As a critical foundation of global computing architecture, Python is heavily scrutinized. 
-                                                Recent historical CVEs (such as CVE-2024-9287 and CVE-2024-11168) involve validation gaps inside standard modules 
-                                                like `tarfile` path traversals or `ipaddress` parsing handling. Vulnerabilities inside the core C engine interpreter 
-                                                are extremely rare; emerging threats are restricted almost immediately by upstream patch tiers.
-    1c Development activity & breakage risk     Highly Active / Elevated Breakage Risk. Upstream tracking is aggressive, with current releases moving into the Python 3.14+ 
-                                                and 3.15+ lifecycles. Utilizing the 3.14 tier introduces real integration breakage risks for external C-extensions, 
-                                                as internal changes or internal C-API cleanups can clash with historical PyMeshLab binding hooks, necessitating targeted script checks.
-    1d What it needs to function                Standard Language Workspace. Requires base file system execution rights inside its local destination directory structure 
-                                                and access to standard system headers during compile workflows. Links to fundamental platform runtime structures 
-                                                (`glibc`, `libssl`, `libffi`) and allocates standard system threads for process computation blocks.
-    1e Can it be sandboxed or isolated          Highly Amenable. Python is naturally stateless and executes exactly what is passed to the interpreter shell. 
-                                                Because it serves as the parent container environment triggering the PyMeshLab workflow, the entire execution path 
-                                                of the binary maps beautifully inside a strict, zero-network Bubblewrap sandbox jail layer.
-    1f Security options & hardened configurationExcellent internal control capabilities. The environment can be hardened by passing optimization flags during compilation 
-                                                and utilizing protective environment variables like `PYTHONNOUSERSITE=1` and `PYTHONDONTWRITEBYTECODE=1` at runtime. 
-                                                Ensure script endpoints drop all user execution privileges inside the Bubblewrap container structure.
-    1g Could another dependency do this better  No. Python is structurally mandatory to drive the local programmatic PyMeshLab array transformation libraries. 
-                                                No other script engine layer provides the required syntax compatibility or binding ecosystems necessary 
-                                                to resolve the 3D model repair workflows cleanly.
-    1h Origin & supply chain risk               Very Low Risk. Governed directly by the Python Software Foundation. Source code assets are cryptographically signed 
-                                                by release managers and distributed via the secure, authoritative python.org content delivery pipelines. 
-                                                Our build system assumes the burden of verifying download hashes before initiating compilation.
-    1i Dependency traps for existing installs   The Bleeding-Edge Extension Trap. The primary trap when shifting to an ultra-modern runtime tier like Python 3.14 
-                                                is the immediate breakdown of binary compatibility for pre-compiled wheels on public registries, forcing pip dependencies 
-                                                to compile local C code extensions on the board, which can exhaust resources on small micro-architectures.
-    2a System package versus a source build     Source Build Mandatory. As defined by the manifest facts, we completely bypass default OS distribution repository packages. 
-                                                Compiling from source is highly advantageous here as it allows us to strip unneeded standard library packages, 
-                                                minimize the binary footprint, and inject optimal performance and security configurations directly.
-    2b Build flags, libraries & features        Mandatory Compiler Fortification. The configure loop should include `--enable-optimizations` and `--with-lto`. 
-                                                Force standard security fortification declarations into the build environment to harden the binary interpreter:
+    1a Security design is amenable to ours        Yes. Python is maintained by the Python Software Foundation (PSF) and possesses an exceptionally mature,
+                                                  enterprise-grade secure development lifecycle. It maintains a dedicated security developer body,
+                                                  a formalized vulnerability reporting policy, and coordinates CVE tracking and disclosures with extreme transparency.
+                                                  The core runtime language layout features solid safety gates, built-in memory allocation controls,
+                                                  and clear execution sandboxing parameters.
+    1b Recent CVEs, issues or exploits            Low-Medium Risk / Managed Promptly. As a critical foundation of global computing architecture, Python is heavily scrutinized.
+                                                  Recent historical CVEs (such as CVE-2024-9287 and CVE-2024-11168) involve validation gaps inside standard modules
+                                                  like `tarfile` path traversals or `ipaddress` parsing handling. Vulnerabilities inside the core C engine interpreter
+                                                  are extremely rare; emerging threats are restricted almost immediately by upstream patch tiers.
+    1c Development activity & breakage risk       Highly Active / Elevated Breakage Risk. Upstream tracking is aggressive, with current releases moving into the Python 3.14+
+                                                  and 3.15+ lifecycles. Utilizing the 3.14 tier introduces real integration breakage risks for external C-extensions,
+                                                  as internal changes or internal C-API cleanups can clash with historical PyMeshLab binding hooks, necessitating targeted script checks.
+    1d What it needs to function                  Standard Language Workspace. Requires base file system execution rights inside its local destination directory structure
+                                                  and access to standard system headers during compile workflows. Links to fundamental platform runtime structures
+                                                  (`glibc`, `libssl`, `libffi`) and allocates standard system threads for process computation blocks.
+    1e Can it be sandboxed or isolated            Highly Amenable. Python is naturally stateless and executes exactly what is passed to the interpreter shell.
+                                                  Because it serves as the parent container environment triggering the PyMeshLab workflow, the entire execution path
+                                                  of the binary maps beautifully inside a strict, zero-network Bubblewrap sandbox jail layer.
+    1f Security options & hardened configuration  Excellent internal control capabilities. The environment can be hardened by passing optimization flags during compilation
+                                                  and utilizing protective environment variables like `PYTHONNOUSERSITE=1` and `PYTHONDONTWRITEBYTECODE=1` at runtime.
+                                                  Ensure script endpoints drop all user execution privileges inside the Bubblewrap container structure.
+    1g Could another dependency do this better    No. Python is structurally mandatory to drive the local programmatic PyMeshLab array transformation libraries.
+                                                  No other script engine layer provides the required syntax compatibility or binding ecosystems necessary
+                                                  to resolve the 3D model repair workflows cleanly.
+    1h Origin & supply chain risk                 Very Low Risk. Governed directly by the Python Software Foundation. Source code assets are cryptographically signed
+                                                  by release managers and distributed via the secure, authoritative python.org content delivery pipelines.
+                                                  Our build system assumes the burden of verifying download hashes before initiating compilation.
+    1i Dependency traps for existing installs     The Bleeding-Edge Extension Trap. The primary trap when shifting to an ultra-modern runtime tier like Python 3.14
+                                                  is the immediate breakdown of binary compatibility for pre-compiled wheels on public registries, forcing pip dependencies
+                                                  to compile local C code extensions on the board, which can exhaust resources on small micro-architectures.
+    2a System package versus a source build       Source Build Mandatory. As defined by the manifest facts, we completely bypass default OS distribution repository packages.
+                                                  Compiling from source is highly advantageous here as it allows us to strip unneeded standard library packages,
+                                                  minimize the binary footprint, and inject optimal performance and security configurations directly.
+    2b Build flags, libraries & features          Mandatory Compiler Fortification. The configure loop should include `--enable-optimizations` and `--with-lto`.
+                                                  Force standard security fortification declarations into the build environment to harden the binary interpreter:
                                                   CFLAGS="-D_FORTIFY_SOURCE=3 -fstack-protector-strong -fPIE" LDFLAGS="-pie -Wl,-z,relro,-z,now"
-    2c Minimum version & version edge cases     Strictly 3.14+ as defined by the manifest facts to ensure type compatibility with modern internal array processing hooks 
-                                                and alignment with the updated PyMeshLab architecture configurations.
-    2d Licensing implications of the build      Python Software Foundation License v2 (PSF-2.0). A highly permissive, open-source approved framework. 
-                                                It carries no copyleft contamination threats, usage limits, or distribution traps for internal or commercial enterprise software bundling.
-    3a Distribution method                      Source archives (tar.xz) distributed directly through the official secure python.org release portals.
-    3b Download source used                     Authoritative upstream release grid (https://python.org).
-    3c How an installer obtains this version    The automated deployment pipeline fetches the explicit release archive using curl/wget, validates the checksum match, 
-                                                resolves standard dependency libraries, and initiates the local build sequence.
-    3d Inspection of any bundled binary or code Inspection Practical. Highly transparent, exceptionally clean, and thoroughly documented C and Python codebase, 
-                                                readily auditable by internal development and security teams.
-    3e Sanity check of the build system         Required, Included. The source includes a comprehensive automated test framework (`make test`) to validate interpreter sanity 
-                                                before finalizing system installation.
-    3f Build script provided                    No.
+    2c Minimum version & version edge cases       Strictly 3.14+ as defined by the manifest facts to ensure type compatibility with modern internal array processing hooks
+                                                  and alignment with the updated PyMeshLab architecture configurations.
+    2d Licensing implications of the build        Python Software Foundation License v2 (PSF-2.0). A highly permissive, open-source approved framework.
+                                                  It carries no copyleft contamination threats, usage limits, or distribution traps for internal or commercial enterprise software bundling.
+    3a Distribution method                        Source archives (tar.xz) distributed directly through the official secure python.org release portals.
+    3b Download source used                       Authoritative upstream release grid (https://python.org).
+    3c How an installer obtains this version      The automated deployment pipeline fetches the explicit release archive using curl/wget, validates the checksum match,
+                                                  resolves standard dependency libraries, and initiates the local build sequence.
+    3d Inspection of any bundled binary or code   Inspection Practical. Highly transparent, exceptionally clean, and thoroughly documented C and Python codebase,
+                                                  readily auditable by internal development and security teams.
+    3e Sanity check of the build system           Required, Included. The source includes a comprehensive automated test framework (`make test`) to validate interpreter sanity
+                                                  before finalizing system installation.
+    3f Build script provided                      No.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
-------------------------------------------------------------------------------------------------------------------
-
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --pip 3.14--
 
   Approval record
-    Status                                      ADOPTED
-    Approved on                                 11/05/2026
-    Expires on                                  11/05/2027
-    Audited by                                  Justin Grimes (@zelon88)
-    Audit outcome                               PASSED WITH CONDITIONS
-    Notes or Conditions                         Core packaging runtime. Must only be executed during deployment/build phases. Enforce strict hash verification flags.
+    Status                                        ADOPTED
+    Approved on                                   11/05/2026
+    Expires on                                    01/01/2027
+    Audited by                                    Justin Grimes (@zelon88)
+    Audit outcome                                 PASSED WITH CONDITIONS
+    Notes or Conditions                           Core packaging runtime. Must only be executed during deployment/build phases. Enforce strict hash verification flags.
 
   Manifest facts, read from Resources/Contract/depends.php
-    Binary                                      -
-    Install type                                source
-    Package                                     -
-    Minimum version                             21.0
-    Required                                    NO
-    Subsystem                                   3D Models
-    License                                     MIT
-    Depends on                                  Python 3.14
-    Source                                      https://pip.pypa.io
-    Purpose                                     Installs the python packages this application needs. Bundled with CPython through ensurepip.
+    Binary                                        -
+    Install type                                  source
+    Package                                       -
+    Minimum version                               21.0
+    Required                                      NO
+    Subsystem                                     3D Models
+    License                                       MIT
+    Depends on                                    Python 3.14
+    Source                                        https://pip.pypa.io
+    Purpose                                       Installs the python packages this application needs. Bundled with CPython through ensurepip.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      Yes, procedurally. Maintained by the Python Packaging Authority (PyPA), pip features a mature open-source 
-                                                security model. It incorporates a formal vulnerability tracking process (via security@python.org), 
-                                                supports cryptographic hash enforcement, and responds rapidly to threats. However, because it installs 
-                                                and executes unvetted third-party packages, it represents a high-yield channel for supply chain exploitation.
-    1b Recent CVEs, issues or exploits          Low Risk / High Threat Vector. Native vulnerabilities inside the core pip engine are historically low-frequency. 
-                                                Recent security items generally involve path-handling limits or HTTP credential caching leaks on shared filesystems. 
-                                                The primary danger is not pip itself, but malicious typosquatting or dependency-confusion payloads on PyPI 
-                                                tricking pip into executing remote code via setup scripts during installation blocks.
-    1c Development activity & breakage risk     Highly Active / Moderate Breakage Risk. Upstream releases packages aggressively (v26.x tracks current deployments). 
-                                                Because this manifest maps to the cutting-edge Python 3.14 tier, ensuring pip correctly hooks into the experimental 
-                                                sysconfig structures is critical. Upstream regularly refines C-extension build handling, which presents minor installation 
-                                                breakage risks if target Python package configurations lag behind.
-    1d What it needs to function                Network Outbound / File Operations. Requires outbound network access (HTTPS/Port 443) to talk to remote package registries 
-                                                like PyPI during dependency retrieval loops. Requires extensive local read/write privileges inside the target site-packages 
-                                                and temporary system build spaces (`/tmp`) to unpack archives and compile wheel structures.
-    1e Can it be sandboxed or isolated          Highly Amenable at Runtime / Restricted at Build. While it requires outbound network access during setup steps to fetch PyMeshLab 
-                                                assets, it can be entirely blocked from the runtime pipeline. Once your HRConvert2 environment preparation is complete, 
-                                                pip can be fully locked down or deleted inside the final execution container using a networkless Bubblewrap configuration.
-    1f Security options & hardened configurationExcellent built-in isolation toggles. To secure installation workflows, pip executions must force the `--require-hashes` flag 
-                                                to guarantee binary integrity against repository tampering. Additionally, using `--no-deps` blocks unexpected transitive package creep, 
-                                                and passing `--isolated` ignores unauthorized configuration blocks or user-level tracking files on the host system.
-    1g Could another dependency do this better  No. As the standard package installer bundled directly with CPython via `ensurepip`, it represents the absolute standard 
-                                                for environment instantiation. While modern alternatives (like `uv`) provide significant performance boosts, pip's universal 
-                                                integration across all experimental Python tiers makes it the safest baseline choice for HRConvert2 setup steps.
-    1h Origin & supply chain risk               Low-Medium Risk. Governed transparently by the PyPA. Release assets are heavily fuzzed, peer-reviewed, and cryptographically signed. 
-                                                The threat landscape shifts entirely to the remote index paths used; pulling from public registries introduces supply chain risk 
-                                                if third-party packages lack pinned verification states.
-    1i Dependency traps for existing installs   The Silent Dynamic Compilation Trap. As noted in the purpose directive, if a targeted package (like NumPy) lacks a pre-compiled 
-                                                binary wheel for ARM64 or x86_64 architectures on Python 3.14, pip will silently download the raw source code and launch a local 
-                                                native compile step, which can cause severe deployment delays or fail completely due to memory exhaustion on low-end hardware.
-    2a System package versus a source build     Source Build Mandatory (Via Python Bootstrapping). As specified in the manifest contract, we bypass standard OS package tools. 
-                                                Relying on the internal `ensurepip` module bundled with our source-compiled Python 3.14 environment guarantees perfect, isolated alignment 
-                                                between the packaging engine and our specialized CPython runtime tier.
-    2b Build flags, libraries & features        Standard environment isolation. When invoking the internal bootstrapping tools to initialize pip, enforce standard environment 
-                                                isolation properties and inject security configurations via environment variables:
+    1a Security design is amenable to ours        Yes, procedurally. Maintained by the Python Packaging Authority (PyPA), pip features a mature open-source
+                                                  security model. It incorporates a formal vulnerability tracking process (via security@python.org),
+                                                  supports cryptographic hash enforcement, and responds rapidly to threats. However, because it installs
+                                                  and executes unvetted third-party packages, it represents a high-yield channel for supply chain exploitation.
+    1b Recent CVEs, issues or exploits            Low Risk / High Threat Vector. Native vulnerabilities inside the core pip engine are historically low-frequency.
+                                                  Recent security items generally involve path-handling limits or HTTP credential caching leaks on shared filesystems.
+                                                  The primary danger is not pip itself, but malicious typosquatting or dependency-confusion payloads on PyPI
+                                                  tricking pip into executing remote code via setup scripts during installation blocks.
+    1c Development activity & breakage risk       Highly Active / Moderate Breakage Risk. Upstream releases packages aggressively (v26.x tracks current deployments).
+                                                  Because this manifest maps to the cutting-edge Python 3.14 tier, ensuring pip correctly hooks into the experimental
+                                                  sysconfig structures is critical. Upstream regularly refines C-extension build handling, which presents minor installation
+                                                  breakage risks if target Python package configurations lag behind.
+    1d What it needs to function                  Network Outbound / File Operations. Requires outbound network access (HTTPS/Port 443) to talk to remote package registries
+                                                  like PyPI during dependency retrieval loops. Requires extensive local read/write privileges inside the target site-packages
+                                                  and temporary system build spaces (`/tmp`) to unpack archives and compile wheel structures.
+    1e Can it be sandboxed or isolated            Highly Amenable at Runtime / Restricted at Build. While it requires outbound network access during setup steps to fetch PyMeshLab
+                                                  assets, it can be entirely blocked from the runtime pipeline. Once your HRConvert2 environment preparation is complete,
+                                                  pip can be fully locked down or deleted inside the final execution container using a networkless Bubblewrap configuration.
+    1f Security options & hardened configuration  Excellent built-in isolation toggles. To secure installation workflows, pip executions must force the `--require-hashes` flag
+                                                  to guarantee binary integrity against repository tampering. Additionally, using `--no-deps` blocks unexpected transitive package creep,
+                                                  and passing `--isolated` ignores unauthorized configuration blocks or user-level tracking files on the host system.
+    1g Could another dependency do this better    No. As the standard package installer bundled directly with CPython via `ensurepip`, it represents the absolute standard
+                                                  for environment instantiation. While modern alternatives (like `uv`) provide significant performance boosts, pip's universal
+                                                  integration across all experimental Python tiers makes it the safest baseline choice for HRConvert2 setup steps.
+    1h Origin & supply chain risk                 Low-Medium Risk. Governed transparently by the PyPA. Release assets are heavily fuzzed, peer-reviewed, and cryptographically signed.
+                                                  The threat landscape shifts entirely to the remote index paths used; pulling from public registries introduces supply chain risk
+                                                  if third-party packages lack pinned verification states.
+    1i Dependency traps for existing installs     The Silent Dynamic Compilation Trap. As noted in the purpose directive, if a targeted package (like NumPy) lacks a pre-compiled
+                                                  binary wheel for ARM64 or x86_64 architectures on Python 3.14, pip will silently download the raw source code and launch a local
+                                                  native compile step, which can cause severe deployment delays or fail completely due to memory exhaustion on low-end hardware.
+    2a System package versus a source build       Source Build Mandatory (Via Python Bootstrapping). As specified in the manifest contract, we bypass standard OS package tools.
+                                                  Relying on the internal `ensurepip` module bundled with our source-compiled Python 3.14 environment guarantees perfect, isolated alignment
+                                                  between the packaging engine and our specialized CPython runtime tier.
+    2b Build flags, libraries & features          Standard environment isolation. When invoking the internal bootstrapping tools to initialize pip, enforce standard environment
+                                                  isolation properties and inject security configurations via environment variables:
                                                   export PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1
-    2c Minimum version & version edge cases     Strictly 21.0+ as defined by the manifest facts to ensure robust modern dependency resolution engine mechanics and 
-                                                built-in support for mandatory hash verification configurations are universally present.
-    2d Licensing implications of the build      MIT License (Highly Permissive). A business-friendly open-source copyright structure. It carries zero copyleft infection threats, 
-                                                redistribution traps, or proprietary utilization limitations for internal or commercial enterprise environment integration.
-    3a Distribution method                      Bundled straight inside the CPython source tree, or delivered as standard Python wheel packages via pypa.io.
-    3b Download source used                     Authoritative Python Packaging Authority delivery grids (https://bootstrap.pypa.io).
-    3c How an installer obtains this version    Triggered automatically inside the deployment pipeline by calling the source-compiled interpreter shell bootstrapping command 
-                                                (`python3.14 -m ensurepip --default-pip`).
-    3d Inspection of any bundled binary or code Inspection Practical. Transparent, exceptionally clean, and highly legible Python package code base, entirely open for 
-                                                independent structural review via their primary GitHub repository.
-    3e Sanity check of the build system         Fully validated via extensive upstream continuous integration matrices and automated validation check suites bundled natively 
-                                                in the core Python test frameworks.
-    3f Build script provided                    No.
-
-------------------------------------------------------------------------------------------------------------------
+    2c Minimum version & version edge cases       Strictly 21.0+ as defined by the manifest facts to ensure robust modern dependency resolution engine mechanics and
+                                                  built-in support for mandatory hash verification configurations are universally present.
+    2d Licensing implications of the build        MIT License (Highly Permissive). A business-friendly open-source copyright structure. It carries zero copyleft infection threats,
+                                                  redistribution traps, or proprietary utilization limitations for internal or commercial enterprise environment integration.
+    3a Distribution method                        Bundled straight inside the CPython source tree, or delivered as standard Python wheel packages via pypa.io.
+    3b Download source used                       Authoritative Python Packaging Authority delivery grids (https://bootstrap.pypa.io).
+    3c How an installer obtains this version      Triggered automatically inside the deployment pipeline by calling the source-compiled interpreter shell bootstrapping command
+                                                  (`python3.14 -m ensurepip --default-pip`).
+    3d Inspection of any bundled binary or code   Inspection Practical. Transparent, exceptionally clean, and highly legible Python package code base, entirely open for
+                                                  independent structural review via their primary GitHub repository.
+    3e Sanity check of the build system           Fully validated via extensive upstream continuous integration matrices and automated validation check suites bundled natively
+                                                  in the core Python test frameworks.
+    3f Build script provided                      No.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

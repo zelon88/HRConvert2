@@ -12,9 +12,9 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.9.
+// / v4.0.0.
 // / This file is the converter for the OCR pipeline. It is loaded by pipelineCore.php
-// / ONLY when a OCR operation is about to be dispatched to it, so a request that does
+// / ONLY when an OCR operation is about to be dispatched to it, so a request that does
 // / something else never parses a line of it.
 // / Error block 15000 through 15014 belongs to this pipeline. Those numbers came with the code when it
 // / moved out of convertCore.php & they did not change, because operators have read them.

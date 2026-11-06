@@ -1,8 +1,21 @@
 #!/bin/bash
 # / -----------------------------------------------------------------------------------
-# / HRConvert2 container entrypoint. v3.8.6.
-# / Corrects everything a mounted volume may have arrived with, starts the listener when
-# / the configuration asks for one, then hands the foreground to the web server.
+# / Copyright Information ...
+# / HRConvert2, Copyright on 8/14/2026 by Justin Grimes, www.github.com/zelon88
+# /
+# / License Information ...
+# / This project is protected by the GNU GPLv3 Open-Source license.
+# / https://www.gnu.org/licenses/gpl-3.0.html
+# /
+# / Application Information ...
+# / This application is designed to provide a web-interface for converting file formats
+# / on a server for users of any web browser without authentication.
+# /
+# / File Information ...
+# / v3.8.6.
+# / This file is the HRConvert2 container entrypoint. It corrects everything a mounted
+# / volume may have arrived with, starts the listener when the configuration asks for one,
+# / then hands the foreground to the web server.
 # /
 # / NOTHING HERE MAY PREVENT THE WEB SERVER FROM STARTING.
 # / A user who cannot reach the page cannot report the problem. Every step below reports
@@ -12,6 +25,15 @@
 # / set -e is deliberately NOT used. It offers nothing here, because every command is
 # / already guarded, & it turns any future unguarded line into a container that exits with
 # / no explanation at all.
+# /
+# / Hardware Requirements ...
+# / This application requires at least a Raspberry Pi Model B+ or greater.
+# / This application will run on just about any x86 or x64 computer.
+# /
+# / Dependency Requirements ...
+# / This file requires bash, php & Apache, & runs as root in the official container image.
+# /
+# / <3 Open-Source
 # / -----------------------------------------------------------------------------------
 CORE=/var/www/html/HRProprietary/HRConvert2/convertCore.php
 CONFIG=/var/www/html/HRProprietary/HRConvert2/Resources/config.php

@@ -18,7 +18,7 @@ This application provides a highly accessible, unauthenticated web interface ena
 | **Hardware** | Raspberry Pi Model B+ (or any standard x86 / x64 architecture computing platform) |
 | **Environment** | Debian Linux + Apache Web Server v2.4 + PHP v8.0 or greater |
 
-> ⚙️ **Core Dependencies:** FFMPEG, Dia, LibreOffice, Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia, and xvfb-run.
+> ⚙️ **Core Dependencies:** The authoritative list of dependencies is `Resources/Contract/depends.php` and nothing else. Run `php convertCore.php -v` to see what this installation has.
 
 ---
 
@@ -28,50 +28,59 @@ In public-facing, security-focused open-source applications (such as [HRConvert2
 1. **Micro-Scoped Variables:** All short-lived variables utilize `camelCase` naming conventions to explicitly signal restricted lexical scope.
 2. **Raw Character Overwriting:** Prior to destroying a variable, string character buffers are physically overwritten with null bytes (`\0`) to wipe the real memory bits from the system heap pool.
 3. **Recursive Structure Unpacking:** Arrays and objects are traversed iteratively or via reference unpacking to expose and flatten every leaf node for memory destruction.
-4. **Explicit Nullification & Symbol Removal:** Variables are explicitly mutated to `null` and their hash pointers are cleanly stripped out of active Zend Engine tables using `unset()`.
+4. **Explicit Nullification:** Variables are explicitly mutated to `null` through the reference the function was handed, so a later read of the caller's variable finds nothing.
 
 ```php
 // Example of the Character-Buffer Shredding Paradigm
 $decryptedPayload = decryptData($userInput);
 processSecureTask($decryptedPayload);
 
-// Wipe data blocks out of the system heap by reference
-purgeSensitiveMemory($decryptedPayload);
+// Wipe data blocks out of the system heap by reference.
+// The first argument decides whether a failure halts. Every target is its own argument.
+purgeSensitiveMemory($EnableMemoryProtection, $decryptedPayload);
 ```
 
 ---
 
 ## Technical Mechanism
-Within the standard Zend Virtual Machine, variables are stored as internal C structures called `zvals` pointing to specific data layouts like `zend_string`. Under ordinary programming paradigms, when a function terminates, its variables naturally fall out of scope and are flagged for recycling by PHP's reference-counting garbage collector. 
+Within the standard Zend Virtual Machine, variables are stored as internal C structures called `zvals` pointing to specific data layouts like `zend_string`. Under ordinary programming paradigms, when a function terminates, its variables naturally fall out of scope and are flagged for recycling by PHP's reference-counting garbage collector.
 
 However, natural garbage collection leaves a critical vulnerability: **the underlying data physically persists in system RAM until that specific heap space (`efree()`) is overwritten by a future memory allocation.**
 
 By passing elements into `purgeSensitiveMemory()`, the engine forces active mutation layers:
 * **Byte Flattening Loop:** Modifying elements sequentially by string offset array notation (`$variable[$i] = "\0"`) overwrites the live characters inside the active `zend_string` structure before any cleanup happens.
 * **Overwriting pointers:** Setting the mutated variable to `null` forces the underlying `zval` type to `IS_NULL`, safely severing pointers to the scrubbed data buffer.
-* **Symbol Table Clean-Up:** Calling `unset()` completely strips the variable name out of the active Zend hash table, ensuring it cannot be reached by subsequent user-land runtime errors or debugging lookups.
+* **Reference Release:** Calling `unset()` on the loop reference releases the function's own handle. The caller's variable name remains & holds `null`, because a function cannot remove a symbol from its caller's scope.
+
+A condensed copy of the kernel's function follows. `Resources/Kernel/kernel.php` holds the real one, with its logging and recursion bookkeeping.
 
 ```php
-function purgeSensitiveMemory(&...$variables) {
-  global $EnableMemoryProtections;
-  $variableIsDestroyed = FALSE;
-  $CannotDestroyVariables = FALSE;
+function purgeSensitiveMemory($FailureIsFatal, &...$variables) {
+  $MemoryIsPurged = TRUE;
   foreach ($variables as &$variable) {
     $variableIsDestroyed = FALSE;
-    if (is_array($variable) && !empty($variable)) { purgeSensitiveMemory(...$variable); $variable = NULL; $variableIsDestroyed = TRUE; }
+    if (is_null($variable)) $variableIsDestroyed = TRUE;
+    if (is_array($variable) && !empty($variable)) {
+      foreach ($variable as $key => &$subValue) { if (!purgeSensitiveMemory($FailureIsFatal, $subValue)) $MemoryIsPurged = FALSE; }
+      unset($subValue);
+      $variable = NULL;
+      $variableIsDestroyed = TRUE; }
     if (is_array($variable) && empty($variable)) { $variable = NULL; $variableIsDestroyed = TRUE; }
     if (is_bool($variable)) { $variable = NULL; $variableIsDestroyed = TRUE; }
     if (is_numeric($variable)) $variable = (string)$variable;
     if (is_string($variable)) {
       $length = strlen($variable);
       for ($i = 0; $i < $length; $i++) $variable[$i] = "\0";
-      $variable = NULL; 
+      $variable = NULL;
       $variableIsDestroyed = TRUE; }
-    if (!$variableIsDestroyed) { 
-      if (!$EnableMemoryProtections) warningEntry('Cannot purge sensitive memory! Memory protection is disabled in config.php. Continuing...');
-      if ($EnableMemoryProtections) { warningEntry('Cannot purge sensitive memory! Memory protection is enabled in config.php. Execution cannot continue!', 40000, TRUE); $CannotDestroyVariables = TRUE; } } }
-  unset($variable); 
-  return($CannotDestroyVariables); }
+    // An object or a resource has buffers this function cannot write into, so it is dropped.
+    if (!$variableIsDestroyed) { $variable = NULL; $variableIsDestroyed = is_null($variable); }
+    if (!$variableIsDestroyed) {
+      $MemoryIsPurged = FALSE;
+      if ($FailureIsFatal) errorEntry('Cannot purge sensitive memory! Execution cannot continue!', 40000, TRUE);
+      else warningEntry('Cannot purge sensitive memory! Continuing...'); } }
+  unset($variable, $subValue, $key, $i, $length);
+  return $MemoryIsPurged; }
 ```
 
 ---

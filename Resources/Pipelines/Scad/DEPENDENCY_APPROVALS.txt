@@ -1,146 +1,166 @@
-------------------------------------------------------------------------------------------------------------------
-DEPENDENCY APPROVAL RECORD
-The OpenSCAD pipeline.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 10/30/2026 by Justin Grimes, www.github.com/zelon88
 
-Written by Documentation/Build/hrconvert2-approvals.py v3.9.7.
-Every factual field is read from the dependency manifest & is rewritten by that tool.
-Every audit answer is written by a person & is kept across a refresh.
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v3.9.7.
+This plain text file is the dependency approval record for the OpenSCAD pipeline.
+It is written by Documentation/Build/hrconvert2-approvals.py. Every factual field is read from the dependency manifest & is rewritten by that tool. Every audit answer & every note is written by a person & is kept across a refresh.
 The procedure these questions come from is in Documentation/ABOUT_DEPENDENCIES.txt.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About This Record--
 
 These are the dependencies this pipeline uses. The list is worked out from the
 tools the pipeline asks for by name, from whether it isolates a command, & from the
 subsystem it declares. A pipeline is detachable, so this record travels with it.
-------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Bubblewrap--
 
   Approval record
-    Status                                      ADOPTED
-    Approved on                                 11/04/2026
-    Expires on                                  11/04/2027
-    Audited by                                  Justin Grimes (@zelon88)
-    Audit outcome                               PASSED
-    Notes or Conditions                         Mandatory foundational dependency. Use to isolate every other archive/image parser.
+    Status                                        ADOPTED
+    Approved on                                   11/04/2026
+    Expires on                                    01/01/2027
+    Audited by                                    Justin Grimes (@zelon88)
+    Audit outcome                                 PASSED
+    Notes or Conditions                           Mandatory foundational dependency. Use to isolate every other archive/image parser.
 
   Manifest facts, read from Resources/Contract/depends.php
-    Binary                                      bwrap
-    Install type                                apt
-    Package                                     bubblewrap
-    Minimum version                             0.4
-    Required                                    YES
-    Subsystem                                   Sandbox
-    License                                     LGPL-2.0
-    Depends on                                  -
-    Source                                      https://github.com
-    Purpose                                     Isolates every conversion from the host & the network.
+    Binary                                        bwrap
+    Install type                                  apt
+    Package                                       bubblewrap
+    Minimum version                               0.4
+    Required                                      YES
+    Subsystem                                     Sandbox
+    License                                       LGPL-2.0
+    Depends on                                    -
+    Source                                        https://github.com/containers/bubblewrap
+    Purpose                                       Isolates every conversion from the host & the network.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      Yes. Designed specifically as a minimal, unprivileged attack surface reduction boundary.
-                                                Maintained by Red Hat/GNOME developers with structured disclosure and explicit security modeling.
-                                                Codebase is exceptionally tight, readable, and avoids macro or parsing complexity.
-    1b Recent CVEs, issues or exploits          Extremely clean track record. No high-severity RCE or jailbreak flaws in years.
-                                                CVE-2019-12439 was a minor local info leak due to a temporary file descriptor layout bug.
-                                                Most environment breakout vulnerabilities stem from the underlying Linux kernel namespaces rather than bwrap.
-    1c Development activity & breakage risk     Highly Active / Low Breakage. Maintained continuously under the containers organization on GitHub.
-                                                CLI arguments and core runtime flags are frozen and stable; update regressions are virtually non-existent.
-    1d What it needs to function                Kernel Namespace Support. Relies directly on user, mount, IPC, PID, and net namespace system calls.
-                                                Requires unprivileged user namespaces enabled on the host (user.max_user_namespaces > 0).
-                                                Dynamically links against standard glibc; needs no background daemons or permanent disk writes.
-    1e Can it be sandboxed or isolated          N/A. This is the sandbox controller itself. It is transient and destroys its environment upon exit.
-    1f Security options & hardened configurationMaximal isolation flags must be applied when executing sub-commands: --unshare-all, --uid, --gid,
-                                                --ro-bind for system runtime folders, and explicit --seccomp filters to drop dangerous syscall architectures.
-    1g Could another dependency do this better  No. It is the gold standard for rapid, unprivileged, daemonless command sandboxing on Linux.
-                                                Alternative tools like Minijail lack the widespread distro adoption, while Podman/Docker bring major daemon overhead.
-    1h Origin & supply chain risk               Very Low Risk. Maintained by primary enterprise Linux contributors (Fedora, Red Hat, SUSE).
-                                                Distributed with cryptographic tag signatures and heavily scrutinized open-source review pipelines.
-    1i Dependency traps for existing installs   The Setuid Trap. If the target host kernel disables unprivileged user namespaces by default, 
-                                                bwrap requires a root-owned setuid bit to function, expanding the local attack surface if misconfigured.
-    2a System package versus a source build     System Package Preferred. The distribution-provided package is kept patched, stable, 
-                                                and correctly mapped to the underlying platform's specific namespace permissions.
-    2b Build flags, libraries & features        Standard hardened compile blocks. Ensure libseccomp filtering is explicitly compiled in (--enable-seccomp).
-    2c Minimum version & version edge cases     Strictly 0.4.0+ as defined by the manifest, though 0.8.0+ is strongly recommended to support modernized flags.
-    2d Licensing implications of the build      LGPL-2.0 is highly amenable. Safe for commercial and internal utility wrapping without copyleft traps.
-    3a Distribution method                      Native package repositories (apt) and official GitHub source releases.
-    3b Download source used                     Upstream GitHub assets or native distribution mirrors.
-    3c How an installer obtains this version    Standard automated package management fetch (apt-get install -y bubblewrap).
-    3d Inspection of any bundled binary or code Inspection Practical. Clean, straightforward, minimal C files without obfuscation or macro masking.
-    3e Sanity check of the build system         Fully automated via native continuous integration testing suites embedded in the upstream source.
-    3f Build script provided                    No. Managed safely via the native OS package controller.
+    1a Security design is amenable to ours        Yes. Designed specifically as a minimal, unprivileged attack surface reduction boundary.
+                                                  Maintained by Red Hat/GNOME developers with structured disclosure and explicit security modeling.
+                                                  Codebase is exceptionally tight, readable, and avoids macro or parsing complexity.
+    1b Recent CVEs, issues or exploits            Extremely clean track record. No high-severity RCE or jailbreak flaws in years.
+                                                  CVE-2019-12439 was a minor local info leak due to a temporary file descriptor layout bug.
+                                                  Most environment breakout vulnerabilities stem from the underlying Linux kernel namespaces rather than bwrap.
+    1c Development activity & breakage risk       Highly Active / Low Breakage. Maintained continuously under the containers organization on GitHub.
+                                                  CLI arguments and core runtime flags are frozen and stable; update regressions are virtually non-existent.
+    1d What it needs to function                  Kernel Namespace Support. Relies directly on user, mount, IPC, PID, and net namespace system calls.
+                                                  Requires unprivileged user namespaces enabled on the host (user.max_user_namespaces > 0).
+                                                  Dynamically links against standard glibc; needs no background daemons or permanent disk writes.
+    1e Can it be sandboxed or isolated            N/A. This is the sandbox controller itself. It is transient and destroys its environment upon exit.
+    1f Security options & hardened configuration  Maximal isolation flags must be applied when executing sub-commands: --unshare-all, --uid, --gid,
+                                                  --ro-bind for system runtime folders, and explicit --seccomp filters to drop dangerous syscall architectures.
+    1g Could another dependency do this better    No. It is the gold standard for rapid, unprivileged, daemonless command sandboxing on Linux.
+                                                  Alternative tools like Minijail lack the widespread distro adoption, while Podman/Docker bring major daemon overhead.
+    1h Origin & supply chain risk                 Very Low Risk. Maintained by primary enterprise Linux contributors (Fedora, Red Hat, SUSE).
+                                                  Distributed with cryptographic tag signatures and heavily scrutinized open-source review pipelines.
+    1i Dependency traps for existing installs     The Setuid Trap. If the target host kernel disables unprivileged user namespaces by default,
+                                                  bwrap requires a root-owned setuid bit to function, expanding the local attack surface if misconfigured.
+    2a System package versus a source build       System Package Preferred. The distribution-provided package is kept patched, stable,
+                                                  and correctly mapped to the underlying platform's specific namespace permissions.
+    2b Build flags, libraries & features          Standard hardened compile blocks. Ensure libseccomp filtering is explicitly compiled in (--enable-seccomp).
+    2c Minimum version & version edge cases       Strictly 0.4.0+ as defined by the manifest, though 0.8.0+ is strongly recommended to support modernized flags.
+    2d Licensing implications of the build        LGPL-2.0 is highly amenable. Safe for commercial and internal utility wrapping without copyleft traps.
+    3a Distribution method                        Native package repositories (apt) and official GitHub source releases.
+    3b Download source used                       Upstream GitHub assets or native distribution mirrors.
+    3c How an installer obtains this version      Standard automated package management fetch (apt-get install -y bubblewrap).
+    3d Inspection of any bundled binary or code   Inspection Practical. Clean, straightforward, minimal C files without obfuscation or macro masking.
+    3e Sanity check of the build system           Fully automated via native continuous integration testing suites embedded in the upstream source.
+    3f Build script provided                      No. Managed safely via the native OS package controller.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-------------------------------------------------------------------------------------------------------------------
-
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --OpenSCAD--
 
   Approval record
-    Status                                      ADOPTED
-    Approved on                                 11/05/2026
-    Expires on                                  11/05/2027
-    Audited by                                  Justin Grimes (@zelon88)
-    Audit outcome                               PASSED WITH CONDITIONS
-    Notes or Conditions                         Parametric rendering engine. Interprets structural scripts. Must always run encapsulated inside Bubblewrap.
+    Status                                        ADOPTED
+    Approved on                                   11/05/2026
+    Expires on                                    01/01/2027
+    Audited by                                    Justin Grimes (@zelon88)
+    Audit outcome                                 PASSED WITH CONDITIONS
+    Notes or Conditions                           Parametric rendering engine. Interprets structural scripts. Must always run encapsulated inside Bubblewrap.
 
   Manifest facts, read from Resources/Contract/depends.php
-    Binary                                      openscad
-    Install type                                apt
-    Package                                     openscad
-    Minimum version                             2021.01
-    Required                                    NO
-    Subsystem                                   SCAD
-    License                                     GPL-2.0
-    Depends on                                  Bubblewrap
-    Source                                      https://openscad.org
-    Purpose                                     Renders parametric models.
+    Binary                                        openscad
+    Install type                                  apt
+    Package                                       openscad
+    Minimum version                               2021.01
+    Required                                      NO
+    Subsystem                                     SCAD
+    License                                       GPL-2.0
+    Depends on                                    Bubblewrap
+    Source                                        https://openscad.org
+    Purpose                                       Renders parametric models.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      Yes, procedurally. OpenSCAD maintains a highly visible, open-source presence on GitHub, utilizes 
-                                                public bug trackers, and responds to vulnerabilities via regular version maintenance tags. However, 
-                                                because it serves as a functional code interpreter that reads complex geometric input scripts (`.scad`) 
-                                                and calculates spatial calculations using multiple underlying mesh engines, it possesses a substantial 
-                                                architectural attack surface when handling unvetted script uploads.
-    1b Recent CVEs, issues or exploits          Moderate Risk. As a compiler for 3D geometry files, it relies heavily on external parsing math blocks. 
-                                                Historical vulnerabilities (such as CVE-2022-0496 and CVE-2022-0497) involve critical memory safety issues, 
-                                                including stack-based buffer overflows and null-pointer dereferences inside its DXF and CSG asset-import modules. 
-                                                A maliciously crafted CAD asset script can intentionally trigger thread corruption or application crashes.
-    1c Development activity & breakage risk     Highly Active / Low Breakage Risk. Upstream maintainers actively manage performance and engine tracking, 
-                                                with stable configurations extending from the baseline v2021.01 release architecture onwards. The command-line 
-                                                arguments for headless conversion (e.g., `openscad -o output.stl input.scad`) are rigidly standardized, 
-                                                ensuring very low risk of syntax breakage during downstream version upgrades.
-    1d What it needs to function                Resource Intensive / Desktop Render Tree. Requires substantial CPU processing and memory structures 
-                                                to compile constructive solid geometry (CSG) layouts into mesh arrays. Functions completely as a stateless console 
-                                                utility during headless script exports, requiring standard file system read/write rights to access source structures. 
-                                                Links to external geometry frameworks (CGAL, OpenCSG) and core C++ runtimes.
-    1e Can it be sandboxed or isolated          Highly Amenable. Parametric rendering is a completely self-contained, mathematical shape transformation routine. 
-                                                It requires no host network operations, no administrative root privilege structures, and zero inter-process 
-                                                communication (IPC) systems. It isolates flawlessly within an unprivileged, zero-network Bubblewrap sandbox jail environment.
-    1f Security options & hardened configurationNative application-level safety settings should be strictly enforced via the invocation execution arguments. 
-                                                When calling OpenSCAD from HRConvert2, ensure parameters explicitly include `--safe` to disable dangerous 
-                                                script behaviors (such as file inclusion or command executions outside authorized folders). The root isolation 
-                                                must be applied by stripping all Linux kernel capabilities via the Bubblewrap sandbox wrapper.
-    1g Could another dependency do this better  No. For parsing, interpreting, and rendering native OpenSCAD files (`.scad`) into standardized 3D mesh layers (STL, OFF) 
-                                                programmatically on a headless system, OpenSCAD is the absolute industry standard. No alternative parser library 
-                                                implements the full turing-complete CAD specification safely. The risk must be accepted and mitigated via Bubblewrap.
-    1h Origin & supply chain risk               Low-Medium Risk. Maintained by a prominent, transparent open-source global community of CAD and geometry engineers. 
-                                                Source tracking and code verification pipelines are completely visible on GitHub. Because this is an `apt` installation type, 
-                                                the primary supply chain validation and patch backport tracking burden is securely handled by your Linux distribution's team.
-    1i Dependency traps for existing installs   The Headless Display Engine Trap. Because OpenSCAD is historically tied to desktop GUI graphics configurations, 
-                                                executing the binary inside a thin server or container environment can trigger immediate initialization failures if the tool 
-                                                attempts to bind to a missing X11 windowing backend, requiring ensuring proper headless flags or wrapping execution within 
-                                                a virtual frame buffer context (like `xvfb-run`).
-    2a System package versus a source build     System Package Preferred. Installing `openscad` via `apt` ensures that incredibly complex mathematical 
-                                                geometry dependencies (like CGAL, MPFR, and GMP) are automatically resolved, synchronized, and managed 
-                                                by the platform repository maintainers without introducing build environment mismatches.
-    2b Build flags, libraries & features        Default package compilation flags applied by apt are sufficient when fully encapsulated by Bubblewrap.
-    2c Minimum version & version edge cases     Strictly 2021.01+ as defined by the manifest facts to ensure modern parsing boundaries, standard multi-threading array support, 
-                                                and built-in mitigations for historical import buffer overruns are structurally present.
-    2d Licensing implications of the build      GNU General Public License (GPL-2.0). Standard copyleft framework. Completely safe for internal automation loop execution 
-                                                within HRConvert2, but mandates careful structural monitoring if the collective environment stack is distributed commercially.
-    3a Distribution method                      Standard distribution native package manager repositories (apt).
-    3b Download source used                     Official distribution mirror networks.
-    3c How an installer obtains this version    Automated package fetch via the platform package tool (apt-get install -y openscad).
-    3d Inspection of any bundled binary or code Inspection Practical but Difficult. Dense C++ geometry framework integrating language parsing engines, 
-                                                Constructive Solid Geometry loops, and matrix array transformations that require specialized compiler and graphics library knowledge to review.
-    3e Sanity check of the build system         Relies entirely on the distribution package builder's native target architecture integration checks.
-    3f Build script provided                    No.
-
-
-------------------------------------------------------------------------------------------------------------------
+    1a Security design is amenable to ours        Yes, procedurally. OpenSCAD maintains a highly visible, open-source presence on GitHub, utilizes
+                                                  public bug trackers, and responds to vulnerabilities via regular version maintenance tags. However,
+                                                  because it serves as a functional code interpreter that reads complex geometric input scripts (`.scad`)
+                                                  and calculates spatial calculations using multiple underlying mesh engines, it possesses a substantial
+                                                  architectural attack surface when handling unvetted script uploads.
+    1b Recent CVEs, issues or exploits            Moderate Risk. As a compiler for 3D geometry files, it relies heavily on external parsing math blocks.
+                                                  Historical vulnerabilities (such as CVE-2022-0496 and CVE-2022-0497) involve critical memory safety issues,
+                                                  including stack-based buffer overflows and null-pointer dereferences inside its DXF and CSG asset-import modules.
+                                                  A maliciously crafted CAD asset script can intentionally trigger thread corruption or application crashes.
+    1c Development activity & breakage risk       Highly Active / Low Breakage Risk. Upstream maintainers actively manage performance and engine tracking,
+                                                  with stable configurations extending from the baseline v2021.01 release architecture onwards. The command-line
+                                                  arguments for headless conversion (e.g., `openscad -o output.stl input.scad`) are rigidly standardized,
+                                                  ensuring very low risk of syntax breakage during downstream version upgrades.
+    1d What it needs to function                  Resource Intensive / Desktop Render Tree. Requires substantial CPU processing and memory structures
+                                                  to compile constructive solid geometry (CSG) layouts into mesh arrays. Functions completely as a stateless console
+                                                  utility during headless script exports, requiring standard file system read/write rights to access source structures.
+                                                  Links to external geometry frameworks (CGAL, OpenCSG) and core C++ runtimes.
+    1e Can it be sandboxed or isolated            Highly Amenable. Parametric rendering is a completely self-contained, mathematical shape transformation routine.
+                                                  It requires no host network operations, no administrative root privilege structures, and zero inter-process
+                                                  communication (IPC) systems. It isolates flawlessly within an unprivileged, zero-network Bubblewrap sandbox jail environment.
+    1f Security options & hardened configuration  Native application-level safety settings should be strictly enforced via the invocation execution arguments.
+                                                  When calling OpenSCAD from HRConvert2, ensure parameters explicitly include `--safe` to disable dangerous
+                                                  script behaviors (such as file inclusion or command executions outside authorized folders). The root isolation
+                                                  must be applied by stripping all Linux kernel capabilities via the Bubblewrap sandbox wrapper.
+    1g Could another dependency do this better    No. For parsing, interpreting, and rendering native OpenSCAD files (`.scad`) into standardized 3D mesh layers (STL, OFF)
+                                                  programmatically on a headless system, OpenSCAD is the absolute industry standard. No alternative parser library
+                                                  implements the full turing-complete CAD specification safely. The risk must be accepted and mitigated via Bubblewrap.
+    1h Origin & supply chain risk                 Low-Medium Risk. Maintained by a prominent, transparent open-source global community of CAD and geometry engineers.
+                                                  Source tracking and code verification pipelines are completely visible on GitHub. Because this is an `apt` installation type,
+                                                  the primary supply chain validation and patch backport tracking burden is securely handled by your Linux distribution's team.
+    1i Dependency traps for existing installs     The Headless Display Engine Trap. Because OpenSCAD is historically tied to desktop GUI graphics configurations,
+                                                  executing the binary inside a thin server or container environment can trigger immediate initialization failures if the tool
+                                                  attempts to bind to a missing X11 windowing backend, requiring ensuring proper headless flags or wrapping execution within
+                                                  a virtual frame buffer context (like `xvfb-run`).
+    2a System package versus a source build       System Package Preferred. Installing `openscad` via `apt` ensures that incredibly complex mathematical
+                                                  geometry dependencies (like CGAL, MPFR, and GMP) are automatically resolved, synchronized, and managed
+                                                  by the platform repository maintainers without introducing build environment mismatches.
+    2b Build flags, libraries & features          Default package compilation flags applied by apt are sufficient when fully encapsulated by Bubblewrap.
+    2c Minimum version & version edge cases       Strictly 2021.01+ as defined by the manifest facts to ensure modern parsing boundaries, standard multi-threading array support,
+                                                  and built-in mitigations for historical import buffer overruns are structurally present.
+    2d Licensing implications of the build        GNU General Public License (GPL-2.0). Standard copyleft framework. Completely safe for internal automation loop execution
+                                                  within HRConvert2, but mandates careful structural monitoring if the collective environment stack is distributed commercially.
+    3a Distribution method                        Standard distribution native package manager repositories (apt).
+    3b Download source used                       Official distribution mirror networks.
+    3c How an installer obtains this version      Automated package fetch via the platform package tool (apt-get install -y openscad).
+    3d Inspection of any bundled binary or code   Inspection Practical but Difficult. Dense C++ geometry framework integrating language parsing engines,
+                                                  Constructive Solid Geometry loops, and matrix array transformations that require specialized compiler and graphics library knowledge to review.
+    3e Sanity check of the build system           Relies entirely on the distribution package builder's native target architecture integration checks.
+    3f Build script provided                      No.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

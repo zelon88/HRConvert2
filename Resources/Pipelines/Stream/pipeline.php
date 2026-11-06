@@ -12,11 +12,11 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.9.
+// / v4.0.0.
 // / This file is the converter for the Stream pipeline. It is loaded by pipelineCore.php
 // / ONLY when a Stream conversion is about to be dispatched to it.
-// / Error block 14000 through 14001 & 26000 through 26007 belong to this pipeline. Those
-// / numbers came with the code when it moved out of convertCore.php & they did not change.
+// / Error block 21000 through 21002 belongs to this pipeline. Those numbers came with the
+// / code when it moved out of convertCore.php & they did not change.
 // /
 // / This is the reference implementation of a detached worker pipeline.
 // / It does not produce an output file before it returns. It launches FFMPEG in the

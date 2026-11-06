@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/152026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 8/15/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -8,17 +8,17 @@ https://www.gnu.org/licenses/gpl-3.0.html
 
 APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats
-on a server for users of any web browser without authentication. 
+on a server for users of any web browser without authentication.
 
 FILE INFORMATION ...
 v3.8.8.
 This file contains a walkthrough guide for building an HRConvert2 Docker Image from source.
 
-HARDWARE REQUIREMENTS ... 
+HARDWARE REQUIREMENTS ...
 This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
-DEPENDENCY REQUIREMENTS ... 
+DEPENDENCY REQUIREMENTS ...
 The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
 
 <3 Open-Source
@@ -53,8 +53,11 @@ If you truly want to build your own Docker Image from source this document will 
 Publishing the official image is automatic. Pushing a version tag is the entire procedure.
 
 1. Make sure every version stamp in the source matches the version you are about to tag.
-  1a. $HRConvertVersion in convertCore.php.
-  1b. $ConfigVersion in Resources/config.php.
+  1a. $HRConvertVersion in convertCore.php, & $Version in Resources/versionInfo.php.
+  1b. $ConfigVersion in Resources/config.php & in Resources/Contract/config-template.php.
+      The template is what a new installation's config.php is written from.
+      Both match $RequiredConfigVersion in convertCore.php rather than the tag. All three
+      move together & only when a release adds a setting the core requires.
   1c. $GuiVersion in every UI/<GUI>/uiVersionInfo.php, if the interfaces changed.
   1d. $LanguageVersion in every language pack, if the strings changed.
   1e. Run  'php convertCore.php -v'  to confirm every component reports what you expect.
@@ -126,7 +129,7 @@ or when you need an image the workflow will not produce.
 
 
 -----STEP 3 - TEST THE IMAGE-----
-1. Run  'docker run -d --name hrc2test -p 8080:80 -p 8443:443 --security-opt seccomp=unconfined hrconvert2:test'
+1. Run  'docker run -d --name hrc2test -p 8080:80 -p 8443:443 --cap-add SYS_ADMIN hrconvert2:test'
 2. Open a browser and navigate to 'http://localhost:8080' to test the converter.
 3. Run  'docker exec hrc2test php /var/www/html/HRProprietary/HRConvert2/convertCore.php -v'
   3a. This reports every component version and every dependency, and is faster than
@@ -145,13 +148,15 @@ NOTE ON DIAGNOSING A FAILED SMOKE TEST.
   waiting out a fixed sleep, & always prints the container state, the logs, the -v report &
   the tail of the HRConvert2 log before it fails.
 
-NOTE ON THE SECCOMP OPTION.
-  bwrap needs an unprivileged user namespace to sandbox an OpenSCAD render.
-  Docker's default seccomp profile blocks the syscall that requires.
-  A container started without  '--security-opt seccomp=unconfined'  will refuse OpenSCAD
-  conversions with error 27007, which is the correct and deliberate behaviour rather than
-  a silent downgrade to rendering without a sandbox.
-  Every other conversion type works normally without the option.
+NOTE ON THE SYS_ADMIN CAPABILITY.
+  Every conversion runs inside a bubblewrap sandbox, & a container cannot create the
+  namespace that needs without  '--cap-add SYS_ADMIN'. A container started without it refuses
+  every conversion, which is the correct and deliberate behaviour rather than a silent
+  downgrade to running a dependency without a sandbox.
+  '--security-opt seccomp=unconfined'  works instead on some hosts, as the Dockerfile says.
+  The workflow tests with the capability, & the README & INSTALLATION_INSTRUCTIONS.txt ask for it.
+  Until v4.0.0 this step used the seccomp option & said only OpenSCAD needed it, which was
+  true before every dependency was sandboxed.
   This belongs in the Docker Hub description so operators know to add it.
 -----------------------------------------------------------------------------------
 

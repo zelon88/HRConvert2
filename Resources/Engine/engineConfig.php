@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.9.9.
+// / v4.0.0.
 // / This file configures the Engine for the application that bundles it.
 // /
 // / This file is NOT the administrator's configuration & is not edited by a user.
@@ -22,9 +22,15 @@
 // /   The app config.php  How this installation behaves. Set by an administrator, kept
 // /                       across an update, & the only one anybody is asked to read.
 // /
-// / This file is read BEFORE the application configuration, so an application setting of
-// / the same name wins. That ordering is deliberate. A developer sets a default here & an
-// / administrator may still override it there, where they can see it.
+// / This file is read AFTER the application configuration, & the order is not a choice.
+// / config.php is how an installation finds itself. The directory it names is verified
+// / before anything is derived from it, & the path to this file is derived from it. An
+// / installation with no config.php writes one from its template before anything else is
+// / trusted, & reads no Engine configuration while it does.
+// / So a setting here with the same name as one in config.php would win over the
+// / administrator, silently. NO NAME IS SET IN BOTH. Every name this file & the contract
+// / set begins with Engine, & an application's own checks are where that is enforced.
+// / A value an administrator may change belongs in config.php & nowhere else.
 // / A value the application must NOT be able to override does not belong in a variable.
 // /
 // / It ASSIGNS VARIABLES & DOES NOTHING ELSE. No functions, no logic, no output.
@@ -45,7 +51,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 // / The version of this configuration. Matched as a MINIMUM by the Engine, the same way
 // / an application matches its own configuration. A newer file carrying every required
 // / setting is fine, because a setting this Engine does not know is simply not read.
-$EngineConfigVersion = 'v3.9.9';
+$EngineConfigVersion = 'v4.0.0';
 // / -----------------------------------------------------------------------------------
 
 

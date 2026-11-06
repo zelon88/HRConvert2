@@ -73,14 +73,13 @@ The six steps are ABOUT_ENGINE_ABSORPTION.txt, ORDER OF WORK. Status as at v3.9.
      generateConfigFile() in Resources/Engine/Cores/setupCore.php.
      PROVEN BY   grep -n 'function generateConfigFile' Resources/Engine/Cores/setupCore.php
 
-  3. CONFIG.PHP IS GENERATED                                                      PARTIAL
+  3. CONFIG.PHP IS GENERATED                                                         DONE
      The generator runs & writes a complete configuration on the no configuration bootstrap
-     path. The shipped Resources/config.php is not marked as generated & carries no header
-     saying so, which the contract required in plain terms.
-     STILL OWED   A first line that says the file is generated & that structure edits are
-                  lost on regeneration. Values survive, so the warning is about an edit
-                  rather than about a configuration.
-     PROVEN BY   head -1 Resources/config.php   when it is done.
+     path. DONE AT v4.0.0. The template carries the notice directly below its copy marker, so
+     every generated configuration says it is generated & that a structural edit is lost when
+     it is generated again. The shipped Resources/config.php is written the same way.
+     Line one of a PHP file has to be the opening tag, so the notice is line two.
+     PROVEN BY   sed -n 2p Resources/config.php   names config-template.php.
 
   4. DEPENDENCY CORE & DEPENDS.PHP MOVED                                             DONE
      Resources/Engine/Cores/dependencyCore.php. The manifest went to Resources/Engine/Contract
@@ -100,17 +99,17 @@ The six steps are ABOUT_ENGINE_ABSORPTION.txt, ORDER OF WORK. Status as at v3.9.
      PROVEN BY   grep -n "verifyConfigVersion(.Required\|verifyCoreComponent('Engine'" convertCore.php
                  The configuration check is called hundreds of lines before the Engine is.
 
-  6. SPLIT THE COMMAND LINE HANDLER                                      NOT STARTED
+  6. SPLIT THE COMMAND LINE HANDLER                                   DONE, AS STEP SEVEN
      Pass a was attempted & REVERTED within the same release. The argument parser went into
      the Engine & came back to the kernel, & the reason is the most useful thing learned
      this release. It is written up under Decisions & Findings below.
-     THE PLAN FOR THIS STEP IS ALSO WRONG & NEEDS REDOING RATHER THAN RESUMING.
-     The sort below assumed the work was moving command machinery into the Engine. The
-     Engine commands' implementations are ALREADY in the Engine; they are Engine functions
-     today. What is actually left is routing & refusal semantics, not relocation.
-     REDERIVED as step seven of THE DIRECTION below, an Engine command dispatcher.
-     PROVEN BY   grep -n 'function parseArgumentVector' convertCore.php   finds it in the
-                 kernel, not the Engine.
+     THE PLAN FOR THIS STEP WAS WRONG & WAS REDONE RATHER THAN RESUMED.
+     It assumed the work was moving command machinery into the Engine. The Engine commands'
+     implementations were ALREADY Engine functions. What was left was routing & refusal
+     semantics, not relocation, & that landed as step seven of THE DIRECTION below, an
+     Engine command dispatcher.
+     PROVEN BY   grep -n 'function parseArgumentVector' Resources/Kernel/kernel.php
+                 grep -n 'function dispatchEngineCommand' Resources/Engine/engine.php
                  php Documentation/Build/hrconvert2-test-cliargs-cli.php
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -236,9 +235,8 @@ The contract describes three tiers. The audit finds four, & the third is the one
 home.
 
   THE KERNEL          Pre Engine & identical in every application. Logging, memory
-                      shredding, input sanitizing, argument parsing, dependency location,
-                      component loading, the install secret & session identity.
-                      Its own file. Its own version.
+                      shredding, input sanitizing, argument parsing, dependency location &
+                      component loading. Its own file. Its own version.
   THE ENGINE          The runtime every application needs. Managers, budgets, sandbox, data
                       locations, cleaning, network policy, Dependency Core, Setup Core &
                       Pipeline Core. Its own directory, its own version, & the same bytes in
@@ -250,7 +248,8 @@ home.
                       The first three & the pipeline pin table are in Resources/Contract
                       as of v3.9.9.
   APPLICATION LOGIC   What makes the application itself. Conversion, the interface, its own
-                      commands.
+                      commands, & the install secret & session identity until an
+                      authentication core exists to take them.
 
 THE ORDER OF WORK.
 Each step is separately testable & separately revertible. A step marked REVERSES changes a
@@ -428,10 +427,9 @@ the code moves, not by the code moving.
                  order. Every scanner & every mode reports the test file infected & the clean
                  file clean, & the report holds no server path, signature or account name.
                  The same run on the code before this step reports ClamAV's scan of the two
-                 files clean, puts
-                 five server paths, two signature names & two account lines in one ScanCore
-                 report, & reports a later scan of the clean file alone as infected, carrying
-                 six stale lines. With the sandbox required & unavailable, the report says the
+                 files clean, puts five server paths, two signature names & two account lines
+                 in one ScanCore report, & reports a later scan of the clean file alone as
+                 infected, carrying six stale lines. With the sandbox required & unavailable, the report says the
                  file could not be scanned & that the scan DID NOT RUN.
                  Through a real bubblewrap sandbox, as root & as www-data, with the real
                  clamscan given a one signature database & the real ScanCore, every scanner &
@@ -862,14 +860,24 @@ passing. A refactor that also changes behaviour produces a failure nobody can bi
               limit & a 32M configured chunk, which the previous pipeline ends in exit 255, & the
               shipped pair fails a 140M file run directly.
 
-  AN UNSANDBOXED DOCUMENT CONVERSION USES A LIBREOFFICE PROFILE ANY ACCOUNT CAN MAKE FIRST.
-  RECORDED, NOT FIXED. IT NEEDS THE SANDBOX SWITCHED OFF, & THE FIX CHANGES A SHARED MODULE.
+  AN UNSANDBOXED DOCUMENT CONVERSION USED A LIBREOFFICE PROFILE ANY ACCOUNT COULD MAKE FIRST.
+  RESOLVED AT v4.0.0. IT NEEDED THE SANDBOX SWITCHED OFF, & THE FIX CHANGED A SHARED MODULE.
   libreOffice.php points LibreOffice's profile at /tmp/hrc2-libreoffice. Inside the sandbox
   that is a tmpfs of the conversion's own. With --Require Sandbox-- FALSE & no sandbox built,
-  the same path is the host's, shared by every conversion & by any account that makes it
-  first, & a LibreOffice profile can carry macros. The fix is a fresh folder for each
-  unsandboxed conversion, removed after it, & it changes libreOffice.php, which the contract
-  pins at v3.9.5.
+  the same path was the host's, shared by every conversion & by any account that made it
+  first, & a LibreOffice profile can carry macros.
+  makeLibreOfficeProfile gives each unsandboxed conversion a folder named with sixteen random
+  bytes, made by mkdir with mode 0700, which fails rather than adopt a name that exists, & the
+  command is built again around it rather than edited. removeLibreOfficeProfile takes it away
+  afterwards & never follows a link inside it. A folder that cannot be made refuses that one
+  document with error 2006. The module & its pin in the contract moved to v4.0.0.
+  ALSO FOUND. The verbose log said Sandboxed: YES for every unsandboxed conversion, because it
+  compared the two commands after the output directory had been edited into one of them.
+  PROVEN BY   Real LibreOffice, no sandbox, & /tmp/hrc2-libreoffice planted beforehand by
+              another account with mode 0777. The conversion completes, a private folder
+              exists only while it runs, & nothing is written to the planted one. With the
+              v3.9.8 module root's profile is written into the planted folder, & the log says
+              Sandboxed: YES. With TMPDIR pointing nowhere the document is refused with 2006.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

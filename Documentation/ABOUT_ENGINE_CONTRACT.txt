@@ -1,10 +1,30 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
+HRProprietary Engine, Copyright on 9/4/2026 by Justin Grimes, www.github.com/zelon88
 
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
 
------------------------------------------------------------------------------------------
-DECIDING WHETHER SOMETHING IS A PIPELINE
------------------------------------------------------------------------------------------
+APPLICATION INFORMATION ...
+The HRProprietary Engine provides a coherent application environment. It is bundled with an application rather than installed beside one.
+
+FILE INFORMATION ...
+v3.8.9.
+This plain text file is the contract between an application and the Engine it bundles.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+The Engine requires PHP. Everything else it uses, it locates at runtime and reports when it cannot find.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Deciding Whether Something Is A Pipeline--
 
 The question is NOT whether it moves bytes on disk. That is a question about mechanism &
 it gives the wrong answer.
@@ -29,10 +49,10 @@ THE FAILURE MODE THIS EXISTS TO PREVENT. A list of candidates written from funct
 will put things on it that sound like file work & leave off things that are. Read what a
 function DOES. A function operating on paths another function handed it is a caller rather
 than an operation, & a function that only counts is not doing the thing it appears to do.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
------------------------------------------------------------------------------------------
-THE SHAPE THIS IS GROWING TOWARD
------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Shape This Is Growing Toward--
 
 NOT IN SCOPE. Recorded so that decisions made now do not quietly foreclose it.
 
@@ -79,10 +99,10 @@ cannot provide something needed before the Engine loads, which is question three
 either session derivation moves later in the boot, or the label becomes something the
 kernel can do without. The kernel already reads it optionally & prints No Session when it is
 absent, so the second is cheap.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
------------------------------------------------------------------------------------------
-THE ENGINE IS A DROP IN REPLACEMENT FOR ITSELF
------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Engine Is A Drop In Replacement For Itself--
 
 The seam is VISIBLE IN THE TREE rather than described in a document.
 
@@ -152,28 +172,6 @@ everything must move to at once.
 The three files are the seam. Anything that starts to feel like a fourth is worth arguing
 about before it is written, because the argument is really about whether the Engine has
 started to know something about one application.
-
-HRProprietary Engine, Copyright on 9/4/2026 by Justin Grimes, www.github.com/zelon88
-
-LICENSE INFORMATION ...
-This project is protected by the GNU GPLv3 Open-Source license.
-https://www.gnu.org/licenses/gpl-3.0.html
-
-APPLICATION INFORMATION ...
-The HRProprietary Engine provides a coherent application environment. It is bundled with an application rather than installed beside one.
-
-FILE INFORMATION ...
-v3.8.9.
-This plain text file is the contract between an application and the Engine it bundles.
-
-HARDWARE REQUIREMENTS ...
-This application requires at least a Raspberry Pi Model B+ or greater.
-This application will run on just about any x86 or x64 computer.
-
-DEPENDENCY REQUIREMENTS ...
-The Engine requires PHP. Everything else it uses, it locates at runtime and reports when it cannot find.
-
-<3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -296,7 +294,7 @@ TRUE & a missing contract value refuses to load rather than falling back. Ship i
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About The Two Configurations--
 
-TWO FILES, ANSWERING DIFFERENT QUESTIONS, READ IN A DELIBERATE ORDER.
+TWO FILES, ANSWERING DIFFERENT QUESTIONS, READ IN AN ORDER THAT IS NOT A CHOICE.
 
   Resources/Engine/engineConfig.php   Which Engine capabilities this application uses.
                                       Set by a developer. Shipped with the release.
@@ -306,9 +304,21 @@ TWO FILES, ANSWERING DIFFERENT QUESTIONS, READ IN A DELIBERATE ORDER.
                                       Set by an administrator. Kept across an update.
                                       The only one anybody is ever asked to read.
 
-The Engine configuration is read FIRST, so a setting of the same name in the application
-configuration wins. A developer sets a default & an administrator may still override it,
-where they can see it & where the comments explaining it live.
+config.php is read FIRST, & has to be. It is how an installation finds itself. The
+directory it names is verified before anything is derived from it, & the Engine
+configuration's path is derived from it. An installation with no config.php writes one from
+its template before anything else is trusted. The Engine configuration is read next, before
+the logging environment, because part of the logfile's name is the Engine's decision. The
+application's Engine settings in Resources/Contract are read last & win over the Engine's
+defaults.
+
+SO THE LAST FILE READ WINS, & IT IS NOT THE ADMINISTRATOR'S.
+A name set in config.php & in either Engine configuration file would be decided by the
+Engine, silently, & an administrator changing it would see nothing happen. NO NAME IS SET
+IN BOTH. Check twenty three in hrconvert2-check.py, configs, fails the day one is.
+Until v4.0.0 this document & engineConfig.php said the Engine configuration was read first,
+so that an administrator's setting would win. The code has always read config.php first. No
+name was shared, so nothing was ever overridden, but the protection described did not exist.
 
 A VALUE THE APPLICATION MUST NOT BE ABLE TO OVERRIDE DOES NOT BELONG IN A VARIABLE.
 A global is overridable by definition. Something the Engine must decide for itself is a
@@ -317,8 +327,8 @@ early.
 
 NAME COLLISION IS THE THING TO WATCH.
 Both files assign uppercase globals into one scope. Engine owned names begin with Engine.
-An application setting that begins with Engine is a mistake waiting to be discovered by
-whichever file happened to load second.
+An application setting that begins with Engine is a mistake waiting to be discovered by the
+Engine, which loads second, so the same check refuses that prefix in config-template.php.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -345,7 +355,7 @@ nothing behind it is a gate somebody will eventually turn on expecting something
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About What Has Moved So Far--
 
-v3.8.9 MOVED NINE FUNCTIONS. NOTHING ELSE CHANGED.
+v3.8.9 MOVED EIGHT FUNCTIONS. NOTHING ABOUT THEM CHANGED.
 
   systemdIsUsable               Whether a service manager is present & usable.
   environmentFindingStatus      Formats an environment finding for a report.
@@ -357,10 +367,11 @@ v3.8.9 MOVED NINE FUNCTIONS. NOTHING ELSE CHANGED.
   validateOperatingEnvironment  Reports whether the host is configured correctly.
 
 Every one was already engine work sitting in an application file. The measurement that
-decided this was simple. coreManager.php calls fourteen functions defined in the core, &
-eleven of them would serve a virus scanner unchanged.
+decided this was simple. Resources/coreManager.php, the Core Manager of the time, called
+fourteen functions defined in the core, & eleven of them would serve a virus scanner
+unchanged. The other three spoke the application's vocabulary.
 
-THOSE THREE HAVE SINCE MOVED, RENAMED FOR THE CONCEPT RATHER THAN THE APPLICATION.
+THOSE THREE MOVED IN THE SAME RELEASE, RENAMED FOR THE CONCEPT RATHER THAN THE APPLICATION.
 enumerateDataLocations, resolveDataLocation & cleanDataLocation, with the session counter
 they share. HRConvert2 calls it a Convert Location & ScanCore would call it a quarantine.
 Nothing was added to the contract to do it. Everything the application knows is passed in,
@@ -419,7 +430,7 @@ anything but the kernel. Status for every migration step lives in
 Documentation/ENGINE_MIGRATION_STATUS.txt rather than here, for the reason that sentence
 above was wrong for several releases.
 
-MANAGER SUBCOMPONENTS ARE POPULATED & Resources/Engine/Managers/coreManager.php IS GONE.
+MANAGER SUBCOMPONENTS ARE POPULATED & Resources/coreManager.php IS GONE.
 getAcceptedManagers names four files under Resources/Engine/Managers & loadEngineManager
 verifies & loads one when a process is dispatched to that role.
 Twenty eight functions of shared machinery went into the Engine rather than into any one
@@ -449,6 +460,7 @@ FOUR QUESTIONS. A NO TO ANY OF THEM MEANS IT STAYS IN THE APPLICATION.
      which usually turns out to be the better answer.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --The Application's Identity--
 
 An application tells the Engine four things about itself, & the Engine asks for them rather
@@ -457,7 +469,7 @@ than assuming them. Each has a helper in Cores/environmentCore.php.
   $EngineApplicationName     engineApplicationName()        HRConvert2
                              engineApplicationSlug()        hrconvert2, for names on disk
   $EngineEntryPoint          engineApplicationEntryPoint()  convertCore.php
-  $EngineApplicationVersion  engineApplicationVersion()     3.9.6
+  $EngineApplicationVersion  engineApplicationVersion()     3.9.9
 
 The first two are set in Contract/app-engine-config.php. The version is handed over by the
 application where it defines its own version, so there is never a second copy to drift, & it
@@ -472,11 +484,15 @@ one behind.
 
 The Engine contains no application's name, no entry point & no application version. An Engine
 component refusing a direct request prints Engine-35000 & names nothing else.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
---Settings the Engine Reads From Configuration--
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Settings The Engine Reads From Configuration--
 
 The Engine also reads its own settings from the application's config.php, such as
-$ManagerSocketTimeout, $MaxConcurrentWorkers, $RequireSandbox & $TotalResourceBudget. They are
-part of the contract: an application's config.php has to define them for the Engine to work.
+$MaxConcurrentWorkers, $RequireSandbox & $TotalResourceBudget, & a few the application sets
+itself, such as $ManagerSocketTimeout. They are part of the contract: an application has to
+define them for the Engine to work.
 Some carry names from HRConvert2, such as $ConvertLoc, because renaming them would break every
 existing installation's configuration.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

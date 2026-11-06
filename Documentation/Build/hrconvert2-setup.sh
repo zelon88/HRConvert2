@@ -1,7 +1,19 @@
 #!/bin/bash
 # / -----------------------------------------------------------------------------------
-# / HRConvert2 Bootstrap.
+# / Copyright Information ...
+# / HRConvert2, Copyright on 8/25/2026 by Justin Grimes, www.github.com/zelon88
+# /
+# / License Information ...
+# / This project is protected by the GNU GPLv3 Open-Source license.
+# / https://www.gnu.org/licenses/gpl-3.0.html
+# /
+# / Application Information ...
+# / This application is designed to provide a web-interface for converting file formats
+# / on a server for users of any web browser without authentication.
+# /
+# / File Information ...
 # / v3.9.3.
+# / This file is the HRConvert2 bootstrap.
 # /
 # / This script does ONE job. It makes sure PHP exists, then hands over to convertCore.php.
 # / Every decision about installing, configuring, updating or repairing an installation is
@@ -24,6 +36,15 @@
 # /   sudo bash hrconvert2-setup.sh --reinstall-existing  Reinstall in place.
 # /
 # / Every argument is passed through untouched, so anything convertCore.php accepts works.
+# /
+# / Hardware Requirements ...
+# / This application requires at least a Raspberry Pi Model B+ or greater.
+# / This application will run on just about any x86 or x64 computer.
+# /
+# / Dependency Requirements ...
+# / This file requires bash & root. It installs PHP with apt-get when PHP is missing.
+# /
+# / <3 Open-Source
 # / -----------------------------------------------------------------------------------
 
 # / This line is written by the Core Manager when the script no longer matches the core.

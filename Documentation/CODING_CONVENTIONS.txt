@@ -8,19 +8,20 @@ https://www.gnu.org/licenses/gpl-3.0.html
 
 APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats
-on a server for users of any web browser without authentication. 
+on a server for users of any web browser without authentication.
 
 FILE INFORMATION ...
 v3.7.8.
-This file contains detailed information about the coding & quality conventions in-use 
+This file contains detailed information about the coding & quality conventions in-use
 in the HRConvert2 codebase.
 
-HARDWARE REQUIREMENTS ... 
+HARDWARE REQUIREMENTS ...
 This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
-DEPENDENCY REQUIREMENTS ... 
+DEPENDENCY REQUIREMENTS ...
 The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
@@ -29,86 +30,85 @@ The authoritative list of dependencies is Resources/Contract/depends.php & nothi
 
 HRConvert2 is maintained by Zelon88 with help from an amazing & dedicated community on Github.
 Github is the source control management platform where all HRConvert2 development takes place.
-Docker repositorsies are updated less often than Github, but offer much easier installation.
+Docker repositories are updated less often than Github, but offer much easier installation.
 
-'Nightly Builds' what you get when you download the repo at any point in time.
+'Nightly Builds' are what you get when you download the repo at any point in time.
 'Nightly Builds' have the latest features and are updated regularly.
 'Releases' available on the Releases page on Github typically represent major milestones.
 'Releases' have the best stability and are updated only for major patches or changes.
-Devel
 -----------------------------------------------------------------------------------
 
 
 -----GENERAL CODING CONVENTIONS-----
 
-HRConvert2 is built using strict coding & quality conventions to promote quality and 
+HRConvert2 is built using strict coding & quality conventions to promote quality and
 consistency within the codebase. Those conventions are detailed here so they can be
 developed in the open, alongside the code they are designed to safeguard.
 
-1. Core Logic and interface are completely separate. UI Pages must not contain any 
-  core logic. Any logic contained within UI pages must be only for the purpose of 
+1. Core Logic and interface are completely separate. UI Pages must not contain any
+  core logic. Any logic contained within UI pages must be only for the purpose of
   generating local UI elements.
 
-2. The Core must not itself contain any UI elements. The Core must "build" or 
+2. The Core must not itself contain any UI elements. The Core must "build" or
   "assemble" the UI from separate, modular components.
 
 3. Upper case first letter variables are global in scope. Only variables with upper-case can
   transcend multiple functions. Upper case first letter variables can be used as Globals or
   function returns.
   The only allowed & documented exception is $SecretKey. Please don't touch.
-  When followed, this technique will reduce the applications exposure to PHP memory leakage.
+  When followed, this technique will reduce the application's exposure to PHP memory leakage.
   For more information, see `Documentation/ABOUT_DEFENSIVE_MEMORY_MANAGEMENT.md`.
 
-4. Lower case variables are severely limited in scope. Lower case first letter variables 
+4. Lower case variables are severely limited in scope. Lower case first letter variables
   must not be used or extended outside of the function in which they are initialized.
-  When followed, this technique will reduce the applications exposure to PHP memory leakage.
+  When followed, this technique will reduce the application's exposure to PHP memory leakage.
   For more information, see `Documentation/ABOUT_DEFENSIVE_MEMORY_MANAGEMENT.md`.
 
 5. Lower case variables must be initialized only within the function where they are used,
-  and destroyed via purgeSensitiveMemory() immediately afterwards. 
-  Pass every target as its own argument. 
+  and destroyed via purgeSensitiveMemory() immediately afterwards.
+  Pass every target as its own argument.
   Never collect targets into an array first, because that copies the values.
-  When followed, this technique will reduce the applications exposure to PHP memory leakage.
+  When followed, this technique will reduce the application's exposure to PHP memory leakage.
   For more information, see `Documentation/ABOUT_DEFENSIVE_MEMORY_MANAGEMENT.md`.
 
-6. Try not redeclare lower case, narrow scope variables where possible.
+6. Try not to redeclare lower case, narrow scope variables where possible.
   Try to use redeclare() where possible.
-  Developers; use your best judgement here.
-  The spirit of this rule is; Keep track of your variable scope. Do not take function scope for granted to protect your data. 
+  Developers, use your best judgement here.
+  The spirit of this rule is: keep track of your variable scope. Do not take function scope for granted to protect your data.
   Assume the interpreter is always compromised.
-  When followed, this technique will reduce the applications exposure to PHP memory leakage.
+  When followed, this technique will reduce the application's exposure to PHP memory leakage.
   For more information, see `Documentation/ABOUT_DEFENSIVE_MEMORY_MANAGEMENT.md`.
 
-7. Functions go first. Logic goes after. All functions must be defined sequentially at 
+7. Functions go first. Logic goes after. All functions must be defined sequentially at
   the top of a code file. Do not define functions nested with logical code.
 
 8. If a function is complex or longer than approximately 35 lines of code, then it must
-  return a sanity check in addition to it's usual output.
+  return a sanity check in addition to its usual output.
 
 9. Calling code must consume a returned check from a called function that has one.
-  When consuming a returned check from a called function, stronly consider validating it.
+  When consuming a returned check from a called function, strongly consider validating it.
   Calling code need not log a failure the callee has already logged under the caller's name.
   Duplicating the entry misreports the origin & doubles the log volume.
   Developers may utilize best judgment.
 
-10. If a sanity check could alter behavior; failing the check must be logged.
+10. If a sanity check could alter behavior, failing the check must be logged.
 
 11. Any and all code changes must be mentioned in the CHANGELOG.txt file.
 
 12. Code comments must be written in complete sentences, with proper grammar & punctuation.
 
-13. Functions must be prefaced with a comment describing it's functionality.
+13. Functions must be prefaced with a comment describing its functionality.
 
 14. Function input and return variable names should be coherent to a human reader. Do not
   use generic, non-descriptive variable names like $f or $a in function inputs or returns.
 
 15. Changes to code files should be batched into groups, tested completely and thoroughly,
-  and uploaded to the repository only once they are complete. Do not upload in-process or 
+  and uploaded to the repository only once they are complete. Do not upload in-process or
   untested code to the repository under any circumstances. Code contained in the repository
   must always be fully executable.
 
-16. No browser console errors or HTML syntax errors are allowed to exist in any release or 
-  nightly build that gets uploaded to the repositopry. The code contained in the repository 
+16. No browser console errors or HTML syntax errors are allowed to exist in any release or
+  nightly build that gets uploaded to the repository. The code contained in the repository
   must execute in all tested cases without HTML, JS, or PHP Errors or Warnings. Warnings or
   errors that are generated normally during expected operation are acceptable.
 
@@ -117,7 +117,7 @@ developed in the open, alongside the code they are designed to safeguard.
 
 18. No cookies. No databases. No third party connections. No analytics. No exceptions.
 
-19. If the code needs all capital comments; it's too important.
+19. If the code needs all capital comments, it's too important.
 
 20. A pattern repeated more than twice belongs in a function or a template.
 
@@ -150,6 +150,7 @@ developed in the open, alongside the code they are designed to safeguard.
 
 -----------------------------------------------------------------------------------
 
+
 -----DETAILED CODEBASE STANDARDS & GUIDANCE-----
 
 -----FALLBACK & FAILURE-----
@@ -166,6 +167,8 @@ default & logging loudly is better than a blank page & a number wherever possibl
 Initialize a local fallback that cannot be overwritten by configuration. A lowercase
 $defaultGui alongside the global $DefaultGui gives the function something to fall back to
 when the administrator's value is invalid.
+-----------------------------------------------------------------------------------
+
 
 -----LOGGING TIERS-----
 
@@ -229,7 +232,11 @@ which sends an operator to the wrong file entirely.
   config.php        MINIMUM match. A newer config carrying every required setting is fine.
   Components        EXACT match. See ABOUT_COMPONENTS.txt.
   UI folders        EXACT match. Newer or older may render incorrectly in either direction.
-  Language packs    EXACT match. Same reasoning.
+  Language packs    EXACT match, REPORTED rather than enforced. A match is required for best
+                    practice & for support, but a mismatched pack still runs, with a warning,
+                    over a baseline pack that supplies any string it lacks. The core & the UI
+                    are the security boundary & their pins are enforced. A language pack is
+                    strings.
   Dependencies      MINIMUM match, compared NUMERICALLY, never as strings.
 
 USE compareVersionMinimum() TO COMPARE TWO VERSIONS. IT IS THE ONLY CORRECT WAY.

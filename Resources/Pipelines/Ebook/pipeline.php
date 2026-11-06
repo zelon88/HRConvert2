@@ -12,11 +12,11 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.6.
+// / v4.0.0.
 // / This file is the converter for the Ebook pipeline. It is loaded by pipelineCore.php
-// / ONLY when a Ebook conversion is about to be dispatched to it, so a request that
+// / ONLY when an Ebook conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
-// / Error block 30000 through 30005 belongs to this pipeline. Those numbers came with the code when it
+// / Error block 30000 through 30002 belongs to this pipeline. Those numbers came with the code when it
 // / moved out of convertCore.php & they did not change, because operators have read them.
 // / This pipeline asks for Calibre through verifiedToolPath(), which answers from the
 // / manifest, & calls sandboxCommand() & locateDependency(), which remain in convertCore.php.

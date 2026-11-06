@@ -1,6 +1,19 @@
 #!/bin/bash
 # / -----------------------------------------------------------------------------------
-# / HRConvert2 v3.9.3. Proves the egress design end to end on THIS host.
+# / Copyright Information ...
+# / HRConvert2, Copyright on 9/6/2026 by Justin Grimes, www.github.com/zelon88
+# /
+# / License Information ...
+# / This project is protected by the GNU GPLv3 Open-Source license.
+# / https://www.gnu.org/licenses/gpl-3.0.html
+# /
+# / Application Information ...
+# / This application is designed to provide a web-interface for converting file formats
+# / on a server for users of any web browser without authentication.
+# /
+# / File Information ...
+# / v3.9.3.
+# / This file proves the egress design end to end on THIS host.
 # / Run as the web server account:  sudo -u www-data bash Documentation/Build/hrconvert2-test-egress.sh
 # /
 # / It starts pasta, which gives an unshared namespace an interface, then bwrap, which
@@ -12,6 +25,16 @@
 # / half could not be, because that container could not open a tap device. This script is
 # / how the second half gets proved, & it must pass before sandboxCommand is taught any of
 # / this.
+# /
+# / Hardware Requirements ...
+# / This application requires at least a Raspberry Pi Model B+ or greater.
+# / This application will run on just about any x86 or x64 computer.
+# /
+# / Dependency Requirements ...
+# / This file requires bash, pasta, bubblewrap, nftables & curl.
+# / It is run as the web server account.
+# /
+# / <3 Open-Source
 # / -----------------------------------------------------------------------------------
 set -u
 cd "$(dirname "$0")/../.." || exit 2

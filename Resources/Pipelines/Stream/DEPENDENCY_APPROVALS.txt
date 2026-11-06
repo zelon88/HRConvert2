@@ -1,142 +1,163 @@
-------------------------------------------------------------------------------------------------------------------
-DEPENDENCY APPROVAL RECORD
-The Stream pipeline.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 10/30/2026 by Justin Grimes, www.github.com/zelon88
 
-Written by Documentation/Build/hrconvert2-approvals.py v3.9.7.
-Every factual field is read from the dependency manifest & is rewritten by that tool.
-Every audit answer is written by a person & is kept across a refresh.
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v3.9.7.
+This plain text file is the dependency approval record for the Stream pipeline.
+It is written by Documentation/Build/hrconvert2-approvals.py. Every factual field is read from the dependency manifest & is rewritten by that tool. Every audit answer & every note is written by a person & is kept across a refresh.
 The procedure these questions come from is in Documentation/ABOUT_DEPENDENCIES.txt.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About This Record--
 
 These are the dependencies this pipeline uses. The list is worked out from the
 tools the pipeline asks for by name, from whether it isolates a command, & from the
 subsystem it declares. A pipeline is detachable, so this record travels with it.
-------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Bubblewrap--
 
   Approval record
-    Status                                      ADOPTED
-    Approved on                                 11/04/2026
-    Expires on                                  11/04/2027
-    Audited by                                  Justin Grimes (@zelon88)
-    Audit outcome                               PASSED
-    Notes or Conditions                         Mandatory foundational dependency. Use to isolate every other archive/image parser.
+    Status                                        ADOPTED
+    Approved on                                   11/04/2026
+    Expires on                                    01/01/2027
+    Audited by                                    Justin Grimes (@zelon88)
+    Audit outcome                                 PASSED
+    Notes or Conditions                           Mandatory foundational dependency. Use to isolate every other archive/image parser.
 
   Manifest facts, read from Resources/Contract/depends.php
-    Binary                                      bwrap
-    Install type                                apt
-    Package                                     bubblewrap
-    Minimum version                             0.4
-    Required                                    YES
-    Subsystem                                   Sandbox
-    License                                     LGPL-2.0
-    Depends on                                  -
-    Source                                      https://github.com
-    Purpose                                     Isolates every conversion from the host & the network.
+    Binary                                        bwrap
+    Install type                                  apt
+    Package                                       bubblewrap
+    Minimum version                               0.4
+    Required                                      YES
+    Subsystem                                     Sandbox
+    License                                       LGPL-2.0
+    Depends on                                    -
+    Source                                        https://github.com/containers/bubblewrap
+    Purpose                                       Isolates every conversion from the host & the network.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      Yes. Designed specifically as a minimal, unprivileged attack surface reduction boundary.
-                                                Maintained by Red Hat/GNOME developers with structured disclosure and explicit security modeling.
-                                                Codebase is exceptionally tight, readable, and avoids macro or parsing complexity.
-    1b Recent CVEs, issues or exploits          Extremely clean track record. No high-severity RCE or jailbreak flaws in years.
-                                                CVE-2019-12439 was a minor local info leak due to a temporary file descriptor layout bug.
-                                                Most environment breakout vulnerabilities stem from the underlying Linux kernel namespaces rather than bwrap.
-    1c Development activity & breakage risk     Highly Active / Low Breakage. Maintained continuously under the containers organization on GitHub.
-                                                CLI arguments and core runtime flags are frozen and stable; update regressions are virtually non-existent.
-    1d What it needs to function                Kernel Namespace Support. Relies directly on user, mount, IPC, PID, and net namespace system calls.
-                                                Requires unprivileged user namespaces enabled on the host (user.max_user_namespaces > 0).
-                                                Dynamically links against standard glibc; needs no background daemons or permanent disk writes.
-    1e Can it be sandboxed or isolated          N/A. This is the sandbox controller itself. It is transient and destroys its environment upon exit.
-    1f Security options & hardened configurationMaximal isolation flags must be applied when executing sub-commands: --unshare-all, --uid, --gid,
-                                                --ro-bind for system runtime folders, and explicit --seccomp filters to drop dangerous syscall architectures.
-    1g Could another dependency do this better  No. It is the gold standard for rapid, unprivileged, daemonless command sandboxing on Linux.
-                                                Alternative tools like Minijail lack the widespread distro adoption, while Podman/Docker bring major daemon overhead.
-    1h Origin & supply chain risk               Very Low Risk. Maintained by primary enterprise Linux contributors (Fedora, Red Hat, SUSE).
-                                                Distributed with cryptographic tag signatures and heavily scrutinized open-source review pipelines.
-    1i Dependency traps for existing installs   The Setuid Trap. If the target host kernel disables unprivileged user namespaces by default, 
-                                                bwrap requires a root-owned setuid bit to function, expanding the local attack surface if misconfigured.
-    2a System package versus a source build     System Package Preferred. The distribution-provided package is kept patched, stable, 
-                                                and correctly mapped to the underlying platform's specific namespace permissions.
-    2b Build flags, libraries & features        Standard hardened compile blocks. Ensure libseccomp filtering is explicitly compiled in (--enable-seccomp).
-    2c Minimum version & version edge cases     Strictly 0.4.0+ as defined by the manifest, though 0.8.0+ is strongly recommended to support modernized flags.
-    2d Licensing implications of the build      LGPL-2.0 is highly amenable. Safe for commercial and internal utility wrapping without copyleft traps.
-    3a Distribution method                      Native package repositories (apt) and official GitHub source releases.
-    3b Download source used                     Upstream GitHub assets or native distribution mirrors.
-    3c How an installer obtains this version    Standard automated package management fetch (apt-get install -y bubblewrap).
-    3d Inspection of any bundled binary or code Inspection Practical. Clean, straightforward, minimal C files without obfuscation or macro masking.
-    3e Sanity check of the build system         Fully automated via native continuous integration testing suites embedded in the upstream source.
-    3f Build script provided                    No. Managed safely via the native OS package controller.
+    1a Security design is amenable to ours        Yes. Designed specifically as a minimal, unprivileged attack surface reduction boundary.
+                                                  Maintained by Red Hat/GNOME developers with structured disclosure and explicit security modeling.
+                                                  Codebase is exceptionally tight, readable, and avoids macro or parsing complexity.
+    1b Recent CVEs, issues or exploits            Extremely clean track record. No high-severity RCE or jailbreak flaws in years.
+                                                  CVE-2019-12439 was a minor local info leak due to a temporary file descriptor layout bug.
+                                                  Most environment breakout vulnerabilities stem from the underlying Linux kernel namespaces rather than bwrap.
+    1c Development activity & breakage risk       Highly Active / Low Breakage. Maintained continuously under the containers organization on GitHub.
+                                                  CLI arguments and core runtime flags are frozen and stable; update regressions are virtually non-existent.
+    1d What it needs to function                  Kernel Namespace Support. Relies directly on user, mount, IPC, PID, and net namespace system calls.
+                                                  Requires unprivileged user namespaces enabled on the host (user.max_user_namespaces > 0).
+                                                  Dynamically links against standard glibc; needs no background daemons or permanent disk writes.
+    1e Can it be sandboxed or isolated            N/A. This is the sandbox controller itself. It is transient and destroys its environment upon exit.
+    1f Security options & hardened configuration  Maximal isolation flags must be applied when executing sub-commands: --unshare-all, --uid, --gid,
+                                                  --ro-bind for system runtime folders, and explicit --seccomp filters to drop dangerous syscall architectures.
+    1g Could another dependency do this better    No. It is the gold standard for rapid, unprivileged, daemonless command sandboxing on Linux.
+                                                  Alternative tools like Minijail lack the widespread distro adoption, while Podman/Docker bring major daemon overhead.
+    1h Origin & supply chain risk                 Very Low Risk. Maintained by primary enterprise Linux contributors (Fedora, Red Hat, SUSE).
+                                                  Distributed with cryptographic tag signatures and heavily scrutinized open-source review pipelines.
+    1i Dependency traps for existing installs     The Setuid Trap. If the target host kernel disables unprivileged user namespaces by default,
+                                                  bwrap requires a root-owned setuid bit to function, expanding the local attack surface if misconfigured.
+    2a System package versus a source build       System Package Preferred. The distribution-provided package is kept patched, stable,
+                                                  and correctly mapped to the underlying platform's specific namespace permissions.
+    2b Build flags, libraries & features          Standard hardened compile blocks. Ensure libseccomp filtering is explicitly compiled in (--enable-seccomp).
+    2c Minimum version & version edge cases       Strictly 0.4.0+ as defined by the manifest, though 0.8.0+ is strongly recommended to support modernized flags.
+    2d Licensing implications of the build        LGPL-2.0 is highly amenable. Safe for commercial and internal utility wrapping without copyleft traps.
+    3a Distribution method                        Native package repositories (apt) and official GitHub source releases.
+    3b Download source used                       Upstream GitHub assets or native distribution mirrors.
+    3c How an installer obtains this version      Standard automated package management fetch (apt-get install -y bubblewrap).
+    3d Inspection of any bundled binary or code   Inspection Practical. Clean, straightforward, minimal C files without obfuscation or macro masking.
+    3e Sanity check of the build system           Fully automated via native continuous integration testing suites embedded in the upstream source.
+    3f Build script provided                      No. Managed safely via the native OS package controller.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-------------------------------------------------------------------------------------------------------------------
-
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --FFMPEG--
 
   Approval record
-    Status                                      ADOPTED
-    Approved on                                 11/04/2026
-    Expires on                                  11/04/2027
-    Audited by                                  Justin Grimes (@zelon88)
-    Audit outcome                               PASSED WITH CONDITIONS
-    Notes or Conditions                         Must be compiled from source using included build infrastructure and strict attack-surface reduction flags.
-                                                Never execute without Bubblewrap wrapper.
+    Status                                        ADOPTED
+    Approved on                                   11/04/2026
+    Expires on                                    01/01/2027
+    Audited by                                    Justin Grimes (@zelon88)
+    Audit outcome                                 PASSED WITH CONDITIONS
+    Notes or Conditions                           Must be compiled from source using included build infrastructure and strict attack-surface reduction flags.
+                                                  Never execute without Bubblewrap wrapper.
 
   Manifest facts, read from Resources/Contract/depends.php
-    Binary                                      ffmpeg
-    Install type                                source
-    Package                                     -
-    Minimum version                             6.1
-    Required                                    NO
-    Subsystem                                   Audio, Video & Streams
-    License                                     LGPL-2.1
-    Depends on                                  Bubblewrap
-    Source                                      https://ffmpeg.org
-    Purpose                                     Converts audio, video, subtitles & captures streams.
+    Binary                                        ffmpeg
+    Install type                                  source
+    Package                                       -
+    Minimum version                               6.1
+    Required                                      NO
+    Subsystem                                     Audio, Video & Streams
+    License                                       LGPL-2.1
+    Depends on                                    Bubblewrap
+    Source                                        https://ffmpeg.org
+    Purpose                                       Converts audio, video, subtitles & captures streams.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      No. FFmpeg is a massive multimedia processing framework consisting of hundreds of legacy C and assembly demuxers.
-                                                It handles highly unpredictable, complex, and untrusted binary formats. While the community patches flaws rapidly,
-                                                the sheer size of the processing code means it cannot be trusted outside a robust runtime sandbox boundary.
-    1b Recent CVEs, issues or exploits          High Risk / Constant Fuzzing Target. As a premier target for security researchers, new vulnerabilities are mapped regularly.
-                                                Vulnerabilities such as CVE-2024-32230 and CVE-2023-47041 involve heap buffer overflows, out-of-bounds reads,
-                                                and calculation errors inside complex container demuxers. Malformed files can cause memory corruption or code execution.
-    1c Development activity & breakage risk     Highly Active / Moderate Breakage Risk. FFmpeg is maintained aggressively with multiple major releases yearly.
-                                                While common conversion flags are backward compatible, moving between major release tiers (like 5.x to 6.x) can deprecate
-                                                or alter strict filter syntax, necessitating validation of the internal HRConvert2 execution strings.
-    1d What it needs to function                Compute Intensive / Local Workspace. Requires massive CPU threading and memory allocation for heavy video decoding.
-                                                Requires direct read/write file system privileges to process media files and write transient chunks.
-                                                Links to system glibc paths and codec libraries but runs completely as a stateless console application.
-    1e Can it be sandboxed or isolated          Highly Amenable. Transcoding is a purely mathematical, deterministic process. Because it is configured to depend on Bubblewrap,
-                                                it can be completely denied host networking, IPC, and system filesystem paths, interacting only with the conversion directory.
-    1f Security options & hardened configurationExcellent via source-build control. We can explicitly disable network protocols at compile time.
-                                                At runtime, HRConvert2 invocation strings must include `-nostdin` to block terminal escape vectors, and lock down protocols
-                                                using the `-protocol_whitelist file,pipe` command-line argument.
-    1g Could another dependency do this better  No. For broad audio, video, and subtitle translation, FFmpeg is functionally unmatched.
-                                                Alternative libraries are specialized to single formats. The cross-format transcoding requirements of HRConvert2
-                                                make FFmpeg mandatory; risk must be mitigated via compilation hardening and Bubblewrap isolation.
-    1h Origin & supply chain risk               Low-Medium Risk. Maintained by a distributed global community of highly transparent open-source engineers.
-                                                Source tarballs are cryptographically signed and hosted via Git on official infrastructure.
-                                                Risk shifts to our local build system to verify hashes before initiating compilation.
-    1i Dependency traps for existing installs   The Protocol and Network Exploit Trap. If compiled with default options, FFmpeg includes network protocol handlers (HLS, RTSP).
-                                                A maliciously crafted user-uploaded playlist file (.m3u8) can trigger Server-Side Request Forgery (SSRF) or force the binary
-                                                to read and leak local files. Compilation must explicitly strip network functions out.
-    2a System package versus a source build     Source Build Mandatory. As specified by the manifest, we bypass the bloated distro binaries.
-                                                Compiling from source allows the pipeline to explicitly strip hundreds of legacy, unused codecs and protocols,
-                                                minimizing the compiled binary's binary attack footprint to only the core features required by HRConvert2.
-    2b Build flags, libraries & features        Mandatory Hardening & Stripping Flags. The configure script must be passed: `--disable-network`, `--disable-ffplay`,
-                                                and `--disable-debug`. Force standard fortification flags into the compiler:
+    1a Security design is amenable to ours        No. FFmpeg is a massive multimedia processing framework consisting of hundreds of legacy C and assembly demuxers.
+                                                  It handles highly unpredictable, complex, and untrusted binary formats. While the community patches flaws rapidly,
+                                                  the sheer size of the processing code means it cannot be trusted outside a robust runtime sandbox boundary.
+    1b Recent CVEs, issues or exploits            High Risk / Constant Fuzzing Target. As a premier target for security researchers, new vulnerabilities are mapped regularly.
+                                                  Vulnerabilities such as CVE-2024-32230 and CVE-2023-47041 involve heap buffer overflows, out-of-bounds reads,
+                                                  and calculation errors inside complex container demuxers. Malformed files can cause memory corruption or code execution.
+    1c Development activity & breakage risk       Highly Active / Moderate Breakage Risk. FFmpeg is maintained aggressively with multiple major releases yearly.
+                                                  While common conversion flags are backward compatible, moving between major release tiers (like 5.x to 6.x) can deprecate
+                                                  or alter strict filter syntax, necessitating validation of the internal HRConvert2 execution strings.
+    1d What it needs to function                  Compute Intensive / Local Workspace. Requires massive CPU threading and memory allocation for heavy video decoding.
+                                                  Requires direct read/write file system privileges to process media files and write transient chunks.
+                                                  Links to system glibc paths and codec libraries but runs completely as a stateless console application.
+    1e Can it be sandboxed or isolated            Highly Amenable. Transcoding is a purely mathematical, deterministic process. Because it is configured to depend on Bubblewrap,
+                                                  it can be completely denied host networking, IPC, and system filesystem paths, interacting only with the conversion directory.
+    1f Security options & hardened configuration  Excellent via source-build control. We can explicitly disable network protocols at compile time.
+                                                  At runtime, HRConvert2 invocation strings must include `-nostdin` to block terminal escape vectors, and lock down protocols
+                                                  using the `-protocol_whitelist file,pipe` command-line argument.
+    1g Could another dependency do this better    No. For broad audio, video, and subtitle translation, FFmpeg is functionally unmatched.
+                                                  Alternative libraries are specialized to single formats. The cross-format transcoding requirements of HRConvert2
+                                                  make FFmpeg mandatory; risk must be mitigated via compilation hardening and Bubblewrap isolation.
+    1h Origin & supply chain risk                 Low-Medium Risk. Maintained by a distributed global community of highly transparent open-source engineers.
+                                                  Source tarballs are cryptographically signed and hosted via Git on official infrastructure.
+                                                  Risk shifts to our local build system to verify hashes before initiating compilation.
+    1i Dependency traps for existing installs     The Protocol and Network Exploit Trap. If compiled with default options, FFmpeg includes network protocol handlers (HLS, RTSP).
+                                                  A maliciously crafted user-uploaded playlist file (.m3u8) can trigger Server-Side Request Forgery (SSRF) or force the binary
+                                                  to read and leak local files. Compilation must explicitly strip network functions out.
+    2a System package versus a source build       Source Build Mandatory. As specified by the manifest, we bypass the bloated distro binaries.
+                                                  Compiling from source allows the pipeline to explicitly strip hundreds of legacy, unused codecs and protocols,
+                                                  minimizing the compiled binary's binary attack footprint to only the core features required by HRConvert2.
+    2b Build flags, libraries & features          Mandatory Hardening & Stripping Flags. The configure script must be passed: `--disable-network`, `--disable-ffplay`,
+                                                  and `--disable-debug`. Force standard fortification flags into the compiler:
                                                   --extra-cflags="-D_FORTIFY_SOURCE=3 -fstack-protector-strong -fPIE" --extra-ldflags="-pie -Wl,-z,relro,-z,now"
-    2c Minimum version & version edge cases     Strictly 6.1+. Do not allow compilation of legacy branches (4.x/5.x) to ensure modern internal API validation safety gates,
-                                                strict multi-threading bounds checks, and support for modern underlying media format layouts are present.
-    2d Licensing implications of the build      Strictly LGPL-2.1 compliant. The manifest restricts the build to LGPL, meaning we must avoid passing `--enable-gpl`
-                                                or enabling non-free external libraries (like libx264 or libx265) during the compilation stage.
-                                                This makes the resulting binary completely safe for commercial distribution and free of copyleft infection risks.
-    3a Distribution method                      Source archives (tar.xz) distributed directly through the official cryptographic ffmpeg.org release portal.
-    3b Download source used                     Upstream release servers (https://ffmpeg.org).
-    3c How an installer obtains this version    The pipeline build system pulls the specified source tarball via curl/wget, validates the checksum,
-                                                and runs the local custom configuration and compilation sequences.
-    3d Inspection of any bundled binary or code Inspection Impractical. Sprawling multi-million line codebase combining advanced vector mathematics,
-                                                highly compressed media macros, and hardware-specific inline assembly code blocks.
-    3e Sanity check of the build system         Required, Included. The source includes a comprehensive automated test framework (`make fate`) to validate compiler safety.
-    3f Build script provided                    Yes. See the customized hardening build block for the deployment pipeline script.
-
-------------------------------------------------------------------------------------------------------------------
+    2c Minimum version & version edge cases       Strictly 6.1+. Do not allow compilation of legacy branches (4.x/5.x) to ensure modern internal API validation safety gates,
+                                                  strict multi-threading bounds checks, and support for modern underlying media format layouts are present.
+    2d Licensing implications of the build        Strictly LGPL-2.1 compliant. The manifest restricts the build to LGPL, meaning we must avoid passing `--enable-gpl`
+                                                  or enabling non-free external libraries (like libx264 or libx265) during the compilation stage.
+                                                  This makes the resulting binary completely safe for commercial distribution and free of copyleft infection risks.
+    3a Distribution method                        Source archives (tar.xz) distributed directly through the official cryptographic ffmpeg.org release portal.
+    3b Download source used                       Upstream release servers (https://ffmpeg.org).
+    3c How an installer obtains this version      The pipeline build system pulls the specified source tarball via curl/wget, validates the checksum,
+                                                  and runs the local custom configuration and compilation sequences.
+    3d Inspection of any bundled binary or code   Inspection Impractical. Sprawling multi-million line codebase combining advanced vector mathematics,
+                                                  highly compressed media macros, and hardware-specific inline assembly code blocks.
+    3e Sanity check of the build system           Required, Included. The source includes a comprehensive automated test framework (`make fate`) to validate compiler safety.
+    3f Build script provided                      Yes. See the customized hardening build block for the deployment pipeline script.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.9.3.
+// / v4.0.0.
 // / The Files pipeline. Operations on a file that do not care what is inside it.
 // /
 // / THE FIRST PIPELINE OF KIND file. Deleting, listing & moving a file is the same work
@@ -28,7 +28,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The version this pipeline reports. Pinned in getAcceptedPipelines.
-$PipelineVersion = 'v3.9.3';
+$PipelineVersion = 'v4.0.0';
 
 // / What this pipeline does. A file operation rather than a conversion or a scan.
 $PipelineKind = 'file';

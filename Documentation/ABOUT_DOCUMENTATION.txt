@@ -7,23 +7,21 @@ This project is protected by the GNU GPLv3 Open-Source license.
 https://www.gnu.org/licenses/gpl-3.0.html
 
 APPLICATION INFORMATION ...
-This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
 
 FILE INFORMATION ...
 v3.7.0.
 This plain text file describes the strict repository documentation paradigm, the dual-flavor format strategy, and standard file layout specifications.
 
-HARDWARE REQUIREMENTS ... 
-This application requires at least a Raspberry Pi Model B+ or greater. 
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
-DEPENDENCY REQUIREMENTS ... 
+DEPENDENCY REQUIREMENTS ...
 The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About The Documentation Paradigm--
@@ -34,8 +32,6 @@ Every core administrative subject must be fully detailed using a matching pair o
 
 The framework enforces an absolute segregation between raw technical mechanics and user-facing instructional content.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --The Plain Text File Flavor--
@@ -49,8 +45,6 @@ Each text file acts as a rigid, uniform, and hyper-concise engineering specifica
 Every informational statement must be direct, containing nothing but explicit technical facts, definitions, or instructions.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
-
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --The Markdown File Flavor--
 
@@ -61,4 +55,45 @@ These files transform the strict engineering data from the text version into a h
 The styling resembles a premium, colorful user manual that adds clear aesthetic value for hobbyists who enjoy interacting with it.
 
 The layout heavily leverages markdown tables, clear bullet structures, visual warning blocks, bold text anchors, and color.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Plain Text File Layout--
+
+Every plain text file opens with the same header, between two rules of 160 dashes.
+
+  COPYRIGHT INFORMATION ...      The application, the date the file was created & the author.
+  LICENSE INFORMATION ...        The license & where to read it.
+  APPLICATION INFORMATION ...    What the application is.
+  FILE INFORMATION ...           The version of the file, then what the file is for.
+  HARDWARE REQUIREMENTS ...      What the application runs on.
+  DEPENDENCY REQUIREMENTS ...    What the subject of the file needs.
+  <3 Open-Source                 The last line before the closing rule.
+
+Each block is its label, the lines under it & one blank line. Nothing else goes inside the
+header, & a section placed there splits it in two where nobody reading it will look.
+
+Every section after the header is an opening rule, a title between two pairs of dashes, a
+blank line, the body & a closing rule. One blank line separates a closing rule from the next
+opening rule.
+
+  ----------------------------------------...
+  --About The Subject--
+
+  The body of the section.
+  ----------------------------------------...
+
+A title names one subject & is written in title case. A subject too large for one section
+is two sections, never a title inside another section's body. A subheading is written the
+same way in sentence case & may sit inside a body. The case is the only thing that tells a
+reader, or a checker, which of the two a line is.
+
+The version in FILE INFORMATION is changed by the maintainer & by nothing else.
+
+Older files use rules of 83 dashes & titles written as -----TITLE-----. That is an older
+style rather than a defect, & those files keep it.
+
+Documentation/Build/hrconvert2-doccheck.py holds every plain text file to this layout & holds
+ERROR_DESCRIPTIONS.txt to its own. Run it from the installation root after changing a
+document. ABOUT_QUALITY_CONTROL.txt says what it checks & what it cannot see.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

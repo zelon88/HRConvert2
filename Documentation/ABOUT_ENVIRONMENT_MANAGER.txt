@@ -27,8 +27,8 @@ systemd for the timer. Nothing else. It refuses to run without root.
 --About The Problem It Solves--
 
 EVERYTHING THAT CAN REPAIR THIS INSTALLATION NEEDS ROOT, & NOTHING THAT RUNS NEEDS ROOT.
-The web server runs as www-data. The listener & its four managers run as www-data. That is
-deliberate & is most of why a compromised dependency achieves so little.
+The web server runs as www-data. The four managers that make up the listener run as
+www-data. That is deliberate & is most of why a compromised dependency achieves so little.
 
 The cost is that a drifted AppArmor profile, a kernel setting somebody changed, a
 permission that moved, or a php.ini a distribution upgrade replaced can all be SEEN by the

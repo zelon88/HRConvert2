@@ -35,17 +35,18 @@ A COMPONENT ADDS A CAPABILITY. IT IS NEVER LOAD BEARING FOR CONVERSION.
 Every component can be deleted from an installation & every conversion still works. What is
 lost is the capability that component provides, & the loss is reported rather than silent.
 
-  Resources/Engine/Managers/coreManager.php                     Resource awareness & the listener.
-  Resources/Engine/Cores/setupCore.php             Installation & configuration.
+  Resources/Engine/Managers/coreManager.php   Resource awareness & the listener.
+  Resources/Engine/Cores/setupCore.php        Installation & configuration.
   Resources/Engine/Cores/dependencyCore.php   Dependency management & the supply chain audit.
   Resources/Engine/Cores/pipelineCore.php     Pipeline verification & dispatch.
 
-Each core lives in a folder of its own, the same way ScanCore does. Configuration files do
-not. config.php, depends.php & versionInfo.php stay in Resources beside each other, because
-a configuration file is data an administrator edits & is not part of a component.
+Each Core lives in Resources/Engine/Cores, because a Core is part of the Engine. Configuration
+files do not. config.php & versionInfo.php stay in Resources, & depends.php lives in
+Resources/Contract with everything else the application tells the Engine, because a
+configuration file is data & is not part of a component.
 
-coreManager.php has not moved into a folder & keeps its name for historical reasons. It is
-a Core by every test in this document.
+coreManager.php keeps its name for historical reasons. It lives with the other three manager
+roles in Resources/Engine/Managers & is pinned by the Engine rather than by the core.
 
 TWO KINDS OF THING LIVE UNDER Resources/Pipelines & NEITHER IS A CORE.
 
@@ -93,9 +94,10 @@ FOUR PROPERTIES SEPARATE A CORE FROM ANYTHING ELSE IN THIS APPLICATION.
 
 A CORE IS NOT A MANAGER, & THE WORD MANAGER MEANS SOMETHING ELSE IN THIS APPLICATION.
 A Core is a file that is loaded. A manager is a role a long lived process runs under, with
-a socket, a supervisor & a place in a budget. Core Manager is the Core that starts them.
-core-manager, resource-manager, worker-manager & request-manager are the managers, & none
-of those is a file. See ABOUT_MANAGERS.txt.
+a socket, a supervisor & a place in a budget. Core Manager is the role that starts the rest.
+core-manager, resource-manager, worker-manager & request-manager are the managers, & each has
+a file under Resources/Engine/Managers that only a process running as that role loads. See
+ABOUT_MANAGERS.txt.
 
 That distinction decides what moves when this machinery is shared with another application.
 The managers have nothing to do with converting files & would serve a virus scanner or a
@@ -165,13 +167,13 @@ one function is what surfaced that bug.
 NOT AT BOOT. ON DEMAND, BY WHATEVER NEEDS IT.
 
 A web request never installs, configures or manages dependencies, so it never pays to read a
-component it will not call. Only the Core Manager is resolved during verifyInstallation, &
-only because resource awareness affects a conversion.
+component it will not call. Only the Engine & Pipeline Core are resolved on every request.
 
-  coreManager.php        Resolved during verifyInstallation when resource awareness is on.
-  setupCore.php          Loaded by --config, & by -fp when it installs the service unit.
-  dependencyCore.php     Loaded by --setup.
+  engine.php             Resolved in the main logic, before verifyGlobals().
   pipelineCore.php       Resolved in the main logic, directly after verifyGlobals().
+  setupCore.php          Loaded by --config, & by -fp for resource limits & the service unit.
+  dependencyCore.php     Loaded by --setup.
+  Managers/<role>.php    Loaded by loadEngineManager, only in a process running as that role.
 
 PIPELINE CORE IS THE EXCEPTION TO ON DEMAND & THE REASON IS ORDERING.
 It is resolved on every request that could convert something, because a conversion cannot
@@ -189,11 +191,12 @@ did by loading Setup Core before every --setup option.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About Version Pins--
 
-TEN PINS. EVERY ONE OF THEM IS AN EXACT MATCH EXCEPT WHERE NOTED.
+ELEVEN PINS. EVERY ONE OF THEM IS AN EXACT MATCH EXCEPT WHERE NOTED.
 
   $RequiredConfigVersion           config.php                    MINIMUM. A newer config carrying
                                                                  every required setting is fine.
-  $RequiredCoreManagerVersion      coreManager.php               EXACT.
+  $RequiredKernelVersion           Resources/Kernel/kernel.php   EXACT.
+  $RequiredEngineVersion           engine.php                    EXACT.
   $RequiredSetupCoreVersion        setupCore.php                 EXACT.
   $RequiredDependencyCoreVersion   dependencyCore.php            EXACT.
   $RequiredPipelineCoreVersion     pipelineCore.php              EXACT.
@@ -202,6 +205,9 @@ TEN PINS. EVERY ONE OF THEM IS AN EXACT MATCH EXCEPT WHERE NOTED.
   $RequiredGuiVersion              every UI folder               EXACT.
   $RequiredLanguageVersion         every language pack           EXACT.
   $RequiredConfigScript            the bootstrap script          EXACT.
+
+The Engine pins its own manager roles in getAcceptedManagers, so a manager is judged by the
+Engine that runs it rather than by the core.
 
 Pipeline Core checks a pin for every pipeline & every shared module the application accepts.
 The pins are the application's & are set in Resources/Contract/app-engine-config.php, as
@@ -235,13 +241,16 @@ that report is the only place the loss becomes visible.
 
 THE CORE DEGRADES. IT DOES NOT BREAK.
 
+  No Engine             A web request is refused with 28005, a sentence rather than a blank
+                        page. -v & -h still work, & -v names what failed.
   No Core Manager       Conversions run without resource awareness. Every budget request is
                         approved by default. --status, -l & -k report the component missing.
   No Setup Core         --config refuses & explains why. Everything else is unaffected.
   No Dependency Core    --setup refuses & explains why. Conversions are unaffected.
                         Capability detection is unavailable & declared formats are trusted.
-  No Pipeline Core      NO CONVERSION RUNS AT ALL. Uploading, downloading, deleting &
-                        virus scanning continue. Every conversion family reports 34005.
+  No Pipeline Core      NO CONVERSION RUNS AT ALL, & neither does an upload, a delete or
+                        a virus scan, because the Files & scanner pipelines are loaded
+                        by it. The page is still served & -v names the cause.
                         This is the one component whose absence is not a partial loss,
                         because convertCore.php stopped converting anything itself once
                         the last family moved out of it.
@@ -279,7 +288,7 @@ later replaced with a matching version is re-enabled on the next sweep.
 
 Five things, in this order.
 
-  1  Create Resources/YourCore/yourCore.php.
+  1  Create Resources/Engine/Cores/yourCore.php.
   2  Open it with the $CoreLoaded guard, copied from any existing component.
   3  Declare $YourCoreVersion near the top, where it can be seen.
   4  Add $RequiredYourCoreVersion to verifyInstallation, with a comment saying what raises it.

@@ -7,23 +7,21 @@ This project is protected by the GNU GPLv3 Open-Source license.
 https://www.gnu.org/licenses/gpl-3.0.html
 
 APPLICATION INFORMATION ...
-This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
 
 FILE INFORMATION ...
 v3.7.0.
 This plain text file describes how HRConvert2 creates bootable ISO filesystem images & handles architecture targets.
 
-HARDWARE REQUIREMENTS ... 
-This application requires at least a Raspberry Pi Model B+ or greater. 
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
-DEPENDENCY REQUIREMENTS ... 
+DEPENDENCY REQUIREMENTS ...
 The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About Bootable ISO Image Creation--
@@ -39,8 +37,6 @@ the filename to a pure standard .iso extension, and builds a boot-compatible ins
 By passing intent via file path naming structures, the state of the conversion remains standalone. The core application logic automatically drops the
 suffix tag immediately after processing, allowing downstream storage and execution procedures to complete without trailing extension artifacts.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --The Bootloader Injection Pipeline--

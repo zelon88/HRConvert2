@@ -143,11 +143,18 @@ A pipeline is detachable. Somebody can copy one into another installation, so th
 what it depends on & whether anybody has ever examined those dependencies has to travel with
 it. A central list would be left behind.
 
-Each record holds, for every dependency.
+Each record opens with the same file header as every other document, then says what it
+covers, then holds a section for every dependency.
 
-  An approval block        Status, approved on, expires on, audited by & the outcome.
+  An approval block        Status, approved on, expires on, audited by, the outcome, & any
+                           notes or conditions the approval was given under.
   The manifest facts       Copied from depends.php. License, source, minimum version & the rest.
   The audit answers        One line per question the audit procedure below asks.
+
+A NOTE OR CONDITION MAY RUN OVER SEVERAL LINES. Write the first line beside the label & indent
+each line after it to the same column. A refresh keeps every line. A condition is anything the
+approval depends on, such as a configuration it was approved under or an event that must
+trigger a fresh audit.
 
 The second block is a copy, so it can go stale. It is rewritten from the manifest by a tool
 rather than by hand.
@@ -161,8 +168,13 @@ It writes the questions & leaves them unanswered. An answer is a judgement a per
 is the only part of the record worth anything. A refresh keeps every answer already written,
 so running it after a manifest change is safe.
 
-A date is written as YYYY-MM-DD, because --check has to compare it against the calendar & a
-date nobody can parse cannot be checked. An unparseable date is reported rather than ignored.
+A date is written as M/D/YYYY, the way the changelog writes one, or as YYYY-MM-DD. A date with
+slashes is always read month first. --check has to compare a date against the calendar & a date
+nobody can parse cannot be checked, so an unparseable date is reported rather than ignored.
+--check also reports an audited dependency that leaves Approved on, Expires on or Audited by
+empty, & a single line field that runs onto a second line, which usually means a label below
+it was deleted. An expiry on any day but 1 January of the year after approval is reported
+too, because every dependency comes up for audit together.
 
 WHICH DEPENDENCIES A PIPELINE'S RECORD COVERS.
 The tool works it out from three places, because no single one is complete. It reads the names
@@ -205,8 +217,8 @@ does not disable a conversion type. It stops the application.
   4. Add or update the entry in Resources/Contract/depends.php.
   5. Run the approvals tool so the record carries the new facts.
     5a. python3 Documentation/Build/hrconvert2-approvals.py --refresh
-    5b. Fill in Status, Approved on, Expires on & Audited by.
-    5c. Expires on is 1 January of the year after approval.
+    5b. Fill in Status, Approved on, Expires on & Audited by, & any Notes or Conditions.
+    5c. Expires on is 1 January of the year after approval. --check holds every record to it.
   6. Update SUPPLY_CHAIN_AUDIT_<YEAR>.xlsx, the Dockerfile & INSTALLATION_INSTRUCTIONS.txt.
   7. Update CHANGELOG.txt.
   8. The dependency is 'Adopted'.

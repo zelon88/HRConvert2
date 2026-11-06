@@ -12,11 +12,12 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.7.
+// / v4.0.0.
 // / This file is the converter for the Archive pipeline. It is loaded by pipelineCore.php
-// / ONLY when a Archive conversion is about to be dispatched to it, so a request that
+// / ONLY when an Archive conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
-// / Error block 24000 through 24010 belongs to this pipeline. Those numbers came with the code when it
+// / Error blocks 13000 through 13014 & 13105 through 13107 belong to this pipeline, except
+// / 13012, which archiveFiles() raises. Those numbers came with the code when it
 // / moved out of convertCore.php & they did not change, because operators have read them.
 // / verifyIsoBootloaders() & generateBootableIsoCommand() MOVED HERE WITH THE CONVERTER,
 // / because convertCore.php had no other caller for either of them.

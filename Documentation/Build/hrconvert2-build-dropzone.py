@@ -1,6 +1,19 @@
 # / -----------------------------------------------------------------------------------
-# / HRConvert2 v3.9.3. Bundles the Dropzone source into the single script this application
-# / loads. Run it from the installation root with the source tree beside it:
+# / Copyright Information ...
+# / HRConvert2, Copyright on 9/7/2026 by Justin Grimes, www.github.com/zelon88
+# /
+# / License Information ...
+# / This project is protected by the GNU GPLv3 Open-Source license.
+# / https://www.gnu.org/licenses/gpl-3.0.html
+# /
+# / Application Information ...
+# / This application is designed to provide a web-interface for converting file formats
+# / on a server for users of any web browser without authentication.
+# /
+# / File Information ...
+# / v3.9.3.
+# / This file bundles the Dropzone source into the single script this application loads.
+# / Run it from the installation root with the source tree beside it:
 # /   python3 Documentation/Build/hrconvert2-build-dropzone.py
 # / Then copy the result over UI/<pack>/Resources/JS/dropzone.js in every interface.
 # /
@@ -16,6 +29,15 @@
 # / emits is already styled by the bundled dropzone.css, which was checked rather than
 # / assumed. Version 6 ships .scss & compiling it would need a toolchain this build does not
 # / have & does not want.
+# /
+# / Hardware Requirements ...
+# / This application requires at least a Raspberry Pi Model B+ or greater.
+# / This application will run on just about any x86 or x64 computer.
+# /
+# / Dependency Requirements ...
+# / This file requires Python 3 & the Dropzone source tree beside the installation root.
+# /
+# / <3 Open-Source
 # / -----------------------------------------------------------------------------------
 import re, os
 S='/tmp/dz/Downloads/AV/dropzone-6.2.0/src'

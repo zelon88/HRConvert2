@@ -165,7 +165,8 @@ that has somewhere to be written.
 The Engine may call logEntry, warningEntry, errorEntry & quickDie freely.
 The kernel is the substrate both the Engine & the application stand on, & it is byte
 identical in every application, so an Engine calling it is not coupled to any one of them.
-See Documentation/ABOUT_ENGINE_CONTRACT.txt for the full list of kernel services.
+The kernel services are whatever Resources/Kernel/kernel.php defines, &
+Documentation/ABOUT_ENGINE_CONTRACT.txt explains why that file is the only list.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -176,6 +177,7 @@ verifyLogs() advances the increment in the filename until it finds one under tha
 A rotation therefore happens at the start of a request rather than in the middle of one.
 No entry is ever split across two files.
 
-ClamAV writes its own log & is rotated the same way by the same function.
-It is named rather than created there, because ClamAV creates it when it first scans.
+The scanner pipelines report through the application log, & a user requested scan writes its
+own report into the session. verifyLogs() also named & rotated a ClamLog file until v4.0.0,
+which nothing had written since ClamAV moved into its pipeline.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

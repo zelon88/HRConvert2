@@ -1,0 +1,92 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 11/5/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v4.0.0.
+This plain text file is the security policy. It says which releases receive security fixes, how to report a vulnerability & how a reporter is credited.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Supported Versions--
+
+Security fixes are made for three things & nothing else.
+
+  The latest tagged release      The newest vX.Y.Z tag. php convertCore.php -u installs it when --Automatic Update Target Version-- is 'latest'.
+  The latest Docker image        zelon88/hrconvert2:latest, which is published from the latest tagged release.
+  Bleeding Edge                  The master branch. An update installs it when --Automatic Update Target Version-- is 'edge'.
+
+Every older tagged release is unsupported. A fix is never backported to one. Update to the latest tagged release to receive it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Reporting A Vulnerability--
+
+Report a vulnerability privately, through GitHub.
+
+  1. Open the Security tab of https://github.com/zelon88/HRConvert2.
+  2. Choose Report a vulnerability.
+  3. Describe the vulnerability in the private advisory that opens. Only the maintainer & the reporter can read it.
+
+Never report a vulnerability in a public issue, pull request or discussion. A public report puts every installation at risk before a fix exists.
+
+Every report is accepted & read, whatever its severity, & whether or not it carries a proof of concept.
+Every part of this repository is covered. That includes the core, the Engine, the pipelines, the bundled ScanCore, the GUIs, the language packs, the Docker image, the build scripts & the documentation.
+A vulnerability in a third party dependency is covered too when HRConvert2 is how it is reached. Report it upstream as well.
+
+A useful report says the following.
+  1. Which supported version it affects. A tag, the latest Docker image or a commit on master.
+  2. The output of  php convertCore.php -v  from the affected installation, where there is one.
+  3. The configuration settings involved, by their labels in config.php.
+  4. The steps that reproduce it, & a proof of concept if there is one.
+  5. What an attacker gains.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--How A Report Is Handled--
+
+  1. The report is acknowledged in its private advisory.
+  2. It is reproduced against every supported version.
+  3. A fix is made on Bleeding Edge & ships in the next tagged release & the latest Docker image.
+  4. The advisory is published once the fix has shipped. CHANGELOG.txt records the fix with the advisory's GHSA number.
+
+Nothing about a vulnerability is made public before it is patched.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Credit--
+
+Every reporter is credited publicly once the vulnerability is patched.
+Credit is given in the published advisory & in CHANGELOG.txt, under the name or handle the reporter chooses.
+A reporter who asks not to be named is not named.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Security Model--
+
+The sandbox is the security boundary. Every dependency that parses an uploaded file is assumed to be exploitable, so it runs inside bubblewrap with no network.
+Sanitizers, filters & lint checks are convenience layers. They are never relied on as a boundary.
+A way past a convenience layer is still a vulnerability & is still credited, even when the sandbox contains it.
+
+These documents describe the protections in detail.
+  ABOUT_NETWORK_ISOLATION.txt          How a conversion is kept off the network.
+  ABOUT_SCAD_SANITIZATION.txt          How an uploaded OpenSCAD source is rewritten before it renders.
+  ABOUT_DATA_DIRECTORY_PROTECTION.txt  How converted files are kept from being browsed.
+  ABOUT_DEPENDENCIES.txt               How every dependency is audited before it is adopted.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

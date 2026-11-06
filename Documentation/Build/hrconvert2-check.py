@@ -33,8 +33,12 @@
 # /   python3 Documentation/Build/hrconvert2-check.py --list
 # /   python3 Documentation/Build/hrconvert2-check.py --only pins
 # /
-# / Twelve checks run. Each one is described above the function that performs it, & each
-# / description says what it CANNOT see as well as what it can.
+# / ScanCore is checked with everything else, because it is HRProprietary software & has no
+# / tooling of its own yet. --no-scancore leaves Resources/ScanCore out of every check.
+# /   python3 Documentation/Build/hrconvert2-check.py --no-scancore
+# /
+# / Run --list for every check. Each one is described above the function that performs it,
+# / & each description says what it CANNOT see as well as what it can.
 # /
 # / Why this exists.
 # / Every check below was written after a fault reached a running installation.
@@ -75,6 +79,14 @@ import re
 import subprocess
 import sys
 
+# / The bundled ScanCore program, relative to the installation root. It runs as a process of
+# / its own & is a different program from the ScanCore pipeline, which is application code.
+SCANCORE_FOLDER = os.path.join('Resources', 'ScanCore') + os.sep
+# / Whether ScanCore is checked. It is unless --no-scancore says otherwise. Set by main.
+INCLUDE_SCANCORE = True
+# / A finding whose message names a file in the bundled ScanCore program.
+SCANCORE_MESSAGE = re.compile(r'Resources[/\\]ScanCore[/\\]|\bScanCore(?:_Config)?\.php\b')
+
 
 # / -----------------------------------------------------------------------------------
 # / A function to find every PHP file this project owns.
@@ -94,6 +106,8 @@ def project_files(root):
     # / parameters & exit in more than one place, all of which is correct for a test & wrong
     # / for the application. Linting them buries the findings that matter.
     found = [f for f in found if os.path.join('Documentation', 'Build') not in f]
+    if not INCLUDE_SCANCORE:
+        found = [f for f in found if not os.path.relpath(f, root).startswith(SCANCORE_FOLDER)]
     return sorted(found)
 
 
@@ -464,10 +478,7 @@ def check_undefined_reads(files, report):
 
 
 # / -----------------------------------------------------------------------------------
-# / CHECK FIVE. No comment line is entirely capitals.
-# / Convention nineteen. A comment that needs shouting is a comment describing something
-# / too important to be a comment. A capitalised word inside a sentence is fine & is not
-# / reported, because emphasis is not shouting.
+# / THE STRAY FILES CHECK. Nothing ships that is not part of the application.
 def check_stray_files(root, report):
     # / A tree that ships is a tree somebody unpacks over their installation, so anything in
     # / it that is not part of the application lands on their disk.
@@ -494,6 +505,8 @@ def check_stray_files(root, report):
     return faults
 
 
+# / -----------------------------------------------------------------------------------
+# / THE SPACING CHECK. Separators & blank lines follow the house shape.
 def check_file_spacing(files, report):
     # / The shape this project writes, measured from the files that were never edited by a
     # / tool rather than decided here.
@@ -559,6 +572,11 @@ def check_file_spacing(files, report):
     return faults
 
 
+# / -----------------------------------------------------------------------------------
+# / CHECK FIVE. No comment line is entirely capitals.
+# / Convention nineteen. A comment that needs shouting is a comment describing something
+# / too important to be a comment. A capitalised word inside a sentence is fine & is not
+# / reported, because emphasis is not shouting.
 def check_comment_case(files, report):
     faults = 0
     for path in files:
@@ -766,6 +784,8 @@ def check_kernel_independence(root, files, report):
 # / PHP has no function overloading, so a second definition of the same name is a fatal
 # / the moment both files load. It is the normal result of moving a function & leaving the
 # / original behind, which is invisible until the two files meet in one request.
+# / Names are matched within one program. ScanCore runs as a process of its own, so a name
+# / it shares with this application never meets it in one request & is not a duplicate.
 def check_duplicate_functions(files, report):
     seen = {}
     faults = 0
@@ -775,12 +795,13 @@ def check_duplicate_functions(files, report):
             if not line.startswith('function '):
                 continue
             name = line.split('(')[0][9:]
-            if name in seen:
-                report('DUPLICATE', name + '() is defined in ' + os.path.basename(seen[name])
+            key = (program_of(path), name)
+            if key in seen:
+                report('DUPLICATE', name + '() is defined in ' + os.path.basename(seen[key])
                        + ' and again in ' + os.path.basename(path) + ':' + str(index + 1))
                 faults += 1
             else:
-                seen[name] = path
+                seen[key] = path
     return faults
 
 
@@ -921,8 +942,20 @@ def check_component_guard(root, report):
             if not name.endswith('.php'):
                 continue
             path = os.path.join(base, name)
+            relative = os.path.relpath(path, root)
+            if relative.startswith(SCANCORE_FOLDER) and not INCLUDE_SCANCORE:
+                continue
             original, blanked = read_source(path)
             body = '\n'.join(blanked)
+            # / ScanCore is a program of its own & never sets $CoreLoaded. Its guard is a
+            # / refusal to run anywhere except a command line, so that is what it is held to.
+            # / The literal is blanked, so the comparison is found in the blanked source & the
+            # / word cli is read from the original line it sits on.
+            if relative.startswith(SCANCORE_FOLDER):
+                refuses_web = any(re.search(r'\bPHP_SAPI\s*!==?', line) and "'cli'" in original[index]
+                                  for index, line in enumerate(blanked))
+                if refuses_web and re.search(r'\b(die|exit)\s*\(', body):
+                    continue
             # / The BLANKED source is read rather than the file, so a comment mentioning the
             # / guard does not count as having one. An earlier version tested the raw text &
             # / a file whose only mention was in a comment passed.
@@ -1287,7 +1320,7 @@ def check_argument_counts(files, report):
     return faults
 
 # / -----------------------------------------------------------------------------------
-# / Check twenty. A function that returns a pair is never assigned whole to one variable.
+# / CHECK TWENTY. A function that returns a pair is never assigned whole to one variable.
 # / sandboxCommand returns whether a command may run & the command, & four callers took the
 # / pair as the command for several releases. The shell was asked to run a program called
 # / Array. ClamAV reported every file clean, ScanCore reported every file infected & no
@@ -1298,8 +1331,11 @@ def check_argument_counts(files, report):
 # / not reported.
 # / ScanCore is a program of its own & defines its own sanitize(), which returns one value.
 # / Functions are therefore matched within one program, ScanCore or everything else.
+# / Only Resources/ScanCore is ScanCore. The ScanCore pipeline is application code & loads
+# / into this application's process. An earlier test matched any folder named ScanCore &
+# / counted the pipeline as part of the scanner.
 def program_of(path):
-    return 'scancore' if os.sep + 'ScanCore' + os.sep in path else 'application'
+    return 'scancore' if os.sep + SCANCORE_FOLDER in path else 'application'
 
 def returns_pair(body):
     returned = re.findall(r'\breturn\s+(.*?);', body)
@@ -1373,9 +1409,111 @@ def check_pairs_destructured(files, report):
     return faults
 
 # / -----------------------------------------------------------------------------------
+# / CHECK TWENTY ONE. Every function opens with a separator & a preface & closes with one.
+# / The shape is a separator, the comment describing the function, the function, & a
+# / separator on the line after its closing line. A reader finds functions by that shape.
+# / The spacing check never saw a MISSING separator, because it judges the gap between two
+# / separators & a missing one leaves no gap to judge. Fourteen functions across four files
+# / had lost an opening separator before this check existed, & every one was found by eye.
+# / It reads only functions declared at the start of a line, which is every function in
+# / this project except the guarded copies in environmentCore.php. Those sit inside an if
+# / & are indented, so they are skipped rather than misread.
+# / It cannot tell a preface that describes the function from a comment that does not. The
+# / sentence check reads what the comment says. This one reads where it is.
+def check_function_frame(files, report):
+    separator = '// / ' + '-' * 83
+    is_rule = lambda text: text.strip().startswith('// / -') and text.strip()[5:] != '' and not (set(text.strip()[5:]) - set('-'))
+    faults = 0
+    for path in files:
+        original, blanked = read_source(path)
+        for name, record in read_functions(original, blanked).items():
+            start = record['start']
+            end = record['end']
+            above = start - 1
+            while above >= 0 and original[above].strip().startswith('// /') and not is_rule(original[above]):
+                above -= 1
+            if above == start - 1:
+                report('FRAME', path + ':' + str(start + 1) + ' ' + name + '() has no comment above it. Write one '
+                       + 'beginning "A function to", between its opening separator & the function line')
+                faults += 1
+            elif above < 0 or not is_rule(original[above]):
+                report('FRAME', path + ':' + str(start + 1) + ' ' + name + '() has no opening separator. Put '
+                       + 'the 88 character separator on the line above its comment')
+                faults += 1
+            elif original[above].strip() != separator:
+                report('FRAME', path + ':' + str(above + 1) + ' ' + name + '() opens with a separator of '
+                       + str(len(original[above].strip())) + ' characters. Use exactly 88')
+                faults += 1
+            if end + 1 >= len(original) or original[end + 1].strip() != separator:
+                report('FRAME', path + ':' + str(end + 1) + ' ' + name + '() has no closing separator on the '
+                       + 'line after its last line. Put the 88 character separator there')
+                faults += 1
+    return faults
+
+# / -----------------------------------------------------------------------------------
+# / CHECK TWENTY TWO. No function destroys a global it declares.
+# / A global declared in a function IS the global. Handing it to purgeSensitiveMemory()
+# / shreds the value for the whole request, not a local copy of it.
+# / updateApplication() declared $Lol global & purged it, so with memory protection on every
+# / line it printed after an update ran together. waitForStream() did the same to a lowercase
+# / name that should never have been global at all. Both read as ordinary cleanup.
+# / The first argument to purgeSensitiveMemory() decides whether a failure halts & is not a
+# / target, so it is not read. A global is the right thing to pass there.
+# / It reads every global statement anywhere in the body & every purge call, so a global
+# / declared inside a branch still counts. It cannot see a purge reached through another
+# / function, which is the same blindness every other check here has to a call graph.
+def check_global_purge(files, report):
+    faults = 0
+    for path in files:
+        original, blanked = read_source(path)
+        for name, record in read_functions(original, blanked).items():
+            body = '\n'.join(record['body'])
+            declared = set()
+            for statement in re.finditer(r'\bglobal\s+([^;]+);', body):
+                declared |= set(re.findall(r'\$(\w+)', statement.group(1)))
+            for call in re.finditer(r'purgeSensitiveMemory\s*\(([^;]*)\)\s*;', body):
+                for target in re.findall(r'\$(\w+)', call.group(1))[1:]:
+                    if target in declared:
+                        report('GLOBALS', path + ':' + str(record['start'] + 1) + ' ' + name + '() declares $'
+                               + target + ' global & then purges it, which destroys the global for the whole '
+                               + 'request. Remove it from the purgeSensitiveMemory() call')
+                        faults += 1
+    return faults
+
+# / -----------------------------------------------------------------------------------
 # / The main logic. Every check runs & the total decides the exit code.
 # / Nothing stops early, because an operator wants every fault in one pass rather than the
 # / first one seven times.
+# / -----------------------------------------------------------------------------------
+# / CHECK TWENTY THREE. No setting is set both by the administrator & by the Engine.
+# / config.php is read first, because it is how an installation finds itself, & the Engine
+# / configuration is read after it, with the application's Engine settings last of all.
+# / So a name set in config-template.php & in either Engine configuration file is decided
+# / by the Engine, silently, & an administrator who changes it sees nothing happen.
+# / Until v4.0.0 the documents said the Engine configuration was read first so that the
+# / administrator would win. No name was shared, so nothing was ever overridden, but the
+# / protection they described did not exist. This check is that protection.
+# / A name in config-template.php that begins with Engine is reported as well, because that
+# / prefix is how an Engine setting is told apart, & the next Engine to use the name wins.
+# / It reads top level assignments only. A setting assigned inside a branch is not seen.
+def check_config_overlap(root, report):
+    faults = 0
+    def assigned(relative):
+        full = os.path.join(root, relative)
+        if not os.path.exists(full):
+            return set()
+        return set(re.findall(r'^\$([A-Z]\w*)\s*=', open(full, encoding='utf-8', errors='replace').read(), re.M))
+    administrator = assigned(os.path.join('Resources', 'Contract', 'config-template.php'))
+    engine = assigned(os.path.join('Resources', 'Engine', 'engineConfig.php')) | assigned(os.path.join('Resources', 'Contract', 'app-engine-config.php'))
+    for name in sorted(administrator & engine):
+        report('CONFIGS', '$' + name + ' is set in config-template.php & in an Engine configuration file, which '
+               + 'is read later & wins. Give the setting one home')
+        faults += 1
+    for name in sorted(n for n in administrator - engine if n.startswith('Engine')):
+        report('CONFIGS', '$' + name + ' is set in config-template.php with the prefix the Engine owns. Rename it')
+        faults += 1
+    return faults
+
 def main():
     quiet = '--quiet' in sys.argv
     # / --fail-on names the kinds that decide the exit code. Every kind is still reported, but
@@ -1388,6 +1526,8 @@ def main():
         position = sys.argv.index('--fail-on')
         if position + 1 < len(sys.argv):
             fail_on = set(sys.argv[position + 1].upper().split(','))
+    global INCLUDE_SCANCORE
+    INCLUDE_SCANCORE = '--no-scancore' not in sys.argv
     root = os.getcwd()
     if not os.path.exists(os.path.join(root, 'convertCore.php')):
         print('Run this from the installation root, beside convertCore.php.')
@@ -1425,6 +1565,9 @@ def main():
         ('return', 'no function destroys what it returns', lambda: check_return_not_purged(files, report)),
         ('args', 'every call supplies the arguments its function requires', lambda: check_argument_counts(files, report)),
         ('pairs', 'a returned pair is never taken whole as one value', lambda: check_pairs_destructured(files, report)),
+        ('frame', 'every function opens & closes with a separator', lambda: check_function_frame(files, report)),
+        ('globals', 'no function destroys a global it declares', lambda: check_global_purge(files, report)),
+        ('configs', 'no setting is set by the administrator & by the Engine', lambda: check_config_overlap(root, report)),
         ('exit', 'every function has one exit', lambda: check_single_exit(files, report)))
     if '--list' in sys.argv:
         print('Checks, in the order they run.')
@@ -1442,6 +1585,8 @@ def main():
             return 2
     if not quiet:
         print('Checking ' + str(len(files)) + ' PHP files under ' + root + '.')
+        if not INCLUDE_SCANCORE:
+            print('Resources/ScanCore is left out, because --no-scancore was given.')
         print()
     total = 0
     for name, description, runner in checks:
@@ -1463,6 +1608,12 @@ def main():
             print()
             print(str(total) + ' finding(s). A finding is not always a fault, & the header')
             print('for each check says which patterns it reports that are not.')
+            # / The two programs are counted apart, so a new finding in the application is not
+            # / lost among the ones ScanCore is carrying.
+            in_scancore = len([message for kind, message in findings if SCANCORE_MESSAGE.search(message)])
+            if in_scancore:
+                print(str(in_scancore) + ' of them are in Resources/ScanCore & ' + str(len(findings) - in_scancore)
+                      + ' are in the application. --no-scancore leaves ScanCore out.')
     if fail_on:
         blocking = [kind for kind, message in findings if kind in fail_on]
         if not quiet and total > 0:

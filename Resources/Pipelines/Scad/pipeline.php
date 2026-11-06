@@ -12,11 +12,11 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.8.
+// / v4.0.0.
 // / This file is the converter for the Scad pipeline. It is loaded by pipelineCore.php
 // / ONLY when a Scad conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
-// / Error block 28000 through 28009 belongs to this pipeline. Those numbers came with the code when it
+// / Error block 27000 through 27009 belongs to this pipeline. Those numbers came with the code when it
 // / moved out of convertCore.php & they did not change, because operators have read them.
 // / FOUR HELPERS MOVED HERE WITH THE CONVERTER, because convertCore.php had no other
 // / caller for any of them. A helper only stays behind when something outside this pipeline

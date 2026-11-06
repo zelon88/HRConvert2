@@ -1,287 +1,308 @@
-------------------------------------------------------------------------------------------------------------------
-DEPENDENCY APPROVAL RECORD
-The Optical Character Recognition pipeline.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 10/30/2026 by Justin Grimes, www.github.com/zelon88
 
-Written by Documentation/Build/hrconvert2-approvals.py v3.9.7.
-Every factual field is read from the dependency manifest & is rewritten by that tool.
-Every audit answer is written by a person & is kept across a refresh.
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v3.9.7.
+This plain text file is the dependency approval record for the Optical Character Recognition pipeline.
+It is written by Documentation/Build/hrconvert2-approvals.py. Every factual field is read from the dependency manifest & is rewritten by that tool. Every audit answer & every note is written by a person & is kept across a refresh.
 The procedure these questions come from is in Documentation/ABOUT_DEPENDENCIES.txt.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About This Record--
 
 These are the dependencies this pipeline uses. The list is worked out from the
 tools the pipeline asks for by name, from whether it isolates a command, & from the
 subsystem it declares. A pipeline is detachable, so this record travels with it.
-------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Bubblewrap--
 
   Approval record
-    Status                                      ADOPTED
-    Approved on                                 11/04/2026
-    Expires on                                  11/04/2027
-    Audited by                                  Justin Grimes (@zelon88)
-    Audit outcome                               PASSED
-    Notes or Conditions                         Mandatory foundational dependency. Use to isolate every other archive/image parser.
+    Status                                        ADOPTED
+    Approved on                                   11/04/2026
+    Expires on                                    01/01/2027
+    Audited by                                    Justin Grimes (@zelon88)
+    Audit outcome                                 PASSED
+    Notes or Conditions                           Mandatory foundational dependency. Use to isolate every other archive/image parser.
 
   Manifest facts, read from Resources/Contract/depends.php
-    Binary                                      bwrap
-    Install type                                apt
-    Package                                     bubblewrap
-    Minimum version                             0.4
-    Required                                    YES
-    Subsystem                                   Sandbox
-    License                                     LGPL-2.0
-    Depends on                                  -
-    Source                                      https://github.com
-    Purpose                                     Isolates every conversion from the host & the network.
+    Binary                                        bwrap
+    Install type                                  apt
+    Package                                       bubblewrap
+    Minimum version                               0.4
+    Required                                      YES
+    Subsystem                                     Sandbox
+    License                                       LGPL-2.0
+    Depends on                                    -
+    Source                                        https://github.com/containers/bubblewrap
+    Purpose                                       Isolates every conversion from the host & the network.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      Yes. Designed specifically as a minimal, unprivileged attack surface reduction boundary.
-                                                Maintained by Red Hat/GNOME developers with structured disclosure and explicit security modeling.
-                                                Codebase is exceptionally tight, readable, and avoids macro or parsing complexity.
-    1b Recent CVEs, issues or exploits          Extremely clean track record. No high-severity RCE or jailbreak flaws in years.
-                                                CVE-2019-12439 was a minor local info leak due to a temporary file descriptor layout bug.
-                                                Most environment breakout vulnerabilities stem from the underlying Linux kernel namespaces rather than bwrap.
-    1c Development activity & breakage risk     Highly Active / Low Breakage. Maintained continuously under the containers organization on GitHub.
-                                                CLI arguments and core runtime flags are frozen and stable; update regressions are virtually non-existent.
-    1d What it needs to function                Kernel Namespace Support. Relies directly on user, mount, IPC, PID, and net namespace system calls.
-                                                Requires unprivileged user namespaces enabled on the host (user.max_user_namespaces > 0).
-                                                Dynamically links against standard glibc; needs no background daemons or permanent disk writes.
-    1e Can it be sandboxed or isolated          N/A. This is the sandbox controller itself. It is transient and destroys its environment upon exit.
-    1f Security options & hardened configurationMaximal isolation flags must be applied when executing sub-commands: --unshare-all, --uid, --gid,
-                                                --ro-bind for system runtime folders, and explicit --seccomp filters to drop dangerous syscall architectures.
-    1g Could another dependency do this better  No. It is the gold standard for rapid, unprivileged, daemonless command sandboxing on Linux.
-                                                Alternative tools like Minijail lack the widespread distro adoption, while Podman/Docker bring major daemon overhead.
-    1h Origin & supply chain risk               Very Low Risk. Maintained by primary enterprise Linux contributors (Fedora, Red Hat, SUSE).
-                                                Distributed with cryptographic tag signatures and heavily scrutinized open-source review pipelines.
-    1i Dependency traps for existing installs   The Setuid Trap. If the target host kernel disables unprivileged user namespaces by default, 
-                                                bwrap requires a root-owned setuid bit to function, expanding the local attack surface if misconfigured.
-    2a System package versus a source build     System Package Preferred. The distribution-provided package is kept patched, stable, 
-                                                and correctly mapped to the underlying platform's specific namespace permissions.
-    2b Build flags, libraries & features        Standard hardened compile blocks. Ensure libseccomp filtering is explicitly compiled in (--enable-seccomp).
-    2c Minimum version & version edge cases     Strictly 0.4.0+ as defined by the manifest, though 0.8.0+ is strongly recommended to support modernized flags.
-    2d Licensing implications of the build      LGPL-2.0 is highly amenable. Safe for commercial and internal utility wrapping without copyleft traps.
-    3a Distribution method                      Native package repositories (apt) and official GitHub source releases.
-    3b Download source used                     Upstream GitHub assets or native distribution mirrors.
-    3c How an installer obtains this version    Standard automated package management fetch (apt-get install -y bubblewrap).
-    3d Inspection of any bundled binary or code Inspection Practical. Clean, straightforward, minimal C files without obfuscation or macro masking.
-    3e Sanity check of the build system         Fully automated via native continuous integration testing suites embedded in the upstream source.
-    3f Build script provided                    No. Managed safely via the native OS package controller.
+    1a Security design is amenable to ours        Yes. Designed specifically as a minimal, unprivileged attack surface reduction boundary.
+                                                  Maintained by Red Hat/GNOME developers with structured disclosure and explicit security modeling.
+                                                  Codebase is exceptionally tight, readable, and avoids macro or parsing complexity.
+    1b Recent CVEs, issues or exploits            Extremely clean track record. No high-severity RCE or jailbreak flaws in years.
+                                                  CVE-2019-12439 was a minor local info leak due to a temporary file descriptor layout bug.
+                                                  Most environment breakout vulnerabilities stem from the underlying Linux kernel namespaces rather than bwrap.
+    1c Development activity & breakage risk       Highly Active / Low Breakage. Maintained continuously under the containers organization on GitHub.
+                                                  CLI arguments and core runtime flags are frozen and stable; update regressions are virtually non-existent.
+    1d What it needs to function                  Kernel Namespace Support. Relies directly on user, mount, IPC, PID, and net namespace system calls.
+                                                  Requires unprivileged user namespaces enabled on the host (user.max_user_namespaces > 0).
+                                                  Dynamically links against standard glibc; needs no background daemons or permanent disk writes.
+    1e Can it be sandboxed or isolated            N/A. This is the sandbox controller itself. It is transient and destroys its environment upon exit.
+    1f Security options & hardened configuration  Maximal isolation flags must be applied when executing sub-commands: --unshare-all, --uid, --gid,
+                                                  --ro-bind for system runtime folders, and explicit --seccomp filters to drop dangerous syscall architectures.
+    1g Could another dependency do this better    No. It is the gold standard for rapid, unprivileged, daemonless command sandboxing on Linux.
+                                                  Alternative tools like Minijail lack the widespread distro adoption, while Podman/Docker bring major daemon overhead.
+    1h Origin & supply chain risk                 Very Low Risk. Maintained by primary enterprise Linux contributors (Fedora, Red Hat, SUSE).
+                                                  Distributed with cryptographic tag signatures and heavily scrutinized open-source review pipelines.
+    1i Dependency traps for existing installs     The Setuid Trap. If the target host kernel disables unprivileged user namespaces by default,
+                                                  bwrap requires a root-owned setuid bit to function, expanding the local attack surface if misconfigured.
+    2a System package versus a source build       System Package Preferred. The distribution-provided package is kept patched, stable,
+                                                  and correctly mapped to the underlying platform's specific namespace permissions.
+    2b Build flags, libraries & features          Standard hardened compile blocks. Ensure libseccomp filtering is explicitly compiled in (--enable-seccomp).
+    2c Minimum version & version edge cases       Strictly 0.4.0+ as defined by the manifest, though 0.8.0+ is strongly recommended to support modernized flags.
+    2d Licensing implications of the build        LGPL-2.0 is highly amenable. Safe for commercial and internal utility wrapping without copyleft traps.
+    3a Distribution method                        Native package repositories (apt) and official GitHub source releases.
+    3b Download source used                       Upstream GitHub assets or native distribution mirrors.
+    3c How an installer obtains this version      Standard automated package management fetch (apt-get install -y bubblewrap).
+    3d Inspection of any bundled binary or code   Inspection Practical. Clean, straightforward, minimal C files without obfuscation or macro masking.
+    3e Sanity check of the build system           Fully automated via native continuous integration testing suites embedded in the upstream source.
+    3f Build script provided                      No. Managed safely via the native OS package controller.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-------------------------------------------------------------------------------------------------------------------
-
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --ImageMagick--
 
   Approval record
-    Status                                      ADOPTED
-    Approved on                                 11/04/2026
-    Expires on                                  11/04/2027
-    Audited by                                  Justin Grimes (@zelon88)
-    Audit outcome                               PASSED WITH CONDITIONS
-    Notes or Conditions                         Massive attack surface. Must compile from source with zero-network and strict policy rules. Never run without a Bubblewrap wrapper.
+    Status                                        ADOPTED
+    Approved on                                   11/04/2026
+    Expires on                                    01/01/2027
+    Audited by                                    Justin Grimes (@zelon88)
+    Audit outcome                                 PASSED WITH CONDITIONS
+    Notes or Conditions                           Massive attack surface. Must compile from source with zero-network and strict policy rules. Never run without a Bubblewrap wrapper.
 
   Manifest facts, read from Resources/Contract/depends.php
-    Binary                                      magick
-    Install type                                source
-    Package                                     -
-    Minimum version                             7.1
-    Required                                    NO
-    Subsystem                                   Images
-    License                                     ImageMagick
-    Depends on                                  Bubblewrap
-    Source                                      https://imagemagick.org
-    Purpose                                     Converts raster images & splits pages for OCR.
+    Binary                                        magick
+    Install type                                  source
+    Package                                       -
+    Minimum version                               7.1
+    Required                                      NO
+    Subsystem                                     Images
+    License                                       ImageMagick
+    Depends on                                    Bubblewrap
+    Source                                        https://imagemagick.org
+    Purpose                                       Converts raster images & splits pages for OCR.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      Yes, procedurally. ImageMagick maintainers have significantly hardened their security posture 
-                                                since historical systemic flaws. They publish a formal security policy, maintain a validation tool 
-                                                for security configurations, and patch vulnerabilities swiftly. However, the codebase parses over 200 format variants 
-                                                using unsafe C/C++ memory management, representing an intrinsically volatile processing path for untrusted uploads.
-    1b Recent CVEs, issues or exploits          High Risk / Highly Targeted. ImageMagick is a premier target for fuzzing and exploit engineering. 
-                                                While notorious for historical bugs like ImageTragick, modern 7.x branches still see recurrent memory safety updates. 
-                                                Recent CVEs inside format delegate libraries involve heap buffer overflows, out-of-bounds array reads, 
-                                                and integer validation issues when handling complex raster compression encodings. 
-                                                A malformed image header can trigger application denial-of-service or arbitrary code execution.
-    1c Development activity & breakage risk     Highly Active / Moderate Breakage Risk. Shipped aggressively with regular releases (v7.1.2-35+). 
-                                                The version 7 architecture unifies command structures under the standalone `magick` binary, 
-                                                moving away from old version 6 split utilities (convert, identify). Command line parsing loops are strict; 
-                                                ensure HRConvert2 script components use syntax compliant with version 7 rules to prevent command failures.
-    1d What it needs to function                Compute and Thread Intensive. Requires significant RAM and CPU burst cycles when expanding 
-                                                and manipulating uncompressed gigapixel raster imagery. Requires read/write file handle authorization 
-                                                in its designated temporary workspace directory to dump raw pixel caches during frame caching operations.
-    1e Can it be sandboxed or isolated          Highly Amenable. Image transformations are a stateless, deterministic computational pipeline. 
-                                                Because it depends on Bubblewrap, it can be completely severed from host network capabilities, local IPC sockets, 
-                                                and host directories, operating securely within an ephemeral scratchpad mapping exclusively the targeted files.
-    1f Security options & hardened configurationExcellent internal security options. Beyond external sandbox boundaries, we must deploy a custom 
-                                                `policy.xml` inside the build destination (`/usr/local/etc/ImageMagick-7/`). The security policy must explicitly 
-                                                disable risky delegate parsers (`EPUB`, `MVG`, `MSVG`, `PDF`, `PL`) via domain restrictions, and specify strict limits 
-                                                on maximum pixel resource tracking (`memory`, `map`, `disk`, `width`, `height`) to prevent zip-bomb equivalent resource exhaustion attacks.
-    1g Could another dependency do this better  No. For broad format coverage across 200+ graphics types, vector rasterization layers, and advanced metadata extraction, 
-                                                ImageMagick remains functionally essential for HRConvert2's image subsystem. Core risks must be accepted 
-                                                and strictly managed using the combination of source-level configuration limits and Bubblewrap.
-    1h Origin & supply chain risk               Low-Medium Risk. Governed transparently by ImageMagick Studio LLC with open Git version control repositories. 
-                                                Source distributions are cryptographically signed. Because this is a source install type, our build system pipeline 
-                                                assumes the burden of downloading archives securely via HTTPS and validating target hashes against the master release definitions.
-    1i Dependency traps for existing installs   The Delegate Package Trap. Because this is a source build, ImageMagick will silently disable features or delegate types 
-                                                at compile time if underlying system library development headers (like `libpng-dev`, `libjpeg-dev`, `libwebp-dev`) 
-                                                are missing from the build machine, leading to unexpected image translation failures during downstream runtime requests.
-    2a System package versus a source build     Source Build Mandatory. As defined by the manifest, we bypass repository-packaged binaries. 
-                                                Compiling from source is highly preferred here as it allows us to intentionally block unneeded delegate modules, 
-                                                compile with strict performance boundaries, and force advanced hardening optimizations into the final execution binary.
-    2b Build flags, libraries & features        Mandatory Hardening Config. Pass explicit configure definitions: `--with-modules`, `--disable-shared`, `--with-security-policy=head`. 
-                                                Inject standard compilation fortification rules into the compiler wrappers to guarantee memory protection:
+    1a Security design is amenable to ours        Yes, procedurally. ImageMagick maintainers have significantly hardened their security posture
+                                                  since historical systemic flaws. They publish a formal security policy, maintain a validation tool
+                                                  for security configurations, and patch vulnerabilities swiftly. However, the codebase parses over 200 format variants
+                                                  using unsafe C/C++ memory management, representing an intrinsically volatile processing path for untrusted uploads.
+    1b Recent CVEs, issues or exploits            High Risk / Highly Targeted. ImageMagick is a premier target for fuzzing and exploit engineering.
+                                                  While notorious for historical bugs like ImageTragick, modern 7.x branches still see recurrent memory safety updates.
+                                                  Recent CVEs inside format delegate libraries involve heap buffer overflows, out-of-bounds array reads,
+                                                  and integer validation issues when handling complex raster compression encodings.
+                                                  A malformed image header can trigger application denial-of-service or arbitrary code execution.
+    1c Development activity & breakage risk       Highly Active / Moderate Breakage Risk. Shipped aggressively with regular releases (v7.1.2-35+).
+                                                  The version 7 architecture unifies command structures under the standalone `magick` binary,
+                                                  moving away from old version 6 split utilities (convert, identify). Command line parsing loops are strict;
+                                                  ensure HRConvert2 script components use syntax compliant with version 7 rules to prevent command failures.
+    1d What it needs to function                  Compute and Thread Intensive. Requires significant RAM and CPU burst cycles when expanding
+                                                  and manipulating uncompressed gigapixel raster imagery. Requires read/write file handle authorization
+                                                  in its designated temporary workspace directory to dump raw pixel caches during frame caching operations.
+    1e Can it be sandboxed or isolated            Highly Amenable. Image transformations are a stateless, deterministic computational pipeline.
+                                                  Because it depends on Bubblewrap, it can be completely severed from host network capabilities, local IPC sockets,
+                                                  and host directories, operating securely within an ephemeral scratchpad mapping exclusively the targeted files.
+    1f Security options & hardened configuration  Excellent internal security options. Beyond external sandbox boundaries, we must deploy a custom
+                                                  `policy.xml` inside the build destination (`/usr/local/etc/ImageMagick-7/`). The security policy must explicitly
+                                                  disable risky delegate parsers (`EPUB`, `MVG`, `MSVG`, `PDF`, `PL`) via domain restrictions, and specify strict limits
+                                                  on maximum pixel resource tracking (`memory`, `map`, `disk`, `width`, `height`) to prevent zip-bomb equivalent resource exhaustion attacks.
+    1g Could another dependency do this better    No. For broad format coverage across 200+ graphics types, vector rasterization layers, and advanced metadata extraction,
+                                                  ImageMagick remains functionally essential for HRConvert2's image subsystem. Core risks must be accepted
+                                                  and strictly managed using the combination of source-level configuration limits and Bubblewrap.
+    1h Origin & supply chain risk                 Low-Medium Risk. Governed transparently by ImageMagick Studio LLC with open Git version control repositories.
+                                                  Source distributions are cryptographically signed. Because this is a source install type, our build system pipeline
+                                                  assumes the burden of downloading archives securely via HTTPS and validating target hashes against the master release definitions.
+    1i Dependency traps for existing installs     The Delegate Package Trap. Because this is a source build, ImageMagick will silently disable features or delegate types
+                                                  at compile time if underlying system library development headers (like `libpng-dev`, `libjpeg-dev`, `libwebp-dev`)
+                                                  are missing from the build machine, leading to unexpected image translation failures during downstream runtime requests.
+    2a System package versus a source build       Source Build Mandatory. As defined by the manifest, we bypass repository-packaged binaries.
+                                                  Compiling from source is highly preferred here as it allows us to intentionally block unneeded delegate modules,
+                                                  compile with strict performance boundaries, and force advanced hardening optimizations into the final execution binary.
+    2b Build flags, libraries & features          Mandatory Hardening Config. Pass explicit configure definitions: `--with-modules`, `--disable-shared`, `--with-security-policy=head`.
+                                                  Inject standard compilation fortification rules into the compiler wrappers to guarantee memory protection:
                                                   CFLAGS="-D_FORTIFY_SOURCE=3 -fstack-protector-strong -fPIE" LDFLAGS="-pie -Wl,-z,relro,-z,now"
-    2c Minimum version & version edge cases     Strictly 7.1+ as defined by the manifest facts to guarantee the unified `magick` binary architecture is used, 
-                                                bypassing old legacy version 6 shell configurations and ensuring updated memory boundaries exist in the internal parser layers.
-    2d Licensing implications of the build      ImageMagick License (a permissive, non-copyleft Apache 2.0-compatible copyright structure). 
-                                                Completely clean for internal execution, packaging, and commercial enterprise distribution strings without copyleft contamination risks.
-    3a Distribution method                      Source archives (tar.xz) or public Git source trees hosted via GitHub or official image archiving servers.
-    3b Download source used                     Official release mirrors (https://imagemagick.org).
-    3c How an installer obtains this version    The automated pipeline script pulls the specific release tarball via curl/wget, validates checksum data, 
-                                                resolves system delegate dependencies, and executes the `./configure && make && make install` workflow.
-    3d Inspection of any bundled binary or code Inspection Impractical. Highly complex, multi-million line optimization engine integrating high-density math equations, 
-                                                vector matrix loops, color profile translation trees, and extensive third-party assembly wrappers.
-    3e Sanity check of the build system         Required, Included. Source distribution contains integrated validation utilities and target formatting checks 
-                                                to verify compilation performance integrity.
-    3f Build script provided                    Yes.
+    2c Minimum version & version edge cases       Strictly 7.1+ as defined by the manifest facts to guarantee the unified `magick` binary architecture is used,
+                                                  bypassing old legacy version 6 shell configurations and ensuring updated memory boundaries exist in the internal parser layers.
+    2d Licensing implications of the build        ImageMagick License (a permissive, non-copyleft Apache 2.0-compatible copyright structure).
+                                                  Completely clean for internal execution, packaging, and commercial enterprise distribution strings without copyleft contamination risks.
+    3a Distribution method                        Source archives (tar.xz) or public Git source trees hosted via GitHub or official image archiving servers.
+    3b Download source used                       Official release mirrors (https://imagemagick.org).
+    3c How an installer obtains this version      The automated pipeline script pulls the specific release tarball via curl/wget, validates checksum data,
+                                                  resolves system delegate dependencies, and executes the `./configure && make && make install` workflow.
+    3d Inspection of any bundled binary or code   Inspection Impractical. Highly complex, multi-million line optimization engine integrating high-density math equations,
+                                                  vector matrix loops, color profile translation trees, and extensive third-party assembly wrappers.
+    3e Sanity check of the build system           Required, Included. Source distribution contains integrated validation utilities and target formatting checks
+                                                  to verify compilation performance integrity.
+    3f Build script provided                      Yes.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-------------------------------------------------------------------------------------------------------------------
-
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Poppler Utils--
 
   Approval record
-    Status                                      ADOPTED
-    Approved on                                 11/05/2026
-    Expires on                                  11/05/2027
-    Audited by                                  Justin Grimes (@zelon88)
-    Audit outcome                               PASSED WITH CONDITIONS
-    Notes or Conditions                         Core PDF parsing utility. Prone to parsing and memory corruption anomalies. Must always run encapsulated inside Bubblewrap.
+    Status                                        ADOPTED
+    Approved on                                   11/05/2026
+    Expires on                                    01/01/2027
+    Audited by                                    Justin Grimes (@zelon88)
+    Audit outcome                                 PASSED WITH CONDITIONS
+    Notes or Conditions                           Core PDF parsing utility. Prone to parsing and memory corruption anomalies. Must always run encapsulated inside Bubblewrap.
 
   Manifest facts, read from Resources/Contract/depends.php
-    Binary                                      pdftotext
-    Install type                                apt
-    Package                                     poppler-utils
-    Minimum version                             20.09
-    Required                                    NO
-    Subsystem                                   Documents & OCR
-    License                                     GPL-2.0
-    Depends on                                  -
-    Source                                      https://poppler.freedesktop.org
-    Purpose                                     Extracts text & converts XPS documents.
+    Binary                                        pdftotext
+    Install type                                  apt
+    Package                                       poppler-utils
+    Minimum version                               20.09
+    Required                                      NO
+    Subsystem                                     Documents & OCR
+    License                                       GPL-2.0
+    Depends on                                    -
+    Source                                        https://poppler.freedesktop.org
+    Purpose                                       Extracts text & converts XPS documents.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      Yes, procedurally. Poppler is maintained actively under the freedesktop.org umbrella and features 
-                                                a mature security model. The project actively participates in Google's OSS-Fuzz initiative to capture 
-                                                vulnerabilities early, tracks issues openly via GitLab, and processes security disclosures cleanly. 
-                                                However, because it is written in C++ and parses incredibly complex, untrusted binary PDF layout definitions, 
-                                                it presents an active and historically volatile architectural attack surface.
-    1b Recent CVEs, issues or exploits          Moderate Risk / Heavily Fuzzed. Due to its status as the default PDF engine for desktop Linux, it is constantly scrutinized. 
-                                                Recent upstream stability improvements fix crashes in malformed documents and form handling states. Historical CVEs 
-                                                typically involve heap-based buffer overflows, out-of-bounds reads, or infinite recursion crashes when parsing 
-                                                corrupted font dictionaries, nested streams, or malformed XRef tables inside hostile user-uploaded PDF files.
-    1c Development activity & breakage risk     Highly Active / Very Low Breakage Risk. Maintained aggressively with monthly updates (tracking up to v26.10.0+). 
-                                                The core command-line utility configurations and parameters for `pdftotext` are rigidly standardized 
-                                                and highly backward-compatible. The threat of updates breaking internal HRConvert2 execution syntax is negligible.
-    1d What it needs to function                Standard System POSIX access. Requires direct read access to targeted PDF/XPS file streams and write 
-                                                privileges for out-of-band text output generation. Functions completely as a stateless console application 
-                                                linking to system font layouts, glibc, and data compression blocks (`libjpeg`, `libopenjp2`, `libpng`).
-    1e Can it be sandboxed or isolated          Highly Amenable. Text extraction is a purely deterministic, mathematical parsing routine. It requires 
-                                                zero network connectivity, zero administrative root execution rights, and zero inter-process communication (IPC) paths. 
-                                                It isolates flawlessly within an unprivileged, zero-network Bubblewrap sandbox jail mapping only the immediate file paths.
-    1f Security options & hardened configurationNative controls are managed via implementation limits. Ensure HRConvert2 invocation commands restrict processing limits 
-                                                where possible. Do not pass untrusted user arguments into the layout parsing flags. The primary mitigation must be 
-                                                applied environmentally by stripping all Linux capabilities via the global Bubblewrap execution container.
-    1g Could another dependency do this better  No. For extracting text and layout structures from standard PDF files or converting XPS paths via a lightweight CLI binary, 
-                                                `poppler-utils` is the absolute industry standard on Linux. Moving to larger alternative stacks adds massive application bloat 
-                                                without improving the underlying parser safety profile. The risk must be accepted and encapsulated inside Bubblewrap.
-    1h Origin & supply chain risk               Very Low Risk. Maintained by a prominent community of core Linux graphics and desktop developers. 
-                                                Source tracking matrices, continuous integration flows, and releases are signed and hosted transparently via freedesktop.org. 
-                                                The downstream OS packaging pipeline (`apt`) ensures continuous security backports and signature validation checks are enforced.
-    1i Dependency traps for existing installs   The Font Dependency / Crash Trap. If a user uploads a PDF containing embedded malformed fonts, or requests parsing layouts 
-                                                requiring localized multi-byte character mapping sets that are missing from the base container installation (`poppler-data`), 
-                                                the binary can throw unexpected extraction faults or drop character formatting entirely, making the injection of `poppler-data` crucial.
-    2a System package versus a source build     System Package Preferred. Installing `poppler-utils` via `apt` guarantees that complex layout, font tracking, 
-                                                and decompression dependencies are automatically synchronized and managed by the operating system, with security patches 
-                                                rolled out rapidly via downstream platform update mirrors.
-    2b Build flags, libraries & features        Default package compilation flags applied by apt are sufficient when fully encapsulated by Bubblewrap.
-    2c Minimum version & version edge cases     Strictly 20.09+ as defined by the manifest facts to ensure compatibility with modern structural layout parameters 
-                                                and proper mapping of internal PDF streams without memory boundary leakage.
-    2d Licensing implications of the build      GNU General Public License (GPL-2.0). Standard copyleft framework. Safe for internal conversion processing execution 
-                                                within HRConvert2, but mandates clear structural boundary monitoring if the surrounding stack is bundled for commercial distribution.
-    3a Distribution method                      Standard distribution native package manager repositories (apt).
-    3b Download source used                     Official distribution mirror networks.
-    3c How an installer obtains this version    Automated package fetch via the standard platform installation utility (apt-get install -y poppler-utils).
-    3d Inspection of any bundled binary or code Inspection Practical but Complex. Large, highly optimized C++ codebase handling dense font layout math 
-                                                and compression routines that requires dedicated binary parsing expertise to review comprehensively.
-    3e Sanity check of the build system         Relies entirely on the distribution package builder's native architecture integration tests.
-    3f Build script provided                    No.
+    1a Security design is amenable to ours        Yes, procedurally. Poppler is maintained actively under the freedesktop.org umbrella and features
+                                                  a mature security model. The project actively participates in Google's OSS-Fuzz initiative to capture
+                                                  vulnerabilities early, tracks issues openly via GitLab, and processes security disclosures cleanly.
+                                                  However, because it is written in C++ and parses incredibly complex, untrusted binary PDF layout definitions,
+                                                  it presents an active and historically volatile architectural attack surface.
+    1b Recent CVEs, issues or exploits            Moderate Risk / Heavily Fuzzed. Due to its status as the default PDF engine for desktop Linux, it is constantly scrutinized.
+                                                  Recent upstream stability improvements fix crashes in malformed documents and form handling states. Historical CVEs
+                                                  typically involve heap-based buffer overflows, out-of-bounds reads, or infinite recursion crashes when parsing
+                                                  corrupted font dictionaries, nested streams, or malformed XRef tables inside hostile user-uploaded PDF files.
+    1c Development activity & breakage risk       Highly Active / Very Low Breakage Risk. Maintained aggressively with monthly updates (tracking up to v26.10.0+).
+                                                  The core command-line utility configurations and parameters for `pdftotext` are rigidly standardized
+                                                  and highly backward-compatible. The threat of updates breaking internal HRConvert2 execution syntax is negligible.
+    1d What it needs to function                  Standard System POSIX access. Requires direct read access to targeted PDF/XPS file streams and write
+                                                  privileges for out-of-band text output generation. Functions completely as a stateless console application
+                                                  linking to system font layouts, glibc, and data compression blocks (`libjpeg`, `libopenjp2`, `libpng`).
+    1e Can it be sandboxed or isolated            Highly Amenable. Text extraction is a purely deterministic, mathematical parsing routine. It requires
+                                                  zero network connectivity, zero administrative root execution rights, and zero inter-process communication (IPC) paths.
+                                                  It isolates flawlessly within an unprivileged, zero-network Bubblewrap sandbox jail mapping only the immediate file paths.
+    1f Security options & hardened configuration  Native controls are managed via implementation limits. Ensure HRConvert2 invocation commands restrict processing limits
+                                                  where possible. Do not pass untrusted user arguments into the layout parsing flags. The primary mitigation must be
+                                                  applied environmentally by stripping all Linux capabilities via the global Bubblewrap execution container.
+    1g Could another dependency do this better    No. For extracting text and layout structures from standard PDF files or converting XPS paths via a lightweight CLI binary,
+                                                  `poppler-utils` is the absolute industry standard on Linux. Moving to larger alternative stacks adds massive application bloat
+                                                  without improving the underlying parser safety profile. The risk must be accepted and encapsulated inside Bubblewrap.
+    1h Origin & supply chain risk                 Very Low Risk. Maintained by a prominent community of core Linux graphics and desktop developers.
+                                                  Source tracking matrices, continuous integration flows, and releases are signed and hosted transparently via freedesktop.org.
+                                                  The downstream OS packaging pipeline (`apt`) ensures continuous security backports and signature validation checks are enforced.
+    1i Dependency traps for existing installs     The Font Dependency / Crash Trap. If a user uploads a PDF containing embedded malformed fonts, or requests parsing layouts
+                                                  requiring localized multi-byte character mapping sets that are missing from the base container installation (`poppler-data`),
+                                                  the binary can throw unexpected extraction faults or drop character formatting entirely, making the injection of `poppler-data` crucial.
+    2a System package versus a source build       System Package Preferred. Installing `poppler-utils` via `apt` guarantees that complex layout, font tracking,
+                                                  and decompression dependencies are automatically synchronized and managed by the operating system, with security patches
+                                                  rolled out rapidly via downstream platform update mirrors.
+    2b Build flags, libraries & features          Default package compilation flags applied by apt are sufficient when fully encapsulated by Bubblewrap.
+    2c Minimum version & version edge cases       Strictly 20.09+ as defined by the manifest facts to ensure compatibility with modern structural layout parameters
+                                                  and proper mapping of internal PDF streams without memory boundary leakage.
+    2d Licensing implications of the build        GNU General Public License (GPL-2.0). Standard copyleft framework. Safe for internal conversion processing execution
+                                                  within HRConvert2, but mandates clear structural boundary monitoring if the surrounding stack is bundled for commercial distribution.
+    3a Distribution method                        Standard distribution native package manager repositories (apt).
+    3b Download source used                       Official distribution mirror networks.
+    3c How an installer obtains this version      Automated package fetch via the standard platform installation utility (apt-get install -y poppler-utils).
+    3d Inspection of any bundled binary or code   Inspection Practical but Complex. Large, highly optimized C++ codebase handling dense font layout math
+                                                  and compression routines that requires dedicated binary parsing expertise to review comprehensively.
+    3e Sanity check of the build system           Relies entirely on the distribution package builder's native architecture integration tests.
+    3f Build script provided                      No.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-------------------------------------------------------------------------------------------------------------------
-
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Tesseract--
 
   Approval record
-    Status                                      ADOPTED
-    Approved on                                 11/05/2026
-    Expires on                                  11/05/2027
-    Audited by                                  Justin Grimes (@zelon88)
-    Audit outcome                               PASSED WITH CONDITIONS
-    Notes or Conditions                         Neural net parsing environment. Must always run encapsulated inside an unprivileged Bubblewrap isolation jail.
+    Status                                        ADOPTED
+    Approved on                                   11/05/2026
+    Expires on                                    01/01/2027
+    Audited by                                    Justin Grimes (@zelon88)
+    Audit outcome                                 PASSED WITH CONDITIONS
+    Notes or Conditions                           Neural net parsing environment. Must always run encapsulated inside an unprivileged Bubblewrap isolation jail.
 
   Manifest facts, read from Resources/Contract/depends.php
-    Binary                                      tesseract
-    Install type                                apt
-    Package                                     tesseract-ocr tesseract-ocr-eng
-    Minimum version                             4.0
-    Required                                    NO
-    Subsystem                                   OCR
-    License                                     Apache-2.0
-    Depends on                                  ImageMagick, Poppler Utils
-    Source                                      https://github.com/tesseract-ocr/tesseract
-    Purpose                                     Reads text out of images & scanned documents.
+    Binary                                        tesseract
+    Install type                                  apt
+    Package                                       tesseract-ocr tesseract-ocr-eng
+    Minimum version                               4.0
+    Required                                      NO
+    Subsystem                                     OCR
+    License                                       Apache-2.0
+    Depends on                                    ImageMagick, Poppler Utils
+    Source                                        https://github.com/tesseract-ocr/tesseract
+    Purpose                                       Reads text out of images & scanned documents.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      Yes, procedurally. Tesseract maintains a highly active repository, features a formal `SECURITY.md` tracking policy, 
-                                                and actively integrates with Google's OSS-Fuzz framework to eliminate input handling memory bugs. 
-                                                However, the runtime core is composed of highly complex C++ layouts that read pixel configurations and multi-byte 
-                                                text blocks, creating an extensive computational attack surface area when handling untrusted user media inputs.
-    1b Recent CVEs, issues or exploits          Moderate Risk / Continuously Audited. As a premier open-source neural net engine, its parser logic undergoes steady fuzzing. 
-                                                Vulnerabilities inside its external imaging dependencies (like Leptonica buffer parsing or TIFF array bounds) represent 
-                                                the primary historical attack paths. Internal codebase patches regularly focus on structural thread-safety issues 
-                                                and null-pointer array verification failures triggered by severely malformed image coordinates.
-    1c Development activity & breakage risk     Highly Active / Low Breakage Risk. Strongly maintained by a core open-source group (tracking major version 5.x tiers). 
-                                                The core command-line structures for execution (e.g., `tesseract input output -l eng`) are exceptionally mature 
-                                                and backward-compatible. Upgrading packages downstream introduces near-zero syntax breakage risk for HRConvert2 workflows.
-    1d What it needs to function                Compute Intensive / Dynamic Assets. Requires notable CPU processing and hardware acceleration threads when executing 
-                                                the LSTM line-recognition math matrices. Requires direct file read access to pixel assets and write privileges for out-of-band 
-                                                text strings. Links dynamically against standard `glibc` libraries, the `Leptonica` image engine, and systemic font layouts.
-    1e Can it be sandboxed or isolated          Highly Amenable. Optical character recognition is a purely mathematical vector analysis routine. 
-                                                It requires no host networking, no inter-process communication (IPC) frameworks, and no absolute administrative root rights. 
-                                                It can be perfectly locked inside an unprivileged, zero-network Bubblewrap sandbox jail mapping only the workspace targets.
-    1f Security options & hardened configurationNative application controls are managed via operational arguments. Ensure script parameters pass clean, non-interactive 
-                                                execution variables and restrict arbitrary configuration paths. The critical boundary configuration must be applied 
-                                                externally by dropping all Linux capabilities via the wrapping Bubblewrap environment setup.
-    1g Could another dependency do this better  No. For local, high-fidelity, open-source text extraction out of raster images or multi-page layouts across dozens of languages, 
-                                                Tesseract is the absolute industry gold standard. Shifting to proprietary cloud alternatives adds massive operational overhead 
-                                                and external dependency issues. The risk is best managed natively using your Bubblewrap orchestration layer.
-    1h Origin & supply chain risk               Very Low Risk. The project has a clean engineering lineage (originally HP, followed by Google maintenance, now open-source). 
-                                                Source distributions are cryptographically managed and scrutinized by packaging engineers worldwide. 
-                                                The downstream `apt` delivery channel ensures continuous security backports are pushed cleanly via distribution servers.
-    1i Dependency traps for existing installs   The Traineddata Missing Trap. As noted in the package manifest facts, the binary demands specific linguistic neural net data packs 
-                                                (`tesseract-ocr-eng`). If an environment installation omits these matching asset files or changes target paths, 
-                                                Tesseract will throw immediate segmentation failures or initialization loop crashes upon processing execution.
-    2a System package versus a source build     System Package Preferred. Installing `tesseract-ocr` via `apt` guarantees that intricate underlying vector libraries (like Leptonica), 
-                                                compression plugins, and language metadata arrays are cleanly compiled and synchronized against your specific OS build target automatically.
-    2b Build flags, libraries & features        Default package compilation flags applied by apt are sufficient when fully encapsulated by Bubblewrap.
-    2c Minimum version & version edge cases     Strictly 4.0+ as defined by the manifest facts to guarantee the modern LSTM neural net architecture components and 
-                                                stable Unicode (UTF-8) line-parsing safety gates are structurally present across all execution loops.
-    2d Licensing implications of the build      Apache License, Version 2.0 (Highly Permissive). A business-friendly open-source copyright standard. It introduces zero copyleft 
-                                                contamination risks, usage limits, or redistribution roadblocks for deployment integrations or commercial packaging pipelines.
-    3a Distribution method                      Standard distribution native package manager repositories (apt).
-    3b Download source used                     Official distribution mirror networks.
-    3c How an installer obtains this version    Automated package fetch via the platform management framework utility (apt-get install -y tesseract-ocr tesseract-ocr-eng).
-    3d Inspection of any bundled binary or code Inspection Practical but Complex. Sprawling C++ implementation mixing deep-learning data loops, mathematical matrix arrays, 
-                                                and raster pixel scaling structures that require advanced domain expertise to analyze thoroughly.
-    3e Sanity check of the build system         Relies entirely on the distribution package builder's native architecture integration tests.
-    3f Build script provided                    No.
-
-------------------------------------------------------------------------------------------------------------------
+    1a Security design is amenable to ours        Yes, procedurally. Tesseract maintains a highly active repository, features a formal `SECURITY.md` tracking policy,
+                                                  and actively integrates with Google's OSS-Fuzz framework to eliminate input handling memory bugs.
+                                                  However, the runtime core is composed of highly complex C++ layouts that read pixel configurations and multi-byte
+                                                  text blocks, creating an extensive computational attack surface area when handling untrusted user media inputs.
+    1b Recent CVEs, issues or exploits            Moderate Risk / Continuously Audited. As a premier open-source neural net engine, its parser logic undergoes steady fuzzing.
+                                                  Vulnerabilities inside its external imaging dependencies (like Leptonica buffer parsing or TIFF array bounds) represent
+                                                  the primary historical attack paths. Internal codebase patches regularly focus on structural thread-safety issues
+                                                  and null-pointer array verification failures triggered by severely malformed image coordinates.
+    1c Development activity & breakage risk       Highly Active / Low Breakage Risk. Strongly maintained by a core open-source group (tracking major version 5.x tiers).
+                                                  The core command-line structures for execution (e.g., `tesseract input output -l eng`) are exceptionally mature
+                                                  and backward-compatible. Upgrading packages downstream introduces near-zero syntax breakage risk for HRConvert2 workflows.
+    1d What it needs to function                  Compute Intensive / Dynamic Assets. Requires notable CPU processing and hardware acceleration threads when executing
+                                                  the LSTM line-recognition math matrices. Requires direct file read access to pixel assets and write privileges for out-of-band
+                                                  text strings. Links dynamically against standard `glibc` libraries, the `Leptonica` image engine, and systemic font layouts.
+    1e Can it be sandboxed or isolated            Highly Amenable. Optical character recognition is a purely mathematical vector analysis routine.
+                                                  It requires no host networking, no inter-process communication (IPC) frameworks, and no absolute administrative root rights.
+                                                  It can be perfectly locked inside an unprivileged, zero-network Bubblewrap sandbox jail mapping only the workspace targets.
+    1f Security options & hardened configuration  Native application controls are managed via operational arguments. Ensure script parameters pass clean, non-interactive
+                                                  execution variables and restrict arbitrary configuration paths. The critical boundary configuration must be applied
+                                                  externally by dropping all Linux capabilities via the wrapping Bubblewrap environment setup.
+    1g Could another dependency do this better    No. For local, high-fidelity, open-source text extraction out of raster images or multi-page layouts across dozens of languages,
+                                                  Tesseract is the absolute industry gold standard. Shifting to proprietary cloud alternatives adds massive operational overhead
+                                                  and external dependency issues. The risk is best managed natively using your Bubblewrap orchestration layer.
+    1h Origin & supply chain risk                 Very Low Risk. The project has a clean engineering lineage (originally HP, followed by Google maintenance, now open-source).
+                                                  Source distributions are cryptographically managed and scrutinized by packaging engineers worldwide.
+                                                  The downstream `apt` delivery channel ensures continuous security backports are pushed cleanly via distribution servers.
+    1i Dependency traps for existing installs     The Traineddata Missing Trap. As noted in the package manifest facts, the binary demands specific linguistic neural net data packs
+                                                  (`tesseract-ocr-eng`). If an environment installation omits these matching asset files or changes target paths,
+                                                  Tesseract will throw immediate segmentation failures or initialization loop crashes upon processing execution.
+    2a System package versus a source build       System Package Preferred. Installing `tesseract-ocr` via `apt` guarantees that intricate underlying vector libraries (like Leptonica),
+                                                  compression plugins, and language metadata arrays are cleanly compiled and synchronized against your specific OS build target automatically.
+    2b Build flags, libraries & features          Default package compilation flags applied by apt are sufficient when fully encapsulated by Bubblewrap.
+    2c Minimum version & version edge cases       Strictly 4.0+ as defined by the manifest facts to guarantee the modern LSTM neural net architecture components and
+                                                  stable Unicode (UTF-8) line-parsing safety gates are structurally present across all execution loops.
+    2d Licensing implications of the build        Apache License, Version 2.0 (Highly Permissive). A business-friendly open-source copyright standard. It introduces zero copyleft
+                                                  contamination risks, usage limits, or redistribution roadblocks for deployment integrations or commercial packaging pipelines.
+    3a Distribution method                        Standard distribution native package manager repositories (apt).
+    3b Download source used                       Official distribution mirror networks.
+    3c How an installer obtains this version      Automated package fetch via the platform management framework utility (apt-get install -y tesseract-ocr tesseract-ocr-eng).
+    3d Inspection of any bundled binary or code   Inspection Practical but Complex. Sprawling C++ implementation mixing deep-learning data loops, mathematical matrix arrays,
+                                                  and raster pixel scaling structures that require advanced domain expertise to analyze thoroughly.
+    3e Sanity check of the build system           Relies entirely on the distribution package builder's native architecture integration tests.
+    3f Build script provided                      No.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

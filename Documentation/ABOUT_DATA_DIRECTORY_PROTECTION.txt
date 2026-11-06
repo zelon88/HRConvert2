@@ -14,9 +14,15 @@ v3.8.6.
 This plain text file describes why the DATA directory must be served as inert downloads,
 what closes that & what only appears to.
 
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About The DATA Directory--
@@ -32,7 +38,6 @@ the working file across whenever an operation asks it to.
 That copy is user supplied bytes handed out by the web server from the application's own
 origin. For any format a browser treats as ACTIVE, those bytes are code.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About Active Formats--
@@ -54,7 +59,6 @@ subset of JavaScript, so the rules below cover it for the same reason & at no ex
 by not being conversion formats. Do not add them.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About What Actually Closes This--
 
@@ -75,7 +79,6 @@ Both real controls are applied, because one directive is one point of failure & 
 fail in different ways.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About Where These Rules Belong--
 
@@ -89,96 +92,6 @@ warning of any kind. It sits there looking like protection & does nothing.
 That failure mode is the whole argument. A control that fails silently is worse than no
 control, because it also removes the reason to look.
 
---About What May Go In A .htaccess--
-
-A DIRECTIVE AN OVERRIDE LEVEL DOES NOT PERMIT IS A 500, NOT AN IGNORED LINE.
-This is the opposite failure to the one above & it is worse while it lasts. An ignored
-.htaccess leaves the tree exposed & working. A REFUSED one takes the whole tree down, so
-every download & every share link on the server returns 500 until the file is removed.
-
-An <IfModule> guard does NOT prevent this. <IfModule> tests whether a module is LOADED, not
-whether a directive is PERMITTED, so a php_flag wrapped in <IfModule mod_php.c> still
-returns 500 wherever AllowOverride does not grant Options.
-
-Measured on Apache 2.4, serving the DATA tree;
-
-  Header             AllowOverride FileInfo    works
-  RemoveHandler      AllowOverride FileInfo    works
-  Options            AllowOverride Options     500 under FileInfo
-  php_flag           AllowOverride Options     500 under FileInfo, guarded or not
-
-So the file this application writes contains Header & RemoveHandler & NOTHING ELSE. It is
-safe at every override level; ignored at None, effective at FileInfo & above, never fatal.
-
-Options & php_flag belong in the server configuration, where no override level applies.
-The <Directory> block verifyApacheConfiguration() writes carries both.
-
-DO NOT ADD Options OR php_flag TO DATA/.htaccess. Running -fp will overwrite the file &
-remove them anyway, which is deliberate.
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
---About Short Lived Links--
-
-A SYMLINK DOES NOT CLOSE THIS FINDING & MUST NOT BE ADOPTED AS THOUGH IT DOES.
-Apache follows a symlink & serves the target's bytes with the target's content type. An SVG
-reached through a symlink is still served as image/svg+xml & its script still executes. The
-exposure is decided by the RESPONSE HEADERS & by nothing else, so the header rules in this
-document are required whether the thing in the DATA tree is a copy or a link.
-
-Measured on Apache 2.4, the same file reached through a symlink rather than a copy;
-
-  header rules absent    Content-Type image/svg+xml, rendered in the tab, SCRIPT EXECUTED
-  header rules present   Content-Disposition attachment, downloaded, script never ran
-
-A SYMLINK ALSO NEEDS MORE SERVER CONFIGURATION THAN A COPY, NOT LESS.
-The target of the link is $ConvertDir, which is outside the DocumentRoot on purpose. Apache
-refuses to serve a symlink whose target it has no <Directory> grant for, & answers
-'Symbolic link not allowed or link target not accessible' rather than serving the file. So a
-symlink scheme needs FollowSymLinks on the DATA tree AND an explicit grant for the data
-location, in the server configuration, in addition to the header rules. Anyone reaching for
-symlinks to AVOID configuring the server will find they have added a second thing to
-configure & closed nothing.
-
-What a link changes is LIFETIME & DUPLICATION, & both are worth having;
-
-  Duplication   A staged copy doubles the bytes on disk for the life of the session. Every
-                file already exists under $ConvertDir before the copy is made, so the copy
-                is pure overhead & is the larger cost on a server converting video.
-  Lifetime      A staged copy is reachable until the session is swept. A link can be
-                withdrawn on its own schedule, which bounds how long a share URL that has
-                been pasted somewhere continues to resolve.
-
-A link also introduces a requirement the copy does not have. Apache serves a symlink only
-where Options FollowSymLinks or SymLinksIfOwnerMatch is granted for that directory, & a
-server hardened with -FollowSymLinks answers 403 instead. That is another way for downloads
-to stop working for a reason nothing explains, so it belongs behind the same live check the
-header rules are behind.
-
-EXPIRY HAS TO WORK WITH & WITHOUT THE LISTENER, & THE TWO ARE NOT THE SAME MECHANISM.
-
-  Resource aware    The listener already runs a timed sweep on --Storage Cleanup Interval,
-                    already holds the session map, & already revalidates this tree. Link
-                    expiry is one more thing done there, on a real timer, whether or not
-                    anybody is making requests.
-  Resource unaware  There is no timer & no process between requests, so expiry can only
-                    happen opportunistically, on the next request that arrives, exactly as
-                    --File Deletion Age Threshold-- sweeps sessions today. A link therefore
-                    carries its own expiry stamp & is checked when it is next touched, & an
-                    installation with no traffic keeps its links longer than the nominal
-                    lifetime. That is a real difference in behaviour & should be documented
-                    rather than papered over, because an administrator who believes links
-                    expire on a clock will otherwise be wrong on a quiet server.
-
-The stronger version of this idea removes the tree from the web root altogether & serves the
-bytes through convertCore.php, which is described in --About The Longer Fix-- below. That
-gets the lifetime control, the deduplication & the header guarantee in one change, & it does
-not depend on the administrator having configured anything.
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
   Preferred    Server configuration, WRITTEN & ACTIVATED AUTOMATICALLY by -fp.
                verifyApacheConfiguration() builds a <Directory> block for this
                installation's own DATA path, writes it to the Apache configuration
@@ -217,13 +130,100 @@ worse than no summary, because it gets read instead of the thing it left out.
 VERIFY. DO NOT ASSUME. THE APPLICATION DOES THIS ITSELF.
 -fp writes the rules & then PROVES the result over HTTP with a canary, printing DATA
 exposure as PROTECTED, EXPOSED, BROKEN or UNREACHABLE.
--v reports the same three facts without repairing anything; where the directory is, whether
+-v reports the same facts without repairing anything: where the directory is, whether
 the fallback is maintained, whether the server configuration is installed, & the live
 exposure. The first three are configuration & only the last is evidence.
 The listener re-establishes it on every --Storage Cleanup Interval & warns the moment it
 regresses. There is no separate tool to run; the check lives where the repairs live.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About What May Go In A .htaccess--
+
+A DIRECTIVE AN OVERRIDE LEVEL DOES NOT PERMIT IS A 500, NOT AN IGNORED LINE.
+This is the opposite failure to the one above & it is worse while it lasts. An ignored
+.htaccess leaves the tree exposed & working. A REFUSED one takes the whole tree down, so
+every download & every share link on the server returns 500 until the file is removed.
+
+An <IfModule> guard does NOT prevent this. <IfModule> tests whether a module is LOADED, not
+whether a directive is PERMITTED, so a php_flag wrapped in <IfModule mod_php.c> still
+returns 500 wherever AllowOverride does not grant Options.
+
+Measured on Apache 2.4, serving the DATA tree:
+
+  Header             AllowOverride FileInfo    works
+  RemoveHandler      AllowOverride FileInfo    works
+  Options            AllowOverride Options     500 under FileInfo
+  php_flag           AllowOverride Options     500 under FileInfo, guarded or not
+
+So the file this application writes contains Header & RemoveHandler & NOTHING ELSE. It is
+safe at every override level; ignored at None, effective at FileInfo & above, never fatal.
+
+Options & php_flag belong in the server configuration, where no override level applies.
+The <Directory> block verifyApacheConfiguration() writes carries both.
+
+DO NOT ADD Options OR php_flag TO DATA/.htaccess. Running -fp will overwrite the file &
+remove them anyway, which is deliberate.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Short Lived Links--
+
+A SYMLINK DOES NOT CLOSE THIS FINDING & MUST NOT BE ADOPTED AS THOUGH IT DOES.
+Apache follows a symlink & serves the target's bytes with the target's content type. An SVG
+reached through a symlink is still served as image/svg+xml & its script still executes. The
+exposure is decided by the RESPONSE HEADERS & by nothing else, so the header rules in this
+document are required whether the thing in the DATA tree is a copy or a link.
+
+Measured on Apache 2.4, the same file reached through a symlink rather than a copy:
+
+  header rules absent    Content-Type image/svg+xml, rendered in the tab, SCRIPT EXECUTED
+  header rules present   Content-Disposition attachment, downloaded, script never ran
+
+A SYMLINK ALSO NEEDS MORE SERVER CONFIGURATION THAN A COPY, NOT LESS.
+The target of the link is $ConvertDir, which is outside the DocumentRoot on purpose. Apache
+refuses to serve a symlink whose target it has no <Directory> grant for, & answers
+'Symbolic link not allowed or link target not accessible' rather than serving the file. So a
+symlink scheme needs FollowSymLinks on the DATA tree AND an explicit grant for the data
+location, in the server configuration, in addition to the header rules. Anyone reaching for
+symlinks to AVOID configuring the server will find they have added a second thing to
+configure & closed nothing.
+
+What a link changes is LIFETIME & DUPLICATION, & both are worth having:
+
+  Duplication   A staged copy doubles the bytes on disk for the life of the session. Every
+                file already exists under $ConvertDir before the copy is made, so the copy
+                is pure overhead & is the larger cost on a server converting video.
+  Lifetime      A staged copy is reachable until the session is swept. A link can be
+                withdrawn on its own schedule, which bounds how long a share URL that has
+                been pasted somewhere continues to resolve.
+
+A link also introduces a requirement the copy does not have. Apache serves a symlink only
+where Options FollowSymLinks or SymLinksIfOwnerMatch is granted for that directory, & a
+server hardened with -FollowSymLinks answers 403 instead. That is another way for downloads
+to stop working for a reason nothing explains, so it belongs behind the same live check the
+header rules are behind.
+
+EXPIRY HAS TO WORK WITH & WITHOUT THE LISTENER, & THE TWO ARE NOT THE SAME MECHANISM.
+
+  Resource aware    The listener already runs a timed sweep on --Storage Cleanup Interval,
+                    already holds the session map, & already revalidates this tree. Link
+                    expiry is one more thing done there, on a real timer, whether or not
+                    anybody is making requests.
+  Resource unaware  There is no timer & no process between requests, so expiry can only
+                    happen opportunistically, on the next request that arrives, exactly as
+                    --File Deletion Age Threshold-- sweeps sessions today. A link therefore
+                    carries its own expiry stamp & is checked when it is next touched, & an
+                    installation with no traffic keeps its links longer than the nominal
+                    lifetime. That is a real difference in behaviour & should be documented
+                    rather than papered over, because an administrator who believes links
+                    expire on a clock will otherwise be wrong on a quiet server.
+
+The stronger version of this idea removes the tree from the web root altogether & serves the
+bytes through convertCore.php, which is described in --About The Longer Fix-- below. That
+gets the lifetime control, the deduplication & the header guarantee in one change, & it does
+not depend on the administrator having configured anything.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About index.html--
@@ -237,7 +237,6 @@ $DangerousFiles & the core refuses to stage a file by that name.
 It is excluded with a negative lookahead in <FilesMatch>, in both the server configuration
 block & the .htaccess, so the same rule is expressed the same way in both places.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About The Longer Fix--

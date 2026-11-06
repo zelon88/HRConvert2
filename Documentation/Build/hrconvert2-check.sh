@@ -23,10 +23,13 @@
 # /   bash Documentation/Build/hrconvert2-check.sh --list
 # /   bash Documentation/Build/hrconvert2-check.sh --only pins
 # /   bash Documentation/Build/hrconvert2-check.sh --quiet
+# /   bash Documentation/Build/hrconvert2-check.sh --no-scancore
+# / ScanCore is checked with everything else, as the Python checks it. --no-scancore leaves
+# / Resources/ScanCore out of every check.
 # /
 # / It exits zero when every check passes, one when any of them does not & two when it was
 # / asked something it could not answer, exactly as the Python does.
-# / Eleven of the Python's twelve checks are here. The one that is not is named below.
+# / Not every check the Python runs is here. The ones that are not are named below.
 # /
 # / WHY TWO OF THESE EXIST.
 # / A checker has bugs like anything else, & a bug in a checker is invisible, because the
@@ -44,9 +47,12 @@
 # / omission. Working out which names a function creates needs a pass per function over its
 # / whole body, & in awk on a file of seven thousand lines that took longer than everything
 # / else in this script put together. A check nobody waits for is a check nobody runs.
-# / Eleven checks are here & the twelfth is in the Python. Run the Python for it.
-# / Neither difference is a bug in this file. Both are stated here so a disagreement can be
-# / read correctly rather than chased.
+# / The Python also runs spacing, locals, sentence, name, return, args, pairs, frame,
+# / globals & configs, which were written for it & have no implementation here. Run the
+# / Python for them. ABOUT_QUALITY_CONTROL.txt marks each of them PYTHON ONLY, & --list here names
+# / exactly what this file runs.
+# / None of these differences is a bug in this file. They are stated here so a disagreement
+# / can be read correctly rather than chased.
 # /
 # / Hardware Requirements ...
 # / This application requires at least a Raspberry Pi Model B+ or greater.
@@ -64,6 +70,7 @@ set -u
 QUIET=0
 ONLY=''
 LIST=0
+SKIP_SCANCORE=0
 FINDINGS=0
 WORKDIR=''
 
@@ -136,7 +143,17 @@ php_files() {
   # / is itself the bug this pair exists to catch.
   find . -name '*.php' -not -path './.git/*' -not -path './DATA/*' -not -path './Logs/*' \
     -not -path './Documentation/Build/*' \
-    -not -path './node_modules/*' | sort
+    -not -path './node_modules/*' | sort | scancore_filter
+}
+
+# / Passes a list of paths through, less the bundled ScanCore program when --no-scancore
+# / was given. Only Resources/ScanCore is ScanCore. The ScanCore pipeline is application code.
+scancore_filter() {
+  if [ "$SKIP_SCANCORE" -eq 1 ]; then
+    grep -v '^\./Resources/ScanCore/' || true
+  else
+    cat
+  fi
 }
 
 # / The blanked copy of one file.
@@ -180,12 +197,16 @@ check_balance() {
 # / CHECK. No function is defined twice.
 # / A second definition is a fatal the moment both files load & is the normal result of
 # / moving a function & leaving the original behind.
+# / Names are matched within one program. ScanCore runs as a process of its own, so a name
+# / it shares with this application never meets it in one request & is not a duplicate.
 check_duplicate() {
   while IFS= read -r file; do
     awk -v name="$file" '/^function /{ split($0, a, "("); sub(/^function /, "", a[1]); print a[1] "|" name "|" NR }' "$(blanked_of "$file")"
   done < <(php_files) | awk -F'|' '
-    { if ($1 in seen) printf "DUPLICATE|%s() is defined in %s and again in %s:%s\n", $1, seen[$1], $2, $3
-      else seen[$1] = $2 }' | while IFS='|' read -r kind message; do report "$kind" "$message"; done
+    { program = (index($2, "./Resources/ScanCore/") == 1) ? "scancore" : "application"
+      key = program SUBSEP $1
+      if (key in seen) printf "DUPLICATE|%s() is defined in %s and again in %s:%s\n", $1, seen[key], $2, $3
+      else seen[key] = $2 }' | while IFS='|' read -r kind message; do report "$kind" "$message"; done
 }
 
 # / -----------------------------------------------------------------------------------
@@ -283,10 +304,21 @@ check_guard() {
       fi
       continue
     fi
+    # / ScanCore is a program of its own & never sets $CoreLoaded. Its guard is a refusal to
+    # / run anywhere except a command line. The literal is blanked, so the comparison is found
+    # / in the blanked copy & the word cli is read from the same line of the original.
+    case "$file" in
+      ./Resources/ScanCore/*)
+        refusing=0
+        while IFS= read -r number; do
+          if sed -n "${number}p" "$file" | grep -q "'cli'"; then refusing=1; fi
+        done < <(grep -nE '\bPHP_SAPI[[:space:]]*!==?' "$blanked" | cut -d: -f1)
+        if [ "$refusing" -eq 1 ] && grep -qE '\b(die|exit)[[:space:]]*\(' "$blanked"; then continue; fi ;;
+    esac
     if ! grep -q 'CoreLoaded' "$blanked" || ! grep -qE '\b(die|exit)[[:space:]]*\(' "$blanked"; then
       report 'GUARD' "$file has no \$CoreLoaded guard & would run if reached directly"
     fi
-  done < <(find ./Resources -name '*.php' | sort)
+  done < <(find ./Resources -name '*.php' | sort | scancore_filter)
 }
 
 # / -----------------------------------------------------------------------------------
@@ -556,6 +588,7 @@ while [ "$#" -gt 0 ]; do
     --quiet) QUIET=1 ;;
     --list)  LIST=1 ;;
     --only)  shift; ONLY="${1:-}" ;;
+    --no-scancore) SKIP_SCANCORE=1 ;;
     *) printf 'Unrecognized argument %s. Run --list to see the checks.\n' "$1"; exit 2 ;;
   esac
   shift
@@ -589,15 +622,22 @@ fi
 prepare
 
 if [ "$QUIET" -eq 0 ]; then
-  printf 'Checking %s PHP files under %s.\n\n' "$(php_files | wc -l | tr -d ' ')" "$(pwd)"
+  printf 'Checking %s PHP files under %s.\n' "$(php_files | wc -l | tr -d ' ')" "$(pwd)"
+  if [ "$SKIP_SCANCORE" -eq 1 ]; then printf 'Resources/ScanCore is left out, because --no-scancore was given.\n'; fi
+  printf '\n'
 fi
 
 # / The count is kept in a file rather than in a variable, because every check pipes its
 # / output & a pipeline runs in a subshell whose variables do not survive it.
 COUNTFILE="$WORKDIR/count"
 : > "$COUNTFILE"
+# / The findings in the bundled ScanCore program are counted apart as well, so a new finding
+# / in the application is not lost among the ones ScanCore is carrying.
+SCANCOREFILE="$WORKDIR/scancore"
+: > "$SCANCOREFILE"
 report() {
   printf '%s\n' "$1" >> "$COUNTFILE"
+  if printf '%s' "$2" | grep -qE 'Resources/ScanCore/|\bScanCore(_Config)?\.php\b'; then printf '%s\n' "$1" >> "$SCANCOREFILE"; fi
   if [ "$QUIET" -eq 0 ]; then
     printf '  %-10s %s\n' "$1" "$2"
   fi
@@ -620,6 +660,10 @@ if [ "$QUIET" -eq 0 ]; then
     done
     printf '\n%s finding(s). A finding is not always a fault, & the header for each check\n' "$FINDINGS"
     printf 'says which patterns it reports that are not.\n'
+    INSCANCORE=$(wc -l < "$SCANCOREFILE" | tr -d ' ')
+    if [ "$INSCANCORE" -gt 0 ]; then
+      printf '%s of them are in Resources/ScanCore & %s are in the application. --no-scancore leaves ScanCore out.\n' "$INSCANCORE" "$((FINDINGS - INSCANCORE))"
+    fi
   fi
 fi
 

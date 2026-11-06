@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.9.9.
+// / v4.0.0.
 // / The environment the Engine provides to every application built on it.
 // /
 // / THE ENGINE OWNS THESE. An application uses them & does not define them. That is the
@@ -325,6 +325,7 @@ function validateInstallation($installPath) {
 
 // / -----------------------------------------------------------------------------------
 
+// / -----------------------------------------------------------------------------------
 // / A function to confirm an Apache module is loaded, & to enable it when it is not.
 // / Accepts the module name as Apache reports it & a boolean permitting repair, in that order.
 // / Returns a loaded boolean & the status word, in that order.
@@ -395,6 +396,7 @@ function verifyApacheModule($moduleName, $mayRepair) {
   return array($ModuleIsLoaded, $ModuleStatus); }
 // / -----------------------------------------------------------------------------------
 
+// / -----------------------------------------------------------------------------------
 // / A function to fetch one URL & return its response headers.
 // / Accepts the URL & a timeout in seconds, in that order.
 // / Returns a reachability boolean & the raw response headers, in that order.
@@ -431,6 +433,7 @@ function fetchOwnResponseHeaders($requestURL, $timeoutSeconds) {
   return array($RequestSucceeded, $ResponseHeaders); }
 // / -----------------------------------------------------------------------------------
 
+// / -----------------------------------------------------------------------------------
 // / A function to explain a policy status in a sentence.
 // / Accepts the policy name & the status word, in that order.
 // / Returns a sentence saying whether anything needs doing.
@@ -469,6 +472,7 @@ function describePolicyStatus($policyName, $policyStatus) {
   return $StatusDescription; }
 // / -----------------------------------------------------------------------------------
 
+// / -----------------------------------------------------------------------------------
 // / A function to read a tool's minimum version from the manifest, for display.
 // / Accepts the manifest name. Returns the minimum, or an empty string when there is none.
 // / -v shows each tool's minimum. That number is read from the manifest, the only owner of it,
@@ -586,6 +590,7 @@ function engineApplicationVersion() {
 // / which runs before the Engine loads & so has to live in the application.
 // / -----------------------------------------------------------------------------------
 
+// / -----------------------------------------------------------------------------------
 // / A function to work out which release to fetch & the URL that will deliver it.
 // / Three targets are supported & each resolves to a different kind of URL.
 // / A version such as v3.6.8 resolves to that tag's tarball directly. A tag that does
@@ -638,6 +643,7 @@ function resolveUpdateTarget($requestedVersion) {
   return array($TargetResolved, $TargetVersion, $TargetURL); }
 // / -----------------------------------------------------------------------------------
 
+// / -----------------------------------------------------------------------------------
 // / A function to write the PHP settings HRConvert2 cannot run without.
 // / Accepts a boolean permitting a write.
 // / Returns a success boolean & the number of configurations written, in that order.
@@ -718,6 +724,7 @@ function verifyPhpConfiguration($mayRepair) {
   return array($ConfigurationIsValid, $ConfigurationsWritten); }
 // / -----------------------------------------------------------------------------------
 
+// / -----------------------------------------------------------------------------------
 // / A function to supply the contents of the DATA directory protection file.
 // / Accepts no arguments.
 // / Returns the complete file contents, carrying the marker that identifies it as ours.

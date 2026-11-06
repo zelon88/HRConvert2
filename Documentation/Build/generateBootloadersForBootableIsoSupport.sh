@@ -12,7 +12,7 @@
 # This application is designed to provide a web-interface for converting file formats
 # on a server for users of any web browser without authentication.
 #
-# FILEINFORMATION ...
+# FILE INFORMATION ...
 # v3.7.3.
 # This file contains a script to generate Bootloader images for bootable iso support.
 #
@@ -26,8 +26,6 @@
 #
 # <3 Open-Source
 # -----------------------------------------------------------------------------------
-
-#!/usr/bin/env bash
 
 
 set -e
@@ -67,16 +65,23 @@ for KEY in "${!ARCHITECTURES[@]}"; do
     mmd -i "$IMG_PATH" ::/EFI
     mmd -i "$IMG_PATH" ::/EFI/BOOT
     
-    touch /tmp/stub_loader.efi
-    mcopy -i "$IMG_PATH" /tmp/stub_loader.efi "::/EFI/BOOT/${EFI_FILE}"
-    rm -f /tmp/stub_loader.efi
+    # / The stub is made by mktemp. A fixed name in /tmp could be made first by any account,
+    # / & whatever it held would be copied into the image as its boot loader & then pinned.
+    STUB_LOADER=$(mktemp)
+    mcopy -i "$IMG_PATH" "$STUB_LOADER" "::/EFI/BOOT/${EFI_FILE}"
+    rm -f "$STUB_LOADER"
     
     echo "Success: $IMG_NAME generated."
 done
 
 echo ""
 echo "=========================================================================="
-echo " COPY AND PASTE THE FOLLOWING PHP DEFINITIONS INTO YOUR CONFIGURATION"
+echo " THESE HASHES PIN THE IMAGES THIS RUN JUST WROTE."
+echo " mkfs.vfat writes a new volume serial every time, so every run differs."
+echo " Paste each into the matching 'hash' of \$assetMap in verifyIsoBootloaders(),"
+echo " in Resources/Pipelines/Archive/pipeline.php. That changes the Archive"
+echo " pipeline, so raise its \$PipelineVersion & its pin in"
+echo " Resources/Contract/app-engine-config.php as well."
 echo "=========================================================================="
 echo ""
 
@@ -87,10 +92,10 @@ HASH_X64=$(sha256sum "$OUTPUT_DIR/uefi_x64.img" | awk '{print $1}')
 HASH_ARM32=$(sha256sum "$OUTPUT_DIR/uefi_arm.img" | awk '{print $1}')
 HASH_ARM64=$(sha256sum "$OUTPUT_DIR/uefi_arm64.img" | awk '{print $1}')
 
-echo "\$RequiredBlankHash = '$HASH_BLANK';"
-echo "\$Requiredx86Hash = '$HASH_X86';"
-echo "\$Requiredx8664Hash = '$HASH_X64';"
-echo "\$RequiredARM32Hash = '$HASH_ARM32';"
-echo "\$RequiredARM64Hash = '$HASH_ARM64';"
+echo "  blank_efi    $HASH_BLANK"
+echo "  uefi_ia32    $HASH_X86"
+echo "  uefi_x64     $HASH_X64"
+echo "  uefi_arm     $HASH_ARM32"
+echo "  uefi_arm64   $HASH_ARM64"
 echo ""
 echo "=========================================================================="

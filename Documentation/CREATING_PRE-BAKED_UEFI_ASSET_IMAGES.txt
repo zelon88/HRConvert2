@@ -7,34 +7,30 @@ This project is protected by the GNU GPLv3 Open-Source license.
 https://www.gnu.org/licenses/gpl-3.0.html
 
 APPLICATION INFORMATION ...
-This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication. 
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
 
 FILE INFORMATION ...
 v3.7.0.
 This plain text file provides instructions and scripts for building pre-baked UEFI asset images for HRConvert2.
 
-HARDWARE REQUIREMENTS ... 
-This application requires at least a Raspberry Pi Model B+ or greater. 
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
-DEPENDENCY REQUIREMENTS ... 
+DEPENDENCY REQUIREMENTS ...
 The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
-
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Building Pre-Baked UEFI Asset Images--
 
-This guide describes how to generate the four architecture-specific *.img files required by the HRConvert2 bootable ISO pipeline. 
+This guide describes how to generate the four architecture-specific *.img files required by the HRConvert2 bootable ISO pipeline.
 
 Because the target production server lacks dosfstools, we compile these static filesystem images once on a development machine and bundle them directly
 into the $BootloadersDir folder.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Development Prerequisites--
@@ -43,8 +39,6 @@ Ensure your development machine (Debian/Ubuntu) has the required tools installed
 
   sudo apt update && sudo apt install -y dosfstools mtools
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Step-By-Step Generation Script--
@@ -57,7 +51,7 @@ You can save and run the following bash script on your development machine to bu
 
 
     #!/usr/bin/env bash
-    
+
     # [generateBootloadersForBootableIsoSupport.sh]
     # [Part of HRConvert2 by zelon88 - https://github.com/zelon88/HRConvert2]
     # [Full File Available At 'Documentation/Build/generateBootloadersForBootableIsoSupport.sh']
@@ -92,25 +86,32 @@ You can save and run the following bash script on your development machine to bu
         IMG_NAME="uefi_${KEY}.img"
         EFI_FILE="${ARCHITECTURES[$KEY]}"
         IMG_PATH="${OUTPUT_DIR}/${IMG_NAME}"
-        
+
         echo "Building Asset: $IMG_NAME (Target: $EFI_FILE)"
-        
+
         dd if=/dev/zero of="$IMG_PATH" bs=1k count=2880 2>/dev/null
         mkfs.vfat "$IMG_PATH" > /dev/null
-        
+
         mmd -i "$IMG_PATH" ::/EFI
         mmd -i "$IMG_PATH" ::/EFI/BOOT
-        
-        touch /tmp/stub_loader.efi
-        mcopy -i "$IMG_PATH" /tmp/stub_loader.efi "::/EFI/BOOT/${EFI_FILE}"
-        rm -f /tmp/stub_loader.efi
-        
+
+        # / The stub is made by mktemp. A fixed name in /tmp could be made first by any account,
+        # / & whatever it held would be copied into the image as its boot loader & then pinned.
+        STUB_LOADER=$(mktemp)
+        mcopy -i "$IMG_PATH" "$STUB_LOADER" "::/EFI/BOOT/${EFI_FILE}"
+        rm -f "$STUB_LOADER"
+
         echo "Success: $IMG_NAME generated."
     done
 
     echo ""
     echo "=========================================================================="
-    echo " COPY AND PASTE THE FOLLOWING PHP DEFINITIONS INTO YOUR CONFIGURATION"
+    echo " THESE HASHES PIN THE IMAGES THIS RUN JUST WROTE."
+    echo " mkfs.vfat writes a new volume serial every time, so every run differs."
+    echo " Paste each into the matching 'hash' of \$assetMap in verifyIsoBootloaders(),"
+    echo " in Resources/Pipelines/Archive/pipeline.php. That changes the Archive"
+    echo " pipeline, so raise its \$PipelineVersion & its pin in"
+    echo " Resources/Contract/app-engine-config.php as well."
     echo "=========================================================================="
     echo ""
 
@@ -121,31 +122,34 @@ You can save and run the following bash script on your development machine to bu
     HASH_ARM32=$(sha256sum "$OUTPUT_DIR/uefi_arm.img" | awk '{print $1}')
     HASH_ARM64=$(sha256sum "$OUTPUT_DIR/uefi_arm64.img" | awk '{print $1}')
 
-    echo "\$RequiredBlankHash = '$HASH_BLANK';"
-    echo "\$Requiredx86Hash = '$HASH_X86';"
-    echo "\$Requiredx8664Hash = '$HASH_X64';"
-    echo "\$RequiredARM32Hash = '$HASH_ARM32';"
-    echo "\$RequiredARM64Hash = '$HASH_ARM64';"
+    echo "  blank_efi    $HASH_BLANK"
+    echo "  uefi_ia32    $HASH_X86"
+    echo "  uefi_x64     $HASH_X64"
+    echo "  uefi_arm     $HASH_ARM32"
+    echo "  uefi_arm64   $HASH_ARM64"
     echo ""
     echo "=========================================================================="
 
 
-Once the script completes, verify that the output files are structured exactly as shown above. 
+Once the script completes, verify that the output files are structured exactly as shown above.
 
 The isolinux/isolinux.bin file can be obtained from a linux machine with `isolinux` installed.
   1. It is located in `/usr/lib/ISOLINUX/`
   2. To find it, run `find / -name isolinux.bin 2>/dev/null`
   3. Copy `isolinux.bin` to `/var/www/html/HRProprietary/HRConvert2/Resources/Bootloaders/isolinux`
   4. Hash the isolinux file using the `sha256sum /var/www/html/HRProprietary/HRConvert2/Resources/Bootloaders/isolinux/isolinux.bin` command.
+  5. Paste that hash into the 'isolinux' entry of $assetMap in verifyIsoBootloaders(), in Resources/Pipelines/Archive/pipeline.php.
 
 
 The isolinux/extra/ldlinux.c32 file can be obtained from a linux machine with `syslinux-common` installed.
   1. It is located in `/usr/lib/syslinux/modules/bios/`
-  2. To find it, run `find / -name isolinux.bin 2>/dev/null`
+  2. To find it, run `find / -name ldlinux.c32 2>/dev/null`
   3. Copy `ldlinux.c32` to `/var/www/html/HRProprietary/HRConvert2/Resources/Bootloaders/isolinux/extra`
-  4. Hash the isolinux file using the `sha256sum /var/www/html/HRProprietary/HRConvert2/Resources/Bootloaders/isolinux/extra/ldlinux.c32` command.
- 
+  4. It is optional & is deliberately not pinned, so it needs no hash.
 
-All bootloader files mush be hashed and hased added to the core they can be used for generating bootable iso images.
+
+Every other bootloader file must be hashed, & its hash pinned, before it can be used for generating bootable ISO images.
+The pins live in the $assetMap of verifyIsoBootloaders(), in Resources/Pipelines/Archive/pipeline.php, rather than in a
+configuration file. The variable names the script above prints are older than that map & name nothing that exists.
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

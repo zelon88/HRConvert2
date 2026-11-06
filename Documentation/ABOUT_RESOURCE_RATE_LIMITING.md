@@ -18,7 +18,7 @@ This application provides a highly accessible, unauthenticated web interface ena
 | **Hardware**| Raspberry Pi Model B+ (or any standard x86 / x64 platform) |
 | **Environment** | Debian Linux + Apache Web Server v2.4 + PHP v8.0 or greater |
 
-> ⚙️ **Core Dependencies:** FFMPEG, Dia, LibreOffice, Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, ...
+> ⚙️ **Core Dependencies:** The authoritative list of dependencies is `Resources/Contract/depends.php` and nothing else. Run `php convertCore.php -v` to see what this installation has.
 
 ---
 
@@ -40,12 +40,12 @@ Resource rate limiting adds a **budget mechanism** (configured in `config.php`) 
 
 ## 📡 About the Listener
 
-The listener is implemented in `Resources/Engine/Managers/coreManager.php` and acts as a detachable component.
+The listener is the four manager roles under `Resources/Engine/Managers`. `coreManager.php` is the one an operator starts, and it starts the other three.
 
 ### 🔐 Security & Validation
-- **Decoupled Design:** Validated the same way as a GUI or language pack.
-- **Lazy Loading:** Only loads if an explicit install secret exists. `convertCore.php` runs without it.
-- **Strict Versioning:** Component versions must match the core required version exactly. Mismatches are refused to prevent unsafe calls and to disable resource awareness when incompatible.
+- **Engine Subcomponents:** Each role file is pinned by the Engine in `getAcceptedManagers` and loaded only in a process dispatched to that role.
+- **Optional:** `convertCore.php` runs perfectly well without any of them.
+- **Strict Versioning:** A role's version must match the version the Engine accepts exactly. A mismatch is refused and resource awareness becomes unavailable.
 
 ---
 
@@ -67,7 +67,7 @@ A single command spins up four separate PHP processes, each with specific respon
    - Owns the resource budget, worker registry, and session-to-location map.
    - Periodically polls the host to recalculate the available budget.
    - Determines which data location a session uses.
-   - Hunts down and terminates zombie workers that outlive their runtime.
+   - Finds workers that outlive their runtime and asks the Worker Manager to end them.
 
 4. Worker Manager (The Executor)
    - Stateless component that holds no memory of past events.
@@ -78,10 +78,10 @@ A single command spins up four separate PHP processes, each with specific respon
 
 ## 🧦 About Socket Communication
 
-Every manager listens on a local Unix domain socket located in a designated Sockets folder within the data directory. [2]
+Every manager listens on a local Unix domain socket located in a designated Sockets folder within the data directory.
 
 - **Permissions:** Created with secure 0700 permissions, owned by the web server user.
-- **Location:** Isolated outside the public web root. [3]
+- **Location:** Isolated outside the public web root.
 
 DIRECTIONAL FLOW: One-Way Traffic Only 🛑  
 Workers ───[ Encrypted Messages ]───► Request Manager Socket
@@ -92,21 +92,21 @@ Workers ───[ Encrypted Messages ]───► Request Manager Socket
 
 ## 🔒 Message Cryptography & Transport
 
-- **Encryption:** AES-256-GCM using a key derived from the install secret and the specific channel used. [4]
-- **Replay Protection:** Every message carries a timestamp and nonce. Messages older than `--Manager Message Skew` are discarded. [5]
+- **Encryption:** AES-256-GCM using a key derived from the install secret and the specific channel used.
+- **Replay Protection:** Every message carries a timestamp and nonce. Messages older than thirty seconds (`$ManagerMessageSkew`) are discarded.
 - **Duplex Response:** Replies return via the same connection the sender opened; workers need no listening address to receive answers.
-- **Performance Batching:** Messages are processed in batches up to `--Manager Message Batch Size` per loop cycle to reduce connection overhead.
-- **Network Limit:** Unix domain sockets do not cross physical hosts. Split topologies (front-end and listener on separate servers) are unsupported, though shared storage is compatible. [...]
+- **Performance Batching:** Messages are processed in batches of up to thirty two (`$ManagerMessageBatchSize`) per loop cycle to reduce connection overhead.
+- **Network Limit:** Unix domain sockets do not cross physical hosts. Split topologies (front-end and listener on separate servers) are unsupported, though shared storage is compatible.
 
 ---
 
 ## 🔑 About Startup Keys
 
-Every core-to-core startup call is cryptographically keyed against the main install secret. [7]
+Every core-to-core startup call is cryptographically keyed against the main install secret.
 
-- **The Token:** An HMAC calculated over the authorized purpose and a temporary time bucket (`--Startup Key Window` seconds).
+- **The Token:** An HMAC calculated over the authorized purpose and a temporary time bucket of ten seconds (`$StartupKeyWindow`).
 - **Clock Tolerance:** The current and immediately preceding time buckets are accepted to accommodate launch delays.
-- **Expiration:** A key becomes useless after a few seconds. [8]
+- **Expiration:** A key becomes useless after a few seconds.
 
 CRITICAL SECURITY POLICY:
 - THE STARTUP KEY IS NEVER PRINTED AND NEVER WRITTEN TO LOGS.
@@ -119,11 +119,11 @@ CRITICAL SECURITY POLICY:
 
 ## 📊 About the Resource Budget
 
-System assets are measured in arbitrary cost units and updated every `--Resource Poll Interval` seconds based on three pillars.
+System assets are measured in arbitrary cost units and updated every `--Resource Poll Interval--` seconds based on three pillars.
 
 ### 🧩 The Budget Equation
-1. **Base Budget:** Set by `--Total Resource Budget`. If 0, defaults to 100 units per CPU core.
-2. **Reserve Pool:** `--Reserve Resource Percentage` — a slice never allocated to conversions to keep the server responsive.
+1. **Base Budget:** Set by `--Total Resource Budget--`. If 0, defaults to 100 units per CPU core.
+2. **Reserve Pool:** `--Reserve Resource Percentage--` — a slice never allocated to conversions to keep the server responsive.
 3. **Pressure Penalty:** A dynamic throttling value scaled against whichever metric is under higher pressure: CPU load average or memory usage.
 
 - Idle server → no throttling (maximum performance)
@@ -135,13 +135,13 @@ System assets are measured in arbitrary cost units and updated every `--Resource
 
 Four operation types consume budget: conversion, archiving, OCR, and the user virus scan. Originally only conversion consumed budget; the other three were unmetered and under-represented the real load.
 
-Each operation declares `--Default Conversion Cost` and `--Default Expected Runtime`. These are not weighted against one another because exact measurements are not available.
+Each operation declares `--Default Conversion Cost--` and `--Default Expected Runtime--`. These are not weighted against one another because exact measurements are not available.
 
-Before an operation begins, it must declare its estimated cost and expected runtime. [9]
+Before an operation begins, it must declare its estimated cost and expected runtime.
 
 - The request is REFUSED if:
-  - ❌ The runtime exceeds `--Maximum Expected Runtime`
-  - ❌ The worker count hits `--Maximum Concurrent Workers`
+  - ❌ The runtime exceeds `--Maximum Expected Runtime--`
+  - ❌ The worker count hits `--Maximum Concurrent Workers--`
   - ❌ The remaining unallocated budget is smaller than the requested job cost
 
 - The request is APPROVED if:
@@ -156,19 +156,19 @@ A refused operation is not an error—nothing failed and nothing was attempted. 
 
 ## 🔄 About Worker Lifecycle
 
-The Resource Manager scans its registry every `--Worker Reap Interval` seconds to clear stagnation.
+The Resource Manager scans its registry every `--Worker Reap Interval--` seconds to clear stagnation.
 
 ### 🧹 The Reaping Process
 A tracked worker is flagged as **stale** and handed to the Worker Manager for destruction if:
 - Its active process no longer exists (it crashed without sending a completion message).
-- It outlives its expected runtime plus the `--Worker Stale Grace Period`. [10]
+- It outlives its expected runtime plus the `--Worker Stale Grace Period--`.
 
 Pro tip: keep the grace period generous. A slow conversion must not be reaped—reaping leads to lost conversions.
 
 ### ⏳ Lifeline Extensions
 A conversion that needs extra time may request an extension.
-- **Limit:** Granted up to `--Maximum Runtime Extensions` times.
-- **Hard Ceiling:** Cannot extend beyond `--Maximum Expected Runtime`.
+- **Limit:** Granted up to `--Maximum Runtime Extensions--` times.
+- **Hard Ceiling:** Cannot extend beyond `--Maximum Expected Runtime--`.
 
 ---
 
@@ -177,7 +177,7 @@ A conversion that needs extra time may request an extension.
 `$ConvertLoc` is always a valid string that resolves to a usable path for the specific worker and conversion.
 
 ### 🔀 Additional Data Locations
-The `--Additional Data Locations` flag allows adding further pools, declared as an array containing a path and a strategy type:
+The `--Additional Data Locations--` flag allows adding further pools, declared as an array containing a path and a strategy type:
 
 | Strategy     | Behavior |
 | :----------- | :------- |
@@ -185,8 +185,8 @@ The `--Additional Data Locations` flag allows adding further pools, declared as 
 | leastactive  | If any location uses this, the entire pool selects paths based on the fewest active sessions. |
 | redundant    | Acts as a strict standby; it takes a session only when every other location is completely unusable. |
 
-⚠️ **`--Convert Location` is always a pool member, and always its primary.** Never declare it
-under `--Additional Data Locations`. It joins the distribution and is swept on the same schedule
+⚠️ **`--Data Storage Directory--` is always a pool member, and always its primary.** Never declare it
+under `--Additional Data Locations--`. It joins the distribution and is swept on the same schedule
 as every other member. A second declaration of the same path is skipped as a duplicate and the
 strategy named on it is discarded, so declare each location exactly once.
 
@@ -200,8 +200,8 @@ The listener hosts the session-to-location map so every front-end sharing the in
 
 - The map is a **cache**, not a permanent log.
 - If the listener restarts mid-session, it discovers the existing directory on disk and returns the original location.
-- **Standalone Fallback:** Without a listener, the standard `--Convert Location` is used.
-- **Static Socket Directory:** The socket directory is pinned to `--Convert Location` and never moves with a session (otherwise workers and managers would look in different locations).
+- **Standalone Fallback:** Without a listener, the standard `--Data Storage Directory--` is used.
+- **Static Socket Directory:** The socket directory is pinned to `--Data Storage Directory--` and never moves with a session (otherwise workers and managers would look in different locations).
 
 ---
 
@@ -210,21 +210,21 @@ The listener hosts the session-to-location map so every front-end sharing the in
 ⚠️ **A location missing from the sweep keeps its expired sessions forever.** Nothing else deletes
 them. The clean calls in `convertCore.php` only sweep the location the running request was
 assigned, so a location receiving no sessions is never reached by those either. Run the Resource
-Manager with `--Verbose` and read the `Scheduled sweep` lines to confirm every location you
+Manager with `--Enhanced Logging Verbosity--` on and read the `Scheduled sweep` lines to confirm every location you
 configured is listed.
 
-The Resource Manager sweeps each configured data location every `--Storage Cleanup Interval` seconds, deleting files older than `--File Deletion Age Threshold`.
+The Resource Manager sweeps each configured data location every `--Storage Cleanup Interval--` seconds, deleting files older than `--File Deletion Age Threshold--`.
 
 - **Shared Cleanups:** The sweep uses the same cleanup function as the standalone `convertCore.php`.
 - **Redundancy:** Standalone routines are required if no listener runs, but are redundant when a listener is active.
 - **Scope Isolation:** Only shared data locations are swept. Temporary locations live inside the local installation directory and are cleaned by each front-end.
-- **Disabling:** Set `--Storage Cleanup Interval` to 0 to disable scheduled sweeps. [12]
+- **Disabling:** Set `--Storage Cleanup Interval--` to 0 to disable scheduled sweeps.
 
 ---
 
 ## 🛡️ About Per-Conversion Resource Ceilings
 
-Enabling `--Enable Per Conversion Limits` runs each conversion inside a transient `systemd` scope with isolated CPU and memory ceilings. This prevents a single heavy file from starving the host.
+Enabling `--Enable Per Conversion Limits--` runs each conversion inside a transient `systemd` scope with isolated CPU and memory ceilings. This prevents a single heavy file from starving the host.
 
 Every expensive operation runs inside a ceiling, not only format conversion. Anything routed through `sandboxCommand()` is wrapped. Example pipelines:
 
@@ -241,4 +241,73 @@ A large file does not raise what a scan needs. Each scanner is sized to its ceil
 - **ClamAV:** the ceiling must hold its signature database, which no argument shrinks. What ClamAV unpacks goes to a private folder in the conversion location, not to the sandbox's `/tmp`, which is always memory. Its size limit is four times the file, between ClamAV's 400M default and the 2047M it can scan, and its file-count and time limits grow by the same factor. The time limit also stretches for a processor share under one processor. A file over 2047M is refused before the database loads.
 - **ScanCore:** its memory limit is the configured one or the ceiling less 64M, whichever is smaller. It holds about three chunks at once, so the chunk is held to a quarter of that limit, and a larger configured chunk is reduced with a warning.
 
-Replacing OpenSCAD's `nice -n 19` with an actual ceiling is not
+Replacing OpenSCAD's `nice -n 19` with an actual ceiling is not strictly stronger on every host. Where a scope can be created it is far stronger, because a `CPUQuota` is enforced against a cgroup instead of requested from the scheduler. Where no scope can be created, the niceness is derived from the configured processor share, so the stock Scad entry of `'75,1024'` yields less than a fixed 19 did. Set a smaller processor share for Scad to get a larger niceness back.
+
+### 📐 The Ceiling Table
+`--Maximum Per Conversion Resources--` declares the ceiling for each conversion type as a processor percentage and a memory ceiling in megabytes, comma separated. The processor figure is a percentage of **one** processor, so `200` is two whole cores. A type that is not listed falls back to `--Default Per Conversion Resources--`, unless the core carries a built-in for it.
+
+The resolution order is:
+1. The listener's scaled table.
+2. `--Maximum Per Conversion Resources--`.
+3. The core's built-in for that type.
+4. `--Default Per Conversion Resources--`.
+
+These are **maxima**. With a listener running they are scaled down against current load and against the conversions already in flight, and never below `--Minimum Per Conversion Resources--`. With no listener they are used unchanged.
+
+> ⚠️ **Scan's memory is never scaled.** Only its processor share is. A scanner needs the memory its loaded signature database takes, so a smaller ceiling does not slow a scan, it has the kernel kill it. The core carries its own Scan ceiling because a ClamAV database does not fit inside 512M, and anything an administrator sets always wins.
+
+### 👤 User Scopes, Never System Scopes
+The web server user cannot create a system scope and must not be given permission to. An account holding systemd `manage-units` can start a transient service as root. HRConvert2 uses a **user manager** instead, which governs only the cgroup subtree delegated to it. Running `-fp` as root enables lingering for the web server user and writes the delegation drop-in a processor quota requires.
+
+| Mechanism | Meaning |
+| :--- | :--- |
+| `user` | A user scope. This is the correct configuration. |
+| `system` | A system scope. An operator configured this deliberately. Remove it. |
+| `none` | No scope. The conversion is deprioritized with `nice` and has no memory ceiling. |
+
+---
+
+## 🪂 About Fallback Behaviour
+
+**Every failure in this subsystem fails open.** A conversion proceeds when the component is missing or mismatched, when no listener is running, when a socket cannot be reached, and when no usable reply comes back. Each is recorded as a warning. Only an explicit answer may refuse a conversion.
+
+`--Require Resource Awareness--` inverts this for an operator who would rather refuse work than accept work they cannot account for.
+
+A resource ceiling is a courtesy to the host and is not a security control. The sandbox is the security control.
+
+---
+
+## 💻 About Command Line Operation
+
+| Argument | Purpose |
+| :--- | :--- |
+| `-l`, `--listen` | Start the resource listener. |
+| `-k`, `--kill` | Stop the resource listener and every manager it started. |
+| `-k <worker-id>` | End one worker by budget token or process identifier. |
+| `--kill-all-workers` | End every tracked conversion in progress. |
+| `--kill-every-worker` | End every PHP process owned by the web server user. |
+| `-y`, `--yes` | Skip the confirmation prompt on the two above. |
+| `--status` | Report listener and resource budget state. Available to any user. |
+| `-fp`, `--fix-permissions` | Correct ownership and permissions, and enable conversion limits. Root only. |
+
+The listener runs until it is stopped. It is started at boot by the service unit `--setup --install-service` writes, or from the container entrypoint.
+
+---
+
+## 💾 About Persistence
+
+The Resource Manager holds the budget, the worker registry and the session map in its own memory and nowhere else, so no process can read a half written file. The one file that survives between processes is the manager process identifiers beside the sockets, because `-l`, `-k` and `--status` must find the listener before they can speak to it. A Resource Manager that restarts rebuilds its map by discovery and recalculates the budget on the next poll. An entry older than the deletion threshold plus an hour is dropped from the map.
+
+---
+
+## 🩺 About Troubleshooting
+
+| Symptom | Cause & Fix |
+| :--- | :--- |
+| The listener starts and then stops. | The web server user cannot read the install secret or write the logfile. Run `-fp` as root. |
+| Every conversion warns that the listener did not answer. | No listener is running. Check `--status` as root, and confirm four socket files exist in the Sockets directory. |
+| Conversions are refused with no reason given. | A reply was delivered but could not be read. The conversion proceeds; a manager is slow or has died. |
+| A processor quota appears to do nothing. | The delegation drop-in is missing, or the user manager has not restarted since it was written. Run `-fp` as root, then restart the user manager for the web server user. |
+| Nothing appears in the log at all. | A root command line run created the logfile first. Run `-fp` as root. |
+
+Every numbered error this subsystem produces is documented in `ERROR_DESCRIPTIONS.txt`.

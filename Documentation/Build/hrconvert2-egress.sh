@@ -1,6 +1,19 @@
 #!/bin/sh
 # / -----------------------------------------------------------------------------------
-# / HRConvert2 v3.9.3. Egress filter, installed INSIDE a sandbox before the tool runs.
+# / Copyright Information ...
+# / HRConvert2, Copyright on 9/6/2026 by Justin Grimes, www.github.com/zelon88
+# /
+# / License Information ...
+# / This project is protected by the GNU GPLv3 Open-Source license.
+# / https://www.gnu.org/licenses/gpl-3.0.html
+# /
+# / Application Information ...
+# / This application is designed to provide a web-interface for converting file formats
+# / on a server for users of any web browser without authentication.
+# /
+# / File Information ...
+# / v3.9.3.
+# / This file is an egress filter, installed INSIDE a sandbox before the tool runs.
 # /
 # / This script is the first thing executed in a networked namespace. It installs a
 # / destination allowlist with nftables & then replaces itself with the tool, so the tool
@@ -17,6 +30,15 @@
 # / a redirect to a literal address that no hosts file could ever have stopped.
 # /
 # / This script never sees user input. Every value it reads was written by the application.
+# /
+# / Hardware Requirements ...
+# / This application requires at least a Raspberry Pi Model B+ or greater.
+# / This application will run on just about any x86 or x64 computer.
+# /
+# / Dependency Requirements ...
+# / This file requires a POSIX shell & nftables, inside a bubblewrap network namespace.
+# /
+# / <3 Open-Source
 # / -----------------------------------------------------------------------------------
 if ! command -v nft >/dev/null 2>&1; then
   echo "hrconvert2-egress: nft is not installed, so no filter can be installed. Refusing to run the tool without one." >&2

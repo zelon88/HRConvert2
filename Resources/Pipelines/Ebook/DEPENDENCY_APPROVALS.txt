@@ -1,146 +1,167 @@
-------------------------------------------------------------------------------------------------------------------
-DEPENDENCY APPROVAL RECORD
-The E-Book pipeline.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 10/30/2026 by Justin Grimes, www.github.com/zelon88
 
-Written by Documentation/Build/hrconvert2-approvals.py v3.9.7.
-Every factual field is read from the dependency manifest & is rewritten by that tool.
-Every audit answer is written by a person & is kept across a refresh.
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v3.9.7.
+This plain text file is the dependency approval record for the E-Book pipeline.
+It is written by Documentation/Build/hrconvert2-approvals.py. Every factual field is read from the dependency manifest & is rewritten by that tool. Every audit answer & every note is written by a person & is kept across a refresh.
 The procedure these questions come from is in Documentation/ABOUT_DEPENDENCIES.txt.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About This Record--
 
 These are the dependencies this pipeline uses. The list is worked out from the
 tools the pipeline asks for by name, from whether it isolates a command, & from the
 subsystem it declares. A pipeline is detachable, so this record travels with it.
-------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Bubblewrap--
 
   Approval record
-    Status                                      ADOPTED
-    Approved on                                 11/04/2026
-    Expires on                                  11/04/2027
-    Audited by                                  Justin Grimes (@zelon88)
-    Audit outcome                               PASSED
-    Notes or Conditions                         Mandatory foundational dependency. Use to isolate every other archive/image parser.
+    Status                                        ADOPTED
+    Approved on                                   11/04/2026
+    Expires on                                    01/01/2027
+    Audited by                                    Justin Grimes (@zelon88)
+    Audit outcome                                 PASSED
+    Notes or Conditions                           Mandatory foundational dependency. Use to isolate every other archive/image parser.
 
   Manifest facts, read from Resources/Contract/depends.php
-    Binary                                      bwrap
-    Install type                                apt
-    Package                                     bubblewrap
-    Minimum version                             0.4
-    Required                                    YES
-    Subsystem                                   Sandbox
-    License                                     LGPL-2.0
-    Depends on                                  -
-    Source                                      https://github.com
-    Purpose                                     Isolates every conversion from the host & the network.
+    Binary                                        bwrap
+    Install type                                  apt
+    Package                                       bubblewrap
+    Minimum version                               0.4
+    Required                                      YES
+    Subsystem                                     Sandbox
+    License                                       LGPL-2.0
+    Depends on                                    -
+    Source                                        https://github.com/containers/bubblewrap
+    Purpose                                       Isolates every conversion from the host & the network.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      Yes. Designed specifically as a minimal, unprivileged attack surface reduction boundary.
-                                                Maintained by Red Hat/GNOME developers with structured disclosure and explicit security modeling.
-                                                Codebase is exceptionally tight, readable, and avoids macro or parsing complexity.
-    1b Recent CVEs, issues or exploits          Extremely clean track record. No high-severity RCE or jailbreak flaws in years.
-                                                CVE-2019-12439 was a minor local info leak due to a temporary file descriptor layout bug.
-                                                Most environment breakout vulnerabilities stem from the underlying Linux kernel namespaces rather than bwrap.
-    1c Development activity & breakage risk     Highly Active / Low Breakage. Maintained continuously under the containers organization on GitHub.
-                                                CLI arguments and core runtime flags are frozen and stable; update regressions are virtually non-existent.
-    1d What it needs to function                Kernel Namespace Support. Relies directly on user, mount, IPC, PID, and net namespace system calls.
-                                                Requires unprivileged user namespaces enabled on the host (user.max_user_namespaces > 0).
-                                                Dynamically links against standard glibc; needs no background daemons or permanent disk writes.
-    1e Can it be sandboxed or isolated          N/A. This is the sandbox controller itself. It is transient and destroys its environment upon exit.
-    1f Security options & hardened configurationMaximal isolation flags must be applied when executing sub-commands: --unshare-all, --uid, --gid,
-                                                --ro-bind for system runtime folders, and explicit --seccomp filters to drop dangerous syscall architectures.
-    1g Could another dependency do this better  No. It is the gold standard for rapid, unprivileged, daemonless command sandboxing on Linux.
-                                                Alternative tools like Minijail lack the widespread distro adoption, while Podman/Docker bring major daemon overhead.
-    1h Origin & supply chain risk               Very Low Risk. Maintained by primary enterprise Linux contributors (Fedora, Red Hat, SUSE).
-                                                Distributed with cryptographic tag signatures and heavily scrutinized open-source review pipelines.
-    1i Dependency traps for existing installs   The Setuid Trap. If the target host kernel disables unprivileged user namespaces by default, 
-                                                bwrap requires a root-owned setuid bit to function, expanding the local attack surface if misconfigured.
-    2a System package versus a source build     System Package Preferred. The distribution-provided package is kept patched, stable, 
-                                                and correctly mapped to the underlying platform's specific namespace permissions.
-    2b Build flags, libraries & features        Standard hardened compile blocks. Ensure libseccomp filtering is explicitly compiled in (--enable-seccomp).
-    2c Minimum version & version edge cases     Strictly 0.4.0+ as defined by the manifest, though 0.8.0+ is strongly recommended to support modernized flags.
-    2d Licensing implications of the build      LGPL-2.0 is highly amenable. Safe for commercial and internal utility wrapping without copyleft traps.
-    3a Distribution method                      Native package repositories (apt) and official GitHub source releases.
-    3b Download source used                     Upstream GitHub assets or native distribution mirrors.
-    3c How an installer obtains this version    Standard automated package management fetch (apt-get install -y bubblewrap).
-    3d Inspection of any bundled binary or code Inspection Practical. Clean, straightforward, minimal C files without obfuscation or macro masking.
-    3e Sanity check of the build system         Fully automated via native continuous integration testing suites embedded in the upstream source.
-    3f Build script provided                    No. Managed safely via the native OS package controller.
+    1a Security design is amenable to ours        Yes. Designed specifically as a minimal, unprivileged attack surface reduction boundary.
+                                                  Maintained by Red Hat/GNOME developers with structured disclosure and explicit security modeling.
+                                                  Codebase is exceptionally tight, readable, and avoids macro or parsing complexity.
+    1b Recent CVEs, issues or exploits            Extremely clean track record. No high-severity RCE or jailbreak flaws in years.
+                                                  CVE-2019-12439 was a minor local info leak due to a temporary file descriptor layout bug.
+                                                  Most environment breakout vulnerabilities stem from the underlying Linux kernel namespaces rather than bwrap.
+    1c Development activity & breakage risk       Highly Active / Low Breakage. Maintained continuously under the containers organization on GitHub.
+                                                  CLI arguments and core runtime flags are frozen and stable; update regressions are virtually non-existent.
+    1d What it needs to function                  Kernel Namespace Support. Relies directly on user, mount, IPC, PID, and net namespace system calls.
+                                                  Requires unprivileged user namespaces enabled on the host (user.max_user_namespaces > 0).
+                                                  Dynamically links against standard glibc; needs no background daemons or permanent disk writes.
+    1e Can it be sandboxed or isolated            N/A. This is the sandbox controller itself. It is transient and destroys its environment upon exit.
+    1f Security options & hardened configuration  Maximal isolation flags must be applied when executing sub-commands: --unshare-all, --uid, --gid,
+                                                  --ro-bind for system runtime folders, and explicit --seccomp filters to drop dangerous syscall architectures.
+    1g Could another dependency do this better    No. It is the gold standard for rapid, unprivileged, daemonless command sandboxing on Linux.
+                                                  Alternative tools like Minijail lack the widespread distro adoption, while Podman/Docker bring major daemon overhead.
+    1h Origin & supply chain risk                 Very Low Risk. Maintained by primary enterprise Linux contributors (Fedora, Red Hat, SUSE).
+                                                  Distributed with cryptographic tag signatures and heavily scrutinized open-source review pipelines.
+    1i Dependency traps for existing installs     The Setuid Trap. If the target host kernel disables unprivileged user namespaces by default,
+                                                  bwrap requires a root-owned setuid bit to function, expanding the local attack surface if misconfigured.
+    2a System package versus a source build       System Package Preferred. The distribution-provided package is kept patched, stable,
+                                                  and correctly mapped to the underlying platform's specific namespace permissions.
+    2b Build flags, libraries & features          Standard hardened compile blocks. Ensure libseccomp filtering is explicitly compiled in (--enable-seccomp).
+    2c Minimum version & version edge cases       Strictly 0.4.0+ as defined by the manifest, though 0.8.0+ is strongly recommended to support modernized flags.
+    2d Licensing implications of the build        LGPL-2.0 is highly amenable. Safe for commercial and internal utility wrapping without copyleft traps.
+    3a Distribution method                        Native package repositories (apt) and official GitHub source releases.
+    3b Download source used                       Upstream GitHub assets or native distribution mirrors.
+    3c How an installer obtains this version      Standard automated package management fetch (apt-get install -y bubblewrap).
+    3d Inspection of any bundled binary or code   Inspection Practical. Clean, straightforward, minimal C files without obfuscation or macro masking.
+    3e Sanity check of the build system           Fully automated via native continuous integration testing suites embedded in the upstream source.
+    3f Build script provided                      No. Managed safely via the native OS package controller.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-------------------------------------------------------------------------------------------------------------------
-
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Calibre--
 
   Approval record
-    Status                                      ADOPTED
-    Approved on                                 11/04/2026
-    Expires on                                  11/04/2027
-    Audited by                                  Justin Grimes (@zelon88)
-    Audit outcome                               PASSED WITH CONDITIONS
-    Notes or Conditions                         Massive Python/C extension footprint. Must strictly run in headless mode and always run encapsulated inside Bubblewrap.
+    Status                                        ADOPTED
+    Approved on                                   11/04/2026
+    Expires on                                    01/01/2027
+    Audited by                                    Justin Grimes (@zelon88)
+    Audit outcome                                 PASSED WITH CONDITIONS
+    Notes or Conditions                           Massive Python/C extension footprint. Must strictly run in headless mode and always run encapsulated inside Bubblewrap.
 
   Manifest facts, read from Resources/Contract/depends.php
-    Binary                                      ebook-convert
-    Install type                                apt
-    Package                                     calibre
-    Minimum version                             9.13
-    Required                                    NO
-    Subsystem                                   Ebooks
-    License                                     GPL-3.0
-    Depends on                                  Bubblewrap
-    Source                                      https://calibre-ebook.com
-    Purpose                                     Converts between ebook formats.
+    Binary                                        ebook-convert
+    Install type                                  apt
+    Package                                       calibre
+    Minimum version                               9.13
+    Required                                      NO
+    Subsystem                                     Ebooks
+    License                                       GPL-3.0
+    Depends on                                    Bubblewrap
+    Source                                        https://calibre-ebook.com
+    Purpose                                       Converts between ebook formats.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours      Yes, procedurally. Calibre is actively maintained by Kovid Goyal and a dedicated community. 
-                                                It has a transparent development lifecycle, utilizes public bug trackers on GitHub/Launchpad, 
-                                                and actively resolves reported software vulnerabilities. However, because it relies on rendering 
-                                                untrusted user-uploaded markup languages (HTML, CSS, SVG) embedded inside compressed e-book formats, 
-                                                it presents an expansive architectural attack surface.
-    1b Recent CVEs, issues or exploits          High Risk. E-books are inherently packaged web code (HTML/CSS), making Calibre a frequent target for injection flaws. 
-                                                Vulnerabilities such as CVE-2024-6782 and CVE-2023-45136 allowed arbitrary file reads and server-side request 
-                                                forgery (SSRF) via malicious XML External Entity (XXE) configurations and unhardened path processing inside 
-                                                the EPUB metadata parser. If unmitigated, a user upload can leak local system environment variables or file contents.
-    1c Development activity & breakage risk     Highly Active / Moderate Breakage Risk. The codebase receives aggressive updates, feature additions, 
-                                                and bug fixes. While the `ebook-convert` CLI syntax is exceptionally stable, layout rendering behaviors 
-                                                and modern CSS parsing engines upgrade frequently between major releases, which can occasionally alter visual 
-                                                formatting outputs during automated conversion checks.
-    1d What it needs to function                Resource Intensive / Complex Font Layouts. Requires significant memory and CPU allocations to spin up 
-                                                its internal virtual layout and rendering engines during conversion passes. Requires direct file system read/write 
-                                                privileges in its temporary staging path to unpack and repack nested archive components. Links dynamically against 
-                                                Python 3 runtimes, Qt libraries, image processing shared objects, and system font layouts.
-    1e Can it be sandboxed or isolated          Highly Amenable. Document and e-book compilation is a purely mathematical layout transformation process. 
-                                                Because it is configured to depend on Bubblewrap, it can be entirely denied host networking, IPC channels, 
-                                                and host filesystem access, interacting solely with the explicit target input/output conversion folder.
-    1f Security options & hardened configurationNative application-level hardening must be applied via command-line arguments. When calling `ebook-convert`, 
-                                                ensure any embedded JavaScript interpretation parameters or external link fetches are explicitly restricted 
-                                                via structural arguments if exposed by the engine variant, and ensure the process environment has zero network access via the sandbox.
-    1g Could another dependency do this better  No. For deep, high-fidelity, cross-format e-book compilation (especially handling proprietary Amazon MOBI/AZW assets 
-                                                alongside standard EPUB layouts), Calibre's `ebook-convert` utility is the unmatched industry gold standard. 
-                                                Micro-libraries fail to parse CSS style hierarchies correctly. The risk must be accepted and mitigated via a Bubblewrap jail.
-    1h Origin & supply chain risk               Low-Medium Risk. Maintained via a highly visible open-source engine with centralized Git version control. 
-                                                Upstream code distributions are vetted, signed, and packaged by every major enterprise Linux OS vendor, 
-                                                minimizing malicious tampering risks if sourced via official OS distribution channels.
-    1i Dependency traps for existing installs   The X11/Qt Desktop Library Bloat Trap. Installing the standard `calibre` package pulls in an extensive desktop 
-                                                GUI dependency graph (including heavy Qt components and graphic rendering subsystems). In a headless server container 
-                                                running HRConvert2, this massive dependency footprint swells the base image size and requires ensuring the `ebook-convert` 
-                                                binary runs completely standalone without throwing X11 display server initialization errors.
-    2a System package versus a source build     System Package Preferred. Compiling Calibre and its entire associated Qt/Python C-extension ecosystem from source 
-                                                is exceptionally complex and prone to environment mismatches. The distribution-provided package via `apt` is heavily 
-                                                fortified, compiled with modern toolchain protections (ASLR, stack guards), and patched downstream for critical CVEs.
-    2b Build flags, libraries & features        Default package compilation flags applied by apt are sufficient when fully encapsulated by Bubblewrap.
-    2c Minimum version & version edge cases     9.13+ as defined by the manifest facts to ensure modern runtime support and critical built-in metadata 
-                                                parsing safety boundaries are enforced across all processing threads.
-    2d Licensing implications of the build      GNU General Public License (GPL-3.0). Standard copyleft framework. Completely clean for internal infrastructure 
-                                                execution within the HRConvert2 architecture, but demands careful separation if you intend to redistribute 
-                                                the primary application layer commercially.
-    3a Distribution method                      Native package repositories (apt) and official signed upstream release portals.
-    3b Download source used                     Official distribution mirror networks.
-    3c How an installer obtains this version    Automated package fetch via the standard platform installation utility (apt-get install -y calibre).
-    3d Inspection of any bundled binary or code Inspection Impractical. Sprawling, multi-gigabyte hybrid code tree mixing millions of lines of high-level Python parsing 
-                                                logic with low-level C rendering pipelines and compiled vector font manipulation drivers.
-    3e Sanity check of the build system         Fully validated via robust built-in automated test suites and continuous testing frameworks managed natively 
-                                                inside the upstream distribution pipeline.
-    3f Build script provided                    No.
-
-------------------------------------------------------------------------------------------------------------------
+    1a Security design is amenable to ours        Yes, procedurally. Calibre is actively maintained by Kovid Goyal and a dedicated community.
+                                                  It has a transparent development lifecycle, utilizes public bug trackers on GitHub/Launchpad,
+                                                  and actively resolves reported software vulnerabilities. However, because it relies on rendering
+                                                  untrusted user-uploaded markup languages (HTML, CSS, SVG) embedded inside compressed e-book formats,
+                                                  it presents an expansive architectural attack surface.
+    1b Recent CVEs, issues or exploits            High Risk. E-books are inherently packaged web code (HTML/CSS), making Calibre a frequent target for injection flaws.
+                                                  Vulnerabilities such as CVE-2024-6782 and CVE-2023-45136 allowed arbitrary file reads and server-side request
+                                                  forgery (SSRF) via malicious XML External Entity (XXE) configurations and unhardened path processing inside
+                                                  the EPUB metadata parser. If unmitigated, a user upload can leak local system environment variables or file contents.
+    1c Development activity & breakage risk       Highly Active / Moderate Breakage Risk. The codebase receives aggressive updates, feature additions,
+                                                  and bug fixes. While the `ebook-convert` CLI syntax is exceptionally stable, layout rendering behaviors
+                                                  and modern CSS parsing engines upgrade frequently between major releases, which can occasionally alter visual
+                                                  formatting outputs during automated conversion checks.
+    1d What it needs to function                  Resource Intensive / Complex Font Layouts. Requires significant memory and CPU allocations to spin up
+                                                  its internal virtual layout and rendering engines during conversion passes. Requires direct file system read/write
+                                                  privileges in its temporary staging path to unpack and repack nested archive components. Links dynamically against
+                                                  Python 3 runtimes, Qt libraries, image processing shared objects, and system font layouts.
+    1e Can it be sandboxed or isolated            Highly Amenable. Document and e-book compilation is a purely mathematical layout transformation process.
+                                                  Because it is configured to depend on Bubblewrap, it can be entirely denied host networking, IPC channels,
+                                                  and host filesystem access, interacting solely with the explicit target input/output conversion folder.
+    1f Security options & hardened configuration  Native application-level hardening must be applied via command-line arguments. When calling `ebook-convert`,
+                                                  ensure any embedded JavaScript interpretation parameters or external link fetches are explicitly restricted
+                                                  via structural arguments if exposed by the engine variant, and ensure the process environment has zero network access via the sandbox.
+    1g Could another dependency do this better    No. For deep, high-fidelity, cross-format e-book compilation (especially handling proprietary Amazon MOBI/AZW assets
+                                                  alongside standard EPUB layouts), Calibre's `ebook-convert` utility is the unmatched industry gold standard.
+                                                  Micro-libraries fail to parse CSS style hierarchies correctly. The risk must be accepted and mitigated via a Bubblewrap jail.
+    1h Origin & supply chain risk                 Low-Medium Risk. Maintained via a highly visible open-source engine with centralized Git version control.
+                                                  Upstream code distributions are vetted, signed, and packaged by every major enterprise Linux OS vendor,
+                                                  minimizing malicious tampering risks if sourced via official OS distribution channels.
+    1i Dependency traps for existing installs     The X11/Qt Desktop Library Bloat Trap. Installing the standard `calibre` package pulls in an extensive desktop
+                                                  GUI dependency graph (including heavy Qt components and graphic rendering subsystems). In a headless server container
+                                                  running HRConvert2, this massive dependency footprint swells the base image size and requires ensuring the `ebook-convert`
+                                                  binary runs completely standalone without throwing X11 display server initialization errors.
+    2a System package versus a source build       System Package Preferred. Compiling Calibre and its entire associated Qt/Python C-extension ecosystem from source
+                                                  is exceptionally complex and prone to environment mismatches. The distribution-provided package via `apt` is heavily
+                                                  fortified, compiled with modern toolchain protections (ASLR, stack guards), and patched downstream for critical CVEs.
+    2b Build flags, libraries & features          Default package compilation flags applied by apt are sufficient when fully encapsulated by Bubblewrap.
+    2c Minimum version & version edge cases       9.13+ as defined by the manifest facts to ensure modern runtime support and critical built-in metadata
+                                                  parsing safety boundaries are enforced across all processing threads.
+    2d Licensing implications of the build        GNU General Public License (GPL-3.0). Standard copyleft framework. Completely clean for internal infrastructure
+                                                  execution within the HRConvert2 architecture, but demands careful separation if you intend to redistribute
+                                                  the primary application layer commercially.
+    3a Distribution method                        Native package repositories (apt) and official signed upstream release portals.
+    3b Download source used                       Official distribution mirror networks.
+    3c How an installer obtains this version      Automated package fetch via the standard platform installation utility (apt-get install -y calibre).
+    3d Inspection of any bundled binary or code   Inspection Impractical. Sprawling, multi-gigabyte hybrid code tree mixing millions of lines of high-level Python parsing
+                                                  logic with low-level C rendering pipelines and compiled vector font manipulation drivers.
+    3e Sanity check of the build system           Fully validated via robust built-in automated test suites and continuous testing frameworks managed natively
+                                                  inside the upstream distribution pipeline.
+    3f Build script provided                      No.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

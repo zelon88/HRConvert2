@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.9.
+// / v4.0.0.
 // / This file declares what the Stream conversion pipeline is & what it can do.
 // / It is read by pipelineCore.php on EVERY request & it must stay cheap.
 // / It ASSIGNS VARIABLES & DOES NOTHING ELSE. No functions, no logic, no output.
@@ -35,7 +35,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read WITHOUT executing this file, then matched
 // / EXACTLY against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v3.9.9';
+$PipelineVersion = 'v4.0.0';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -56,9 +56,11 @@ $PipelineDisplayName = 'Stream';
 // / Stream sits last of every family & that is load bearing.
 // / Its outputs are ordinary audio & video containers, so an mp4 or an mp3 is claimed by
 // / the Video or Audio family as well as by this one. A local file must always reach the
-// / converter that reads a file, never the one that fetches a URL. Before this pipeline
-// / existed, convertFiles() enforced this by keeping Stream at the end of a hand ordered
-// / array & saying so in a comment. This number is that comment made enforceable.
+// / converter that reads a file, never the one that fetches a URL. convertFiles() is what
+// / enforces this, by keeping Stream at the end of its hand ordered family maps & taking
+// / the first family that matches. This number does NOT enforce it, because
+// / resolvePipelineCandidates() filters on the family before it reads a priority, so a
+// / priority only orders the implementations inside one family.
 $PipelinePriority = 900;
 
 // / The function dispatch calls. THIS NAME MUST BE UNIQUE ACROSS EVERY INSTALLED PIPELINE.

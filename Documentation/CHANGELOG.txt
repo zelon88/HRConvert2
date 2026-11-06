@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 9/4/2026 by Justin Grimes, www.github.com/zelon88
+HRConvert2, Copyright on 11/5/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v3.9.9.
+v4.0.0.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -24,6 +24,117 @@ The authoritative list of dependencies is Resources/Contract/depends.php & nothi
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+
+--------------------
+COMMIT 11/5/2026
+v4.0.0 - The core & the documentation are read by hand, & the audit is carried into the new approval records.
+
+-v4.0.0.
+-A manual QC pass read convertCore.php & the Documentation folder in full, rather than by search. What changes behaviour comes first.
+-Every page was a fatal error when the Pipeline Core was missing or mismatched. getFiles, uploadFiles & deleteFiles called loadPipelineCore unguarded. loadFilesPipeline guards all three.
+-cleanBuildEnvironment looked for a Build folder above the installation rather than inside it, so it never found its own & would have emptied a neighbour's.
+-Error 26 is no longer fatal. A build environment that could not be removed took every page down until a permission was fixed. It was always documented as not fatal.
+-updateApplication purged $Lol, a global it declares, so every line ending printed after an update was gone. The Engine's waitForStream purged a global the same way.
+-convertFiles assigned verifyFile's name back to the upload, so a second file in one request became name.ext.ext.
+-verifyConfigVersion could never report a config.php with no version, because the global declaration made the key exist.
+-consolidateLogs declared its own two arguments global, which overwrote them.
+-verifyInputs set four uppercase locals nobody returned & tested a button name the form never sends. Removed.
+-applicationConfigModel describes each setting with the label config.php gives it, as its own rule says. Thirty two did not. Nothing reads them yet.
+-Three log lines named the wrong operation or the wrong file.
+-Comments, prefaces, declarations & indentation are corrected throughout convertCore.php. Uppercase locals that nothing returned are lowercase.
+-Fourteen functions had lost a separator, five in convertCore.php & nine in environmentCore.php, resourceManager.php & the Files pipeline.
+-The Files pipeline moves to v4.0.0 with its pin. The Stream pipeline's comment says map order keeps Stream last, not its priority.
+-Add check twenty one, frame. Every function opens & closes with a separator.
+-Add check twenty two, globals. No function destroys a global it declares. Both are Python only & ABOUT_QUALITY_CONTROL.txt lists them.
+-hrconvert2-check.sh no longer counts the Python's checks. It names the ones it does not run.
+-Add Documentation/Build/hrconvert2-doccheck.py. It checks every document's header & sections, every ERROR_DESCRIPTIONS.txt entry against the code, & every function & setting a document names.
+-Its first run found five entries whose FATAL field said the opposite of the code. 8001, 9001 & 15000 are not fatal. 14000 was, & is retired below.
+-Fifty planted faults were each caught before it was trusted. --fix repairs whitespace & the gaps between sections, & nothing that can change a meaning.
+-hrconvert2-approvals.py writes the standard header & a Notes or Conditions field in the approval record.
+-An answer to question 1f was lost on every refresh, because the label filled its column. Every pipeline's DEPENDENCY_APPROVALS.txt & README.md is regenerated.
+-Eight Build scripts carry the standard header. bisect.sh & build-imagemagick-v7.sh had no version & carry v4.0.0.
+-ERROR_DESCRIPTIONS.txt is in numeric order with the example first. Twenty six entries had been pasted into its header, & seven numbers were documented twice with different answers.
+-Eleven of its FILE fields named convertCore.php for numbers raised elsewhere, & nineteen references named minimum version settings config.php no longer has.
+-Error 25 described a GUI pin as a minimum. A GUI is pinned exactly.
+-improperly, exceeding & seriously were misspelled fifty eight times.
+-Every document names functions, settings & files as the code names them now. Stale names found by reading were confirmed by the names check.
+-ABOUT_COMPONENTS.txt, ABOUT_MANAGERS.txt & ABOUT_PIPELINE_COMPONENTS.txt described the layout & roles from before the Engine. Rewritten to the code.
+-CREATING_CONVERSION_PIPELINES.txt said $PipelinePriority orders families. It orders implementations within one family, & convertFiles orders the families.
+-CREATING_LANGUAGE_PACKS.txt described a version mismatch as a refusal. The code warns & loads a baseline pack underneath.
+-CREATING_GUIS.txt told GUI authors to use Resources/Images. The core reads Resources/Image, so a GUI built from it was refused.
+-ABOUT_REST_API.txt named two POST fields in the wrong case & three buttons the core never reads. CREATING_GUIS.txt carries the same corrected text.
+-ABOUT_RESOURCE_RATE_LIMITING.md ended mid sentence & is complete. It & the text file no longer name four settings that do not exist.
+-ABOUT_DEFENSIVE_MEMORY_MANAGEMENT.md showed a purge function with the wrong signature & a global that does not exist.
+-ABOUT_DOCUMENTATION.txt describes the plain text layout every document is held to.
+-Headers are rejoined in ABOUT_ENGINE_CONTRACT.txt & ERROR_DESCRIPTIONS.txt, & completed in ABOUT_COHESION_PASS.txt, ABOUT_ENGINE_ABSORPTION.txt, ABOUT_DATA_DIRECTORY_PROTECTION.txt & ABOUT_PIPELINE_COMPONENTS.txt.
+-verifyFile no longer halts a request over one file. A file that fails first stage validation is refused with a warning, & error 14000 is retired.
+-An output with the same name & extension as its input is refused with error 14005. Removing it as a stale output deleted the original.
+-verifyFile & uploadFiles tested $DangerousFiles without the leading dot it uses, so a dangerous format an administrator allowed would have passed. extensionIsDangerous tests both spellings for every caller.
+-Error 14003 is documented as what it is, a format config.php allows that is also dangerous.
+-A scan with every scanner delivers its report when one scanner reaches no verdict, as either scanner alone does. Error 23 now means the report could not be written.
+-verifyLogs no longer names & rotates a ClamAV log that nothing writes.
+-An unsandboxed document conversion gets a private LibreOffice profile, made for it & removed after it. Any account could make the shared /tmp/hrc2-libreoffice first, & a profile can carry macros.
+-A profile folder that cannot be made refuses that document with error 2006.
+-The verbose log said Sandboxed: YES for every unsandboxed LibreOffice conversion. libreOffice.php & its pin move to v4.0.0.
+-Six pipeline headers named the wrong error block. Archive, Audio, Ebook, Image & Scad move to v4.0.0 with their pins, & their README.md files are regenerated.
+-The Worker Manager & Request Manager headers describe the roles they have. Both move to v4.0.0 with their pins.
+-ABOUT_MANAGERS.txt said the Request Manager grants budget. The Resource Manager grants & reclaims it.
+-config.php is read before the Engine configuration, because it is how an installation finds itself. engineConfig.php & ABOUT_ENGINE_CONTRACT.txt said the opposite.
+-Add check twenty three, configs. No setting is set both in config-template.php & in an Engine configuration file, which is read later & would win.
+-Eight configuration labels are corrected, & so is every document & description that mirrors them. File Deletion Age Threshold, Supported GUIs, the two ebook format labels & four stream labels.
+-config-template.php says what --Delete Build Environment-- removes. It never touched Documentation/Build, which the application needs.
+-CODING_CONVENTIONS says a language pack mismatch is reported rather than enforced, which is what the code does. The core & the UI are the pins it enforces.
+-INSTALLATION_INSTRUCTIONS.txt names --Installation Directory-- & has its blank line.
+-DOCKER_BUILD_INSTRUCTIONS.txt tests with SYS_ADMIN, as the workflow does, & its release stamps include versionInfo.php & config-template.php.
+-CREATING_GUIS.txt points at ABOUT_REST_API.txt instead of carrying a copy of it.
+-generateBootloadersForBootableIsoSupport.sh prints the hashes for $assetMap, which is where they are pinned, & makes its stub with mktemp. The UEFI asset guide follows it.
+-Every index.html has its refresh in the head & its URL inside the content.
+-The 66 copies in the two GUI folders keep their translations & declare their language. The Russian copy carried Portuguese & is Russian now.
+-ABOUT_SCAD_SANITIZATION.txt credits GHSA-qcq3-837w-2c9c to Saudadeeee, as v3.5.6 records, with the five reports that produced the lexer & the sandbox.
+-The documentation checker leaves the changelog's entries alone, & --fix never writes to it.
+-Delete Documentation/Build/hrconvert2-test-addresses.php. hrconvert2-test-addresses-cli.php replaces it.
+-Delete Documentation/CREATING_CONVERSION_PIPELINES_EXAMPLE.txt, as v3.9.6 said. A working pipeline is the example now.
+-Every component changed since the v3.9.9 commit moves to v4.0.0 with its pin. That is convertCore.php, engine.php, engineConfig.php, the four managers, environmentCore.php, libreOffice.php, app-engine-config.php, versionInfo.php & the Archive, Audio, Ebook, Files, Image, OCR, Scad & Stream pipelines.
+-The kernel, the Setup, Dependency & Pipeline Cores & the ClamAV & ScanCore pipelines did not change & stay v3.9.9. $RequiredConfigVersion & $RequiredSecretVersion do not move.
+-The Default & Original GUIs move to v4.0.0, & so does $RequiredGuiVersion. The language packs stay v3.9.3.
+-The supply chain audit's answers are carried into the new approval record layout. Every answer & record field was compared after the refresh & none changed.
+-A record written in the old layout keeps every answer through a refresh. The reader finds a label by name & a continuation line by its depth, not by its column, so the v3.9.7 layout lost nothing.
+-The record field is Notes or Conditions, as the audit writes it.
+-hrconvert2-approvals.py --check reads M/D/YYYY, as the changelog & the audit write a date, as well as YYYY-MM-DD. It had reported every audited date as unreadable.
+-It also reports an audited dependency with no Approved on, Expires on or Audited by, & a single line field that runs onto a second line. NOT APPLICABLE, OWNED is exempt from the calendar, as ABOUT_DEPENDENCIES.txt says.
+-The PyMeshLab record had lost its Approved on label, so its date was read as part of its status. The label is restored.
+-config-template.php says a SCAD reference is removed, never commented out, & carries the GHSA-mqvr-h4q5-chg9 warning config.php has carried since v3.9.8.
+-Resources/config.php is written from config-template.php, at default values, so it takes every corrected label & comment.
+-Its $ScanCoreChunkSize is 67108864, as the template's is. The 134217928 it shipped was a mistyped 128M & over a quarter of the memory limit, so ScanCore reduced it at scan time & logged a warning.
+-Remove --Use Patched Document Engine--. It chose a bundled unoconv that no longer exists, & nothing read it. LibreOffice converts every document itself.
+-convertCore.php no longer requires it, builds a path to unoconv from it, or declares it & DocumentEngineSleepTimer as globals. An older config.php that still carries it is unaffected.
+-Errors 2000, 7000, 7001, 15007 & 15008 describe LibreOffice rather than unoconv. 7000, 15007 & 15008 quote the message the code writes.
+-$ConfigVersion stays v3.9.6, as it did for v3.9.7, v3.9.8 & v3.9.9, because no setting was added. Removing one leaves every older configuration valid. DOCKER_BUILD_INSTRUCTIONS.txt says it follows $RequiredConfigVersion rather than the tag.
+-versionInfo.php & both uiVersionInfo.php files report v4.0.0 & lose a stray letter in their headers.
+-ABOUT_QUALITY_CONTROL.txt says the checkers report nothing outside Resources/ScanCore. It said nothing at all, which is true only of a tree without ScanCore. The findings there are the same on v3.9.9.
+-Both linters check Resources/ScanCore by default & take --no-scancore to leave it out. The summary counts ScanCore's findings apart from the application's.
+-A function name is matched within one program, because ScanCore runs as a process of its own. The Python had also counted the ScanCore pipeline, which is application code, as ScanCore.
+-ScanCore's guard is its refusal to run anywhere except a command line, & both linters hold it to that.
+-Every approval expires on 01/01/2027, 1 January of the year after it was given. --check reports an expiry on any other day.
+-The Subtitle pipeline's FFMPEG & Bubblewrap answers are copied from the Audio pipeline's, so every pipeline record is audited.
+-config-template.php & config.php have no blank line between two settings. A blank line comes before a section separator & nowhere else.
+-Every header that listed the application's dependencies points at Resources/Contract/depends.php instead, as the changelog's does. That is 72 files, & unoconv was among the names they carried.
+-The language packs, the Setup & Dependency Cores & depends.php change only in that comment & keep their versions.
+-Add Documentation/SECURITY.txt & SECURITY.md. Advisories are supported for the latest tagged release, the latest Docker image & Bleeding Edge. Every report is accepted & every reporter is credited publicly once it is patched.
+-Add .github/SECURITY.md, which GitHub shows on the Security tab & which points at the policy. GitHub does not read a policy from Documentation.
+-README.md sends a security report to the Security tab rather than to a public issue.
+-Documentation/README.md lists SECURITY.md & .txt under Security, & lists 2026_SUPPLY_CHAIN_AUDIT.xlsx beside the approval records.
+-config.php says it is generated from config-template.php & that a structural edit is lost when it is generated again. Step three of the Engine migration is done.
+
+--------------------
+COMMIT 11/5/2026
+v3.9.9 - Supply Chain Audit Complete. No code changed.
+
+-v3.9.9.
+-No code changes.
+-Supply Chain Audit Complete.
+-All dependencies officially audited, & adopted.
+-Special thanks to Google Gemini for helping with the research.
 
 --------------------
 COMMIT 10/31/2026

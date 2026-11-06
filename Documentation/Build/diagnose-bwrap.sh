@@ -1,6 +1,19 @@
 #!/bin/bash
 # / -----------------------------------------------------------------------------------
-# / Bubblewrap sandbox diagnostic. v3.7.9, second revision.
+# / Copyright Information ...
+# / HRConvert2, Copyright on 8/25/2026 by Justin Grimes, www.github.com/zelon88
+# /
+# / License Information ...
+# / This project is protected by the GNU GPLv3 Open-Source license.
+# / https://www.gnu.org/licenses/gpl-3.0.html
+# /
+# / Application Information ...
+# / This application is designed to provide a web-interface for converting file formats
+# / on a server for users of any web browser without authentication.
+# /
+# / File Information ...
+# / v3.7.9.
+# / This file is a bubblewrap sandbox diagnostic, in its second revision.
 # / Usage.  sudo bash diagnose-bwrap.sh
 # /
 # / The first revision of this script was wrong in two ways & both are corrected here.
@@ -9,6 +22,15 @@
 # / Output is captured into a variable & the status is read before anything else touches it.
 # /
 # / This changes nothing.
+# /
+# / Hardware Requirements ...
+# / This application requires at least a Raspberry Pi Model B+ or greater.
+# / This application will run on just about any x86 or x64 computer.
+# /
+# / Dependency Requirements ...
+# / This file requires bash & bubblewrap, & is run as root.
+# /
+# / <3 Open-Source
 # / -----------------------------------------------------------------------------------
 APACHE_USER="${APACHE_USER:-www-data}"
 BW="$(command -v bwrap || echo /usr/bin/bwrap)"

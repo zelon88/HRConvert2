@@ -1,6 +1,6 @@
 # Supporting HRConvert2
 
-Thank you for your interest in supporting the development of HRConvert2! Whether you are a developer, a designer, or an enthusiast, your contributions help keep this project alive and growing. 
+Thank you for your interest in supporting the development of HRConvert2! Whether you are a developer, a designer, or an enthusiast, your contributions help keep this project alive and growing.
 
 ---
 
@@ -18,7 +18,7 @@ This application provides a highly accessible, unauthenticated web interface ena
 | **Hardware** | Raspberry Pi Model B+ (or any standard x86 / x64 architecture computing platform) |
 | **Environment** | Debian Linux + Apache Web Server v2.4 + PHP v8.0 or greater |
 
-> ⚙️ **Core Dependencies:** FFMPEG, Dia, LibreOffice, Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia, and xvfb-run.
+> ⚙️ **Core Dependencies:** The authoritative list of dependencies is `Resources/Contract/depends.php` and nothing else. Run `php convertCore.php -v` to see what this installation has.
 
 ---
 

@@ -18,18 +18,18 @@ This application provides a highly accessible, unauthenticated web interface ena
 | **Hardware** | Raspberry Pi Model B+ (or any standard x86 / x64 architecture computing platform) |
 | **Environment** | Debian Linux + Apache Web Server v2.4 + PHP v8.0 or greater |
 
-> ⚙️ **Core Dependencies:** FFMPEG, Dia, LibreOffice, Mkisofs, 7zip, Unoconv, libgxps-utils, Tesseract, Unzip, OpenSCAD, Rar, Inkscape, Unrar, ClamAV, MeshLab, PopplerUtils, PDFTOTEXT, ImageMagick, Assimp, Bwrap, Dia, and xvfb-run.
+> ⚙️ **Core Dependencies:** The authoritative list of dependencies is `Resources/Contract/depends.php` and nothing else. Run `php convertCore.php -v` to see what this installation has.
 
 ---
 
 ## About Command Line Arguments
 HRConvert2 accepts input from the command line to provide administrative functionality and to support external scripting and automation.
 
-* **No File Conversions:** File conversions are **NOT** supported from the command line. 
+* **No File Conversions:** File conversions are **NOT** supported from the command line.
 * **Admin Use Only:** CLI functionality exists solely for administrators maintaining, troubleshooting, or diagnosing a server.
-* **Mutually Exclusive:** A command line invocation and a web request will always remain mutually exclusive. 
-* **Disables Web Interface:** Any CLI argument disables the web interface and all conversion paths for that invocation. 
-* **Strict Execution:** The application handles the requested operation and then stops immediately. Nothing falls through. 
+* **Mutually Exclusive:** A command line invocation and a web request will always remain mutually exclusive.
+* **Disables Web Interface:** Any CLI argument disables the web interface and all conversion paths for that invocation.
+* **Strict Execution:** The application handles the requested operation and then stops immediately. Nothing falls through.
 * **Error Handling:** An unrecognized argument displays the help menu rather than serving a web page.
 * **No User Sessions:** No session is created by a CLI invocation and no user data is touched (except by the `clean` argument).
 
@@ -58,14 +58,16 @@ Add your desired argument to the end of the base command. Arguments accepting a 
   sudo php /var/www/html/HRProprietary/HRConvert2/convertCore.php -u v3.6.7
   ```
 
+Arguments are case insensitive as of v3.9.9. A path or a name given to an option is passed exactly as typed.
+
 ---
 
 ## CLI User Account Considerations
 
 ### Running as Root
-HRConvert2 should be run as **root** when using the command line. 
+HRConvert2 should be run as **root** when using the command line.
 
-* **Permission Safety:** Running as root does **NOT** create root-owned permission problems. 
+* **Permission Safety:** Running as root does **NOT** create root-owned permission problems.
 * **Automatic Corrections:** When a directory is created under root, HRConvert2 immediately corrects the owner, group, and permissions to the values Apache requires.
 * **Web Readiness:** The application maintains constant readiness for web operations; CLI invocations are never permitted to compromise this.
 
@@ -95,7 +97,7 @@ sudo chown -R www-data:www-data "/the/full/path/that/has/incorrect/permissions"
 ```
 *Do not run the above commands against the data location without restoring the secret file permissions immediately afterward:*
 ```bash
-sudo chmod 0600 "/DATA/HRConvert2/secret.php"
+sudo chmod 0600 "/DATA/HRConvert2/HRConvert2-secret.php"
 ```
 
 ## Supported Command Line Arguments
@@ -120,9 +122,20 @@ sudo chmod 0600 "/DATA/HRConvert2/secret.php"
 | `--kill-every-worker` | End every PHP process owned by the web server user. | root or `www-data` |
 | `-y`, `--yes` | Skip the confirmation prompt on the two above. | — |
 | `--config <argument>` | Configure, view, verify, repair & back up `config.php`. | root, except `--backup` |
-| `--setup <argument>` | Install, check & audit dependencies. | root, except `--check-depends` |
+| `--setup <argument>` | Install, check & audit dependencies. | root |
 | `--pipeline <argument>` | List, describe & verify the installed pipelines. | any user |
 | `--app<name>` | Handed to the application untouched. HRConvert2 declares none yet. | — |
+
+`ABOUT_COMMAND_LINE_ARGUMENTS.txt` covers `--config`, `--setup`, `--pipeline` and `--app` option by option.
+
+### 🚦 Exit Status
+Every command exits with a status a script can act on, as of v3.9.9.
+
+| Status | Meaning |
+| :--- | :--- |
+| `0` | The command did what was asked, or what it asks for was already true. A report exits `0` whatever it reports. |
+| `1` | The command failed, found a fault, was refused or was declined. Every fatal error. |
+| `2` | The arguments were not understood. Nothing was attempted. |
 
 ---
 
@@ -134,7 +147,7 @@ Performs a comprehensive diagnostic evaluation of the installation. This is far 
 It analyzes and reports:
 * Core version, configuration version, and the minimum version requirements.
 * Every version-pinned dependency (verifying if minimum requirements are met).
-* Functional status of the **bubblewrap sandbox** (required for OpenSCAD conversions).
+* Functional status of the **bubblewrap sandbox** (every dependency command runs inside it).
 * Every installed interface and whether its version matches core requirements.
 * Language pack matches and discrepancies across interfaces.
 * Active conversion types enabled within the configuration file.
@@ -148,11 +161,15 @@ Displays the built-in help message. It lists every supported argument and refere
 * **Invalid Flags:** Unrecognized arguments default to this help screen and write a warning to the log file.
 * This argument works for **any user**.
 
-### 🧼 About `-c` and `--clean` (Continued)
+### 🧼 About `-c` and `--clean`
+Sweeps expired sessions from the temporary location and from the data location. The sweep normally happens on every web request; this argument exists for a server where no web request is coming.
+
+* **No Value:** Uses `--File Deletion Age Threshold--` from `config.php`.
+* **Whole Number (`-c=<minutes>`):** Uses that many minutes instead, for this run only.
 * **Now Value (`-c=now`):** Forces an immediate sweep of every single session, completely disregarding its age.
   > ⚠️ **CRITICAL WARNING:** `-c=now` deletes **EVERY** session, including those currently in use. A user mid-conversion will lose their files. Use this parameter with extreme caution.
 * **Typo Protection:** Values that are neither a whole number nor the word `now` are rejected, falling back to the configured default. A warning is written to the logs and printed to the shell to prevent accidental sweeps.
-* **Scope Isolation:** Nothing outside a designated session directory is ever touched. The log directory, LibreOffice profiles, and update backups live alongside session data but are strictly protected by name validation. Any location not matching its requested name is refused outright.
+* **Scope Isolation:** Nothing outside a designated session directory is ever touched. The log directory, LibreOffice profiles, and update backups live alongside session data but are strictly protected by name validation. Any location that is not one of the configured data locations is refused outright.
 * **Privileges:** This argument explicitly requires write access to the data locations.
 
 ---
@@ -210,7 +227,7 @@ every web request.
 The startup key is never printed and never logged. A failed start points at the log rather than
 reproducing the command.
 
-Normally started at boot from `rc.local` or a container entrypoint rather than by hand.
+Normally started at boot by the service unit `--setup --install-service` writes, or from a container entrypoint, rather than by hand.
 
 ---
 
@@ -318,5 +335,5 @@ Every command-line argument is safe to trigger via `cron` or external orchestrat
 This application is open-source software licensed under the **GPLv3 license**. Anyone can obtain a copy and utilize it for personal or commercial operations.
 
 * **Reciprocity Requirement:** If you modify this application and leverage it to generate revenue or offer it as a customer-facing product, **you MUST make your modified source code publicly available**.
-* **Contributing Changes:** The ideal workflow is to fork the official `zelon88/HRConvert2` GitHub repository and commit your modifications there. Alternatively, you can submit a Pull Request to have your optimizations added directly to the official codebase (with proper authorship credit). 
+* **Contributing Changes:** The ideal workflow is to fork the official `zelon88/HRConvert2` GitHub repository and commit your modifications there. Alternatively, you can submit a Pull Request to have your optimizations added directly to the official codebase (with proper authorship credit).
 * By reciprocating changes and software optimizations, the community ensures that `HRConvert2` remains highly capable, stable, and bug-free for everyone.

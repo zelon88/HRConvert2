@@ -74,6 +74,7 @@
 # / <3 Open-Source
 # / -----------------------------------------------------------------------------------
 
+import glob
 import os
 import re
 import subprocess
@@ -639,15 +640,20 @@ def check_purge_comment(files, report):
 # / Convention. A single exit is what makes a cleanup at the return reliable, & it is what
 # / made moving thirteen conversion families out of the core a mechanical operation.
 # / Three functions are exempt & each is exempt for a stated reason.
+# / Every return counts, wherever it sits on its line. Until v4.0.1 only a return that began a
+# / line was counted, so a one line if ending in a return passed, & one Engine function had three
+# / exits. A one line closure is removed first, because the return inside it is the closure's.
 def check_single_exit(files, report):
     exempt = {'quickDie', 'closeClientConnection', 'mergeConfigFile'}
+    closure = re.compile(r'\bfunction\s*\([^()]*\)\s*(?:use\s*\([^()]*\)\s*)?\{[^{}]*\}')
+    keyword = re.compile(r'(?<![\w$>])return\b')
     faults = 0
     for path in files:
         original, blanked = read_source(path)
         for name, record in read_functions(original, blanked).items():
             if name in exempt:
                 continue
-            returns = len([x for x in record['body'] if re.match(r'\s*return\b', x)])
+            returns = sum(len(keyword.findall(closure.sub('', x))) for x in record['body'])
             if returns != 1:
                 report('EXIT', path + ':' + str(record['start'] + 1) + ' ' + name
                        + '() has ' + str(returns) + ' return statements')
@@ -866,6 +872,22 @@ def check_version_pins(root, report):
                 report('PIN', match.group(1) + ' is pinned at ' + match.group(2)
                        + ' & declares ' + found.group(1))
                 faults += 1
+    # / The bootstrap script is pinned by $RequiredConfigScript & declares SCRIPT_VERSION.
+    # / Its name does not follow the pattern above, so it was never checked, & it drifted from
+    # / v3.9.3 onward. -fp disables a script that does not match, so a stale pin disables the
+    # / installer every release ships.
+    script_pin = re.search(r"\$RequiredConfigScript\s*=\s*'v?([0-9.]+)'", core)
+    scripts = glob.glob(os.path.join(root, 'Documentation', 'Build', '*-setup.sh'))
+    if script_pin and scripts:
+        found = re.search(r'^SCRIPT_VERSION="v?([0-9.]+)"', open(scripts[0], encoding='utf-8').read(), re.M)
+        if not found:
+            report('PIN', os.path.basename(scripts[0]) + ' declares no SCRIPT_VERSION & an unknown build cannot be cleared')
+            faults += 1
+        elif found.group(1) != script_pin.group(1):
+            report('PIN', 'the bootstrap script is pinned at ' + script_pin.group(1) + ' & '
+                   + os.path.basename(scripts[0]) + ' declares ' + found.group(1)
+                   + '. Set $RequiredConfigScript in convertCore.php to match.')
+            faults += 1
     return faults
 
 
@@ -1514,6 +1536,49 @@ def check_config_overlap(root, report):
         faults += 1
     return faults
 
+
+# / -----------------------------------------------------------------------------------
+# / CHECK TWENTY FOUR. An owner is changed only through changeOwnerWithoutFollowing().
+# / The second rule of ABOUT_MANAGED_LOCATIONS.txt. Root never works by name inside a folder
+# / another account can change, & changing an owner is the most dangerous thing root does by
+# / name. chown follows a link, & even lchown can be handed a hard link swapped in between a
+# / look & the change. changeOwnerWithoutFollowing() changes the name itself, & refuses where
+# / a hard link could be swapped in, so every other function calls it.
+# / A PHP chown, chgrp, lchown or lchgrp is reported, & so is chown or chgrp as a word inside
+# / a string, which is how a shell command reaches one. A printed instruction that names
+# / chown is reported as well, & is reworded rather than exempted.
+# / Four functions are exempt & each is exempt for a stated reason.
+# /   changeOwnerWithoutFollowing  It is the one place the change is made.
+# /   applyCodeRole                It gives the code tree to root with find -execdir chown -h,
+# /   applyRootOnlyRole            which never follows a link, & a name handed to root gives
+# /                                no other account anything. The root only role does the
+# /                                same to the backup.
+# /   runAsAccount                 It gives its own output file to the account it is about to
+# /                                become. tempnam created that file for root a moment earlier,
+# /                                in a folder whose sticky bit stops another account replacing it.
+# / It cannot see an owner changed by a program this one runs, such as a build script.
+OWNER_CALL = re.compile(r'\b(l?chown|l?chgrp)\s*\(')
+OWNER_SHELL = re.compile(r'''(['"])[^'"]*\b(chown|chgrp)\s''')
+def check_owner_changes(files, report):
+    exempt = {'changeOwnerWithoutFollowing', 'applyCodeRole', 'applyRootOnlyRole', 'runAsAccount'}
+    faults = 0
+    for path in files:
+        original, blanked = read_source(path)
+        # / The function each line belongs to, so an exempt one is passed over whole.
+        owners = {}
+        for name, record in read_functions(original, blanked).items():
+            for index in range(record['start'], record['end'] + 1):
+                owners[index] = name
+        for index, line in enumerate(blanked):
+            if owners.get(index) in exempt:
+                continue
+            # / A call is found in the blanked source, where no string or comment can fake one.
+            # / A shell command is found in the original, on a line that is code at all.
+            if OWNER_CALL.search(line) or (line.strip() != '' and OWNER_SHELL.search(original[index])):
+                report('OWNER', path + ':' + str(index + 1) + ' changes an owner by name. Call changeOwnerWithoutFollowing() instead')
+                faults += 1
+    return faults
+
 def main():
     quiet = '--quiet' in sys.argv
     # / --fail-on names the kinds that decide the exit code. Every kind is still reported, but
@@ -1568,6 +1633,7 @@ def main():
         ('frame', 'every function opens & closes with a separator', lambda: check_function_frame(files, report)),
         ('globals', 'no function destroys a global it declares', lambda: check_global_purge(files, report)),
         ('configs', 'no setting is set by the administrator & by the Engine', lambda: check_config_overlap(root, report)),
+        ('owner', 'an owner is changed only through changeOwnerWithoutFollowing', lambda: check_owner_changes(files, report)),
         ('exit', 'every function has one exit', lambda: check_single_exit(files, report)))
     if '--list' in sys.argv:
         print('Checks, in the order they run.')

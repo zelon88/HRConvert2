@@ -11,7 +11,7 @@ This application is designed to provide a web-interface for converting file form
 on a server for users of any web browser without authentication. 
 
 FILE INFORMATION ...
-v4.0.0.
+v4.0.1.
 This file contains a list of itemized changes made in each iteration of the application.
 
 HARDWARE REQUIREMENTS ... 
@@ -24,6 +24,153 @@ The authoritative list of dependencies is Resources/Contract/depends.php & nothi
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+
+--------------------
+COMMIT 11/6/2026
+v4.0.1 - Root stops trusting anything the web server account can change, & the Engine builds its own pins.
+
+-v4.0.1.
+-README.md is rewritten to lead with what HRConvert2 is for. It shows v4.0.0 in three colour schemes & in Arabic, a conversion in progress, a phone layout & the path a conversion takes.
+-Its format count is 490+, counted from the shipped format lists, & its links & images are relative, so a fork shows its own.
+-It no longer says a container without SYS_ADMIN refuses conversions. With --Require Sandbox On Docker-- at its default of FALSE, it runs them unprotected & logs a warning.
+-FIX. $RequiredConfigScript said v3.8.0, while the bootstrap script has reported v3.9.3 since v3.9.3. Every Resource Manager sweep tried to disable the shipped hrconvert2-setup.sh, & did wherever it could write to it.
+-It is v3.9.3. A script the old pin disabled is re-enabled by the next sweep.
+-Both linters check the bootstrap script's pin. Its name does not follow the $Required...Version pattern, so the pins check never saw it.
+-The Engine builds the pins. php convertCore.php --build --pins checks every version pin against the component it names, & --write rewrites the ones that differ.
+-A pin whose components disagree, such as two interfaces declaring different versions, is refused rather than guessed. $RequiredSecretVersion is the one pin nothing ships, & is still set by hand.
+-The contract names the application's own pin sources in $EnginePinSources. The Engine knows where its own components live, & an entry there cannot redirect one.
+-The build names a manager nothing pins. environmentManager.php is one.
+-DOCKER_BUILD_INSTRUCTIONS.txt runs the build before a release is tagged. CREATING_CONVERSION_PIPELINES.txt runs it rather than moving $RequiredConfigVersion by hand.
+-FIX. Root ran code the web server account could change. The installer & -fp handed the installation, the data location & every session to it with chown -R, & root ran that code next.
+-Every location the application keeps has a role in $EngineManagedLocations, code, web, root-only or shared. Setup Core decides what each means & -fp applies them.
+-The installation is root's, 0755 & 0644. A web location's own folder is the web server account's, 0700, & nothing in it is touched. The backup is root's alone. HRProprietary is never walked.
+-FIX. -fp on its own never corrected a location. It asked Setup Core for something before loading it.
+-FIX. Root loaded the install secret with require, so PHP the web server account wrote into it ran as root. Root reads it with the tokenizer & never runs it.
+-The install secret is root:www-data 0640. A file an earlier release left is written again by root with the same key, so no session is lost.
+-The web server account no longer creates or replaces the install secret. A request that finds none raises error 31021.
+-New --rotate-secret replaces the install secret, after asking. -y answers in advance. A running listener is restarted with keys from the new one.
+-FIX. Docker images shipped the install secret they were built with, so every container shared one. Images no longer do. Run --rotate-secret -y once where an older image filled the data location.
+-FIX. Root wrote its logfile, the capability cache, manager state, the exposure canary & the DATA protection file by name in folders the web server account owns. A planted link sent each write elsewhere.
+-The kernel adds pathIsTrustedByRoot, writeFileWithoutFollowing, openFileWithoutFollowing, removeFileWithoutFollowing & changeOwnerWithoutFollowing. Root does that work through them.
+-Root opens its logfile once & writes through that handle, through the kernel's appendLogText.
+-FIX. Root loaded the capability cache from the data location with require. It no longer loads it, & the formats the application declares stand.
+-The Dockerfile no longer hands /var/www & /DATA to the web server account.
+-Root changes an owner by name in a folder another account can change only when fs.protected_hardlinks is on. With it off, a hard link swapped in would hand a root file over. A warning says so.
+-FIX. A policy file whose backup failed was overwritten anyway. It is left alone.
+-FIX. -fp & -l chmodded the socket folder by name as root.
+-FIX. runAsAccount kept root's groups, never checked the drop & always returned 0, so the sandbox probe passed whatever the web server account could build.
+-FIX. A fresh install stopped its first command with error 5, because nothing created the data location. Root creates it, & never beneath a system folder or one it does not trust.
+-FIX. -l as root with no service unit ran every manager as root & reported them running as the web server account. Root hands the start to that account.
+-FIX. A listener its service unit owns was reported started when systemctl failed.
+-The build environment is removed by -fp as root, & no longer by every web request. A link at Build or inside it is removed as a link.
+-FIX. The updater has failed validation since v3.9.9.
+-FIX. A successful update deleted every session. The release's own DATA folder stopped the live one moving. It is removed first, & error 29019 stops an update that still cannot move DATA.
+-FIX. The repair after an update ran the old release's code. The new release runs its own -fp.
+-The updater refuses unless the folder the swap happens in is root's, error 31023. It works beside the installation & never extracts with the package's owners.
+-Error 30 no longer sends a standard user to -fp, which never touched that user's own secret.
+-Errors 29019, 31020, 31021, 31022 & 31023 are documented. 33 entries said the web server account needs write access to the installation. It needs read access.
+-ABOUT_MANAGED_LOCATIONS.txt describes the two rules, the roles & what is not finished.
+-$RequiredKernelVersion & $RequiredEngineVersion are set by hand. The build runs inside both & cannot rewrite what loads it.
+-Root refuses to run an installation another account could change, error 28008. Every name in it must be root's & writable by nobody else, with no links, & so must every folder above it.
+-The repairs, -fp, --setup & --config --repair, still run on such an installation after a warning, because they are what give it to root.
+-An installation config.php names that is not the one running is read too, before anything is loaded from it.
+--fp ends by reading the installation again & fails when root still may not run it.
+-The kernel adds treeIsTrustedByRoot.
+-FIX. GitHub's release archives carry 0664 & 0775. An update extracts through umask 022, or root would refuse every release it installed.
+-FIX. Root swept expired sessions by name in the web server account's folders, resolving, chmodding & removing each name. Root's -c hands the sweep to that account.
+--c is available to root & the web server account.
+-FIX. No expired session in DATA was ever swept. -c & every web request were handed the session folder of the request making them. Both sweep the whole DATA folder.
+-The shared role changes the HRProprietary folder's owner through changeOwnerWithoutFollowing.
+-verifyRequiredDirs & verifyLogs lose ownership changes only root could reach, which root never does.
+-Both linters check that an owner is changed only through changeOwnerWithoutFollowing. ScanCore's four are reported.
+-Error 28008 is documented. ABOUT_MANAGED_LOCATIONS.txt describes the gate.
+-Run  sudo php convertCore.php -fp  once after updating from v4.0.0.
+-FIX. The kernel's write, open & re-own functions guarded a name but not the folder above it. The log & socket folders sit inside the data location the web server account owns, so it could swap either folder whole & root would create its logfile or state through the link.
+-The kernel adds folderIsHeldForRoot. Root writes, opens & re-owns a name only when every folder above it is root's, so nothing can swap the folder underneath.
+-FIX. Root created its logfile in the web server account's log folder. Root writes no logfile now & logs to standard error, which a terminal shows & a systemd unit sends to the journal.
+-appendLogText writes a handle that is not a plain file without a lock, so a line to standard error under systemd, which is a socket, is no longer dropped.
+-The web server account on the command line writes its own per user secret & logs again, which the install secret rule wrongly caught, so -v as that account stopped with error 5.
+-FIX. Root read the manager state the web server account wrote & ran kill on the process identifiers in it. readManagerState & writeManagerState refuse root.
+-Root hands -k, -k <worker>, --kill-all-workers, --kill-every-worker & --status to the web server account, as it already did for -l. It confirms the ones that prompt first.
+-FIX. --rotate-secret stopped & restarted the listener as root. It asks the web server account to stop it before the rewrite, with the old key, & to start it after, with the new one.
+-FIX. The supply chain report was written as root by name & then chmodded. Root writes it without following anything, & falls back to the data location when the log folder is the web server account's.
+-ABOUT_LOGGING.txt describes where root's log goes. ABOUT_MANAGED_LOCATIONS.txt & the command line docs describe what root hands to the web server account.
+-FIX. -fp applied a location's role to wherever a link at it led. A location is corrected by the path configured, & one that leads anywhere else is refused & named.
+-FIX. The code & root-only walks changed a folder's contents before the folder, & changed a file with more than one name, which changes every name it has. Each walk goes top down one name at a time, & a file with more than one name is left alone & named.
+-FIX. -fp walked a backup inside the data location, which the web server account can replace. A root-only location is walked only where root holds the folder above it, & is skipped & left as it is anywhere else.
+-FIX. The updater wrote the backup there regardless. It keeps one only where root holds the folder above it, & a warning says when it does not. --setup no longer makes one in the data location.
+-FIX. Root's tools ran with an empty HOME, which was set before config.php was loaded. Root's HOME is its own. The updater's curl ignores .curlrc.
+-FIX. Root could run the foreground listener. --run-core-manager refuses root with error 31014.
+-FIX. --run-environment-manager halted with Engine-35000 & exit status 0, so a timer read every pass as a success. It is refused, says why & exits 1.
+-FIX. --rotate-secret rewrote the secret when the running listener could not be stopped. It stops with error 31022, & stops the listener through its service unit when one owns it.
+-FIX. Root read the install secret & the DATA protection file by name, & would wait forever on a FIFO there. The kernel adds readFileWithoutFollowing, which reads only a plain file with one name & never waits.
+-FIX. A DATA protection file without the marker was replaced with no backup, in a folder the web server account owns. It is left alone & reported.
+-Root removes the exposure probe & a legacy secret through the kernel. removeFileWithoutFollowing uses the folder rule the others use.
+-FIX. The shared role reported a folder locked when its chmod failed. Each step is reported as it went.
+-FIX. --setup made data locations beneath a folder the web server account could replace. It makes them only beneath one root holds.
+-FIX. -fp said Setup Core was unavailable when it had run & found no locations declared.
+-FIX. Every fatal error root raised appeared twice on the terminal, with two numbers. It is written once.
+-FIX. A policy in a folder root trusts was written by the name given, through any link on the way. It is written in the folder the trust check resolved.
+-FIX. Root created the data location through a link in its path. It refuses & names where the link leads.
+-FIX. --setup raised PHP warnings when the DATA folder could not be made.
+-verifyCodeIsTrustedByRoot & writeFileWithoutFollowing set every variable before a branch reads it. showEngineStatus has one exit.
+-ABOUT_MANAGED_LOCATIONS.txt, ABOUT_ENVIRONMENT_MANAGER.txt, ABOUT_LOGGING.txt, the command line docs & errors 31014, 31022, 32015 & 36000 match the above.
+-The data location is a root root owns now, 0755, & each kind of file has a folder of its own below it. The web server account can no longer touch the top of it, so it cannot replace the install secret or swap a managed location for a link.
+-Sessions move to Sessions, the web server account's caches & home to Cache, & the socket & log folders keep their names. The install secret stays at the top, protected now by the root owned folder around it rather than needing one of its own.
+-New roles data-root & the contract names $DataRootLoc, not $ConvertLoc, which is narrowed to a session area on the command line. SessionLoc, CacheLoc & EngineDir are derived from the data location & added to the managed locations. HomeLoc leaves them.
+-The pool distributes sessions across each root's Sessions folder. An additional data location is provisioned root owned with a web owned Sessions when its mount exists.
+-Root logs to a file in its own Engine folder through the kernel, no longer to standard error. The first root command after an upgrade still uses standard error, because Engine does not exist until that -fp creates it.
+-The web server account's HOME is the Cache folder, set after config.php is read. A $HomeLoc equal to the data location falls back to Cache with a warning. Until v4.0.1 HOME was empty, set before config.php loaded. $HomeLoc's default is $ConvertLoc.'/Cache'.
+-The capability cache moves to Cache, written by the web server account & by root through the kernel. The supply chain report moves to Engine, written by root through the kernel.
+-The OpenSCAD AppArmor local include grants the session area, not the whole data location, so a confined converter cannot reach the install secret or root's folders.
+-An update keeps the backup again, because its folder is root's now. --setup & -fp provision the data root's folders & move an older layout's sessions into Sessions, so no open session is lost. prepareDataLocationAsRoot creates the data root root owned.
+-ABOUT_MANAGED_LOCATIONS.txt, ABOUT_LOGGING.txt, ABOUT_ENVIRONMENT_MANAGER.txt, config.php, the config template & the Dockerfile describe the data root. The Environment Manager's state folder now exists; reviving the pass is the remaining step.
+-Root at a terminal repeats each warning & error on standard error as it writes the line to Engine. Op-Act lines are not repeated, & a timer, pipe, redirect or build repeats nothing. New kernel function echoLogEntryToConsole & global $LogEchoToConsole.
+-FIX. A halt is recorded & shown once, by quickDie, for every account. Before a logfile existed one reached a terminal two to four times, & after one existed it was recorded under one number & shown under the next.
+-FIX. A halt raised through quickDie directly once a logfile existed was never recorded, & one raised because the logfile could not be created was lost. Both reach a log.
+-FIX. The log buffer's overflow notice said older entries were discarded. A full buffer drops later ones & the notice says so.
+-ABOUT_LOGGING.txt & ERROR_DESCRIPTIONS.txt match the above. ERROR_DESCRIPTIONS.txt named the install folder as the default log location; it is the data location.
+-The Environment Manager runs again. --run-environment-manager loads it through new Engine function loadEngineRootManager, which pins it exactly in new getAcceptedRootManagers, a list the listener never dispatches from. Until v4.0.1 every pass halted with Engine-35000 & exit status 0.
+-Its state is hrconvert2-environment.state at the top of the data location, root & the web server group, 0640, written & read through the kernel. --status shows the last pass. New Engine functions environmentStatePath, readEnvironmentState & writeEnvironmentState.
+-A pass holds a lock in Engine, so two never run together. Every pass removes root's logfiles in Engine older than thirty days, through new Engine function pruneRootLogs.
+-FIX. The manager's repair would have enabled & started a listener an administrator stopped, & nothing read --Environment Manager May Rewrite Configs--. The Engine sets $EngineRepairIsUnattended around the repair, reached through runApplicationRepair rather than by name, & fixManagedPermissions then starts & enables no service, skips lingering & rewrites host configuration only when that setting allows.
+-FIX. A watching pass would have repaired the sandbox AppArmor profile as it booted, then reported it fine. Its boot only checks it.
+-FIX. The sandbox, ImageMagick & OpenSCAD policy checks kept a failure found without permission to repair & answered a later permitted repair with it. They check again.
+-FIX. The PHP drop in was reported missing when it was present & differed. It is reported as differing.
+-New Engine function findingIsBenign, shared by showEnvironmentFindings & the manager, so the report & the count a pass acts on agree.
+-The --run-environment-manager command is in -h & the command line docs. ABOUT_ENVIRONMENT_MANAGER.txt, ABOUT_ENGINE_CONTRACT.txt, ABOUT_MANAGED_LOCATIONS.txt, ABOUT_LOGGING.txt, config.php, the config template & errors 32015 & 36000 match the above.
+-FIX. A bootstrap script from another release stayed enabled, because the listener that disabled it can no longer write to an installation root owns. -fp disables it as root through the kernel, & enables one that matches again. A permitted Environment Manager repair does both. New Engine functions repairBootstrapScript, bootstrapScriptPath & describeBootstrapStatus.
+-verifyBootstrapScript moved from the Resource Manager to the Engine & only reports. validateOperatingEnvironment reports the script, so the listener & the Environment Manager see it, & -v lists it under Detachable components. The Resource Manager is v4.0.1.
+-ABOUT_COMPONENTS.txt, ABOUT_MANAGED_LOCATIONS.txt, ABOUT_ENVIRONMENT_MANAGER.txt & the command line docs match the above.
+-The bootstrap script is v4.0.1 & says -fp disabled it, where it named the Core Manager. $RequiredConfigScript is v4.0.1.
+-FIX. The exposure check & every share link asked a host named like localhostopt for a file whenever the installation sat outside --Server Root Directory--, & a --Server URL-- ending in a separator lost the one before the path. $FullURL removes the document root only as leading whole folders & joins with one separator.
+-FIX. hrconvert2.conf refuses every data location outright, as written & as it resolves, so Sessions, Cache & Logs are not served even from inside the document root. One holding the installation is not refused & a warning names it. New functions pathForms, pathHoldsPath, dataLocationRoots, misplacedDataRoots & apacheDataLocationRules.
+-A data location inside the document root is a Data location finding of MISPLACED, a failed -v line & a listener warning on every pass.
+-FIX. hrconvert2.conf did not parse on a host without mod_dir or mod_mime, so -fp withdrew all of it, Header rules included. DirectoryIndex & RemoveHandler are guarded by their modules.
+-FIX. Root wrote hrconvert2.conf with a plain write & a chmod. It reads & writes it through the kernel, atomically & never through a link, & leaves a name it cannot read as a plain file alone. One that differs is reported as differing rather than missing.
+-FIX. A configuration that failed its test deleted the file it replaced & a link the administrator made. What was there is put back exactly, the link goes only when this run made it, & the test runs again. Error 504 says withdrawn.
+-FIX. apachectl -k graceful starts a stopped server, so -fp & a permitted unattended repair started an Apache somebody had stopped. Only a running server is reloaded. New function apacheIsRunning.
+-ABOUT_DATA_DIRECTORY_PROTECTION.txt, ABOUT_MANAGED_LOCATIONS.txt, ABOUT_ENVIRONMENT_MANAGER.txt, the container entrypoint's comments & error 504 match the above.
+-FIX. Both linters counted only a return that began a line, so a one line if ending in a return passed, & Engine function releaseBudgetOnShutdown left by three returns. Every return outside a one line closure counts, & releaseBudgetOnShutdown has one exit.
+-The application is installed in Application in the data location, outside the web root. The folder --Installation Directory-- names is the hosted location & holds only a loader named convertCore.php, the protection page, the static files a browser fetches & DATA.
+-The first -fp of v4.0.1, & -fp or --setup --install-complete run from any tree that is not installed, install that tree as they end & hand over to the installed copy, which runs -fp. The installation it replaces is kept in Last-Installed-Version. New core function handOverToApplication.
+-New Setup Core functions installApplicationTree, copyApplicationEntry, retireApplicationTree, publishHostedLocation, hostedLocationPlan, holdHostedFolder, removeHostedCopies, removeStaleHostedAssets, filesAreIdentical, applicationLoaderContents & fileIsApplicationLoader. New contract entries $EngineApplicationLayout, $EngineHostedAssetFolders & $EngineHostedAssetTypes.
+-The hosted location is changed only when its convertCore.php is the loader, the installed core or absent, & loses only byte for byte copies of the installation & static files a release no longer ships. A release unpacked there is reported as UNINSTALLED & left as it is.
+-The loader refuses root with error 28008 when the installation could have been changed by another account, & root reads the loader's own tree before anything else.
+-$InstLoc is the tree that is running & new global $HostedLoc is --Installation Directory--. DATA, $FullURL & the cleanup of an older layout's folders use the hosted location. A web request works in the installation's folder, so every interface path still resolves.
+-hrconvert2.conf refuses every PHP file in the hosted location but the loader. A data location is left unrefused when it holds the hosted location, rather than the installation, which is inside it now & refused with it.
+-New Hosted location finding, & -v lines for the installation & the hosted location. The listener warns about a hosted location that needs -fp. The data root migration passes over Application & every name beginning with a dot.
+-The Docker image keeps its release in the web root & the entrypoint's -fp installs it into the data volume, so a volume kept from an older container runs the new release.
+-config.php, the config template, README.md, ABOUT_MANAGED_LOCATIONS.txt, ABOUT_DATA_DIRECTORY_PROTECTION.txt, ABOUT_ENVIRONMENT_MANAGER.txt, ABOUT_ENGINE_CONTRACT.txt, the command line docs & error 28008 match the above.
+-Comments in the core, Setup Core & Environment Core that placed DATA in the installation say the hosted location.
+-FIX. Kernel function closeClientConnection ended a buffer zlib.output_compression had begun to compress, which cannot be removed, so every request under Apache put a PHP notice in its error log. Such a buffer is flushed instead.
+-The container entrypoint reads config.php from Application in the data volume, because the web root holds none once -fp has installed the release, & so still starts the resource listener.
+-FIX. A folder above the data location that another account owns stopped every command run as root, -fp included, by calling the install secret unusable & failing with error 5. Root now stops first with error 31024 & names every such folder with its owner, mode & what it needs. v3.4.1 & older guides gave /var/www & /DATA to the web server account.
+-Folders above the hosted location & above each additional data location that root cannot trust are named the same way, as a warning. New core functions foldersRootCannotTrust & reportFoldersRootCannotTrust.
+-FIX. -v run as root reported a running listener as STOPPED, because root does not read the state the web server account writes. It says the listener was not asked & that --status asks.
+-When -fp updates the listener service unit it says a listener already running still runs the old unit, & prints the command that restarts it.
+-FIX. The Docker image gives /var/www/html to root. The official PHP image leaves it to www-data with mode 1777, & root corrects nothing beneath a folder another account can change.
+-ABOUT_MANAGED_LOCATIONS.txt & error 31024 describe the above.
 
 --------------------
 COMMIT 11/5/2026

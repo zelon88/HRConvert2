@@ -67,37 +67,32 @@ Arguments are case insensitive as of v3.9.9. A path or a name given to an option
 ### Running as Root
 HRConvert2 should be run as **root** when using the command line.
 
-* **Permission Safety:** Running as root does **NOT** create root-owned permission problems.
-* **Automatic Corrections:** When a directory is created under root, HRConvert2 immediately corrects the owner, group, and permissions to the values Apache requires.
-* **Web Readiness:** The application maintains constant readiness for web operations; CLI invocations are never permitted to compromise this.
+* **Nothing Left Unusable:** The data location and its folders belong to the web server user. Root writes no logfile and prints its log lines to standard error. The install secret belongs to root and is readable by the web server user's group.
+* **The Two Rules:** Root never runs, reads as code, or works by name inside anything the web server user can change. See [ABOUT_MANAGED_LOCATIONS.txt](ABOUT_MANAGED_LOCATIONS.txt).
+* **The Gate:** Every command run as root first reads the whole installation. Every name in it must belong to root and be writable by nobody else, with no links, and every folder above it must pass the same test, `/var/www/html` included. Anything else stops the command with error 28008. Only the repairs, `-fp`, `--setup` and `--config --repair`, run anyway after a warning, because they are what give an installation to root.
 
 ### Running as Non-Root
 Running as a non-root user is safe but structurally limited.
 
 * **Fail-Safe Filesystem:** Any operation requiring write access that the current user lacks will fail safely rather than partially completing. The filesystem is never left in a broken state.
-* **Unrestricted Flags:** The version (`-v`) and help (`-h`) arguments work flawlessly for any user.
-* **Secret File Protection:** The secret file is readable only by its owner. A non-root user (who is also not the web server user) cannot read it. This is a deliberate security feature, as this file derives every session identifier in the application.
+* **Unrestricted Flags:** The version (`-v`) and help (`-h`) arguments work for any user.
+* **Secret File Protection:** The install secret is `root:www-data 0640`, so a non-root user who is also not the web server user cannot read it. This is deliberate, because this file derives every session identifier in the application. Such a user is given a secret of its own, in a folder of its own.
 
 ### Manual Permission Management
-If an administrator modifies an HRConvert2 installation using external tools, they must configure the files and folders within the HRConvert2 directory exactly as follows:
+An administrator who modifies an HRConvert2 installation using external tools must leave every location the way `-fp` leaves it:
 
-| Property | Required Value | Notes |
-| :--- | :--- | :--- |
-| **Owner** | `www-data` | Standard web server user |
-| **Group** | `www-data` | Standard web server group |
-| **Permissions** | `0755` | Folder/File standard permissions |
-| **Secret File** | `0600` | **Exception:** Must stay owned by `www-data` |
+| Location | Owner & Mode |
+| :--- | :--- |
+| **The installation** | `root:root`, folders `0755`, files `0644` |
+| **The DATA folder in it** | `www-data:www-data 0700` |
+| **The data location** | `www-data:www-data 0700`, & its `Logs` & `Sockets` folders the same |
+| **The backup** | `root:root 0700` |
+| **The install secret** | `root:www-data 0640` |
 
-> ⚠️ **Note:** The secret file is created automatically and should never need to be modified by hand.
+> ⚠️ **Do not give the installation to the web server user.** `chown -R www-data` was the documented repair until v4.0.1, and it let the web server user change code that root then runs. To correct anything, run `-fp` instead:
 
-#### Commands to Fix Compromised Permissions:
 ```bash
-sudo chmod -R 0755 "/the/full/path/that/has/incorrect/permissions"
-sudo chown -R www-data:www-data "/the/full/path/that/has/incorrect/permissions"
-```
-*Do not run the above commands against the data location without restoring the secret file permissions immediately afterward:*
-```bash
-sudo chmod 0600 "/DATA/HRConvert2/HRConvert2-secret.php"
+sudo php /var/www/html/HRProprietary/HRConvert2/convertCore.php -fp
 ```
 
 ## Supported Command Line Arguments
@@ -107,23 +102,26 @@ sudo chmod 0600 "/DATA/HRConvert2/HRConvert2-secret.php"
 | `-v`, `--version` | Display version & dependency information. | any user |
 | `-h`, `--help` | Display the built in help message. | any user |
 | `--status` | Report listener, budget & data location state. | any user |
-| `-c`, `--clean` | Sweep expired sessions from both data locations. | root |
-| `-c=<minutes>` | Sweep sessions older than that many minutes. | root |
-| `-c=now` | Sweep every session regardless of age. | root |
+| `-c`, `--clean` | Sweep expired sessions from both data locations. Root hands the sweep to `www-data`. | root or `www-data` |
+| `-c=<minutes>` | Sweep sessions older than that many minutes. | root or `www-data` |
+| `-c=now` | Sweep every session regardless of age. | root or `www-data` |
 | `-u`, `--update` | Update using the configured target. | root |
 | `-u=latest` | Update to the newest tagged release. | root |
 | `-u=edge` | Update to the current state of the master branch. | root |
 | `-u=v#.#.#` | Update to exactly that tagged release. | root |
 | `-fp`, `--fix-permissions` | Correct ownership, permissions & policy files. | root |
+| `--run-environment-manager` | Run one Environment Manager pass. It watches, & repairs only when allowed. | root |
+| `--rotate-secret [-y]` | Replace the install secret with a new key. Every session ends. | root |
 | `-l`, `--listen` | Start the resource listener. | root or `www-data` |
 | `-k`, `--kill` | Stop the resource listener. | root or `www-data` |
 | `-k <worker-id>` | End one worker by budget token or process identifier. | root or `www-data` |
 | `--kill-all-workers` | End every tracked conversion in progress. | root or `www-data` |
 | `--kill-every-worker` | End every PHP process owned by the web server user. | root or `www-data` |
-| `-y`, `--yes` | Skip the confirmation prompt on the two above. | — |
+| `-y`, `--yes` | Skip the confirmation prompt on the two above & on `--rotate-secret`. | — |
 | `--config <argument>` | Configure, view, verify, repair & back up `config.php`. | root, except `--backup` |
 | `--setup <argument>` | Install, check & audit dependencies. | root |
 | `--pipeline <argument>` | List, describe & verify the installed pipelines. | any user |
+| `--build --pins [--write]` | Check every version pin against what ships, or rewrite every pin that differs. A developer step that rewrites source files. | write access to the tree |
 | `--app<name>` | Handed to the application untouched. HRConvert2 declares none yet. | — |
 
 `ABOUT_COMMAND_LINE_ARGUMENTS.txt` covers `--config`, `--setup`, `--pipeline` and `--app` option by option.
@@ -170,7 +168,9 @@ Sweeps expired sessions from the temporary location and from the data location. 
   > ⚠️ **CRITICAL WARNING:** `-c=now` deletes **EVERY** session, including those currently in use. A user mid-conversion will lose their files. Use this parameter with extreme caution.
 * **Typo Protection:** Values that are neither a whole number nor the word `now` are rejected, falling back to the configured default. A warning is written to the logs and printed to the shell to prevent accidental sweeps.
 * **Scope Isolation:** Nothing outside a designated session directory is ever touched. The log directory, LibreOffice profiles, and update backups live alongside session data but are strictly protected by name validation. Any location that is not one of the configured data locations is refused outright.
-* **Privileges:** This argument explicitly requires write access to the data locations.
+* **The Web Server User Sweeps:** Every name in a session belongs to the web server user, which can swap any of them for a link mid-sweep. Root hands the whole argument to that user instead of sweeping itself, and prints what it reports. Until v4.0.1 root swept as itself.
+* **The Whole DATA Folder:** From v4.0.1 the temporary location is the whole DATA folder. Until then this argument and every web request swept only the session folder of the request making them, so no expired session in DATA was ever removed.
+* **Privileges:** This argument requires root or the web server user.
 
 ---
 
@@ -178,12 +178,17 @@ Sweeps expired sessions from the temporary location and from the data location. 
 
 Reports what the resource listener is doing, and what this account is able to see of it — the
 running identity, whether the component is available, the socket directory, each manager's
-process identifier, tracked workers, remaining budget and mapped sessions.
+process identifier, tracked workers, remaining budget and mapped sessions. It also reports when
+the last Environment Manager pass ran, what it found and when it last repaired.
 
 **A standard user cannot read the socket directory and will be told so.** The directory is `0700`
 and belongs to the web server user, so a standard user sees a listener that appears stopped
 whether it is running or not. The report distinguishes the two cases. Run it as root for the true
 picture.
+
+**Root does not read the state itself.** It hands `--status` to the web server user and relays
+what that user saw, because the state file belongs to that user. The report names root as asking
+and the web server user as answering.
 
 ---
 
@@ -191,9 +196,15 @@ picture.
 
 Corrects everything about an installation that root is required to correct.
 
-- Sets every managed directory to the web server user and `0755`.
-- Sets the secret file to the web server user and `0600`.
-- Sets the socket directory to `0700`.
+- Gives every managed location its role. The installation is root's, the data locations are the
+  web server user's and the backup is root's alone. See
+  [ABOUT_MANAGED_LOCATIONS.txt](ABOUT_MANAGED_LOCATIONS.txt).
+- Installs the tree it runs from into `Application` in the data location, when that tree is not
+  the installed one, and hands over to the installed copy as it ends.
+- Writes the loader, the protection page and the static files into the hosted location, and
+  removes every copy of the application left there.
+- Removes the build environment and the development documentation when `config.php` asks for it.
+- Disables a bootstrap script that does not match this core, and enables one that matches again.
 - Installs or repairs the ImageMagick policy that permits document coders.
 - Installs or repairs the AppArmor profile bubblewrap needs to build a sandbox.
 - Installs or repairs the AppArmor override a confined OpenSCAD needs.
@@ -204,10 +215,50 @@ Every step is idempotent. A policy file this application did not write is backed
 timestamp before replacement; if the backup fails, the original is left alone and the step is
 refused.
 
-**Run this after any command line invocation made as root.** A root invocation creates its
-logfile and secret file owned by root, and the web server user cannot read or append to either
-afterwards. This is the most common cause of an installation that worked yesterday and does not
-today.
+**Run this once after updating from v4.0.0.** Until v4.0.1 this handed the installation and every
+data location to the web server user, and root then ran code that account could change. It now
+gives each location the role it needs, and an installation v4.0.0 left behind keeps the old
+ownership until it runs. That run also moves the installation out of the web root, into
+`Application` in the data location. A command run as root no longer leaves a logfile or a secret the web
+server user cannot use, so it no longer has to be followed by this.
+
+---
+
+## `--run-environment-manager`
+
+Runs one Environment Manager pass and exits. The timer `--setup --install-service` writes runs it
+hourly once an administrator enables that timer, and an administrator may run it by hand.
+
+It checks what `-v` checks, logs every problem as a warning, records what it found and prints it.
+**It changes nothing** unless `--Environment Manager May Repair--` is `TRUE` in `config.php`. Then
+the first pass of a day that finds a problem runs the repair `-fp` runs, unattended: it starts and
+enables no service, and rewrites the host configuration this application owns only when
+`--Environment Manager May Rewrite Configs--` is `TRUE`. Every later pass that day only reports.
+
+What it found is kept in `hrconvert2-environment.state` at the top of the data location, readable
+by the web server user and written only by root, and `--status` reports the last pass. Every pass
+also removes root's own logfiles older than thirty days. One pass runs at a time, and one started
+beside another checks and changes nothing.
+
+It exits `0` when the pass completed, whatever it found, and `1` when it could not run. See
+[ABOUT_ENVIRONMENT_MANAGER.txt](ABOUT_ENVIRONMENT_MANAGER.txt).
+
+---
+
+## `--rotate-secret`
+
+Replaces the install secret with a new key. **Every session ends**, because every session
+folder, token and startup key derives from the secret. It asks first, and `-y` answers in advance.
+
+A running listener is stopped and started again, and root does neither. It asks the web server
+user whether a listener is running and stops it, both **before** the secret is rewritten, so the
+stop is signed with the key on disk the running listener still answers to. Root then rewrites the
+secret, and the web server user starts the listener again, reading the new key from disk, through
+its service unit when one owns it. A listener that was not running is left stopped. It is never
+started as root.
+
+Run it once in every container started from an image built before v4.0.1. Each of those carries
+the secret its image was built with, and every container started from the image shares it.
 
 ---
 
@@ -247,12 +298,16 @@ php convertCore.php -k a1b2c3d4e5f6     # end the worker holding that budget tok
 
 A worker that is ended loses whatever it was converting.
 
+Run as root, this is handed to the web server user, which reads its own listener state and
+signals its own processes; root reads no state and signals nothing itself.
+
 ---
 
 ## `--kill-all-workers` and `--kill-every-worker`
 
 Both prompt for confirmation. Both accept `-y` to skip the prompt, which exists for scripts and
-not for convenience.
+not for convenience. Run as root, both are confirmed at the terminal first and then handed to the
+web server user with the answer already given; root ends nothing itself.
 
 **`--kill-all-workers`** ends every *tracked* conversion. Every user mid conversion loses their
 files. Nothing outside HRConvert2 is touched.
@@ -276,7 +331,7 @@ Replaces the live application code with a release from your configured update so
 #### System Requirements
 * `$EnableAutoUpdates` must be set to `TRUE` in `config.php` (Default is `FALSE`).
 * The server must have outbound network access to reach the update source.
-* The executing user must have write access to the **PARENT** directory of the installation, not just the installation directory itself.
+* The update runs as root. The folder holding the installation and the `--Proprietary Directory--` must belong to root and be writable by nobody else, or the update is refused with ERROR 31023.
 * The filesystem holding the installation must have free space roughly equal to **twice the installed size** of the app.
 
 #### Target Versioning Options
@@ -294,11 +349,12 @@ If no value is supplied, the `--Automatic Update Target Version--` setting from 
 * **Array Settings:** **Arrays are NOT merged.** They reset entirely to the new defaults. Rewriting arrays requires structural reformatting, and partial merges of large lists (like a 200-element format list) break easily. Any array modified from the new default will be **NAMED** at the end of the update so you can reapply changes manually.
 
 #### Atomic Replacement Process
-1. The release is downloaded and unpacked into a temporary location.
+1. The release is downloaded and unpacked into a private working folder beside the installation.
 2. Your existing configuration is safely merged into the temporary directory first.
 3. The prepared release is moved to the same filesystem as the active installation.
 4. The live data directory is moved into the new layout so no active sessions are lost.
 5. The live installation and the new release are instantly swapped using **two atomic rename operations**.
+6. The new release's own `-fp` runs as the update finishes, so its locations get their roles.
 
 > ⚡ **Web Request & Process Impact:** Because renames within a single filesystem are atomic, the directory is never half-populated. A web request arriving mid-swap will seamlessly hit either the old or new code. The tiny fraction of a second between the two renames might cause a request to drop, but it will succeed instantly on retry. Conversions already in progress are completely unaffected because running processes hold open file handles that remain valid across folder renames.
 
@@ -308,7 +364,7 @@ If no value is supplied, the `--Automatic Update Target Version--` setting from 
 * **Automatic Rollback:** An installation failing this health check is instantly rolled back, restoring the previous version. The event is recorded in the system log.
 
 #### Managing the Previous Version
-* After a successful update, the old core is copied to the `--Backup Location--` configured in `config.php` (defaults to `Last-Installed-Version` inside the data directory).
+* After a successful update, the old core is copied to the `--Backup Location--` configured in `config.php`, which defaults to `Last-Installed-Version` inside the data directory. The data location is root's now, so the backup's folder is root's and the copy is kept by default. An update refuses to keep a backup **only** where `$BackupLoc` has been pointed at a folder another account could replace, and a WARNING says so there. See `Documentation/ABOUT_MANAGED_LOCATIONS.txt`.
 * This backup is safely isolated **OUTSIDE the web root** to prevent an old, vulnerable core from answering public HTTP requests.
 * It is protected from session sweeps and won't be cleared by the delete threshold.
 * The backup directory holds exactly **one** previous version (overwritten on the next successful update) and explicitly excludes the live data directory.

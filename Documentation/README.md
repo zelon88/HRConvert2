@@ -65,6 +65,7 @@ Navigate the complete documentation library using the directory structure below.
 * [ABOUT_SCAD_SANITIZATION.txt](ABOUT_SCAD_SANITIZATION.txt) — How an uploaded OpenSCAD source is stripped of its file references before it renders.
 * [ABOUT_NETWORK_ISOLATION.txt](ABOUT_NETWORK_ISOLATION.txt) — How a sandbox profile is arrived at & what every permission in it costs.
 * [ABOUT_DATA_DIRECTORY_PROTECTION.txt](ABOUT_DATA_DIRECTORY_PROTECTION.txt) — How the hosted DATA tree is served as inert content.
+* [ABOUT_MANAGED_LOCATIONS.txt](ABOUT_MANAGED_LOCATIONS.txt) — Who owns each location on disk, & what root will & will not do inside them.
 * [ABOUT_DEFENSIVE_MEMORY_MANAGEMENT.md](ABOUT_DEFENSIVE_MEMORY_MANAGEMENT.md) — Memory leak prevention strategies.
 * [ABOUT_QUALITY_CONTROL.txt](ABOUT_QUALITY_CONTROL.txt) — The static analysis gate every change has to pass.
 

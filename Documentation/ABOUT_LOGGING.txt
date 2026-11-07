@@ -43,9 +43,11 @@ A blocked SSRF attempt, a removed file reference & a refused stream are all warn
 
 THREE TIERS, ONE COMPOSER & ONE WRITER.
 
-  composeLogEntry()  Builds the line & gives it a sequence number.
-  emitLogEntry()     Writes the line, or holds it until there is somewhere to write.
-  flushLogBuffer()   Empties whatever was held, in order.
+  composeLogEntry()        Builds the line & gives it a sequence number.
+  emitLogEntry()           Writes the line, or holds it until there is somewhere to write.
+  appendLogText()          Appends to the logfile, through the held handle when there is one.
+  flushLogBuffer()         Empties whatever was held, in order.
+  echoLogEntryToConsole()  Repeats a warning or an error on root's terminal. See Where Root's Log Goes.
 
 The three tiers were three near identical copies of the same formatting until v3.8.9.
 Each one recomputed the timestamp, resolved the session & assembled the line itself.
@@ -84,11 +86,23 @@ verifyLogs() empties the buffer itself, so nothing waits for the next entry to a
 THE BUFFER IS BOUNDED AT FIVE HUNDRED & TWELVE ENTRIES.
 A process that never reaches a logfile must not grow until it is killed for memory.
 The entries that explain a boot failure are the early ones rather than the thousandth.
-An overflow leaves a line in the log saying older entries were discarded.
+An overflow keeps the earliest entries & leaves a line in the log saying later ones were
+discarded. Until v4.0.1 that line said older ones, which was the reverse of what happened.
 
 quickDie() EMPTIES THE BUFFER TO WHATEVER CHANNEL EXISTS BEFORE IT HALTS.
 A halt during boot is exactly the case where the entries leading up to it explain the halt.
 It is also exactly the case where there was nowhere to have written them.
+
+quickDie() IS THE ONE PLACE A HALT IS RECORDED, & A HALT IS RECORDED & SHOWN ONCE.
+errorEntry() leaves a fatal error to quickDie(), which writes it to the logfile when one is
+usable & to PHP's own error log when none is, then shows it on the page or the terminal. On the
+command line PHP's error log is standard error unless php.ini names somewhere else, so there the
+halt is printed once rather than sent to both. A logfile is usable on the terms emitLogEntry()
+uses, a held handle or a file that exists, so a halt raised because the logfile could not be
+created reaches PHP's error log rather than a file that is not there.
+Until v4.0.1 errorEntry() wrote a fatal error as well. A halt before a logfile existed appeared
+twice, a halt after one existed was recorded under one sequence number & shown under the next, &
+a halt raised through quickDie() directly once a logfile existed was shown & never recorded.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -127,6 +141,49 @@ guarding against it, which is why they exist at all.
 THERE IS NO Worker ROLE YET & THAT IS DELIBERATE.
 Nothing spawns a PHP worker today. A detached conversion spawns FFMPEG rather than PHP.
 The role exists in the naming for when HRProtect dispatches workers of its own.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Where Root's Log Goes--
+
+ROOT LOGS TO A FILE IN ITS OWN FOLDER, Engine, INSIDE THE DATA ROOT.
+The web server account's log folder sits inside the data root & is that account's, so root will
+not open a logfile there: that account could rename the whole folder aside & put a link in its
+place, redirecting a logfile root opened by name to any file on the host. Guarding the name is
+not enough when the folder under it can be swapped, as Debian's nginx package was in 2016, in
+CVE-2016-1247. Engine is root:root inside a data root root owns, so no other account can swap it.
+
+Root opens its logfile in Engine through openFileWithoutFollowing() in verifyLogs(), which
+follows neither a symbolic nor a hard link & checks the handle is the file it examined. A fatal
+error is written to that file once, by quickDie(), rather than logged by errorEntry() & written
+again. Op-Act, warning & error lines all go to the file; with $Verbose FALSE the Op-Act lines are
+suppressed. The printed report an administrator sees on the terminal is separate from the log, as
+it is for a web request, & is the human-facing summary.
+
+AN ADMINISTRATOR AT A TERMINAL STILL SEES EVERY WARNING & ERROR AS IT HAPPENS.
+When root opens its file in Engine with standard error on a terminal, verifyLogs() sets
+$LogEchoToConsole, & echoLogEntryToConsole() repeats each WARNING!!! & ERROR!!! line there as it
+reaches the file, held lines included. The repeat is the recorded line, sequence number & all.
+Op-Act lines are not repeated. A systemd timer, a pipe, a redirect & a Docker build have no
+terminal on standard error, so their lines go to the file alone. A halt is repeated there once
+by quickDie() & is not printed beside the repeat. Every other account is unaffected.
+
+ROOT'S OLD LOGFILES ARE REMOVED BY THE ENVIRONMENT MANAGER.
+No account but root can read or clean Engine, so nothing else would ever remove an old one.
+Every Environment Manager pass, watching or repairing, removes root's logfiles there older than
+thirty days, through pruneRootLogs() & the kernel. An installation that never runs a pass keeps
+them until root removes them by hand. See ABOUT_ENVIRONMENT_MANAGER.txt.
+
+Until the data root is root's — before -fp has run after an upgrade — Engine does not exist, so
+root falls back to standard error for that one command, which a terminal shows & a systemd unit
+sends to the journal. appendLogText() writes a handle that is not a plain file without a lock,
+because standard error under systemd is a socket where a lock always fails. The next root command,
+with Engine in place, logs to the file. A halt before verifyLogs() has run goes to PHP's own error
+log & to the terminal, as for every account.
+
+The web server account & every other account are unchanged. Each still opens a logfile in its
+own folder & writes to it, because nothing there belongs to an account root is protecting
+itself from.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -60,10 +60,12 @@ after it, because continuing produces an installation that looks finished & is n
 
   2  DATA LOCATIONS
      Creates the data location, the log directory, the backup location & the socket
-     directory, & hands each to the web server user.
+     directory. Each folder the web server user writes is handed to it, & the backup is
+     root's alone.
 
   3  PERMISSIONS & POLICIES
-     Corrects ownership across every managed path & the secret file.
+     Gives every managed location its role. The installation is root's & the web server
+     user only reads it. See ABOUT_MANAGED_LOCATIONS.txt.
      Writes the ImageMagick policy at whatever prefix this build actually reads, which is
      asked of the binary rather than guessed. A build from source does not use /etc.
      Extends the distribution AppArmor profile for bubblewrap through its local include.
@@ -79,8 +81,7 @@ after it, because continuing produces an installation that looks finished & is n
      Installs & enables hrconvert2-listener, if resource awareness is enabled.
 
   6  PERMISSIONS, SECOND PASS
-     Corrects ownership again, because stages four & five both write files, & returns the
-     install secret & the socket directory to their tight permissions.
+     Gives every location its role again, because stages four & five both write files.
 
   7  VERIFICATION
      Reports what actually works rather than what was attempted.
@@ -120,6 +121,10 @@ The installer does not choose this for you, because only you know how this host 
 
 That path is the default every setting in config.php expects. Installing elsewhere is
 supported, but --Installation Directory-- must be corrected afterwards with --config.
+
+Every folder above the installation must belong to root & be writable by nobody else. Root
+refuses to run an installation another account could swap out. /var/www/html is root's on a
+fresh Debian or Ubuntu. Do not hand it to the web server user.
 
 Do not place the data location inside the web root. The installer creates it at
 /DATA/HRConvert2 by default, which is outside anything Apache serves.
@@ -186,16 +191,27 @@ first whether or not you asked for one.
 RUN  'sudo php convertCore.php -fp'  FIRST. It is idempotent, it repairs everything the
 installer set up, & it verifies the result rather than assuming it worked.
 
-RUN IT AFTER ANY COMMAND YOU RAN AS ROOT. A root invocation creates its logfile & its
-secret file owned by root, & the web server user cannot read either afterwards. This is
-the single most common cause of an installation that worked yesterday & does not today.
+RUN IT ONCE AFTER UPDATING FROM v4.0.0. Until v4.0.1 the installer & -fp handed the whole
+installation to the web server user, & an installation v4.0.0 left behind keeps that
+ownership until -fp gives each location its role.
+
+DO NOT HAND THE INSTALLATION TO THE WEB SERVER USER WITH chown. Root runs that code. A
+command run as root no longer leaves a logfile or a secret the web server user cannot use.
 
   Conversions refuse & the log names bubblewrap.
     The sandbox cannot create a namespace. -fp reports which of the three causes it is.
     Kernel restriction, missing AppArmor permission, or a namespace budget of zero.
 
+  Root refuses to run anything & names error 28008.
+    Something in the installation, or a folder above it, can be changed by an account other
+    than root, & the message names it. -fp corrects the installation. A folder above it,
+    such as /var/www/html, is not this application's & is corrected by hand.
+    See ABOUT_MANAGED_LOCATIONS.txt.
+
   Nothing appears in the log at all.
-    The logfile belongs to another account. -fp corrects it.
+    The logfile belongs to another account. A release before v4.0.1 left the day's logfile
+    root's whenever root ran the first command of the day. -fp corrects the log folder &
+    leaves the files in it alone, so remove that file as root & the next entry creates it.
 
   A conversion works from a terminal & refuses from a browser.
     The two run as different accounts. -fp corrects ownership across both.

@@ -13,7 +13,7 @@
 // / command line, finds executables & loads components, the Engine among them.
 // /
 // / File Information ...
-// / v3.9.9.
+// / v4.0.1.
 // / This file is the kernel. An application's entry point requires it directly as the first
 // / thing it does, & pins it EXACTLY via $RequiredKernelVersion.
 // / Error 35000 is the direct load guard every component shares.
@@ -44,8 +44,12 @@
 // /   $InstLoc                 The application root. Components are found beneath it.
 // /   $ApplicationName         The name an operator sees in warning & error lines.
 // /   $RunningFromCLI          Whether there is a terminal rather than a web client.
+// /   $RunningAsRoot           Whether this process is root. Only root prepares a root folder.
 // /   $CoreLoaded              Set TRUE by the application before it loads any component.
 // /   $LogFile                 The logfile. Until it exists, lines are buffered rather than lost.
+// /   $LogHandle               Optional. An open handle written through rather than by name.
+// /                            Root holds one, standard error until it has a log folder of
+// /                            its own, & nothing else needs to.
 // /   $SesHash3                Optional. A session label for every log line. Absent reads as
 // /                            No Session, which is correct for an application without sessions.
 // / The time globals are set by verifyTime. The log buffer & sequence are managed here.
@@ -63,7 +67,7 @@ if (count(get_included_files()) < 2) die('ERROR!!! Kernel-35000, The kernel cann
 // / The version of this kernel.
 // / The application reads it with a pattern BEFORE requiring this file, so a mismatched
 // / kernel is never executed. It cannot use readComponentVersion for that, which is below.
-$KernelVersion = 'v3.9.9';
+$KernelVersion = 'v4.0.1';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -365,11 +369,15 @@ function purgeSensitiveMemory($FailureIsFatal, &...$variables) {
 // / Named for what it does. It was called closeHRC2Connection until v3.9.9, which put one
 // / application's name inside the kernel, so a second application would have had to define a
 // / function named after this one for its own quickDie to halt.
+// / A buffer zlib.output_compression has begun to compress can be flushed but not removed, &
+// / ending it put a notice in the web server's log on every request until v4.0.1. Such a
+// / buffer is flushed instead, which passes on what it holds.
 function closeClientConnection() {
   ignore_user_abort(TRUE);
   if (function_exists('fastcgi_finish_request')) fastcgi_finish_request();
   else {
-    if (ob_get_level() > 0) ob_end_flush();
+    if (ob_get_level() > 0 && (ob_get_status()['flags'] & PHP_OUTPUT_HANDLER_REMOVABLE)) ob_end_flush();
+    else if (ob_get_level() > 0 && (ob_get_status()['flags'] & PHP_OUTPUT_HANDLER_FLUSHABLE)) ob_flush();
     flush(); } }
 // / -----------------------------------------------------------------------------------
 
@@ -448,6 +456,61 @@ function composeLogEntry($tierLabel, $entry, $errorLabel) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to append text to the logfile, through the held handle when there is one.
+// / Accepts the text, which already ends in a line break. Returns TRUE when all of it was written.
+// / emitLogEntry & quickDie both write here, so a process holding $LogHandle never writes
+// / its logfile by name from either. Like emitLogEntry it does NOT call purgeSensitiveMemory,
+// / because purgeSensitiveMemory logs through this path.
+// / A logfile is locked & written at its end, because several processes append to one file.
+// / A handle that is not a plain file is written without a lock. Root's handle is standard
+// / error until it has a log folder of its own, & under systemd standard error is a socket,
+// / where a lock always fails & every line used to be dropped.
+function appendLogText($logText) {
+  // / Set variables.
+  global $LogFile, $LogHandle;
+  $TextWasWritten = $handleIsFile = FALSE;
+  $handleStatus = array();
+  if (isset($LogHandle) && is_resource($LogHandle)) {
+    $handleStatus = @fstat($LogHandle);
+    $handleIsFile = (is_array($handleStatus) && ((int)$handleStatus['mode'] & 0170000) === 0100000);
+    if (!$handleIsFile) {
+      $TextWasWritten = (@fwrite($LogHandle, (string)$logText) === strlen((string)$logText));
+      @fflush($LogHandle); }
+    else if (@flock($LogHandle, LOCK_EX)) {
+      @fseek($LogHandle, 0, SEEK_END);
+      $TextWasWritten = (@fwrite($LogHandle, (string)$logText) === strlen((string)$logText));
+      @fflush($LogHandle);
+      @flock($LogHandle, LOCK_UN); } }
+  else if (isset($LogFile) && is_string($LogFile) && $LogFile !== '') $TextWasWritten = (@file_put_contents($LogFile, (string)$logText, FILE_APPEND | LOCK_EX) !== FALSE);
+  // / This cleanup is manual, because purgeSensitiveMemory calls into this path.
+  $logText = $handleStatus = $handleIsFile = NULL;
+  unset($logText, $handleStatus, $handleIsFile);
+  return $TextWasWritten; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to repeat a warning or an error on the terminal of an administrator running root.
+// / Accepts one finished line. Returns TRUE when the line was repeated.
+// / Root logs to a file in Engine, so an administrator running it by hand would otherwise see
+// / none of its warnings until the file was opened. verifyLogs sets $LogEchoToConsole only for
+// / root writing that file with standard error on a terminal, so a timer, a pipe, a redirect & a
+// / build repeat nothing & every other account is untouched. Op-Act lines are never repeated.
+// / Like emitLogEntry it does NOT call purgeSensitiveMemory, because purgeSensitiveMemory logs
+// / through this path.
+function echoLogEntryToConsole($composedEntry) {
+  // / Set variables.
+  global $LogEchoToConsole;
+  $EntryWasEchoed = $entryIsLoud = FALSE;
+  if (isset($LogEchoToConsole) && $LogEchoToConsole === TRUE && defined('STDERR')) {
+    $entryIsLoud = (strpos((string)$composedEntry, 'WARNING!!! ') === 0 or strpos((string)$composedEntry, 'ERROR!!! ') === 0);
+    if ($entryIsLoud) $EntryWasEchoed = (@fwrite(STDERR, (string)$composedEntry.PHP_EOL) !== FALSE); }
+  // / This cleanup is manual, because purgeSensitiveMemory calls into this path.
+  $composedEntry = $entryIsLoud = NULL;
+  unset($composedEntry, $entryIsLoud);
+  return $EntryWasEchoed; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to record one finished line, or to hold it until a logfile exists.
 // / Accepts the finished line. Returns TRUE when it reached the logfile.
 // / An entry raised before verifyLogs has nowhere to go & used to reach the server error
@@ -458,13 +521,22 @@ function composeLogEntry($tierLabel, $entry, $errorLabel) {
 // / An append under the pipe buffer size is atomic without it, & a stream inspection dump
 // / or a compiler log is not. Those are exactly the entries worth not corrupting.
 // / This function does NOT call purgeSensitiveMemory, for the reason given above.
+// /
+// / A PROCESS HOLDING $LogHandle WRITES THROUGH IT & NEVER BY NAME. A logfile in a folder the
+// / web server account owns can be swapped for a link at any moment, & a write by name follows
+// / the link wherever it points. Debian's nginx package was rooted exactly that way in 2016, as
+// / CVE-2016-1247. So root writes nothing in that folder at all. Its handle is standard error
+// / until it has a log folder of its own, & its lines appear wherever its output goes. A handle
+// / to a logfile is locked & moved to the end before every entry, which is what an append by
+// / name did, so lines from several processes still land whole & in order.
 function emitLogEntry($composedEntry) {
   // / Set variables.
-  global $LogFile, $LogBuffer, $LogBufferOverflowed;
-  $EntryWasWritten = $logIsUsable = FALSE;
-  $bufferedEntry = '';
+  global $LogFile, $LogHandle, $LogBuffer, $LogBufferOverflowed;
+  $EntryWasWritten = $logIsUsable = $handleIsUsable = FALSE;
+  $bufferedEntry = $pendingText = $overflowNotice = '';
   if (!isset($LogBuffer) or !is_array($LogBuffer)) $LogBuffer = array();
-  $logIsUsable = (isset($LogFile) && is_string($LogFile) && $LogFile !== '' && file_exists($LogFile));
+  $handleIsUsable = (isset($LogHandle) && is_resource($LogHandle));
+  $logIsUsable = ($handleIsUsable or (isset($LogFile) && is_string($LogFile) && $LogFile !== '' && file_exists($LogFile)));
   if (!$logIsUsable) {
     // / The buffer is bounded. A process that never reaches a logfile must not grow until
     // / it is killed for memory, & the entries that explain a boot failure are the early
@@ -473,16 +545,24 @@ function emitLogEntry($composedEntry) {
     else $LogBufferOverflowed = TRUE; }
   else {
     // / Anything held before the logfile existed is written first & in order.
-    if (count($LogBuffer) > 0) {
-      foreach ($LogBuffer as $bufferedEntry) @file_put_contents($LogFile, $bufferedEntry.PHP_EOL, FILE_APPEND | LOCK_EX);
-      $LogBuffer = array();
-      if (isset($LogBufferOverflowed) && $LogBufferOverflowed) {
-        @file_put_contents($LogFile, 'WARNING!!! The log buffer filled before a logfile existed & older entries were discarded.'.PHP_EOL, FILE_APPEND | LOCK_EX);
-        $LogBufferOverflowed = FALSE; } }
-    $EntryWasWritten = (@file_put_contents($LogFile, $composedEntry.PHP_EOL, FILE_APPEND | LOCK_EX) !== FALSE); }
+    // / A full buffer keeps its earliest entries & drops what arrives after, so the notice says
+    // / later entries were discarded. It said older ones until v4.0.1, which was the reverse.
+    foreach ($LogBuffer as $bufferedEntry) $pendingText .= $bufferedEntry.PHP_EOL;
+    if (isset($LogBufferOverflowed) && $LogBufferOverflowed) {
+      $overflowNotice = 'WARNING!!! The log buffer filled before a logfile existed & later entries were discarded.';
+      $pendingText .= $overflowNotice.PHP_EOL; }
+    $pendingText .= $composedEntry.PHP_EOL;
+    $EntryWasWritten = appendLogText($pendingText);
+    // / The warnings & errors among them are repeated on the terminal of an administrator
+    // / running root by hand. echoLogEntryToConsole decides that, & repeats nothing otherwise.
+    foreach ($LogBuffer as $bufferedEntry) echoLogEntryToConsole($bufferedEntry);
+    if ($overflowNotice !== '') echoLogEntryToConsole($overflowNotice);
+    echoLogEntryToConsole($composedEntry);
+    $LogBuffer = array();
+    $LogBufferOverflowed = FALSE; }
   // / This cleanup is manual, because purgeSensitiveMemory calls into this path.
-  $composedEntry = $logIsUsable = $bufferedEntry = NULL;
-  unset($composedEntry, $logIsUsable, $bufferedEntry);
+  $composedEntry = $logIsUsable = $handleIsUsable = $bufferedEntry = $pendingText = $overflowNotice = NULL;
+  unset($composedEntry, $logIsUsable, $handleIsUsable, $bufferedEntry, $pendingText, $overflowNotice);
   return $EntryWasWritten; }
 // / -----------------------------------------------------------------------------------
 
@@ -511,7 +591,7 @@ function flushLogBuffer() {
 // / no $Lol, so this function assumes nothing exists & tests everything it uses.
 function quickDie($entry, $errorNumber) {
   // / Set variables.
-  global $Time, $LogFile, $SesHash3, $ApplicationName, $RunningFromCLI, $LogBuffer;
+  global $Time, $LogFile, $LogHandle, $SesHash3, $ApplicationName, $RunningFromCLI, $LogBuffer, $LogEchoToConsole;
   // / The timestamp is recomputed HERE, at the moment the entry is written, rather than
   // / taken from $Time. $Time is set once by verifyTime during boot, which is correct for a
   // / web request that lives half a second & wrong for a manager process that runs for
@@ -527,24 +607,42 @@ function quickDie($entry, $errorNumber) {
   $errorLabel = is_numeric($errorNumber) ? $applicationLabel.'-'.$errorNumber : $applicationLabel.'-###';
   // / A halt is numbered like everything else, so the sequence has no hole at the end.
   $formattedEntry = composeLogEntry('ERROR!!! ', $entry, $errorLabel);
-  $logIsWritable = (isset($LogFile) && is_string($LogFile) && $LogFile !== '');
-  // / Record it wherever it can be recorded. A halt with no record is a support ticket
-  // / that can never be answered.
-  if (!$logIsWritable) error_log($formattedEntry);
+  // / A log is usable on the terms emitLogEntry uses, a held handle or a logfile that exists.
+  // / A name alone counted until v4.0.1, so a halt raised because the logfile could not be
+  // / created was appended to a file that was not there & reached no log at all.
+  $logIsWritable = ((isset($LogHandle) && is_resource($LogHandle)) or (isset($LogFile) && is_string($LogFile) && $LogFile !== '' && file_exists($LogFile)));
+  // / Root's log on the command line is the console itself, so whatever reaches that log has
+  // / already reached the terminal. Printed as well, every line here appeared twice.
+  $logIsConsole = (isset($LogFile) && $LogFile === 'php://stderr');
+  // / Root's logfile repeats its warnings & errors on the terminal of an administrator running it
+  // / by hand, so a halt is repeated there once rather than printed beside the repeat.
+  $logIsEchoed = (isset($LogEchoToConsole) && $LogEchoToConsole === TRUE);
+  // / On the command line PHP's own error log is standard error unless php.ini names somewhere
+  // / else, so an entry sent there reached the terminal beside the copy printed below. It is
+  // / printed once instead. Until v4.0.1 every halt before a logfile existed appeared twice.
+  $errorLogIsConsole = ($RunningFromCLI && in_array(trim((string)ini_get('error_log')), array('', 'php://stderr', '/dev/stderr'), TRUE));
   // / Everything held before a logfile existed is reported here rather than discarded.
   // / A halt during boot is exactly the case where the entries leading up to it explain the
   // / halt, & exactly the case where there was nowhere to have written them.
   if (isset($LogBuffer) && is_array($LogBuffer) && count($LogBuffer) > 0) {
     foreach ($LogBuffer as $bufferedEntry) {
-      if ($logIsWritable) @file_put_contents($LogFile, $bufferedEntry.PHP_EOL, FILE_APPEND | LOCK_EX);
-      else error_log($bufferedEntry);
-      if ($RunningFromCLI) print($bufferedEntry.PHP_EOL);
-      else print($bufferedEntry.PHP_EOL.'<br />'.PHP_EOL); }
+      if ($logIsWritable) appendLogText($bufferedEntry.PHP_EOL);
+      else if (!$errorLogIsConsole) error_log($bufferedEntry);
+      if (!$RunningFromCLI) print($bufferedEntry.PHP_EOL.'<br />'.PHP_EOL);
+      else if ($logIsEchoed) echoLogEntryToConsole($bufferedEntry);
+      else if (!$logIsConsole) print($bufferedEntry.PHP_EOL); }
     $LogBuffer = array(); }
+  // / Record the halt wherever it can be recorded. A halt with no record is a support ticket
+  // / that can never be answered. errorEntry leaves a fatal error to this function, so this is
+  // / the one place a halt is recorded. Until v4.0.1 a halt raised here directly once a logfile
+  // / existed was shown & never recorded.
+  if ($logIsWritable) appendLogText($formattedEntry.PHP_EOL);
+  else if (!$errorLogIsConsole) error_log($formattedEntry);
   // / A browser needs a line break to render the message. A terminal does not & would
-  // / print the tag literally.
-  if ($RunningFromCLI) print($formattedEntry.PHP_EOL);
-  else print($formattedEntry.PHP_EOL.'<br />'.PHP_EOL);
+  // / print the tag literally. A log that is the console has shown it already.
+  if (!$RunningFromCLI) print($formattedEntry.PHP_EOL.'<br />'.PHP_EOL);
+  else if ($logIsEchoed) echoLogEntryToConsole($formattedEntry);
+  else if (!$logIsConsole) print($formattedEntry.PHP_EOL);
   // / Close the connection deliberately rather than dropping it, so the message is
   // / delivered before the process ends. There is nothing to close on the command line.
   if (!$RunningFromCLI && function_exists('closeClientConnection')) closeClientConnection();
@@ -606,9 +704,13 @@ function errorEntry($entry, $errorNumber, $die) {
   $applicationLabel = $errorLabel = '';
   $applicationLabel = (isset($ApplicationName) && is_string($ApplicationName) && $ApplicationName !== '') ? $ApplicationName : 'HRConvert2';
   $errorLabel = is_numeric($errorNumber) ? $applicationLabel.'-'.$errorNumber : $applicationLabel.'-###';
-  $LogWritten = emitLogEntry(composeLogEntry('ERROR!!! ', $entry, $errorLabel));
-  // / A fatal error halts here & quickDie repeats none of the above.
-  // / It reports to the page, empties the log buffer & closes the connection.
+  // / A fatal error is recorded, numbered & shown by quickDie, once, so it is not written here.
+  // / Written here as well until v4.0.1, a halt before the logfile existed was held, then shown
+  // / twice, & a halt after it was recorded under one number & shown under the next.
+  if (!$die) $LogWritten = emitLogEntry(composeLogEntry('ERROR!!! ', $entry, $errorLabel));
+  // / A fatal error halts here.
+  // / quickDie records it, reports to the page or the console, empties the log buffer & closes
+  // / the connection.
   if ($die) quickDie($entry, $errorNumber);
   // / This cleanup is manual, because purgeSensitiveMemory() may call this function.
   $entry = $errorNumber = $die = $applicationLabel = $errorLabel = NULL;
@@ -813,4 +915,364 @@ function verifyCoreComponent($componentName, $componentRelativePath, $versionVar
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $componentPath, $componentContents, $cleanDetected, $cleanRequired, $versionMatches, $componentName, $componentRelativePath, $versionVariableName, $requiredComponentVersion);
   return array($ComponentIsAvailable, $DetectedComponentVersion); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether root may trust a path.
+// / Accepts the path. Returns a trust boolean, the resolved path & the reason it is not
+// / trusted, in that order.
+// /
+// / ROOT MUST NOT RUN, READ OR WRITE THROUGH anything another account can change. A file is
+// / only as trustworthy as the folders above it, because an account that can write a
+// / folder can rename anything in it & put something else in its place. That includes a
+// / folder root owns. Moving a folder to another parent needs write permission on the folder
+// / itself, but renaming it within the same parent does not, & that was measured. So every
+// / folder from the filesystem root down must belong to root & must not be writable by its
+// / group or by anybody else, & so must the path itself. There is no exception for a data
+// / folder, because a root owned folder inside one can be renamed aside & its name taken.
+// /
+// / The path is resolved first & the resolved path is the one judged & returned. A caller
+// / uses the returned path rather than the one it supplied, so a link that changes after the
+// / check cannot redirect what is done next. Every component is examined with lstat, so a
+// / link that appeared after resolving is caught rather than followed.
+function pathIsTrustedByRoot($candidatePath) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $PathIsTrusted = FALSE;
+  $ResolvedPath = $TrustNotice = '';
+  $walkedPath = $pathComponent = '';
+  $pathComponents = $componentStatus = array();
+  if (trim((string)$candidatePath) !== '') $ResolvedPath = (string)@realpath((string)$candidatePath);
+  if ($ResolvedPath === '') $TrustNotice = (string)$candidatePath.' does not exist.';
+  else {
+    $PathIsTrusted = TRUE;
+    // / The empty first component is the filesystem root, which is judged like any other.
+    $pathComponents = array_merge(array(''), array_values(array_filter(explode(DIRECTORY_SEPARATOR, $ResolvedPath), 'strlen')));
+    foreach ($pathComponents as $pathComponent) {
+      $walkedPath = rtrim($walkedPath, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$pathComponent;
+      clearstatcache(TRUE, $walkedPath);
+      $componentStatus = @lstat($walkedPath);
+      if (!is_array($componentStatus)) $TrustNotice = $walkedPath.' could not be examined.';
+      else if (((int)$componentStatus['mode'] & 0170000) === 0120000) $TrustNotice = $walkedPath.' is a link.';
+      else if ((int)$componentStatus['uid'] !== 0) $TrustNotice = $walkedPath.' does not belong to root.';
+      else if (((int)$componentStatus['mode'] & 0022) !== 0) $TrustNotice = $walkedPath.' can be written by an account other than root.';
+      if ($TrustNotice !== '') {
+        $PathIsTrusted = FALSE;
+        break; } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $walkedPath, $pathComponent, $pathComponents, $componentStatus, $candidatePath);
+  return array($PathIsTrusted, $ResolvedPath, $TrustNotice); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether root may run code from a whole tree.
+// / Accepts the tree & the folders inside it that hold no code, which are never entered.
+// / Returns a trust boolean & the reason it is not trusted, in that order.
+// /
+// / A TREE IS ONLY AS TRUSTWORTHY AS THE WEAKEST NAME IN IT. Root does not only load the
+// / files a request names. It loads cores & pipelines on demand & runs build scripts from
+// / the same tree, so one name another account can change is enough to run that account's
+// / code as root. Every folder from the filesystem root down to the tree must pass
+// / pathIsTrustedByRoot, & the tree must be the folder named rather than where a link leads.
+// / Every name inside it must belong to root & be writable by nobody else. No name may be a
+// / link, because a link can lead out of the tree to something another account owns. The
+// / walk uses lstat & never follows anything.
+function treeIsTrustedByRoot($treePath, $excludedPaths) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $TreeIsTrusted = FALSE;
+  $TrustNotice = $resolvedTree = $currentFolder = $folderEntry = $entryPath = '';
+  $pendingFolders = $folderEntries = $entryStatus = array();
+  $treePath = rtrim((string)$treePath, DIRECTORY_SEPARATOR);
+  list ($TreeIsTrusted, $resolvedTree, $TrustNotice) = pathIsTrustedByRoot($treePath);
+  if ($TreeIsTrusted && $resolvedTree !== $treePath) {
+    $TreeIsTrusted = FALSE;
+    $TrustNotice = $treePath.' leads to '.$resolvedTree.'.'; }
+  if ($TreeIsTrusted) $pendingFolders = array($treePath);
+  while ($TreeIsTrusted && count($pendingFolders) > 0) {
+    $currentFolder = (string)array_pop($pendingFolders);
+    $folderEntries = @scandir($currentFolder);
+    if (!is_array($folderEntries)) $TrustNotice = $currentFolder.' could not be read.';
+    else foreach ($folderEntries as $folderEntry) {
+      if ($folderEntry === '.' or $folderEntry === '..') continue;
+      $entryPath = $currentFolder.DIRECTORY_SEPARATOR.$folderEntry;
+      if (in_array($entryPath, $excludedPaths, TRUE)) continue;
+      $entryStatus = @lstat($entryPath);
+      if (!is_array($entryStatus)) $TrustNotice = $entryPath.' could not be examined.';
+      else if (((int)$entryStatus['mode'] & 0170000) === 0120000) $TrustNotice = $entryPath.' is a link.';
+      else if ((int)$entryStatus['uid'] !== 0) $TrustNotice = $entryPath.' does not belong to root.';
+      else if (((int)$entryStatus['mode'] & 0022) !== 0) $TrustNotice = $entryPath.' can be written by an account other than root.';
+      else if (((int)$entryStatus['mode'] & 0170000) === 0040000) $pendingFolders[] = $entryPath;
+      if ($TrustNotice !== '') break; }
+    if ($TrustNotice !== '') $TreeIsTrusted = FALSE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $resolvedTree, $currentFolder, $folderEntry, $entryPath, $pendingFolders, $folderEntries, $entryStatus, $treePath, $excludedPaths);
+  return array($TreeIsTrusted, $TrustNotice); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether only root could replace the folder a name is in.
+// / Accepts the folder. Returns whether it is held & the reason it is not, in that order.
+// /
+// / A FOLDER IS ONLY AS STILL AS THE FOLDER ABOVE IT. The functions below guard the name they
+// / are given & never follow a link planted at it. They reach that name through the folder it
+// / is in, though, & the folder is looked up again every time. An account that can write the
+// / folder above can rename this one aside & put a link in its place, & root would then create,
+// / open or re-own a file wherever the link leads. Nothing checked until v4.0.1, & Logs &
+// / Sockets both sit inside the data location, which the web server account owns.
+// / So the folder must not be a link, & every folder above it must pass pathIsTrustedByRoot.
+// / The folder itself may belong to another account. Only what is inside it can then change,
+// / & the name inside it is what each of those functions already guards.
+// / Only root is judged. Another account reaches nothing through a link that it could not
+// / reach without one, so it is answered TRUE.
+function folderIsHeldForRoot($folderPath) {
+  // / Set variables.
+  global $RunningAsRoot, $EnableMemoryProtection;
+  $FolderIsHeld = FALSE;
+  $HoldNotice = '';
+  $callerIsRoot = $parentIsTrusted = FALSE;
+  $parentPath = $resolvedParent = $trustNotice = '';
+  $folderStatus = array();
+  // / A process that cannot tell who it is is judged as root, because that is the safe guess.
+  $callerIsRoot = function_exists('posix_geteuid') ? (posix_geteuid() === 0) : (!isset($RunningAsRoot) or $RunningAsRoot !== FALSE);
+  $folderPath = rtrim((string)$folderPath, DIRECTORY_SEPARATOR);
+  if ($folderPath === '') $folderPath = DIRECTORY_SEPARATOR;
+  if (!$callerIsRoot) $FolderIsHeld = TRUE;
+  else {
+    // / The folder above is judged first. Once only root can change it, nothing else can swap
+    // / the folder beneath it, so what lstat reports next stays true.
+    $parentPath = dirname($folderPath);
+    list ($parentIsTrusted, $resolvedParent, $trustNotice) = pathIsTrustedByRoot($parentPath);
+    clearstatcache(TRUE, $folderPath);
+    $folderStatus = @lstat($folderPath);
+    if (!$parentIsTrusted) $HoldNotice = 'Another account could replace '.$folderPath.'. '.$trustNotice;
+    else if ($resolvedParent !== $parentPath) $HoldNotice = $parentPath.' leads to '.$resolvedParent.'.';
+    else if (!is_array($folderStatus)) $HoldNotice = $folderPath.' does not exist.';
+    else if (((int)$folderStatus['mode'] & 0170000) === 0120000) $HoldNotice = $folderPath.' is a link.';
+    else if (((int)$folderStatus['mode'] & 0170000) !== 0040000) $HoldNotice = $folderPath.' is not a folder.';
+    else $FolderIsHeld = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $callerIsRoot, $parentIsTrusted, $parentPath, $resolvedParent, $trustNotice, $folderStatus, $folderPath);
+  return array($FolderIsHeld, $HoldNotice); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to write a file without following anything another account planted.
+// / Accepts the destination path, the contents & the mode the file is created with.
+// / Returns a success boolean & the reason for a failure, in that order.
+// /
+// / A PLAIN WRITE FOLLOWS A LINK, & SO DOES A CHMOD BY PATH. Root writing into a folder the
+// / web server account can change writes wherever a link it planted points, & root changing
+// / the mode afterwards changes whatever the link points at. Both were measured in v4.0.0. A
+// / link planted where the DATA protection file belongs made one -fp copy the link's target
+// / into a backup the web server account could read, overwrite it & leave it world readable.
+// /
+// / So the contents go into a new file that did not exist a moment before. Opening with x
+// / fails on any name that already exists, a link included, so it never opens something
+// / planted. The mode is set by the umask as the file is created, so nothing is changed by
+// / path afterwards. The new file is then renamed over the destination. A rename replaces
+// / the name & never follows what was there, so a link at the destination is replaced rather
+// / than written through, & a reader sees the whole old file or the whole new one.
+// / The temporary name is random, so it cannot be predicted & occupied first.
+// / Root writes only in a folder folderIsHeldForRoot holds, because all of this guards the name
+// / & none of it guards the folder the name is reached through.
+function writeFileWithoutFollowing($targetPath, $fileContents, $fileMode) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $FileWasWritten = $folderIsHeld = FALSE;
+  $WriteNotice = $holdNotice = '';
+  $temporaryPath = $randomPart = '';
+  $fileHandle = $error = FALSE;
+  $previousMask = $bytesWritten = 0;
+  list ($folderIsHeld, $holdNotice) = folderIsHeldForRoot(dirname((string)$targetPath));
+  try { $randomPart = bin2hex(random_bytes(6)); }
+  catch (Throwable $error) { $randomPart = str_replace('.', '', uniqid('', TRUE)); }
+  $temporaryPath = dirname((string)$targetPath).DIRECTORY_SEPARATOR.'.'.basename((string)$targetPath).'.'.$randomPart.'.tmp';
+  if ($folderIsHeld) {
+    $previousMask = umask(0777 & ~((int)$fileMode));
+    $fileHandle = @fopen($temporaryPath, 'x');
+    umask($previousMask); }
+  if (!$folderIsHeld) $WriteNotice = (string)$targetPath.' was not written. '.$holdNotice;
+  else if ($fileHandle === FALSE) $WriteNotice = 'A new file could not be created beside '.$targetPath.'.';
+  else {
+    $bytesWritten = @fwrite($fileHandle, (string)$fileContents);
+    @fflush($fileHandle);
+    @fclose($fileHandle);
+    if ($bytesWritten !== strlen((string)$fileContents)) $WriteNotice = 'Only part of '.$targetPath.' could be written.';
+    else if (!@rename($temporaryPath, $targetPath)) $WriteNotice = 'The new copy of '.$targetPath.' could not be moved into place.';
+    else $FileWasWritten = TRUE;
+    // / A copy that was not moved into place is removed. Removing a name never follows it.
+    if (!$FileWasWritten) @unlink($temporaryPath); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $folderIsHeld, $holdNotice, $temporaryPath, $randomPart, $fileHandle, $previousMask, $bytesWritten, $error, $targetPath, $fileContents, $fileMode);
+  return array($FileWasWritten, $WriteNotice); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to open a file for appending without following anything another account planted.
+// / Accepts the path & the mode a new file is created with.
+// / Returns the open handle or FALSE, whether the file was created, & the reason for a
+// / failure, in that order.
+// /
+// / A NEW FILE IS CREATED WITH x, WHICH REFUSES EVERY NAME THAT ALREADY EXISTS, A LINK INCLUDED.
+// / An existing file is opened only when it is a plain file with exactly one name, & it is
+// / opened with r+ rather than a, because a creates a file wherever a link points & r+ creates
+// / nothing. The open handle is then compared with what was examined, by device & inode. A
+// / link swapped in between the look & the open opens something else, which the comparison
+// / catches, & the handle is closed before anything is written to it.
+// / The caller writes through the handle for as long as it runs, so the name is never
+// / resolved again & cannot be pointed somewhere else halfway through.
+// / Root opens only in a folder folderIsHeldForRoot holds, for the reason given there.
+function openFileWithoutFollowing($filePath, $fileMode) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $FileHandle = FALSE;
+  $FileWasCreated = $folderIsHeld = FALSE;
+  $OpenNotice = $holdNotice = '';
+  $pathStatus = $handleStatus = array();
+  $previousMask = 0;
+  list ($folderIsHeld, $holdNotice) = folderIsHeldForRoot(dirname((string)$filePath));
+  clearstatcache(TRUE, (string)$filePath);
+  $pathStatus = @lstat((string)$filePath);
+  if (!$folderIsHeld) $OpenNotice = (string)$filePath.' was not opened. '.$holdNotice;
+  else if (!is_array($pathStatus)) {
+    $previousMask = umask(0777 & ~((int)$fileMode));
+    $FileHandle = @fopen((string)$filePath, 'x');
+    umask($previousMask);
+    if ($FileHandle === FALSE) $OpenNotice = (string)$filePath.' could not be created.';
+    else $FileWasCreated = TRUE; }
+  else if (((int)$pathStatus['mode'] & 0170000) !== 0100000) $OpenNotice = (string)$filePath.' is not a plain file & was not opened.';
+  else if ((int)$pathStatus['nlink'] !== 1) $OpenNotice = (string)$filePath.' has more than one name & was not opened.';
+  else {
+    $FileHandle = @fopen((string)$filePath, 'r+');
+    if ($FileHandle === FALSE) $OpenNotice = (string)$filePath.' could not be opened.';
+    else {
+      $handleStatus = @fstat($FileHandle);
+      if (!is_array($handleStatus) or $handleStatus['dev'] !== $pathStatus['dev'] or $handleStatus['ino'] !== $pathStatus['ino']) {
+        @fclose($FileHandle);
+        $FileHandle = FALSE;
+        $OpenNotice = (string)$filePath.' changed while it was being opened & was not written.'; }
+      else @fseek($FileHandle, 0, SEEK_END); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $folderIsHeld, $holdNotice, $pathStatus, $handleStatus, $previousMask, $filePath, $fileMode);
+  return array($FileHandle, $FileWasCreated, $OpenNotice); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to read a small file without following anything another account planted.
+// / Accepts the path & the most bytes to read. Returns whether it was read, the contents & the
+// / reason it was not, in that order.
+// /
+// / A READ BY NAME FOLLOWS A LINK, & OPENING A FIFO WAITS FOREVER. Root reads the install secret
+// / & the DATA protection file in folders the web server account owns, & a name there can be
+// / swapped for a link, or for a FIFO that would hold every command run as root at its first
+// / read, -fp included, with no way to recover from inside the application. Until v4.0.1 both
+// / were read with file_get_contents.
+// / So the name must be a plain file with one name. It is opened without blocking, which a FIFO
+// / swapped in cannot hold, & the open handle is compared with what was examined, by device &
+// / inode, so a name swapped in between the look & the open is refused unread. No more than the
+// / bytes asked for are read, so a file that never ends cannot fill memory.
+// / Root reads only in a folder folderIsHeldForRoot holds, for the reason given there.
+function readFileWithoutFollowing($filePath, $maximumBytes) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $FileWasRead = $folderIsHeld = FALSE;
+  $FileContents = $ReadNotice = $holdNotice = '';
+  $pathStatus = $handleStatus = array();
+  $fileHandle = FALSE;
+  list ($folderIsHeld, $holdNotice) = folderIsHeldForRoot(dirname((string)$filePath));
+  clearstatcache(TRUE, (string)$filePath);
+  $pathStatus = @lstat((string)$filePath);
+  if (!$folderIsHeld) $ReadNotice = (string)$filePath.' was not read. '.$holdNotice;
+  else if (!is_array($pathStatus)) $ReadNotice = (string)$filePath.' does not exist.';
+  else if (((int)$pathStatus['mode'] & 0170000) !== 0100000) $ReadNotice = (string)$filePath.' is not a plain file & was not read.';
+  else if ((int)$pathStatus['nlink'] !== 1) $ReadNotice = (string)$filePath.' has more than one name & was not read.';
+  else {
+    $fileHandle = @fopen((string)$filePath, 'rn');
+    if ($fileHandle === FALSE) $ReadNotice = (string)$filePath.' could not be opened.';
+    else {
+      $handleStatus = @fstat($fileHandle);
+      if (!is_array($handleStatus) or ((int)$handleStatus['mode'] & 0170000) !== 0100000 or $handleStatus['dev'] !== $pathStatus['dev'] or $handleStatus['ino'] !== $pathStatus['ino']) $ReadNotice = (string)$filePath.' changed while it was being opened & was not read.';
+      else {
+        $FileContents = (string)@stream_get_contents($fileHandle, max(0, (int)$maximumBytes));
+        $FileWasRead = TRUE; }
+      @fclose($fileHandle); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $FileContents is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $folderIsHeld, $holdNotice, $pathStatus, $handleStatus, $fileHandle, $filePath, $maximumBytes);
+  return array($FileWasRead, $FileContents, $ReadNotice); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to remove a file by name without following anything another account planted.
+// / Accepts the path of the file to remove.
+// / Returns a removal boolean & the reason for a failure, in that order. A file that is
+// / already absent counts as removed.
+// /
+// / REMOVING A NAME NEVER FOLLOWS A LINK AT THAT NAME. Every folder above it is looked up
+// / again, though. A folder that can be swapped for a link to /etc between a check & the
+// / removal would have root remove a file from /etc. So the folder holding the file must be
+// / one folderIsHeldForRoot holds, which nothing but root can replace. The folder itself may
+// / be another account's, because a name that account swaps in there is only ever one of its
+// / own. A link at the name itself is removed as a link. A folder is never removed, because
+// / nothing inside it has been examined.
+function removeFileWithoutFollowing($targetPath) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $FileWasRemoved = $folderIsHeld = FALSE;
+  $RemovalNotice = $holdNotice = '';
+  $targetStatus = array();
+  $targetFolder = dirname((string)$targetPath);
+  clearstatcache(TRUE, (string)$targetPath);
+  $targetStatus = @lstat((string)$targetPath);
+  if (!is_array($targetStatus)) $FileWasRemoved = TRUE;
+  else if (((int)$targetStatus['mode'] & 0170000) === 0040000) $RemovalNotice = (string)$targetPath.' is a folder & was left where it is.';
+  else {
+    list ($folderIsHeld, $holdNotice) = folderIsHeldForRoot($targetFolder);
+    if (!$folderIsHeld) $RemovalNotice = (string)$targetPath.' was not removed. '.$holdNotice;
+    else if (!@unlink((string)$targetPath)) $RemovalNotice = (string)$targetPath.' could not be removed.';
+    else $FileWasRemoved = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $targetFolder, $targetStatus, $folderIsHeld, $holdNotice, $targetPath);
+  return array($FileWasRemoved, $RemovalNotice); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to change the owner & group of a name without following anything planted.
+// / Accepts the path, the owning account & the group, by name. An empty owner or group is
+// / left as it is. Returns a success boolean & the reason for a failure, in that order.
+// /
+// / PHP HAS NO fchown, SO ROOT CAN ONLY CHANGE AN OWNER BY NAME. lchown & lchgrp change the
+// / name itself & never what a link points at, which closes a symbolic link. A hard link is
+// / the other way to put a different file behind a name. In a folder the web server account
+// / can write, the name can be swapped for a hard link to a root file between the moment root
+// / looks & the moment it acts, & root would then hand that file to the web server account.
+// / So a name is changed only when nothing can swap it, because root trusts the folder it is
+// / in, or when fs.protected_hardlinks is on. With that on, an account can only link a file it
+// / already owns or can already read & write, so a swap gains it nothing. systemd turns it on
+// / at boot, so it is on almost everywhere. A host that turned it off is told, & the name is left.
+// / Neither of those helps when the folder itself can be swapped, because lchown follows every
+// / folder on the way to the name. So the folder must be one folderIsHeldForRoot holds as well.
+function changeOwnerWithoutFollowing($targetPath, $ownerAccount, $groupAccount) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $OwnerWasChanged = $folderIsTrusted = $nameIsSafe = $folderIsHeld = FALSE;
+  $OwnerNotice = $resolvedFolder = $trustNotice = $hardlinkSetting = $holdNotice = '';
+  $targetFolder = dirname((string)$targetPath);
+  list ($folderIsHeld, $holdNotice) = folderIsHeldForRoot($targetFolder);
+  list ($folderIsTrusted, $resolvedFolder, $trustNotice) = pathIsTrustedByRoot($targetFolder);
+  $nameIsSafe = ($folderIsTrusted && $resolvedFolder === $targetFolder);
+  if (!$nameIsSafe) {
+    $hardlinkSetting = trim((string)@file_get_contents('/proc/sys/fs/protected_hardlinks'));
+    $nameIsSafe = ($hardlinkSetting === '1'); }
+  if (!$folderIsHeld) $OwnerNotice = (string)$targetPath.' was left as it is. '.$holdNotice;
+  else if (!$nameIsSafe) $OwnerNotice = (string)$targetPath.' was left as it is, because another account can change '.$targetFolder.' & fs.protected_hardlinks is not on. Run  sysctl -w fs.protected_hardlinks=1  & keep it on in /etc/sysctl.d.';
+  else {
+    $OwnerWasChanged = TRUE;
+    if ((string)$ownerAccount !== '' && !@lchown((string)$targetPath, (string)$ownerAccount)) $OwnerWasChanged = FALSE;
+    if ((string)$groupAccount !== '' && !@lchgrp((string)$targetPath, (string)$groupAccount)) $OwnerWasChanged = FALSE;
+    if (!$OwnerWasChanged) $OwnerNotice = (string)$targetPath.' could not be given to the account or group asked for.'; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $folderIsTrusted, $nameIsSafe, $folderIsHeld, $resolvedFolder, $trustNotice, $hardlinkSetting, $holdNotice, $targetFolder, $targetPath, $ownerAccount, $groupAccount);
+  return array($OwnerWasChanged, $OwnerNotice); }
 // / -----------------------------------------------------------------------------------

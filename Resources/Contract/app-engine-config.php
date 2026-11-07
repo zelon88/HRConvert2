@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.0.
+// / v4.0.1.
 // / THIS APPLICATION'S ENGINE SETTINGS. It is loaded AFTER engineConfig.php & anything it
 // / sets wins.
 // /
@@ -114,6 +114,66 @@ $EngineAcceptedPipelines = array(
 // / libreOffice.php serves the Document & OCR pipelines alike, so neither of them owns it.
 $EngineAcceptedSharedModules = array(
   'libreOffice.php' => 'v4.0.0');
+
+// / Where each of this application's own pins reads its version from.
+// / php convertCore.php --build --pins --write writes every pin from the files named here,
+// / so none of this application's pins is moved by hand. The kernel's & the Engine's are,
+// / because the build runs inside both & cannot rewrite what loads it. A pattern may match
+// / several files, such as one for each interface, & they must all declare the same
+// / version. Paths are relative to the installation. The Engine knows where its own
+// / components live, so they are not listed.
+// / $RequiredSecretVersion has no entry, because no shipped file declares it. It is the
+// / format of a file this application writes, & it is moved by hand when that format changes.
+$EnginePinSources = array(
+  'ConfigVersion' => 'Resources/Contract/config-template.php',
+  'DependsVersion' => 'Resources/Contract/depends.php',
+  'GuiVersion' => 'UI/*/uiVersionInfo.php',
+  'LanguageVersion' => 'UI/*/Languages/*/languageStrings.php');
+
+// / Every location this application keeps on disk, by the setting that holds it, & its role.
+// / The role says what a location IS. The Engine decides what that means for its owner & its
+// / mode, & this contract cannot ask for a mode, so a location can never be made writable by
+// / the account root is protecting itself from. -fp & the Environment Manager apply them.
+// /   code       The installation. root's, 0755 & 0644, read by the web server account.
+// /   web        A folder the web server account writes. 0700 & never walked by root.
+// /   root-only  root alone. 0700 & 0600.
+// /   shared     A folder other software shares. Checked & never walked.
+// / A location inside another keeps its own role, so DATA stays the web server account's
+// / inside an installation that is root's. See Documentation/ABOUT_MANAGED_LOCATIONS.txt.
+// / The data location is a root root owns. A folder for each kind of file hangs off it, & each
+// / has its own role. Sessions & the web server account's cache are that account's, root's log
+// / folder & the previous installation are root's. The data location itself is never walked &
+// / only its own owner & mode are corrected, which is what the data-root role means. HomeLoc is
+// / no longer listed, because the cache folder is the web server account's home now.
+// / The data location is named by $DataRootLoc here, not $ConvertLoc. $ConvertLoc is narrowed to
+// / the session area a request uses, so it is not the root on the command line where this is
+// / applied. $DataRootLoc always holds the configured root. SessionLoc is the session area below
+// / it, which is what $ConvertLoc narrows to.
+$EngineManagedLocations = array(
+  'ProprietaryLoc' => 'shared',
+  'InstLoc' => 'code',
+  'ConvertTemp' => 'web',
+  'DataRootLoc' => 'data-root',
+  'SessionLoc' => 'web',
+  'CacheLoc' => 'web',
+  'LogDir' => 'web',
+  'ManagerSocketDir' => 'web',
+  'EngineDir' => 'root-only',
+  'BackupLoc' => 'root-only');
+
+// / The entries at the top of a release that make up the application, & nothing else.
+// / -fp run from a tree that is not installed copies exactly these into the application folder
+// / in the data location, & the hosted location loses only what is a copy of one of them.
+// / Whatever else shares the folder a release was unpacked into is never taken along & never
+// / removed. DATA is not one of them, because the web server serves it where it is.
+// / See Documentation/ABOUT_MANAGED_LOCATIONS.txt.
+$EngineApplicationLayout = array('convertCore.php', 'index.html', 'README.md', 'LICENSE', 'Documentation', 'Resources', 'UI');
+
+// / The folders of the application whose static files a browser fetches, & the types those are.
+// / The hosted location holds a copy of each beside the loader, written by -fp as root. Nothing
+// / of any other type is copied, so the loader is the only PHP left in the web root.
+$EngineHostedAssetFolders = array('UI');
+$EngineHostedAssetTypes = array('css', 'js', 'gif', 'png', 'jpg', 'jpeg', 'svg', 'ico', 'webp', 'woff', 'woff2', 'ttf', 'otf', 'html');
 
 // / The settings in config.php that each shared name reads. Operators keep the names they
 // / have always used, & the shared layers ask for a value by a name that says nothing about

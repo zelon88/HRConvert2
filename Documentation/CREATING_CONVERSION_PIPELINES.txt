@@ -207,7 +207,8 @@ Read these before writing code. They are preconditions, not steps.
   4e. Comment every setting with how an administrator finds the right value.
   4f. Comment every setting with what the default is.
   4g. Bump `$ConfigVersion` in the template. Do it right now. Not later.
-  4h. Bump `$RequiredConfigVersion` in `convertCore.php`. Do it right now. Not later.
+  4h. Run  `php convertCore.php --build --pins --write`, which moves `$RequiredConfigVersion`
+      in `convertCore.php` to match. Do it right now. Not later.
   4i. `config.php` remains authoritative over what may be uploaded. A pipeline declaration
       never widens it. See `ABOUT_CAPABILITY_DETECTION.txt` for how the layers compose.
   4j. Add each new setting to `applicationConfigModel()` in `convertCore.php`, with the label the

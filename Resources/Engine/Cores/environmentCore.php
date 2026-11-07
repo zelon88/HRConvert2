@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.0.
+// / v4.0.1.
 // / The environment the Engine provides to every application built on it.
 // /
 // / THE ENGINE OWNS THESE. An application uses them & does not define them. That is the
@@ -281,6 +281,14 @@ function confirmDestructiveAction($promptText, $confirmationSupplied) {
 // / separate process. A core that cannot parse, cannot load its config, & cannot reach
 // / the command line branch will not answer, & that is the condition worth catching.
 // / A file count or a directory listing proves nothing about whether the code executes.
+// /
+// / THE ANSWER IS RECOGNIZED BY ITS FIRST LINE. Until v4.0.1 it was recognized by the words
+// / Core version, which -v stopped printing at v3.9.9, so every update from then on failed
+// / this check & rolled itself back, whatever it had installed. The first line of -v is the
+// / application's name & its version, & has been for every release that can be updated to.
+// / The old words are still accepted, & v4.0.1 prints them again, so an older updater can
+// / install this release. Checks -v reports as failed do not fail this, because an update
+// / that changed nothing about them would still be rolled back.
 function validateInstallation($installPath) {
   // / Set variables.
   global $Verbose, $EnableMemoryProtection;
@@ -288,14 +296,18 @@ function validateInstallation($installPath) {
   $validateCommand = '';
   $validateOutput = array();
   $validateExitCode = 1;
+  $validateLine = '';
   $validateCommand = 'php '.escapeshellarg($installPath.'/'.engineApplicationEntryPoint()).' -v 2>&1';
   exec($validateCommand, $validateOutput, $validateExitCode);
   // / The exit code proves it ran. The marker proves it ran far enough to report.
   if ($validateExitCode === 0 && is_array($validateOutput)) {
-    if (strpos(implode(' ', $validateOutput), 'Core version') !== FALSE) $InstallationIsValid = TRUE; }
+    foreach ($validateOutput as $validateLine) {
+      if (preg_match('/^'.preg_quote(engineApplicationName(), '/').' v?[0-9]+\.[0-9]+\.[0-9]+$/', trim((string)$validateLine)) === 1 or strpos((string)$validateLine, 'Core version') !== FALSE) {
+        $InstallationIsValid = TRUE;
+        break; } } }
   if ($Verbose) logEntry('Installation validation: '.($InstallationIsValid ? 'PASSED' : 'FAILED').', exit code '.$validateExitCode.'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $validateCommand, $validateOutput, $validateExitCode, $installPath);
+  purgeSensitiveMemory($EnableMemoryProtection, $validateCommand, $validateOutput, $validateExitCode, $validateLine, $installPath);
   return $InstallationIsValid; }
 // / -----------------------------------------------------------------------------------
 // / Five were moved from the application at v3.9.6 & FOUR of them remain.
@@ -703,9 +715,11 @@ function verifyPhpConfiguration($mayRepair) {
       $dropInPath = $candidateDir.$DirSep.'99-'.engineApplicationSlug().'.ini';
       $existingContents = file_exists($dropInPath) ? (string)@file_get_contents($dropInPath) : '';
       if ($existingContents === $dropInContents) print('  '.str_pad('Unchanged', 12).$dropInPath.$Lol);
+      // / A drop in that is there & differs is reported as such. It was reported as missing
+      // / until v4.0.1, which sent an administrator looking for a file that was in place.
       else if (!$mayRepair or !$RunningAsRoot) {
         $ConfigurationIsValid = FALSE;
-        print('  '.str_pad('Missing', 12).$dropInPath.$Lol); }
+        print('  '.str_pad(($existingContents === '' ? 'Missing' : 'Differs'), 12).$dropInPath.$Lol); }
       else {
         $bytesWritten = @file_put_contents($dropInPath, $dropInContents);
         if ($bytesWritten !== strlen($dropInContents)) {
@@ -730,8 +744,8 @@ function verifyPhpConfiguration($mayRepair) {
 // / Returns the complete file contents, carrying the marker that identifies it as ours.
 // /
 // / $ConvertTempDir IS INSIDE THE WEB ROOT & HOLDS USER SUPPLIED BYTES.
-// / $ConvertTemp is $InstLoc/DATA & every file a user uploads or produces is copied there
-// / by verifyFile() so a browser can fetch it by URL. That makes the web server hand out
+// / $ConvertTemp is DATA in the hosted location & every file a user uploads or produces is
+// / copied there by verifyFile() so a browser can fetch it by URL. That makes the web server hand out
 // / attacker chosen content from this application's own origin, & for any format a browser
 // / treats as ACTIVE that content is code rather than data.
 // / An SVG is the clear case. It is a document, not a picture; it is served as
@@ -873,13 +887,31 @@ function showEnvironmentFindings($environmentFindings, $onlyProblems) {
     // / policyDisplayStatus has already reduced every benign policy state to ok, so the
     // / column can be trusted. The words left here are the ones that changed something or
     // / went wrong, & only the second kind is a problem.
-    $findingIsBenign = in_array($finding['Status'], array('ok', 'installed', 'repaired', 'corrected', 'removed', 'disabled'), TRUE);
+    $findingIsBenign = findingIsBenign($finding['Status']);
     if (!$findingIsBenign) $ProblemsFound++;
     if (!$onlyProblems or !$findingIsBenign) print('  '.str_pad($finding['Check'], 28).str_pad($finding['Status'], 14).$finding['Detail'].$Lol); }
   if ($onlyProblems && $ProblemsFound === 0) print('  '.str_pad('All checks', 28).str_pad('ok', 14).count($environmentFindings).' check(s) passed. Nothing above needs attention.'.$Lol);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $finding, $findingIsBenign, $onlyProblems, $environmentFindings);
   return $ProblemsFound; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to say whether one finding's status is a problem.
+// / Accepts the status word. Returns TRUE when nothing about it needs attention.
+// / A status that changed something, such as repaired, is not a problem, because the change
+// / is what was asked for. Only a status that went wrong is one.
+// / showEnvironmentFindings & the Environment Manager both decide with this, so the report an
+// / operator reads & the count a pass acts on cannot disagree. Until v4.0.1 the manager counted
+// / everything but ok as a problem, which would have read a repaired policy as drift.
+function findingIsBenign($findingStatus) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $FindingIsBenign = FALSE;
+  $FindingIsBenign = in_array((string)$findingStatus, array('ok', 'installed', 'repaired', 'corrected', 'removed', 'disabled'), TRUE);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $findingStatus);
+  return $FindingIsBenign; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

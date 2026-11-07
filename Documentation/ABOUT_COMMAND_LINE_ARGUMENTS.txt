@@ -66,38 +66,41 @@ their lower case forms. A path or a name given to an option is passed exactly as
 
 HRConvert2 should be run as root when using the command line.
 
-Running as root does NOT turn the installation into a root owned permission problem.
-When HRConvert2 creates a directory while running as root it immediately corrects the owner,
-the group & the permissions to the values Apache requires. The application is designed to
-maintain readiness for web operation at all times, & a command line invocation is not
-permitted to compromise that.
+Running as root does NOT leave anything the web server user cannot use. The data location &
+its folders belong to the web server user, root writes no logfile & prints its log lines to
+standard error, & the install secret belongs to root & is readable by the web server user's group. Root never runs, reads as code,
+or works by name inside anything the web server user can change.
+See ABOUT_MANAGED_LOCATIONS.txt.
+
+ROOT RUNS NOTHING ANOTHER ACCOUNT COULD HAVE CHANGED. Every command run as root first reads
+the whole installation. Every name in it must belong to root & be writable by nobody else,
+no name may be a link, & every folder above it must pass the same test, /var/www/html
+included. A command that finds anything else stops with error 28008 & names what it found.
+Only the repairs run anyway, -fp, --setup & --config --repair, after a warning, because they
+are what give an installation to root. Every other account is unaffected.
 
 Running as a non root user is safe but limited. Any operation that would require write access
 the current user does not have will fail rather than partially complete. The filesystem is
 not left in a broken state. The version & help arguments work as any user.
 
-The secret file is readable only by its owner, so a non root user who is also not the web
-server user cannot read it. This is deliberate. That file derives every session identifier
-in the application.
+The install secret is root:www-data 0640, so a non root user who is also not the web server
+user cannot read it. This is deliberate. That file derives every session identifier in the
+application. Such a user is given a secret of its own, in a folder of its own.
 
 An administrator who modifies an HRConvert2 installation using external tools must leave
-every file & folder in an HRConvert2 controlled directory owned & permissioned as follows.
+every location the way -fp leaves it.
 
-  Owner:        www-data
-  Group:        www-data
-  Permissions:  0755
+  The installation        root:root, folders 0755, files 0644
+  The DATA folder in it   www-data:www-data 0700
+  The data location       www-data:www-data 0700, & its Logs & Sockets folders the same
+  The backup              root:root 0700
+  The install secret      root:www-data 0640
 
-The one exception is the secret file, which must remain 0600 & owned by www-data.
-It is created automatically & should never need to be touched by hand.
+DO NOT GIVE THE INSTALLATION TO THE WEB SERVER USER.
+chown -R www-data was the documented repair until v4.0.1, & it let the web server user change
+code that root then runs. To correct anything, run -fp instead.
 
-To correct permissions that have been compromised, run the following in a terminal.
-
-  sudo chmod -R 0755 "/the/full/path/that/has/incorrect/permissions"
-  sudo chown -R www-data:www-data "/the/full/path/that/has/incorrect/permissions"
-
-Do not run the above against the data location without restoring the secret file afterwards.
-
-  sudo chmod 0600 "/DATA/HRConvert2/HRConvert2-secret.php"
+  sudo php /var/www/html/HRProprietary/HRConvert2/convertCore.php -fp
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -114,20 +117,35 @@ Do not run the above against the data location without restoring the secret file
   -u=edge                     Update to the current state of the master branch.
   -u=v#.#.#                   Update to exactly that tagged release.
   -fp, --fix-permissions      Correct ownership, permissions & policy files.
+  --run-environment-manager   Run one Environment Manager pass. It watches, & repairs only when allowed.
+  --rotate-secret             Replace the install secret with a new key. Every session ends.
+  --rotate-secret -y          The same, answered in advance.
   -l, --listen                Start the resource listener.
   -k, --kill                  Stop the resource listener.
   -k <worker-id>              End one worker by budget token or process identifier.
   --kill-all-workers          End every tracked conversion in progress.
   --kill-every-worker         End every PHP process owned by the web server user.
-  -y, --yes                   Skip the confirmation prompt on the two above.
+  -y, --yes                   Skip the confirmation prompt on the two above & on --rotate-secret.
   --config <argument>         An entire suite of commands for configuring HRConvert2 installations.
   --setup <argument>          An entire suite of commands for installing & managing HRConvert2 installations.
   --pipeline <argument>       Inspect & verify the installed pipelines.
+  --build --pins              Check every version pin against what ships. A developer step.
+  --build --pins --write      Rewrite every version pin that differs from what ships.
   --app<name>                 Handed to the application untouched. See --About --app.
 
-The -c, -u & -fp arguments require root.
+The -u, -fp, --run-environment-manager & --rotate-secret arguments require root.
+The -c argument requires root or the web server user, & root hands it to the web server user.
 The -l, -k, --kill-all-workers & --kill-every-worker arguments require root or the web server user.
+Root operates the listener through NONE of these itself. The listener runs as the web server
+user, records what it started in a folder that user owns, & is signalled from there, so root
+hands every one of them to that user, as it already did for -l. Root confirms the two that
+prompt, & --rotate-secret, at the terminal first. --status is relayed from that user for the
+same reason, & --rotate-secret stops & restarts the listener through it. See the sections below.
+Root refuses an installation another account could change, & only the repairs run on one.
+See --CLI User Account Considerations--.
 The -v, -h, --status & --pipeline arguments work when run as any user.
+--build needs write access to the source tree & nothing more. It is the developer's build
+step. It rewrites source files, & an operator never has a reason to run it.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -150,6 +168,8 @@ to. --status needs the Engine to build its report, so without one it is refused 
 A check exits 1 when it finds a fault. --setup --check-depends exits 1 when a REQUIRED
 dependency is missing or too old. An optional one costs a feature & does not fail the check.
 --pipeline --verify exits 1 when a pinned pipeline did not load.
+--build --pins exits 1 when a pin differs from what ships or cannot be built. With --write
+it exits 1 only when a pin could not be built or could not be written.
 
 Refusals exit 1. A command run as the wrong user, a command that needs an Engine that is
 missing or mismatched, & an answer of no at a confirmation prompt all do nothing & say so.
@@ -357,7 +377,17 @@ Nothing outside a session directory is ever swept. The log directory, the LibreO
 profile & the update backup all live alongside the session directories & are protected by
 name. A location that is not one of the configured data locations is refused outright.
 
-This argument requires write access to the data locations.
+THE WEB SERVER USER SWEEPS, EVEN WHEN ROOT ASKS. Every name in a session belongs to that
+user, which can swap any of them for a link between the moment it is examined & the moment
+it is removed. Root running the sweep itself would follow that link. Root hands the whole
+argument to the web server user instead, & prints what it reports. Until v4.0.1 root swept
+as itself.
+
+The temporary location is the whole DATA folder, from v4.0.1. Until then this argument &
+every web request were handed the session folder of the request making them, so no expired
+session in DATA was ever removed by either.
+
+This argument requires root or the web server user.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -373,8 +403,10 @@ secret would reduce that authorization to one guessable string.
 REQUIREMENTS.
   $EnableAutoUpdates must be TRUE in config.php. The default is FALSE.
   The server must be able to reach the update source. Many deliberately cannot.
-  The user running the update needs write access to the PARENT of the installation
-  directory, not only to the installation itself.
+  The update runs as root. The folder holding the installation & the --Proprietary
+  Directory-- must belong to root & be writable by nobody else, or the update is refused
+  with ERROR 31023. An account that could write there could swap the installation for its
+  own between the two renames below, & root would run it.
   Roughly twice the installed size must be free on the filesystem holding the installation.
 
 WHICH VERSION IS INSTALLED.
@@ -405,11 +437,12 @@ WHAT HAPPENS TO THE CONFIGURATION.
   new default is NAMED at the end of the update so the change can be reapplied by hand.
 
 HOW THE REPLACEMENT IS PERFORMED.
-  The release is downloaded & unpacked in a temporary location.
+  The release is downloaded & unpacked in a private working folder beside the installation.
   The configuration is merged there, before anything touches the installation.
   The prepared release is moved next to the installation, on the same filesystem.
   The live data directory is moved into it, so no session is lost.
   The installation & the prepared release are then exchanged by two rename operations.
+  The new release's own -fp runs as the update finishes, so its locations get their roles.
 
   A rename within one filesystem is atomic, so the installation directory is never half
   populated. A web request arriving during the exchange sees either the old installation or
@@ -429,7 +462,10 @@ WHAT HAPPENS IF THE UPDATE FAILS.
 
 THE PREVIOUS VERSION.
   After a successful update the previous installation is copied to --Backup Location-- from
-  config.php, which defaults to Last-Installed-Version inside the data location.
+  config.php, which defaults to Last-Installed-Version inside the data location. The data
+  location is root's now, so the backup's folder is root's & the copy is kept. An update refuses
+  to keep a backup only where $BackupLoc has been pointed at a folder another account could
+  replace, & a WARNING says so there. See Documentation/ABOUT_MANAGED_LOCATIONS.txt.
   It is held OUTSIDE the web root, because a stale core inside the web root would be a
   second, older copy of the application answering requests.
   It is protected from the session sweep & is NOT deleted on the delete threshold.
@@ -454,11 +490,16 @@ It reports the following.
   Whether the listener is running, & the process identifier of each manager.
   The number of tracked workers & the remaining resource budget.
   The number of sessions currently mapped to a data location.
+  When the last Environment Manager pass ran, what it found & when it last repaired.
 
 A STANDARD USER CANNOT READ THE SOCKET DIRECTORY & WILL BE TOLD SO.
 The directory is 0700 & belongs to the web server user, so a standard user sees a listener that
 appears stopped whether it is running or not. The report says which case it is in rather than
 collapsing the two into one word. Run it as root for the true picture.
+
+ROOT DOES NOT READ THE STATE ITSELF. It hands --status to the web server user & relays what
+that user saw, because the state file belongs to that user & root reads none of it. The report
+then names root as asking, & the web server user as answering. That is the true picture.
 
 This argument works when run as any user.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -470,9 +511,14 @@ Corrects everything about an installation that root is required to correct.
 
 It performs the following.
 
-  Sets every managed directory to the web server user & 0755.
-  Sets the secret file to the web server user & 0600.
-  Sets the socket directory to 0700, whatever the sweep above set it to.
+  Gives every managed location its role. The installation is root's, the data locations are
+  the web server user's & the backup is root's alone. See ABOUT_MANAGED_LOCATIONS.txt.
+  Installs the tree it runs from into Application in the data location, when that tree is not
+  the installed one, & hands over to the installed copy as it ends.
+  Writes the loader, the protection page & the static files into the hosted location, & removes
+  every copy of the application left there.
+  Removes the build environment & the development documentation when config.php asks for it.
+  Disables a bootstrap script that does not match this core, & enables one that matches again.
   Installs or repairs the ImageMagick policy that permits document coders.
   Installs or repairs the AppArmor profile bubblewrap needs to build a sandbox.
   Installs or repairs the AppArmor override a confined OpenSCAD needs.
@@ -483,10 +529,71 @@ Every step is idempotent & is safe to run again.
 A policy file that was not written by this application is backed up with a timestamp before it is
 replaced. If the backup cannot be written, the original is left alone & the step is refused.
 
-RUN THIS AFTER ANY COMMAND LINE INVOCATION MADE AS ROOT.
-A root invocation creates its logfile & its secret file owned by root, & the web server user
-cannot read or append to either afterwards. This is the single most common cause of an
-installation that worked yesterday & does not today.
+RUN THIS ONCE AFTER UPDATING FROM v4.0.0.
+Until v4.0.1 this handed the installation & every data location to the web server user, &
+root then ran code that account could change. It now gives each location the role it needs,
+& an installation v4.0.0 left behind keeps the old ownership until it runs. That run also moves
+the installation out of the web root, into Application in the data location.
+
+A command run as root no longer leaves a logfile or a secret the web server user cannot use,
+so it no longer has to be followed by this. It is still the first thing to run when anything
+looks wrong.
+
+This argument requires root.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About  --run-environment-manager--
+
+Runs one Environment Manager pass & exits. The timer --setup --install-service writes runs it
+hourly once an administrator enables that timer, & an administrator may run it by hand.
+
+  sudo php /var/www/html/HRProprietary/HRConvert2/convertCore.php --run-environment-manager
+
+It checks what -v checks, logs every problem as a warning, records what it found & prints it.
+IT CHANGES NOTHING unless --Environment Manager May Repair-- is TRUE in config.php. Then the first
+pass of a day that finds a problem runs the repair -fp runs, unattended. An unattended repair
+starts & enables no service, & rewrites the host configuration this application owns only when
+--Environment Manager May Rewrite Configs-- is TRUE. Every later pass that day only reports.
+
+What it found is kept in hrconvert2-environment.state at the top of the data location, readable by
+the web server user & written only by root, & --status reports the last pass. Every pass also
+removes root's own logfiles older than thirty days. One pass runs at a time, & one started beside
+another checks & changes nothing.
+
+It exits 0 when the pass completed, whatever it found, & 1 when it could not run.
+See ABOUT_ENVIRONMENT_MANAGER.txt.
+
+This argument requires root.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About  --rotate-secret--
+
+Replaces the install secret with a new key.
+
+EVERY SESSION ENDS. Every session folder, token & startup key derives from the secret, so a
+visitor is given a new session on their next visit & cannot reach their earlier files. Those
+folders stay where they are & expire on the delete threshold like any other.
+
+It asks before it does anything, & -y answers in advance.
+
+  sudo php /var/www/html/HRProprietary/HRConvert2/convertCore.php --rotate-secret
+  sudo php /var/www/html/HRProprietary/HRConvert2/convertCore.php --rotate-secret -y
+
+A running listener is stopped & started again, & root does neither. It asks the web server user
+whether a listener is running & stops it, BOTH before the secret is rewritten, so the stop is
+signed with the key on disk that the running listener still answers to. Root then rewrites the
+secret. The web server user starts the listener again, reading the new key from disk, through
+the service unit when one owns it. A listener that was not running is left stopped. It is never
+started as root.
+
+Run it once in every container started from an image built before v4.0.1. Each of those
+carries the secret its image was built with, & every container started from the image shares
+it. An image built from v4.0.1 onward ships no secret.
+
+A rotation that cannot write the new secret raises ERROR 31022, & the secret in place is left
+as it was.
 
 This argument requires root.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -536,6 +643,10 @@ Supplied with a value, ends one worker. The value may be a budget token or a pro
 
 A worker that is ended loses whatever it was converting. The user sees a failed conversion.
 
+Run as root, this is handed to the web server user, which reads its own listener state & signals
+its own processes. Root reads no state & signals nothing itself. The web server user on the
+command line runs it directly.
+
 This argument requires root or the web server user.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -560,6 +671,10 @@ its own instruction.
 
 Neither argument is a substitute for the reaper, which ends workers that outlive their expected
 runtime automatically & without ending anything else.
+
+Run as root, both are confirmed at the terminal first & then handed to the web server user with
+the answer already given, because that user has no terminal to be asked at & owns the processes
+being ended. Root ends nothing itself.
 
 These arguments require root or the web server user.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -12,7 +12,7 @@
 # / on a server for users of any web browser without authentication.
 # /
 # / File Information ...
-# / v3.9.3.
+# / v4.0.1.
 # / This file is the HRConvert2 bootstrap.
 # /
 # / This script does ONE job. It makes sure PHP exists, then hands over to convertCore.php.
@@ -47,11 +47,12 @@
 # / <3 Open-Source
 # / -----------------------------------------------------------------------------------
 
-# / This line is written by the Core Manager when the script no longer matches the core.
+# / This line is written by convertCore.php -fp, as root, when the script no longer matches the
+# / core, & written back when a matching script is in place again.
 # / Do not edit it by hand. Reinstall the script instead.
 DisabledByCore="FALSE"
 
-SCRIPT_VERSION="v3.9.3"
+SCRIPT_VERSION="v4.0.1"
 set -u
 
 # / The core lives two directories above this one when the script is where it ships.
@@ -62,7 +63,7 @@ CORE_PATH="${HRCONVERT2_CORE:-$SCRIPT_DIR/../../convertCore.php}"
 
 if [ "$DisabledByCore" = "TRUE" ]; then
   echo
-  echo "This bootstrap script has been disabled by the Core Manager."
+  echo "This bootstrap script has been disabled by convertCore.php -fp."
   echo "It reports $SCRIPT_VERSION & no longer matches the installed core."
   echo "Reinstall it from the release that matches your core, then try again."
   echo

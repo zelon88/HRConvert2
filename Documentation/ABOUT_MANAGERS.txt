@@ -122,7 +122,8 @@ THE LEDGER OF SPENT KEYS HAS A CEILING & IT IS WORTH KNOWING WHERE.
 It holds hashes rather than keys, so reading it grants nothing. It defends against a key
 that leaked. It does NOT defend against an account holding the install secret. Deleting the
 ledger un-spends a captured key, & the only accounts that can delete it are root & the web
-server user, both of which can already read the secret at 0600 & mint a valid key directly.
+server user, both of which can already read the secret, root:www-data 0640, & mint a valid key
+directly.
 Losing the ledger to either of them costs nothing that was not already lost.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 

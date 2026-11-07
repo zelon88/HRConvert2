@@ -13,7 +13,7 @@
 // / that carries it.
 // /
 // / File Information ...
-// / v4.0.0.
+// / v4.0.1.
 // / This file is the Engine. It provides the environment an application runs in.
 // / It is pinned EXACTLY by the application via $RequiredEngineVersion.
 // / Error block 35000 through 35019 reserved. 35000 is the direct load guard every component
@@ -57,7 +57,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 
 // / -----------------------------------------------------------------------------------
 // / The version of this Engine. Read by the application WITHOUT executing this file.
-$EngineVersion = 'v4.0.0';
+$EngineVersion = 'v4.0.1';
 // / -----------------------------------------------------------------------------------
 
 
@@ -199,11 +199,11 @@ function readTransportedStartupKey() {
 // / spend it twice, & cannot spend it at all once the process it was minted for has used it.
 // / It does NOT defend against an account that holds the install secret. Deleting this
 // / ledger un-spends a captured key, & the two accounts that can delete it are root & the
-// / web server user, both of which can already read the secret at 0600 & mint a valid key
-// / for any purpose in any window. That is a shorter route to the same place, so losing the
-// / ledger to either of them costs nothing that was not already lost.
-// / The directory holding the ledger sits inside the data location at 0755 & owned by the
-// / web server user, so an unprivileged local account cannot unlink it. That is the account
+// / web server user, both of which can already read the secret, root:www-data 0640, & mint a
+// / valid key for any purpose in any window. That is a shorter route to the same place, so
+// / losing the ledger to either of them costs nothing that was not already lost.
+// / The ledger sits in the socket folder inside the data location, 0700 & owned by the web
+// / server user, so an unprivileged local account cannot reach it at all. That is the account
 // / this control exists for, & the property that has to keep holding.
 function consumeStartupKey($keyPurpose, $suppliedKey) {
   // / Set variables.
@@ -306,19 +306,26 @@ function validateOperatingEnvironment() {
   global $RequireSandbox, $RunningInContainer, $RequireSandboxOnDocker, $EngineEnvironmentProvider, $EnableMemoryProtection;
   $EnvironmentIsReady = TRUE;
   $EnvironmentFindings = array();
-  $sandboxIsRequired = $providerIsReady = FALSE;
-  $environmentProvider = '';
+  $sandboxIsRequired = $providerIsReady = $scriptIsValid = FALSE;
+  $environmentProvider = $scriptStatus = $scriptDisplayStatus = $scriptDetail = '';
   $providerFindings = $providerFinding = array();
   // / The sandbox is the one thing a conversion cannot proceed without when it is required.
   $sandboxIsRequired = (bool)$RequireSandbox;
   if ($RunningInContainer && !$RequireSandboxOnDocker) $sandboxIsRequired = FALSE;
   // / The Engine checks what the ENGINE provides & nothing else.
-  // / Bubblewrap is the one thing here that belongs to it, because sandboxCommand is what
-  // / builds the namespace & this is that namespace being proved.
+  // / Bubblewrap is one of the two things here that belong to it, because sandboxCommand is
+  // / what builds the namespace & this is that namespace being proved.
   if (verifyBwrap() === FALSE) {
     $EnvironmentFindings[] = array('Check' => 'Sandbox', 'Status' => 'FAILED', 'Detail' => 'Bubblewrap cannot build a namespace.'.($sandboxIsRequired ? ' Every conversion will be refused.' : ' Conversions will run unprotected.'));
     if ($sandboxIsRequired) $EnvironmentIsReady = FALSE; }
   else $EnvironmentFindings[] = array('Check' => 'Sandbox', 'Status' => 'ok', 'Detail' => 'Bubblewrap can build a namespace.');
+  // / The bootstrap script is the other. The Engine pins it exactly, & one left by another
+  // / release hands arguments to a core that may no longer accept them. It is reported here so
+  // / -v, the listener & the Environment Manager all see it, & -fp changes it as root. It never
+  // / stops a conversion, so it never makes the environment unready.
+  list ($scriptIsValid, $scriptStatus) = verifyBootstrapScript();
+  list ($scriptDisplayStatus, $scriptDetail) = describeBootstrapStatus($scriptStatus);
+  $EnvironmentFindings[] = array('Check' => 'Bootstrap script', 'Status' => $scriptDisplayStatus, 'Detail' => $scriptDetail);
   // / Everything else an installation wants checked is the APPLICATION'S to check.
   // / The kernel namespace settings, three AppArmor policies & the DATA exposure test all
   // / used to be called from here by name, which meant the Engine could not load without an
@@ -339,8 +346,174 @@ function validateOperatingEnvironment() {
   // / An exposed or broken tree does not stop a conversion, so it does not make the
   // / environment unready. It is reported loudly & the operator decides.
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $sandboxIsRequired, $environmentProvider, $providerIsReady, $providerFindings, $providerFinding);
+  purgeSensitiveMemory($EnableMemoryProtection, $sandboxIsRequired, $environmentProvider, $providerIsReady, $providerFindings, $providerFinding, $scriptIsValid, $scriptStatus, $scriptDisplayStatus, $scriptDetail);
   return array($EnvironmentIsReady, $EnvironmentFindings); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to name the bootstrap script.
+// / Accepts nothing. Returns its absolute path, whether or not anything is there.
+// / The script is the Engine's & ships in the application's Documentation/Build folder, named
+// / for the application, so HRConvert2's is hrconvert2-setup.sh. There is no search & no
+// / fallback, because a check that guessed which file to judge would one day judge another.
+function bootstrapScriptPath() {
+  // / Set variables.
+  global $InstLoc, $EnableMemoryProtection;
+  $ScriptPath = '';
+  $ScriptPath = rtrim((string)$InstLoc, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build'.DIRECTORY_SEPARATOR.engineApplicationSlug().'-setup.sh';
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $ScriptPath is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection);
+  return $ScriptPath; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to validate the bootstrap script without changing it.
+// / Accepts nothing. Returns a validity boolean & a status word, in that order.
+// / The status is one of these.
+// /   absent       No script is installed. It is a convenience, so that is not a fault.
+// /   ok           It matches this core & is enabled.
+// /   disabled     It does not match & is already disabled, which is the safe state.
+// /   mismatched   It does not match & would still run. -fp disables it.
+// /   stale        It matches again & is still disabled. -fp enables it.
+// /   unmarked     It does not match & carries no DisabledByCore line to set.
+// /   unreadable   It could not be read.
+// / A script that reports no parseable version is judged as not matching, because an unknown
+// / build cannot be cleared.
+// / IT NEVER WRITES. Until v4.0.1 this rewrote the script itself, from the Resource Manager,
+// / which runs as the web server account & can no longer write to an installation root owns.
+// / repairBootstrapScript() writes it, as root, from -fp. It moved from the Resource Manager to
+// / the Engine at v4.0.1 so that -v, -fp & the Environment Manager can all ask it.
+function verifyBootstrapScript() {
+  // / Set variables.
+  global $RequiredConfigScript, $Verbose, $EnableMemoryProtection;
+  $ScriptIsValid = FALSE;
+  $ScriptStatus = 'absent';
+  $scriptPath = $scriptContents = $readNotice = $detectedVersion = $cleanDetected = $cleanRequired = '';
+  $versionMatches = array();
+  $scriptWasRead = $scriptIsDisabled = $scriptIsMarked = $scriptMatches = FALSE;
+  $scriptPath = bootstrapScriptPath();
+  clearstatcache(TRUE, $scriptPath);
+  if (!file_exists($scriptPath) && !is_link($scriptPath)) {
+    $ScriptIsValid = TRUE;
+    $ScriptStatus = 'absent'; }
+  else {
+    // / Read through the kernel, which follows no link & cannot be held by a FIFO.
+    list ($scriptWasRead, $scriptContents, $readNotice) = readFileWithoutFollowing($scriptPath, 1048576);
+    if (!$scriptWasRead or $scriptContents === '') $ScriptStatus = 'unreadable';
+    else {
+      if (preg_match('/^SCRIPT_VERSION="([^"]+)"/m', $scriptContents, $versionMatches)) $detectedVersion = $versionMatches[1];
+      $scriptIsDisabled = (preg_match('/^DisabledByCore="TRUE"/m', $scriptContents) === 1);
+      $scriptIsMarked = (preg_match('/^DisabledByCore="(TRUE|FALSE)"/m', $scriptContents) === 1);
+      $cleanDetected = ltrim(trim($detectedVersion), 'vV');
+      $cleanRequired = ltrim(trim((string)$RequiredConfigScript), 'vV');
+      $scriptMatches = ($cleanDetected !== '' && $cleanDetected === $cleanRequired);
+      if ($scriptMatches && !$scriptIsDisabled) {
+        $ScriptIsValid = TRUE;
+        $ScriptStatus = 'ok'; }
+      else if ($scriptMatches) $ScriptStatus = 'stale';
+      else if ($scriptIsDisabled) {
+        $ScriptIsValid = TRUE;
+        $ScriptStatus = 'disabled'; }
+      else if (!$scriptIsMarked) $ScriptStatus = 'unmarked';
+      else $ScriptStatus = 'mismatched'; } }
+  if ($Verbose) logEntry('Bootstrap Script: '.$scriptPath.', Reports: '.($detectedVersion === '' ? 'none' : $detectedVersion).', Status: '.$ScriptStatus.'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $scriptPath, $scriptContents, $readNotice, $detectedVersion, $cleanDetected, $cleanRequired, $versionMatches, $scriptWasRead, $scriptIsDisabled, $scriptIsMarked, $scriptMatches);
+  return array($ScriptIsValid, $ScriptStatus); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to disable a bootstrap script that does not match this core, & to enable one
+// / that matches again.
+// / Accepts nothing. Returns a validity boolean & a status word, in that order.
+// / The status is any word verifyBootstrapScript() returns, 'repaired' when a matching script was
+// / enabled again, or 'failed' when a change could not be made.
+// / Only root changes it, because the installation is root's, & -fp calls this only once root may
+// / run the installation, so no other account can replace the folder holding it. The kernel
+// / reads it & writes a new copy renamed into place, so nothing planted at the name is followed.
+// / The DisabledByCore line is the only thing changed. The script is never deleted & is not
+// / otherwise altered, so an operator can read exactly what was disabled & reinstall the match.
+function repairBootstrapScript() {
+  // / Set variables.
+  global $RunningAsRoot, $EnableMemoryProtection;
+  $ScriptIsValid = FALSE;
+  $ScriptStatus = 'absent';
+  $scriptPath = $scriptContents = $readNotice = $writeNotice = $detectedVersion = '';
+  $updatedContents = NULL;
+  $versionMatches = array();
+  $scriptWasRead = $scriptWasWritten = FALSE;
+  list ($ScriptIsValid, $ScriptStatus) = verifyBootstrapScript();
+  if (($ScriptStatus === 'mismatched' or $ScriptStatus === 'stale') && !$RunningAsRoot) warningEntry('Only root may change the bootstrap script, because the installation is root\'s. Nothing was changed.');
+  else if ($ScriptStatus === 'mismatched' or $ScriptStatus === 'stale') {
+    $scriptPath = bootstrapScriptPath();
+    list ($scriptWasRead, $scriptContents, $readNotice) = readFileWithoutFollowing($scriptPath, 1048576);
+    if ($scriptWasRead && preg_match('/^SCRIPT_VERSION="([^"]+)"/m', $scriptContents, $versionMatches)) $detectedVersion = $versionMatches[1];
+    if ($scriptWasRead && $ScriptStatus === 'mismatched') $updatedContents = preg_replace('/^DisabledByCore="FALSE"/m', 'DisabledByCore="TRUE"', $scriptContents, 1);
+    else if ($scriptWasRead) $updatedContents = preg_replace('/^DisabledByCore="TRUE"/m', 'DisabledByCore="FALSE"', $scriptContents, 1);
+    if (!is_string($updatedContents) or $updatedContents === $scriptContents) {
+      $ScriptStatus = 'failed';
+      warningEntry('The bootstrap script could not be read back to change it. '.$readNotice); }
+    else {
+      list ($scriptWasWritten, $writeNotice) = writeFileWithoutFollowing($scriptPath, $updatedContents, 0644);
+      if (!$scriptWasWritten) {
+        $ScriptStatus = 'failed';
+        warningEntry('The bootstrap script reports '.($detectedVersion === '' ? 'no version' : $detectedVersion).' & could not be changed. '.$writeNotice.' Remove it by hand.'); }
+      else if ($ScriptStatus === 'mismatched') {
+        $ScriptIsValid = TRUE;
+        $ScriptStatus = 'disabled';
+        warningEntry('The bootstrap script reports '.($detectedVersion === '' ? 'no version' : $detectedVersion).' & does not match this core. It has been disabled. Reinstall the script from the matching release.'); }
+      else {
+        $ScriptIsValid = TRUE;
+        $ScriptStatus = 'repaired';
+        warningEntry('The bootstrap script now matches this core & was enabled again.'); } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $scriptPath, $scriptContents, $readNotice, $writeNotice, $detectedVersion, $updatedContents, $versionMatches, $scriptWasRead, $scriptWasWritten);
+  return array($ScriptIsValid, $ScriptStatus); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to describe a bootstrap script status for an operator.
+// / Accepts the status word. Returns the word to display & a sentence, in that order.
+// / A state that needs nothing is lower case & a state that needs attention is upper case, as
+// / for every other finding, so findingIsBenign() & the eye agree about which is which.
+function describeBootstrapStatus($scriptStatus) {
+  // / Set variables.
+  global $RequiredConfigScript, $EnableMemoryProtection;
+  $DisplayStatus = 'UNKNOWN';
+  $StatusDetail = 'This status is not one the Engine knows.';
+  $requiredText = '';
+  $requiredText = 'This core requires '.ltrim(trim((string)$RequiredConfigScript), 'vV').'.';
+  if ($scriptStatus === 'absent') {
+    $DisplayStatus = 'ok';
+    $StatusDetail = 'No bootstrap script is installed. Nothing to do.'; }
+  else if ($scriptStatus === 'ok') {
+    $DisplayStatus = 'ok';
+    $StatusDetail = 'Matches this core. Nothing to do.'; }
+  else if ($scriptStatus === 'disabled') {
+    $DisplayStatus = 'disabled';
+    $StatusDetail = 'It does not match this core & refuses to run. '.$requiredText.' Reinstall it from the matching release.'; }
+  else if ($scriptStatus === 'repaired') {
+    $DisplayStatus = 'repaired';
+    $StatusDetail = 'It matches this core again & was enabled.'; }
+  else if ($scriptStatus === 'mismatched') {
+    $DisplayStatus = 'MISMATCHED';
+    $StatusDetail = 'It does not match this core & would still run. '.$requiredText.' Run -fp as root to disable it.'; }
+  else if ($scriptStatus === 'stale') {
+    $DisplayStatus = 'STILL DISABLED';
+    $StatusDetail = 'It matches this core & is still disabled. Run -fp as root to enable it.'; }
+  else if ($scriptStatus === 'unmarked') {
+    $DisplayStatus = 'UNMARKED';
+    $StatusDetail = 'It does not match this core & carries no DisabledByCore line to set. '.$requiredText.' Remove it by hand.'; }
+  else if ($scriptStatus === 'unreadable') {
+    $DisplayStatus = 'UNREADABLE';
+    $StatusDetail = 'It could not be read. Check it by hand.'; }
+  else if ($scriptStatus === 'failed') {
+    $DisplayStatus = 'FAILED';
+    $StatusDetail = 'It could not be changed. Root\'s log says why.'; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $requiredText, $scriptStatus);
+  return array($DisplayStatus, $StatusDetail); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -361,13 +534,33 @@ function getAcceptedManagers() {
   $AcceptedManagers = array();
   $AcceptedManagers = array(
     'coreManager.php' => 'v4.0.0',
-    'resourceManager.php' => 'v4.0.0',
+    'resourceManager.php' => 'v4.0.1',
     'workerManager.php' => 'v4.0.0',
     'requestManager.php' => 'v4.0.0');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $AcceptedManagers is not purged, because it is the return value.
   purgeSensitiveMemory($EnableMemoryProtection);
   return $AcceptedManagers; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to report the managers this Engine runs as root, & only as root.
+// / Accepts nothing. Returns an array of file name to required version.
+// / A root manager is pinned exactly like the others & kept off getAcceptedManagers() on
+// / purpose. That list is what the listener dispatches from, & a root role the listener could
+// / reach is exactly what the Environment Manager's design refuses to have. Nothing but
+// / loadEngineRootManager() reads this list, & only a root command calls that.
+// / Raise the Engine version whenever this list changes, for the reason given above.
+function getAcceptedRootManagers() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $AcceptedRootManagers = array();
+  $AcceptedRootManagers = array(
+    'environmentManager.php' => 'v4.0.1');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $AcceptedRootManagers is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection);
+  return $AcceptedRootManagers; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -395,6 +588,41 @@ function loadEngineManager($managerFileName) {
     if (!file_exists($managerPath)) warningEntry('The manager subcomponent '.$managerFileName.' is not installed. The role it serves is unavailable.');
     else if ($ManagerVersion === '') warningEntry('The manager subcomponent '.$managerFileName.' reports no version. An unknown build cannot be cleared & it was not loaded.');
     else if (ltrim((string)$ManagerVersion, 'vV') !== $requiredVersion) warningEntry('The manager subcomponent '.$managerFileName.' reports '.$ManagerVersion.' & this Engine requires '.$requiredVersion.'. It was not loaded.');
+    else {
+      require_once ($managerPath);
+      $ManagerIsAvailable = TRUE; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $acceptedManagers, $managerPath, $requiredVersion, $managerFileName);
+  return array($ManagerIsAvailable, $ManagerVersion); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to verify & load one manager this Engine runs as root.
+// / Accepts the file name. Returns an availability boolean & the detected version.
+// / It judges a manager the way loadEngineManager() does, before it is loaded, against
+// / getAcceptedRootManagers() rather than the list the listener dispatches from.
+// / $CoreLoaded is declared global because the manager is required inside this function &
+// / its guard reads $CoreLoaded at file scope. Until v4.0.1 the Environment Manager was
+// / required from a function that did not declare it, so its guard never saw it & every pass
+// / halted with Engine-35000 & exit status 0.
+function loadEngineRootManager($managerFileName) {
+  // / Set variables.
+  global $InstLoc, $DirSep, $CoreLoaded, $RunningAsRoot, $EnableMemoryProtection;
+  $ManagerIsAvailable = FALSE;
+  $ManagerVersion = '';
+  $acceptedManagers = array();
+  $managerPath = $requiredVersion = '';
+  $acceptedManagers = getAcceptedRootManagers();
+  if (!$RunningAsRoot) warningEntry('The root manager '.$managerFileName.' was asked for by an account other than root. It was not loaded.');
+  else if (!isset($acceptedManagers[(string)$managerFileName])) warningEntry('The root manager '.$managerFileName.' is not one this Engine accepts. It was not loaded.');
+  else {
+    $requiredVersion = ltrim((string)$acceptedManagers[(string)$managerFileName], 'vV');
+    $managerPath = rtrim((string)$InstLoc, $DirSep).$DirSep.'Resources'.$DirSep.'Engine'.$DirSep.'Managers'.$DirSep.(string)$managerFileName;
+    // / The version is read without executing the file, so a mismatched one is refused unrun.
+    $ManagerVersion = readComponentVersion('Engine'.$DirSep.'Managers'.$DirSep.(string)$managerFileName, 'ManagerVersion');
+    if (!file_exists($managerPath)) warningEntry('The root manager '.$managerFileName.' is not installed. It cannot run.');
+    else if ($ManagerVersion === '') warningEntry('The root manager '.$managerFileName.' reports no version. An unknown build cannot be cleared & it was not loaded.');
+    else if (ltrim((string)$ManagerVersion, 'vV') !== $requiredVersion) warningEntry('The root manager '.$managerFileName.' reports '.$ManagerVersion.' & this Engine requires '.$requiredVersion.'. It was not loaded.');
     else {
       require_once ($managerPath);
       $ManagerIsAvailable = TRUE; } }
@@ -1212,14 +1440,14 @@ function releaseBudgetOnShutdown() {
   // / Set variables.
   global $BudgetToken, $BudgetTokenIsReleased;
   $BudgetWasReleased = TRUE;
-  // / Already returned, or there was never one to return.
-  if (!empty($BudgetTokenIsReleased)) return TRUE;
-  if (!isset($BudgetToken) or (string)$BudgetToken === '') return TRUE;
+  // / Nothing is done when the token was already returned, or there was never one to return.
   // / The flag is set BEFORE the attempt, not after. A release that fails has already
   // / warned & handed the token to the reaper, & a second attempt from the other caller
   // / would warn about the same token all over again.
-  $BudgetTokenIsReleased = TRUE;
-  $BudgetWasReleased = releaseConversionBudget($BudgetToken);
+  // / Until v4.0.1 this left by three returns, where every function here has one exit.
+  if (empty($BudgetTokenIsReleased) && isset($BudgetToken) && (string)$BudgetToken !== '') {
+    $BudgetTokenIsReleased = TRUE;
+    $BudgetWasReleased = releaseConversionBudget($BudgetToken); }
   return $BudgetWasReleased; }
 // / -----------------------------------------------------------------------------------
 // / A function to return the resource budget an operation took.
@@ -1378,15 +1606,18 @@ function killTargetedWorker($workerTarget) {
 // / Accepts the short state name.
 // / Returns a success boolean & the state array, in that order.
 // / State is shared through the filesystem because every manager is a separate process.
+// / Root reads none of it. The web server account writes every state file, in a folder it
+// / owns, so root hands each command that needs one to that account instead.
 function readManagerState($stateName) {
   // / Set variables.
-  global $ManagerSocketDir, $DirSep, $EnableMemoryProtection;
+  global $ManagerSocketDir, $DirSep, $RunningAsRoot, $EnableMemoryProtection;
   $StateWasRead = FALSE;
   $ManagerState = array();
   $statePath = $stateContents = '';
   $decodedState = array();
   $cleanStateName = preg_replace('/[^A-Za-z0-9\-]/', '', (string)$stateName);
-  if ($cleanStateName !== '') {
+  if ($RunningAsRoot) warningEntry('Root does not read the '.$cleanStateName.' state, because the web server account writes it. Nothing was read.');
+  else if ($cleanStateName !== '') {
     $statePath = $ManagerSocketDir.$DirSep.$cleanStateName.'.state';
     if (file_exists($statePath)) {
       $stateContents = @file_get_contents($statePath);
@@ -1404,14 +1635,21 @@ function readManagerState($stateName) {
 // / A function to write a shared manager state file.
 // / Accepts the short state name & the array to store.
 // / Returns TRUE when the file was written completely.
+// /
+// / Root writes none of it. The socket folder is the web server account's, so root could not
+// / write there safely even through the kernel. Until v4.0.1 root wrote the Environment Manager's
+// / state & the manager list -k empties into that folder. -k is now handed to the web server
+// / account, & the Environment Manager keeps its state at the top of the data root, which root
+// / owns, through writeEnvironmentState().
 function writeManagerState($stateName, $stateData) {
   // / Set variables.
-  global $ManagerSocketDir, $DirSep, $EnableMemoryProtection;
+  global $ManagerSocketDir, $DirSep, $RunningAsRoot, $EnableMemoryProtection;
   $StateWasWritten = FALSE;
   $statePath = $stateContents = '';
   $bytesWritten = 0;
   $cleanStateName = preg_replace('/[^A-Za-z0-9\-]/', '', (string)$stateName);
-  if ($cleanStateName !== '' && is_array($stateData)) {
+  if ($RunningAsRoot) warningEntry('Root does not write the '.$cleanStateName.' state, because it belongs to the web server account. Nothing was written.');
+  else if ($cleanStateName !== '' && is_array($stateData)) {
     $statePath = $ManagerSocketDir.$DirSep.$cleanStateName.'.state';
     $stateContents = json_encode($stateData);
     $bytesWritten = @file_put_contents($statePath, $stateContents, LOCK_EX);
@@ -1421,6 +1659,140 @@ function writeManagerState($stateName, $stateData) {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $statePath, $stateContents, $bytesWritten, $cleanStateName, $stateName, $stateData);
   return $StateWasWritten; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to name the Environment Manager's state file.
+// / Accepts nothing. Returns the path, or an empty string when the data root is not known.
+// / It sits at the top of the data root, beside the install secret, root owned & readable by
+// / the web server account's group. Root owns that folder, so no other account can replace a
+// / name in it, & the web server account can read what a pass found, which is how --status
+// / reports the last one. Engine would hide it from every reader the state exists for, because
+// / no account but root can read anything inside it.
+function environmentStatePath() {
+  // / Set variables.
+  global $DataRootLoc, $EnableMemoryProtection;
+  $StatePath = '';
+  if (isset($DataRootLoc) && is_string($DataRootLoc) && trim($DataRootLoc) !== '') $StatePath = rtrim($DataRootLoc, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.engineApplicationSlug().'-environment.state';
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $StatePath is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection);
+  return $StatePath; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to read the Environment Manager's state file.
+// / Accepts nothing. Returns whether it was read, the state & a status word, in that order.
+// / The status is 'read', 'absent', 'unreadable' or 'corrupt'.
+// / Root & every other account read it through the kernel alike. A name that is not a plain
+// / file cannot redirect or hold a reader, & a state file is a few kilobytes, so a megabyte is
+// / a generous bound on what is read.
+function readEnvironmentState() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $StateWasRead = FALSE;
+  $EnvironmentState = array();
+  $StateStatus = 'absent';
+  $statePath = $stateContents = $readNotice = '';
+  $fileWasRead = FALSE;
+  $decodedState = NULL;
+  $statePath = environmentStatePath();
+  if ($statePath !== '') clearstatcache(TRUE, $statePath);
+  if ($statePath === '' or (!file_exists($statePath) && !is_link($statePath))) $StateStatus = 'absent';
+  else {
+    list ($fileWasRead, $stateContents, $readNotice) = readFileWithoutFollowing($statePath, 1048576);
+    if (!$fileWasRead) $StateStatus = 'unreadable';
+    else {
+      $decodedState = json_decode($stateContents, TRUE);
+      if (!is_array($decodedState)) $StateStatus = 'corrupt';
+      else {
+        $EnvironmentState = $decodedState;
+        $StateWasRead = TRUE;
+        $StateStatus = 'read'; } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $statePath, $stateContents, $readNotice, $fileWasRead, $decodedState);
+  return array($StateWasRead, $EnvironmentState, $StateStatus); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to write the Environment Manager's state file.
+// / Accepts the state to record. Returns TRUE when it was written.
+// / Only root writes it. The kernel writes a new file & renames it into place, so a reader
+// / sees the old state or the new one & never part of either, & nothing planted at the name
+// / is followed. The owner stays root & only the group becomes the web server account's, so
+// / that account can read what a pass found & can never change it.
+function writeEnvironmentState($stateData) {
+  // / Set variables.
+  global $RunningAsRoot, $ApacheUser, $EnableMemoryProtection;
+  $StateWasWritten = FALSE;
+  $statePath = $writeNotice = $groupNotice = '';
+  $stateContents = FALSE;
+  $fileWasWritten = $groupWasChanged = FALSE;
+  $statePath = environmentStatePath();
+  if (!$RunningAsRoot) warningEntry('Only root writes the Environment Manager\'s state. Nothing was written.');
+  else if ($statePath === '' or !is_array($stateData)) warningEntry('The Environment Manager\'s state has nowhere to go, because the data location is not known. Nothing was written.');
+  else {
+    $stateContents = json_encode($stateData, JSON_INVALID_UTF8_SUBSTITUTE);
+    if (!is_string($stateContents)) warningEntry('The Environment Manager\'s state could not be encoded. Nothing was written.');
+    else {
+      list ($fileWasWritten, $writeNotice) = writeFileWithoutFollowing($statePath, $stateContents, 0640);
+      if (!$fileWasWritten) warningEntry('The Environment Manager\'s state could not be written. '.$writeNotice);
+      else {
+        list ($groupWasChanged, $groupNotice) = changeOwnerWithoutFollowing($statePath, '', (string)$ApacheUser);
+        if (!$groupWasChanged) warningEntry($groupNotice.' The web server account cannot read the Environment Manager\'s state until it is.');
+        $StateWasWritten = TRUE; } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $statePath, $writeNotice, $groupNotice, $stateContents, $fileWasWritten, $groupWasChanged, $stateData);
+  return $StateWasWritten; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to remove root's own logfiles once they are older than a number of days.
+// / Accepts the number of days to keep. Returns whether the folder was examined & how many
+// / files were removed, in that order.
+// / Root's log folder is Engine, which no other account can read or clean, so nothing but root
+// / would ever remove an old one. The Environment Manager calls this every pass, watching or
+// / repairing, because removing root's own files from root's own folder changes nothing about
+// / the host. Only a name shaped like one of root's logfiles is considered, so the state, the
+// / lock & the supply chain report are never touched, & each file is removed through the
+// / kernel, which never follows a link.
+function pruneRootLogs($retentionDays) {
+  // / Set variables.
+  global $EngineDir, $ApplicationName, $RunningAsRoot, $EnableMemoryProtection;
+  $FolderWasExamined = FALSE;
+  $FilesRemoved = 0;
+  $folderIsHeld = $fileWasRemoved = FALSE;
+  $holdNotice = $removalNotice = $logPattern = $candidateName = $candidatePath = '';
+  $candidateNames = $candidateStatus = array();
+  $oldestKept = $candidateType = 0;
+  if (!$RunningAsRoot) warningEntry('Only root prunes root\'s logfiles. Nothing was removed.');
+  else if (!isset($EngineDir) or !is_string($EngineDir) or $EngineDir === '' or !is_dir($EngineDir)) warningEntry('Root\'s log folder does not exist yet, so no old logfile was removed. Run -fp to create it.');
+  else {
+    list ($folderIsHeld, $holdNotice) = folderIsHeldForRoot($EngineDir);
+    if (!$folderIsHeld) warningEntry('Root\'s old logfiles were not removed. '.$holdNotice);
+    else {
+      $FolderWasExamined = TRUE;
+      $oldestKept = time() - (max(1, (int)$retentionDays) * 86400);
+      // / The name verifyLogs gives a logfile. The application, the role, the increment, the
+      // / date & an optional hash, in that order.
+      $logPattern = '/^'.preg_quote((string)$ApplicationName, '/').'_[A-Za-z0-9-]+_[0-9]+_[0-9_]+(_[A-Za-z0-9]+)?\.txt$/';
+      $candidateNames = @scandir($EngineDir);
+      if (!is_array($candidateNames)) $candidateNames = array();
+      foreach ($candidateNames as $candidateName) {
+        if (preg_match($logPattern, (string)$candidateName) !== 1) continue;
+        $candidatePath = rtrim($EngineDir, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.(string)$candidateName;
+        clearstatcache(TRUE, $candidatePath);
+        $candidateStatus = @lstat($candidatePath);
+        if (!is_array($candidateStatus)) continue;
+        // / A plain file or a link & nothing else, & only once it is older than the retention.
+        $candidateType = ((int)$candidateStatus['mode'] & 0170000);
+        if (($candidateType !== 0100000 && $candidateType !== 0120000) or (int)$candidateStatus['mtime'] >= $oldestKept) continue;
+        list ($fileWasRemoved, $removalNotice) = removeFileWithoutFollowing($candidatePath);
+        if ($fileWasRemoved) $FilesRemoved++;
+        else warningEntry('An old logfile of root\'s could not be removed. '.$removalNotice); } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $folderIsHeld, $fileWasRemoved, $holdNotice, $removalNotice, $logPattern, $candidateName, $candidatePath, $candidateNames, $candidateStatus, $oldestKept, $candidateType, $retentionDays);
+  return array($FolderWasExamined, $FilesRemoved); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1754,12 +2126,14 @@ function runCoreManagerForeground() {
   $startupKey = '';
   $callerIsAuthorized = FALSE;
   $environmentFindings = array();
-  if ($RunningAsRoot or $CurrentUser === $ApacheUser) $callerIsAuthorized = TRUE;
+  // / ROOT DOES NOT RUN THE LISTENER, & IS REFUSED HERE RATHER THAN WARNED. The listener sweeps
+  // / the web server account's folders & keeps its state there, & root never works by name in
+  // / those. Until v4.0.1 root was allowed through with a warning, so a unit with no User line,
+  // / or an administrator typing this by hand, ran every manager as root. The unit runs it as
+  // / the web server account, & -l starts it by hand as that account.
+  if ($CurrentUser === $ApacheUser && !$RunningAsRoot) $callerIsAuthorized = TRUE;
   if (!$callerIsAuthorized) errorEntry('The foreground listener was started by an account that may not operate it!', 31014, TRUE);
   else {
-    // / Running as root would leave every socket owned by root & unreachable by a worker.
-    // / A service manager should set User in the unit. This is the last line of defence.
-    if ($RunningAsRoot) warningEntry('The foreground listener is running as root. Every socket it creates will be owned by root & no web worker will be able to reach it. Set User to '.$ApacheUser.' in the service unit.');
     $startupKey = deriveStartupKey('start-core-manager');
     if ($startupKey === '') errorEntry('The foreground listener could not derive a startup key. No install secret is available!', 31015, TRUE);
     else {
@@ -1810,6 +2184,12 @@ function listenerUnitIsInstalled() {
 // / Returns TRUE when the Core Manager process was launched & recorded itself.
 // / A listener that is already running is not started twice.
 // / A service unit that owns this listener is started through the service manager instead.
+// /
+// / ROOT NEVER RUNS THE LISTENER ITSELF. Until v4.0.1 root started every manager as root & then
+// / reported them running as the web server account. Those managers sweep the web server
+// / account's folders by name, which root must never do, & bind sockets no web worker can
+// / reach. Root now hands the whole start to the web server account through runAsAccount,
+// / which is what ABOUT_COMMAND_LINE_ARGUMENTS.txt has always said happens.
 function startCoreManagerListener() {
   // / Set variables.
   global $InstLoc, $ManagerSocketDir, $ApacheUser, $CurrentUser, $RunningAsRoot, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $Verbose, $Lol, $EnableMemoryProtection;
@@ -1818,8 +2198,9 @@ function startCoreManagerListener() {
   $stateWasRead = $directoryIsReady = $listenerIsRunning = FALSE;
   $startupKey = $spawnCommand = $innerCommand = $managerRole = '';
   $chownExitCode = $listenerPid = $waitCounter = $managerPid = $unitExitCode = 0;
-  $unitOwnsListener = FALSE;
-  $unitOutput = array();
+  $unitOwnsListener = $handedToAccount = FALSE;
+  $unitOutput = $accountOutput = array();
+  $accountExitCode = 1;
   // / A service unit that owns this listener is the only thing that should start it.
   // / Starting a second one beside it produces two Core Managers fighting over one socket.
   if (listenerUnitIsInstalled()) {
@@ -1830,6 +2211,11 @@ function startCoreManagerListener() {
     else {
       print('  systemctl start '.engineApplicationSlug().'-listener FAILED'.$Lol);
       print('  '.implode($Lol.'  ', $unitOutput).$Lol.$Lol); } }
+  // / The web server account runs this same argument & reports for itself.
+  else if ($RunningAsRoot) {
+    $handedToAccount = TRUE;
+    list ($accountOutput, $accountExitCode) = runAsAccount('php '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.engineApplicationEntryPoint()).' -l 2>&1', (string)$ApacheUser);
+    print(implode($Lol, $accountOutput).$Lol); }
   else $directoryIsReady = prepareManagerSocketDir();
   // / Hand the socket directory to the web server user before anything binds inside it.
   // / A root owned directory is unreachable to the workers that must connect.
@@ -1840,8 +2226,13 @@ function startCoreManagerListener() {
   // / The wrong owner is reported rather than corrected, because correcting it needs a
   // / privilege this process should not be holding.
   if ($directoryIsReady && !is_writable($ManagerSocketDir)) warningEntry('The manager socket directory at '.$ManagerSocketDir.' is not writable by this account. Run -fp as root to correct it.');
-  list ($stateWasRead, $managerState) = readManagerState('managers');
-  if ($unitOwnsListener) $ListenerWasStarted = TRUE;
+  // / Only the account that runs the listener reads its state. Root handed the start over
+  // / above, & a unit that owns the listener is asked through systemctl instead.
+  if (!$unitOwnsListener && !$handedToAccount) list ($stateWasRead, $managerState) = readManagerState('managers');
+  // / A unit that failed to start, or an account that reported failure, is a failure. This
+  // / returned TRUE for a unit whatever systemctl said until v4.0.1.
+  if ($unitOwnsListener) $ListenerWasStarted = ($unitExitCode === 0);
+  else if ($handedToAccount) $ListenerWasStarted = ($accountExitCode === 0);
   else if ($stateWasRead && isset($managerState['CoreManagerPid']) && managerProcessIsAlive((int)$managerState['CoreManagerPid'])) {
     print($Lol.'The listener is already running as process '.(int)$managerState['CoreManagerPid'].'.'.$Lol);
     print('Stop it with -k before starting another.'.$Lol.$Lol); }
@@ -1856,11 +2247,10 @@ function startCoreManagerListener() {
       .' nohup php '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.engineApplicationEntryPoint())
       .' --start-core-manager'
       .' > /dev/null 2>&1 &';
-    // / Drop to the web server user so every socket is owned by the account that must reach it.
-    // / No su. A listener started by its unit already runs as the right account & one
-    // / started by hand as root is warned about rather than quietly dropped into place.
+    // / Only the web server account reaches this. A unit starts its own listener, & root
+    // / handed the start to the web server account above.
     $spawnCommand = $innerCommand;
-    if ($Verbose) logEntry('Launching the Core Manager listener as '.($RunningAsRoot ? $ApacheUser : $CurrentUser).'.');
+    if ($Verbose) logEntry('Launching the Core Manager listener as '.$CurrentUser.'.');
     shell_exec($spawnCommand);
     // / The listener records its own pid, so wait for that rather than reading one back
     // / from the spawn. Five seconds is generous for a process that only opens a socket.
@@ -1880,7 +2270,7 @@ function startCoreManagerListener() {
       print($Lol.'  '.str_pad('Core Manager', 24).'process '.$listenerPid.$Lol);
       if (isset($listenerStatus['Subordinates'])) {
         foreach ($listenerStatus['Subordinates'] as $managerRole => $managerPid) print('  '.str_pad($managerRole, 24).'process '.(int)$managerPid.(file_exists('/proc/'.(int)$managerPid) ? '' : '  NOT RUNNING').$Lol); }
-      print($Lol.'  '.str_pad('Running as', 24).$ApacheUser.$Lol);
+      print($Lol.'  '.str_pad('Running as', 24).$CurrentUser.$Lol);
       print('  '.str_pad('Socket directory', 24).$ManagerSocketDir.$Lol);
       print('  '.str_pad('Total budget', 24).((int)$TotalResourceBudget < 1 ? 'AUTO, derived from the processor count' : (int)$TotalResourceBudget.' cost units').$Lol);
       print('  '.str_pad('Reserved share', 24).(int)$ReserveResourcePercentage.'%'.$Lol);
@@ -1897,7 +2287,7 @@ function startCoreManagerListener() {
       print('Confirm '.$ApacheUser.' can read the install secret & write the logfile,'.$Lol);
       print('then run the -fp argument as root & try again.'.$Lol.$Lol); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $managerState, $chownOutput, $listenerStatus, $stateWasRead, $directoryIsReady, $listenerIsRunning, $startupKey, $spawnCommand, $innerCommand, $managerRole, $chownExitCode, $listenerPid, $waitCounter, $managerPid, $unitOwnsListener, $unitOutput, $unitExitCode);
+  purgeSensitiveMemory($EnableMemoryProtection, $managerState, $chownOutput, $listenerStatus, $stateWasRead, $directoryIsReady, $listenerIsRunning, $startupKey, $spawnCommand, $innerCommand, $managerRole, $chownExitCode, $listenerPid, $waitCounter, $managerPid, $unitOwnsListener, $unitOutput, $unitExitCode, $handedToAccount, $accountOutput, $accountExitCode);
   return $ListenerWasStarted; }
 // / -----------------------------------------------------------------------------------
 
@@ -1994,17 +2384,29 @@ function managerProcessIsAlive($processId) {
 // / A function to create & secure the socket directory.
 // / Accepts no arguments.
 // / Returns TRUE when the directory exists & is writable.
+// / Root never changes its mode by name. The folder is the web server account's, which can
+// / swap it for a link, & a chmod by name lands on whatever the link points at. Root started
+// / the listener through here with -l, so 0700 could have landed on /etc. The web server
+// / account secures its own folder, & -fp secures it through that account. A folder root has
+// / to create is given to the web server account by changeOwnerWithoutFollowing, which
+// / changes the name itself.
 function prepareManagerSocketDir() {
   // / Set variables.
-  global $ManagerSocketDir, $EnableMemoryProtection;
-  $DirectoryIsReady = FALSE;
-  if (!is_dir($ManagerSocketDir)) @mkdir($ManagerSocketDir, 0700, TRUE);
-  if (is_dir($ManagerSocketDir)) {
-    @chmod($ManagerSocketDir, 0700);
+  global $ManagerSocketDir, $RunningAsRoot, $ApacheUser, $EnableMemoryProtection;
+  $DirectoryIsReady = $ownerWasChanged = FALSE;
+  $folderStatus = array();
+  $ownerNotice = '';
+  if (!is_dir($ManagerSocketDir) && @mkdir($ManagerSocketDir, 0700, TRUE) && $RunningAsRoot) {
+    list ($ownerWasChanged, $ownerNotice) = changeOwnerWithoutFollowing($ManagerSocketDir, (string)$ApacheUser, (string)$ApacheUser);
+    if (!$ownerWasChanged) warningEntry($ownerNotice); }
+  clearstatcache(TRUE, $ManagerSocketDir);
+  $folderStatus = @lstat($ManagerSocketDir);
+  if (is_array($folderStatus) && ((int)$folderStatus['mode'] & 0170000) === 0040000) {
+    if (!$RunningAsRoot) @chmod($ManagerSocketDir, 0700);
     if (is_writable($ManagerSocketDir)) $DirectoryIsReady = TRUE; }
   if (!$DirectoryIsReady) warningEntry('The manager socket directory at '.$ManagerSocketDir.' is not usable.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection);
+  purgeSensitiveMemory($EnableMemoryProtection, $folderStatus, $ownerWasChanged, $ownerNotice);
   return $DirectoryIsReady; }
 // / -----------------------------------------------------------------------------------
 
@@ -2941,6 +3343,18 @@ function waitForStream($StreamPID, $newPathname) {
 // / A host without the pcntl or posix extension cannot do this safely, so it refuses
 // / rather than falling back to running the command as root. A command that was meant to
 // / run unprivileged is worse than a command that did not run.
+// /
+// / THREE THINGS WERE WRONG UNTIL v4.0.1, & each was measured.
+// / The supplementary groups were never replaced. setgid changes the primary group only, so
+// / a child of a root shell kept root & adm & could read whatever those groups can, auth.log
+// / among it. posix_initgroups now gives the child the account's own groups & nothing else.
+// / The output file was created by root, 0600, before the child dropped to the account, so
+// / the child could never write it. Every command returned exit code 0 & no output, & the
+// / one caller, the sandbox probe -v & -fp run as root, reported a working sandbox whatever
+// / the web server account could actually build. The file now belongs to the account first.
+// / A drop that did not take was never checked, so a failed setuid would have run the command
+// / as root. The child now confirms who it is before it runs anything, & a child that cannot
+// / report back is a failure rather than a silent success.
 function runAsAccount($command, $accountName) {
   // / Set variables.
   global $RunningAsRoot, $EnableMemoryProtection;
@@ -2949,8 +3363,9 @@ function runAsAccount($command, $accountName) {
   $accountRecord = array();
   $outputPath = $outputContents = '';
   $childPid = $childStatus = 0;
+  $dropSucceeded = FALSE;
   if (!$RunningAsRoot) exec((string)$command, $CommandOutput, $CommandExitCode);
-  else if (!function_exists('pcntl_fork') or !function_exists('posix_setuid') or !function_exists('posix_getpwnam')) {
+  else if (!function_exists('pcntl_fork') or !function_exists('posix_setuid') or !function_exists('posix_getpwnam') or !function_exists('posix_initgroups')) {
     warningEntry('A command had to run as '.$accountName.' & this PHP has no pcntl or posix extension. It was not run at all, because running it as root would be worse.');
     $CommandExitCode = 1; }
   else {
@@ -2959,24 +3374,37 @@ function runAsAccount($command, $accountName) {
     else {
       // / The child writes to a file rather than a pipe, because the parent must not read
       // / from a descriptor the child still owns while it is changing identity.
-      $outputPath = tempnam(sys_get_temp_dir(), 'hrc2run');
-      $childPid = pcntl_fork();
+      // / tempnam creates the file 0600 for root in a folder where nobody else can replace it,
+      // / so giving it to the account by name before the fork is safe.
+      $outputPath = (string)tempnam(sys_get_temp_dir(), 'hrc2run');
+      if ($outputPath !== '') @chown($outputPath, (int)$accountRecord['uid']);
+      $childPid = ($outputPath === '') ? -1 : pcntl_fork();
       if ($childPid === -1) warningEntry('A command that had to run as '.$accountName.' could not be forked.');
       else if ($childPid === 0) {
-        // / Inside the child. Group first, account second, & neither can be undone.
-        posix_setgid($accountRecord['gid']);
-        posix_setuid($accountRecord['uid']);
-        exec((string)$command, $CommandOutput, $CommandExitCode);
+        // / Inside the child. Groups first, account second, & none of it can be undone.
+        $dropSucceeded = (posix_initgroups((string)$accountName, (int)$accountRecord['gid']) && posix_setgid((int)$accountRecord['gid']) && posix_setuid((int)$accountRecord['uid']));
+        // / Nothing runs unless the child is the account & nothing more.
+        if ($dropSucceeded && (posix_getuid() !== (int)$accountRecord['uid'] or posix_geteuid() !== (int)$accountRecord['uid'] or posix_getgid() !== (int)$accountRecord['gid'] or posix_getegid() !== (int)$accountRecord['gid'] or in_array(0, posix_getgroups(), TRUE))) $dropSucceeded = FALSE;
+        if ($dropSucceeded) exec((string)$command, $CommandOutput, $CommandExitCode);
+        else {
+          $CommandOutput = array('The command was not run, because this process could not become '.$accountName.' & nothing else.');
+          $CommandExitCode = 126; }
         @file_put_contents($outputPath, (string)$CommandExitCode.PHP_EOL.implode(PHP_EOL, $CommandOutput));
         exit(0); }
       else {
         pcntl_waitpid($childPid, $childStatus);
         $outputContents = (string)@file_get_contents($outputPath);
         @unlink($outputPath);
-        $CommandOutput = explode(PHP_EOL, $outputContents);
-        $CommandExitCode = (int)array_shift($CommandOutput); } } }
+        // / A child that wrote nothing did not report an exit code, & silence is not success.
+        if ($outputContents === '' or !ctype_digit((string)explode(PHP_EOL, $outputContents, 2)[0])) {
+          warningEntry('A command that had to run as '.$accountName.' did not report back, so it is treated as failed.');
+          $CommandOutput = array();
+          $CommandExitCode = 1; }
+        else {
+          $CommandOutput = explode(PHP_EOL, $outputContents);
+          $CommandExitCode = (int)array_shift($CommandOutput); } } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $accountRecord, $outputPath, $outputContents, $childPid, $childStatus, $command, $accountName);
+  purgeSensitiveMemory($EnableMemoryProtection, $accountRecord, $outputPath, $outputContents, $childPid, $childStatus, $dropSucceeded, $command, $accountName);
   return array($CommandOutput, $CommandExitCode); }
 // / -----------------------------------------------------------------------------------
 
@@ -3863,24 +4291,45 @@ function runEngineManagerEntry($cliCommand, $cliTarget, $cliSecondTarget) {
 // / Returns the exit status. A report is produced or the request was refused before it got here.
 function showEngineStatus($cliWhoami, $cliListenerAuthorized) {
   // / Set variables.
-  global $Lol, $RunningAsRoot, $ResourceAwarenessActive, $EnableMemoryProtection;
+  global $Lol, $InstLoc, $ApacheUser, $RunningAsRoot, $ResourceAwarenessActive, $EnableMemoryProtection;
   $CommandStatus = 0;
-  $cliListenerRunning = FALSE;
-  $cliStatus = array();
-  print($Lol.'Running as          '.$cliWhoami.($RunningAsRoot ? ' (root)' : '').$Lol);
-  print('Listener commands   '.($cliListenerAuthorized ? 'AVAILABLE' : 'NOT AVAILABLE to this user').$Lol);
-  if (!$ResourceAwarenessActive) print('Resource awareness  UNAVAILABLE, the Core Manager component is missing or does not match this core.'.$Lol);
+  $cliListenerRunning = $cliStateWasRead = FALSE;
+  $cliStatus = $cliAccountOutput = $cliEnvironmentState = array();
+  $cliAccountExit = 1;
+  $cliStateStatus = $cliPassLine = '';
+  // / Root reports none of this itself, because the listener state lives in the web server
+  // / account's folder & readManagerState refuses root. It hands --status to that account &
+  // / relays what the account saw, which is the truth about a listener that account runs.
+  if ($RunningAsRoot) {
+    print($Lol.'Running as          '.$cliWhoami.' (root), asking '.$ApacheUser.' what it sees.'.$Lol);
+    list ($cliAccountOutput, $cliAccountExit) = runAsAccount('php '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.engineApplicationEntryPoint()).' --status 2>&1', (string)$ApacheUser);
+    print(implode($Lol, $cliAccountOutput).$Lol);
+    if ($cliAccountExit !== 0) $CommandStatus = 1; }
   else {
-    list ($cliListenerRunning, $cliStatus) = reportListenerStatus();
-    print('Listener            '.($cliListenerRunning ? 'RUNNING as process '.$cliStatus['CoreManagerPid'] : 'STOPPED').$Lol);
-    print('Subordinates        '.count($cliStatus['Subordinates']).$Lol);
-    print('Tracked workers     '.$cliStatus['TrackedWorkers'].$Lol);
-    if (isset($cliStatus['SessionLocations'])) print('Mapped sessions     '.$cliStatus['SessionLocations'].$Lol);
-    if (isset($cliStatus['Budget']['RemainingBudget'])) print('Remaining budget    '.$cliStatus['Budget']['RemainingBudget'].' of '.$cliStatus['Budget']['TotalBudget'].$Lol);
-    if (!$cliListenerRunning && !$cliListenerAuthorized) print($Lol.'STOPPED may be wrong. This user cannot read the socket directory.'.$Lol); }
-  print($Lol);
+    print($Lol.'Running as          '.$cliWhoami.$Lol);
+    print('Listener commands   '.($cliListenerAuthorized ? 'AVAILABLE' : 'NOT AVAILABLE to this user').$Lol);
+    if (!$ResourceAwarenessActive) print('Resource awareness  UNAVAILABLE, the Core Manager component is missing or does not match this core.'.$Lol);
+    else {
+      list ($cliListenerRunning, $cliStatus) = reportListenerStatus();
+      print('Listener            '.($cliListenerRunning ? 'RUNNING as process '.$cliStatus['CoreManagerPid'] : 'STOPPED').$Lol);
+      print('Subordinates        '.count($cliStatus['Subordinates']).$Lol);
+      print('Tracked workers     '.$cliStatus['TrackedWorkers'].$Lol);
+      if (isset($cliStatus['SessionLocations'])) print('Mapped sessions     '.$cliStatus['SessionLocations'].$Lol);
+      if (isset($cliStatus['Budget']['RemainingBudget'])) print('Remaining budget    '.$cliStatus['Budget']['RemainingBudget'].' of '.$cliStatus['Budget']['TotalBudget'].$Lol);
+      if (!$cliListenerRunning && !$cliListenerAuthorized) print($Lol.'STOPPED may be wrong. This user cannot read the socket directory.'.$Lol); }
+    // / The last Environment Manager pass, from the state file root writes for every reader.
+    // / It answers whether anything has been quietly wrong since somebody last looked.
+    list ($cliStateWasRead, $cliEnvironmentState, $cliStateStatus) = readEnvironmentState();
+    if ($cliStateWasRead) {
+      $cliPassLine = (isset($cliEnvironmentState['LastPassHuman']) ? (string)$cliEnvironmentState['LastPassHuman'] : 'At an unknown time').'. '.(isset($cliEnvironmentState['ProblemCount']) ? (int)$cliEnvironmentState['ProblemCount'] : 0).' problem(s), repair '.((isset($cliEnvironmentState['RepairIsPermitted']) && $cliEnvironmentState['RepairIsPermitted'] === TRUE) ? 'permitted' : 'not permitted').'.';
+      if (isset($cliEnvironmentState['LastRepairDay']) && (string)$cliEnvironmentState['LastRepairDay'] !== '') $cliPassLine = $cliPassLine.' Last repair '.(string)$cliEnvironmentState['LastRepairDay'].'.';
+      print('Environment pass    '.$cliPassLine.$Lol); }
+    else if ($cliStateStatus === 'absent') print('Environment pass    NONE RECORDED. The Environment Manager has not run here.'.$Lol);
+    else if ($cliStateStatus === 'unreadable') print('Environment pass    NOT READABLE by this user.'.$Lol);
+    else print('Environment pass    UNREADABLE. The state file is not one the Environment Manager wrote.'.$Lol);
+    print($Lol); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $cliListenerRunning, $cliStatus, $cliWhoami, $cliListenerAuthorized);
+  purgeSensitiveMemory($EnableMemoryProtection, $cliListenerRunning, $cliStateWasRead, $cliStatus, $cliAccountOutput, $cliEnvironmentState, $cliAccountExit, $cliStateStatus, $cliPassLine, $cliWhoami, $cliListenerAuthorized);
   return $CommandStatus; }
 // / -----------------------------------------------------------------------------------
 
@@ -4202,11 +4651,12 @@ function runEngineSetupCommand($cliArguments, $cliTarget, $cliConfirmed) {
 // / & whether that user may run the listener, in that order. Returns the exit status.
 function runEngineListenerCommand($cliCommand, $cliTarget, $cliConfirmed, $cliWhoami, $cliListenerAuthorized) {
   // / Set variables.
-  global $Lol, $ApacheUser, $ResourceAwarenessActive, $ManagerSocketTimeout, $EnableMemoryProtection;
+  global $Lol, $InstLoc, $ApacheUser, $RunningAsRoot, $ResourceAwarenessActive, $ManagerSocketTimeout, $EnableMemoryProtection;
   $CommandStatus = 0;
   $cliActionConfirmed = $cliMessageDelivered = $cliWorkerManagerLoaded = FALSE;
-  $cliMessageReply = array();
-  $cliWorkerManagerVersion = '';
+  $cliMessageReply = $cliAccountOutput = array();
+  $cliWorkerManagerVersion = $cliHandedCommand = '';
+  $cliAccountExit = 1;
   if (!$cliListenerAuthorized) {
     warningEntry('A listener command was refused for an unauthorized user.');
     $CommandStatus = 1;
@@ -4219,6 +4669,31 @@ function runEngineListenerCommand($cliCommand, $cliTarget, $cliConfirmed, $cliWh
   else if (!$ResourceAwarenessActive) {
     $CommandStatus = 1;
     print($Lol.'Resource awareness is unavailable. The Core Manager component is missing or does not match this core.'.$Lol.$Lol); }
+  // / Root operates none of the running listener. -k reads the manager list the web server
+  // / account wrote & signals the process identifiers in it, & --kill-all & --kill-every reach
+  // / the same processes. All of them live in that account's folders & belong to that account's
+  // / processes, so root reading that list & running kill on a number from it is root doing what
+  // / the account chose. Root confirms a destructive one itself, because an administrator is at
+  // / the terminal, then hands the command to the account exactly as -l is handed over, with the
+  // / answer already given. The account signals only what it could already signal. -l is not here
+  // / because startCoreManagerListener already hands it over, & -k with no target stops through
+  // / that same account below once it is no longer root.
+  else if ($RunningAsRoot && ($cliCommand === '-k' or $cliCommand === '--kill' or $cliCommand === '--kill-all-workers' or $cliCommand === '--kill-every-worker')) {
+    if ($cliCommand === '--kill-all-workers') $cliActionConfirmed = confirmDestructiveAction('This ends every tracked conversion in progress. Users will lose work.', $cliConfirmed);
+    else if ($cliCommand === '--kill-every-worker') $cliActionConfirmed = confirmDestructiveAction('This ends EVERY PHP process owned by '.$ApacheUser.' on this host. Other applications sharing this server, such as WordPress or OwnCloud, will lose every session in progress.', $cliConfirmed);
+    else $cliActionConfirmed = TRUE;
+    if (!$cliActionConfirmed) $CommandStatus = 1;
+    else {
+      logEntry('Command line invocation. Handing '.$cliCommand.' to '.$ApacheUser.'.');
+      // / -y is appended ONLY for the two commands that prompt, so the account does not ask
+      // / again with no terminal to answer on. -k never prompts, & -k reads its target from the
+      // / second argument, so appending -y there made the account read -y as a worker to kill.
+      $cliHandedCommand = 'php '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.engineApplicationEntryPoint()).' '.escapeshellarg($cliCommand)
+        .($cliTarget !== '' ? ' '.escapeshellarg($cliTarget) : '')
+        .(($cliCommand === '--kill-all-workers' or $cliCommand === '--kill-every-worker') ? ' -y' : '').' 2>&1';
+      list ($cliAccountOutput, $cliAccountExit) = runAsAccount($cliHandedCommand, (string)$ApacheUser);
+      print(implode($Lol, $cliAccountOutput).$Lol);
+      if ($cliAccountExit !== 0) $CommandStatus = 1; } }
   // / Start the listener.
   else if ($cliCommand === '-l' or $cliCommand === '--listen') {
     logEntry('Command line invocation. Starting the Core Manager listener.');
@@ -4274,7 +4749,7 @@ function runEngineListenerCommand($cliCommand, $cliTarget, $cliConfirmed, $cliWh
         print($Lol.'The Worker Manager could not be loaded, so nothing was ended. The log says why.'.$Lol.$Lol); }
       else print($Lol.'Terminated '.killEveryWorker().' process(es).'.$Lol); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $cliActionConfirmed, $cliMessageDelivered, $cliWorkerManagerLoaded, $cliMessageReply, $cliWorkerManagerVersion, $cliCommand, $cliTarget, $cliConfirmed, $cliWhoami, $cliListenerAuthorized);
+  purgeSensitiveMemory($EnableMemoryProtection, $cliActionConfirmed, $cliMessageDelivered, $cliWorkerManagerLoaded, $cliMessageReply, $cliAccountOutput, $cliWorkerManagerVersion, $cliHandedCommand, $cliAccountExit, $cliCommand, $cliTarget, $cliConfirmed, $cliWhoami, $cliListenerAuthorized);
   return $CommandStatus; }
 // / -----------------------------------------------------------------------------------
 
@@ -4286,36 +4761,37 @@ function runEngineListenerCommand($cliCommand, $cliTarget, $cliConfirmed, $cliWh
 // / helpers are the application's & moving them is a migration of its own.
 function runEngineRootCommand($cliCommand, $cliTarget) {
   // / Set variables.
-  global $Lol, $InstLoc, $DirSep, $DeleteThreshold, $ConvertTempDir, $ConvertLoc, $ProtectedRootDirs, $EnableMemoryProtection;
+  global $Lol, $EnableMemoryProtection;
   $CommandStatus = 0;
-  $cliEnvironmentFile = '';
-  $cliPassCompleted = $cliPermissionsFixed = $cliTempCleaned = $cliTempDeepCleaned = $cliDataCleaned = $cliDataDeepCleaned = FALSE;
-  $cliPassFindings = $cliPassFinding = array();
-  $cliPathsCorrected = $cliThreshold = 0;
+  $cliPermissionsFixed = $cliManagerAvailable = $cliPassCompleted = FALSE;
+  $cliPathsCorrected = 0;
+  $cliManagerVersion = '';
+  $cliPassFindings = array();
+  // / THE ENVIRONMENT MANAGER IS LOADED HERE BY NAME, through loadEngineRootManager(), & never
+  // / through loadEngineManager() or getAcceptedManagers(). That list is what the listener
+  // / dispatches from, & a root role the listener could reach is exactly what its design refuses.
+  // / A pass that could not complete exits 1, so a timer reports it as failed. A pass that found
+  // / drift has completed & exits 0. What it found is in root's log, its state file & --status.
+  // / Until v4.0.1 it was required here without $CoreLoaded in scope, so every pass halted with
+  // / Engine-35000 & exit status 0 & a timer read every pass as a success. It also kept its state
+  // / in the web server account's socket folder, where root writes nothing.
+  // / See Documentation/ABOUT_ENVIRONMENT_MANAGER.txt.
   if ($cliCommand === '--run-environment-manager') {
-    // / This is NOT dispatched through dispatchManagerRole(). That path is for the four
-    // / roles the listener starts, each of which opens a socket & runs as the web server
-    // / account. This one is root, opens nothing & exits when it is done.
-    // / It is loaded here by name rather than through loadEngineManager() for the same
-    // / reason. Putting it in getAcceptedManagers() would make it dispatchable, & a root
-    // / role that the listener can reach is exactly what this design refuses to have.
-    $cliEnvironmentFile = $InstLoc.$DirSep.'Resources'.$DirSep.'Engine'.$DirSep.'Managers'.$DirSep.'environmentManager.php';
-    if (!file_exists($cliEnvironmentFile)) $CommandStatus = 1;
-    if (!file_exists($cliEnvironmentFile)) print($Lol.'The Environment Manager is not installed at '.$cliEnvironmentFile.'.'.$Lol);
+    list ($cliManagerAvailable, $cliManagerVersion) = loadEngineRootManager('environmentManager.php');
+    if (!$cliManagerAvailable or !function_exists('runEnvironmentManager')) {
+      $CommandStatus = 1;
+      print($Lol.'The Environment Manager could not be loaded. Root\'s log says why. Nothing was checked or changed.'.$Lol.$Lol); }
     else {
-      require_once ($cliEnvironmentFile);
-      if (!function_exists('runEnvironmentManager')) $CommandStatus = 1;
-      if (!function_exists('runEnvironmentManager')) print($Lol.'The Environment Manager file is present & defines no entry point.'.$Lol);
+      list ($cliPassCompleted, $cliPassFindings) = runEnvironmentManager();
+      if (!$cliPassCompleted) {
+        $CommandStatus = 1;
+        print($Lol.'The Environment Manager pass did not complete. Root\'s log says why.'.$Lol.$Lol); }
+      // / The findings are what the pass found before any repair it made. A repair prints its own
+      // / report as it runs, ending with the environment checked again, so that is above these.
       else {
-        list ($cliPassCompleted, $cliPassFindings) = runEnvironmentManager();
-        if (!$cliPassCompleted) $CommandStatus = 1;
-        if (!$cliPassCompleted) print($Lol.'The Environment Manager pass did not complete. It requires root.'.$Lol);
-        else {
-          print($Lol.'Environment Manager pass complete. '.count($cliPassFindings).' check(s) examined.'.$Lol);
-          foreach ($cliPassFindings as $cliPassFinding) {
-            if (!isset($cliPassFinding['Status'])) continue;
-            printf('  %-28s %-14s %s'.PHP_EOL, (isset($cliPassFinding['Check']) ? $cliPassFinding['Check'] : ''), (string)$cliPassFinding['Status'], (isset($cliPassFinding['Detail']) ? $cliPassFinding['Detail'] : '')); }
-          print($Lol); } } } }
+        print($Lol.'Environment Manager pass complete. What it found, before any repair it made:'.$Lol);
+        showEnvironmentFindings($cliPassFindings, FALSE);
+        print($Lol); } } }
   // / Handle the -fp or --fix-permissions arguments.
   // / The repair is the application's & is reached through the provider it declares,
   // / $EngineRepairProvider. HRConvert2 declares fixManagedPermissions, which this called
@@ -4326,10 +4802,42 @@ function runEngineRootCommand($cliCommand, $cliTarget) {
     list ($cliPermissionsFixed, $cliPathsCorrected) = runApplicationRepair();
     if (!$cliPermissionsFixed) $CommandStatus = 1;
     print($Lol.($cliPermissionsFixed ? 'Corrected '.$cliPathsCorrected.' path(s).' : 'Permissions could not be corrected.').$Lol.$Lol); }
-  // / Handle the -c or --clean arguments.
-  else if ($cliCommand === '-c' or $cliCommand === '--clean') {
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $cliPermissionsFixed, $cliManagerAvailable, $cliPassCompleted, $cliPathsCorrected, $cliManagerVersion, $cliPassFindings, $cliCommand, $cliTarget);
+  return $CommandStatus; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to sweep expired sessions from the command line.
+// / Accepts the threshold the operator supplied, if any. Returns the exit status.
+// / The caller has already refused this to anybody but root & the web server account.
+// /
+// / ROOT DOES NOT SWEEP, & hands the sweep to the web server account instead. Every name in a
+// / session folder belongs to that account, which can swap any of them for a link between the
+// / moment it is examined & the moment it is removed. Until v4.0.1 root swept as itself, & the
+// / sweep resolves each name, makes it 0777 & removes it, so a link swapped in at the right
+// / moment sent all three to wherever it pointed. Run through runAsAccount, the same sweep can
+// / only remove what that account could already remove.
+// /
+// / THE TEMPORARY LOCATION IS SWEPT WHOLE. Until v4.0.1 this & every web request were handed
+// / the session folder of the request making them, rather than the DATA folder holding every
+// / session, so no expired session in DATA was ever removed by either.
+function runEngineCleanCommand($cliTarget) {
+  // / Set variables.
+  global $Lol, $InstLoc, $DirSep, $DeleteThreshold, $ConvertTemp, $ConvertLoc, $ProtectedRootDirs, $RunningAsRoot, $ApacheUser, $EnableMemoryProtection;
+  $CommandStatus = 0;
+  $cliTempCleaned = $cliTempDeepCleaned = $cliDataCleaned = $cliDataDeepCleaned = FALSE;
+  $cliThreshold = 0;
+  $accountOutput = array();
+  $accountExitCode = 1;
+  $cliTarget = strtolower((string)$cliTarget);
+  if ($RunningAsRoot) {
+    logEntry('Command line invocation. Handing the manual clean to '.$ApacheUser.'.');
+    list ($accountOutput, $accountExitCode) = runAsAccount('php '.escapeshellarg($InstLoc.$DirSep.engineApplicationEntryPoint()).' -c'.($cliTarget === '' ? '' : ' '.escapeshellarg($cliTarget)).' 2>&1', (string)$ApacheUser);
+    print(implode($Lol, $accountOutput).$Lol);
+    if ($accountExitCode !== 0) $CommandStatus = 1; }
+  else {
     logEntry('Command line invocation. Performing a manual clean.');
-    $cliTarget = strtolower($cliTarget);
     $cliThreshold = $DeleteThreshold;
     // / A threshold of zero expires everything, because every session is older than nothing.
     if ($cliTarget === 'now') $cliThreshold = 0;
@@ -4341,7 +4849,7 @@ function runEngineRootCommand($cliCommand, $cliTarget) {
       print($Lol.'Unrecognized threshold. Supply a whole number of minutes, or now.'.$Lol); }
     print($Lol.'Cleaning sessions older than '.$cliThreshold.' minute(s).'.$Lol);
     logEntry('Manual clean requested. Threshold set to '.$cliThreshold.' minute(s).');
-    list ($cliTempCleaned, $cliTempDeepCleaned) = cleanDataLocation($ConvertTempDir, 'Temporary files', $cliThreshold, $ProtectedRootDirs, array($ConvertTempDir));
+    list ($cliTempCleaned, $cliTempDeepCleaned) = cleanDataLocation($ConvertTemp, 'Temporary files', $cliThreshold, $ProtectedRootDirs, array($ConvertTemp));
     print('  Temporary location   '.($cliTempCleaned ? 'OK' : 'FAILED').($cliTempDeepCleaned ? ', removed expired sessions' : ', nothing was expired').$Lol);
     list ($cliDataCleaned, $cliDataDeepCleaned) = cleanDataLocation($ConvertLoc, 'Data location', $cliThreshold, $ProtectedRootDirs, array($ConvertLoc));
     print('  Data location        '.($cliDataCleaned ? 'OK' : 'FAILED').($cliDataDeepCleaned ? ', removed expired sessions' : ', nothing was expired').$Lol);
@@ -4349,8 +4857,225 @@ function runEngineRootCommand($cliCommand, $cliTarget) {
     if (!$cliTempCleaned or !$cliDataCleaned) $CommandStatus = 1;
     print($Lol); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $cliEnvironmentFile, $cliPassCompleted, $cliPermissionsFixed, $cliTempCleaned, $cliTempDeepCleaned, $cliDataCleaned, $cliDataDeepCleaned, $cliPassFindings, $cliPassFinding, $cliPathsCorrected, $cliThreshold, $cliCommand, $cliTarget);
+  purgeSensitiveMemory($EnableMemoryProtection, $cliTempCleaned, $cliTempDeepCleaned, $cliDataCleaned, $cliDataDeepCleaned, $cliThreshold, $accountOutput, $accountExitCode, $cliTarget);
   return $CommandStatus; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to read the version every file matching a pattern declares.
+// / Accepts a pattern relative to the installation & the name the version is declared under.
+// / Returns the versions keyed by path, & whether every matching file declared one, in that order.
+// / SCRIPT_VERSION is read the way a shell script declares it. Every other name is read the
+// / way a PHP file declares it, at the start of a line, so a version quoted in a comment is
+// / never mistaken for a declaration.
+function readDeclaredVersions($sourcePattern, $versionName) {
+  // / Set variables.
+  global $InstLoc, $EnableMemoryProtection;
+  $DeclaredVersions = array();
+  $EveryFileDeclares = FALSE;
+  $sourcePaths = $versionMatches = array();
+  $sourcePath = $sourceContents = $versionPattern = '';
+  // / A pattern that climbs out of the installation, or a name that is not a plain word, is
+  // / refused. Both come from the contract, & neither ever needs to.
+  if (strpos((string)$sourcePattern, '..') === FALSE && preg_match('/^\w+$/', (string)$versionName) === 1) {
+    $versionPattern = ($versionName === 'SCRIPT_VERSION') ? '/^SCRIPT_VERSION="v?([0-9]+\.[0-9]+\.[0-9]+)"/m' : '/^\s*\$'.$versionName.'\s*=\s*\'v?([0-9]+\.[0-9]+\.[0-9]+)\';/m';
+    $sourcePaths = glob(rtrim((string)$InstLoc, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.ltrim((string)$sourcePattern, DIRECTORY_SEPARATOR));
+    if (is_array($sourcePaths) && !empty($sourcePaths)) $EveryFileDeclares = TRUE;
+    if (is_array($sourcePaths)) foreach ($sourcePaths as $sourcePath) {
+      $sourceContents = (string)@file_get_contents($sourcePath);
+      if (preg_match($versionPattern, $sourceContents, $versionMatches) === 1) $DeclaredVersions[$sourcePath] = $versionMatches[1];
+      else $EveryFileDeclares = FALSE; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $sourcePaths, $versionMatches, $sourcePath, $sourceContents, $versionPattern, $sourcePattern, $versionName);
+  return array($DeclaredVersions, $EveryFileDeclares); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide what one pin should say.
+// / Accepts the pin's current version, & the pattern & name its version is declared under.
+// / Returns the status, the version that ships & a detail, in that order.
+// / The status is 'ok', 'differs', 'hand' or 'refused'. A pin nothing declares is set by
+// / hand. A pin whose components disagree, or where one of them declares nothing, cannot be
+// / built, because writing either version would hide the disagreement rather than settle it.
+function resolvePinVersion($pinnedVersion, $sourcePattern, $versionName) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $PinStatus = 'hand';
+  $ShippedVersion = $PinDetail = '';
+  $declaredVersions = $distinctVersions = array();
+  $everyFileDeclares = FALSE;
+  if ($sourcePattern === '') $PinDetail = 'no shipped file declares it';
+  else {
+    list ($declaredVersions, $everyFileDeclares) = readDeclaredVersions($sourcePattern, $versionName);
+    $distinctVersions = array_values(array_unique($declaredVersions));
+    $PinStatus = 'refused';
+    if (empty($declaredVersions)) $PinDetail = 'nothing matching '.$sourcePattern.' declares '.$versionName;
+    else if (!$everyFileDeclares) $PinDetail = 'a file matching '.$sourcePattern.' declares no '.$versionName;
+    else if (count($distinctVersions) > 1) $PinDetail = 'the files matching '.$sourcePattern.' declare '.implode(' & ', $distinctVersions);
+    else {
+      $ShippedVersion = $distinctVersions[0];
+      $PinStatus = ($ShippedVersion === ltrim((string)$pinnedVersion, 'vV')) ? 'ok' : 'differs'; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $declaredVersions, $distinctVersions, $everyFileDeclares, $pinnedVersion, $sourcePattern, $versionName);
+  return array($PinStatus, $ShippedVersion, $PinDetail); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to describe the line one pin is written on.
+// / Accepts the pin's style & its key. Returns the pattern that finds the pin's version.
+// / A variable pin is written as $Required<Key> = 'v#.#.#'; in the application's entry point.
+// / An entry pin is written as '<Key>' => 'v#.#.#' in a pin table. The key is matched as a
+// / whole name, so writing one pin can never move its neighbour.
+// / The pattern captures what comes before the version, the version, & what comes after it.
+function pinLinePattern($pinStyle, $pinKey) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $PinPattern = '';
+  $quotedKey = preg_quote((string)$pinKey, '/');
+  if ($pinStyle === 'variable') $PinPattern = '/^(\s*\$Required'.$quotedKey.'\s*=\s*\'v?)([0-9]+\.[0-9]+\.[0-9]+)(\';)/m';
+  else $PinPattern = '/^(\s*\''.$quotedKey.'\'\s*=>\s*\'v?)([0-9]+\.[0-9]+\.[0-9]+)(\')/m';
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $quotedKey, $pinStyle, $pinKey);
+  return $PinPattern; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to list every version pin the build is responsible for.
+// / Accepts nothing. Returns the pins, & whether the entry point's pins could be read, in that order.
+// / Each pin is the file it is written in, its style & key there, the version it says now,
+// / & the pattern & name its version is declared under. Pins live in four places.
+// /   The application's entry point pins the kernel, the Engine, its cores & the bootstrap
+// /   script, & whatever $EnginePinSources in the contract names.
+// /   getAcceptedManagers() pins each manager.
+// /   $EngineAcceptedPipelines in the contract pins each pipeline.
+// /   $EngineAcceptedSharedModules in the contract pins each shared module.
+// / The Engine knows where its own components live, so the contract names only the
+// / application's, & an entry there can never redirect a pin the Engine owns.
+function listEnginePins() {
+  // / Set variables.
+  global $InstLoc, $DirSep, $EnginePinSources, $EngineAcceptedPipelines, $EngineAcceptedSharedModules, $EnableMemoryProtection;
+  $EnginePins = array();
+  $EntryPinsReadable = FALSE;
+  $engineSources = $pinSources = $pinMatches = $pinMatch = array();
+  $entryPath = $entryContents = $enginePath = $contractFile = $pinKey = $pinVersion = '';
+  $engineSources = array('KernelVersion' => 'Resources/Kernel/kernel.php', 'EngineVersion' => 'Resources/Engine/engine.php', 'SetupCoreVersion' => 'Resources/Engine/Cores/setupCore.php',
+    'DependencyCoreVersion' => 'Resources/Engine/Cores/dependencyCore.php', 'PipelineCoreVersion' => 'Resources/Engine/Cores/pipelineCore.php', 'ConfigScript' => 'Documentation/Build/'.engineApplicationSlug().'-setup.sh');
+  $pinSources = array_merge((isset($EnginePinSources) && is_array($EnginePinSources)) ? $EnginePinSources : array(), $engineSources);
+  $entryPath = $InstLoc.$DirSep.engineApplicationEntryPoint();
+  $enginePath = $InstLoc.$DirSep.'Resources'.$DirSep.'Engine'.$DirSep.'engine.php';
+  $contractFile = contractPath('app-engine-config.php');
+  $entryContents = (string)@file_get_contents($entryPath);
+  if ($entryContents !== '') $EntryPinsReadable = TRUE;
+  preg_match_all('/^\s*\$Required(\w+?(?:Version|Script))\s*=\s*\'v?([0-9]+\.[0-9]+\.[0-9]+)\';/m', $entryContents, $pinMatches, PREG_SET_ORDER);
+  foreach ($pinMatches as $pinMatch) $EnginePins[] = array('File' => $entryPath, 'Style' => 'variable', 'Key' => $pinMatch[1], 'Label' => '$Required'.$pinMatch[1], 'Pinned' => $pinMatch[2],
+    'Pattern' => isset($pinSources[$pinMatch[1]]) ? $pinSources[$pinMatch[1]] : '', 'Name' => ($pinMatch[1] === 'ConfigScript') ? 'SCRIPT_VERSION' : $pinMatch[1]);
+  foreach (getAcceptedManagers() as $pinKey => $pinVersion) $EnginePins[] = array('File' => $enginePath, 'Style' => 'entry', 'Key' => $pinKey, 'Label' => 'Manager '.$pinKey, 'Pinned' => ltrim($pinVersion, 'vV'),
+    'Pattern' => 'Resources/Engine/Managers/'.basename($pinKey), 'Name' => 'ManagerVersion');
+  foreach (getAcceptedRootManagers() as $pinKey => $pinVersion) $EnginePins[] = array('File' => $enginePath, 'Style' => 'entry', 'Key' => $pinKey, 'Label' => 'Manager '.$pinKey, 'Pinned' => ltrim($pinVersion, 'vV'),
+    'Pattern' => 'Resources/Engine/Managers/'.basename($pinKey), 'Name' => 'ManagerVersion');
+  if (isset($EngineAcceptedPipelines) && is_array($EngineAcceptedPipelines)) foreach ($EngineAcceptedPipelines as $pinKey => $pinVersion) $EnginePins[] = array('File' => $contractFile, 'Style' => 'entry', 'Key' => $pinKey,
+    'Label' => 'Pipeline '.$pinKey, 'Pinned' => ltrim($pinVersion, 'vV'), 'Pattern' => 'Resources/Pipelines/'.basename($pinKey).'/pipelineConfig.php', 'Name' => 'PipelineVersion');
+  if (isset($EngineAcceptedSharedModules) && is_array($EngineAcceptedSharedModules)) foreach ($EngineAcceptedSharedModules as $pinKey => $pinVersion) $EnginePins[] = array('File' => $contractFile, 'Style' => 'entry', 'Key' => $pinKey,
+    'Label' => 'Shared '.$pinKey, 'Pinned' => ltrim($pinVersion, 'vV'), 'Pattern' => 'Resources/Pipelines/Shared/'.basename($pinKey), 'Name' => 'SharedModuleVersion');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $engineSources, $pinSources, $pinMatches, $pinMatch, $entryPath, $entryContents, $enginePath, $contractFile, $pinKey, $pinVersion);
+  return array($EnginePins, $EntryPinsReadable); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to write new versions into the pins one file holds.
+// / Accepts the file & the new versions, keyed by style & then by pin key.
+// / Returns whether every pin was found once & written.
+// / Only the version between the quotes changes. The line, its leading v & the rest of the
+// / file stay exactly as they were, & the file is read back to prove the write landed.
+function writePinsToFile($pinFile, $newVersions) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $PinsWereWritten = FALSE;
+  $fileContents = $updatedContents = $pinStyle = $pinKey = $newVersion = '';
+  $styleVersions = array();
+  $replacementCount = $bytesWritten = 0;
+  $fileContents = (string)@file_get_contents($pinFile);
+  $updatedContents = $fileContents;
+  if ($fileContents !== '') {
+    $PinsWereWritten = TRUE;
+    foreach ($newVersions as $pinStyle => $styleVersions) foreach ($styleVersions as $pinKey => $newVersion) {
+      $updatedContents = preg_replace(pinLinePattern($pinStyle, $pinKey), '${1}'.$newVersion.'${3}', $updatedContents, 1, $replacementCount);
+      if ($replacementCount !== 1) $PinsWereWritten = FALSE; }
+    if ($PinsWereWritten && $updatedContents !== $fileContents) {
+      $bytesWritten = @file_put_contents($pinFile, $updatedContents, LOCK_EX);
+      if ($bytesWritten !== strlen($updatedContents) or (string)@file_get_contents($pinFile) !== $updatedContents) $PinsWereWritten = FALSE; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $fileContents, $updatedContents, $pinStyle, $pinKey, $newVersion, $styleVersions, $replacementCount, $bytesWritten, $pinFile, $newVersions);
+  return $PinsWereWritten; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to build every version pin from the components that ship, for --build.
+// / Accepts the action & a second target, which is --write or nothing.
+// / Returns the exit status & whether every pin now matches what ships, in that order.
+// / A pin is never edited by hand. Each one is read from the component it names, so a pin
+// / & its component can only disagree when the components themselves do, & the build
+// / refuses that rather than choosing a side. Without --write nothing is changed & a pin
+// / that would change exits 1, so the same command is the check a release runs before it
+// / is tagged. With --write every pin that differs is rewritten & the result is checked.
+// / This rewrites source files. It is the developer's build step & never an operator's.
+// / Raising a component's version is still the developer's decision. The build only makes
+// / every pin agree with the versions the developer chose.
+function runEngineBuildCommand($cliTarget, $cliSecondTarget) {
+  // / Set variables.
+  global $Lol, $InstLoc, $DirSep, $EnableMemoryProtection;
+  $CommandStatus = 0;
+  $PinsMatch = FALSE;
+  $buildAction = $pinStatus = $shippedVersion = $pinDetail = $statusText = $managerPath = $managerName = $pinFile = '';
+  $enginePins = $enginePin = $pendingWrites = $pinRows = $pinRow = $pinnedManagers = $newVersions = $managerPaths = array();
+  $managerPin = '';
+  $entryPinsReadable = $writePins = $fileWritten = FALSE;
+  $pinsChecked = $pinsMatching = $pinsChanged = $pinsRefused = $pinsByHand = $pinsDiffering = 0;
+  $buildAction = ($cliTarget === '') ? '--pins' : $cliTarget;
+  $writePins = ($cliSecondTarget === '--write');
+  if ($buildAction !== '--pins' or ($cliSecondTarget !== '' && !$writePins)) {
+    print($Lol.'Usage: --build --pins            Check every version pin against what ships.'.$Lol.'       --build --pins --write    Rewrite every pin that differs.'.$Lol.$Lol);
+    $CommandStatus = 2; }
+  else {
+    list ($enginePins, $entryPinsReadable) = listEnginePins();
+    if (!$entryPinsReadable) {
+      warningEntry('The build could not read the pins in '.engineApplicationEntryPoint().'.');
+      print($Lol.'The pins in '.engineApplicationEntryPoint().' could not be read.'.$Lol); }
+    foreach ($enginePins as $enginePin) {
+      list ($pinStatus, $shippedVersion, $pinDetail) = resolvePinVersion($enginePin['Pinned'], $enginePin['Pattern'], $enginePin['Name']);
+      if ($pinStatus === 'differs') $pendingWrites[$enginePin['File']][$enginePin['Style']][$enginePin['Key']] = $shippedVersion;
+      $pinRows[] = array($enginePin['Label'], $enginePin['Pinned'], $shippedVersion, $pinStatus, $pinDetail, $enginePin['File']); }
+    if ($writePins) foreach ($pendingWrites as $pinFile => $newVersions) {
+      $fileWritten = writePinsToFile($pinFile, $newVersions);
+      if (!$fileWritten) warningEntry('The build could not write the pins in '.$pinFile.'.');
+      foreach ($pinRows as $pinRow) if ($pinRow[5] === $pinFile && $pinRow[3] === 'differs') $pinsChanged += ($fileWritten ? 1 : 0); }
+    print($Lol.'Version pins'.($writePins ? '' : '. Nothing is changed without --write.').$Lol.$Lol);
+    printf('  %-36s %-9s %-9s %s'.$Lol, 'PIN', 'PINNED', 'SHIPS', 'STATUS');
+    foreach ($pinRows as $pinRow) {
+      $pinsChecked++;
+      if ($pinRow[3] === 'ok') $pinsMatching++;
+      if ($pinRow[3] === 'refused') $pinsRefused++;
+      if ($pinRow[3] === 'hand') $pinsByHand++;
+      if ($pinRow[3] === 'differs') $pinsDiffering++;
+      if ($pinRow[3] === 'ok') $statusText = 'OK';
+      else if ($pinRow[3] === 'hand') $statusText = 'SET BY HAND, '.$pinRow[4];
+      else if ($pinRow[3] === 'refused') $statusText = 'CANNOT BUILD, '.$pinRow[4];
+      else $statusText = $writePins ? 'CHANGED' : 'WOULD CHANGE';
+      printf('  %-36s %-9s %-9s %s'.$Lol, $pinRow[0], $pinRow[1], ($pinRow[2] === '' ? '-' : $pinRow[2]), $statusText); }
+    // / A manager nothing pins is reported, because nothing refuses it when it is wrong.
+    foreach (getAcceptedManagers() as $managerName => $managerPin) $pinnedManagers[] = basename($managerName);
+    foreach (getAcceptedRootManagers() as $managerName => $managerPin) $pinnedManagers[] = basename($managerName);
+    $managerPaths = glob($InstLoc.$DirSep.'Resources'.$DirSep.'Engine'.$DirSep.'Managers'.$DirSep.'*.php');
+    if (!is_array($managerPaths)) $managerPaths = array();
+    foreach ($managerPaths as $managerPath) if (!in_array(basename($managerPath), $pinnedManagers, TRUE)) printf('  %-36s %-9s %-9s %s'.$Lol, 'Manager '.basename($managerPath), '-', readComponentVersion('Engine'.$DirSep.'Managers'.$DirSep.basename($managerPath), 'ManagerVersion'), 'NOT PINNED, nothing refuses it when it is wrong');
+    $PinsMatch = ($entryPinsReadable && $pinsRefused === 0 && ($pinsMatching + $pinsByHand + ($writePins ? $pinsChanged : 0)) === $pinsChecked);
+    if (!$PinsMatch) $CommandStatus = 1;
+    print($Lol.'  '.$pinsChecked.' pin(s). '.$pinsMatching.' match, '.($writePins ? $pinsChanged.' changed' : $pinsDiffering.' would change').', '.$pinsRefused.' cannot be built & '.$pinsByHand.' are set by hand.'.$Lol.$Lol);
+    logEntry('The build checked '.$pinsChecked.' pin(s)'.($writePins ? ' & changed '.$pinsChanged : '').'. '.$pinsRefused.' could not be built.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $buildAction, $pinStatus, $shippedVersion, $pinDetail, $statusText, $managerPath, $managerName, $pinFile, $enginePins, $enginePin, $pendingWrites, $pinRows, $pinRow, $pinnedManagers, $newVersions, $managerPaths, $managerPin, $entryPinsReadable, $writePins, $fileWritten, $pinsChecked, $pinsMatching, $pinsChanged, $pinsRefused, $pinsByHand, $pinsDiffering, $cliTarget, $cliSecondTarget);
+  return array($CommandStatus, $PinsMatch); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -4366,14 +5091,20 @@ function dispatchEngineCommand($cliArguments, $cliCommand, $cliTarget, $cliSecon
   global $RunningAsRoot, $CurrentUser, $ApacheUser, $EnableMemoryProtection;
   $CommandWasHandled = TRUE;
   $CommandStatus = 0;
-  $cliListenerAuthorized = FALSE;
+  $cliListenerAuthorized = $cliPinsMatch = FALSE;
   $cliWhoami = '';
   // / Every command the listener owns. Recognized for all users & refused for the wrong one.
   $listenerCommands = array('-l', '--listen', '-k', '--kill', '--kill-all-workers', '--kill-every-worker');
   // / Every command Setup Core, Dependency Core & Pipeline Core answer.
   $setupCommands = array('--config', '--setup', '--pipeline');
   // / Every Engine command that needs root & nothing less.
-  $rootCommands = array('-fp', '--fix-permissions', '-c', '--clean', '--run-environment-manager');
+  $rootCommands = array('-fp', '--fix-permissions', '--run-environment-manager');
+  // / The sweep removes the web server account's own files, so root & that account may ask for
+  // / it, & root hands it to that account. Until v4.0.1 it was root only & root swept itself.
+  $cleanCommands = array('-c', '--clean');
+  // / The developer's build commands. They rewrite source files, so they need write access to
+  // / the tree & nothing more. An operator never has a reason to run one.
+  $buildCommands = array('--build');
   // / The entry points the listener starts its managers through. Never typed by a person.
   $managerCommands = array('--start-core-manager', '--run-core-manager', '--start-manager');
   // / Only the web server user & root may operate the listener.
@@ -4385,6 +5116,11 @@ function dispatchEngineCommand($cliArguments, $cliCommand, $cliTarget, $cliSecon
   $cliWhoami = ($CurrentUser === '' ? 'an unidentified user' : $CurrentUser);
   if (in_array($cliCommand, $managerCommands, TRUE)) $CommandStatus = runEngineManagerEntry($cliCommand, $cliTarget, $cliSecondTarget);
   else if ($cliCommand === '--status') $CommandStatus = showEngineStatus($cliWhoami, $cliListenerAuthorized);
+  // / A build that reports no failure but no match is still a failure, so the second value is
+  // / held against the first rather than trusted to agree with it.
+  else if (in_array($cliCommand, $buildCommands, TRUE)) {
+    list ($CommandStatus, $cliPinsMatch) = runEngineBuildCommand($cliTarget, $cliSecondTarget);
+    if (!$cliPinsMatch && $CommandStatus === 0) $CommandStatus = 1; }
   // / Every setup & config command is root only, & is refused here rather than partway
   // / through its own work. --detect-capabilities used to probe every installed dependency
   // / as a standard user & then fail on the last line when it could not write the cache.
@@ -4398,11 +5134,13 @@ function dispatchEngineCommand($cliArguments, $cliCommand, $cliTarget, $cliSecon
   else if (in_array($cliCommand, $listenerCommands, TRUE)) $CommandStatus = runEngineListenerCommand($cliCommand, $cliTarget, $cliConfirmed, $cliWhoami, $cliListenerAuthorized);
   // / A root only command issued by a standard user is named rather than dismissed, & told
   // / it needs root rather than being allowed to run & quietly achieve nothing.
+  else if (in_array($cliCommand, $cleanCommands, TRUE) && !$cliListenerAuthorized) $CommandStatus = refuseCommandForUser($cliCommand, $cliWhoami, 'A clean was refused for an unauthorized user.');
+  else if (in_array($cliCommand, $cleanCommands, TRUE)) $CommandStatus = runEngineCleanCommand($cliTarget);
   else if (in_array($cliCommand, $rootCommands, TRUE) && !$RunningAsRoot) $CommandStatus = refuseCommandForUser($cliCommand, $cliWhoami, 'A root only command was refused for an unauthorized user.');
   else if (in_array($cliCommand, $rootCommands, TRUE)) $CommandStatus = runEngineRootCommand($cliCommand, $cliTarget);
   else $CommandWasHandled = FALSE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $cliListenerAuthorized, $cliWhoami, $listenerCommands, $setupCommands, $rootCommands, $managerCommands, $cliArguments, $cliCommand, $cliTarget, $cliSecondTarget, $cliConfirmed);
+  purgeSensitiveMemory($EnableMemoryProtection, $cliListenerAuthorized, $cliPinsMatch, $cliWhoami, $listenerCommands, $setupCommands, $rootCommands, $cleanCommands, $buildCommands, $managerCommands, $cliArguments, $cliCommand, $cliTarget, $cliSecondTarget, $cliConfirmed);
   return array($CommandWasHandled, $CommandStatus); }
 // / -----------------------------------------------------------------------------------
 ?>

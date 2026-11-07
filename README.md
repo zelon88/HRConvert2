@@ -1,251 +1,222 @@
 <p align="center">
-  <img src="https://github.com/zelon88/HRConvert2/blob/master/UI/Default/Resources/Image/convert-banner.png?raw=true" alt="HRConvert2" width="100%"/>
-</p>
-
-<h1 align="center">🔁 HRConvert2</h1>
-
-<p align="center">
-  <strong>Self-Hosted, Resource-Aware, Public-Facing File Conversion Server</strong><br>
-  No database. No cookies. No tracking. Nothing leaves your server.
+  <img src="UI/Default/Resources/Image/convert-banner.png" alt="HRConvert2" width="560"/>
 </p>
 
 <p align="center">
-  <a href="https://github.com/zelon88/HRConvert2/blob/master/Documentation/INSTALLATION_INSTRUCTIONS.txt"><strong>Get Started</strong></a> ·
-  <a href="https://github.com/zelon88/HRConvert2/tree/master/Documentation">Documentation</a> ·
-  <a href="https://hub.docker.com/r/zelon88/hrconvert2">Docker Image</a>
+  <strong>Convert almost anything, on your own server. Nothing ever leaves it.</strong><br>
+  A self-hosted file converter for the public internet, with every converter locked in a sandbox.
 </p>
 
 <p align="center">
-  <img src="https://github.com/zelon88/HRConvert2/blob/master/Documentation/Screenshots/new-selector-bar2.png" alt="The HRConvert2 options interface" width="600"/>
+  <strong>490+ formats</strong> · <strong>26 languages</strong> · <strong>runs on a Raspberry Pi</strong> · <strong>no accounts, cookies, database or tracking</strong>
+</p>
+
+<p align="center">
+  <a href="#-quick-start"><strong>Get Started</strong></a> ·
+  <a href="https://hub.docker.com/r/zelon88/hrconvert2">Docker Image</a> ·
+  <a href="Documentation">Documentation</a> ·
+  <a href="Documentation/SECURITY.md">Security Policy</a>
+</p>
+
+<p align="center">
+  <img src="Documentation/Screenshots/v4-themes.png" alt="HRConvert2 in the blue, dark and green colour schemes, the last one in Arabic" width="100%"/>
+  <br><sub>Seven colour schemes, two interfaces and 26 languages, with right-to-left layouts where a language needs one.</sub>
 </p>
 
 ---
 
 ## 🔒 Why HRConvert2?
 
-Every free online file converter is actually a data collection business in disguise. Upload a contract, medical scan, or proprietary CAD file? You just handed it to a stranger with an ad network.
+Free online converters are paid for with your files. Upload a contract, a medical scan or a client's CAD drawing and it now sits on a stranger's server, next to an ad network.
 
-**HRConvert2 is different.** Same convenience. Zero compromise.
+**HRConvert2 gives you the same convenience with none of that.** Drag a file in, pick a format, download the result. The conversion happens on hardware you control, your visitors never make an account, and their files are deleted on a schedule you set.
 
-- Conversions happen on **your machine** using local tools
-- Users need **no account** and leave **no trace**
-- Runs on a **Raspberry Pi**
-- Workflow: Drag, drop, convert, download
+| Promise | What it means |
+| :--- | :--- |
+| 🏠 **Nothing transmitted** | Every conversion runs on your server, with local tools. No CDN, no analytics, no telemetry. |
+| 👤 **No accounts, no cookies** | Visitors are anonymous. Each gets an isolated folder nobody else can see. |
+| 🗑️ **Files expire** | Uploads and results are deleted automatically after an age you choose. |
+| 🧱 **Sandboxed converters** | Every tool that parses an upload runs in a bubblewrap sandbox with no network. |
+| 🌍 **Built for strangers** | Designed to be put on the public internet and attacked, and documented that way. |
 
-### 🛡️ The Privacy Promise
+---
 
-| Feature | What You Get |
-|---------|--------------|
-| **Nothing transmitted** | Conversions run locally only |
-| **No accounts or sessions** | Users are temporary directories |
-| **Zero tracking** | No analytics, telemetry, or CDN |
-| **Auto-delete files** | Configurable age-based cleanup |
-| **Isolated storage** | Users cannot see each other's files |
+## ✨ How It Works
+
+<table>
+<tr>
+<td width="42%" valign="top">
+  <img src="Documentation/Screenshots/v4-convert.png" alt="The file conversion options page with an image conversion panel open" width="100%"/>
+</td>
+<td valign="top">
+
+1. **Drop files in.** Any number, any mix of types. Archives, photos, documents, 3D models, video.
+2. **Choose what to do with each one.** Convert, compress, extract, run OCR, virus scan, share or delete. Only the options that make sense for that file appear.
+3. **Download the result.** Bulk options convert or archive a whole selection at once.
+4. **Walk away.** Files expire on their own and nothing about the visit is kept.
+
+</td>
+</tr>
+</table>
+
+Every conversion travels the same path:
+
+```mermaid
+flowchart LR
+    A["Browser<br/>no account, no cookie"] -->|upload| B["HRConvert2"]
+    B --> C["Pipeline<br/>image, video, document, 3D ..."]
+    C --> E
+    subgraph S["bubblewrap sandbox, no network"]
+        E["ImageMagick, FFmpeg,<br/>LibreOffice, OpenSCAD ..."]
+    end
+```
+
+The result comes back the same way, and expires on the schedule you set.
 
 ---
 
 ## ⚡ Quick Start
 
-### 🧩 Traditional Install (30 seconds)
+### 🧩 Install on Debian or Ubuntu
 ```bash
 git clone https://github.com/zelon88/HRConvert2
 sudo bash HRConvert2/Documentation/Build/hrconvert2-setup.sh
 ```
 
-The installer handles everything:
-- Pulls all dependencies
-- Creates storage
-- Sets up AppArmor profile & PHP settings
-- Installs systemd unit
-- Reports what's working
+Two commands. The installer pulls every dependency, creates the storage, sets up the AppArmor profile, PHP and the systemd units, installs HRConvert2 beside its storage, outside the web root, then tells you exactly what is working. Add `-y` to skip the confirmations.
 
 Then open `http://your-server/HRProprietary/HRConvert2/convertCore.php` and start converting.
-
-**Pro tip:** Add `-y` to skip confirmations.
 
 ### 🐳 Docker
 ```bash
 docker run -d -p 8080:80 --cap-add SYS_ADMIN zelon88/hrconvert2
 ```
 
-**Note:** `SYS_ADMIN` is required for the security sandbox. Without it, HRConvert2 refuses conversions rather than running unprotected.
+`SYS_ADMIN` lets the container build the sandbox every converter runs in. Leave it off and the container cannot build one. Run `php convertCore.php -v` inside the container to confirm the sandbox works.
 
-### 🛠️ Troubleshooting
+### 🩺 When Something Is Wrong
 ```bash
-sudo php convertCore.php -fp
+sudo php convertCore.php -v     # Check every component & say what is wrong
+sudo php convertCore.php -fp    # Repair permissions & the web server setup
 ```
-
-This fixes 99% of issues and reports exactly what it corrected.
-
-```bash
-sudo php convertCore.php -v
-```
-
-This validates every installed component, every dependency, every feature. Everything. An extremely powerful diagnostic tool.
 
 ---
 
-## 📦 Supported Formats: 488 Total
+## 📦 490+ Formats
 
 | Category | Examples |
-|----------|----------|
-| **Documents** | doc, docx, txt, rtf, odt, pdf |
-| **Video** | mp4, mkv, avi, mov, webm, flv, + 50+ more |
-| **Audio** | mp3, flac, aac, wav, opus, wma, + 30+ more |
-| **Spreadsheets** | csv, xls, xlsx, ods |
-| **Presentations** | pptx, ppt, odp |
-| **Images** | jpg, png, gif, webp, svg, ico, heic |
-| **Archives** | zip, rar, 7z, tar, gz, bz2 |
+| :--- | :--- |
+| **Documents** | doc, docx, odt, rtf, txt, pdf |
+| **Spreadsheets** | xls, xlsx, ods, csv |
+| **Presentations** | ppt, pptx, odp |
+| **Images** | jpg, png, gif, webp, heic, avif, svg, ico, tiff |
+| **Video** | mp4, mkv, avi, mov, webm, flv, and 50+ more |
+| **Audio** | mp3, flac, aac, wav, opus, wma, and 30+ more |
+| **Subtitles** | srt, vtt, ass, sub, sbv, ttml, and more |
 | **E-Books** | epub, mobi, azw, azw3, azw4 |
-| **3D Models** | obj, stl, dxf, collada, ply |
-| **Technical** | OpenSCAD, CAD drawings, vector graphics |
-| **Bootable ISO** | x86, ARM, UEFI, MBR/GPT hybrid |
+| **Archives** | zip, rar, 7z, tar, gz, bz2 |
+| **3D Models** | obj, stl, ply, collada, and OpenSCAD sources |
+| **Drawings & Vectors** | dxf, dia, vdx, svg |
+| **Bootable Disk Images** | x86, ARM, UEFI and MBR/GPT hybrid ISOs |
 | **OCR** | Extract text from images and PDFs |
-| **Live Streams** | Capture and convert .m3u8 playlists |
-| **Remote Files** | Fetch a file from a URL, off by default |
-| **Subtitles** | srt, vtt, ass, sub, sbv, ttml, + more |
+| **Live Streams** | Capture and convert m3u8 playlists |
+| **Remote Files** | Fetch a file from a URL. Off by default. |
 
 ---
 
-## 🔐 Security by Design
+## 🛡️ Security You Can Read
 
-HRConvert2 is built for public-facing deployment—which means it's built to be attacked. Every protection is there for a reason.
+HRConvert2 assumes every tool that parses a hostile file can be exploited. So the sandbox is the security boundary, and everything else is a layer on top of it.
 
-### 🧰 Sandboxing
-Every conversion dependency runs inside a bubblewrap namespace:
-- ImageMagick, FFmpeg, Inkscape, OpenSCAD—all isolated
-- Each process sees only its input (read-only) and output directories
-- Network is unshared—no external URL handlers
-- **No sandbox = no conversion** (HRConvert2 refuses rather than takes risks)
-
-### 🛡️ Multi-Layer Protections
-- **Session identifiers** derived from a per-install secret (CSPRNG)
-- **Dependencies version-pinned** and verified at runtime
-- **Uploads sanitized** before any tool touches them
-- **Stream URLs** fully inspected before FFmpeg sees them
-- **Updates require shell access** (not guessable secrets)
-- **Every error documented** with cause and solution
+- **🧱 Sandboxed converters.** ImageMagick, FFmpeg, LibreOffice, Inkscape, OpenSCAD and every other converter run inside bubblewrap. Each sees only its own input and output, with no network at all.
+- **🧼 Hostile inputs disarmed.** OpenSCAD sources are rewritten before they render. Archive links are pruned before they reach anything. Stream URLs are inspected before FFmpeg sees them. Fetched files are checked before they are placed.
+- **📋 An audited supply chain.** Every dependency is declared in one manifest with minimum and maximum versions. Every pipeline carries an approval record for the dependencies it uses, and approvals expire every year.
+- **🏆 Reports are welcome and credited.** Every advisory is accepted, and every reporter is credited publicly once the fix ships. Two were credited in v4.0.0. See the [Security Policy](Documentation/SECURITY.md).
+- **🔍 Checked by machine as well as by hand.** Two independent linters, in Python and Bash, check every change, and each check is proven against faults planted on purpose. Every error the application can raise is documented with its cause and its fix.
+- **🔑 No guessable secrets.** Sessions derive from a per-install secret, and updates need shell access.
 
 ---
 
-## 🌐 26 Languages Built In
+## 🌐 26 Languages
 
-Users switch languages instantly from the interface—no language packs to install:
+Visitors switch language from the page. Nothing to install.
 
-| | | | |
-|---|---|---|---|
-| English | Français | Español | 中文 |
-| हिन्दी | العربية | Русский | Українська |
-| বাংলা | Deutsch | 한국어 | Italiano |
-| Português | Tiếng Việt | Türkçe | 日本語 |
-| Bahasa Indonesia | Polski | Nederlands | Kiswahili |
-| မြန်မာ | اردو | فارسی | עברית |
+<p align="center">
+English · Français · Español · 中文 · हिन्दी · العربية · Русский · Українська · বাংলা<br>
+Deutsch · 한국어 · Italiano · Português · Tiếng Việt · Türkçe · 日本語 · Bahasa Indonesia<br>
+Polski · Nederlands · Kiswahili · မြန်မာ · اردو · فارسی · עברית · ܣܘܪܝܝܐ · ܐܪܡܝܐ
+</p>
 
-**RTL Support:** Arabic, Hebrew, Persian, Urdu, and Syriac display with proper right-to-left layouts.
-
-**Community-Driven:** Adding a language is as simple as adding one folder. No core code changes required.
+Arabic, Hebrew, Persian, Urdu and both Syriac script languages get proper right-to-left layouts. A new language is one folder, with no change to the core.
 
 ---
 
-## 🎨 Customizable Interfaces & Appearance
+## 🚀 Built for Administrators
 
-Users can personalize their experience:
-- **2 interface layouts:** Default, Original
-- **Fluid width:** Every layout fits the device, up to a ceiling you set
-- **7 color schemes:** Red, Green, Blue, Grey, Orange, Purple, Dark
-- **In-page switching:** No reload needed
+<table>
+<tr>
+<td width="62%" valign="top">
 
-Admins can lock down preferences in `config.php`. Each interface lives in its own folder—fork and brand it however you want without touching the core.
+**🧩 Built on the HRProprietary Engine.** HRConvert2 is a thin application on a reusable engine. The engine provides sandboxing, dependency management, self-repairing configuration, resource budgets and data protection. Every conversion, scan and file operation is a version-pinned **pipeline** you can inspect with `--pipeline`.
 
----
+**⚙️ Resource-aware.** Optional processor and memory budgets keep a busy server responsive, and runaway conversions are stopped. Storage can span several disks, round-robin, least-active or as a standby. A missing budget never stops a conversion.
 
-## 🚀 Advanced Features
+**🔄 Updates that roll back.** `php convertCore.php -u` stages a release, swaps it in, and validates it. If the new version can't run, it rolls back on its own. Your configuration is kept.
 
-### 🧱 Built on the HRProprietary Engine
-HRConvert2 is a thin application on top of a reusable engine: sandboxing, dependency management,
-self-repairing configuration & resource budgets. Conversions, scans & file handling are
-version-pinned **pipelines** you can inspect with `--pipeline` or drop into your own project.
+**🎨 Yours to brand.** Each interface and each language is a folder. Fork one, restyle it, and lock your visitors' choices in `config.php`.
 
-### ⚙️ Resource-Aware Load Management (Optional)
-Turn on smart resource management to prevent overload:
-- CPU & memory caps scale with system load
-- Runaway conversions auto-terminate
-- Storage spans multiple disks (round-robin, least-active, or failover)
-- System watchdog monitors everything
+</td>
+<td valign="top">
+  <img src="Documentation/Screenshots/v4-phone.png" alt="The dark colour scheme on a phone" width="100%"/>
+  <br><sub>Every layout fits the device, up to a width you set.</sub>
+</td>
+</tr>
+</table>
 
-**Key design:** Fails open. No budget socket? Conversion runs anyway. Nothing can take your server offline.
-
-### 💻 Command-Line Control
 Everything is manageable from the terminal:
 
 ```bash
-php convertCore.php -v              # Version & dependency check
-php convertCore.php --status        # System state
-php convertCore.php -u=latest       # Update to newest release
-php convertCore.php -c=now          # Clean all expired sessions
-php convertCore.php -fp             # Fix permissions & repair
-php convertCore.php --config        # Interactive config wizard
-php convertCore.php -l              # Start resource listener
-php convertCore.php -k              # Stop resource listener
+php convertCore.php -v                        # Check every component, dependency & feature
+php convertCore.php --status                  # System state & the listener
+php convertCore.php --config                  # Interactive configuration
+php convertCore.php --config --repair         # Add any setting the configuration is missing
 php convertCore.php --setup --check-depends   # Audit every dependency
-php convertCore.php --config --repair         # Rebuild or repair config.php
 php convertCore.php --pipeline --verify       # Confirm every pipeline loaded
+php convertCore.php -u=latest                 # Update to the newest release
+php convertCore.php -c=now                    # Clean every expired session now
 ```
 
-[Full command reference](https://github.com/zelon88/HRConvert2/blob/master/Documentation/ABOUT_COMMAND_LINE_ARGUMENTS.txt)
-
-### 🗄️ Storage Distribution
-Span storage across multiple drives with your choice of strategy:
-- **Round-robin** for even distribution
-- **Least-active** for dynamic load balancing
-- **Redundant** for failover protection
-
-### 🔄 Auto-Update with Rollback
-```bash
-php convertCore.php -u=latest
-```
-Updates pull a release, merge your config, swap atomically, then verify. Can't run? Automatically rolls back to the previous version.
+Every command exits with a status a script can act on. See the [full command reference](Documentation/ABOUT_COMMAND_LINE_ARGUMENTS.txt).
 
 ---
 
-## 🧾 System Requirements
+## 🧾 Requirements
 
-| Requirement | Minimum |
-|-------------|---------|
+| | Minimum |
+| :--- | :--- |
 | **OS** | Debian or Ubuntu Linux |
-| **Web Server** | Apache 2.4 |
+| **Web server** | Apache 2.4 |
 | **PHP** | 8.0 or later |
-| **Hardware** | Raspberry Pi Model B+ (any x86/x64 is comfortable) |
-| **Sandbox** | Bubblewrap (required and non-negotiable) |
+| **Hardware** | Raspberry Pi Model B+. Any x86 or x64 machine is comfortable. |
+| **Sandbox** | Bubblewrap |
 
-The installer handles all dependencies. Seriously—just run the script.
+The installer handles every dependency. The authoritative list is [depends.php](Resources/Contract/depends.php).
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome:
-
-- **Language translations** — Just add a folder
-- **Interface themes** — Fork a UI folder and get creative
-- **Bug reports** — Include reproduction steps
-- **Security reports** — Report them privately from the **Security** tab, never in an issue. Every report is accepted, and every reporter is credited once the fix ships. See the [Security Policy](https://github.com/zelon88/HRConvert2/blob/master/Documentation/SECURITY.md).
-
-The architecture is deliberately modular: a language is a folder, an interface is a folder. Neither requires touching the core.
+- **🌍 Translations.** Add a folder.
+- **🎨 Interfaces.** Fork a UI folder and make it yours.
+- **🐛 Bug reports.** Include the steps that reproduce it and the output of `php convertCore.php -v`.
+- **🔐 Security reports.** Report them privately from the **Security** tab, never in an issue. Every report is accepted, and every reporter is credited once the fix ships. See the [Security Policy](Documentation/SECURITY.md).
 
 ---
 
 ## 📜 License
 
-[GNU General Public License v3.0](https://github.com/zelon88/HRConvert2/blob/master/Documentation/LICENSE)
-
-Free to use. Free to modify. Free to self-host.
-
-If you improve it, send it back.
-
----
+[GNU General Public License v3.0](Documentation/LICENSE). Free to use, free to modify, free to self-host. If you improve it, send it back.
 
 <p align="center">
-  Made for privacy-conscious developers<br>
-  <a href="https://github.com/zelon88">@zelon88</a>
+  <sub>Built by <a href="https://github.com/zelon88">@zelon88</a> for people who would rather not hand their files to strangers.</sub>
 </p>

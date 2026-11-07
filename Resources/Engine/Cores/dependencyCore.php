@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / Fileinformation ...
-// / v3.9.9.
+// / v4.0.1.
 // / A detachable dependency management component. convertCore.php runs without it.
 // / This file defines functions only. setupCore.php & convertCore.php dispatch into them.
 // /
@@ -47,7 +47,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependencyCoreVersion = 'v3.9.9';
+$DependencyCoreVersion = 'v4.0.1';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1354,16 +1354,25 @@ function detectDependencyCapability($dependencyEntry) {
 // / The cache is a PHP file & that is deliberate. It cannot render anything if it is ever
 // / served, it refuses to execute without the core, & require_once is the only parser it
 // / needs. A JSON or an ini file would need a parser & would be readable as text.
+// /
+// / ROOT WRITES IT WITHOUT FOLLOWING ANYTHING & never hands it to the web server account.
+// / The file lives in the data location, which belongs to the web server account. Until
+// / v4.0.1 root wrote it by name & then chowned it to that account. A link planted at its
+// / name made one --setup --detect-capabilities overwrite the link's target & give it to the
+// / web server account, which was demonstrated with a root owned stand in. Root now writes a
+// / new file, renames it into place & leaves it root's & 0644, so the web server reads it &
+// / cannot edit it.
 function buildCapabilityCache() {
   // / Set variables.
   // / The pin the core sets is $RequiredDependsVersion. $DependsVersion is what the
   // / manifest declares & is not set until the manifest has been read, so passing it here
   // / handed verifyDependsManifest() an empty string & every manifest was refused for
   // / reporting a version this core did not require.
-  global $ConvertLoc, $DirSep, $RequiredDependsVersion, $RunningAsRoot, $ApacheUser, $EnableMemoryProtection;
+  global $CacheLoc, $DirSep, $RequiredDependsVersion, $RunningAsRoot, $EnableMemoryProtection;
   $CacheWasBuilt = FALSE;
   $DetectedCount = 0;
-  $manifestIsAvailable = FALSE;
+  $manifestIsAvailable = $cacheWasWritten = FALSE;
+  $writeNotice = '';
   $dependsManifest = $dependencyEntry = $cacheRecords = array();
   $readableExtensions = $writableExtensions = array();
   $readState = $writeState = $detectedDependsVersion = $cachePath = $cacheContents = '';
@@ -1394,19 +1403,22 @@ function buildCapabilityCache() {
       .'$CapabilityCacheBuilt = '.var_export(time(), TRUE).';'.PHP_EOL
       .'$CapabilityCache = '.var_export($cacheRecords, TRUE).';'.PHP_EOL
       .'?>'.PHP_EOL;
-    $cachePath = rtrim((string)$ConvertLoc, $DirSep).$DirSep.'capability-cache.php';
-    if (@file_put_contents($cachePath, $cacheContents, LOCK_EX) === FALSE) warningEntry('The capability cache could not be written to '.$cachePath.'. Detection will be repeated on the next run & conversions will use declared formats.');
+    // / The cache lives in the cache folder, which the web server account owns & root provisions
+    // / inside the data root it owns. Root writes it through the kernel, which the root owned
+    // / data root lets it do without following anything, & the web server account writes its own.
+    // / Until v4.0.1 it sat at the top of the data location, which the web server account owned.
+    $cachePath = rtrim((string)$CacheLoc, $DirSep).$DirSep.'capability-cache.php';
+    if ($RunningAsRoot) list ($cacheWasWritten, $writeNotice) = writeFileWithoutFollowing($cachePath, $cacheContents, 0644);
+    else $cacheWasWritten = (@file_put_contents($cachePath, $cacheContents, LOCK_EX) !== FALSE);
+    if (!$cacheWasWritten) warningEntry('The capability cache could not be written to '.$cachePath.'. Detection will be repeated on the next run & conversions will use declared formats. '.$writeNotice);
     else {
-      // / Detection is run from the command line & usually as root, so the file it writes
-      // / is owned by root & the web server cannot read it. Every request would then find
-      // / no cache, fall back to declared formats, & nothing would say why.
-      // / This is the same mistake a configuration backup made before it was corrected.
-      if ($RunningAsRoot && (string)$ApacheUser !== '') @chown($cachePath, (string)$ApacheUser);
-      @chmod($cachePath, 0640);
+      // / A file root writes is 0644 from the moment it exists, so the web server can read it
+      // / without being handed it. Any other account writes a file of its own, made 0640.
+      if (!$RunningAsRoot) @chmod($cachePath, 0640);
       $CacheWasBuilt = TRUE;
       logEntry('Capability cache written. '.$DetectedCount.' of '.count($cacheRecords).' dependencies answered.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $manifestIsAvailable, $dependsManifest, $dependencyEntry, $cacheRecords, $readableExtensions, $writableExtensions, $readState, $writeState, $detectedDependsVersion, $cachePath, $cacheContents);
+  purgeSensitiveMemory($EnableMemoryProtection, $manifestIsAvailable, $dependsManifest, $dependencyEntry, $cacheRecords, $readableExtensions, $writableExtensions, $readState, $writeState, $detectedDependsVersion, $cachePath, $cacheContents, $cacheWasWritten, $writeNotice);
   return array($CacheWasBuilt, $DetectedCount); }
 // / -----------------------------------------------------------------------------------
 
@@ -1418,6 +1430,12 @@ function buildCapabilityCache() {
 // / The caller receives no records & must read that as every dependency being unknown,
 // / which leaves every pipeline declaration standing. Reading it as no capability would
 // / take the whole application down on a missing file.
+// / ROOT NEVER REQUIRES IT. The file is in the data location, which the web server account
+// / owns & can put any file into under this name. Until v4.0.1 every root command that asked
+// / a pipeline about a format required it, so the web server account could run code as root
+// / by editing it. Root now answers as if there were no cache, which leaves every declared
+// / format standing. Nothing root does depends on the cache, because conversions run as the
+// / web server account, & that account still reads it exactly as before.
 function readCapabilityCache() {
   // / Set variables.
   // / $CoreLoaded is declared so the guard at the top of the generated file can see it.
@@ -1426,14 +1444,16 @@ function readCapabilityCache() {
   // / $RequiredDependsVersion for the same reason buildCapabilityCache() uses it. This
   // / function may run before the manifest has been read, & a comparison against a value
   // / that is not set yet refuses every cache that was ever written.
-  global $ConvertLoc, $DirSep, $RequiredDependsVersion, $CoreLoaded, $EnableMemoryProtection;
+  global $CacheLoc, $DirSep, $RequiredDependsVersion, $CoreLoaded, $RunningAsRoot, $Verbose, $EnableMemoryProtection;
   $CacheIsAvailable = FALSE;
   $CapabilityRecords = array();
   $cachePath = $requiredManifest = '';
   $CapabilityCacheFormat = $CapabilityCacheManifest = $CapabilityCacheBuilt = $CapabilityCache = NULL;
-  $cachePath = rtrim((string)$ConvertLoc, $DirSep).$DirSep.'capability-cache.php';
+  $cachePath = rtrim((string)$CacheLoc, $DirSep).$DirSep.'capability-cache.php';
   $requiredManifest = ltrim((string)$RequiredDependsVersion, 'vV');
-  if (file_exists($cachePath)) {
+  if ($RunningAsRoot) {
+    if ($Verbose) logEntry('Root does not load the capability cache, so declared formats stand for this run.'); }
+  else if (file_exists($cachePath)) {
     // / The declarations are nulled before the require, so a truncated or partly written
     // / file is caught here instead of inheriting whatever was in scope.
     require ($cachePath);
@@ -1463,9 +1483,9 @@ function readCapabilityCache() {
 // / able to choose where on the disk it writes.
 function outputSupplyChain($outputPath) {
   // / Set variables.
-  global $RequiredDependsVersion, $LogDir, $DirSep, $Date, $Lol, $EnableMemoryProtection;
-  $ReportWasWritten = FALSE;
-  $ReportPath = '';
+  global $RequiredDependsVersion, $LogDir, $EngineDir, $DirSep, $Date, $Lol, $RunningAsRoot, $EnableMemoryProtection;
+  $ReportWasWritten = $reportWasWritten = FALSE;
+  $ReportPath = $reportName = $writeNotice = $fallbackNotice = '';
   $dependsManifest = $dependencyEntry = $reportRows = array();
   $manifestIsAvailable = $dependencyIsPresent = FALSE;
   $rawOutput = $detectedVersion = $dependencyStatus = $detectedDependsVersion = $reportContents = $requestedName = '';
@@ -1479,14 +1499,15 @@ function outputSupplyChain($outputPath) {
     // / write in this component sits behind a token & a root check, so an unauthenticated
     // / caller must not be able to choose a destination. Only the file NAME is taken from
     // / the caller, & only its basename.
-    $ReportPath = rtrim((string)$LogDir, $DirSep).$DirSep.engineApplicationName().'-Supply-Chain-'.date('Y-m-d').'.csv';
+    $reportName = engineApplicationName().'-Supply-Chain-'.date('Y-m-d').'.csv';
     if (trim((string)$outputPath) !== '') {
       $requestedName = basename(trim((string)$outputPath));
       if ($requestedName === '' or strtolower(pathinfo($requestedName, PATHINFO_EXTENSION)) !== 'csv') warningEntry('A supply chain report destination was ignored because it is not a csv file name. The default was used.');
       else if ($requestedName !== trim((string)$outputPath)) {
         warningEntry('A supply chain report destination named a directory. Only the file name was used & the report was written beside the logs.');
-        $ReportPath = rtrim((string)$LogDir, $DirSep).$DirSep.$requestedName; }
-      else $ReportPath = rtrim((string)$LogDir, $DirSep).$DirSep.$requestedName; }
+        $reportName = $requestedName; }
+      else $reportName = $requestedName; }
+    $ReportPath = rtrim((string)$LogDir, $DirSep).$DirSep.$reportName;
     $reportRows[] = array(engineApplicationName().' Supply Chain Audit');
     $reportRows[] = array('Application version', engineApplicationVersion(), 'Manifest version', $detectedDependsVersion, 'Generated', (string)$Date);
     $reportRows[] = array('');
@@ -1508,19 +1529,32 @@ function outputSupplyChain($outputPath) {
         (string)$dependencyEntry['Purpose'],
         '', '', '', '', '', '', '', ''); }
     $reportContents = buildCsvContents($reportRows);
-    $bytesWritten = @file_put_contents($ReportPath, $reportContents);
-    if ($bytesWritten !== strlen($reportContents)) {
-      print($Lol.'The supply chain report could not be written to '.$ReportPath.'.'.$Lol.$Lol);
+    // / Root writes its report in Engine/, the folder it owns inside the data root, through the
+    // / kernel, which sets the mode as the file is created & follows nothing. Beside the logs is
+    // / the web server account's folder, which root does not write. Engine/ does not exist until
+    // / -fp has run after an upgrade, so a write that fails there is reported rather than retried
+    // / somewhere root cannot safely hold. Every other account owns its log folder & writes the
+    // / report there with a plain call. Until v4.0.1 root tried beside the logs & fell back to
+    // / the data location, which it did not yet own.
+    if ($RunningAsRoot) {
+      $ReportPath = rtrim((string)$EngineDir, $DirSep).$DirSep.$reportName;
+      list ($reportWasWritten, $writeNotice) = writeFileWithoutFollowing($ReportPath, $reportContents, 0644);
+      $fallbackNotice = $writeNotice; }
+    else {
+      $bytesWritten = @file_put_contents($ReportPath, $reportContents);
+      $reportWasWritten = ($bytesWritten === strlen($reportContents));
+      if ($reportWasWritten) @chmod($ReportPath, 0644); }
+    if (!$reportWasWritten) {
+      print($Lol.'The supply chain report could not be written to '.$ReportPath.'.'.($RunningAsRoot ? ' '.$fallbackNotice : '').$Lol.$Lol);
       errorEntry('A supply chain report could not be written!', 33001, FALSE); }
     else {
-      @chmod($ReportPath, 0644);
       $ReportWasWritten = TRUE;
       logEntry('A supply chain report covering '.count($dependsManifest).' dependenc(ies) was written to '.$ReportPath.'.');
       print($Lol.'Wrote a supply chain audit template covering '.count($dependsManifest).' dependenc(ies).'.$Lol);
       print($ReportPath.$Lol);
       print($Lol.'The right hand columns are blank on purpose. They are the audit.'.$Lol.$Lol); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $dependsManifest, $dependencyEntry, $reportRows, $manifestIsAvailable, $dependencyIsPresent, $detectedVersion, $dependencyStatus, $detectedDependsVersion, $reportContents, $bytesWritten, $requestedName, $outputPath, $rawOutput);
+  purgeSensitiveMemory($EnableMemoryProtection, $dependsManifest, $dependencyEntry, $reportRows, $manifestIsAvailable, $dependencyIsPresent, $detectedVersion, $dependencyStatus, $detectedDependsVersion, $reportContents, $reportWasWritten, $reportName, $writeNotice, $fallbackNotice, $bytesWritten, $requestedName, $outputPath, $rawOutput);
   return array($ReportWasWritten, $ReportPath); }
 // / -----------------------------------------------------------------------------------
 

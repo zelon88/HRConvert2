@@ -242,6 +242,18 @@ check_pins() {
         fi
       done
   fi
+  # / The bootstrap script is pinned by $RequiredConfigScript & declares SCRIPT_VERSION.
+  # / Its name does not follow the pattern above, so it needs a check of its own.
+  script=$(ls Documentation/Build/*-setup.sh 2>/dev/null | head -1)
+  pinned=$(grep -oE "\\\$RequiredConfigScript[[:space:]]*=[[:space:]]*'v?[0-9.]+'" convertCore.php 2>/dev/null | sed -E "s/.*'v?([0-9.]+)'/\1/")
+  if [ -n "$script" ] && [ -n "$pinned" ]; then
+    declared=$(grep -oE '^SCRIPT_VERSION="v?[0-9.]+"' "$script" | sed -E 's/.*"v?([0-9.]+)"/\1/')
+    if [ -z "$declared" ]; then
+      report 'PIN' "$(basename "$script") declares no SCRIPT_VERSION & an unknown build cannot be cleared"
+    elif [ "$declared" != "$pinned" ]; then
+      report 'PIN' "the bootstrap script is pinned at $pinned & $(basename "$script") declares $declared. Set \$RequiredConfigScript in convertCore.php to match."
+    fi
+  fi
 }
 
 # / -----------------------------------------------------------------------------------
@@ -374,6 +386,8 @@ check_purge() {
 # / CHECK. Every function has one exit.
 # / A single exit is what makes the cleanup at the return reliable. Three functions are
 # / exempt & each is exempt for a reason the Python states.
+# / Every return counts, wherever it sits on its line, once a one line closure is removed. The
+# / Python says why.
 check_exit() {
   while IFS= read -r file; do
     awk -v name="$file" '
@@ -392,8 +406,9 @@ check_exit() {
               c = substr(line, k, 1)
               if (c == "{") depth++
               else if (c == "}") depth-- }
-            stripped = line; sub(/^[[:space:]]+/, "", stripped)
-            if (substr(stripped, 1, 7) == "return " || stripped == "return;") returns++
+            counted = " " line
+            gsub(/function[[:space:]]*\([^()]*\)[[:space:]]*(use[[:space:]]*\([^()]*\)[[:space:]]*)?\{[^{}]*\}/, "", counted)
+            returns += gsub(/[^A-Za-z0-9_$>]return([^A-Za-z0-9_]|$)/, "&", counted)
             if (depth == 0 && j > i) break
             j++ }
           if (returns != 1) printf "EXIT|%s:%d %s() has %d return statements\n", name, i, fname, returns } }' "$(blanked_of "$file")"
@@ -557,12 +572,41 @@ check_config() {
 }
 
 # / -----------------------------------------------------------------------------------
+# / CHECK. An owner is changed only through changeOwnerWithoutFollowing().
+# / The second rule of ABOUT_MANAGED_LOCATIONS.txt. The Python states why, & exempts the same
+# / four functions for the same reasons. A call is found in the blanked copy, where no string or
+# / comment can fake one. A shell command is found in the original, on a line that is code.
+check_owner() {
+  while IFS= read -r file; do
+    awk -v name="$file" '
+      FNR == NR { original[FNR] = $0; next }
+      { blanked[FNR] = $0; count = FNR }
+      END {
+        exempt["changeOwnerWithoutFollowing"] = 1; exempt["applyCodeRole"] = 1; exempt["applyRootOnlyRole"] = 1; exempt["runAsAccount"] = 1
+        current = ""; started = 0; depth = 0
+        for (i = 1; i <= count; i++) {
+          line = blanked[i]
+          if (substr(line, 1, 9) == "function ") { split(line, parts, "("); current = substr(parts[1], 10); started = 0; depth = 0 }
+          for (k = 1; k <= length(line); k++) {
+            c = substr(line, k, 1)
+            if (c == "{") { depth++; started = 1 }
+            else if (c == "}") depth-- }
+          owner = current
+          if (current != "" && started == 1 && depth == 0) current = ""
+          if (owner in exempt) continue
+          code = line; gsub(/[[:space:]]/, "", code)
+          if (line ~ /(^|[^A-Za-z0-9_])l?ch(own|grp)[[:space:]]*\(/ || (code != "" && original[i] ~ /[\047"]([^\047"]*[^A-Za-z0-9_\047"])?(chown|chgrp)[[:space:]]/))
+            printf "OWNER|%s:%d changes an owner by name. Call changeOwnerWithoutFollowing() instead\n", name, i } }' "$file" "$(blanked_of "$file")"
+  done < <(php_files) | while IFS='|' read -r kind message; do report "$kind" "$message"; done
+}
+
+# / -----------------------------------------------------------------------------------
 # / The main logic. Every check runs & the total decides the exit code.
 # / Nothing stops early, because an operator wants every fault in one pass rather than the
 # / first one seven times.
 
 # / Every check, in the order they run, keyed by the name --only accepts.
-CHECK_NAMES='syntax balance order duplicate pins errno guard contract kernel config caps purge exit stray'
+CHECK_NAMES='syntax balance order duplicate pins errno guard contract kernel config caps purge exit owner stray'
 
 describe() {
   case "$1" in
@@ -580,6 +624,7 @@ describe() {
     stray)     printf 'nothing ships that is not part of the application' ;;
     purge)     printf 'every cleanup at a return carries its comment' ;;
     exit)      printf 'every function has one exit' ;;
+    owner)     printf 'an owner is changed only through changeOwnerWithoutFollowing' ;;
   esac
 }
 

@@ -98,6 +98,7 @@ one, believe the Python until proven otherwise.
   frame       Every function opens & closes with a separator. PYTHON ONLY.
   globals     No function destroys a global it declares. PYTHON ONLY.
   configs     No setting is set by the administrator & by the Engine. PYTHON ONLY.
+  owner       An owner is changed only through changeOwnerWithoutFollowing().
   stray       Nothing ships that is not part of the application.
 
 This heading carried a count until v3.9.9 & the count was wrong by three. A number in a
@@ -159,6 +160,10 @@ fault of either kind does not wait for another one.
   configs     The one written first. The documents promised that an administrator's setting
               beat the Engine's, & the code reads the Engine's second, so it never could. No
               name was shared yet. This keeps the promise true rather than lucky.
+  owner       Until v4.0.1 -fp & the installer gave the installation to the web server account
+              with chown -R, & root then ran that code. Root also gave the capability cache to
+              that account by name in a folder it could change, so a link planted there handed
+              any file on the host over, & that was proven before it was fixed.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

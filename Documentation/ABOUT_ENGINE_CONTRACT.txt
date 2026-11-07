@@ -143,6 +143,25 @@ THE PIPELINE CORE JOINED THE ENGINE IN THE SAME RELEASE. It is Resources/Engine/
 pipelineCore.php, & the list of pipelines it accepts left it for app-engine-config.php, as
 $EngineAcceptedPipelines & $EngineAcceptedSharedModules. It is the Engine's mechanism & the
 application's choice, so the file names no pipeline & the contract names them all.
+THE BUILD WRITES THE PINS, FROM v4.0.0. $EnginePinSources in the contract names where each of
+the application's own pins reads its version, such as one file for each interface. The
+Engine knows where its own components live & needs no entry for them. php convertCore.php
+--build --pins checks every pin against what ships, & --write rewrites the ones that differ.
+The kernel's pin & the Engine's are moved by hand, from v4.0.1, because the build runs inside
+both & cannot rewrite what loads it.
+THE APPLICATION NAMES ITS LOCATIONS & THE ENGINE OWNS WHAT THEY MEAN, FROM v4.0.1.
+$EngineManagedLocations in the contract names every location the application keeps on disk,
+by the setting that holds it, & gives each a role. A role is code, web, root-only or shared.
+Setup Core decides the owner & the mode each role means, & the contract cannot ask for a mode,
+so no location can be made writable by the account root protects itself from. -fp applies
+them. See ABOUT_MANAGED_LOCATIONS.txt.
+THE APPLICATION IS INSTALLED OUTSIDE THE WEB ROOT, FROM v4.0.1. $EngineApplicationLayout in the
+contract names the entries at the top of a release that make up the application. Setup Core's
+installApplicationTree copies exactly those into the folder the application names, & keeps the
+one it replaces as the backup. $EngineHostedAssetFolders & $EngineHostedAssetTypes name the
+static files a browser fetches. publishHostedLocation writes them, with a loader carrying the
+entry point's name, into the folder the web server serves, & removes only what is a copy of the
+installation. An application that names no layout installs nothing & runs where it is.
 THE APPLICATION'S SETTINGS ARE READ THROUGH A MAP, FROM v3.9.9. $EngineSettingNames in the
 contract names, for each name a shared layer uses, the setting the application keeps the value
 in. applicationSetting in the kernel reads it, or the shared layer's own default when the
@@ -200,7 +219,8 @@ exactly one application, which is the situation this exists to leave behind.
   THE KERNEL   Resources/Kernel/kernel.php, beside the Engine & never inside it. Required
                by the entry point before anything else runs & pinned exactly by
                $RequiredKernelVersion. Logging, halting, memory shredding, sanitizing,
-               the command line, dependency location & component loading.
+               the command line, dependency location, component loading, & the file
+               operations root performs where another account could interfere.
 
   THE ENGINE   Resources/Engine/engine.php. The environment every application needs.
 
@@ -289,6 +309,16 @@ knowing.
 
 --Engine Strict Contract-- in the Engine configuration inverts this while developing. Set it
 TRUE & a missing contract value refuses to load rather than falling back. Ship it FALSE.
+
+THE ENGINE TELLS A REPAIR WHETHER ANYBODY IS WATCHING, FROM v4.0.1.
+The application's repair is the function it names in $EngineRepairProvider, & -fp & the
+Environment Manager both reach it through runApplicationRepair(). The Engine sets
+$EngineRepairIsUnattended TRUE for the length of an Environment Manager repair & FALSE again
+after it. A repair reads it with isset(), as every contract value is read, & an unattended one
+starts & enables no service & leaves the host's configuration alone unless the application's own
+setting allows it. Unset or FALSE means an administrator typed the command, which is the case
+for -fp & --setup. HRConvert2's fixManagedPermissions() honours it. See
+Documentation/ABOUT_ENVIRONMENT_MANAGER.txt.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

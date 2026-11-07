@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / Fileinformation ...
-// / v3.9.9.
+// / v4.0.1.
 // / HRConvert2 Setup Core.
 // / A detachable installation & configuration component. convertCore.php runs without it.
 // / This file defines functions only. convertCore.php dispatches into them.
@@ -39,7 +39,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$SetupCoreVersion = 'v3.9.9';
+$SetupCoreVersion = 'v4.0.1';
 // / -----------------------------------------------------------------------------------
 
 
@@ -223,7 +223,7 @@ function validateConfigDependencies($configModel, $detectedSections) {
 // / destination belongs to the administrator taking the backup.
 function backupConfigFile($configPath, $backupPath) {
   // / Set variables.
-  global $EnableMemoryProtection, $RunningAsRoot, $ApacheUser;
+  global $EnableMemoryProtection;
   $BackupSucceeded = FALSE;
   $backupDirectory = '';
   $backupDirectory = dirname($backupPath);
@@ -232,10 +232,8 @@ function backupConfigFile($configPath, $backupPath) {
   else if (file_exists($backupPath)) errorEntry('A configuration backup was requested but '.$backupPath.' already exists. Nothing was overwritten!', 32002, FALSE);
   else {
     @copy($configPath, $backupPath);
-    // / A backup taken while running as root is created owned by root, & it lands in a
-    // / directory the permissions pass manages. Correcting it here rather than leaving it
-    // / for that pass means a backup taken by hand, outside an install, is also correct.
-    if ($RunningAsRoot && $ApacheUser !== '' && file_exists($backupPath)) @chown($backupPath, $ApacheUser);
+    // / A backup keeps the owner of whoever took it, & one root takes is root's. Until v4.0.1
+    // / it was handed to the web server account, as config.php itself was.
     if (file_exists($backupPath)) @chmod($backupPath, 0640);
     if (file_exists($backupPath) && filesize($backupPath) === filesize($configPath)) {
       $BackupSucceeded = TRUE;
@@ -252,11 +250,12 @@ function backupConfigFile($configPath, $backupPath) {
 // / Returns TRUE when the file was replaced & the replacement parses as PHP.
 // / The new contents are written beside the original, checked, & only then moved into
 // / place. A configuration that does not parse is never allowed to reach the installation.
-// / While running as root the write is performed as the web server user, so an
-// / administrator repairing a configuration cannot leave a file its own server cannot read.
+// / config.php is code root runs, so the file is root's & 0644. The web server account reads
+// / it & cannot change it. Until v4.0.1 a configuration written as root was handed to the web
+// / server account, which could then edit what root required on its next command.
 function writeConfigFile($configPath, $configContents) {
   // / Set variables.
-  global $ApacheUser, $RunningAsRoot, $EnableMemoryProtection;
+  global $EnableMemoryProtection;
   $WriteSucceeded = FALSE;
   $temporaryPath = $writeCommand = '';
   $lintOutput = array();
@@ -280,10 +279,6 @@ function writeConfigFile($configPath, $configContents) {
       @unlink($temporaryPath);
       errorEntry('The staged configuration does not parse & was discarded. '.implode(' ', $lintOutput), 32005, FALSE); }
     else {
-      // / Hand the file to the account that has to read it before it is moved into place.
-      if ($RunningAsRoot) {
-        @chown($temporaryPath, $ApacheUser);
-        @chgrp($temporaryPath, $ApacheUser); }
       @chmod($temporaryPath, 0644);
       if (@rename($temporaryPath, $configPath)) {
         $WriteSucceeded = TRUE;
@@ -757,49 +752,301 @@ function enableConversionLimits() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to correct ownership & permissions on a list of paths.
-// / Accepts the paths, the account to own them & the mode to set. Returns whether it ran,
-// / how many were corrected & how many were refused, in that order.
+// / A function to give one installation tree to root, with folders 0755 & files 0644.
+// / Accepts the tree & the paths inside it that hold another role. Returns a success boolean.
+// / The tree is walked by GNU find, which never follows a link, never leaves the filesystem
+// / it started on, & with -execdir hands each command a name relative to a folder it already
+// / holds open, so a folder renamed during the walk cannot redirect a change. Root's group
+// / is used, so the web server account reads the installation as everybody else does & can
+// / write none of it. Nothing in an installation needs an execute bit, because every script
+// / it ships is run through its interpreter.
+// / The caller has already refused a tree that another account could replace.
 // /
-// / WHICH PATHS AN APPLICATION MANAGES IS THE APPLICATION'S TO SAY. Doing the correcting is
-// / not. HRConvert2 knows it owns a DATA directory, a temporary tree, a log directory & a
-// / socket directory. No engine can guess that list & no other application will have it.
-// / So the list arrives as an argument & everything below is the same work whoever asked.
-// /
-// / A PATH THAT RESOLVES TO A SYSTEM DIRECTORY IS REFUSED & the refusal is reported rather
-// / than logged quietly. chown -R on /usr because a configuration line was empty is not a
-// / mistake anybody recovers from quickly, & an empty value in a path list is exactly how
-// / that happens.
-// / It is checked per path rather than once, because a list is only as safe as its worst
-// / entry & a caller that got one right may still have got another wrong.
-// /
-// / A path that is not a directory is skipped in silence. A list may name something an
-// / installation has not created yet, & that is not a fault worth reporting on every run.
-function correctManagedPaths($pathsToCorrect, $ownerAccount, $permissionMode) {
+// / THE MODES ARE SET TOP DOWN, ONE NAME AT A TIME. The owner pass leaves every folder root's,
+// / but a folder another account made writable to everybody stays writable until its mode is
+// / set, & chmod follows a link. With one command per name, find sets a folder's mode before
+// / it reads what is inside, so every name is reached through a folder only root can change.
+// / Until v4.0.1 the commands were batched & ran after the walk had moved on.
+// / A FILE WITH MORE THAN ONE NAME IS LEFT ALONE. Its other name may be anywhere on the same
+// / filesystem, & changing the owner or the mode of one name changes every other. It is named
+// / in a warning, & the trust check that ends -fp refuses the tree until it is removed.
+function applyCodeRole($treePath, $prunedPaths) {
   // / Set variables.
-  global $Lol, $EnableMemoryProtection;
-  $CorrectionRan = FALSE;
-  $PathsCorrected = $PathsRefused = 0;
-  $managedPath = '';
+  global $EnableMemoryProtection;
+  $RoleWasApplied = FALSE;
+  $pruneExpression = $prunedPath = $findPrefix = '';
+  $commandOutput = $linkedFiles = array();
+  $ownerExitCode = $modeExitCode = $linkedExitCode = 1;
+  // / A fixed PATH, because find refuses -execdir when PATH holds a relative entry.
+  $findPrefix = 'PATH=/usr/sbin:/usr/bin:/sbin:/bin find '.escapeshellarg($treePath).' -xdev';
+  // / -path reads a pattern, so a bracket, star or question mark in a real path is escaped.
+  foreach ($prunedPaths as $prunedPath) $pruneExpression .= ' -path '.escapeshellarg(addcslashes((string)$prunedPath, '*?[]\\')).' -prune -o';
+  exec($findPrefix.$pruneExpression.' -type f -links +1 -print 2>&1', $linkedFiles, $linkedExitCode);
+  if (count($linkedFiles) > 0) warningEntry(count($linkedFiles).' file(s) in the installation at '.$treePath.' have more than one name & were left alone, because changing one name changes every other. Remove them & run -fp again. The first is '.$linkedFiles[0].'.');
+  exec($findPrefix.$pruneExpression.' ! \( -type f -links +1 \) -execdir chown -h root:root {} + 2>&1', $commandOutput, $ownerExitCode);
   $commandOutput = array();
-  $commandExitCode = 1;
-  if (!is_array($pathsToCorrect)) $pathsToCorrect = array($pathsToCorrect);
-  if (trim((string)$ownerAccount) === '') warningEntry('A path correction was asked for with no account to own the result. Nothing was changed.');
+  exec($findPrefix.$pruneExpression.' -type d -execdir chmod 0755 {} \; -o -type f -links 1 -execdir chmod 0644 {} \; 2>&1', $commandOutput, $modeExitCode);
+  if ($ownerExitCode === 0 && $modeExitCode === 0) $RoleWasApplied = TRUE;
+  else warningEntry('The installation at '.$treePath.' could not be given to root completely. '.implode(' ', array_slice($commandOutput, 0, 3)));
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $pruneExpression, $prunedPath, $findPrefix, $commandOutput, $linkedFiles, $ownerExitCode, $modeExitCode, $linkedExitCode, $treePath, $prunedPaths);
+  return $RoleWasApplied; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to give one tree to root alone, with folders 0700 & files 0600.
+// / Accepts the tree. Returns a success boolean.
+// / The previous installation is kept here for an operator to restore by hand. Nothing else
+// / needs to read it, so nothing else can. It is walked the same way as an installation, top
+// / down & one name at a time, & a file with more than one name is left alone, for the reasons
+// / given at applyCodeRole. The caller has already refused a tree another account could replace.
+function applyRootOnlyRole($treePath) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $RoleWasApplied = FALSE;
+  $findPrefix = '';
+  $commandOutput = $linkedFiles = array();
+  $ownerExitCode = $modeExitCode = $linkedExitCode = 1;
+  $findPrefix = 'PATH=/usr/sbin:/usr/bin:/sbin:/bin find '.escapeshellarg($treePath).' -xdev';
+  exec($findPrefix.' -type f -links +1 -print 2>&1', $linkedFiles, $linkedExitCode);
+  if (count($linkedFiles) > 0) warningEntry(count($linkedFiles).' file(s) at '.$treePath.' have more than one name & were left alone, because changing one name changes every other. The first is '.$linkedFiles[0].'.');
+  exec($findPrefix.' ! \( -type f -links +1 \) -execdir chown -h root:root {} + 2>&1', $commandOutput, $ownerExitCode);
+  $commandOutput = array();
+  exec($findPrefix.' -type d -execdir chmod 0700 {} \; -o -type f -links 1 -execdir chmod 0600 {} \; 2>&1', $commandOutput, $modeExitCode);
+  if ($ownerExitCode === 0 && $modeExitCode === 0) $RoleWasApplied = TRUE;
+  else warningEntry('The location at '.$treePath.' could not be given to root alone completely. '.implode(' ', array_slice($commandOutput, 0, 3)));
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $findPrefix, $commandOutput, $linkedFiles, $ownerExitCode, $modeExitCode, $linkedExitCode, $treePath);
+  return $RoleWasApplied; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to give one folder to the web server account, & only the folder.
+// / Accepts the folder & the account. Returns a success boolean.
+// / ROOT DOES NOT WALK IT & DOES NOT CHANGE ITS MODE BY NAME. The folder & everything in it is
+// / the web server account's, which can swap any name in it at any moment. The owner is changed
+// / by changeOwnerWithoutFollowing, which changes the name itself, never what a link points at,
+// / & only when a hard link to a root file cannot be swapped in. The mode is set by the web
+// / server account, through runAsAccount, so a link swapped in can only send the change to a
+// / file that account could already change. Every session, upload & log inside is left exactly
+// / as it is, which is what ABOUT_ENVIRONMENT_MANAGER.txt has always said a repair does.
+function applyWebRole($folderPath, $ownerAccount) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $RoleWasApplied = $ownerWasChanged = FALSE;
+  $folderStatus = $commandOutput = array();
+  $modeExitCode = 1;
+  $ownerNotice = '';
+  clearstatcache(TRUE, $folderPath);
+  $folderStatus = @lstat($folderPath);
+  if (!is_array($folderStatus) or ((int)$folderStatus['mode'] & 0170000) !== 0040000) warningEntry('The location at '.$folderPath.' is not a folder, & a link is never followed, so it was left alone.');
+  else {
+    list ($ownerWasChanged, $ownerNotice) = changeOwnerWithoutFollowing($folderPath, (string)$ownerAccount, (string)$ownerAccount);
+    if (!$ownerWasChanged) warningEntry($ownerNotice);
+    // / The account sets its own mode, so a folder that is still root's is reported here too.
+    else list ($commandOutput, $modeExitCode) = runAsAccount('chmod 0700 -- '.escapeshellarg($folderPath).' 2>&1', (string)$ownerAccount);
+    if ($modeExitCode === 0) $RoleWasApplied = TRUE;
+    else if ($ownerWasChanged) warningEntry('The location at '.$folderPath.' could not be made private to '.$ownerAccount.'. '.implode(' ', $commandOutput)); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $folderStatus, $commandOutput, $modeExitCode, $ownerWasChanged, $ownerNotice, $folderPath, $ownerAccount);
+  return $RoleWasApplied; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to check a folder other software shares, & correct only the folder itself.
+// / Accepts the folder & the web server account. Returns TRUE when nothing else can change it.
+// / The HRProprietary folder holds every HRProprietary application & whatever else an operator
+// / keeps there. Until v4.0.1 -fp walked it, so every application in it was handed to the web
+// / server account & made world readable & executable, whether it was this one or not.
+// / It is never walked now. It is corrected only when the web server account could change it,
+// / which only an earlier release or a hand made mistake causes, & which lets that account
+// / rename this installation aside & put its own in its place. Only the folder's own owner &
+// / write bits change, & only when the folder above it is one only root can change.
+function applySharedRole($folderPath, $webAccount) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $FolderIsSafe = FALSE;
+  $folderStatus = $webRecord = array();
+  $parentIsTrusted = $folderIsTrusted = $webCanWrite = $ownerWasChanged = $modeWasChanged = FALSE;
+  $resolvedParent = $resolvedFolder = $trustNotice = $ownerNotice = '';
+  clearstatcache(TRUE, $folderPath);
+  $folderStatus = @lstat($folderPath);
+  if (function_exists('posix_getpwnam')) $webRecord = @posix_getpwnam((string)$webAccount);
+  if (!is_array($folderStatus) or ((int)$folderStatus['mode'] & 0170000) !== 0040000) warningEntry('The shared folder at '.$folderPath.' is not a folder & was left alone.');
+  else {
+    $webCanWrite = ((is_array($webRecord) && (int)$folderStatus['uid'] === (int)$webRecord['uid']) or ((int)$folderStatus['mode'] & 0022) !== 0);
+    list ($parentIsTrusted, $resolvedParent, $trustNotice) = pathIsTrustedByRoot(dirname($folderPath));
+    if ($webCanWrite && !$parentIsTrusted) warningEntry('The shared folder at '.$folderPath.' can be changed by another account & the folder above it cannot be trusted, so it was left alone. '.$trustNotice);
+    // / The mode is changed only once the folder is root's, & only root can rename it, because
+    // / the folder above it is root's. Each step is reported as it actually went. Until v4.0.1
+    // / the chmod went unchecked & the folder was announced as root's even when it was not.
+    else if ($webCanWrite) {
+      list ($ownerWasChanged, $ownerNotice) = changeOwnerWithoutFollowing($folderPath, 'root', '');
+      if (!$ownerWasChanged) warningEntry($ownerNotice);
+      else $modeWasChanged = @chmod($folderPath, (((int)$folderStatus['mode'] & 07777) & ~0022));
+      if ($ownerWasChanged && $modeWasChanged) warningEntry('The shared folder at '.$folderPath.' could be changed by another account. It now belongs to root & only root can write it. Nothing inside it was touched.');
+      else if ($ownerWasChanged) warningEntry('The shared folder at '.$folderPath.' now belongs to root, & its group & other write permission could not be removed.'); }
+    list ($folderIsTrusted, $resolvedFolder, $trustNotice) = pathIsTrustedByRoot($folderPath);
+    if ($folderIsTrusted) $FolderIsSafe = TRUE;
+    else warningEntry('The shared folder at '.$folderPath.' still cannot be trusted. '.$trustNotice); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $folderStatus, $webRecord, $parentIsTrusted, $folderIsTrusted, $webCanWrite, $ownerWasChanged, $modeWasChanged, $ownerNotice, $resolvedParent, $resolvedFolder, $trustNotice, $folderPath, $webAccount);
+  return $FolderIsSafe; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to give the data root to root, as the folder every other data location hangs
+// / off. Accepts the folder. Returns TRUE when it belongs to root & nothing else can write it.
+// / ROOT OWNS IT & DOES NOT WALK IT. The data root is root:root & 0755, so every account may
+// / traverse it to reach a folder of its own below, & none but root may change what is in it.
+// / The session, cache, log & socket folders below are the web server account's, root's secret
+// / & backup folders below are root's, & each is corrected by its own role. This corrects only
+// / the root itself. The owner is changed by changeOwnerWithoutFollowing, which never follows a
+// / link & refuses unless the folder above the root is one only root can change, so a v4.0.0
+// / data location the web server account still owns is taken only where root could hold it.
+function applyDataRootRole($folderPath) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $RoleWasApplied = $parentIsTrusted = $ownerWasChanged = $modeWasChanged = $folderIsTrusted = FALSE;
+  $folderStatus = array();
+  $ownerNotice = $resolvedParent = $resolvedFolder = $trustNotice = '';
+  clearstatcache(TRUE, $folderPath);
+  $folderStatus = @lstat($folderPath);
+  list ($parentIsTrusted, $resolvedParent, $trustNotice) = pathIsTrustedByRoot(dirname($folderPath));
+  if (!is_array($folderStatus) or ((int)$folderStatus['mode'] & 0170000) !== 0040000) warningEntry('The data root at '.$folderPath.' is not a folder, & a link is never followed, so it was left alone.');
+  // / The folder above the root is checked before anything is changed, so a root refused for
+  // / sitting where another account could replace it is left exactly as it was.
+  else if (!$parentIsTrusted) warningEntry('The data root at '.$folderPath.' sits where another account could replace it, so it was left alone. '.$trustNotice);
+  else {
+    list ($ownerWasChanged, $ownerNotice) = changeOwnerWithoutFollowing($folderPath, 'root', 'root');
+    if (!$ownerWasChanged) warningEntry($ownerNotice);
+    // / The mode is set by name, which is safe because the folder above the root is one only
+    // / root can change, so the root cannot be renamed aside between the owner change & this.
+    else $modeWasChanged = @chmod($folderPath, 0755);
+    if ($ownerWasChanged && !$modeWasChanged) warningEntry('The data root at '.$folderPath.' belongs to root, & its mode could not be set to 0755.');
+    list ($folderIsTrusted, $resolvedFolder, $trustNotice) = pathIsTrustedByRoot($folderPath);
+    if ($folderIsTrusted) $RoleWasApplied = TRUE;
+    else warningEntry('The data root at '.$folderPath.' still cannot be trusted. '.$trustNotice); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $folderStatus, $parentIsTrusted, $ownerWasChanged, $modeWasChanged, $folderIsTrusted, $ownerNotice, $resolvedParent, $resolvedFolder, $trustNotice, $folderPath);
+  return $RoleWasApplied; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to give every location the application declares the owner & mode its role needs.
+// / Accepts the web server account. Must be run as root.
+// / Returns whether the pass ran, how many locations were corrected & how many were refused.
+// /
+// / THE CONTRACT SAYS WHAT A LOCATION IS, & this decides what that means.
+// / An application names each location by the setting that holds it & gives it a role in
+// / $EngineManagedLocations. Every owner & mode is fixed here & nowhere else, so an
+// / application cannot ask for one that undoes the rest of this.
+// /   code       The installation. root, 0755 & 0644. The web server account reads it.
+// /   web        One folder the web server account owns & writes. 0700, & never walked.
+// /   root-only  root alone, 0700 & 0600. The previous installation kept for an operator.
+// /   shared     A folder other software shares. Checked, never walked.
+// /
+// / THE TWO RULES IT KEEPS. Root runs nothing the web server account can change, & root never
+// / works by name inside a folder the web server account can change. Until v4.0.1 this was
+// / chown -R to the web server account & chmod -R 0755 over the installation, the data
+// / location, every session in it & the HRProprietary folder, so root then ran code the web
+// / server account owned on its next command. See Documentation/ABOUT_MANAGED_LOCATIONS.txt.
+// /
+// / THE INSTALLATION IS THE ONE THAT IS RUNNING. A code location is accepted only when it is
+// / the folder this Engine is running from, so a wrong setting cannot hand some other tree
+// / to root. It is never the filesystem root, a system folder, a shared folder or the folder
+// / above one. A location with another role inside it is left out of the walk.
+function correctManagedLocations($webAccount) {
+  // / Set variables.
+  global $EngineManagedLocations, $RunningAsRoot, $Lol, $EnableMemoryProtection;
+  $CorrectionRan = FALSE;
+  $LocationsCorrected = $LocationsRefused = 0;
+  $roleOrder = array('shared', 'code', 'data-root', 'root-only', 'web');
+  $locationRoles = $resolvedLocations = $prunedPaths = $sharedPaths = $otherLocation = $seenLocations = array();
+  $settingName = $locationRole = $roleName = $locationPath = $runningInstall = $configuredPath = $holdNotice = '';
+  $roleWasApplied = $treeIsHeld = FALSE;
+  if (!$RunningAsRoot) warningEntry('Managed locations can only be corrected by root, so nothing was changed.');
+  else if (!isset($EngineManagedLocations) or !is_array($EngineManagedLocations)) warningEntry('The contract declares no managed locations in $EngineManagedLocations, so nothing was corrected.');
   else {
     $CorrectionRan = TRUE;
-    foreach ($pathsToCorrect as $managedPath) {
-      if (trim((string)$managedPath) === '' or !is_dir($managedPath)) continue;
-      if (!pathIsSafeToModifyRecursively($managedPath)) {
-        print('  '.str_pad('REFUSED', 12).$managedPath.' is a system directory & will not be changed recursively.'.$Lol);
-        warningEntry('A managed path resolved to a system directory & was refused: '.$managedPath);
-        $PathsRefused++;
+    $runningInstall = (string)@realpath(dirname(__DIR__, 3));
+    // / Every declared location is resolved once. A setting that is empty or names nothing
+    // / that exists is skipped in silence, because a location may not be created yet.
+    // / A LOCATION IS ACTED ON BY THE PATH CONFIGURED, NEVER BY WHERE A LINK LEADS. Several of
+    // / them sit inside the data location, which the web server account owns, so it can put a
+    // / link where one of them was. Until v4.0.1 each was resolved & its role applied to the
+    // / resolved path, so a link sent the role to whatever folder it pointed at. A location whose
+    // / path leads anywhere but itself is refused now, & named.
+    foreach ($EngineManagedLocations as $settingName => $locationRole) {
+      if (!in_array($locationRole, $roleOrder, TRUE)) {
+        warningEntry('The managed location '.$settingName.' declares the role '.$locationRole.', which the Engine does not have. It was left alone.');
+        $LocationsRefused++;
         continue; }
-      exec('chown -R '.escapeshellarg($ownerAccount).':'.escapeshellarg($ownerAccount).' '.escapeshellarg($managedPath).' 2>&1', $commandOutput, $commandExitCode);
-      exec('chmod -R '.escapeshellarg($permissionMode).' '.escapeshellarg($managedPath).' 2>&1', $commandOutput, $commandExitCode);
-      $PathsCorrected++; } }
+      $configuredPath = (isset($GLOBALS[$settingName]) && is_string($GLOBALS[$settingName])) ? rtrim((string)$GLOBALS[$settingName], DIRECTORY_SEPARATOR) : '';
+      $locationPath = ($configuredPath === '') ? '' : (string)@realpath($configuredPath);
+      // / Two settings that name the same folder with the same role, as $HomeLoc & $ConvertLoc
+      // / do by default, are the same location & are corrected once.
+      if ($locationPath === '' or in_array($locationPath.'|'.$locationRole, $seenLocations, TRUE)) continue;
+      $seenLocations[] = $locationPath.'|'.$locationRole;
+      if ($locationPath !== $configuredPath) {
+        print('  '.str_pad('REFUSED', 12).$configuredPath.' leads to '.$locationPath.'. Set '.$settingName.' to the real path.'.$Lol);
+        warningEntry('The managed location '.$settingName.' is '.$configuredPath.', which leads to '.$locationPath.'. A link is never followed, so it was refused.');
+        $LocationsRefused++;
+        continue; }
+      $resolvedLocations[] = array($locationPath, $locationRole, $settingName); }
+    // / A shared folder & the folder above it are never walked by root, whatever else names them.
+    foreach ($resolvedLocations as $locationRoles) {
+      if ($locationRoles[1] !== 'shared') continue;
+      $sharedPaths[] = $locationRoles[0];
+      $sharedPaths[] = dirname($locationRoles[0]); }
+    foreach ($roleOrder as $roleName) {
+      foreach ($resolvedLocations as $locationRoles) {
+        if ($locationRoles[1] !== $roleName) continue;
+        $locationPath = $locationRoles[0];
+        $roleWasApplied = FALSE;
+        // / Nothing walked by root may resolve to a system folder or a folder other software shares.
+        if (($roleName === 'code' or $roleName === 'root-only') && (!pathIsSafeToModifyRecursively($locationPath) or in_array($locationPath, $sharedPaths, TRUE))) {
+          print('  '.str_pad('REFUSED', 12).$locationPath.' is a system or shared folder & will not be changed recursively.'.$Lol);
+          warningEntry('The managed location '.$locationRoles[2].' resolved to a system or shared folder & was refused: '.$locationPath);
+          $LocationsRefused++;
+          continue; }
+        if ($roleName === 'code' && $locationPath !== $runningInstall) {
+          print('  '.str_pad('REFUSED', 12).$locationPath.' is not the installation that is running, '.$runningInstall.'.'.$Lol);
+          warningEntry('The managed location '.$locationRoles[2].' is '.$locationPath.', which is not the installation that is running, '.$runningInstall.'. It was refused.');
+          $LocationsRefused++;
+          continue; }
+        // / Root walks a code or root-only tree, so the tree itself must be one nothing else can
+        // / replace partway through, which means every folder above it is root's. The shared role
+        // / runs first, so an installation an earlier release gave away has its folder back by now.
+        if ($roleName === 'code' or $roleName === 'root-only') list ($treeIsHeld, $holdNotice) = folderIsHeldForRoot($locationPath);
+        // / The backup sits in the data location by default, which the web server account owns, &
+        // / every release before v4.0.1 left one there that the account owns too. Root keeps
+        // / nothing there & walks nothing there, so it is skipped & left exactly as it is. That is
+        // / not a fault in any location, so --setup goes on, & the updater keeps no backup there.
+        if ($roleName === 'root-only' && !$treeIsHeld) {
+          print('  '.str_pad('SKIPPED', 12).$locationPath.' could be replaced by another account, so root keeps nothing there & left it as it is. '.$holdNotice.$Lol);
+          warningEntry('The managed location '.$locationRoles[2].' at '.$locationPath.' could be replaced by another account, so root did not walk it & keeps nothing there. '.$holdNotice);
+          continue; }
+        if ($roleName === 'code' && !$treeIsHeld) {
+          print('  '.str_pad('REFUSED', 12).$locationPath.' could be replaced by another account & was not walked. '.$holdNotice.$Lol);
+          warningEntry('The managed location '.$locationRoles[2].' at '.$locationPath.' could be replaced by another account, so root did not walk it. '.$holdNotice);
+          $LocationsRefused++;
+          continue; }
+        if ($roleName === 'shared') $roleWasApplied = applySharedRole($locationPath, $webAccount);
+        else if ($roleName === 'data-root') $roleWasApplied = applyDataRootRole($locationPath);
+        else if ($roleName === 'code') {
+          // / Every other declared location inside the installation keeps its own role.
+          $prunedPaths = array();
+          foreach ($resolvedLocations as $otherLocation) {
+            if ($otherLocation[0] !== $locationPath && strpos($otherLocation[0].DIRECTORY_SEPARATOR, $locationPath.DIRECTORY_SEPARATOR) === 0) $prunedPaths[] = $otherLocation[0]; }
+          $roleWasApplied = applyCodeRole($locationPath, $prunedPaths); }
+        else if ($roleName === 'root-only') $roleWasApplied = applyRootOnlyRole($locationPath);
+        else $roleWasApplied = applyWebRole($locationPath, $webAccount);
+        if ($roleWasApplied) $LocationsCorrected++;
+        else $LocationsRefused++; } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $managedPath, $commandOutput, $commandExitCode, $pathsToCorrect, $ownerAccount, $permissionMode);
-  return array($CorrectionRan, $PathsCorrected, $PathsRefused); }
+  purgeSensitiveMemory($EnableMemoryProtection, $roleOrder, $locationRoles, $resolvedLocations, $prunedPaths, $sharedPaths, $otherLocation, $seenLocations, $settingName, $locationRole, $roleName, $locationPath, $runningInstall, $configuredPath, $holdNotice, $roleWasApplied, $treeIsHeld, $webAccount);
+  return array($CorrectionRan, $LocationsCorrected, $LocationsRefused); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1044,6 +1291,112 @@ function findConfigVariable($detectedSections, $variableName) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to create one folder beneath a folder only root can replace.
+// / Accepts the folder. Returns TRUE when it exists afterwards.
+// / mkdir never follows the name it creates, but it does follow every folder above it, so the
+// / first existing ancestor must be one nothing but root can change before a folder is created
+// / below it. The folders above a missing one are created 0755 so every account may traverse
+// / them, & the folder itself 0700. correctManagedLocations gives it its owner & final mode.
+function createHeldFolder($folderPath) {
+  // / Set variables.
+  global $DirSep, $EnableMemoryProtection;
+  $FolderExists = $ancestorIsHeld = FALSE;
+  $existingAncestor = $holdNotice = '';
+  if ((string)$folderPath === '' or is_dir($folderPath)) $FolderExists = (is_dir($folderPath));
+  else {
+    $existingAncestor = dirname($folderPath);
+    while ($existingAncestor !== $DirSep && $existingAncestor !== '.' && !file_exists($existingAncestor) && !is_link($existingAncestor)) $existingAncestor = dirname($existingAncestor);
+    list ($ancestorIsHeld, $holdNotice) = folderIsHeldForRoot($existingAncestor);
+    if ($ancestorIsHeld) {
+      @mkdir(dirname($folderPath), 0755, TRUE);
+      @mkdir($folderPath, 0700); }
+    if (is_dir($folderPath)) $FolderExists = TRUE;
+    else warningEntry('The folder at '.$folderPath.' could not be created. '.($ancestorIsHeld ? '' : $holdNotice)); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $ancestorIsHeld, $existingAncestor, $holdNotice, $folderPath);
+  return $FolderExists; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to create the data root's folders & move an older layout's sessions into them.
+// / Accepts the web server account. Must run as root. Returns whether the primary folders are
+// / present & how many session directories were moved, in that order.
+// / THE DATA ROOT IS A ROOT ROOT OWNS, & each kind of file lives in a folder of its own below.
+// / This creates the primary folders — Sessions, Cache, Logs, Engine & the socket folder — &
+// / their roles are set by correctManagedLocations, which runs straight after this in both
+// / --setup & -fp. Each additional data location is a root of its own the contract does not
+// / name, so its root & its Sessions folder are created & given their roles here.
+// / AN OLDER RELEASE KEPT EACH SESSION DIRECTLY IN A DATA LOCATION. Every session directory
+// / found at the top of a data root is moved into that root's Sessions folder, so no open
+// / session is lost, which is why -fp after an upgrade keeps visitors signed in. The move
+// / happens before correctManagedLocations re-owns the root, while root can still rename inside
+// / it, & each moved directory keeps the web server account's ownership it already had. The
+// / capability cache an older release left at the root is moved into the cache folder with it.
+function provisionAndMigrateDataRoot($webAccount) {
+  // / Set variables.
+  global $DataRootLoc, $SessionLoc, $CacheLoc, $LogDir, $EngineDir, $ManagerSocketDir, $AdditionalConvertLocs, $DirSep, $Lol, $RunningAsRoot, $EnableMemoryProtection;
+  $FoldersAreReady = TRUE;
+  $MovedCount = 0;
+  $primaryFolders = $additionalEntry = $additionalRoots = $rootEntries = array();
+  $folderPath = $additionalRoot = $rootToMigrate = $sessionTarget = $rootEntry = $entryPath = '';
+  $reservedNames = array('.', '..', 'Sessions', 'Cache', 'Logs', 'Sockets', 'Engine', 'Last-Installed-Version', 'Application', 'lost+found', '.cache', '.config');
+  if (!$RunningAsRoot) { warningEntry('The data root can only be provisioned while running as root, so nothing was created or moved.'); $FoldersAreReady = FALSE; }
+  else {
+    // / Create the primary folders. The root comes first, so every folder below it is created
+    // / beneath a folder root already holds.
+    $primaryFolders = array($DataRootLoc, $SessionLoc, $CacheLoc, $LogDir, $EngineDir, $ManagerSocketDir);
+    foreach ($primaryFolders as $folderPath) {
+      if ((string)$folderPath === '') continue;
+      if (!createHeldFolder($folderPath)) $FoldersAreReady = FALSE; }
+    // / Every additional data location is a root of its own. Its root & its Sessions folder are
+    // / created & given their roles here, because the contract names only the primary.
+    // / An additional data location sits on a mount the operator provides, such as a second
+    // / disk. Its own folder & its Sessions folder are created & given their roles here only
+    // / when that mount already exists, never created on top of a mount that failed, for the same
+    // / reason the primary refuses to create itself on a missing one. The pool path carries the
+    // / Sessions suffix, so the root is one level up & the mount is one above that.
+    $additionalRoots = array();
+    if (is_array($AdditionalConvertLocs)) {
+      foreach ($AdditionalConvertLocs as $additionalEntry) {
+        if (is_array($additionalEntry) && isset($additionalEntry[0]) && trim((string)$additionalEntry[0]) !== '') {
+          $additionalRoot = rtrim(dirname(rtrim(trim((string)$additionalEntry[0]), $DirSep)), $DirSep);
+          if ($additionalRoot !== '' && !in_array($additionalRoot, $additionalRoots, TRUE) && is_dir(dirname($additionalRoot))) $additionalRoots[] = $additionalRoot; } } }
+    foreach ($additionalRoots as $additionalRoot) {
+      if (createHeldFolder($additionalRoot) && createHeldFolder($additionalRoot.$DirSep.'Sessions')) {
+        applyDataRootRole($additionalRoot);
+        applyWebRole($additionalRoot.$DirSep.'Sessions', $webAccount); } }
+    // / Move an older layout's sessions into each root's Sessions folder. The primary root &
+    // / every additional root is swept once. A session is any directory at the top of a root
+    // / that is not one of the folders this layout keeps, & it is moved by rename, which never
+    // / crosses a filesystem & never copies, so a large session moves in an instant & intact.
+    foreach (array_merge(array($DataRootLoc), $additionalRoots) as $rootToMigrate) {
+      $sessionTarget = $rootToMigrate.$DirSep.'Sessions';
+      if (!is_dir($rootToMigrate) or !is_dir($sessionTarget)) continue;
+      $rootEntries = @scandir($rootToMigrate);
+      if (!is_array($rootEntries)) continue;
+      foreach ($rootEntries as $rootEntry) {
+        // / The installation is a folder at the root since v4.0.1, & a name beginning with a dot
+        // / is never a session, which is how a staged installation an install left is passed over.
+        if (in_array($rootEntry, $reservedNames, TRUE) or strpos((string)$rootEntry, '.') === 0) continue;
+        $entryPath = $rootToMigrate.$DirSep.$rootEntry;
+        // / A link is never followed into & is left exactly where it is, as is any plain file,
+        // / which at the root is the install secret or, from an older release, the capability
+        // / cache. Only a real session directory is moved.
+        if (is_link($entryPath)) continue;
+        if (is_dir($entryPath)) {
+          if (@rename($entryPath, $sessionTarget.$DirSep.$rootEntry)) $MovedCount++;
+          else warningEntry('A session directory at '.$entryPath.' could not be moved into '.$sessionTarget.'. It was left where it is.'); } }
+      // / The capability cache an older release wrote at the root moves into the cache folder,
+      // / which is where this release reads & writes it. Only the primary root ever held one.
+      if ($rootToMigrate === $DataRootLoc && is_file($rootToMigrate.$DirSep.'capability-cache.php') && is_dir($CacheLoc) && !is_file($CacheLoc.$DirSep.'capability-cache.php'))
+        @rename($rootToMigrate.$DirSep.'capability-cache.php', $CacheLoc.$DirSep.'capability-cache.php'); }
+    if ($MovedCount > 0) logEntry($MovedCount.' session directory or directories were moved into a Sessions folder during the data root migration.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $primaryFolders, $additionalEntry, $additionalRoots, $rootEntries, $folderPath, $additionalRoot, $rootToMigrate, $sessionTarget, $rootEntry, $entryPath, $reservedNames, $webAccount);
+  return array($FoldersAreReady, $MovedCount); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to create the data locations an installation cannot start without.
 // / Accepts no arguments & must be run as root.
 // / Returns a success boolean & the number of directories created, in that order.
@@ -1052,60 +1405,41 @@ function findConfigVariable($detectedSections, $variableName) {
 // / mount that failed & creating an empty one on top of it would hide the fault. At
 // / install time there is nothing to hide, so this creates it once & then gets out of the
 // / way. Everything below the data location is created by verifyRequiredDirs as normal.
+// / A location is only CREATED here. Its owner & mode come from its role, through
+// / correctManagedLocations at the end, which is the one place a location gets either. A
+// / created folder is 0700 & the folders created above it are 0755, so the web server account
+// / can reach it. Until v4.0.1 each location was changed here by name with chown & chmod,
+// / which follow a link, & the backup & log folders were handed to the web server account.
 function prepareDataLocations() {
   // / Set variables.
-  global $ConvertLoc, $PrimaryConvertLoc, $AdditionalConvertLocs, $LogDir, $BackupLoc, $HomeLoc, $ManagerSocketDir, $ConvertTemp, $ApacheUser, $RunningAsRoot, $Lol, $EnableMemoryProtection;
+  global $ConvertTemp, $ApacheUser, $RunningAsRoot, $Lol, $EnableMemoryProtection;
   $LocationsAreReady = TRUE;
   $LocationsCreated = 0;
-  $requiredLocations = $additionalEntry = array();
-  $requiredLocation = $entryPath = '';
-  $dataPolicyIsValid = $dataIsProtected = FALSE;
+  $foldersAreReady = $dataPolicyIsValid = $dataIsProtected = $locationPassRan = FALSE;
+  $policyFindings = $policyFinding = array();
   $dataPolicyStatus = $exposureStatus = $exposureDetail = '';
+  $locationsCreated = $locationsCorrected = $locationsRefused = 0;
   if (!$RunningAsRoot) errorEntry('Data locations can only be created while running as root!', 32010, FALSE);
   else {
-    // / The primary data location, the log directory, the backup location & the home
-    // / directory the converters need. Everything else hangs off these.
-    $requiredLocations[] = (string)$PrimaryConvertLoc !== '' ? (string)$PrimaryConvertLoc : (string)$ConvertLoc;
-    $requiredLocations[] = (string)$LogDir;
-    $requiredLocations[] = (string)$HomeLoc;
-    if ((string)$BackupLoc !== '') $requiredLocations[] = (string)$BackupLoc;
-    // / Every additional data location declared in config.php.
-    if (is_array($AdditionalConvertLocs)) {
-      foreach ($AdditionalConvertLocs as $additionalEntry) {
-        if (is_array($additionalEntry) && isset($additionalEntry[0]) && trim((string)$additionalEntry[0]) !== '') $requiredLocations[] = trim((string)$additionalEntry[0]); } }
-    foreach ($requiredLocations as $requiredLocation) {
-      if ($requiredLocation === '') continue;
-      if (is_dir($requiredLocation)) print('  '.str_pad('Present', 12).$requiredLocation.$Lol);
-      else {
-        @mkdir($requiredLocation, 0755, TRUE);
-        if (!is_dir($requiredLocation)) {
-          $LocationsAreReady = FALSE;
-          print('  '.str_pad('FAILED', 12).$requiredLocation.$Lol);
-          errorEntry('A required data location could not be created at '.$requiredLocation.'!', 32011, FALSE); }
-        else {
-          $LocationsCreated++;
-          print('  '.str_pad('Created', 12).$requiredLocation.$Lol); } }
-      // / Hand every location to the account that has to write into it, whether this run
-      // / created it or found it. A location created by hand as root is the most common
-      // / reason a fresh installation cannot write its first session.
-      if (is_dir($requiredLocation)) {
-        @chown($requiredLocation, $ApacheUser);
-        @chgrp($requiredLocation, $ApacheUser);
-        @chmod($requiredLocation, 0755); } }
-    // / The socket directory is never world readable, whatever the sweep above set.
-    if ((string)$ManagerSocketDir !== '' && !is_dir($ManagerSocketDir)) @mkdir($ManagerSocketDir, 0700, TRUE);
-    if (is_dir($ManagerSocketDir)) {
-      @chown($ManagerSocketDir, $ApacheUser);
-      @chgrp($ManagerSocketDir, $ApacheUser);
-      @chmod($ManagerSocketDir, 0700); }
+    // / The data root & the folders below it — Sessions, Cache, Logs, Engine & the socket folder
+    // / — are created here, & an older layout's sessions are moved into Sessions, by the one
+    // / function -fp uses for the same, so a fresh install & an upgrade reach the same shape.
+    // / Each location's owner & mode come from its role, through correctManagedLocations below,
+    // / which is the one place a primary location gets either. The backup is not made here. It
+    // / is root-only & the updater makes it when it keeps one, beneath a folder root holds.
+    list ($foldersAreReady, $locationsCreated) = provisionAndMigrateDataRoot($ApacheUser);
+    if (!$foldersAreReady) {
+      $LocationsAreReady = FALSE;
+      errorEntry('A required data location could not be created!', 32011, FALSE); }
+    $LocationsCreated = $locationsCreated;
     // / The DATA tree is the one location that lives inside the web root.
     // / Every location above is outside it & is reachable only by this application. $ConvertTemp
-    // / is $InstLoc/DATA & is served straight to browsers, because that is how a user fetches a
-    // / converted file. It therefore needs a protection file that none of the others do, & it
+    // / is DATA in the hosted location & is served straight to browsers, because that is how a
+    // / user fetches a converted file. It therefore needs a protection file that none of the others do, & it
     // / has to exist before the first upload rather than after somebody notices.
     if ((string)$ConvertTemp !== '') {
       if (!is_dir($ConvertTemp)) {
-        @mkdir($ConvertTemp, 0755, TRUE);
+        @mkdir($ConvertTemp, 0700, TRUE);
         if (is_dir($ConvertTemp)) {
           $LocationsCreated++;
           print('  '.str_pad('Created', 12).$ConvertTemp.$Lol); } }
@@ -1115,9 +1449,10 @@ function prepareDataLocations() {
         print('  '.str_pad('FAILED', 12).$ConvertTemp.$Lol);
         errorEntry('The web served DATA location could not be created at '.$ConvertTemp.'!', 32014, FALSE); }
       else {
-        @chown($ConvertTemp, $ApacheUser);
-        @chgrp($ConvertTemp, $ApacheUser);
-        @chmod($ConvertTemp, 0755);
+        // / Every location gets its owner & mode from its role before the DATA protection
+        // / below is written, because that protection is written into one of them.
+        list ($locationPassRan, $locationsCorrected, $locationsRefused) = correctManagedLocations($ApacheUser);
+        if (!$locationPassRan or $locationsRefused > 0) $LocationsAreReady = FALSE;
         print($Lol.'DATA directory protection.'.$Lol);
         // / What this application says about its own data exposure, printed as given.
         // / Whether a data tree is reachable by a web server is a question about an
@@ -1128,9 +1463,9 @@ function prepareDataLocations() {
         foreach ($policyFindings as $policyFinding) {
           if (isset($policyFinding['Label'])) print('  '.str_pad((string)$policyFinding['Label'], 22).str_pad((string)$policyFinding['Status'], 14).(string)$policyFinding['Detail'].$Lol);
           else print((string)$policyFinding['Text'].$Lol); } } }
-    if ($LocationsAreReady) logEntry('Prepared '.count($requiredLocations).' data location(s). '.$LocationsCreated.' created.'); }
+    if ($LocationsAreReady) logEntry('Prepared the data root & its folders. '.$LocationsCreated.' session directory or directories were moved from an older layout.'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $policyFindings, $policyFinding, $requiredLocations, $additionalEntry, $requiredLocation, $entryPath, $dataPolicyIsValid, $dataPolicyStatus, $dataIsProtected, $exposureStatus, $exposureDetail);
+  purgeSensitiveMemory($EnableMemoryProtection, $policyFindings, $policyFinding, $foldersAreReady, $dataPolicyIsValid, $dataPolicyStatus, $dataIsProtected, $exposureStatus, $exposureDetail, $locationPassRan, $locationsCreated, $locationsCorrected, $locationsRefused);
   return array($LocationsAreReady, $LocationsCreated); }
 // / -----------------------------------------------------------------------------------
 
@@ -1144,10 +1479,12 @@ function prepareDataLocations() {
 // / agree. Generating it here means moving --Convert Location-- moves the unit with it.
 function generateListenerService() {
   // / Set variables.
-  global $InstLoc, $PrimaryConvertLoc, $ConvertLoc, $ApacheUser, $DirSep, $EnableMemoryProtection;
+  global $InstLoc, $DataRootLoc, $ConvertLoc, $ApacheUser, $DirSep, $EnableMemoryProtection;
   $ServiceContents = '';
   $dataLocation = $corePath = $documentationPath = $webServerUnit = '';
-  $dataLocation = (string)$PrimaryConvertLoc !== '' ? (string)$PrimaryConvertLoc : (string)$ConvertLoc;
+  // / The data root, not a session area, because the socket folder the listener binds hangs off
+  // / the root. $PrimaryConvertLoc is the session area now, so the root is read directly.
+  $dataLocation = (string)$DataRootLoc !== '' ? (string)$DataRootLoc : (string)$ConvertLoc;
   $corePath = $InstLoc.$DirSep.engineApplicationEntryPoint();
   $documentationPath = $InstLoc.$DirSep.'Documentation'.$DirSep.'ABOUT_RESOURCE_RATE_LIMITING.txt';
   // / Order after whichever web server is actually installed. Both are Wants rather than
@@ -1362,6 +1699,11 @@ function installListenerService($enableService, $startIfStopped = FALSE) {
             $ServiceWasInstalled = TRUE;
             $ServiceStatus = 'installed';
             print('  '.str_pad('Enabled', 12).engineApplicationSlug().'-listener, starting at boot & running now'.$Lol);
+            // / enable --now starts a stopped listener & leaves a running one as it is, & a running
+            // / one keeps the unit & the release it started with. It is not restarted here, because
+            // / a listener started again within thirty seconds mints the startup keys it just spent
+            // / & refuses them as replays, so the administrator is told instead.
+            if ($existingContents !== '') print('  '.str_pad('Note', 12).'A listener that was already running still runs the old unit. Restart it.'.$Lol.'  '.str_pad('', 12).'systemctl restart '.engineApplicationSlug().'-listener'.$Lol);
             logEntry('The listener service unit was installed & enabled.'); }
           else {
             $ServiceStatus = 'failed';
@@ -1536,15 +1878,10 @@ function runCompleteInstall($authorizationToken, $operatorConfirmed) {
           installEnvironmentTimer(FALSE);
           // / Stage six. Permissions again, because stages four & five both wrote files.
           // / Stage three cannot be the last word on ownership when work happens after it.
-          // / writeConfigFile() chowns & chmods the file it renames into place, so config.php
-          // / itself is correct. backupConfigFile() uses a plain copy with neither, so a
-          // / backup taken during stage four is owned by root & lands inside a path this
-          // / pass manages. Left alone it stays root owned until somebody runs -fp by hand.
-          // / The pass is idempotent, so running it twice costs a directory walk & nothing
-          // / else, & it is cheap insurance against any future stage that writes something.
-          // / It also re-tightens the two paths the whole manager security model rests on.
-          // / The install secret is returned to 0600 & the socket directory to 0700, after
-          // / the recursive sweep above them has finished.
+          // / writeConfigFile() leaves config.php root's & 0644 as it renames it into place, &
+          // / backupConfigFile() keeps a copy that is root's & 0640. This pass applies every role again,
+          // / so anything those stages left is put right by the same rules -fp uses. It is
+          // / idempotent, so running it twice costs a walk of the installation & nothing else.
           print($Lol.'Stage 6 of '.$stageTotal.'. Permissions, second pass.'.$Lol);
           list ($permissionsWereFixed, $pathsCorrected) = runApplicationRepair();
           if ($permissionsWereFixed) $StagesCompleted++;
@@ -1604,4 +1941,511 @@ function runReinstallExisting($targetVersion, $operatorConfirmed) {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $targetVersion, $operatorConfirmed);
   return $ReinstallCompleted; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to write the loader the web server runs in place of the application.
+// / Accepts the path of the application's entry point in its installed folder.
+// / Returns the contents of the loader.
+// /
+// / THE APPLICATION LIVES OUTSIDE THE WEB ROOT & THIS IS THE ONLY CODE LEFT INSIDE IT. It carries
+// / the entry point's name, so every URL, form, bookmark & command an operator knows reaches the
+// / same file, & it does one thing, which is hand the request to the installed application. The
+// / path in it is written from the installation, never typed. Root refuses to go on when the
+// / entry point or its folder could have been changed by another account, because the entry point
+// / runs before anything in it can check the tree it is in. A missing application is refused with
+// / a plain message & exit status one. A browser is told only that the application is
+// / unavailable, because the path would tell a stranger where the data location is.
+function applicationLoaderContents($applicationEntry) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $LoaderContents = '';
+  $quotedEntry = $quotedFolder = $applicationName = $entryName = '';
+  $quotedEntry = var_export((string)$applicationEntry, TRUE);
+  $quotedFolder = var_export(dirname((string)$applicationEntry), TRUE);
+  $applicationName = engineApplicationName();
+  $entryName = engineApplicationEntryPoint();
+  $LoaderContents = '<?php'.PHP_EOL
+    .'// / -----------------------------------------------------------------------------------'.PHP_EOL
+    .'// / The '.$applicationName.' loader. '.strtoupper(engineApplicationSlug()).'-LOADER-MARKER'.PHP_EOL
+    .'// / Written by '.$entryName.' -fp as root, which writes it again whenever it differs.'.PHP_EOL
+    .'// / '.$applicationName.' is installed outside the web root, in the folder named below. This file'.PHP_EOL
+    .'// / hands every request & every command to it, & is the only PHP the web server runs here.'.PHP_EOL
+    .'// / -----------------------------------------------------------------------------------'.PHP_EOL
+    .'if (!is_file('.$quotedEntry.')) {'.PHP_EOL
+    .'  if (PHP_SAPI === \'cli\') print(\''.$applicationName.' is not installed at \'.'.$quotedEntry.'.\', so this loader has nothing to run. Unpack a release beside this file & run  sudo php '.$entryName.' -fp  to install it.\'.PHP_EOL);'.PHP_EOL
+    .'  else {'.PHP_EOL
+    .'    http_response_code(503);'.PHP_EOL
+    .'    print(\''.$applicationName.' is unavailable.\'); }'.PHP_EOL
+    .'  exit(1); }'.PHP_EOL
+    .'if (function_exists(\'posix_geteuid\') && posix_geteuid() === 0 && (@fileowner('.$quotedEntry.') !== 0 or (@fileperms('.$quotedEntry.') & 0022) !== 0 or @fileowner('.$quotedFolder.') !== 0 or (@fileperms('.$quotedFolder.') & 0022) !== 0)) {'.PHP_EOL
+    .'  print(\'ERROR!!! '.$applicationName.'-28008, Root refused to run \'.'.$quotedEntry.'.\', because an account other than root could have changed it. Run  sudo php \'.'.$quotedEntry.'.\' -fp  to give it back to root.\'.PHP_EOL);'.PHP_EOL
+    .'  exit(1); }'.PHP_EOL
+    .'require '.$quotedEntry.';'.PHP_EOL;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $LoaderContents is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $quotedEntry, $quotedFolder, $applicationName, $entryName, $applicationEntry);
+  return $LoaderContents; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to say whether a file is a loader this Engine wrote.
+// / Accepts the path. Returns TRUE when the file carries the loader's marker.
+// / The marker is the application's own name, so another application's loader is not this one.
+function fileIsApplicationLoader($filePath) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $FileIsLoader = $fileWasRead = FALSE;
+  $fileContents = $readNotice = '';
+  list ($fileWasRead, $fileContents, $readNotice) = readFileWithoutFollowing($filePath, 65536);
+  if ($fileWasRead && strpos($fileContents, strtoupper(engineApplicationSlug()).'-LOADER-MARKER') !== FALSE) $FileIsLoader = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $fileWasRead, $fileContents, $readNotice, $filePath);
+  return $FileIsLoader; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to copy one entry of an application tree, & everything inside it.
+// / Accepts the source & the destination. Returns whether it was copied, how many files were
+// / copied & the reason it was not, in that order.
+// / THE DESTINATION IS INSIDE A FOLDER ONLY ROOT CAN ENTER, which installApplicationTree creates
+// / 0700 beside the installation, so nothing can be swapped in while this writes, & the source
+// / is a tree root already trusts. A link anywhere in it stops the copy, because an installation
+// / that leads somewhere else is not one tree. Folders are 0755 & files 0644, as the code role
+// / leaves them, because nothing in an installation is run except through its interpreter.
+function copyApplicationEntry($sourcePath, $targetPath) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $EntryWasCopied = FALSE;
+  $FilesCopied = 0;
+  $CopyNotice = '';
+  $entryStatus = $childNames = array();
+  $entryType = $childFiles = 0;
+  $childName = $childNotice = '';
+  $childWasCopied = FALSE;
+  clearstatcache(TRUE, (string)$sourcePath);
+  $entryStatus = @lstat((string)$sourcePath);
+  if (is_array($entryStatus)) $entryType = ((int)$entryStatus['mode'] & 0170000);
+  if (!is_array($entryStatus)) $CopyNotice = $sourcePath.' does not exist.';
+  else if ($entryType === 0120000) $CopyNotice = $sourcePath.' is a link, & an installation is copied only as plain files & folders.';
+  else if ($entryType === 0100000) {
+    if (@copy((string)$sourcePath, (string)$targetPath) && @chmod((string)$targetPath, 0644)) {
+      $EntryWasCopied = TRUE;
+      $FilesCopied = 1; }
+    else $CopyNotice = $sourcePath.' could not be copied.'; }
+  else if ($entryType !== 0040000) $CopyNotice = $sourcePath.' is neither a file nor a folder.';
+  else if (!@mkdir((string)$targetPath, 0755) or !@chmod((string)$targetPath, 0755)) $CopyNotice = $targetPath.' could not be created.';
+  else {
+    $childNames = @scandir((string)$sourcePath);
+    if (!is_array($childNames)) $CopyNotice = $sourcePath.' could not be read.';
+    else {
+      $EntryWasCopied = TRUE;
+      foreach (array_diff($childNames, array('.', '..')) as $childName) {
+        list ($childWasCopied, $childFiles, $childNotice) = copyApplicationEntry($sourcePath.DIRECTORY_SEPARATOR.$childName, $targetPath.DIRECTORY_SEPARATOR.$childName);
+        $FilesCopied = $FilesCopied + (int)$childFiles;
+        if (!$childWasCopied) {
+          $EntryWasCopied = FALSE;
+          $CopyNotice = $childNotice;
+          break; } } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $entryStatus, $childNames, $entryType, $childFiles, $childName, $childNotice, $childWasCopied, $sourcePath, $targetPath);
+  return array($EntryWasCopied, $FilesCopied, $CopyNotice); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to keep the installation an application folder replaces, or to remove it.
+// / Accepts the application folder & the backup location. Returns whether it was kept & a
+// / sentence saying what happened, in that order.
+// / It is kept as the backup when the folder the backup lives in is one only root can change &
+// / the backup is not a system folder, which is the same test an update applies to its own
+// / backup. Otherwise it is removed & that is said, because the new installation must go in.
+function retireApplicationTree($applicationPath, $backupLoc) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $TreeWasKept = FALSE;
+  $RetireNotice = '';
+  $backupPath = $resolvedParent = $trustNotice = '';
+  $parentIsTrusted = $backupIsUsable = FALSE;
+  $backupPath = rtrim((string)$backupLoc, DIRECTORY_SEPARATOR);
+  if ($backupPath !== '') list ($parentIsTrusted, $resolvedParent, $trustNotice) = pathIsTrustedByRoot(dirname($backupPath));
+  $backupIsUsable = ($parentIsTrusted && $resolvedParent === dirname($backupPath));
+  // / The backup before it is removed first. A link there is removed as a link, & a folder only
+  // / when it is not a system folder, because a misconfigured backup would empty that instead.
+  if ($backupIsUsable && (is_link($backupPath) or (file_exists($backupPath) && pathIsSafeToModifyRecursively($backupPath)))) exec('rm -rf '.escapeshellarg($backupPath).' 2>&1');
+  if ($backupIsUsable && !file_exists($backupPath) && !is_link($backupPath) && @rename((string)$applicationPath, $backupPath)) {
+    $TreeWasKept = TRUE;
+    $RetireNotice = 'The installation it replaced is kept at '.$backupPath.'.'; }
+  if (!$TreeWasKept) {
+    if (pathIsSafeToModifyRecursively((string)$applicationPath)) exec('rm -rf '.escapeshellarg((string)$applicationPath).' 2>&1');
+    $RetireNotice = 'The installation it replaced was not kept'.($backupPath === '' ? ', because no backup location is configured.' : ', because '.$backupPath.' could not hold it.'.($trustNotice === '' ? '' : ' '.$trustNotice)); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $backupPath, $resolvedParent, $trustNotice, $parentIsTrusted, $backupIsUsable, $applicationPath, $backupLoc);
+  return array($TreeWasKept, $RetireNotice); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to install the tree that is running into the application folder.
+// / Accepts the running tree, the application folder & the backup location, in that order.
+// / Returns whether it was installed & a sentence saying what happened, in that order.
+// /
+// / THE APPLICATION LIVES IN THE DATA LOCATION, OUTSIDE THE WEB ROOT, & IS ROOT'S. Only the
+// / entries the contract names in $EngineApplicationLayout are copied, so whatever else shares
+// / the folder a release was unpacked into is never taken along, & the DATA tree stays where the
+// / web server serves it. The copy is made in a folder only root can enter, beside the
+// / application folder, & renamed into place, so the application folder holds the whole old
+// / installation or the whole new one. The one it replaces is kept as the backup, as an update
+// / keeps one. The running tree must be one root trusts, & the folder the application lives in
+// / must be one only root can change, or nothing is copied at all.
+function installApplicationTree($sourceTree, $applicationLoc, $backupLoc) {
+  // / Set variables.
+  global $EngineApplicationLayout, $RunningAsRoot, $EnableMemoryProtection;
+  $TreeWasInstalled = FALSE;
+  $InstallNotice = '';
+  $sourcePath = $applicationPath = $applicationParent = $resolvedParent = $trustNotice = $treeNotice = $stagedPath = $layoutEntry = $entryNotice = $retireNotice = '';
+  $parentIsTrusted = $treeIsTrusted = $entryWasCopied = $treeWasKept = FALSE;
+  $filesCopied = $entryFiles = 0;
+  $layoutEntries = array();
+  $sourcePath = rtrim((string)$sourceTree, DIRECTORY_SEPARATOR);
+  $applicationPath = rtrim((string)$applicationLoc, DIRECTORY_SEPARATOR);
+  $applicationParent = dirname($applicationPath);
+  if (isset($EngineApplicationLayout) && is_array($EngineApplicationLayout)) $layoutEntries = $EngineApplicationLayout;
+  if (!$RunningAsRoot) $InstallNotice = 'Only root installs the application.';
+  else if (count($layoutEntries) === 0) $InstallNotice = 'The contract names no application layout in $EngineApplicationLayout, so nothing was installed.';
+  else if ($sourcePath === '' or $applicationPath === '' or (string)@realpath($sourcePath) === $applicationPath) $InstallNotice = 'The running tree is the installed one, so there is nothing to install.';
+  else {
+    list ($parentIsTrusted, $resolvedParent, $trustNotice) = pathIsTrustedByRoot($applicationParent);
+    if ($parentIsTrusted && $resolvedParent !== $applicationParent) $trustNotice = $applicationParent.' leads to '.$resolvedParent.'.';
+    list ($treeIsTrusted, $treeNotice) = treeIsTrustedByRoot($sourcePath, array($sourcePath.DIRECTORY_SEPARATOR.'DATA'));
+    if (!$parentIsTrusted or $resolvedParent !== $applicationParent) $InstallNotice = 'The folder the application lives in, '.$applicationParent.', can be changed by an account other than root, so nothing was installed. '.$trustNotice;
+    else if (!$treeIsTrusted) $InstallNotice = 'The running tree at '.$sourcePath.' can be changed by an account other than root, so it was not installed. '.$treeNotice;
+    else if (is_link($applicationPath) or (file_exists($applicationPath) && !is_dir($applicationPath))) $InstallNotice = $applicationPath.' is not a folder, so nothing was installed.';
+    else {
+      $stagedPath = $applicationParent.DIRECTORY_SEPARATOR.'.'.basename($applicationPath).'-install-'.bin2hex(random_bytes(8));
+      if (!@mkdir($stagedPath, 0700) or !@chmod($stagedPath, 0700)) $InstallNotice = 'A folder to stage the installation in could not be created beside '.$applicationPath.'.';
+      else {
+        // / Each entry is a name at the top of the tree. A name that walks out of it is ignored,
+        // / & an entry a release does not carry is skipped rather than refused.
+        foreach ($layoutEntries as $layoutEntry) {
+          $layoutEntry = basename((string)$layoutEntry);
+          if ($layoutEntry === '' or $layoutEntry === '.' or $layoutEntry === '..' or (!file_exists($sourcePath.DIRECTORY_SEPARATOR.$layoutEntry) && !is_link($sourcePath.DIRECTORY_SEPARATOR.$layoutEntry))) continue;
+          list ($entryWasCopied, $entryFiles, $entryNotice) = copyApplicationEntry($sourcePath.DIRECTORY_SEPARATOR.$layoutEntry, $stagedPath.DIRECTORY_SEPARATOR.$layoutEntry);
+          $filesCopied = $filesCopied + (int)$entryFiles;
+          if (!$entryWasCopied) {
+            $InstallNotice = 'The running tree was not installed. '.$entryNotice;
+            break; } }
+        if ($InstallNotice === '' && !is_file($stagedPath.DIRECTORY_SEPARATOR.engineApplicationEntryPoint())) $InstallNotice = 'The running tree holds no '.engineApplicationEntryPoint().', so it was not installed.';
+        if ($InstallNotice === '' && is_dir($applicationPath)) list ($treeWasKept, $retireNotice) = retireApplicationTree($applicationPath, $backupLoc);
+        if ($InstallNotice === '' && file_exists($applicationPath)) $InstallNotice = 'The installation at '.$applicationPath.' could not be moved aside, so the new one was not put in its place.';
+        else if ($InstallNotice === '' && @rename($stagedPath, $applicationPath) && @chmod($applicationPath, 0755)) {
+          $TreeWasInstalled = TRUE;
+          $InstallNotice = 'Installed '.$filesCopied.' file(s) from '.$sourcePath.' into '.$applicationPath.'.'.($retireNotice === '' ? '' : ' '.$retireNotice); }
+        else if ($InstallNotice === '') $InstallNotice = 'The staged installation could not be moved into '.$applicationPath.'.';
+        // / A staged copy that was not moved into place is removed. It is root's & only root can enter it.
+        if (!$TreeWasInstalled && is_dir($stagedPath)) exec('rm -rf '.escapeshellarg($stagedPath).' 2>&1'); } } }
+  if (!$TreeWasInstalled && $RunningAsRoot && count($layoutEntries) > 0 && $sourcePath !== '' && (string)@realpath($sourcePath) !== $applicationPath) warningEntry($InstallNotice);
+  else if ($TreeWasInstalled) logEntry($InstallNotice);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $sourcePath, $applicationPath, $applicationParent, $resolvedParent, $trustNotice, $treeNotice, $stagedPath, $layoutEntry, $entryNotice, $retireNotice, $parentIsTrusted, $treeIsTrusted, $entryWasCopied, $treeWasKept, $filesCopied, $entryFiles, $layoutEntries, $sourceTree, $applicationLoc, $backupLoc);
+  return array($TreeWasInstalled, $InstallNotice); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to list what the hosted location should hold, apart from DATA.
+// / Accepts the application folder. Returns the files by their path below the hosted location,
+// / each with the path it is copied from or an empty string for the loader, & the folders they
+// / need, parents first, in that order.
+// / A browser fetches the static files of the folders the contract names in
+// / $EngineHostedAssetFolders, so each file of a type $EngineHostedAssetTypes names is copied.
+// / Nothing else is. The application is read & never written, & a link in it is passed over.
+function hostedLocationPlan($applicationLoc) {
+  // / Set variables.
+  global $EngineHostedAssetFolders, $EngineHostedAssetTypes, $EnableMemoryProtection;
+  $PlannedFiles = $PlannedFolders = array();
+  $applicationPath = $assetFolder = $currentFolder = $childName = $childPath = $relativePath = '';
+  $pendingFolders = $childNames = $childStatus = $assetTypes = array();
+  $applicationPath = rtrim((string)$applicationLoc, DIRECTORY_SEPARATOR);
+  $PlannedFiles[engineApplicationEntryPoint()] = '';
+  if (is_file($applicationPath.DIRECTORY_SEPARATOR.'index.html') && !is_link($applicationPath.DIRECTORY_SEPARATOR.'index.html')) $PlannedFiles['index.html'] = $applicationPath.DIRECTORY_SEPARATOR.'index.html';
+  if (isset($EngineHostedAssetTypes) && is_array($EngineHostedAssetTypes)) $assetTypes = array_map('strtolower', $EngineHostedAssetTypes);
+  if (isset($EngineHostedAssetFolders) && is_array($EngineHostedAssetFolders)) {
+    foreach ($EngineHostedAssetFolders as $assetFolder) {
+      $assetFolder = basename((string)$assetFolder);
+      if ($assetFolder === '' or $assetFolder === '.' or $assetFolder === '..') continue;
+      $pendingFolders = array($assetFolder);
+      while (count($pendingFolders) > 0) {
+        $currentFolder = array_shift($pendingFolders);
+        clearstatcache(TRUE, $applicationPath.DIRECTORY_SEPARATOR.$currentFolder);
+        $childStatus = @lstat($applicationPath.DIRECTORY_SEPARATOR.$currentFolder);
+        if (!is_array($childStatus) or ((int)$childStatus['mode'] & 0170000) !== 0040000) continue;
+        $childNames = @scandir($applicationPath.DIRECTORY_SEPARATOR.$currentFolder);
+        if (!is_array($childNames)) continue;
+        foreach (array_diff($childNames, array('.', '..')) as $childName) {
+          $relativePath = $currentFolder.DIRECTORY_SEPARATOR.$childName;
+          $childPath = $applicationPath.DIRECTORY_SEPARATOR.$relativePath;
+          clearstatcache(TRUE, $childPath);
+          $childStatus = @lstat($childPath);
+          if (!is_array($childStatus)) continue;
+          if (((int)$childStatus['mode'] & 0170000) === 0040000) $pendingFolders[] = $relativePath;
+          else if (((int)$childStatus['mode'] & 0170000) === 0100000 && in_array(strtolower(pathinfo($childName, PATHINFO_EXTENSION)), $assetTypes, TRUE)) $PlannedFiles[$relativePath] = $childPath; } } } }
+  // / The folders are the ones the files need & no others, each listed before what it holds.
+  foreach (array_keys($PlannedFiles) as $relativePath) {
+    for ($currentFolder = dirname($relativePath); $currentFolder !== '.' && $currentFolder !== DIRECTORY_SEPARATOR && $currentFolder !== ''; $currentFolder = dirname($currentFolder)) $PlannedFolders[] = $currentFolder; }
+  $PlannedFolders = array_values(array_unique($PlannedFolders));
+  usort($PlannedFolders, function($firstFolder, $secondFolder) { return substr_count($firstFolder, DIRECTORY_SEPARATOR) - substr_count($secondFolder, DIRECTORY_SEPARATOR); });
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / Neither $PlannedFiles nor $PlannedFolders is purged, because both are return values.
+  purgeSensitiveMemory($EnableMemoryProtection, $applicationPath, $assetFolder, $currentFolder, $childName, $childPath, $relativePath, $pendingFolders, $childNames, $childStatus, $assetTypes, $applicationLoc);
+  return array($PlannedFiles, $PlannedFolders); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to say whether two files hold the same bytes.
+// / Accepts both paths. Returns TRUE when both are plain files & their contents match.
+// / Both are read through the kernel, so a link or a FIFO in either place is never followed.
+function filesAreIdentical($firstPath, $secondPath) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $FilesMatch = $firstWasRead = $secondWasRead = FALSE;
+  $firstContents = $secondContents = $readNotice = '';
+  if (@filesize((string)$firstPath) === @filesize((string)$secondPath)) {
+    list ($firstWasRead, $firstContents, $readNotice) = readFileWithoutFollowing($firstPath, 268435456);
+    if ($firstWasRead) list ($secondWasRead, $secondContents, $readNotice) = readFileWithoutFollowing($secondPath, 268435456);
+    $FilesMatch = ($firstWasRead && $secondWasRead && $firstContents === $secondContents); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $firstWasRead, $secondWasRead, $firstContents, $secondContents, $readNotice, $firstPath, $secondPath);
+  return $FilesMatch; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to remove from the hosted location what is only a copy of the installed application.
+// / Accepts the hosted path, the matching path in the application, the path below the hosted
+// / location, the files the hosted location keeps & a boolean permitting removal, in that order.
+// / Returns how many names were removed, & how many were left because they differ, in that order.
+// /
+// / A NAME IS REMOVED ONLY WHEN THE APPLICATION HOLDS THE SAME BYTES UNDER THE SAME NAME. What an
+// / administrator keeps there, & a release that was unpacked there & is not installed, is never
+// / removed, because neither has a copy anywhere else. A folder is entered only when root alone
+// / can change it, so nothing can be swapped in while this removes, & is removed only once it is
+// / empty. The hosted location's own files are kept.
+function removeHostedCopies($hostedPath, $applicationPath, $relativePath, $keptFiles, $mayRepair) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $NamesRemoved = $NamesLeft = 0;
+  $entryStatus = $childNames = array();
+  $childName = $resolvedPath = $trustNotice = $removalNotice = $keptPath = '';
+  $childRemoved = $childLeft = 0;
+  $folderIsTrusted = $nameWasRemoved = $folderIsNeeded = FALSE;
+  clearstatcache(TRUE, (string)$hostedPath);
+  $entryStatus = @lstat((string)$hostedPath);
+  if (!is_array($entryStatus) or array_key_exists((string)$relativePath, $keptFiles)) $NamesLeft = 0;
+  else if (((int)$entryStatus['mode'] & 0170000) === 0040000) {
+    list ($folderIsTrusted, $resolvedPath, $trustNotice) = pathIsTrustedByRoot((string)$hostedPath);
+    $childNames = $folderIsTrusted ? @scandir((string)$hostedPath) : FALSE;
+    if (!is_array($childNames)) $NamesLeft = 1;
+    else {
+      foreach (array_diff($childNames, array('.', '..')) as $childName) {
+        list ($childRemoved, $childLeft) = removeHostedCopies($hostedPath.DIRECTORY_SEPARATOR.$childName, $applicationPath.DIRECTORY_SEPARATOR.$childName, $relativePath.DIRECTORY_SEPARATOR.$childName, $keptFiles, $mayRepair);
+        $NamesRemoved = $NamesRemoved + $childRemoved;
+        $NamesLeft = $NamesLeft + $childLeft; }
+      // / A folder the hosted location still needs stays, even emptied, & so does one with
+      // / anything left in it. rmdir refuses a folder that is not empty.
+      foreach (array_keys($keptFiles) as $keptPath) if (strpos((string)$keptPath, $relativePath.DIRECTORY_SEPARATOR) === 0) $folderIsNeeded = TRUE;
+      if ($mayRepair && !$folderIsNeeded && count(array_diff((array)@scandir((string)$hostedPath), array('.', '..'))) === 0 && @rmdir((string)$hostedPath)) $NamesRemoved++; } }
+  else if (((int)$entryStatus['mode'] & 0170000) === 0100000 && filesAreIdentical($hostedPath, $applicationPath)) {
+    if ($mayRepair) list ($nameWasRemoved, $removalNotice) = removeFileWithoutFollowing((string)$hostedPath);
+    if ($nameWasRemoved) $NamesRemoved = 1;
+    else $NamesLeft = 1; }
+  else $NamesLeft = 1;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $entryStatus, $childNames, $childName, $resolvedPath, $trustNotice, $removalNotice, $keptPath, $childRemoved, $childLeft, $folderIsTrusted, $nameWasRemoved, $folderIsNeeded, $hostedPath, $applicationPath, $relativePath, $keptFiles, $mayRepair);
+  return array($NamesRemoved, $NamesLeft); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to remove static files the hosted location no longer needs.
+// / Accepts the hosted location, the application folder, the files the hosted location keeps,
+// / the folders they need & a boolean permitting removal, in that order.
+// / Returns how many names were removed & how many would have been, in that order.
+// / A static file in one of those folders that the application no longer has at all was copied
+// / there by an earlier release, so it is this application's to remove. Anything else is left.
+function removeStaleHostedAssets($hostedLoc, $applicationLoc, $plannedFiles, $plannedFolders, $mayRepair) {
+  // / Set variables.
+  global $EngineHostedAssetTypes, $EnableMemoryProtection;
+  $AssetsRemoved = $AssetsStale = 0;
+  $plannedFolder = $childName = $relativePath = $removalNotice = $resolvedPath = $trustNotice = '';
+  $childNames = $childStatus = $assetTypes = array();
+  $folderIsTrusted = $nameWasRemoved = FALSE;
+  if (isset($EngineHostedAssetTypes) && is_array($EngineHostedAssetTypes)) $assetTypes = array_map('strtolower', $EngineHostedAssetTypes);
+  foreach ($plannedFolders as $plannedFolder) {
+    list ($folderIsTrusted, $resolvedPath, $trustNotice) = pathIsTrustedByRoot($hostedLoc.DIRECTORY_SEPARATOR.$plannedFolder);
+    $childNames = $folderIsTrusted ? @scandir($hostedLoc.DIRECTORY_SEPARATOR.$plannedFolder) : FALSE;
+    if (!is_array($childNames)) continue;
+    foreach (array_diff($childNames, array('.', '..')) as $childName) {
+      $relativePath = $plannedFolder.DIRECTORY_SEPARATOR.$childName;
+      clearstatcache(TRUE, $hostedLoc.DIRECTORY_SEPARATOR.$relativePath);
+      $childStatus = @lstat($hostedLoc.DIRECTORY_SEPARATOR.$relativePath);
+      if (!is_array($childStatus) or ((int)$childStatus['mode'] & 0170000) !== 0100000 or array_key_exists($relativePath, $plannedFiles)) continue;
+      if (!in_array(strtolower(pathinfo($childName, PATHINFO_EXTENSION)), $assetTypes, TRUE) or file_exists($applicationLoc.DIRECTORY_SEPARATOR.$relativePath) or is_link($applicationLoc.DIRECTORY_SEPARATOR.$relativePath)) continue;
+      $AssetsStale++;
+      $nameWasRemoved = FALSE;
+      if ($mayRepair) list ($nameWasRemoved, $removalNotice) = removeFileWithoutFollowing($hostedLoc.DIRECTORY_SEPARATOR.$relativePath);
+      if ($nameWasRemoved) $AssetsRemoved++; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $plannedFolder, $childName, $relativePath, $removalNotice, $resolvedPath, $trustNotice, $childNames, $childStatus, $assetTypes, $folderIsTrusted, $nameWasRemoved, $hostedLoc, $applicationLoc, $plannedFiles, $plannedFolders, $mayRepair);
+  return array($AssetsRemoved, $AssetsStale); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to give one hosted folder to root, & only the folder.
+// / Accepts the folder & a boolean permitting repair. Returns whether it is root's & 0755 now,
+// / & whether anything had to change, in that order.
+// / The folder above it is already root's, because the hosted location is put right from the
+// / top down, so the name cannot be swapped while its owner & mode are set. A name that is not
+// / a folder where a folder belongs is removed first, & the folder is made.
+function holdHostedFolder($folderPath, $mayRepair) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $FolderIsHeld = $FolderChanged = FALSE;
+  $folderStatus = array();
+  $folderType = 0;
+  $ownerNotice = $removalNotice = '';
+  $ownerWasChanged = $nameWasRemoved = FALSE;
+  clearstatcache(TRUE, (string)$folderPath);
+  $folderStatus = @lstat((string)$folderPath);
+  if (is_array($folderStatus)) $folderType = ((int)$folderStatus['mode'] & 0170000);
+  if (is_array($folderStatus) && $folderType === 0040000 && (int)$folderStatus['uid'] === 0 && (int)$folderStatus['gid'] === 0 && ((int)$folderStatus['mode'] & 07777) === 0755) $FolderIsHeld = TRUE;
+  else if ($mayRepair) {
+    $FolderChanged = TRUE;
+    if (is_array($folderStatus) && $folderType !== 0040000) list ($nameWasRemoved, $removalNotice) = removeFileWithoutFollowing((string)$folderPath);
+    if (!is_array($folderStatus) or $nameWasRemoved) @mkdir((string)$folderPath, 0755);
+    else if ($folderType === 0040000 && ((int)$folderStatus['uid'] !== 0 or (int)$folderStatus['gid'] !== 0)) list ($ownerWasChanged, $ownerNotice) = changeOwnerWithoutFollowing((string)$folderPath, 'root', 'root');
+    clearstatcache(TRUE, (string)$folderPath);
+    $folderStatus = @lstat((string)$folderPath);
+    if (is_array($folderStatus) && ((int)$folderStatus['mode'] & 0170000) === 0040000 && (int)$folderStatus['uid'] === 0) $FolderIsHeld = @chmod((string)$folderPath, 0755); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $folderStatus, $folderType, $ownerNotice, $removalNotice, $ownerWasChanged, $nameWasRemoved, $folderPath, $mayRepair);
+  return array($FolderIsHeld, $FolderChanged); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to keep the hosted location in step with the installed application.
+// / Accepts the hosted location, the application folder & a boolean permitting repair.
+// / Returns the status word, a sentence explaining it, & how many names were written & removed,
+// / in that order.
+// /
+// / THE HOSTED LOCATION IS WHAT THE WEB SERVER SERVES, & IT HOLDS NOTHING BUT WHAT IT MUST. That
+// / is the loader in place of the entry point, the protection page, the static files a browser
+// / fetches, & DATA, which is the web server account's & is never entered here. Every file is
+// / written by root through the kernel, so each is root's & 0644, & every folder the files need
+// / is root's & 0755. IT IS CHANGED ONLY WHEN IT IS RECOGNIZABLY THIS APPLICATION'S. Its entry
+// / point must be the loader, or the installed application's own entry point, as it is straight
+// / after an install, or absent. Any other entry point is a release unpacked there & not
+// / installed yet, & it is reported & left exactly as it is, because running -fp from it is what
+// / installs it. Nothing is removed unless the application holds the same bytes under the same
+// / name, so whatever else an administrator keeps there stays. With repair forbidden it only
+// / reports, which is what the listener & -v ask for.
+function publishHostedLocation($hostedLoc, $applicationLoc, $mayRepair) {
+  // / Set variables.
+  global $EngineApplicationLayout, $RunningAsRoot, $EnableMemoryProtection;
+  $PublishStatus = 'ok';
+  $PublishDetail = '';
+  $NamesWritten = $NamesRemoved = 0;
+  $hostedPath = $applicationPath = $entryName = $hostedEntry = $applicationEntry = $loaderContents = $plannedPath = $sourcePath = $plannedFolder = $holdNotice = $writeNotice = $readNotice = $wantedContents = $hostedContents = $layoutEntry = '';
+  $plannedFiles = $plannedFolders = $fileStatus = $layoutEntries = array();
+  $repairIsAllowed = $locationsOverlap = $hostedIsHeld = $entryIsOurs = $folderIsHeld = $folderChanged = $fileWasWritten = $wantedWasRead = $hostedWasRead = FALSE;
+  $namesDiffering = $namesLeft = $namesFailed = $entryRemoved = $entryLeft = $assetsRemoved = $assetsStale = 0;
+  $hostedPath = rtrim((string)$hostedLoc, DIRECTORY_SEPARATOR);
+  $applicationPath = rtrim((string)$applicationLoc, DIRECTORY_SEPARATOR);
+  $entryName = engineApplicationEntryPoint();
+  $hostedEntry = $hostedPath.DIRECTORY_SEPARATOR.$entryName;
+  $applicationEntry = $applicationPath.DIRECTORY_SEPARATOR.$entryName;
+  $repairIsAllowed = ($mayRepair && $RunningAsRoot);
+  $locationsOverlap = ($hostedPath === $applicationPath or strpos($hostedPath.DIRECTORY_SEPARATOR, $applicationPath.DIRECTORY_SEPARATOR) === 0 or strpos($applicationPath.DIRECTORY_SEPARATOR, $hostedPath.DIRECTORY_SEPARATOR) === 0);
+  if (isset($EngineApplicationLayout) && is_array($EngineApplicationLayout)) $layoutEntries = $EngineApplicationLayout;
+  // / The hosted location is made when it is missing, with any folder missing above it, below the
+  // / first folder that exists & only root can change. createHeldFolder makes it 0700 & it is
+  // / opened to 0755 at once, because the web server serves it.
+  if ($hostedPath !== '' && $repairIsAllowed && !$locationsOverlap && is_file($applicationEntry) && !file_exists($hostedPath) && !is_link($hostedPath) && createHeldFolder($hostedPath) && @chmod($hostedPath, 0755)) $NamesWritten++;
+  if ($hostedPath !== '') list ($hostedIsHeld, $holdNotice) = folderIsHeldForRoot($hostedPath);
+  if ($hostedPath === '') {
+    $PublishStatus = 'UNCONFIGURED';
+    $PublishDetail = 'No hosted location is configured.'; }
+  else if (!is_file($applicationEntry)) {
+    $PublishStatus = 'NOT INSTALLED';
+    $PublishDetail = 'Nothing is installed at '.$applicationPath.' yet, so there is nothing to serve.'; }
+  else if ($locationsOverlap) {
+    $PublishStatus = 'REFUSED';
+    $PublishDetail = 'The hosted location '.$hostedPath.' & the installation '.$applicationPath.' overlap, so neither was changed.'; }
+  else if (is_link($hostedPath)) {
+    $PublishStatus = 'REFUSED';
+    $PublishDetail = $hostedPath.' is a link, so it was left as it is.'; }
+  else if (!is_dir($hostedPath)) {
+    $PublishStatus = 'MISSING';
+    $PublishDetail = $hostedPath.' does not exist, so the web server has nothing to serve. Run -fp as root to make it.'; }
+  else if (!$hostedIsHeld or !pathIsSafeToModifyRecursively($hostedPath)) {
+    $PublishStatus = 'REFUSED';
+    $PublishDetail = $hostedPath.' is a system folder or could be replaced by another account, so it was left as it is. '.$holdNotice; }
+  else {
+    $entryIsOurs = ((!file_exists($hostedEntry) && !is_link($hostedEntry)) or fileIsApplicationLoader($hostedEntry) or filesAreIdentical($hostedEntry, $applicationEntry));
+    if (!$entryIsOurs) {
+      $PublishStatus = 'UNINSTALLED';
+      $PublishDetail = $hostedEntry.' belongs to a release that is not installed, so the hosted location was left as it is. Run  sudo php '.$hostedEntry.' -fp  to install it.'; }
+    else {
+      list ($plannedFiles, $plannedFolders) = hostedLocationPlan($applicationPath);
+      $loaderContents = applicationLoaderContents($applicationEntry);
+      // / The hosted location itself first, then every folder the files need, parents first, so
+      // / each is root's before anything inside it is touched. Then the static files a release no
+      // / longer ships are removed, then every copy of the application, & then the files are written.
+      list ($folderIsHeld, $folderChanged) = holdHostedFolder($hostedPath, $repairIsAllowed);
+      if ($folderChanged && !$folderIsHeld) $namesFailed++;
+      else if (!$folderIsHeld) $namesDiffering++;
+      foreach ($plannedFolders as $plannedFolder) {
+        list ($folderIsHeld, $folderChanged) = holdHostedFolder($hostedPath.DIRECTORY_SEPARATOR.$plannedFolder, $repairIsAllowed);
+        if ($folderChanged && !$folderIsHeld) $namesFailed++;
+        else if (!$folderIsHeld) $namesDiffering++; }
+      list ($assetsRemoved, $assetsStale) = removeStaleHostedAssets($hostedPath, $applicationPath, $plannedFiles, $plannedFolders, $repairIsAllowed);
+      $NamesRemoved = $NamesRemoved + $assetsRemoved;
+      foreach ($layoutEntries as $layoutEntry) {
+        $layoutEntry = basename((string)$layoutEntry);
+        if ($layoutEntry === '' or $layoutEntry === '.' or $layoutEntry === '..') continue;
+        list ($entryRemoved, $entryLeft) = removeHostedCopies($hostedPath.DIRECTORY_SEPARATOR.$layoutEntry, $applicationPath.DIRECTORY_SEPARATOR.$layoutEntry, $layoutEntry, $plannedFiles, $repairIsAllowed);
+        $NamesRemoved = $NamesRemoved + $entryRemoved;
+        $namesLeft = $namesLeft + $entryLeft; }
+      foreach ($plannedFiles as $plannedPath => $sourcePath) {
+        $wantedWasRead = $hostedWasRead = $fileWasWritten = FALSE;
+        $wantedContents = $hostedContents = '';
+        if ($sourcePath === '') {
+          $wantedWasRead = TRUE;
+          $wantedContents = $loaderContents; }
+        else list ($wantedWasRead, $wantedContents, $readNotice) = readFileWithoutFollowing($sourcePath, 268435456);
+        clearstatcache(TRUE, $hostedPath.DIRECTORY_SEPARATOR.$plannedPath);
+        $fileStatus = @lstat($hostedPath.DIRECTORY_SEPARATOR.$plannedPath);
+        if (is_array($fileStatus) && ((int)$fileStatus['mode'] & 0170000) === 0100000 && (int)$fileStatus['nlink'] === 1 && (int)$fileStatus['uid'] === 0 && ((int)$fileStatus['mode'] & 07777) === 0644) list ($hostedWasRead, $hostedContents, $readNotice) = readFileWithoutFollowing($hostedPath.DIRECTORY_SEPARATOR.$plannedPath, 268435456);
+        if (!$wantedWasRead) $namesFailed++;
+        else if ($hostedWasRead && $hostedContents === $wantedContents) continue;
+        else if (!$repairIsAllowed) $namesDiffering++;
+        else {
+          list ($fileWasWritten, $writeNotice) = writeFileWithoutFollowing($hostedPath.DIRECTORY_SEPARATOR.$plannedPath, $wantedContents, 0644);
+          if ($fileWasWritten) $NamesWritten++;
+          else $namesFailed++; } }
+      // / Without repair a stale static file is counted among what was left, & with it the file is
+      // / gone before anything was counted.
+      if (!$repairIsAllowed) $namesDiffering = $namesDiffering + $namesLeft;
+      if ($namesFailed > 0) {
+        $PublishStatus = 'FAILED';
+        $PublishDetail = $namesFailed.' name(s) in '.$hostedPath.' could not be written. The log says which.'; }
+      else if ($namesDiffering > 0) {
+        $PublishStatus = 'DIFFERS';
+        $PublishDetail = $namesDiffering.' name(s) in '.$hostedPath.' differ from what the installation at '.$applicationPath.' serves. Run -fp as root.'; }
+      else if ($namesLeft > 0) {
+        $PublishStatus = 'STRAY';
+        $PublishDetail = $namesLeft.' name(s) in '.$hostedPath.' are not part of the installation & differ from it, so they were left. Remove them by hand.'; }
+      else if ($NamesWritten > 0 or $NamesRemoved > 0) {
+        $PublishStatus = 'repaired';
+        $PublishDetail = 'Wrote '.$NamesWritten.' & removed '.$NamesRemoved.' name(s). '.$hostedPath.' serves the loader & '.(count($plannedFiles) - 1).' other file(s).'; }
+      else $PublishDetail = 'Serves the loader & '.(count($plannedFiles) - 1).' other file(s) from '.$applicationPath.'.'; } }
+  if (in_array($PublishStatus, array('FAILED', 'REFUSED', 'UNINSTALLED', 'STRAY'), TRUE) && $repairIsAllowed) warningEntry('The hosted location reported '.$PublishStatus.'. '.$PublishDetail);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $hostedPath, $applicationPath, $entryName, $hostedEntry, $applicationEntry, $loaderContents, $plannedPath, $sourcePath, $plannedFolder, $holdNotice, $writeNotice, $readNotice, $wantedContents, $hostedContents, $layoutEntry, $plannedFiles, $plannedFolders, $fileStatus, $layoutEntries, $repairIsAllowed, $locationsOverlap, $hostedIsHeld, $entryIsOurs, $folderIsHeld, $folderChanged, $fileWasWritten, $wantedWasRead, $hostedWasRead, $namesDiffering, $namesLeft, $namesFailed, $entryRemoved, $entryLeft, $assetsRemoved, $assetsStale, $hostedLoc, $applicationLoc, $mayRepair);
+  return array($PublishStatus, $PublishDetail, $NamesWritten, $NamesRemoved); }
 // / -----------------------------------------------------------------------------------

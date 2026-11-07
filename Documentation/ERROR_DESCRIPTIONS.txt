@@ -24,7 +24,9 @@ DEPENDENCY REQUIREMENTS ...
 The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
 
 ADDITIONAL INFORMATION ...
-HRConvert2 logs information about its operational activity to the Logs subdirectory where HRConvert2 is installed by default.
+HRConvert2 logs information about its operational activity to the Logs subdirectory of the data location by default.
+Root logs to the Engine subdirectory beside it, & repeats its warnings & errors on the terminal when run there by hand.
+A command line account other than root logs to a folder of its own in the temporary directory.
 The default logging directory can be adjusted by modifying the --Log Storage Directory-- section of the config.php file.
 Log entries that represent normal, expected behavior begin with 'Op-Act,' to signify "Operational Activity".
 Log entries that represent abnormal behavior begin with 'WARNING!!!' or 'ERROR!!!'.
@@ -370,6 +372,8 @@ ERROR DESCRIPTION
   This may be the result of incorrect user or group associations for the www-data user or group.
   The www-data:www-data user:group needs to have read & write access to the Logs directory.
   The device where data is stored has an insufficient amount of storage space available.
+  Root never reaches this through the Logs directory. Root writes no logfile & logs to standard
+  error, so as root this means standard error itself could not be opened.
   Because this error takes place before the logging environment is initialized, this error will not be logged.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -433,7 +437,7 @@ ERROR DESCRIPTION
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   This may be the result of incorrect file permission levels on the directory where Data is being stored.
   This may be the result of incorrect user or group associations for the www-data user or group.
-  The www-data:www-data user:group needs to have read & write access to the Data & Installation directories.
+  The www-data:www-data user:group needs read & write access to the Data directory, read access to the Installation directory & read & write access to its DATA directory.
   The device where data is stored has an insufficient amount of storage space available.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -458,7 +462,7 @@ ERROR DESCRIPTION
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect user or group associations for the www-data user or group.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   The supplied path is not a subdirectory of either the convert location or the temporary location.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -614,7 +618,7 @@ ERROR DESCRIPTION
   The user has requested to download a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   The www-data:www-data user:group needs to have read & write access to the Data directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
@@ -643,7 +647,7 @@ ERROR DESCRIPTION
   The user has requested to archive a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   The www-data:www-data user:group needs to have read & write access to the Data directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
@@ -672,7 +676,7 @@ ERROR DESCRIPTION
   The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   The www-data:www-data user:group needs to have read & write access to the Data directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
@@ -701,7 +705,7 @@ ERROR DESCRIPTION
   The user has requested to OCR a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   The www-data:www-data user:group needs to have read & write access to the Data directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
@@ -799,11 +803,12 @@ ERROR DESCRIPTION
   HRConvert2 was asked to remove the build environment or the development documentation and could not.
   This work is controlled by --Delete Build Environment-- and --Delete Development Documentation-- in config.php.
   Both settings default to leaving those files in place, so this error only occurs when one has been enabled.
-  The www-data:www-data user:group needs write access to the installation directory to remove these files.
-  This may be the result of incorrect file permission levels on the installation directory.
-  This may be the result of the files having already been removed by hand outside of HRConvert2.
-  This work used to run inside verifyInstallation() before the globals it needed had been defined.
-  It now runs after verifyGlobals() and after verifyLogs(), so its failures can be written to the log.
+  The removal is done by root, from the -fp argument, & an update runs -fp as it finishes.
+  Until v4.0.1 every web request tried it as the web server user, which can no longer write to the installation.
+  Root only removes a file from a folder it trusts. Every folder from / down must belong to root & be writable by nobody else.
+  A WARNING entry just above this error names the file that was left & the folder root does not trust.
+  A folder such as /var/www/html that belongs to the web server user is the usual cause. -fp does not change it, because it is not this application's.
+  ERROR 26000 & ERROR 26001 say which of the two removals failed.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -882,7 +887,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-30, <SESSION_IDENTIFIER>: The secret file at <PATH> could not be removed by <USER>. Correct its ownership with the -fp argument as root, or delete it by hand.
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-30, <SESSION_IDENTIFIER>: The secret file at <PATH> could not be removed by <USER>. Delete it as root & run the command again.
 
 FILE
   convertCore.php
@@ -894,13 +899,16 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  The install secret file is unusable & could not be deleted so a new one could be written.
-  The file was created by a different account, which is almost always a root command line run.
-  A root invocation creates the secret owned by root & the web server user can never read it.
-  The file is on a read only mount, or the directory does not permit deletion.
-  Run the -fp argument as root, which corrects ownership on the secret & every managed path.
-  This error is not fatal. Sessions cannot be validated until it is resolved & every request
-  will be issued a new session, so no user will be able to return to their files.
+  A standard user's own secret file is unusable & could not be deleted so a new one could be written.
+  A command line user who is neither root nor the web server user keeps a secret of its own, in a
+  folder of its own in the temporary directory, & this is that file. -fp does not manage it.
+  The file was created there by a different account, or it is on a read only mount.
+  Delete the file named in the message as root & run the command again.
+  Only a standard user reaches this. Root replaces the install secret itself, & the web server
+  user never removes or creates one. ERROR 31021 & ERROR 31020 cover the install secret.
+  Until v4.0.1 this message sent the user to -fp, which never touched this file.
+  This error is not fatal on its own. Without a secret the installation does not verify, so
+  ERROR 5 follows & that user's command does not run until the file is removed.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -1056,7 +1064,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-504, <SESSION_IDENTIFIER>: The Apache configuration HRConvert2 wrote did not pass apachectl configtest & was removed again.
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-504, <SESSION_IDENTIFIER>: The Apache configuration HRConvert2 wrote did not pass apachectl configtest & was withdrawn.
 
 FILE
   /convertCore.php
@@ -1070,12 +1078,18 @@ LOGGED
 ERROR DESCRIPTION
   The -fp argument wrote the DATA rules into the Apache configuration, ran apachectl
   configtest, & the test failed for a reason that was NOT already present before the write.
-  THE FILE WAS REMOVED AGAIN & THE WEB SERVER IS UNCHANGED. Nothing was reloaded, so the
-  server is still running the configuration it was running before this ran.
+  THE FILE WAS WITHDRAWN & WHAT WAS THERE BEFORE IS BACK. A file this run created is removed,
+  a file it replaced is written back exactly as it was, & the conf-enabled link is removed only
+  when this run made it. Nothing was reloaded, so the server is still running the configuration
+  it was running before this ran. configtest is then run once more, & a WARNING follows this
+  error if the configuration still does not parse.
+  Until v4.0.1 a replaced file was deleted rather than put back.
   A configuration that does not parse takes the whole server down on its next restart, which
   is a far worse outcome than the exposure these rules close, so the rules are never left in
   place unless they are known to parse.
   The apachectl output is quoted in the error & names the offending line.
+  A directive whose module is not loaded is a syntax error, so every directive in the file
+  that needs a module is guarded by it. One that is not, added by hand, is the likeliest cause.
   A host whose configuration ALREADY did not parse before this ran is reported differently &
   the HRConvert2 file is KEPT, because that fault belongs to the administrator rather than to
   this application.
@@ -1939,7 +1953,7 @@ ERROR DESCRIPTION
   The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   The www-data:www-data user:group needs to have read & write access to the Data directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
@@ -1971,7 +1985,7 @@ ERROR DESCRIPTION
   The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   The www-data:www-data user:group needs to have read & write access to the Data directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
@@ -2063,7 +2077,7 @@ ERROR DESCRIPTION
   The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   The www-data:www-data user:group needs to have read & write access to the Data directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
@@ -2200,7 +2214,7 @@ ERROR DESCRIPTION
   The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   The www-data:www-data user:group needs to have read & write access to the Data directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
@@ -2290,7 +2304,7 @@ ERROR DESCRIPTION
   The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   The www-data:www-data user:group needs to have read & write access to the Data directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
@@ -2371,7 +2385,7 @@ ERROR DESCRIPTION
   The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   The www-data:www-data user:group needs to have read & write access to the Data directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
@@ -2451,7 +2465,7 @@ ERROR DESCRIPTION
   The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   The www-data:www-data user:group needs to have read & write access to the Data directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
@@ -2483,7 +2497,7 @@ ERROR DESCRIPTION
   The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   The www-data:www-data user:group needs to have read & write access to the Data directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
@@ -2515,7 +2529,7 @@ ERROR DESCRIPTION
   The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   The www-data:www-data user:group needs to have read & write access to the Data directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
@@ -2547,7 +2561,7 @@ ERROR DESCRIPTION
   The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   The www-data:www-data user:group needs to have read & write access to the Data directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
@@ -2579,7 +2593,7 @@ ERROR DESCRIPTION
   The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   The www-data:www-data user:group needs to have read & write access to the Data directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
@@ -2612,7 +2626,7 @@ ERROR DESCRIPTION
   The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   The www-data:www-data user:group needs to have read & write access to the Data directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
@@ -2819,7 +2833,7 @@ ERROR DESCRIPTION
   The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   The www-data:www-data user:group needs to have read & write access to the Data directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
@@ -3017,7 +3031,7 @@ LOGGED
 
 ERROR DESCRIPTION
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
@@ -3085,7 +3099,7 @@ LOGGED
 
 ERROR DESCRIPTION
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
@@ -3233,7 +3247,7 @@ ERROR DESCRIPTION
   The OCR operation failed when attempted using the 'Simple' method.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   The www-data:www-data user:group needs to have read & write access to the Data directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
@@ -3262,7 +3276,7 @@ ERROR DESCRIPTION
   The OCR operation failed when attempted using the 'Advanced' method.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   The www-data:www-data user:group needs to have read & write access to the Data directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
@@ -3291,7 +3305,7 @@ ERROR DESCRIPTION
   The OCR operation failed when attempted using the 'Advanced' method.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   The www-data:www-data user:group needs to have read & write access to the Data directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
@@ -3530,7 +3544,7 @@ LOGGED
 
 ERROR DESCRIPTION
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
@@ -3552,7 +3566,7 @@ LOGGED
 
 ERROR DESCRIPTION
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
@@ -3574,7 +3588,7 @@ LOGGED
 
 ERROR DESCRIPTION
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
@@ -3596,7 +3610,7 @@ LOGGED
 
 ERROR DESCRIPTION
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
@@ -3707,7 +3721,7 @@ ERROR DESCRIPTION
   The installation has become corrupt.
   The ScanCore bundled dependency is missing.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
@@ -3784,7 +3798,7 @@ LOGGED
 
 ERROR DESCRIPTION
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
@@ -3806,7 +3820,7 @@ LOGGED
 
 ERROR DESCRIPTION
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
@@ -3916,7 +3930,7 @@ ERROR DESCRIPTION
   The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   The www-data:www-data user:group needs to have read & write access to the Data directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
@@ -4113,7 +4127,7 @@ ERROR DESCRIPTION
   The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Installation directories.
+  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
   The www-data:www-data user:group needs to have read & write access to the Data directory.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
@@ -4188,9 +4202,10 @@ LOGGED
 
 ERROR DESCRIPTION
   The Dockerfile or the Build directory could not be removed from the installation.
-  This work is controlled by --Delete Build Environment-- in config.php.
-  The www-data:www-data user:group needs write access to the installation directory and to the Build directory.
-  This may be the result of incorrect file permission levels on the installation directory.
+  This work is controlled by --Delete Build Environment-- in config.php & is done by root, from the -fp argument.
+  Root only removes a file from a folder it trusts, & a WARNING entry just above this error names what was left & why.
+  A Build directory root does not trust is left exactly as it is & is never entered.
+  A link at Build or inside it is removed as a link. What it points at is never touched.
   The Build directory may contain subdirectories, which this routine does not remove.
   The build environment is removed directly and not through cleanFiles(), because it sits outside every approved cleanup root.
   Widening the cleanFiles() whitelist to include the application directory would make the recursive deleter far more dangerous.
@@ -4212,10 +4227,9 @@ LOGGED
 
 ERROR DESCRIPTION
   The CHANGELOG.txt or README.md file could not be removed from the installation.
-  This work is controlled by --Delete Development Documentation-- in config.php.
-  The www-data:www-data user:group needs write access to the installation directory and to the Documentation directory.
-  This may be the result of incorrect file permission levels on the installation directory.
-  This may be the result of the files having already been removed by hand outside of HRConvert2.
+  This work is controlled by --Delete Development Documentation-- in config.php & is done by root, from the -fp argument.
+  Root only removes a file from a folder it trusts, & a WARNING entry just above this error names what was left & why.
+  A file already removed by hand counts as removed & does not raise this error.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -4686,6 +4700,48 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-28008, <SESSION_IDENTIFIER>: Root refused to run the installation at <PATH>, because an account other than root could have changed it. <ADDITIONAL_DATA> Run  sudo php convertCore.php -fp  to give it back to root. Any other account may still run -v in the meantime.
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  NO
+
+ERROR DESCRIPTION
+  A command run as root found something in the installation, or above it, that an account other
+  than root could change, & stopped before running anything from it but the kernel.
+  Root runs nothing another account can change. Every folder from / down to the installation must
+  belong to root & be writable by nobody else. Every name inside the installation must belong to
+  root & be writable by nobody else, & no name may be a link. DATA is never examined.
+  The message names the first thing that failed.
+  An installation left by v4.0.0 belongs to the web server account. Run  sudo php convertCore.php -fp
+  once & it is root's. -fp, --setup & --config --repair run on such an installation after a warning,
+  because they are what give it to root.
+  A file someone made group writable or gave to another account is corrected by -fp as well.
+  A link inside the installation is not removed by -fp. Remove it by hand.
+  A folder above the installation, such as /var/www/html, is not this application's & -fp leaves it
+  alone. A web server account that owns it can swap the whole installation for its own. Confirm
+  nothing else on the server relies on writing there, then give it to root.
+    sudo chown root:root /var/www/html
+    sudo chmod 0755 /var/www/html
+  Since v4.0.1 the installation is Application in the data location, & root also reads the hosted
+  location, --Installation Directory--, whenever it runs the loader there, because the loader ran
+  first. -fp gives the hosted location's own files back to root.
+  The loader refuses before it hands anything over, with this number & a shorter sentence, when the
+  installation or its folder could have been changed by another account. Run -fp from the
+  installation itself then, as the sentence says, because the loader refuses it too.
+  Every account but root is unaffected. The message is not logged, because it is raised before a
+  logfile exists, & it is printed instead.
+  See Documentation/ABOUT_MANAGED_LOCATIONS.txt.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29000, <SESSION_IDENTIFIER>: Could not determine the latest release from the update source!
 
 FILE
@@ -5050,8 +5106,9 @@ ERROR DESCRIPTION
   It has to be there rather than in the temporary directory, because the swap that follows
   uses rename(), & rename() is only atomic within one filesystem.
   The staged copy is written to the parent of the installation directory.
-  The user running the update needs WRITE access to that parent directory, not only to the
-  installation itself. This is a requirement the application does not otherwise have.
+  The update runs as root, & that parent must belong to root & be writable by nobody else.
+  ERROR 31023 refuses the update before this point when it is not.
+  The parent may be on a read only mount, or carry an immutable attribute.
   The disk holding the installation may be full. A staged release is a full second copy of
   the application, so roughly twice the installed size must be free.
   Nothing was changed. The installation is untouched.
@@ -5076,8 +5133,8 @@ ERROR DESCRIPTION
   The installation is replaced by exchanging directories rather than by overwriting files,
   so that there is never a moment where the installation is half of one version & half of
   another. This is the first half of that exchange & it did not happen.
-  The user running the update needs write access to the parent of the installation.
-  A file inside the installation may be held open by another process.
+  The parent of the installation may be on a read only mount, or carry an immutable attribute.
+  The installation may be a mount point, which rename() cannot move.
   Nothing was changed. The installation is untouched & is still the version it was.
   The staged release is left behind & is removed at the start of the next update.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -5163,7 +5220,8 @@ ERROR DESCRIPTION
     Stop the web server.
     Move or delete whatever is at the installation path.
     Rename the .old directory back to the installation path.
-    Confirm ownership is www-data:www-data throughout.
+    Run  sudo php convertCore.php -fp  so every location gets its role back.
+    The code is root's & the web server user only reads it. Do not give it to www-data.
     Start the web server & confirm with  php convertCore.php -v
   The DATA directory holding live user sessions was moved between the two installations
   during the update. It is in whichever of the two directories still exists.
@@ -5171,6 +5229,34 @@ ERROR DESCRIPTION
   A backup of the previous installation may also exist at the --Backup Location-- from an
   earlier successful update. That backup is one version older still.
   This error should not be possible. Something is seriously wrong with the filesystem.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29019, <SESSION_IDENTIFIER>: Could not move the DATA folder into the update, so the update was stopped & nothing was changed!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The DATA folder holding live user sessions could not be moved into the staged release.
+  DATA is moved rather than copied, so a session that is open during the update survives it.
+  Until v4.0.1 this move failed in silence on every update. The release ships a DATA folder of
+  its own & a folder cannot be renamed over one that is not empty, so the live DATA stayed with
+  the previous installation & was deleted with it. The release's own copy is removed first now,
+  & an update that still cannot move DATA stops here rather than going on without it.
+  Nothing was changed. The installation & its DATA are where they were.
+  DATA may be a mount point, which rename() cannot move. Unmount it before updating & mount it
+  again afterwards.
+  DATA may carry an immutable attribute, or sit on a read only mount.
+  The staged release is left behind & is removed at the start of the next update.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -5356,6 +5442,8 @@ ERROR DESCRIPTION
   The data location itself is missing, read only, or owned by the wrong user.
   The listener was started by root & the directory belongs to another account.
   The directory is created 0700 & is handed to the web server user when root starts the listener.
+  Root does not hand it over when fs.protected_hardlinks is off & the folder above it is the web
+  server user's, because a hard link could be swapped in. A WARNING entry says so when it happens.
   Run the -fp argument as root to correct ownership & permissions on every managed path.
   This error only occurs when the -l or --listen argument is used.
   This error is not fatal. The listener simply does not start.
@@ -5600,7 +5688,9 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  The --run-core-manager argument was used by an account that is neither root nor the web server user.
+  The --run-core-manager argument was used by an account other than the web server user.
+  Root is refused too. The listener sweeps the web server user's folders & keeps its state
+  there, so it only ever runs as that user. Start it with -l, which hands it to that user.
   A command line user attempted to start the listener by hand.
   A service unit was installed with the wrong User setting.
   --run-core-manager is the entry point a service manager uses. It does not fork & does not return.
@@ -5625,7 +5715,8 @@ LOGGED
 
 ERROR DESCRIPTION
   The install secret could not be read by the account the listener is running as.
-  The secret file belongs to root because a root command line run created it first.
+  The secret file is root's & the web server user reads it through its group, root:www-data 0640.
+  A file left by a release before v4.0.1 is not in that shape until a command runs as root.
   The secret file was removed or rotated while the listener was starting.
   The listener is running as an account that resolves a per user secret rather than the install secret.
   Run the -fp argument as root, which corrects the ownership of the secret file.
@@ -5728,6 +5819,165 @@ ERROR DESCRIPTION
   operating system needs.
   NOTHING WAS DELETED. Correct $BackupLoc in config.php.
   An empty $BackupLoc is fine & means backups are off. A wrong one is not.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31020, <SESSION_IDENTIFIER>: An install secret could not be generated, because this host could not supply random bytes!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31020, <SESSION_IDENTIFIER>: The install secret could not be written to <FILE_PATH>! <ADDITIONAL_DATA>
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31020, <SESSION_IDENTIFIER>: The install secret written to <FILE_PATH> did not read back correctly!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Root could not put a usable install secret in place.
+  Every command run as root reads the install secret, & writes it again when it is missing,
+  unusable, or not yet in the shape this release keeps it in. That shape is root:www-data 0640,
+  so the web server user can read the key & cannot change it.
+  Root reads the file with PHP's tokenizer & never runs it. It writes a new file that did not
+  exist a moment before & renames it into place, so nothing at that name is ever followed.
+  The first message means random_bytes() failed. The host has no usable source of randomness.
+  The second message carries the reason the write failed. The data location may be full, on a
+  read only mount, or missing. The warnings above it say whether root could create it.
+  When the write fails, the secret in place is unchanged.
+  The third message means the file on disk is not the file that was written. Something changed
+  it in the moment between the write & the read, & only the web server user could have. The next
+  command run as root examines it again & replaces it if it is still wrong.
+  Without a secret the installation does not verify, so ERROR 5 follows & the command stops.
+  Correct the cause & run  sudo php convertCore.php -v  to confirm.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31021, <SESSION_IDENTIFIER>: There is no install secret & the web server account does not create one. Run -fp as root to create it.
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A web request, or the web server user on the command line, found no install secret.
+  Until v4.0.1 the web server user created the secret whenever it found none. It no longer does,
+  because a secret the web server user could write is a secret root would one day have to read.
+  Root creates it, root:www-data 0640, the first time any command runs as root.
+  A fresh installation that has never run a command as root has no secret yet. The installer runs
+  as root & creates it, & so does  sudo php convertCore.php -fp
+  The data location may have been emptied or replaced by hand since the last command run as root.
+  The message names no path, because it can reach a visitor's page.
+  Without a secret the installation does not verify, so ERROR 5 follows & the page is not served.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31022, <SESSION_IDENTIFIER>: The install secret could not be rotated! The secret in place is unchanged.
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The --rotate-secret argument was confirmed & a new secret could not be put in place.
+  There are two causes, & the lines just above this one say which.
+  A running listener could not be stopped first. The secret is never rotated past a listener
+  that would keep answering with the old key, so nothing was changed & a WARNING says so. Stop
+  it with  sudo php convertCore.php -k  & run the rotation again.
+  ERROR 31020 just above this one says the new secret could not be written. The secret in place
+  is unchanged, so every session continues to work. When ERROR 31020 reports a read back failure
+  instead, the file on disk is not the one written, & the next command run as root examines it
+  again. A listener that was stopped for the rotation is started again.
+  Correct the cause & run  sudo php convertCore.php --rotate-secret  again.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31023, <SESSION_IDENTIFIER>: The update was refused, because the folder it would happen in can be changed by an account other than root. <ADDITIONAL_DATA>
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  An update swaps the installation for the new release by renaming both, inside the folder that
+  holds the installation, & root then runs the new release's code.
+  An account that can write that folder can rename the installation aside between the two & put
+  its own in its place, & root would run it. So the update refuses unless every folder from /
+  down to the installation's parent, & the --Proprietary Directory--, belongs to root & can be
+  written by nobody else.
+  The message names the first folder that failed.
+  When it names the --Proprietary Directory-- itself, run  sudo php convertCore.php -fp  & try
+  again. -fp gives that folder to root when the folder above it is root's.
+  Error 28008 usually answers first, because every command run as root reads every folder above
+  the installation before it runs. This one still covers the --Proprietary Directory-- when it is
+  configured somewhere that is not above the installation.
+  When it names a folder above that, such as /var/www/html, -fp leaves it alone, because it is
+  not this application's & other software may share it. A web server user that owns the web root
+  can replace anything served from it. Confirm nothing else on the server relies on writing there,
+  then give it to root.
+    sudo chown root:root /var/www/html
+    sudo chmod 0755 /var/www/html
+  Nothing was downloaded & nothing was changed.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31024, <SESSION_IDENTIFIER>: Root will not work beneath <FOLDERS>, because another account can change them. Give each back to root & run the command again.
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Every command run as root reads the install secret, which is in the data location, so every
+  folder from / down to the folder above the data location must belong to root & be writable by
+  nobody else. An account that can write one of them can rename the data location aside & put
+  its own in its place, & root would then read & write wherever that led.
+  So root stops before it touches the secret, -fp included, & names every folder that failed with
+  its owner, group & mode. -fp corrects the locations it manages & never a folder above them.
+  Releases before v4.0.1 caused this. v3.4.1 asked for /var/www to be given to the web server
+  account, & older guides did the same to /DATA. Nothing needs that now, because the web server
+  account's home is the Cache folder in the data location. The commands printed with the list
+  give each folder back to root & change nothing inside it.
+    sudo chown root:root /var/www /var/www/html /DATA
+    sudo chmod 755 /var/www /var/www/html /DATA
+  Run them for the folders named only, & without -R. Mode 755 keeps every account able to reach
+  the folders below, which the web server account needs.
+  A folder another account owns, such as a home folder, & a folder every account shares by
+  design, such as /tmp, are named without commands. Move the location out of it instead.
+  The folders above the hosted location & above each additional data location are named the
+  same way when they fail, as a warning. Root goes on then & corrects nothing beneath them.
+  Nothing was changed.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -6095,9 +6345,9 @@ ERROR DESCRIPTION
   The service & the timer are written together, so this reports either one failing.
   The usual cause is a read only /etc or a full disk. Neither is specific to this
   application, & the listener unit would fail the same way at the same moment.
-  Nothing else is affected. The Environment Manager still runs by hand.
-
-    sudo php convertCore.php --run-environment-manager
+  Nothing else is affected. The Environment Manager still runs by hand, as
+  sudo php convertCore.php --run-environment-manager, & is simply not scheduled.
+  See Documentation/ABOUT_ENVIRONMENT_MANAGER.txt.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -6224,8 +6474,12 @@ LOGGED
 
 ERROR DESCRIPTION
   The comma separated report could not be written to the destination.
-  A path was supplied with --output-supply-chain & names a directory this account cannot write.
-  No path was supplied & the log directory is not writable by this account.
+  The report is always written beside the logs. A path supplied with --output-supply-chain only
+  names the file, & the folder it names is ignored.
+  The log directory is not writable by this account.
+  As root, the log directory belongs to the web server account, so root writes the report into
+  the data location instead, & a WARNING names it. This error means that fallback failed too,
+  because the data location is missing or another account could replace it.
   The filesystem is full.
   This error is not fatal. Nothing else is affected & the report may be requested again with a
   destination this account owns.
@@ -6606,9 +6860,10 @@ ERROR DESCRIPTION
   so a pass by any other account reports every one of them as unreadable & logs a page of
   failures that mean nothing. It refuses instead.
   This is not a fault in the manager. It is the manager saying it was started the wrong way.
-  Run it as root, or leave it to the systemd timer that already does.
-
-    sudo php convertCore.php --run-environment-manager
+  It is the third refusal & is not expected to fire. The command dispatcher refuses
+  --run-environment-manager to every account but root, & loadEngineRootManager refuses to load
+  the manager for one, before this check is ever reached. Run it as root.
+  See Documentation/ABOUT_ENVIRONMENT_MANAGER.txt.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 

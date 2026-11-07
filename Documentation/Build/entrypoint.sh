@@ -37,6 +37,10 @@
 # / -----------------------------------------------------------------------------------
 CORE=/var/www/html/HRProprietary/HRConvert2/convertCore.php
 CONFIG=/var/www/html/HRProprietary/HRConvert2/Resources/config.php
+# / The configuration is the installation's from the first -fp on. That -fp installs the release
+# / into Application in the data volume & leaves only a loader in the web root, so the web root
+# / holds config.php only while no -fp has installed it. See ABOUT_MANAGED_LOCATIONS.txt.
+INSTALLED_CONFIG=/DATA/HRConvert2/Application/Resources/config.php
 
 say() {
   # / Everything this script prints is prefixed, so it is distinguishable in docker logs
@@ -55,11 +59,18 @@ fi
 
 # / A mounted volume arrives owned by whoever created it on the host, so permissions,
 # / policies & the PHP drop in are corrected on every start. Every step is idempotent.
-# / This also re-tightens the install secret to 0600 & the manager socket directory to
-# / 0700, which is what every startup key in the manager protocol rests on.
+# / The image carries its release in the web root, & -fp installs it into Application in the
+# / data volume & leaves only the loader in the web root, so a volume kept from an older
+# / container runs this image's release from its first start.
+# / The first start of a container also creates its install secret, inside its own volume,
+# / because the image no longer carries one. Every location is given the owner its role in
+# / the contract names, so the code root runs here is root's & the web server only reads it.
 say "Correcting permissions & policies."
 if ! php "$CORE" -fp; then
   say "Permission & policy repair reported problems. Continuing."
+fi
+if [ -f "$INSTALLED_CONFIG" ]; then
+  CONFIG=$INSTALLED_CONFIG
 fi
 
 # / Start the resource listener only when the configuration wants one. A container has no
@@ -86,8 +97,9 @@ php "$CORE" --status 2>/dev/null || true
 # / THE WEB SERVER CONFIGURATION IS TESTED BEFORE THE WEB SERVER IS HANDED THE FOREGROUND.
 # / apache2-foreground exits immediately on a configuration it cannot parse, which reaches
 # / an operator as a container that refuses connections & explains nothing. The core writes
-# / an Apache configuration during -fp above & removes its own if it fails a config test,
-# / but a mounted configuration or an edited image can still be wrong.
+# / an Apache configuration during -fp above & puts back what was there if it fails a config
+# / test, but a mounted configuration or an edited image can still be wrong. -fp reloads only a
+# / server that is running, so it never starts the one this script hands the foreground to.
 # / A failure here is reported in full & the server is still started, because a server that
 # / refuses to boot is not safer than one that boots without a hardening rule.
 if command -v apache2ctl > /dev/null 2>&1; then

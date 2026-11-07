@@ -71,6 +71,7 @@ A way past a convenience layer is still a vulnerability, and is still credited, 
 | [ABOUT_NETWORK_ISOLATION.txt](ABOUT_NETWORK_ISOLATION.txt) | How a conversion is kept off the network. |
 | [ABOUT_SCAD_SANITIZATION.txt](ABOUT_SCAD_SANITIZATION.txt) | How an uploaded OpenSCAD source is rewritten before it renders. |
 | [ABOUT_DATA_DIRECTORY_PROTECTION.txt](ABOUT_DATA_DIRECTORY_PROTECTION.txt) | How converted files are kept from being browsed. |
+| [ABOUT_MANAGED_LOCATIONS.txt](ABOUT_MANAGED_LOCATIONS.txt) | How root is kept from trusting anything the web server account can change. |
 | [ABOUT_DEPENDENCIES.txt](ABOUT_DEPENDENCIES.txt) | How every dependency is audited before it is adopted. |
 
 The plain text source of truth for this policy is [SECURITY.txt](SECURITY.txt).

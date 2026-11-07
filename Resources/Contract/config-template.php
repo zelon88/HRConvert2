@@ -142,9 +142,9 @@ $ScanCoreDebug = FALSE;
 $ScanCoreVerbose = TRUE;
 // /  --Delete Build Environment--
 // /   Automatically remove the build environment when it is no longer needed.
-// /   Production servers should not keep the 'Build' folder in the --Installation Directory-- as a security precaution.
+// /   Production servers should not keep the 'Build' folder in the installation as a security precaution.
 // /   If set to TRUE, the Dockerfile in Documentation/Build & any 'Build' folder in the root of the
-// /   --Installation Directory-- are deleted. Only the files directly inside that 'Build' folder are
+// /   installation are deleted. Only the files directly inside that 'Build' folder are
 // /   removed. A folder inside it is left where it is & the failure is logged as error 26000.
 // /   Documentation/Build itself is NOT removed. The Resource Manager & the source builds read scripts
 // /   from it while the application runs.
@@ -158,7 +158,7 @@ $ScanCoreVerbose = TRUE;
 $DeleteBuildEnvironment = FALSE;
 // /  --Delete Development Documentation--
 // /   Automatically remove 'README.md' & 'Documentation/CHANGELOG.txt' files when they are no longer needed.
-// /   Production servers should not keep these files in the --Installation Directory-- as a security precaution.
+// /   Production servers should not keep these files in the installation as a security precaution.
 // /   If set to TRUE, the 'README.md' & 'Documentation/CHANGELOG.txt' files will be deleted.
 // /   If set to FALSE, the 'README.md' & 'Documentation/CHANGELOG.txt' files will NOT be deleted.
 // /   These files could be used by an adversary to obtain configuration information about the application or server.
@@ -474,19 +474,22 @@ $DefaultVirusScanner = 'scancore';
 // /   FALSE means it looks, logs what has drifted & changes nothing. That is the default &
 // /   is what a new installation should run until an administrator has read what it WOULD
 // /   have done.
-// /   TRUE means it also repairs, & a repair is exactly what --fix-permissions does. It
+// /   TRUE means it also repairs, once a day, & a repair is what --fix-permissions does. It
 // /   calls the same function, so there is no second definition of a correct installation.
+// /   The one difference is that nobody is watching it, so it starts & enables no service.
 // /   A repair is logged as a warning rather than as normal activity, because an
-// /   installation repairing the same thing every hour is not healthy.
+// /   installation repairing the same thing every day is not healthy.
 // /   Default is FALSE.
 $EnvironmentManagerMayRepair = FALSE;
 // /  --Environment Manager May Rewrite Configs--
-// /   Whether a permitted repair may rewrite the configuration files this application owns.
-// /   Only ever applies when --Environment Manager May Repair-- is TRUE.
-// /   Those files are HRConvert2's OWN drop-ins & profiles. 99-hrconvert2.ini in the php
-// /   conf.d, hrconvert2.conf in the Apache conf-available, & the AppArmor profiles this
-// /   application ships. Nothing belonging to the distribution is touched, which is why
-// /   this defaults to TRUE while repair itself defaults to FALSE.
+// /   Whether a permitted repair may rewrite the host configuration this application owns.
+// /   Only ever applies when --Environment Manager May Repair-- is TRUE. --fix-permissions
+// /   typed by an administrator rewrites them whatever this says.
+// /   Those are HRConvert2's OWN drop ins, settings & policies. 99-hrconvert2.ini in the php
+// /   conf.d, hrconvert2.conf in the Apache conf-available, the sandbox kernel settings, the
+// /   ImageMagick policy & the AppArmor profiles this application ships. With this FALSE each
+// /   one is checked, reported & left exactly as it is. This defaults to TRUE while repair
+// /   itself defaults to FALSE, because every one of them is something this application writes.
 // /   Set it FALSE if you have tuned one of those files by hand. A rewrite reverts it to
 // /   the shipped version silently & you will find out at the next conversion.
 // /   Default is TRUE.
@@ -498,7 +501,10 @@ $EnvironmentManagerMayRewriteConfigs = TRUE;
 // / ---Directory Information---
 // / 
 // /  --Installation Directory--
-// /   Install HRConvert2 files to the following directory.
+// /   The directory the web server serves HRConvert2 from.
+// /   Since v4.0.1 HRConvert2 itself is installed in Application inside the --Data Storage Directory--,
+// /   outside the web root, & this directory holds only its loader, the static files a browser
+// /   fetches & DATA, which -fp writes. See Documentation/ABOUT_MANAGED_LOCATIONS.txt.
 // /   Do not include a trailing slash.
 // /   Do not use a path with whitespace.
 // /   Changing this value is not recommended.
@@ -531,12 +537,15 @@ $ConvertLoc = '/DATA/HRConvert2';
 // /   Default is $ConvertLoc.'/Logs'.
 $LogDir = $ConvertLoc.'/Logs';
 // /  --Home Directory--
-// /   This is the Home directory for the web server user.
+// /   This is the Home directory for the web server user, where its tools keep their own
+// /   configuration & caches. It is the Cache folder inside the data location by default, which
+// /   the web server user owns. A value equal to the data location itself, as older releases
+// /   shipped, is the folder root now owns & the web server user cannot write, so the Cache
+// /   folder is used instead & a warning says so.
 // /   Do not include a trailing slash.
 // /   Do not use a path with whitespace.
-// /   Changing this value is not recommended.
-// /   Default is $ConvertLoc.
-$HomeLoc = $ConvertLoc;
+// /   Default is $ConvertLoc.'/Cache'.
+$HomeLoc = $ConvertLoc.'/Cache';
 // /  --Backup Location--
 // /   Where the previous installation is preserved after a successful update.
 // /   The update process moves the old installation aside inside the installation

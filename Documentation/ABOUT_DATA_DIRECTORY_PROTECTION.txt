@@ -27,7 +27,7 @@ The authoritative list of dependencies is Resources/Contract/depends.php & nothi
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About The DATA Directory--
 
-$ConvertTempDir is $InstLoc/DATA/<SesHash>/<SesHash2>/ & it sits INSIDE the web root.
+$ConvertTempDir is DATA/<SesHash>/<SesHash2>/ in the hosted location & it sits INSIDE the web root.
 $ConvertDir is $ConvertLoc/<SesHash>/<SesHash2>/ & it sits outside it.
 
 Every file a user uploads or produces exists in both. The copy under $ConvertDir is the one
@@ -94,9 +94,10 @@ control, because it also removes the reason to look.
 
   Preferred    Server configuration, WRITTEN & ACTIVATED AUTOMATICALLY by -fp.
                verifyApacheConfiguration() builds a <Directory> block for this
-               installation's own DATA path, writes it to the Apache configuration
-               directory this host uses, links it into conf-enabled on a Debian layout,
-               proves it parses with apachectl configtest & gracefully reloads.
+               installation's own DATA path, & one refusing each data location, writes
+               them to the Apache configuration directory this host uses, links the file
+               into conf-enabled on a Debian layout, proves it parses with apachectl
+               configtest & gracefully reloads a server that is running.
                No override level applies to server configuration, so the whole rule set is
                reliable there & nothing is silently dropped.
   Fallback     DATA/.htaccess, written by -fp & --setup & kept current on every request by
@@ -117,10 +118,45 @@ carrying the rules alone, & the exposure line is what says whether it is.
 
 A CONFIGURATION THAT DOES NOT PARSE IS WITHDRAWN BEFORE ANYTHING RELOADS.
 configtest is run before the write to establish a baseline & again after. A failure that was
-NOT already present is treated as ours; the file & its link are removed, nothing is
-reloaded, the server keeps running what it was already running, & error 504 is written. A
-failure that WAS already present is the administrator's, so the file is kept & the
-pre-existing fault is reported as theirs.
+NOT already present is treated as ours. What was there is put back exactly; a file this run
+created is removed, a file it replaced is written back as it was, & the conf-enabled link goes
+only when this run made it. Nothing is reloaded, error 504 is written, & configtest is run once
+more to prove the configuration parses as it did. Until v4.0.1 a replaced file was deleted
+rather than put back, & a link the administrator had made went with it. A failure that WAS
+already present is the administrator's, so the file is kept & the pre-existing fault is
+reported as theirs.
+
+A DIRECTIVE WHOSE MODULE IS NOT LOADED DOES NOT PARSE, & THEN THE WHOLE FILE IS WITHDRAWN.
+Measured on Apache 2.4; RemoveHandler without mod_mime & DirectoryIndex without mod_dir are each
+a syntax error. Until v4.0.1 either one made -fp withdraw the file, Header rules included, on
+a host that had disabled the module. Each is now guarded by its module, & Require, Options &
+AllowOverride need none.
+
+ROOT WRITES THE FILE THROUGH THE KERNEL, AS IT WRITES EVERY OTHER FILE.
+It is written as a new file & renamed into place, so the server never starts against half of
+one, & nothing is written through a link at its name. A name that is not a plain file, such as
+a link an administrator made to a copy they manage, is left exactly as it is & reported as
+FAILED, because a file that was never read cannot be put back.
+
+THE HOSTED LOCATION RUNS ONE PHP FILE, THE LOADER.
+Since v4.0.1 the application is installed outside the web root, & the folder the web server
+serves holds the loader, the protection page, static files & DATA. The same file refuses every
+other PHP file there, whatever the case of its extension, so a PHP file anybody leaves there is
+refused rather than run. See ABOUT_MANAGED_LOCATIONS.txt.
+
+A STOPPED WEB SERVER IS LEFT STOPPED.
+apachectl -k graceful starts a server that is not running. Measured; it says httpd not running,
+trying to start, & starts it. -fp asks the server for its pid file & reloads only a server that
+is running, so a stopped one reads the new configuration when it next starts. An unattended
+Environment Manager repair permitted to rewrite configuration therefore starts nothing either.
+Until v4.0.1 both reported a reload & started the server.
+
+THE EXPOSURE CHECK ASKS FOR THE URL A BROWSER WOULD.
+That is --Server URL--, then the installation's path below --Server Root Directory--, then
+DATA. An installation outside the document root is taken to be served at the root of --Server
+URL--, which is right when a virtual host serves it directly. Until v4.0.1 the document root was
+removed from wherever it appeared in the path & the separator after the host was lost with it,
+so the check & every share link asked a host named like localhostopt for the file.
 
 THE EXPOSURE CHECK IS ONE OF THE ENVIRONMENT CHECKS & IS COUNTED WITH THEM.
 It used to be reported separately & after the summary, so a run could say every check passed
@@ -130,11 +166,43 @@ worse than no summary, because it gets read instead of the thing it left out.
 VERIFY. DO NOT ASSUME. THE APPLICATION DOES THIS ITSELF.
 -fp writes the rules & then PROVES the result over HTTP with a canary, printing DATA
 exposure as PROTECTED, EXPOSED, BROKEN or UNREACHABLE.
--v reports the same facts without repairing anything: where the directory is, whether
-the fallback is maintained, whether the server configuration is installed, & the live
-exposure. The first three are configuration & only the last is evidence.
+-v reports the same facts without repairing anything: where the directory is, whether the
+data location is outside the document root, whether the fallback is maintained, whether the
+server configuration is installed, & the live exposure. The first four are configuration &
+only the last is evidence.
 The listener re-establishes it on every --Storage Cleanup Interval & warns the moment it
 regresses. There is no separate tool to run; the check lives where the repairs live.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Data Location--
+
+THE DATA LOCATION IS NEVER SERVED, WHEREVER IT IS.
+The data location, --Data Storage Directory-- in config.php, holds Sessions, Cache & Logs, &
+each belongs to the web server account, which is the account that serves files. A data location inside the document root hands them to anybody
+who guesses a name. One outside it is still granted wherever the host grants a folder above
+it, as Debian grants all of /var/www, & is one Alias or one wider document root away from
+being served. Only the DATA tree inside the installation is meant to be fetched.
+
+So the file -fp writes refuses each data location outright, the primary & every pool member:
+
+  <Directory "<data location>">
+    Require all denied
+    AllowOverride None
+    Options None
+  </Directory>
+
+A data location reached through a link is refused as it is written & as it resolves. One that
+holds the installation or its DATA tree is not refused, because refusing it would refuse
+HRConvert2 as well, & -fp names it in a warning instead. Measured on Apache 2.4, a data
+location inside the document root answered 200 for its own files without this block & 403
+with it.
+
+MOVE A DATA LOCATION THAT IS INSIDE THE DOCUMENT ROOT. THE BLOCK IS NOT THE CURE.
+The block works only where Apache reads this file. A data location inside --Server Root
+Directory-- is reported as MISPLACED by the Data location environment finding, which the
+Environment Manager records, by -v, which counts it as a failure, & by the listener on every
+pass. Nothing checked where the data location was until v4.0.1.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

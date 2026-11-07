@@ -1,0 +1,475 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 11/6/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v4.0.1.
+This plain text file describes who owns each location HRConvert2 keeps on disk, what root
+will & will not do inside them, & what is not finished yet.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Two Rules--
+
+HRConvert2 runs as two accounts. The web server account serves every request & runs every
+conversion. Root installs, repairs & updates.
+
+The web server account is the one an attacker reaches first. Every request a stranger sends
+runs as it, & every dependency that parses an uploaded file is assumed to be exploitable.
+Whatever that account can change, an attacker can change.
+
+ROOT RUNS NOTHING THE WEB SERVER ACCOUNT CAN CHANGE.
+Code root runs, a file root reads as code & a configuration root acts on all belong to root,
+& so does every folder above them.
+
+ROOT NEVER WORKS BY NAME INSIDE A FOLDER THE WEB SERVER ACCOUNT CAN CHANGE.
+A name in such a folder can be swapped for a link at any moment, between the moment root
+looks at it & the moment root acts on it. A write, a chmod, a chown & a require all follow a
+link, so each would land on whatever the link points at, /etc/shadow included.
+
+Until v4.0.1 neither rule held. The installer & -fp handed the installation, the data
+location & every session in it to the web server account, & root ran that code on its next
+command. Root also wrote its log, the install secret, the capability cache & the DATA
+protection file by name inside folders the web server account owned. The secret, the cache
+& the protection file were each proven on v4.0.0 before they were fixed.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Roles--
+
+Every location HRConvert2 keeps is named in its contract, as $EngineManagedLocations in
+Resources/Contract/app-engine-config.php, by the setting that holds it. Each has a role.
+The role says what a location IS. Setup Core decides what that means for its owner & its
+mode, & the contract cannot ask for a mode, so no location can be made writable by the
+account root is protecting itself from.
+
+  ROLE        LOCATIONS                              OWNER & MODE
+  code        $InstLoc, the installation             root:root, folders 0755, files 0644
+  data-root   $DataRootLoc                           root:root, 0755, never walked
+  web         $ConvertTemp, $SessionLoc, $CacheLoc,  the web server account, 0700
+              $LogDir, $ManagerSocketDir
+  root-only   $EngineDir, $BackupLoc                  root:root, folders 0700, files 0600
+  shared      $ProprietaryLoc                        checked, & only its own entry corrected
+
+THE DATA LOCATION IS A ROOT ROOT OWNS, & each kind of file lives in a folder of its own below
+it. $ConvertLoc is the data location & $DataRootLoc holds that same path on the command line,
+where $ConvertLoc has been narrowed to the session area a request uses. Sessions live in
+Sessions, the web server account's caches & its home in Cache, its logs in Logs & its sockets
+in Sockets. Root's own log folder is Engine & the previous installation is Last-Installed-Version.
+The install secret sits at the top of the data location, which is enough to keep the web server
+account from replacing it now that the data location is root's. The Environment Manager's state
+sits beside it, hrconvert2-environment.state, root's & readable by the web server account's group
+for the same reason. See ABOUT_ENVIRONMENT_MANAGER.txt.
+
+CODE.
+The installation the command is running from, & no other. Since v4.0.1 that is Application in
+the data location, & before the first -fp of v4.0.1 it is still the folder the web server
+serves, as it was in every earlier release. A setting that names another tree is refused, so
+a wrong value cannot hand some other folder to root. Every name in it is given
+to root with chown -h, which never follows a link, through find -xdev -execdir. A location
+with a role of its own inside it, such as DATA, is left out of the walk. The web server
+account reads the code & cannot change it.
+
+DATA-ROOT.
+The data location itself, root:root & 0755. Every account may traverse it to reach a folder of
+its own below, & none but root may change what is in it. It is never walked, so the session,
+cache & log folders below keep their own owners. Only the data location's own owner & mode are
+corrected. Until v4.0.1 the data location was the web server account's, because sessions were
+kept directly in it, & that is what let that account replace the install secret or swap a
+managed location for a link. The named path is $DataRootLoc, not $ConvertLoc, because $ConvertLoc
+is narrowed to a session area on the command line where the role is applied.
+
+WEB.
+A folder the web server account owns & writes — the session area, the cache, the log folder &
+the socket folder. Root gives each folder itself to that account & has the account set its own
+mode, through runAsAccount, so a link swapped in can only send the change to a file that account
+could already change. Nothing inside is touched. Every session, upload & log stays as it is.
+
+ROOT-ONLY.
+Root's own log folder, Engine, & the previous installation kept for an operator after an update.
+Both are root's alone, & each is kept & walked only where no other account could replace the
+folder it is in, which beneath a root owned data location is always.
+
+SHARED.
+The HRProprietary folder holds every HRProprietary application & whatever else an operator
+keeps there. It is never walked. It is corrected only when the web server account could
+change it, & only when the folder above it is root's. Then only its own owner & write bits
+change. Until v4.0.1 -fp walked it & handed every application in it to the web server account.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Installation & The Hosted Location--
+
+THE APPLICATION IS INSTALLED OUTSIDE THE WEB ROOT, IN Application IN THE DATA LOCATION.
+  <data location>/Application    the installation, code & config.php    root:root, 0755 & 0644
+It is the code role's location, so it is root's & the web server account only reads it. It sits
+inside the data location, which the Apache configuration -fp writes refuses outright, so nothing
+in it can be fetched, config.php & the build tooling included. Edit config.php there, with sudo.
+
+THE WEB SERVER SERVES THE HOSTED LOCATION, WHICH HOLDS ONLY WHAT IT MUST.
+The hosted location is the folder --Installation Directory-- names in config.php, where the
+installation was until v4.0.1. Its URL has not changed. It holds four things.
+  convertCore.php    the loader, the only PHP the web server runs here      root:root, 0644
+  index.html         the protection page                                    root:root, 0644
+  UI                 a copy of every static file a browser fetches          root:root, 0755 & 0644
+  DATA               the staging tree, the web server account's, as before  web role
+Everything but DATA is written by -fp as root, through the kernel, from the installation. The
+Apache configuration refuses every other PHP file there. See ABOUT_DATA_DIRECTORY_PROTECTION.txt.
+
+THE LOADER HANDS EVERY REQUEST & EVERY COMMAND TO THE INSTALLATION.
+It keeps the entry point's name, so every URL, form, bookmark & command an operator knows still
+works, & it does nothing else. Root refuses to go on, with error 28008, when the installation or
+its folder could have been changed by another account, because the loader runs before anything
+in the installation can check it. Root also reads the hosted location's own tree whenever it runs
+the loader, for the same reason.
+
+-fp RUN FROM A TREE THAT IS NOT INSTALLED INSTALLS IT, AS IT ENDS.
+That is how the first -fp of v4.0.1 moves an installation, & how any release unpacked anywhere
+is installed. -fp does all of its work on that tree first, which gives it to root & makes the
+data location root's. Then it copies the entries the contract names in $EngineApplicationLayout,
+& nothing else, into a folder only root can enter beside Application, & renames it into place.
+The installation it replaces is kept in Last-Installed-Version, as an update keeps one. Then the
+installed copy runs -fp itself, which serves it from the hosted location & does every other
+repair again. --setup --install-complete does the same as it ends.
+  convertCore.php, index.html, README.md, LICENSE, Documentation, Resources & UI are copied.
+  DATA stays where the web server serves it, & anything else in the folder stays as it was.
+  A tree root cannot trust, or a data location another account could change, is not installed,
+  & -fp says why & exits with status one. The application keeps running from where it is.
+
+THE HOSTED LOCATION IS CHANGED ONLY WHEN IT IS RECOGNIZABLY THIS APPLICATION'S.
+Its convertCore.php must be the loader, the installed copy's own core, as it is straight after
+an install, or absent. Any other core is a release unpacked there & not installed yet, & it is
+reported as UNINSTALLED & left exactly as it is, because -fp run from it is what installs it.
+A name is removed from the hosted location only when the installation holds the same bytes under
+the same name, so whatever an administrator keeps there stays. A static file a release no longer
+ships is removed. Anything else that is not the loader's is reported as STRAY & left.
+
+UPGRADING ONCE THE APPLICATION HAS MOVED.
+  -u updates Application in place & keeps the installation it replaced, as it always has.
+  A release unpacked over the hosted location is installed by  sudo php convertCore.php -fp  run
+  there. Its config.php is installed with it, as unpacking over the installation has always
+  replaced it, & the configuration it replaced is in Last-Installed-Version.
+  A drop in of changed files is unpacked into Application, followed by -fp.
+A Docker image keeps its release in the web root, & the entrypoint's -fp installs it into the
+data volume on every start, so a volume kept from an older container runs the new release.
+
+-v reports where the application runs from, as Installation, & the hosted location, as Hosted
+location. The environment findings carry a Hosted location check, which the Environment Manager
+records & the listener warns about, & which reads NOT MOVED until the first -fp of v4.0.1.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Install Secret--
+
+The install secret derives every session, token & startup key. It sits at the top of the data
+location, as HRConvert2-secret.php by default.
+
+It belongs to root & only the web server account's group can read it, root:www-data 0640. The
+data location around it is root's & 0755 now, so the web server account can neither write the
+secret nor remove its name nor put a file of its own beside it. That is the main thing that
+keeps the secret the one root wrote. Root still never runs it, never follows it, & takes nothing
+from it but a key in the exact shape this application writes, because that costs nothing & holds
+even on a host where the data location is somehow not yet root's.
+
+ROOT NEVER RUNS IT.
+Until v4.0.1 every command run as root loaded it with require, so a web server account that
+wrote PHP into it had that PHP run as root. Root now reads it with PHP's tokenizer & accepts
+it only in the exact shape this application writes. Anything else is replaced with a new key,
+& a warning says so.
+
+Every command run as root checks it, & writes it again when it is missing, unusable or not in
+that shape. Root writes it without following anything. A file an earlier release left, owned
+by the web server account, is written again with the SAME key, so no session is lost.
+
+The web server account never creates or replaces it. A secret the web server account could
+write is a secret root would one day have to read. A request that finds none raises ERROR
+31021, & the next command run as root creates it.
+
+  sudo php convertCore.php --rotate-secret       Replaces it with a new key, after asking.
+  sudo php convertCore.php --rotate-secret -y    The same, answered in advance.
+
+Rotating ends every session, because everything derives from it. A running listener is
+stopped before the rewrite & started again after it, by the account that runs it, & never by
+root. See --About What Root Does Not Touch--.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About What Root Does By Name--
+
+Eight kernel functions are how root writes, opens, reads, removes, re-owns or trusts one file
+where another account might interfere. They are in Resources/Kernel/kernel.php. A whole tree is
+walked with find instead, one name at a time & from the top down, as --About The Roles-- says.
+
+  pathIsTrustedByRoot          Resolves the path, then requires every folder from / down, & the
+                               path itself, to belong to root & be writable by nobody else. It
+                               returns the resolved path, so a caller that must not follow a
+                               link either compares the two or works in the resolved path.
+  treeIsTrustedByRoot          The same test for every name in a whole tree, which is what the
+                               gate below runs before root loads anything.
+  folderIsHeldForRoot          Whether only root could replace the folder a name is in. The
+                               folder itself may be another account's, but every folder above
+                               it must be root's, so nothing can swap the folder underneath.
+  writeFileWithoutFollowing    Writes a new file that did not exist a moment before, with its
+                               mode set as it is created, & renames it over the name.
+  openFileWithoutFollowing     Opens a plain file with one name for appending, & checks that
+                               the handle is the file that was examined.
+  readFileWithoutFollowing     Reads a plain file with one name, up to a limit, without waiting
+                               on a FIFO, & checks that the handle is the file that was examined.
+  removeFileWithoutFollowing   Removes a name only from a folder only root could replace. A
+                               link is removed as a link.
+  changeOwnerWithoutFollowing  Changes the owner of the name itself, never what a link points
+                               at, & only when a hard link cannot have been swapped in.
+
+THE NAME IS NOT ENOUGH ON ITS OWN. The write, open, read, remove & re-own functions guard the
+name they are given, but they reach it through the folder it is in, & that folder is looked up
+every time. An account that can write the folder above can rename this one aside & put a link
+in its place between the look & the act. So each of them asks folderIsHeldForRoot first &
+refuses, for root, a folder another account could replace. Until v4.0.1 the write, open &
+re-own functions did not, & the log folder & the socket folder both sit inside the data
+location, which the web server account owns, so each could be swapped whole. Root creating its
+logfile or its manager state inside one was the hole.
+
+Once the installation is root's, root changes no mode by name in a folder the web server
+account can change. The repairs that make it root's run before it is, as --About The Gate--
+explains. Root no longer opens a logfile or reads or writes manager state at all. Where its log
+goes instead, & how its listener commands reach the web server account, are in --About What
+Root Does Not Touch-- below.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Gate--
+
+THE FIRST RULE IS CHECKED BEFORE ANYTHING BUT THE KERNEL RUNS.
+Every command run as root reads the whole installation with treeIsTrustedByRoot before it
+loads anything else from it. Every folder from / down to the installation must belong to
+root & be writable by nobody else, /var/www/html included. Every name inside it must belong to
+root & be writable by nobody else, & no name may be a link, because a link can lead out of
+the tree to something another account owns. DATA is never entered, because it holds no code.
+
+A command that finds anything else stops with error 28008, & names the first thing it found.
+
+  Root refused to run the installation at /var/www/html/HRProprietary/HRConvert2, because an
+  account other than root could have changed it. /var/www/html does not belong to root. Run
+  sudo php convertCore.php -fp  to give it back to root. Any other account may still run -v
+  in the meantime.
+
+Nothing is logged yet when the gate runs, so the line goes to the terminal & to PHP's own error
+log, which on the command line is usually the terminal too, so it can appear there twice.
+
+THE REPAIRS RUN ANYWAY, & SAY SO FIRST.
+-fp & --setup are what give an installation to root, & --config --repair is what either of
+them needs when config.php is missing. A fresh clone belongs to whoever cloned it, & a v4.0.0
+installation belongs to the web server account, so neither is root's until one of them has
+run. Refusing them would leave nothing to run. An account that could have changed the tree
+could also have changed the file that enforces this, so refusing them would protect nothing.
+
+Once its locations are corrected, -fp reads the tree again exactly as the gate does. When root
+still may not run it, the first thing in the way is named straight after the location count,
+& -fp finishes its other repairs & exits 1. A link it does not remove, a file with more than one
+name & a folder above the installation it may not change are each things it leaves in the way.
+
+When config.php names an installation other than the one the command is in, as $InstLoc,
+that tree is read too, before anything is loaded from it.
+
+Every account but root is unaffected, because nothing it runs is root's to protect. The web
+server account may still run -v, --status, -c & the listener commands, & a standard user may
+still run -v.
+
+The kernel is loaded before the check, because the check is part of it. A kernel another
+account can change inside a tree root otherwise owns is the one case seen after it has run.
+It is still refused before anything else is loaded.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About What Root Does Not Touch--
+
+ROOT READS & WRITES NO MANAGER STATE, & SIGNALS NO PROCESS THE LISTENER TRACKS.
+The listener runs as the web server account & records what it started in a state file in the
+socket folder, which that account owns. A command that stops the listener, or ends a worker,
+reads that file for a process identifier & signals it. Root reading a list the web server
+account wrote & running kill on a number from it is root doing whatever that account chose, so
+readManagerState & writeManagerState both refuse root outright now. Until v4.0.1 root read that
+list for -k, -k <worker>, --kill-all-workers & --status, & wrote an empty one after a stop.
+
+ROOT HANDS EVERY LISTENER COMMAND TO THE WEB SERVER ACCOUNT, AS IT ALREADY DID FOR -l.
+  -l                     Starts the listener as the web server account, through its service
+                         unit when one owns it, & through runAsAccount when none does.
+  -k, -k <worker>        Handed to that account, which reads its own state & signals its own
+                         processes. The account can only end what it could already end.
+  --kill-all-workers     Root confirms at the terminal, then hands it over with the answer
+  --kill-every-worker    already given, because the account has no terminal to ask at.
+  --status               Handed over, & what the account sees is relayed, because only the
+                         account that wrote the state can read it.
+  --rotate-secret        Asks the account whether a listener is running & stops it, BEFORE the
+                         secret is rewritten, so the stop is signed with the key the running
+                         listener answers to. Root rewrites the secret. The account starts the
+                         listener again, reading the new key from disk. A listener that was not
+                         running is left stopped.
+
+Every one of these runs as the web server account through runAsAccount, which drops to that
+account in a child that can never climb back. A standard user is refused these as before, & the
+web server account on the command line runs them directly, because they were always its to run.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About A Root Folder Inside A Web Folder--
+
+A FOLDER ROOT OWNS IS NOT SAFE INSIDE A FOLDER THE WEB SERVER ACCOUNT OWNS.
+Moving a folder to another parent needs write permission on the folder itself. Renaming it
+within the same parent does not, & that was measured. So the web server account can rename
+a root folder in its own folder aside & create one of its own with the same name, & root
+would then work in a folder it does not own while believing it does.
+
+That is why pathIsTrustedByRoot judges every folder from / down, & why there is no exception
+for a data folder. It is also why the data location itself is root's now: once it is, a root
+folder inside it — Engine, the backup — is safe, because no other account can rename the data
+location aside or anything in it. Until v4.0.1 the data location was the web server account's,
+so root kept nothing of its own there & an update kept no backup by default. Both are root's now.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Hard Links--
+
+PHP has no fchown, so root can only change an owner by name. lchown changes the name itself
+& never what a symbolic link points at. A hard link is the other way to put a different file
+behind a name. In a folder the web server account can write, the name could be swapped for a
+hard link to a root file between the moment root looks & the moment it acts, & root would
+then hand that file to the web server account.
+
+The kernel prevents it with fs.protected_hardlinks. With that on, an account can only make a
+hard link to a file it already owns or can already read & write, so a swap gains it nothing.
+systemd turns it on at boot, so it is on almost everywhere.
+
+changeOwnerWithoutFollowing checks it whenever the folder is not one root trusts. When it is
+off, the owner is left as it is & a WARNING entry says so. Anything root creates inside a
+folder the web server account owns, such as the data location or a file beside it, then stays
+root's until it is turned on. Turn it on & keep it on.
+
+  sudo sysctl -w fs.protected_hardlinks=1
+  echo 'fs.protected_hardlinks = 1' | sudo tee /etc/sysctl.d/90-protected-hardlinks.conf
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Who Applies The Roles--
+
+  -fp                   Applies every role, then removes the build environment when
+                        config.php asks for it. Run it after installing & after any change.
+  Any command as root   Creates the data location when it is missing, & checks the install
+                        secret & writes it again when it is not right.
+  -u                    Refuses unless the folder the swap happens in is root's, ERROR
+                        31023, & runs the new release's own -fp as it finishes. A release
+                        arrives 0664 from GitHub & is extracted through umask 022. The
+                        previous release is kept only where root's folder can hold it.
+  -c                    Root hands the sweep to the web server account, which owns every
+                        name in a session & deletes them itself.
+  The web server        Writes only inside its own folders, & reports anything it finds
+  account               wrong rather than repairing it.
+
+-fp prints a REFUSED line for each location it would not touch, a SKIPPED line for a backup
+location root cannot hold & a WARNING for each location it could not finish, then a count of
+those it corrected & of those it refused or left incomplete. A skipped backup location is in
+neither count, so --setup carries on past it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Upgrading From v4.0.0--
+
+Run -fp once, as root, after updating.
+
+  sudo php convertCore.php -fp
+
+Until it has run, every other command run as root stops with error 28008, because the
+installation still belongs to the web server account. The message says to run -fp.
+
+On a host that followed an earlier release's guide, -fp may stop first with error 31024 & a
+list of folders. v3.4.1 asked for /var/www to be given to the web server account, older guides
+did the same to /DATA, & root will not work beneath a folder another account can change. -fp
+corrects the locations it manages & never a folder above them, so it names each such folder
+with its owner & mode & what it needs. These commands give the usual ones back to root, & change
+only the folders named & nothing inside them. Run them, then run -fp again.
+
+  sudo chown root:root /var/www /var/www/html /DATA
+  sudo chmod 755 /var/www /var/www/html /DATA
+
+The folders above the hosted location & above each additional data location, such as /DATA2,
+are named the same way as a warning, & -fp goes on. It makes the session folders in an
+additional data location once the folder above it is root's.
+
+The listener service keeps running the release it started with. When -fp updates its unit it
+says so, & the service is restarted once by hand.
+
+  sudo systemctl restart hrconvert2-listener
+
+The updater in v4.0.0 has two faults v4.0.1 fixes. It leaves the new release owned by the
+web server account, & it deletes the live DATA folder, so every open session is lost. Run -fp
+by hand after updating from v4.0.0 with -u, & expect visitors to start new sessions.
+
+That -fp also moves the installation into Application in the data location & leaves only the
+loader, the protection page, the static files & DATA in the web root. It is root's afterwards.
+Edit config.php in Application with sudo, & do not give the tree back to the web server
+account. See --About The Installation & The Hosted Location--.
+
+A Docker container started from an image built before v4.0.1 carries the install secret that
+image was built with, & every container started from it shares it. A data volume first filled
+by such an image keeps that secret after the image is replaced. Run this once in each.
+
+  docker exec <container> php /var/www/html/HRProprietary/HRConvert2/convertCore.php --rotate-secret -y
+
+An image built from v4.0.1 onward ships no secret, & each container creates its own.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About What Is Not Finished--
+
+This is one of several steps, & what remains is knowingly interim.
+
+WHAT THIS STEP SETTLED. The data location is a root root owns now, so the things earlier
+releases could not place safely have a home. Root's log is a file in Engine rather than standard
+error. The web server account's home is Cache rather than the data location, which closes the
+empty HOME an earlier release ran its tools with. Sessions live in Sessions & the backup is kept
+again by default, because its folder above is root's. The install secret stays at the top of the
+data location, now protected by the root owned folder around it rather than by a folder of its
+own. See Documentation/ABOUT_LOGGING.txt for where root's log goes.
+
+THE ENVIRONMENT MANAGER RUNS AGAIN, & KEEPS BOTH RULES.
+Until v4.0.1 every pass halted with Engine-35000 & exit status 0, so the hourly root pass never
+ran & a timer read every pass as a success. It runs now, as root, & keeps out of the web server
+account's folders & manager state entirely. Its state is at the top of the data location, its
+lock & root's logs are in Engine, & it reads & writes each through the kernel. Its repair is
+-fp's, unattended, so it starts & enables no service. See ABOUT_ENVIRONMENT_MANAGER.txt.
+
+-fp DISABLES A MISMATCHED BOOTSTRAP SCRIPT, AS ROOT.
+The listener used to disable Documentation/Build/hrconvert2-setup.sh when it did not match the
+core. It runs as the web server account, which can no longer write to the installation, so it
+reports the script instead, & -fp disables it as root once root may run the installation. A
+permitted Environment Manager repair does it too, because that repair is -fp's. See
+ABOUT_COMPONENTS.txt.
+
+THE APPLICATION IS INSTALLED OUTSIDE THE WEB ROOT.
+The web root keeps only the loader & what a browser fetches, so no code, configuration or build
+tooling of this application can be requested there any longer. Secrets still sit at the top of
+the data location rather than in a folder of their own.
+
+THE APACHE CONFIGURATION REFUSES THE DATA LOCATION, & ROOT WRITES IT THROUGH THE KERNEL.
+hrconvert2.conf refuses every data location outright, so Sessions, Cache & Logs are not served
+even from inside the document root, & -v, the environment findings & the listener name a data
+location that is. Root writes the file atomically & never through a link, puts back what was
+there when it does not parse, & reloads only a web server that is running, so neither -fp nor
+an unattended repair starts one. See ABOUT_DATA_DIRECTORY_PROTECTION.txt.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

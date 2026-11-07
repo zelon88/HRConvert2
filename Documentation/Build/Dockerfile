@@ -53,6 +53,13 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
       ca-certificates sudo procps curl \
     && rm -rf /var/lib/apt/lists/*
 
+# / THE WEB ROOT IS ROOT'S, because the official PHP image leaves it to www-data with mode 1777
+# / so that any account can run the image. Root will not work beneath a folder another account
+# / can change, so -fp could correct nothing below it & would leave the application in the web
+# / root rather than install it & publish its loader. This image runs its entrypoint as root &
+# / its web server as www-data, & neither has to write the web root itself.
+RUN chown root:root /var/www/html && chmod 755 /var/www/html
+
 WORKDIR /var/www/html/HRProprietary/HRConvert2
 
 # / THE MANIFEST ARRIVES BEFORE THE REST OF THE SOURCE, & THAT ORDERING IS THE CACHE.
@@ -95,8 +102,11 @@ COPY . .
 # / by the web server.
 RUN mkdir -p /DATA/HRConvert2
 
-# / Hand the whole installation to the account the web server runs as, once, before setup.
-RUN chown -R www-data:www-data /var/www /DATA
+# / NOTHING IS HANDED TO THE WEB SERVER ACCOUNT HERE. Until v4.0.1 this chowned /var/www &
+# / /DATA to it, so the account that serves the web could rewrite the code root runs at every
+# / container start. The source is root's as copied, & setup below gives each location the
+# / owner its role in the contract names. The data location is root's; only the Sessions, Cache,
+# / Logs & Sockets folders below it, & the DATA staging tree, are the web server account's.
 
 # / THE INSTALL IS THE SAME ONE A BARE METAL HOST RUNS.
 # / --install-complete creates the data locations, corrects permissions, writes the PHP
@@ -113,14 +123,33 @@ RUN php ./convertCore.php --setup --install-complete -y \
 # / is the record of what this image can convert.
 RUN php ./convertCore.php -v || true
 
+# / NO INSTALL SECRET SHIPS IN THE IMAGE. The two runs above create one, because every root run
+# / does, & until v4.0.1 it stayed in this layer. Every container started from the published
+# / image without a volume of its own was seeded with the same secret, & anyone could read it
+# / from the image. The entrypoint's -fp creates a fresh one, in the container's own volume,
+# / the first time the container starts. A container from an older image keeps the shared one
+# / until  php convertCore.php --rotate-secret -y  is run inside it once.
+RUN rm -f /DATA/HRConvert2/*-secret.php /DATA/HRConvert2/secret.php
+
+# / THE IMAGE KEEPS THE RELEASE IN THE WEB ROOT, & THE ENTRYPOINT INSTALLS IT.
+# / Since v4.0.1 -fp installs the application into Application in the data location & leaves
+# / only its loader in the web root, & the setup above has done exactly that inside this image.
+# / The data location is a volume, though, & a volume kept from an older container hides this
+# / image's copy, so its loader would run the release that volume already held. So the release
+# / is copied into the web root again, the copy setup installed is removed, & the entrypoint's
+# / -fp installs this image's release into whatever volume the container starts with.
+COPY . .
+RUN rm -rf /DATA/HRConvert2/Application /DATA/HRConvert2/Last-Installed-Version
+
 # / The container serves the application from the web root it was copied into.
 RUN a2enmod rewrite headers || true
 
 # / THE VOLUME IS DECLARED LAST, & THAT POSITION MATTERS.
 # / Docker discards every change a later layer makes to a declared volume path. Declaring
-# / this before the chown & the setup above meant both were thrown away, so a container
-# / started from the image found an empty directory owned by root & the entrypoint had to
-# / redo the work on every cold start. Declared here, the layers above are kept.
+# / this before the setup above meant its work was thrown away, so a container started from
+# / the image found an empty directory owned by root & the entrypoint had to redo the work on
+# / every cold start. Declared here, the layers above are kept. It is also why the secret is
+# / removed above rather than left for the volume, which would have copied it in.
 VOLUME /DATA/HRConvert2
 
 EXPOSE 80

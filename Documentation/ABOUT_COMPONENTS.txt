@@ -214,6 +214,22 @@ The pins are the application's & are set in Resources/Contract/app-engine-config
 $EngineAcceptedPipelines & $EngineAcceptedSharedModules. ABOUT_PIPELINE_COMPONENTS.txt says how
 they are judged.
 
+THE BUILD WRITES EVERY PIN BUT THREE. THOSE ARE EDITED BY HAND.
+php convertCore.php --build --pins reads each pin's version from the component it names &
+reports every pin that differs. With --write it rewrites them, & only the version between
+the quotes changes. Choosing a component's version is the developer's decision. Making every
+pin agree with that choice is the build's.
+A pin the build cannot settle is refused rather than guessed. Interfaces or language packs
+that declare different versions, or one that declares none, stop the build for that pin.
+$RequiredSecretVersion is the one pin no shipped file declares, so it is still set by hand.
+$RequiredKernelVersion & $RequiredEngineVersion are set by hand as well, from v4.0.1. The
+build runs inside the kernel & the Engine, so it cannot rewrite the pins that load them.
+The Engine knows where its own components live. The application names its own pin sources
+in $EnginePinSources in Resources/Contract/app-engine-config.php.
+Until v4.0.0 every pin was moved by hand. $RequiredConfigScript said v3.8.0 for a whole
+release after the script it pins moved to v3.9.3, & the Resource Manager disabled the
+installer wherever it could.
+
 RAISE $RequiredPipelineCoreVersion WHEN THE PIPELINE CORE ITSELF CHANGES, & FOR NOTHING ELSE.
 A pipeline added, removed or raised is a line in the contract. Until v3.9.9 the pin list was
 inside the Pipeline Core, so a pipeline moving meant a new Pipeline Core & a new pin here.
@@ -276,11 +292,19 @@ Every decision about installing, configuring, updating or repairing lives in Set
 A CONFIGURATION UTILITY WRITTEN IN BASH WOULD BE A SECOND IMPLEMENTATION OF THE SAME
 UNDERSTANDING, KEPT IN STEP BY HAND. That is the whole reason it is this thin.
 
-It carries a SCRIPT_VERSION & a DisabledByCore line. The Resource Manager compares the
-version against $RequiredConfigScript on its sweep. A script that does not match has
+It carries a SCRIPT_VERSION & a DisabledByCore line. verifyBootstrapScript() in the Engine
+compares the version against $RequiredConfigScript, & -v, the listener & the Environment
+Manager all report what it found. -fp changes it, as root. A script that does not match has
 DisabledByCore rewritten to TRUE, so it refuses to run & says why. It is never deleted & is
 not otherwise altered, so an operator can read exactly what was disabled. A script that is
-later replaced with a matching version is re-enabled on the next sweep.
+later replaced with a matching version is enabled again by the next -fp. A permitted
+Environment Manager repair does both, because that repair is -fp's.
+
+ONLY ROOT CHANGES IT, FROM v4.0.1. Until then the Resource Manager rewrote it on its sweep, as
+the web server account. The installation is root's now, so that account cannot write it, & the
+listener only reports a script that needs changing. Root reads it & writes a new copy renamed
+into place through the kernel, & only once -fp has made the installation one root may run, so
+nothing planted at its name is ever followed.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

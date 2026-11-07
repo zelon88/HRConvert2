@@ -60,8 +60,12 @@ Publishing the official image is automatic. Pushing a version tag is the entire 
       move together & only when a release adds a setting the core requires.
   1c. $GuiVersion in every UI/<GUI>/uiVersionInfo.php, if the interfaces changed.
   1d. $LanguageVersion in every language pack, if the strings changed.
-  1e. Run  'php convertCore.php -v'  to confirm every component reports what you expect.
-  1f. A tag that does not match the source produces an image whose core refuses its own config.
+  1e. Run  'php convertCore.php --build --pins --write'  to move every pin to the versions
+      above, then  'php convertCore.php --build --pins', which must exit 0.
+      $RequiredKernelVersion & $RequiredEngineVersion in convertCore.php are set by hand,
+      because the build runs inside the kernel & the Engine & cannot rewrite what loads it.
+  1f. Run  'php convertCore.php -v'  to confirm every component reports what you expect.
+  1g. A tag that does not match the source produces an image whose core refuses its own config.
 2. Commit and push everything to the repository.
 3. Tag the release and push the tag.
   3a. Run  'git tag v#.#.#'
@@ -191,7 +195,14 @@ NOTE ON THE GITHUB CONTAINER REGISTRY.
 4. A Docker container is disposable. A Docker user updates by pulling a new image, not by
    running the built in updater. The updater exists for bare metal installations.
 5. Everything a container must keep across a replacement lives outside the image.
-  5a. The data location, which holds every session and secret.php.
+  5a. The data location, which holds every session and the install secret, HRConvert2-secret.php.
   5b. Resources/config.php.
   5c. Confirm both are on a volume before telling anyone to pull a new image.
+6. An image built before v4.0.1 shipped the install secret it was built with, so every
+   container started from it shares one secret. A data volume first filled by such an image
+   keeps that secret after the image is replaced. Images from v4.0.1 onward ship none, & each
+   container creates its own. Run this once in every container whose data location an older
+   image filled.
+  6a. 'docker exec <container> php /var/www/html/HRProprietary/HRConvert2/convertCore.php --rotate-secret -y'
+  6b. Every session in that container ends, which is what rotating a secret is for.
 -----------------------------------------------------------------------------------

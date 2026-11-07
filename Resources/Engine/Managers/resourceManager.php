@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.0.
+// / v4.0.1.
 // / This file is the Resource Manager. It is a manager subcomponent of the Engine.
 // / The Resource Manager polls the host, calculates the budget every operation is granted from & sweeps anything that has outlived its welcome.
 // /
@@ -38,7 +38,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A m
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v4.0.0';
+$ManagerVersion = 'v4.0.1';
 // / -----------------------------------------------------------------------------------
 
 
@@ -62,8 +62,8 @@ function runResourceManager() {
   $messagesReceived = $messageIndex = $allocatedBudget = $newExpectedRuntime = 0;
   $lastPollTime = $lastReapTime = $lastSweepTime = $locationsSwept = $entriesDropped = 0;
   $environmentIsReady = $dataIsProtected = FALSE;
-  $environmentFindings = array();
-  $exposureStatus = $exposureDetail = '';
+  $environmentFindings = $scriptFinding = array();
+  $exposureStatus = $exposureDetail = $scriptStatus = $scriptDetail = $locationStatus = $hostedStatus = $hostedDetail = '';
   $socketPath = buildManagerSocketPath('resource-manager');
   list ($serverIsOpen, $socketServer) = openManagerSocketServer($socketPath);
   if (!$serverIsOpen) errorEntry('The Resource Manager could not open its socket!', 31002, TRUE);
@@ -97,9 +97,6 @@ function runResourceManager() {
         list ($sweepCompleted, $locationsSwept) = cleanEveryConvertLoc();
         if (!$sweepCompleted) warningEntry('A scheduled data location sweep did not complete cleanly.');
         else logEntry('Scheduled sweep completed across '.$locationsSwept.' data location(s).');
-        // / Check the bootstrap script on the same schedule. A script left behind by an
-        // / older release hands arguments to a core that may no longer accept them.
-        verifyBootstrapScript();
         // / Revalidate the operating environment on the same schedule. A package upgrade, a
         // / kernel change or an administrator editing a policy can break the sandbox under a
         // / listener that has been running for weeks, & nothing else would notice until a
@@ -108,6 +105,23 @@ function runResourceManager() {
         list ($environmentIsReady, $environmentFindings) = validateOperatingEnvironment();
         if (!$environmentIsReady) warningEntry('The operating environment has degraded. The sandbox is unavailable & conversions requiring it will be refused. Run the -fp argument as root.');
         else if ($Verbose) logEntry('Operating environment revalidated. '.count($environmentFindings).' check(s) passed.');
+        // / The bootstrap script is one of those findings. A script left behind by another
+        // / release hands arguments to a core that may no longer accept them. The listener runs
+        // / as the web server account, which cannot write to an installation root owns, so it
+        // / says what the script needs & -fp does it as root. Until v4.0.1 the listener rewrote
+        // / the script itself, which stopped working once the installation became root's.
+        $scriptStatus = environmentFindingStatus($environmentFindings, 'Bootstrap script');
+        foreach ($environmentFindings as $scriptFinding) if (isset($scriptFinding['Check'], $scriptFinding['Detail']) && $scriptFinding['Check'] === 'Bootstrap script') $scriptDetail = (string)$scriptFinding['Detail'];
+        if ($scriptStatus !== '' && !findingIsBenign($scriptStatus)) warningEntry('The bootstrap script reported '.$scriptStatus.'. '.$scriptDetail);
+        // / The data location is another. Inside the document root its sessions, caches & logs
+        // / could be fetched, & only an administrator can move it, so every pass says so.
+        $locationStatus = environmentFindingStatus($environmentFindings, 'Data location');
+        if ($locationStatus !== '' && !findingIsBenign($locationStatus)) warningEntry('The data location is inside the document root, so its sessions, caches & logs could be fetched. Move it outside the document root. The -v argument names it.');
+        // / So is the hosted location, which holds the loader the web server runs. A release unpacked
+        // / there & not installed, or a copy that has drifted, is root's to put right with -fp.
+        $hostedStatus = environmentFindingStatus($environmentFindings, 'Hosted location');
+        foreach ($environmentFindings as $scriptFinding) if (isset($scriptFinding['Check'], $scriptFinding['Detail']) && $scriptFinding['Check'] === 'Hosted location') $hostedDetail = (string)$scriptFinding['Detail'];
+        if ($hostedStatus !== '' && !findingIsBenign($hostedStatus)) warningEntry('The hosted location reported '.$hostedStatus.'. '.$hostedDetail);
         // / Re-prove that the web served DATA tree still hands out inert downloads.
         // /
         // / This is not a check that can be done once at install time.
@@ -174,7 +188,7 @@ function runResourceManager() {
         $messageIndex++; } }
     $ResourceManagerExitedCleanly = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $socketServer, $serverIsOpen, $keepRunning, $resourcesPolled, $budgetCalculated, $requestApproved, $workerWasRegistered, $workerWasReleased, $extensionApproved, $sweepCompleted, $messageWasDelivered, $socketPath, $denialReason, $budgetToken, $sessionConvertLoc, $staleToken, $systemResources, $resourceBudget, $workerRegistry, $sessionLocations, $managerMessages, $managerConnections, $replyPayload, $staleWorkers, $staleRecord, $workerRecord, $killReply, $scaledLimits, $limitsWereScaled, $environmentIsReady, $environmentFindings, $dataIsProtected, $exposureStatus, $exposureDetail, $messagesReceived, $messageIndex, $allocatedBudget, $newExpectedRuntime, $lastPollTime, $lastReapTime, $lastSweepTime, $locationsSwept, $entriesDropped);
+  purgeSensitiveMemory($EnableMemoryProtection, $socketServer, $serverIsOpen, $keepRunning, $resourcesPolled, $budgetCalculated, $requestApproved, $workerWasRegistered, $workerWasReleased, $extensionApproved, $sweepCompleted, $messageWasDelivered, $socketPath, $denialReason, $budgetToken, $sessionConvertLoc, $staleToken, $systemResources, $resourceBudget, $workerRegistry, $sessionLocations, $managerMessages, $managerConnections, $replyPayload, $staleWorkers, $staleRecord, $workerRecord, $killReply, $scaledLimits, $limitsWereScaled, $environmentIsReady, $environmentFindings, $scriptFinding, $scriptStatus, $scriptDetail, $locationStatus, $hostedStatus, $hostedDetail, $dataIsProtected, $exposureStatus, $exposureDetail, $messagesReceived, $messageIndex, $allocatedBudget, $newExpectedRuntime, $lastPollTime, $lastReapTime, $lastSweepTime, $locationsSwept, $entriesDropped);
   return $ResourceManagerExitedCleanly; }
 // / -----------------------------------------------------------------------------------
 
@@ -240,71 +254,6 @@ function scaleConversionLimits($systemResources, $trackedWorkers) {
   // / $ScaledLimits is not purged, because it is a return value.
   purgeSensitiveMemory($EnableMemoryProtection, $conversionType, $limitString, $limitIsValid, $minimumIsValid, $cpuPercentage, $memoryMegabytes, $minimumCpu, $minimumMemory, $scaledCpu, $scaledMemory, $concurrentShare, $highestPressure, $pressureFactor, $limitTable, $systemResources, $trackedWorkers);
   return array($LimitsWereScaled, $ScaledLimits); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to validate the bootstrap script & disable it when it no longer matches.
-// / Accepts no arguments.
-// / Returns a validity boolean & a status word, in that order.
-// / The status is 'ok', 'disabled', 'absent', 'unreadable' or 'unwritable'.
-// / The bootstrap script hands arguments to a core it does not understand. A script from
-// / another release may pass an argument this core has dropped, or fail to pass one it now
-// / needs, & the operator running it has no way to know that has happened.
-// / When the versions differ the DisabledByCore line is rewritten, so the script refuses to
-// / run & says why. It is never deleted & is not otherwise altered, so an operator can read
-// / exactly what was disabled & reinstall the matching one.
-// / A script that matches is left alone, including one disabled earlier that has since been
-// / replaced with a matching version, which is re-enabled.
-function verifyBootstrapScript() {
-  // / Set variables.
-  global $InstLoc, $DirSep, $RequiredConfigScript, $Verbose, $EnableMemoryProtection;
-  $ScriptIsValid = FALSE;
-  $ScriptStatus = 'absent';
-  $scriptPath = $scriptContents = $updatedContents = $detectedVersion = $cleanDetected = $cleanRequired = '';
-  $versionMatches = array();
-  $bytesWritten = 0;
-  $scriptIsDisabled = FALSE;
-  $scriptPath = $InstLoc.$DirSep.'Documentation'.$DirSep.'Build'.$DirSep.engineApplicationSlug().'-setup.sh';
-  if (!file_exists($scriptPath)) {
-    // / No script is not a fault. An installation that never used one is perfectly normal.
-    $ScriptIsValid = TRUE;
-    $ScriptStatus = 'absent'; }
-  else {
-    $scriptContents = (string)@file_get_contents($scriptPath);
-    if ($scriptContents === '') $ScriptStatus = 'unreadable';
-    else {
-      if (preg_match('/^SCRIPT_VERSION="([^"]+)"/m', $scriptContents, $versionMatches)) $detectedVersion = $versionMatches[1];
-      $scriptIsDisabled = (preg_match('/^DisabledByCore="TRUE"/m', $scriptContents) === 1);
-      $cleanDetected = ltrim(trim($detectedVersion), 'vV');
-      $cleanRequired = ltrim(trim((string)$RequiredConfigScript), 'vV');
-      // / A script that matches is left alone, & is re-enabled if it was disabled before.
-      if ($cleanDetected !== '' && $cleanDetected === $cleanRequired) {
-        $ScriptIsValid = TRUE;
-        $ScriptStatus = 'ok';
-        if ($scriptIsDisabled) {
-          $updatedContents = preg_replace('/^DisabledByCore="TRUE"/m', 'DisabledByCore="FALSE"', $scriptContents, 1);
-          $bytesWritten = @file_put_contents($scriptPath, $updatedContents);
-          if ($bytesWritten === strlen($updatedContents)) warningEntry('The bootstrap script now matches this core & was re-enabled.');
-          else warningEntry('The bootstrap script matches this core but could not be re-enabled. Edit DisabledByCore by hand.'); } }
-      // / A script that does not match is disabled where it stands.
-      else if ($scriptIsDisabled) $ScriptStatus = 'disabled';
-      else {
-        $updatedContents = preg_replace('/^DisabledByCore="FALSE"/m', 'DisabledByCore="TRUE"', $scriptContents, 1);
-        if ($updatedContents === $scriptContents) {
-          $ScriptStatus = 'unwritable';
-          warningEntry('The bootstrap script reports v'.($cleanDetected === '' ? 'none' : $cleanDetected).' & this core requires v'.$cleanRequired.', but it carries no DisabledByCore line to set. Remove it by hand.'); }
-        else {
-          $bytesWritten = @file_put_contents($scriptPath, $updatedContents);
-          if ($bytesWritten !== strlen($updatedContents)) {
-            $ScriptStatus = 'unwritable';
-            warningEntry('The bootstrap script reports v'.($cleanDetected === '' ? 'none' : $cleanDetected).' & this core requires v'.$cleanRequired.', but it could not be disabled. Remove it by hand.'); }
-          else {
-            $ScriptStatus = 'disabled';
-            warningEntry('The bootstrap script reports v'.($cleanDetected === '' ? 'none' : $cleanDetected).' & this core requires v'.$cleanRequired.'. It has been disabled. Reinstall the script from the matching release.'); } } } } }
-  if ($Verbose) logEntry('Bootstrap Script: '.$scriptPath.', Reports: '.($detectedVersion === '' ? 'none' : $detectedVersion).', Status: '.$ScriptStatus.'.');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $scriptPath, $scriptContents, $updatedContents, $detectedVersion, $cleanDetected, $cleanRequired, $versionMatches, $bytesWritten, $scriptIsDisabled);
-  return array($ScriptIsValid, $ScriptStatus); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
